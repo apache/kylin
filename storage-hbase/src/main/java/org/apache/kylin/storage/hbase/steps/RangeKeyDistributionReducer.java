@@ -57,24 +57,24 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
     protected void setup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
 
-        if (context.getConfiguration().get(BatchConstants.OUTPUT_PATH) != null) {
-            output = context.getConfiguration().get(BatchConstants.OUTPUT_PATH);
+        if (context.getConfiguration().get(BatchConstants.CFG_OUTPUT_PATH) != null) {
+            output = context.getConfiguration().get(BatchConstants.CFG_OUTPUT_PATH);
         }
 
-        if (context.getConfiguration().get(BatchConstants.HFILE_SIZE_GB) != null) {
-            hfileSizeGB = Integer.valueOf(context.getConfiguration().get(BatchConstants.HFILE_SIZE_GB));
+        if (context.getConfiguration().get(BatchConstants.CFG_HFILE_SIZE_GB) != null) {
+            hfileSizeGB = Integer.valueOf(context.getConfiguration().get(BatchConstants.CFG_HFILE_SIZE_GB));
         }
 
-        if (context.getConfiguration().get(BatchConstants.REGION_SPLIT_SIZE) != null) {
-            cut = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_SPLIT_SIZE));
+        if (context.getConfiguration().get(BatchConstants.CFG_REGION_SPLIT_SIZE) != null) {
+            cut = Integer.valueOf(context.getConfiguration().get(BatchConstants.CFG_REGION_SPLIT_SIZE));
         }
 
-        if (context.getConfiguration().get(BatchConstants.REGION_NUMBER_MIN) != null) {
-            minRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_NUMBER_MIN));
+        if (context.getConfiguration().get(BatchConstants.CFG_REGION_NUMBER_MIN) != null) {
+            minRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.CFG_REGION_NUMBER_MIN));
         }
 
-        if (context.getConfiguration().get(BatchConstants.REGION_NUMBER_MAX) != null) {
-            maxRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.REGION_NUMBER_MAX));
+        if (context.getConfiguration().get(BatchConstants.CFG_REGION_NUMBER_MAX) != null) {
+            maxRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.CFG_REGION_NUMBER_MAX));
         }
 
         logger.info("Chosen cut for htable is " + cut + ", max region count=" + maxRegionCount

@@ -47,11 +47,6 @@ import org.apache.kylin.metadata.model.MeasureDesc;
  */
 public class SaveStatisticsStep extends AbstractExecutable {
 
-    private static final String CUBE_NAME = "cubeName";
-    private static final String SEGMENT_ID = "segmentId";
-    private static final String STATISTICS_PATH = "statisticsPath";
-    private static final String CUBING_JOB_ID = "cubingJobId";
-
     public SaveStatisticsStep() {
         super();
     }
@@ -60,15 +55,15 @@ public class SaveStatisticsStep extends AbstractExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         KylinConfig kylinConf = context.getConfig();
         final CubeManager mgr = CubeManager.getInstance(kylinConf);
-        final CubeInstance cube = mgr.getCube(getCubeName());
-        final CubeSegment newSegment = cube.getSegmentById(getSegmentId());
+        final CubeInstance cube = mgr.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
+        final CubeSegment newSegment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
-            Path statisticsFilePath = new Path(getStatisticsPath(), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
+            Path statisticsFilePath = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
             FileSystem fs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
             if (!fs.exists(statisticsFilePath))
-                throw new IOException("File " + statisticsFilePath + " does not exists;");
+                throw new IOException("File " + statisticsFilePath + " does not exists");
 
             FSDataInputStream is = fs.open(statisticsFilePath);
             try {
@@ -105,7 +100,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
                     break;
                 }
             }
-            
+
             if (memoryHungry == true) {
                 alg = AlgorithmEnum.LAYER;
             } else if ("random".equalsIgnoreCase(algPref)) { // for testing
@@ -120,40 +115,8 @@ public class SaveStatisticsStep extends AbstractExecutable {
         }
         logger.info("The cube algorithm for " + seg + " is " + alg);
 
-        CubingJob cubingJob = (CubingJob) executableManager.getJob(getCubingJobId());
+        CubingJob cubingJob = (CubingJob) executableManager.getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
         cubingJob.setAlgorithm(alg);
-    }
-
-    public void setCubeName(String cubeName) {
-        this.setParam(CUBE_NAME, cubeName);
-    }
-
-    private String getCubeName() {
-        return getParam(CUBE_NAME);
-    }
-
-    public void setSegmentId(String segmentId) {
-        this.setParam(SEGMENT_ID, segmentId);
-    }
-
-    private String getSegmentId() {
-        return getParam(SEGMENT_ID);
-    }
-
-    public void setStatisticsPath(String path) {
-        this.setParam(STATISTICS_PATH, path);
-    }
-
-    private String getStatisticsPath() {
-        return getParam(STATISTICS_PATH);
-    }
-
-    public void setCubingJobId(String id) {
-        setParam(CUBING_JOB_ID, id);
-    }
-
-    private String getCubingJobId() {
-        return getParam(CUBING_JOB_ID);
     }
 
 }

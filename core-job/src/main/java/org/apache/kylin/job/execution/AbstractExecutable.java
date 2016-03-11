@@ -18,10 +18,13 @@
 
 package org.apache.kylin.job.execution;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
@@ -32,12 +35,10 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -117,12 +118,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             }
             retry++;
         } while (((result != null && result.succeed() == false) || exception != null) && needRetry() == true);
-        
+
         if (exception != null) {
             onExecuteError(exception, executableContext);
             throw new ExecuteException(exception);
         }
-        
+
         onExecuteFinished(result, executableContext);
         return result;
     }
@@ -164,7 +165,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public final Map<String, String> getParams() {
-        return Collections.unmodifiableMap(this.params);
+        return this.params;
     }
 
     public final String getParam(String key) {

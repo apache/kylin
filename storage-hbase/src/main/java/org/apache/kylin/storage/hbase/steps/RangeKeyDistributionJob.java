@@ -99,11 +99,11 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             int regionSplitSize = KylinConfig.getInstanceFromEnv().getHBaseRegionCut(cubeCapacity.toString());
             int maxRegionCount = KylinConfig.getInstanceFromEnv().getHBaseRegionCountMax();
             int minRegionCount = KylinConfig.getInstanceFromEnv().getHBaseRegionCountMin();
-            job.getConfiguration().set(BatchConstants.OUTPUT_PATH, output.toString());
-            job.getConfiguration().set(BatchConstants.HFILE_SIZE_GB, String.valueOf(hfileSizeGB));
-            job.getConfiguration().set(BatchConstants.REGION_SPLIT_SIZE, String.valueOf(regionSplitSize));
-            job.getConfiguration().set(BatchConstants.REGION_NUMBER_MAX, String.valueOf(maxRegionCount));
-            job.getConfiguration().set(BatchConstants.REGION_NUMBER_MIN, String.valueOf(minRegionCount));
+            job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
+            job.getConfiguration().set(BatchConstants.CFG_HFILE_SIZE_GB, String.valueOf(hfileSizeGB));
+            job.getConfiguration().set(BatchConstants.CFG_REGION_SPLIT_SIZE, String.valueOf(regionSplitSize));
+            job.getConfiguration().set(BatchConstants.CFG_REGION_NUMBER_MAX, String.valueOf(maxRegionCount));
+            job.getConfiguration().set(BatchConstants.CFG_REGION_NUMBER_MIN, String.valueOf(minRegionCount));
             // The partition file for hfile is sequenece file consists of ImmutableBytesWritable and NullWritable
             TableMapReduceUtil.addDependencyJars(job.getConfiguration(), ImmutableBytesWritable.class, NullWritable.class);
 

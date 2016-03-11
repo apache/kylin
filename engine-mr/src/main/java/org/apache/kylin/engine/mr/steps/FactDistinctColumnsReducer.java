@@ -128,7 +128,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     private void outputDistinctValues(TblColRef col, Collection<ByteArray> values, Context context) throws IOException {
         final Configuration conf = context.getConfiguration();
         final FileSystem fs = FileSystem.get(conf);
-        final String outputPath = conf.get(BatchConstants.OUTPUT_PATH);
+        final String outputPath = conf.get(BatchConstants.CFG_OUTPUT_PATH);
         final Path outputFile = new Path(outputPath, col.getName());
 
         FSDataOutputStream out = null;
@@ -176,7 +176,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     private void writeMapperAndCuboidStatistics(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         FileSystem fs = FileSystem.get(conf);
-        FSDataOutputStream out = fs.create(new Path(statisticsOutput, BatchConstants.CFG_STATISTICS_CUBE_ESTIMATION));
+        FSDataOutputStream out = fs.create(new Path(statisticsOutput, BatchConstants.CFG_STATISTICS_CUBE_ESTIMATION_FILENAME));
 
         try {
             String msg;

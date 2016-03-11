@@ -24,17 +24,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
+import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -47,8 +46,8 @@ import org.apache.kylin.job.execution.Output;
 /**
  */
 public class CubingJob extends DefaultChainedExecutable {
-    
-    public static enum AlgorithmEnum {
+
+    public enum AlgorithmEnum {
         LAYER, INMEM
     }
 
@@ -57,9 +56,6 @@ public class CubingJob extends DefaultChainedExecutable {
     public static final String SOURCE_SIZE_BYTES = "sourceSizeBytes";
     public static final String CUBE_SIZE_BYTES = "byteSizeBytes";
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
-
-    private static final String CUBE_INSTANCE_NAME = "cubeName";
-    private static final String SEGMENT_ID = "segmentId";
 
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, "BUILD", submitter, config);
@@ -73,8 +69,8 @@ public class CubingJob extends DefaultChainedExecutable {
         CubingJob result = new CubingJob();
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(config.getTimeZone()));
-        result.setCubeName(seg.getCubeInstance().getName());
-        result.setSegmentId(seg.getUuid());
+        CubingExecutableUtil.setCubeName(seg.getCubeInstance().getName(), result.getParams());
+        CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         result.setName(seg.getCubeInstance().getName() + " - " + seg.getName() + " - " + jobType + " - " + format.format(new Date(System.currentTimeMillis())));
         result.setSubmitter(submitter);
         result.setNotifyList(seg.getCubeInstance().getDescriptor().getNotifyList());
@@ -85,29 +81,9 @@ public class CubingJob extends DefaultChainedExecutable {
         super();
     }
 
-    void setCubeName(String name) {
-        setParam(CUBE_INSTANCE_NAME, name);
-    }
-
-    public String getCubeName() {
-        return getParam(CUBE_INSTANCE_NAME);
-    }
-
-    void setSegmentIds(List<String> segmentIds) {
-        setParam(SEGMENT_ID, StringUtils.join(segmentIds, ","));
-    }
-
-    void setSegmentId(String segmentId) {
-        setParam(SEGMENT_ID, segmentId);
-    }
-
-    public String getSegmentIds() {
-        return getParam(SEGMENT_ID);
-    }
-
     @Override
     protected Pair<String, String> formatNotifications(ExecutableContext context, ExecutableState state) {
-        CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig()).getCube(getCubeName());
+        CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig()).getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final Output output = jobService.getOutput(getId());
         String logMsg;
         state = output.getState();
@@ -131,7 +107,7 @@ public class CubingJob extends DefaultChainedExecutable {
         String content = ExecutableConstants.NOTIFY_EMAIL_TEMPLATE;
         content = content.replaceAll("\\$\\{job_name\\}", getName());
         content = content.replaceAll("\\$\\{result\\}", state.toString());
-        content = content.replaceAll("\\$\\{cube_name\\}", getCubeName());
+        content = content.replaceAll("\\$\\{cube_name\\}", CubingExecutableUtil.getCubeName(this.getParams()));
         content = content.replaceAll("\\$\\{source_records_count\\}", String.valueOf(findSourceRecordCount()));
         content = content.replaceAll("\\$\\{start_time\\}", new Date(getStartTime()).toString());
         content = content.replaceAll("\\$\\{duration\\}", getDuration() / 60000 + "mins");
@@ -147,7 +123,7 @@ public class CubingJob extends DefaultChainedExecutable {
             logger.warn(e.getLocalizedMessage(), e);
         }
 
-        String title = "[" + state.toString() + "] - [Kylin Cube Build Job]-" + getCubeName();
+        String title = "[" + state.toString() + "] - [Kylin Cube Build Job]-" + CubingExecutableUtil.getCubeName(this.getParams());
         return Pair.of(title, content);
     }
 
@@ -174,11 +150,11 @@ public class CubingJob extends DefaultChainedExecutable {
     public void setMapReduceWaitTime(long t) {
         addExtraInfo(MAP_REDUCE_WAIT_TIME, t + "");
     }
-    
+
     public void setAlgorithm(AlgorithmEnum alg) {
         addExtraInfo("algorithm", alg.name());
     }
-    
+
     public AlgorithmEnum getAlgorithm() {
         String alg = getExtraInfo().get("algorithm");
         return alg == null ? null : AlgorithmEnum.valueOf(alg);
@@ -187,11 +163,11 @@ public class CubingJob extends DefaultChainedExecutable {
     public boolean isLayerCubing() {
         return AlgorithmEnum.LAYER == getAlgorithm();
     }
-    
+
     public boolean isInMemCubing() {
         return AlgorithmEnum.INMEM == getAlgorithm();
     }
-    
+
     public long findSourceRecordCount() {
         return Long.parseLong(findExtraInfo(SOURCE_RECORD_COUNT, "0"));
     }
@@ -204,7 +180,7 @@ public class CubingJob extends DefaultChainedExecutable {
         // look for the info BACKWARD, let the last step that claims the cube size win
         return Long.parseLong(findExtraInfoBackward(CUBE_SIZE_BYTES, "0"));
     }
-    
+
     public String findExtraInfo(String key, String dft) {
         return findExtraInfo(key, dft, false);
     }
@@ -212,14 +188,14 @@ public class CubingJob extends DefaultChainedExecutable {
     public String findExtraInfoBackward(String key, String dft) {
         return findExtraInfo(key, dft, true);
     }
-    
+
     private String findExtraInfo(String key, String dft, boolean backward) {
         ArrayList<AbstractExecutable> tasks = new ArrayList<AbstractExecutable>(getTasks());
-        
+
         if (backward) {
             Collections.reverse(tasks);
         }
-        
+
         for (AbstractExecutable child : tasks) {
             Output output = executableManager.getOutput(child.getId());
             String value = output.getExtra().get(key);

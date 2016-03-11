@@ -22,6 +22,7 @@ import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMROutput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.MRUtil;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.constant.ExecutableConstants;
@@ -29,9 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BatchIIJobBuilder extends JobBuilderSupport {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(BatchIIJobBuilder.class);
-    
+
     private final IMRBatchCubingInputSide inputSide;
     private final IMROutput.IMRBatchInvertedIndexingOutputSide outputSide;
 
@@ -44,15 +45,15 @@ public class BatchIIJobBuilder extends JobBuilderSupport {
     public IIJob build() {
         logger.info("MR new job to BUILD segment " + seg);
 
-        final IIJob result = IIJob.createBuildJob((IISegment)seg, submitter, config);
+        final IIJob result = IIJob.createBuildJob((IISegment) seg, submitter, config);
         final String jobId = result.getId();
-        
+
         final String iiRootPath = getRealizationRootPath(jobId) + "/";
         // Phase 1: Create Flat Table
         inputSide.addStepPhase1_CreateFlatTable(result);
-    
+
         // Phase 2: Build Inverted Index
-        result.addTask(createInvertedIndexStep((IISegment)seg, iiRootPath));
+        result.addTask(createInvertedIndexStep((IISegment) seg, iiRootPath));
         outputSide.addStepPhase3_BuildII(result, iiRootPath);
 
         // Phase 3: Update Metadata & Cleanup
@@ -71,13 +72,13 @@ public class BatchIIJobBuilder extends JobBuilderSupport {
 
         buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_II);
 
-        appendExecCmdParameters(cmd, "iiname", seg.getRealization().getName());
-        appendExecCmdParameters(cmd, "output", iiOutputTempPath);
-        appendExecCmdParameters(cmd, "jobname", ExecutableConstants.STEP_NAME_BUILD_II);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_II_NAME, seg.getRealization().getName());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, iiOutputTempPath);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, ExecutableConstants.STEP_NAME_BUILD_II);
 
         buildIIStep.setMapReduceParams(cmd.toString());
         buildIIStep.setMapReduceJobClass(InvertedIndexJob.class);
         return buildIIStep;
     }
-    
+
 }

@@ -43,7 +43,7 @@ public class CuboidStatsUtil {
     }
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
             Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage, double mapperOverlapRatio) throws IOException {
-        Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION);
+        Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
 
         List<Long> allCuboids = new ArrayList<Long>();
         allCuboids.addAll(cuboidHLLMap.keySet());

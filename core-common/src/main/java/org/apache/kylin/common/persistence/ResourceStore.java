@@ -73,7 +73,7 @@ abstract public class ResourceStore {
         }
         return knownImpl;
     }
-    
+
     private static ResourceStore createResourceStore(KylinConfig kylinConfig) {
         List<Throwable> es = new ArrayList<Throwable>();
         logger.info("Using metadata url " + kylinConfig.getMetadataUrl() + " for resource store");
@@ -141,7 +141,7 @@ abstract public class ResourceStore {
         RawResource res = getResourceImpl(resPath);
         if (res == null)
             return null;
-        
+
         DataInputStream din = new DataInputStream(res.inputStream);
         try {
             T r = serializer.deserialize(din);
@@ -160,25 +160,9 @@ abstract public class ResourceStore {
     final public long getResourceTimestamp(String resPath) throws IOException {
         return getResourceTimestampImpl(norm(resPath));
     }
-    
+
     final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, Class<T> clazz, Serializer<T> serializer) throws IOException {
-        final List<RawResource> allResources = getAllResources(rangeStart, rangeEnd);
-        if (allResources.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<T> result = Lists.newArrayList();
-        try {
-            for (RawResource rawResource : allResources) {
-                final T element = serializer.deserialize(new DataInputStream(rawResource.inputStream));
-                element.setLastModified(rawResource.timestamp);
-                result.add(element);
-            }
-            return result;
-        } finally {
-            for (RawResource rawResource : allResources) {
-                IOUtils.closeQuietly(rawResource.inputStream);
-            }
-        }
+        return getAllResources(rangeStart, rangeEnd, -1L, -1L, clazz, serializer);
     }
 
     final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis, Class<T> clazz, Serializer<T> serializer) throws IOException {
@@ -210,7 +194,7 @@ abstract public class ResourceStore {
 
     /** returns 0 if not exists */
     abstract protected long getResourceTimestampImpl(String resPath) throws IOException;
-    
+
     /**
      * overwrite a resource without write conflict check
      */

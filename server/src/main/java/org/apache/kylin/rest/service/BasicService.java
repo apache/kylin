@@ -28,6 +28,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.CubingJob;
+import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIManager;
@@ -100,40 +101,7 @@ public abstract class BasicService {
     }
 
     protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs) {
-        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllExecutables()).filter(new Predicate<AbstractExecutable>() {
-            @Override
-            public boolean apply(AbstractExecutable executable) {
-                if (executable instanceof CubingJob) {
-                    if (cubeName == null) {
-                        return true;
-                    }
-                    return ((CubingJob) executable).getCubeName().equalsIgnoreCase(cubeName);
-                } else {
-                    return false;
-                }
-            }
-        }).transform(new Function<AbstractExecutable, CubingJob>() {
-            @Override
-            public CubingJob apply(AbstractExecutable executable) {
-                return (CubingJob) executable;
-            }
-        }).filter(new Predicate<CubingJob>() {
-            @Override
-            public boolean apply(CubingJob executable) {
-                if (null == projectName || null == getProjectManager().getProject(projectName)) {
-                    return true;
-                } else {
-                    ProjectInstance project = getProjectManager().getProject(projectName);
-                    return project.containsRealization(RealizationType.CUBE, executable.getCubeName());
-                }
-            }
-        }).filter(new Predicate<CubingJob>() {
-            @Override
-            public boolean apply(CubingJob executable) {
-                return statusList.contains(allOutputs.get(executable.getId()).getState());
-            }
-        }));
-        return results;
+        return listAllCubingJobs(cubeName, projectName, statusList, -1L, -1L, allOutputs);
     }
 
     protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs) {
@@ -144,7 +112,7 @@ public abstract class BasicService {
                     if (cubeName == null) {
                         return true;
                     }
-                    return ((CubingJob) executable).getCubeName().equalsIgnoreCase(cubeName);
+                    return CubingExecutableUtil.getCubeName(executable.getParams()).equalsIgnoreCase(cubeName);
                 } else {
                     return false;
                 }
@@ -161,7 +129,7 @@ public abstract class BasicService {
                     return true;
                 } else {
                     ProjectInstance project = getProjectManager().getProject(projectName);
-                    return project.containsRealization(RealizationType.CUBE, executable.getCubeName());
+                    return project.containsRealization(RealizationType.CUBE, CubingExecutableUtil.getCubeName(executable.getParams()));
                 }
             }
         }).filter(new Predicate<CubingJob>() {

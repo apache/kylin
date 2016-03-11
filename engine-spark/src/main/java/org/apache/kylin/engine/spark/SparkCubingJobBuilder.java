@@ -18,12 +18,12 @@
 package org.apache.kylin.engine.spark;
 
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.MRUtil;
+import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ public class SparkCubingJobBuilder extends JobBuilderSupport {
     }
 
     public DefaultChainedExecutable build() {
-        final CubingJob result = CubingJob.createBuildJob((CubeSegment)seg, submitter, config);
+        final CubingJob result = CubingJob.createBuildJob((CubeSegment) seg, submitter, config);
         final String jobId = result.getId();
 
         inputSide.addStepPhase1_CreateFlatTable(result);
@@ -59,7 +59,7 @@ public class SparkCubingJobBuilder extends JobBuilderSupport {
         final SparkExecutable sparkExecutable = new SparkExecutable();
         sparkExecutable.setClassName(SparkCubing.class.getName());
         sparkExecutable.setParam("hiveTable", tableName);
-        sparkExecutable.setParam("cubeName", seg.getRealization().getName());
+        sparkExecutable.setParam(CubingExecutableUtil.CUBE_NAME, seg.getRealization().getName());
         sparkExecutable.setParam("segmentId", seg.getUuid());
         sparkExecutable.setParam("confPath", confPath);
         sparkExecutable.setParam("coprocessor", coprocessor);

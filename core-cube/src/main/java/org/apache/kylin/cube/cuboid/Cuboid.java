@@ -18,10 +18,14 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
@@ -31,13 +35,10 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Lists;
 
 public class Cuboid implements Comparable<Cuboid> {
 
@@ -231,8 +232,7 @@ public class Cuboid implements Comparable<Cuboid> {
             return true;
         }
 
-        hier:
-        for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
+        hier: for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
             long result = cuboidID & hierarchyMasks.fullMask;
             if (result > 0) {
                 for (long mask : hierarchyMasks.allMasks) {
