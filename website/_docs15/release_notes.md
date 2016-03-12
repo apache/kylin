@@ -21,8 +21,8 @@ _Tag:_ [kylin-1.5.0](https://github.com/apache/kylin/tree/kylin-1.5.0)
 __Highlights__
 
     * [KYLIN-875] - A plugin-able architecture, to allow alternative cube engine / storage engine / data source.
-    * [KYLIN-1245] - A better MR cubing algorithm, about 1.5 times faster than 1.x by comparing hundreds of jobs.
-    * [KYLIN-942] - A better storage engine, makes query roughly 2 times faster (especially for slow queries) than 1.x by comparing tens of thousands sqls.
+    * [KYLIN-1245] - A better MR cubing algorithm, about 1.5 times faster by comparing hundreds of jobs.
+    * [KYLIN-942] - A better storage engine, makes query roughly 2 times faster (especially for slow queries) by comparing tens of thousands sqls.
     * [KYLIN-738] - Streaming cubing EXPERIMENTAL support, source from kafka, build cube in-mem at minutes interval
     * [KYLIN-943] - TopN pre-calculation (more UDFs coming)
     * [KYLIN-1065] - ODBC compatible with Tableau 9.1, MS Excel, MS PowerBI
