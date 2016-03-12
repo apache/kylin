@@ -7,7 +7,7 @@ categories: blog
 ---
 
 
-One of the most important features in 2.x branches is streaming cubing which enables OLAP analysis on streaming data. Streaming cubing delivers faster insights on the data to help more promptly business decisions. Even though there are already many real time analysis tools in open source community, Kylin Streaming cubing still differs from them in multiple angles:
+One of the most important features in v1.5 is streaming cubing which enables OLAP analysis on streaming data. Streaming cubing delivers faster insights on the data to help more promptly business decisions. Even though there are already many real time analysis tools in open source community, Kylin Streaming cubing still differs from them in multiple angles:
 
 Firstly, Kylin Streaming Cubing aligns with Kylin traditional cubing to provided unified, ANSI SQL interface. Actually Kylin Streaming shares the storage engine and query engine with traditional Kylin cubes, so in theory all of the optimization techniques to save storage and speed up query performance can also be applied on streaming cubes. Besides, all the supported aggregations/filters/UDFs still work for streaming cubes. By unifying the storage engine and query engine we also get freed from double amount of maintaince work. 
     
@@ -23,6 +23,6 @@ With the major difference in mind we will introduce the modules for Kylin Stream
 * Streaming Batch Ingestion to ingest the incoming data batch and transform it into a micro cube. Thanks to the latest Kylin In-memory cubing technology, this step is now times faster and space-saving than previous. The micro cube is directly saved to HBase.
 * Job Scheduling Module to trigger Streaming Batch Ingestion. Kylin does not put too much efforts in job scheduling, streaming cubing is not a exception. Currently we provided a simple implementation based on Linux Crontab.
     
-We'll publish more detailed documents on how to use Kylin Streaming soon. In latest 2.x branch we are also working on more complicated load balancing schemes for streaming cubing. Please stay tuned.
+We'll publish more detailed documents on how to use Kylin Streaming soon. In latest v1.5 we are also working on more complicated load balancing schemes for streaming cubing. Please stay tuned.
 
    

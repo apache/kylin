@@ -1,9 +1,8 @@
 ---
-layout: docs
+layout: docs15
 title:  "Technical Concepts"
 categories: gettingstarted
-permalink: /docs/gettingstarted/concepts.html
-version: v1.2
+permalink: /docs15/gettingstarted/concepts.html
 since: v1.2
 ---
  
@@ -40,7 +39,7 @@ For terminology in domain, please refer to: [Terminology](terminology.md)
 
 * __Count Distinct(HyperLogLog)__ - Immediate COUNT DISTINCT is hard to calculate, a approximate algorithm - [HyperLogLog](https://en.wikipedia.org/wiki/HyperLogLog) is introduced, and keep error rate in a lower level. 
 * __Count Distinct(Precise)__ - Precise COUNT DISTINCT will be pre-calculated basing on RoaringBitmap, currently only int or bigint are supported.
-* __Top N__ - (Will release in v1.5) For example, with this measure type, user can easily get specified numbers of top sellers/buyers etc. 
+* __Top N__ - For example, with this measure type, user can easily get specified numbers of top sellers/buyers etc. 
 ![](/images/docs/concepts/Measure.png)
 
 ## CUBE ACTIONS

@@ -1,8 +1,8 @@
 ---
-layout: docs
+layout: docs15
 title: Overview
 categories: docs
-permalink: /docs/index.html
+permalink: /docs15/index.html
 ---
 
 Welcome to Apache Kylin™
@@ -11,7 +11,7 @@ Welcome to Apache Kylin™
 
 Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets, original contributed from eBay Inc.
 
-Future documents: [v1.5](/docs15/)
+Prior documents: [v1.3](/docs/)
 
 Installation & Setup
 ------------  
