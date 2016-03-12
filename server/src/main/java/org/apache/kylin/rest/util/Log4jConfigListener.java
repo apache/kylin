@@ -27,9 +27,7 @@ public class Log4jConfigListener extends org.springframework.web.util.Log4jConfi
     private boolean isDebugTomcat;
 
     public Log4jConfigListener() {
-        // check if is DebugTomcat
-        String property = System.getProperty(KylinConfig.KYLIN_CONF);
-        this.isDebugTomcat = property != null && property.contains("examples/test_case_data/sandbox");
+        this.isDebugTomcat = KylinConfig.getInstanceFromEnv().isDevEnv();
     }
 
     @Override
