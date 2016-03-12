@@ -18,6 +18,10 @@ or send to Apache Kylin mailing list:
 ## v1.5.0 - 2016-03-12
 _Tag:_ [kylin-1.5.0](https://github.com/apache/kylin/tree/kylin-1.5.0)
 
+__Significant changes have taken place in metadata and cube data, upgrade from v1.3 and before is difficult. Recommend build new cube from scratch with this version.__
+
+__JIRA system is down at the of writing, below is pending manual revision.__
+
 __Highlights__
 
     * [KYLIN-875] - A plugin-able architecture, to allow alternative cube engine / storage engine / data source.
@@ -27,8 +31,6 @@ __Highlights__
     * [KYLIN-943] - TopN pre-calculation (more UDFs coming)
     * [KYLIN-1065] - ODBC compatible with Tableau 9.1, MS Excel, MS PowerBI
     * [KYLIN-1219] - Kylin support SSO with Spring SAML
-
-__Below generated from JIRA system, pending manual revision.__
 
 __New Feature__
 
