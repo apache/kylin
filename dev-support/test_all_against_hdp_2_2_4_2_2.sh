@@ -21,5 +21,5 @@ dir=$(dirname ${0})
 cd ${dir}
 cd ..
 
-mvn clean install -DskipTests | tee mci.log
-mvn verify -Dhdp.version=2.2.4.2-2 -fae | tee mvnverify.log
+mvn clean install -DskipTests 2>&1 | tee mci.log
+mvn verify -Dhdp.version=2.2.4.2-2 -fae 2>&1 | tee mvnverify.log
