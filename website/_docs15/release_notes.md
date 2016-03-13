@@ -20,17 +20,19 @@ _Tag:_ [kylin-1.5.0](https://github.com/apache/kylin/tree/kylin-1.5.0)
 
 __Significant changes have taken place in metadata and cube data, upgrade from v1.3 and before is difficult. Recommend build new cube from scratch with this version.__
 
-__JIRA system is down at the of writing, below is pending manual revision.__
+__JIRA system is down at the time of writing, below is pending manual revision.__
 
 __Highlights__
 
     * [KYLIN-875] - A plugin-able architecture, to allow alternative cube engine / storage engine / data source.
     * [KYLIN-1245] - A better MR cubing algorithm, about 1.5 times faster by comparing hundreds of jobs.
     * [KYLIN-942] - A better storage engine, makes query roughly 2 times faster (especially for slow queries) by comparing tens of thousands sqls.
-    * [KYLIN-738] - Streaming cubing EXPERIMENTAL support, source from kafka, build cube in-mem at minutes interval
-    * [KYLIN-943] - TopN pre-calculation (more UDFs coming)
-    * [KYLIN-1065] - ODBC compatible with Tableau 9.1, MS Excel, MS PowerBI
-    * [KYLIN-1219] - Kylin support SSO with Spring SAML
+    * [KYLIN-738] - Streaming cubing EXPERIMENTAL support, source from kafka, build cube in-mem at minutes interval.
+    * [KYLIN-242] - Redesign aggregation group, support of 20+ dimensions made easy.
+    * [KYLIN-976] - Custom aggregation types (or UDF in other words).
+    * [KYLIN-943] - TopN aggregation type.
+    * [KYLIN-1065] - ODBC compatible with Tableau 9.1, MS Excel, MS PowerBI.
+    * [KYLIN-1219] - Kylin support SSO with Spring SAML.
 
 __New Feature__
 
