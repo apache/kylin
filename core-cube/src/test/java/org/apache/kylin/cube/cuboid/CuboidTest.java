@@ -175,7 +175,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         cuboid = Cuboid.findById(cube, toLong("111111110"));
         assertEquals(toLong("11111111"), cuboid.getId());
 
-        cuboid = Cuboid.findById(cube, toLong("111111111"));
+        cuboid = Cuboid.findById(cube, toLong("10111111"));
         assertEquals(toLong("11111111"), cuboid.getId());
     }
 }
