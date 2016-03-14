@@ -49,6 +49,10 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         return getCubeDescManager().getCubeDesc("test_kylin_cube_with_slr_desc");
     }
 
+    private CubeDesc getTestKylinCubeWithoutSellerLeftJoin() {
+        return getCubeDescManager().getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
+
+    }
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
@@ -86,7 +90,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCuboid1() {
+    public void testFindCuboidByIdWithSingleAggrGroup1() {
         CubeDesc cube = getTestKylinCubeWithoutSeller();
         Cuboid cuboid;
 
@@ -137,7 +141,7 @@ public class CuboidTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCuboid2() {
+    public void testFindCuboidByIdWithSingleAggrGroup2() {
         CubeDesc cube = getTestKylinCubeWithSeller();
         Cuboid cuboid;
 
@@ -163,4 +167,15 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         assertEquals(toLong("111111111"), cuboid.getId());
     }
 
+    @Test
+    public void testFindCuboidByIdWithMultiAggrGroup() {
+        CubeDesc cube = getTestKylinCubeWithoutSellerLeftJoin();
+        Cuboid cuboid;
+
+        cuboid = Cuboid.findById(cube, toLong("111111110"));
+        assertEquals(toLong("11111111"), cuboid.getId());
+
+        cuboid = Cuboid.findById(cube, toLong("111111111"));
+        assertEquals(toLong("11111111"), cuboid.getId());
+    }
 }

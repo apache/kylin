@@ -73,6 +73,10 @@ public class Cuboid implements Comparable<Cuboid> {
     }
 
     public static boolean isValid(CubeDesc cube, long cuboidID) {
+        if (cuboidID == getBaseCuboidId(cube)) {
+            return true;
+        }
+
         for (AggregationGroup agg : cube.getAggregationGroups()) {
             if (isValid(agg, cuboidID)) {
                 return true;
@@ -112,7 +116,8 @@ public class Cuboid implements Comparable<Cuboid> {
     }
 
     public static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
-        if (cuboidID == getBaseCuboidId(cubeDesc)) {
+        long baseCuboidId = getBaseCuboidId(cubeDesc);
+        if (cuboidID == baseCuboidId) {
             return cuboidID;
         }
         List<Long> candidates = Lists.newArrayList();
@@ -124,7 +129,7 @@ public class Cuboid implements Comparable<Cuboid> {
         }
 
         if (candidates.size() == 0) {
-            throw new IllegalStateException("Cannot find parent for :" + cuboidID);
+            return baseCuboidId;
         }
 
         return Collections.min(candidates, cuboidSelectComparator);
