@@ -18,20 +18,6 @@ For convenience, there’s binary package also available:
 * [apache-kylin-1.3.0-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.3.0/apache-kylin-1.3.0-bin.tar.gz)
 * [Installation Guide](http://kylin.apache.org/docs/install)
 
-__1.2 Release(Source Code)__  
-The 1.2 release of Apache Kylin™ can be downloaded from the ASF:
-
-* [Apache Kylin v1.2](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.2/)
-* [Release Notes](http://kylin.apache.org/docs/release_notes.html)
-* Git Tag: [kylin-1.2](https://github.com/apache/kylin/tree/kylin-1.2)
-* Git Commit: [c2589aee4ac5537b460b3b02fa89cdb3a922d64e](https://github.com/apache/kylin/commit/c2589aee4ac5537b460b3b02fa89cdb3a922d64e)
-
-__1.2 Release Binary Package (for running on HBase 0.98/0.99)__
-For convenience, there’s binary package also available: 
-
-* [apache-kylin-1.2-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.2/apache-kylin-1.2-bin.tar.gz)
-* [Installation Guide](http://kylin.apache.org/docs/install)
-
 __Special Binary Package (for running on HBase 1.1.3 or above)__
 As there are more and more HBase 1.1 deployments, an binary snapshot build for HBase 1.1.3+ is provided; 
 Note the requirement of HBase version 1.1.3 (or above). There is a known bug in HBase earlier versions about fuzzy key filter that will cause

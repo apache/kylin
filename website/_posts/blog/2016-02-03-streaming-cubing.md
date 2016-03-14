@@ -23,6 +23,6 @@ With the major difference in mind we will introduce the modules for Kylin Stream
 * Streaming Batch Ingestion to ingest the incoming data batch and transform it into a micro cube. Thanks to the latest Kylin In-memory cubing technology, this step is now times faster and space-saving than previous. The micro cube is directly saved to HBase.
 * Job Scheduling Module to trigger Streaming Batch Ingestion. Kylin does not put too much efforts in job scheduling, streaming cubing is not a exception. Currently we provided a simple implementation based on Linux Crontab.
     
-We'll publish more detailed documents on how to use Kylin Streaming soon. In latest v1.5 we are also working on more complicated load balancing schemes for streaming cubing. Please stay tuned.
+We'll publish more detailed documents on how to use Kylin Streaming soon. Please stay tuned.
 
    
