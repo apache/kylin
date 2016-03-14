@@ -21,13 +21,11 @@ package org.apache.kylin.engine.mr;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -42,6 +40,8 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 
 /**
  */
@@ -56,6 +56,8 @@ public class CubingJob extends DefaultChainedExecutable {
     public static final String SOURCE_SIZE_BYTES = "sourceSizeBytes";
     public static final String CUBE_SIZE_BYTES = "byteSizeBytes";
     public static final String MAP_REDUCE_WAIT_TIME = "mapReduceWaitTime";
+    private static final String DEPLOY_ENV_NAME = "envName";
+    private static final String PROJECT_INSTANCE_NAME = "projectName";
 
     public static CubingJob createBuildJob(CubeSegment seg, String submitter, JobEngineConfig config) {
         return initCubingJob(seg, "BUILD", submitter, config);
@@ -66,9 +68,20 @@ public class CubingJob extends DefaultChainedExecutable {
     }
 
     private static CubingJob initCubingJob(CubeSegment seg, String jobType, String submitter, JobEngineConfig config) {
+        KylinConfig kylinConfig = config.getConfig();
+        CubeInstance cube = seg.getCubeInstance();
+        List<ProjectInstance> projList = ProjectManager.getInstance(kylinConfig).findProjects(cube.getType(), cube.getName());
+        if (projList == null || projList.size() == 0) {
+            throw new RuntimeException("Cannot find the project containing the cube " + cube.getName() + "!!!");
+        } else if (projList.size() >= 2) {
+            throw new RuntimeException("Find more than one project containing the cube " + cube.getName() + ". It does't meet the uniqueness requirement!!! ");
+        }
+
         CubingJob result = new CubingJob();
         SimpleDateFormat format = new SimpleDateFormat("z yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(config.getTimeZone()));
+        result.setDeployEnvName(kylinConfig.getDeployEnv());
+        result.setProjectName(projList.get(0).getName());
         CubingExecutableUtil.setCubeName(seg.getCubeInstance().getName(), result.getParams());
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         result.setName(seg.getCubeInstance().getName() + " - " + seg.getName() + " - " + jobType + " - " + format.format(new Date(System.currentTimeMillis())));
@@ -79,6 +92,23 @@ public class CubingJob extends DefaultChainedExecutable {
 
     public CubingJob() {
         super();
+    }
+
+
+    void setDeployEnvName(String name) {
+        setParam(DEPLOY_ENV_NAME, name);
+    }
+
+    public static String getDeployEnvName() {
+        return DEPLOY_ENV_NAME;
+    }
+
+    void setProjectName(String name) {
+        setParam(PROJECT_INSTANCE_NAME, name);
+    }
+
+    public static String getProjectName() {
+        return PROJECT_INSTANCE_NAME;
     }
 
     @Override
@@ -92,21 +122,23 @@ public class CubingJob extends DefaultChainedExecutable {
             return null;
         }
         switch (state) {
-        case ERROR:
-            logMsg = output.getVerboseMsg();
-            break;
-        case DISCARDED:
-            logMsg = "job has been discarded";
-            break;
-        case SUCCEED:
-            logMsg = "job has succeeded";
-            break;
-        default:
-            return null;
+            case ERROR:
+                logMsg = output.getVerboseMsg();
+                break;
+            case DISCARDED:
+                logMsg = "job has been discarded";
+                break;
+            case SUCCEED:
+                logMsg = "job has succeeded";
+                break;
+            default:
+                return null;
         }
         String content = ExecutableConstants.NOTIFY_EMAIL_TEMPLATE;
         content = content.replaceAll("\\$\\{job_name\\}", getName());
         content = content.replaceAll("\\$\\{result\\}", state.toString());
+        content = content.replaceAll("\\$\\{env_name\\}", getDeployEnvName());
+        content = content.replaceAll("\\$\\{project_name\\}", getProjectName());
         content = content.replaceAll("\\$\\{cube_name\\}", CubingExecutableUtil.getCubeName(this.getParams()));
         content = content.replaceAll("\\$\\{source_records_count\\}", String.valueOf(findSourceRecordCount()));
         content = content.replaceAll("\\$\\{start_time\\}", new Date(getStartTime()).toString());
@@ -123,7 +155,8 @@ public class CubingJob extends DefaultChainedExecutable {
             logger.warn(e.getLocalizedMessage(), e);
         }
 
-        String title = "[" + state.toString() + "] - [Kylin Cube Build Job]-" + CubingExecutableUtil.getCubeName(this.getParams());
+        String title = "[" + state.toString() + "] - [" + getDeployEnvName() + "] - [" + getProjectName() + "] - " + CubingExecutableUtil.getCubeName(this.getParams());
+
         return Pair.of(title, content);
     }
 

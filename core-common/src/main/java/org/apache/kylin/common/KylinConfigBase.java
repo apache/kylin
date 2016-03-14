@@ -579,4 +579,8 @@ public class KylinConfigBase implements Serializable {
         return getOptional("kylin.hive.beeline.params", "");
     }
 
+    public String getDeployEnv() {
+        return getOptional("deploy.env", "DEV");
+    }
+
 }
