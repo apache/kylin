@@ -58,12 +58,13 @@ public class ExecutableManager {
     public static ExecutableManager getInstance(KylinConfig config) {
         ExecutableManager r = CACHE.get(config);
         if (r == null) {
-            r = new ExecutableManager(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one singleton exist");
+            synchronized (ExecutableManager.class) {
+                r = CACHE.get(config);
+                if (r == null) {
+                    r = new ExecutableManager(config);
+                    CACHE.put(config, r);
+                }
             }
-
         }
         return r;
     }
