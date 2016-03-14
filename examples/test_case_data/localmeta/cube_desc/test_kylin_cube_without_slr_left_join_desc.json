@@ -213,7 +213,7 @@
     } ]
   },
   "aggregation_groups" : [ {
-    "includes" : [ "cal_dt", "categ_lvl2_name", "categ_lvl3_name", "leaf_categ_id", "lstg_format_name", "lstg_site_id", "meta_categ_name", "slr_segment_cd" ],
+    "includes" : [ "cal_dt", "categ_lvl2_name", "categ_lvl3_name", "leaf_categ_id", "lstg_format_name", "lstg_site_id", "meta_categ_name"],
     "select_rule" : {
       "hierarchy_dims" : [ ],
       "mandatory_dims" : [ "cal_dt" ],
