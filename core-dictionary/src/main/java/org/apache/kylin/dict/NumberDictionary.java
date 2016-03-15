@@ -26,7 +26,7 @@ import org.apache.kylin.common.util.Bytes;
  */
 public class NumberDictionary<T> extends TrieDictionary<T> {
 
-    public static final int MAX_DIGITS_BEFORE_DECIMAL_POINT = 16;
+    public static final int MAX_DIGITS_BEFORE_DECIMAL_POINT = 19;
 
     // encode a number into an order preserving byte sequence
     // for positives -- padding '0'
