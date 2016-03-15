@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.model.v3;
+package org.apache.kylin.cube.model.v1_4_0;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,6 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -116,6 +116,11 @@ public class CubeDesc extends RootPersistentEntity {
     private List<String> notifyList;
     @JsonProperty("status_need_notify")
     private List<String> statusNeedNotify = Collections.emptyList();
+
+    @JsonProperty("partition_date_start")
+    private long partitionDateStart = 0L;
+    @JsonProperty("partition_date_end")
+    private long partitionDateEnd = 3153600000000l;
     @JsonProperty("auto_merge_time_ranges")
     private long[] autoMergeTimeRanges;
     @JsonProperty("retention_range")
@@ -125,6 +130,8 @@ public class CubeDesc extends RootPersistentEntity {
     private int engineType = IEngineAware.ID_MR_V1;
     @JsonProperty("storage_type")
     private int storageType = IStorageAware.ID_HBASE;
+    @JsonProperty("override_kylin_properties")
+    private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
 
     private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
@@ -260,10 +267,10 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public String getResourcePath() {
-        return getCubeDescResourcePath(name);
+        return concatResourcePath(name);
     }
 
-    public static String getCubeDescResourcePath(String descName) {
+    public static String concatResourcePath(String descName) {
         return ResourceStore.CUBE_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
@@ -323,6 +330,10 @@ public class CubeDesc extends RootPersistentEntity {
 
     public TableDesc getFactTableDesc() {
         return model.getFactTableDesc();
+    }
+
+    public List<TableDesc> getLookupTableDescs() {
+        return model.getLookupTableDescs();
     }
 
     public String[] getNullStrings() {
@@ -386,7 +397,7 @@ public class CubeDesc extends RootPersistentEntity {
 
         CubeDesc cubeDesc = (CubeDesc) o;
 
-        if (!name.equals(cubeDesc.name))
+        if (!name.equals(cubeDesc.getName()))
             return false;
         if (!getFactTable().equals(cubeDesc.getFactTable()))
             return false;
@@ -638,6 +649,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
 
         TableDesc factTable = getFactTableDesc();
+        List<TableDesc> lookups = getLookupTableDescs();
         for (MeasureDesc m : measures) {
             m.setName(m.getName().toUpperCase());
 
@@ -646,12 +658,16 @@ public class CubeDesc extends RootPersistentEntity {
             }
 
             FunctionDesc func = m.getFunction();
-            func.init(factTable, null);
+            func.init(factTable, lookups);
             allColumns.addAll(func.getParameter().getColRefs());
 
-            func.getMeasureType().validate(func);
+//            // verify holistic count distinct as a dependent measure
+//            if (isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
+//                throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
+//            }
         }
     }
+
 
     private void initMeasureReferenceToColumnFamily() {
         if (measures == null || measures.size() == 0)
@@ -727,15 +743,6 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
-    public boolean hasMemoryHungryMeasures() {
-        for (MeasureDesc measure : measures) {
-            if (measure.getFunction().getMeasureType().isMemoryHungry()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public long getRetentionRange() {
         return retentionRange;
     }
@@ -793,7 +800,7 @@ public class CubeDesc extends RootPersistentEntity {
         return storageType;
     }
 
-    void setStorageType(int storageType) {
+    public void setStorageType(int storageType) {
         this.storageType = storageType;
     }
 
@@ -801,25 +808,47 @@ public class CubeDesc extends RootPersistentEntity {
         return engineType;
     }
 
-    void setEngineType(int engineType) {
+    public void setEngineType(int engineType) {
         this.engineType = engineType;
     }
 
-    public List<TblColRef> getAllColumnsNeedDictionary() {
-        List<TblColRef> result = Lists.newArrayList();
-
-        for (RowKeyColDesc rowKeyColDesc : rowkey.getRowKeyColumns()) {
-            TblColRef colRef = rowKeyColDesc.getColRef();
-            if (rowkey.isUseDictionary(colRef)) {
-                result.add(colRef);
-            }
-        }
-
-        for (MeasureDesc measure : measures) {
-            MeasureType<?> aggrType = measure.getFunction().getMeasureType();
-            result.addAll(aggrType.getColumnsNeedDictionary(measure.getFunction()));
-        }
-        return result;
+    public long getPartitionDateStart() {
+        return partitionDateStart;
     }
 
+    public void setPartitionDateStart(long partitionDateStart) {
+        this.partitionDateStart = partitionDateStart;
+    }
+
+    public long getPartitionDateEnd() {
+        return partitionDateEnd;
+    }
+
+    public void setPartitionDateEnd(long partitionDateEnd) {
+        this.partitionDateEnd = partitionDateEnd;
+    }
+
+    public static CubeDesc getCopyOf(CubeDesc cubeDesc) {
+        CubeDesc newCubeDesc = new CubeDesc();
+        newCubeDesc.setName(cubeDesc.getName());
+        newCubeDesc.setModelName(cubeDesc.getModelName());
+        newCubeDesc.setDescription(cubeDesc.getDescription());
+        newCubeDesc.setNullStrings(cubeDesc.getNullStrings());
+        newCubeDesc.setDimensions(cubeDesc.getDimensions());
+        newCubeDesc.setMeasures(cubeDesc.getMeasures());
+        newCubeDesc.setRowkey(cubeDesc.getRowkey());
+        newCubeDesc.setHBaseMapping(cubeDesc.getHBaseMapping());
+        newCubeDesc.setSignature(cubeDesc.getSignature());
+        newCubeDesc.setNotifyList(cubeDesc.getNotifyList());
+        newCubeDesc.setStatusNeedNotify(cubeDesc.getStatusNeedNotify());
+        newCubeDesc.setAutoMergeTimeRanges(cubeDesc.getAutoMergeTimeRanges());
+        newCubeDesc.setPartitionDateStart(cubeDesc.getPartitionDateStart());
+        newCubeDesc.setPartitionDateEnd(cubeDesc.getPartitionDateEnd());
+        newCubeDesc.setRetentionRange(cubeDesc.getRetentionRange());
+        newCubeDesc.setEngineType(cubeDesc.getEngineType());
+        newCubeDesc.setStorageType(cubeDesc.getStorageType());
+        newCubeDesc.setConfig(cubeDesc.getConfig());
+        newCubeDesc.updateRandomUuid();
+        return newCubeDesc;
+    }
 }

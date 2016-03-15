@@ -16,7 +16,6 @@
  */
 package org.apache.kylin.common;
 
-
 public class KylinVersion {
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
@@ -30,7 +29,7 @@ public class KylinVersion {
      *
      * @return current kylin version in String
      */
-    public static String getCurrentVersion(){
+    public static String getCurrentVersion() {
         return CURRENT_KYLIN_VERSION;
     }
 }

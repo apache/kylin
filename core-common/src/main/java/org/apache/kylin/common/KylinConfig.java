@@ -46,6 +46,10 @@ public class KylinConfig extends KylinConfigBase {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
+    static {
+        Log4jConfigurer.initLogger();
+    }
+
     /** Kylin properties file name */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
     public static final String KYLIN_CONF = "KYLIN_CONF";
@@ -226,7 +230,6 @@ public class KylinConfig extends KylinConfigBase {
      * $KYLIN_CONF/kylin.properties 2. Check the $KYLIN_HOME/conf/kylin.properties
      */
     private static KylinConfig loadKylinConfig() {
-        Log4jConfigurer.initLogger();
 
         InputStream is = getKylinPropertiesAsInputSteam();
         if (is == null) {

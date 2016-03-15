@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.model.v3;
+package org.apache.kylin.cube.model.v1_4_0;
 
-import org.apache.kylin.metadata.model.TblColRef;
+import java.util.Arrays;
+
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -27,42 +28,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class HierarchyDesc {
+public class HBaseColumnFamilyDesc {
 
-    @JsonProperty("level")
-    private String level;
-    @JsonProperty("column")
-    private String column;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("columns")
+    private HBaseColumnDesc[] columns;
 
-    private TblColRef columnRef;
-
-    public String getLevel() {
-        return level;
+    public String getName() {
+        return name;
     }
 
-    public void setLevel(String level) {
-        this.level = level;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public TblColRef getColumnRef() {
-        return columnRef;
+    public HBaseColumnDesc[] getColumns() {
+        return columns;
     }
 
-    public void setColumnRef(TblColRef column) {
-        this.columnRef = column;
-    }
-
-    public String getColumn() {
-        return column;
-    }
-
-    public void setColumn(String columnName) {
-        this.column = columnName;
+    public void setColumns(HBaseColumnDesc[] columns) {
+        this.columns = columns;
     }
 
     @Override
     public String toString() {
-        return "HierarchyDesc [level=" + level + ", column=" + column + "]";
+        return "HBaseColumnFamilyDesc [name=" + name + ", columns=" + Arrays.toString(columns) + "]";
     }
 
 }

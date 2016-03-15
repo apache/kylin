@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class DimensionDesc {
+public class ModelDimensionDesc {
     @JsonProperty("table")
     private String table;
     @JsonProperty("columns")
@@ -50,22 +50,22 @@ public class DimensionDesc {
         this.columns = columns;
     }
 
-    public static void capicalizeStrings(List<DimensionDesc> dimensions) {
+    public static void capicalizeStrings(List<ModelDimensionDesc> dimensions) {
         if (dimensions != null) {
-            for (DimensionDesc dimensionDesc : dimensions) {
-                dimensionDesc.setTable(dimensionDesc.getTable().toUpperCase());
-                if (dimensionDesc.getColumns() != null) {
-                    StringUtil.toUpperCaseArray(dimensionDesc.getColumns(), dimensionDesc.getColumns());
+            for (ModelDimensionDesc modelDimensionDesc : dimensions) {
+                modelDimensionDesc.setTable(modelDimensionDesc.getTable().toUpperCase());
+                if (modelDimensionDesc.getColumns() != null) {
+                    StringUtil.toUpperCaseArray(modelDimensionDesc.getColumns(), modelDimensionDesc.getColumns());
                 }
             }
         }
     }
 
-    public static int getColumnCount(List<DimensionDesc> dimensionDescs) {
+    public static int getColumnCount(List<ModelDimensionDesc> modelDimensionDescs) {
         int count = 0;
-        for (DimensionDesc dimensionDesc : dimensionDescs) {
-            if (dimensionDesc.getColumns() != null) {
-                count += dimensionDesc.getColumns().length;
+        for (ModelDimensionDesc modelDimensionDesc : modelDimensionDescs) {
+            if (modelDimensionDesc.getColumns() != null) {
+                count += modelDimensionDesc.getColumns().length;
             }
         }
         return count;
