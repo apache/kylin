@@ -46,6 +46,19 @@ public class NumberDictionaryTest {
     Random rand = new Random();
 
     @Test
+    public void testMinMax() {
+        NumberDictionaryBuilder<String> builder = new NumberDictionaryBuilder<String>(new StringBytesConverter());
+        builder.addValue("" + Long.MAX_VALUE);
+        builder.addValue("" + Long.MIN_VALUE);
+        NumberDictionary<String> dict = builder.build(0);
+        
+        int minId = dict.getIdFromValue("" + Long.MIN_VALUE);
+        int maxId = dict.getIdFromValue("" + Long.MAX_VALUE);
+        assertEquals(0, minId);
+        assertEquals(1, maxId);
+    }
+
+    @Test
     public void testEmptyInput() throws IOException{
         String[] ints = new String[] { "", "0", "5", "100", "13" };
         Collection<byte[]> intBytes = Lists.newArrayListWithCapacity(ints.length);
@@ -63,12 +76,12 @@ public class NumberDictionaryTest {
 
     @Test
     public void testNumberEncode() {
-        checkCodec("12345", "00000000000012345");
-        checkCodec("12345.123", "00000000000012345.123");
-        checkCodec("-12345", "-9999999999987654;");
-        checkCodec("-12345.123", "-9999999999987654.876;");
-        checkCodec("0", "00000000000000000");
-        checkCodec("0.0", "00000000000000000.0");
+        checkCodec("12345", "00000000000000012345");
+        checkCodec("12345.123", "00000000000000012345.123");
+        checkCodec("-12345", "-9999999999999987654;");
+        checkCodec("-12345.123", "-9999999999999987654.876;");
+        checkCodec("0", "00000000000000000000");
+        checkCodec("0.0", "00000000000000000000.0");
     }
 
     private void checkCodec(String number, String code) {
