@@ -49,12 +49,13 @@ public class ExecutableDao {
     public static ExecutableDao getInstance(KylinConfig config) {
         ExecutableDao r = CACHE.get(config);
         if (r == null) {
-            r = new ExecutableDao(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one singleton exist");
+            synchronized (ExecutableDao.class) {
+                r = CACHE.get(config);
+                if (r == null) {
+                    r = new ExecutableDao(config);
+                    CACHE.put(config, r);
+                }
             }
-
         }
         return r;
     }

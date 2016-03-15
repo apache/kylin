@@ -62,10 +62,12 @@ public class DictionaryManager {
     public static DictionaryManager getInstance(KylinConfig config) {
         DictionaryManager r = CACHE.get(config);
         if (r == null) {
-            r = new DictionaryManager(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one singleton exist");
+            synchronized (DictionaryManager.class) {
+                r = CACHE.get(config);
+                if (r == null) {
+                    r = new DictionaryManager(config);
+                    CACHE.put(config, r);
+                }
             }
         }
         return r;
