@@ -21,6 +21,7 @@ package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 import java.util.Map;
 
 import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
@@ -50,8 +51,15 @@ public class LocalDictionary implements IDimensionEncodingMap {
     public DimensionEncoding get(TblColRef col) {
         DimensionEncoding result = encMap.get(col);
         if (result == null) {
-            int len = recordInfo.length(type.getColIndexByTblColRef(col));
-            encMap.put(col, result = new FixedLenDimEnc(len));
+            Dictionary<String> dict = getDictionary(col);
+            if (dict == null) {
+                int idx = type.getColIndexByTblColRef(col);
+                int len = recordInfo.length(idx);
+                result = new FixedLenDimEnc(len);
+            } else {
+                result = new DictionaryDimEnc(dict);
+            }
+            encMap.put(col, result);
         }
         return result;
     }
@@ -59,7 +67,8 @@ public class LocalDictionary implements IDimensionEncodingMap {
     @SuppressWarnings("unchecked")
     @Override
     public Dictionary<String> getDictionary(TblColRef col) {
-        return (Dictionary<String>) this.colDictMap[type.getColIndexByTblColRef(col)];
+        int idx = type.getColIndexByTblColRef(col);
+        return (Dictionary<String>) this.colDictMap[idx];
     }
 
 }
