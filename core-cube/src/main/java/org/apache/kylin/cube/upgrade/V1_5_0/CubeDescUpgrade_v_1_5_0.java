@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.upgrade.V3;
+package org.apache.kylin.cube.upgrade.V1_5_0;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,29 +27,30 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.SelectRule;
-import org.apache.kylin.cube.model.v3.CubeDesc;
-import org.apache.kylin.cube.model.v3.DimensionDesc;
-import org.apache.kylin.cube.model.v3.HBaseMappingDesc;
-import org.apache.kylin.cube.model.v3.RowKeyColDesc;
-import org.apache.kylin.cube.model.v3.RowKeyDesc;
+import org.apache.kylin.cube.model.v1_4_0.CubeDesc;
+import org.apache.kylin.cube.model.v1_4_0.DimensionDesc;
+import org.apache.kylin.cube.model.v1_4_0.HBaseMappingDesc;
+import org.apache.kylin.cube.model.v1_4_0.RowKeyColDesc;
+import org.apache.kylin.cube.model.v1_4_0.RowKeyDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class CubeDescUpgraderV3 {
+public class CubeDescUpgrade_v_1_5_0 {
 
     @SuppressWarnings("unused")
-    private static final Log logger = LogFactory.getLog(CubeDescUpgraderV3.class);
-    private static final Serializer<CubeDesc> oldCubeDescSerializer = new JsonSerializer<CubeDesc>(CubeDesc.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeDescUpgrade_v_1_5_0.class);
 
+    private static final Serializer<CubeDesc> oldCubeDescSerializer = new JsonSerializer<>(CubeDesc.class);
+
+    private ResourceStore store;
     private String resourcePath;
 
     private List<String[]> oldHierarchies = Lists.newArrayList();
@@ -57,8 +58,9 @@ public class CubeDescUpgraderV3 {
     private String[][] oldAggGroup = null;
     private Set<String> allRowKeyCols = newIgnoreCaseSet(null);
 
-    public CubeDescUpgraderV3(String resourcePath) {
+    public CubeDescUpgrade_v_1_5_0(String resourcePath, ResourceStore resourceStore) {
         this.resourcePath = resourcePath;
+        this.store = resourceStore;
     }
 
     public org.apache.kylin.cube.model.CubeDesc upgrade() throws IOException {
@@ -75,8 +77,6 @@ public class CubeDescUpgraderV3 {
     }
 
     private CubeDesc loadOldCubeDesc(String path) throws IOException {
-        ResourceStore store = getStore();
-
         CubeDesc ndesc = store.getResource(path, CubeDesc.class, oldCubeDescSerializer);
 
         if (StringUtils.isBlank(ndesc.getName())) {
@@ -281,7 +281,4 @@ public class CubeDescUpgraderV3 {
         newModel.setEngineType(oldModel.getEngineType());
     }
 
-    protected static ResourceStore getStore() {
-        return ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-    }
 }

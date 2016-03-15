@@ -114,6 +114,10 @@ public class MetadataManager {
         init(config);
     }
 
+    public static String concatDataModelResourcePath(String modelName) {
+        return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + modelName + MetadataConstants.FILE_SURFIX;
+    }
+
     /**
      * Tell MetadataManager that the instance has changed. The cube info will
      * be stored Reload the cube desc and source table A broadcast must be sent
@@ -208,7 +212,7 @@ public class MetadataManager {
         this.srcTableMap = new CaseInsensitiveStringCache<TableDesc>(config, Broadcaster.TYPE.TABLE);
         this.srcTableExdMap = new CaseInsensitiveStringCache<Map<String, String>>(config, Broadcaster.TYPE.TABLE);
         this.dataModelDescMap = new CaseInsensitiveStringCache<DataModelDesc>(config, Broadcaster.TYPE.DATA_MODEL);
-        
+
         reloadAllSourceTable();
         reloadAllSourceTableExd();
         reloadAllDataModel();
@@ -238,7 +242,7 @@ public class MetadataManager {
             logger.warn("Failed to get table exd info from " + path);
             return null;
         }
-        
+
         InputStream is = res.inputStream;
 
         try {
@@ -343,8 +347,8 @@ public class MetadataManager {
     }
 
     public boolean isTableInModel(String tableName, String projectName) throws IOException {
-        for(DataModelDesc modelDesc : getModels(projectName)) {
-            if(modelDesc.getAllTables().contains(tableName.toUpperCase())) {
+        for (DataModelDesc modelDesc : getModels(projectName)) {
+            if (modelDesc.getAllTables().contains(tableName.toUpperCase())) {
                 return true;
             }
         }
@@ -352,8 +356,8 @@ public class MetadataManager {
     }
 
     public boolean isTableInAnyModel(String tableName) {
-        for(DataModelDesc modelDesc : getModels()) {
-            if(modelDesc.getAllTables().contains(tableName.toUpperCase())){
+        for (DataModelDesc modelDesc : getModels()) {
+            if (modelDesc.getAllTables().contains(tableName.toUpperCase())) {
                 return true;
             }
         }
