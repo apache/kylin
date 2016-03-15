@@ -279,8 +279,8 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
       nextpara: '='
     },
     template:
-    '<li class="parent_li">Value:<b>{{nextpara.value}}</b>, Type:<b>{{ nextpara.type }}</b></li>' +
-    '<li class="parent_li">Order By:<b>{{nextpara.next_parameter.value}}</b></li>',
+    '<li class="parent_li">SUM|ORDER BY:<b>{{nextpara.value}}</b></b></li>' +
+    '<li class="parent_li">GROUP BY:<b>{{nextpara.next_parameter.value}}</b></li>',
     compile: function(tElement, tAttr, transclude) {
       var contents = tElement.contents().remove();
       var compiledContents;

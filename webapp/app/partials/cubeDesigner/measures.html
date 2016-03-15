@@ -132,7 +132,14 @@
                       <!--Param Value-->
                       <div class="form-group">
                           <div class="row">
-                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Value</b></label>
+                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                                <b>Param Value</b>
+                                <!--tip for top_n-->
+                                <small ng-if="newMeasure.function.expression == 'TOP_N'" class="help-block" style="color:#b94a48">(SUM|ORDER BY Column for TOP_N)</small>
+                              </label>
+
+
+
                               <div class="col-xs-12 col-sm-6">
                                   <span class="font-color-default"
                                       ng-if="newMeasure.function.parameter.type == 'constant'"
@@ -210,7 +217,7 @@
 
                             <table class="table table-hover table-bordered list" ng-if="nextParameters.length" ng-show="newMeasure.function.expression == 'TOP_N'">
                               <tr ng-repeat="n_parameter in nextParameters track by $index">
-                                <td><b>Order By Column</b></td>
+                                <td><b>Group By Column</b></td>
                                 <td>{{n_parameter.value}}</td>
                                 <td>
                                   <button class="btn btn-xs btn-info" ng-click="editNextParameter(n_parameter)">
@@ -225,11 +232,8 @@
                             </table>
 
 
-                            <button class="btn btn-sm btn-info" ng-click="addNextParameter()" ng-show="newMeasure.function.expression != 'TOP_N'"
-                                    ng-show="state.mode=='edit'"><i class="fa fa-plus">Parameter</i>
-                            </button>
                             <button class="btn btn-sm btn-info" ng-click="addNextParameter()" ng-show="newMeasure.function.expression == 'TOP_N' && nextParameters.length==0"
-                                    ng-show="state.mode=='edit'"><i class="fa fa-plus"> Order by Column</i>
+                                    ng-show="state.mode=='edit'"><i class="fa fa-plus"> Group by Column</i>
                             </button>
                           </div>
                         </div>
@@ -272,7 +276,7 @@
 <script type="text/ng-template" id="nextParameter.html">
   <div class="modal-header">
     <h4 tooltip="submit" ng-if="newmea.measure&&newmea.measure.function.expression !== 'TOP_N'">Add Parameter</h4>
-    <h4 tooltip="submit" ng-if="newmea.measure&&newmea.measure.function.expression == 'TOP_N'">Select Order By Column</h4>
+    <h4 tooltip="submit" ng-if="newmea.measure&&newmea.measure.function.expression == 'TOP_N'">Select Group By Column</h4>
   </div>
   <div class="modal-body" style="background-color: white">
 
@@ -319,7 +323,7 @@
             </div>
 
             <div ng-if="newmea.measure&&newmea.measure.function.expression == 'TOP_N'" ng-init="nextPara.type='column'" class="row">
-              <label  class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Order By Column</b></label>
+              <label  class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Group By Column</b></label>
               <!--COUNT_DISTINCT-->
               <div class="col-xs-12 col-sm-6">
                 <select class="form-control" chosen
