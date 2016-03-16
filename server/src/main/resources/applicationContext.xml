@@ -38,6 +38,8 @@
     <mvc:annotation-driven/>
     <aop:aspectj-autoproxy/>
 
+    <bean class="org.apache.kylin.rest.init.InitialTaskManager" />
+
     <context:component-scan base-package="org.apache.kylin.rest"/>
 
     <bean class="org.apache.kylin.rest.security.PasswordPlaceholderConfigurer">
