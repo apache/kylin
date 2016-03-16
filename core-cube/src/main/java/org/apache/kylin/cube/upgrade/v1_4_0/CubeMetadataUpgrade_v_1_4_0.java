@@ -45,7 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * please check doc on CubeMetadataUpgrade_v_1_5_0
+ * please check doc on CubeMetadataUpgrade_v_1_5_1
  */
 public class CubeMetadataUpgrade_v_1_4_0 extends CubeMetadataUpgrade {
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.upgrade.V1_5_0;
+package org.apache.kylin.cube.upgrade.V1_5_1;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,13 +51,13 @@ import org.slf4j.LoggerFactory;
  * 
  * Notice:
  * 1) From Kylin 1.5.0, every metadata store entity will bind with release version number. See RootPersistentEntity.version
- * 2) From Kylin 1.5.0, the CubeMetadataUpgrade class will be named after version number. As with CubeMetadataUpgrade_v_1_5_0
- * 3) For details on how to upgrade from prior 1.5.0 to 1.5.0 compatible please visit http://kylin.apache.org/docs15/howto/howto_upgrade.html.
+ * 2) From Kylin 1.5.1, the CubeMetadataUpgrade class will be named after version number. As with CubeMetadataUpgrade_v_1_5_1
+ * 3) For details on how to upgrade from prior 1.5.0 to 1.5 compatible please visit http://kylin.apache.org/docs15/howto/howto_upgrade.html.
  */
-public class CubeMetadataUpgrade_v_1_5_0 extends CubeMetadataUpgrade {
-    private static final Logger logger = LoggerFactory.getLogger(CubeMetadataUpgrade_v_1_5_0.class);
+public class CubeMetadataUpgrade_v_1_5_1 extends CubeMetadataUpgrade {
+    private static final Logger logger = LoggerFactory.getLogger(CubeMetadataUpgrade_v_1_5_1.class);
 
-    public CubeMetadataUpgrade_v_1_5_0(String newMetadataUrl) {
+    public CubeMetadataUpgrade_v_1_5_1(String newMetadataUrl) {
         super(newMetadataUrl);
     }
 
@@ -73,7 +73,7 @@ public class CubeMetadataUpgrade_v_1_5_0 extends CubeMetadataUpgrade {
     }
 
     private void upgradeVersion() {
-        MetadataVersionRefresher refresher = new MetadataVersionRefresher(this.store);
+        MetadataVersionRefresher refresher = new MetadataVersionRefresher(this.store, "1.5.1");
         try {
             refresher.refresh();
         } catch (IOException e) {
@@ -84,10 +84,10 @@ public class CubeMetadataUpgrade_v_1_5_0 extends CubeMetadataUpgrade {
     private void upgradeCubeDesc() {
         List<String> paths = listResourceStore(ResourceStore.CUBE_DESC_RESOURCE_ROOT);
         for (String path : paths) {
-            logger.info("CubeMetadataUpgrade_v_1_5_0 handling in upgradeCubeDesc {}", path);
+            logger.info("CubeMetadataUpgrade_v_1_5_1 handling in upgradeCubeDesc {}", path);
 
             try {
-                CubeDescUpgrade_v_1_5_0 upgrade = new CubeDescUpgrade_v_1_5_0(path, store);
+                CubeDescUpgrade_v_1_5_1 upgrade = new CubeDescUpgrade_v_1_5_1(path, store);
                 CubeDesc ndesc = upgrade.upgrade();
 
                 ResourceStore.getStore(config).putResource(ndesc.getResourcePath(), ndesc, CubeDescManager.CUBE_DESC_SERIALIZER);
@@ -103,7 +103,7 @@ public class CubeMetadataUpgrade_v_1_5_0 extends CubeMetadataUpgrade {
         CubeDescManager cubeDescManager = CubeDescManager.getInstance(config);
         List<CubeDesc> cubeDescs = cubeDescManager.listAllDesc();
         for (CubeDesc cubeDesc : cubeDescs) {
-            logger.info("CubeMetadataUpgrade_v_1_5_0 handling in upgradeSignature {}", cubeDesc.getName());
+            logger.info("CubeMetadataUpgrade_v_1_5_1 handling in upgradeSignature {}", cubeDesc.getName());
             upgradeSignature(cubeDesc);
         }
     }
@@ -130,7 +130,7 @@ public class CubeMetadataUpgrade_v_1_5_0 extends CubeMetadataUpgrade {
             try {
                 org.apache.kylin.cube.model.CubeDesc cubeDesc = cube.getDescriptor();
                 if (cube.getFirstSegment() == null && cubeDesc != null && cubeDesc.getStorageType() == IStorageAware.ID_HBASE && cubeDesc.getEngineType() == IEngineAware.ID_MR_V1) {
-                    logger.info("CubeMetadataUpgrade_v_1_5_0 handling in upgradeEngineTypeStorageType {}", cube.getName());
+                    logger.info("CubeMetadataUpgrade_v_1_5_1 handling in upgradeEngineTypeStorageType {}", cube.getName());
 
                     cubeDesc.setEngineType(IEngineAware.ID_MR_V2);
                     cubeDesc.setStorageType(IStorageAware.ID_SHARDED_HBASE);

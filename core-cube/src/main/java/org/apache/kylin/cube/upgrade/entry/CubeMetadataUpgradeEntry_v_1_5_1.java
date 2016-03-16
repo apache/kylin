@@ -18,24 +18,24 @@
 
 package org.apache.kylin.cube.upgrade.entry;
 
-import org.apache.kylin.cube.upgrade.V1_5_0.CubeMetadataUpgrade_v_1_5_0;
+import org.apache.kylin.cube.upgrade.V1_5_1.CubeMetadataUpgrade_v_1_5_1;
 import org.apache.kylin.cube.upgrade.v1_4_0.CubeMetadataUpgrade_v_1_4_0;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CubeMetadataUpgradeEntry_v_1_5_0 {
-    private static final Logger logger = LoggerFactory.getLogger(CubeMetadataUpgradeEntry_v_1_5_0.class);
+public class CubeMetadataUpgradeEntry_v_1_5_1 {
+    private static final Logger logger = LoggerFactory.getLogger(CubeMetadataUpgradeEntry_v_1_5_1.class);
 
     public static void main(String[] args) {
         if (!(args != null && (args.length == 1))) {
-            System.out.println("Usage: java CubeMetadataUpgradeEntry_v_1_5_0 <metadata_export_folder>");
+            System.out.println("Usage: java CubeMetadataUpgradeEntry_v_1_5_1 <metadata_export_folder>");
             System.out.println(", where metadata_export_folder is the folder containing your current metadata's dump (Upgrade program will not modify it directly, relax.");
             return;
         }
 
         try {
             CubeMetadataUpgrade_v_1_4_0.upgradeOrVerify(CubeMetadataUpgrade_v_1_4_0.class, args, true, false);
-            CubeMetadataUpgrade_v_1_5_0.upgradeOrVerify(CubeMetadataUpgrade_v_1_5_0.class, new String[] { args[0] + "_workspace" }, false, true);
+            CubeMetadataUpgrade_v_1_5_1.upgradeOrVerify(CubeMetadataUpgrade_v_1_5_1.class, new String[] { args[0] + "_workspace" }, false, true);
         } catch (Exception e) {
             logger.error("something went wrong when upgrading, suggest to roll back metadata", e);
             return;

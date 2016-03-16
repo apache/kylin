@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.upgrade.V1_5_0;
+package org.apache.kylin.cube.upgrade.V1_5_1;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,10 +43,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class CubeDescUpgrade_v_1_5_0 {
+public class CubeDescUpgrade_v_1_5_1 {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(CubeDescUpgrade_v_1_5_0.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeDescUpgrade_v_1_5_1.class);
 
     private static final Serializer<CubeDesc> oldCubeDescSerializer = new JsonSerializer<>(CubeDesc.class);
 
@@ -58,7 +58,7 @@ public class CubeDescUpgrade_v_1_5_0 {
     private String[][] oldAggGroup = null;
     private Set<String> allRowKeyCols = newIgnoreCaseSet(null);
 
-    public CubeDescUpgrade_v_1_5_0(String resourcePath, ResourceStore resourceStore) {
+    public CubeDescUpgrade_v_1_5_1(String resourcePath, ResourceStore resourceStore) {
         this.resourcePath = resourcePath;
         this.store = resourceStore;
     }

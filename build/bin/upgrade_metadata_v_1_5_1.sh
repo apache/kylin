@@ -26,19 +26,14 @@ source ${dir}/check-env.sh
 # start command
 if [ "$#" -ne 1 ]
 then
-    echo "usage: upgrade_metadata_v_1_5_0.sh current_metadata_store_dump_path"
+    echo "usage: upgrade_metadata_v_1_5_1.sh current_metadata_store_dump_path"
     exit 1
 fi
 
 
 echo "=====Upgrade Cube metadata to 1.4 compatible ====="
-$KYLIN_HOME/bin/kylin.sh org.apache.kylin.cube.upgrade.v1_4_0.CubeMetadataUpgrade_v_1_4_0 $1
+$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.cube.upgrade.entry.CubeMetadataUpgradeEntry_v_1_5_1 $1
 
-echo "=====Upgrade Cube metadata to 1.5 compatible ====="
-$KYLIN_HOME/bin/kylin.sh org.apache.kylin.cube.upgrade.V1_5_0.CubeMetadataUpgrade_v_1_5_0 $1
-
-echo "=====Refresh all cubes' signature ====="
-$KYLIN_HOME/bin/kylin.sh org.apache.kylin.cube.cli.CubeSignatureRefresher
 
 echo "======Deploy coprocessor======="
 $KYLIN_HOME/bin/kylin.sh org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-2.0-SNAPSHOT.jar all
