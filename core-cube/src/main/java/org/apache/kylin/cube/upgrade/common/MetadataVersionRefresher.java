@@ -44,9 +44,12 @@ public class MetadataVersionRefresher {
     private static final Logger logger = LoggerFactory.getLogger(MetadataVersionRefresher.class);
 
     private ResourceStore store;
+    private String version;
 
-    public MetadataVersionRefresher(ResourceStore resourceStore) {
+    public MetadataVersionRefresher(ResourceStore resourceStore, String version) {
         this.store = resourceStore;
+        this.version = version;
+
     }
 
     public void refresh() throws IOException {
@@ -60,7 +63,7 @@ public class MetadataVersionRefresher {
             if (path.endsWith(MetadataConstants.FILE_SURFIX) && !(path.startsWith(ResourceStore.DICT_RESOURCE_ROOT) || path.startsWith(ResourceStore.SNAPSHOT_RESOURCE_ROOT))) {
                 logger.info("Updating metadata version of path {}", path);
                 ObjectNode objectNode = (ObjectNode) mapper.readTree(this.store.getResource(path).inputStream);
-                objectNode.put("version", KylinVersion.getCurrentVersion());
+                objectNode.put("version", version);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 mapper.writeValue(baos, objectNode);
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());

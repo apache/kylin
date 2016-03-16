@@ -439,8 +439,8 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public boolean checkSignature() {
-        if (!KylinVersion.getCurrentVersion().equals(getVersion())) {
-            logger.info("checkSignature on {} is skipped as the its version is {} (not latest but compatible) ", getName(), getVersion());
+        if (KylinVersion.isCompatibleWith(getVersion()) && !KylinVersion.isSignatureCompatibleWith(getVersion())) {
+            logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), getVersion());
             return true;
         }
 
@@ -469,7 +469,9 @@ public class CubeDesc extends RootPersistentEntity {
                     .append(JsonUtil.writeValueAsString(this.engineType)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.storageType)).append("|");
 
-            byte[] signature = md.digest(sigString.toString().toLowerCase().getBytes());
+            String signatureInput = sigString.toString().replaceAll("\\s+", "").toLowerCase();
+
+            byte[] signature = md.digest(signatureInput.getBytes());
             String ret = new String(Base64.encodeBase64(signature));
             return ret;
         } catch (NoSuchAlgorithmException | JsonProcessingException e) {
