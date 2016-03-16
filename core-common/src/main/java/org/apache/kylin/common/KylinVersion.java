@@ -20,7 +20,7 @@ public class KylinVersion {
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final String CURRENT_KYLIN_VERSION = "1.5.0";
+    private static final String CURRENT_KYLIN_VERSION = "1.5.1";
 
     /**
      * Get current Kylin version

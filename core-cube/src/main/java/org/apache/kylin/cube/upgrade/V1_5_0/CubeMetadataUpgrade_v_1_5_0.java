@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * Notice:
  * 1) From Kylin 1.5.0, every metadata store entity will bind with release version number. See RootPersistentEntity.version
  * 2) From Kylin 1.5.0, the CubeMetadataUpgrade class will be named after version number. As with CubeMetadataUpgrade_v_1_5_0
- * 3) For details on how to upgrade from prior 1.5 to 1.5 compatible please visit http://kylin.apache.org/docs15/howto/howto_upgrade.html.
+ * 3) For details on how to upgrade from prior 1.5.0 to 1.5.0 compatible please visit http://kylin.apache.org/docs15/howto/howto_upgrade.html.
  */
 public class CubeMetadataUpgrade_v_1_5_0 extends CubeMetadataUpgrade {
     private static final Logger logger = LoggerFactory.getLogger(CubeMetadataUpgrade_v_1_5_0.class);
