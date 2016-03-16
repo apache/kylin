@@ -34,7 +34,7 @@ A successful project requires many people to play many roles. Some members write
 
 | Name  | Apache ID    | Github    |  Role |
 |:----- |:-------------|:----------|:------|
-{% for c in site.data.contributors %}  | {{ c.name }} | <a href="http://home.apache.org/phonebook.html?uid={{ c.apacheId }}">{{ c.apacheId }}</a> | <a href="h#ttp://github.com/{{ c.githubId }}"><img width="48" src="{% unless c.avatar %}http://github.com/{{ c.githubId }}.png{% else %}{{ c.avatar }}{% endunless %}"></a> |  {{ c.role }} |
+{% for c in site.data.contributors %}  | {{ c.name }} | <a href="http://home.apache.org/phonebook.html?uid={{ c.apacheId }}">{{ c.apacheId }}</a> | <a href="http://github.com/{{ c.githubId }}"><img width="48" src="{% unless c.avatar %}http://github.com/{{ c.githubId }}.png{% else %}{{ c.avatar }}{% endunless %}"></a> |  {{ c.role }} |
 {% endfor %}
 
 ### Contributors
