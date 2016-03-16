@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  How to Use Restful API in Javascript
+title:  Use RESTful API in Javascript
 categories: howto
 permalink: /docs/howto/howto_use_restapi_in_js.html
-version: v1.2
-since: v0.7.1
 ---
 Kylin security is based on basic access authorization, if you want to use API in your javascript, you need to add authorization info in http headers.
 

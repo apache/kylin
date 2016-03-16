@@ -4,7 +4,6 @@ title:  Kylin网页版教程
 categories: 教程
 permalink: /cn/docs/tutorial/web.html
 version: v1.2
-since: v0.7.1
 ---
 
 > **支持的浏览器**
@@ -14,7 +13,7 @@ since: v0.7.1
 > Mac: Google Chrome, FireFox, Safari
 
 ## 1. 访问 & 登陆
-访问主机: http://your_sandbox_ip:9080
+访问主机: http://hostname:7070
 使用用户名/密码登陆：ADMIN/KYLIN
 
 ![]( /images/Kylin-Web-Tutorial/1 login.png)
@@ -133,7 +132,3 @@ Kylin的网页版提供一个简单的Pivot与可视化分析工具供用户探�
 
    ![]( /images/Kylin-Web-Tutorial/17 line-chart.png)
 
-## 6. Cube建立 Job监控
-监控和管理cube建立过程与诊断的详细信息，甚至直接连接到Hadoop的job信息：
-
-![](/images/Kylin-Web-Tutorial/7 job-steps.png)

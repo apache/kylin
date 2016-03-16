@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  MS Excel and Power BI Tutorial
+title:  MS Excel and Power BI
 categories: tutorial
 permalink: /docs/tutorial/powerbi.html
-version: v1.2
-since: v1.2
 ---
 
 Microsoft Excel is one of the most famous data tool on Windows platform, and has plenty of data analyzing functions. With Power Query installed as plug-in, excel can easily read data from ODBC data source and fill spreadsheets. 

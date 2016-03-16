@@ -3,8 +3,6 @@ layout: docs
 title:  "Technical Concepts"
 categories: gettingstarted
 permalink: /docs/gettingstarted/concepts.html
-version: v1.2
-since: v1.2
 ---
  
 Here are some basic technical concepts used in Apache Kylin, please check them for your reference.

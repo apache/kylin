@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  Kylin ODBC Driver Tutorial
+title:  Kylin ODBC Driver
 categories: tutorial
 permalink: /docs/tutorial/odbc.html
-version: v1.2
-since: v0.7.1
 ---
 
 > We provide Kylin ODBC driver to enable data access from ODBC-compatible client applications.

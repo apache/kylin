@@ -3,7 +3,6 @@ layout: docs15
 title:  "Multiple Kylin REST servers"
 categories: install
 permalink: /docs15/install/kylin_cluster.html
-since: v0.7.1
 ---
 
 

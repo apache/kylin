@@ -3,8 +3,6 @@ layout: docs
 title:  Quick Start with Sample Cube
 categories: tutorial
 permalink: /docs/tutorial/kylin_sample.html
-version: v1.2
-since: v0.7.1
 ---
 
 Kylin provides a script for you to create a sample Cube; the script will also create three sample hive tables:

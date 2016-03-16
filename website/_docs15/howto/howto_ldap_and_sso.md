@@ -1,9 +1,8 @@
 ---
 layout: docs15
-title:  How to Enable Security with LDAP and SSO
+title:  Enable Security with LDAP and SSO
 categories: howto
 permalink: /docs15/howto/howto_ldap_and_sso.html
-since: v1.5
 ---
 
 ## Enable LDAP authentication

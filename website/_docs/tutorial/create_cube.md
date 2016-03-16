@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  Kylin Cube Creation Tutorial
+title:  Kylin Cube Creation
 categories: tutorial
 permalink: /docs/tutorial/create_cube.html
-version: v1.2
-since: v0.7.1
 ---
   
   

@@ -1,12 +1,12 @@
 ---
 layout: docs15
-title:  How to Use Restful API
+title:  Use RESTful API
 categories: howto
 permalink: /docs15/howto/howto_use_restapi.html
 since: v0.7.1
 ---
 
-This page lists all the Rest APIs provided by Kylin; The base of the URL is `/kylin/api`, so don't forget to add it before a certain API's path. For example, to get all cube instances, send HTTP GET request to "/kylin/api/cubes".
+This page lists all the RESTful APIs provided by Kylin; The base of the URL is `/kylin/api`, so don't forget to add it before a certain API's path. For example, to get all cube instances, send HTTP GET request to "/kylin/api/cubes".
 
 * Query
    * [Authentication](#authentication)

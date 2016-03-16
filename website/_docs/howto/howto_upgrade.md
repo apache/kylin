@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  How to Upgrade
+title:  Upgrade from old version
 categories: howto
 permalink: /docs/howto/howto_upgrade.html
-version: v1.2
-since: v0.7.1
 ---
 
 ## Upgrade among v0.7.x and v1.x 

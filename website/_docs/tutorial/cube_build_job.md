@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  Kylin Cube Build and Job Monitoring Tutorial
+title:  Kylin Cube Build and Job Monitoring
 categories: tutorial
 permalink: /docs/tutorial/cube_build_job.html
-version: v1.2
-since: v0.7.1
 ---
 
 ### Cube Build

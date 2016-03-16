@@ -1,9 +1,8 @@
 ---
 layout: docs15
-title:  How to Build Cube with Restful API
+title:  Build Cube with RESTful API
 categories: howto
 permalink: /docs15/howto/howto_build_cube_with_restapi.html
-since: v0.7.1
 ---
 
 ### 1.	Authentication

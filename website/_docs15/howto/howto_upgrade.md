@@ -1,6 +1,6 @@
 ---
 layout: docs15
-title:  How to Upgrade
+title:  Upgrade from old version
 categories: howto
 permalink: /docs15/howto/howto_upgrade.html
 since: v1.5

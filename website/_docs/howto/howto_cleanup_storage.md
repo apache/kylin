@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  How to Cleanup Storage (HDFS & HBase Tables)
+title:  Cleanup Storage (HDFS & HBase Tables)
 categories: howto
 permalink: /docs/howto/howto_cleanup_storage.html
-version: v0.7.2
-since: v0.7.1
 ---
 
 Kylin will generate intermediate files in HDFS during the cube building; Besides, when purge/drop/merge cubes, some HBase tables may be left in HBase and will no longer be queried; Although Kylin has started to do some 

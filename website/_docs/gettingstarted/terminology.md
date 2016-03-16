@@ -3,11 +3,8 @@ layout: docs
 title:  "Terminology"
 categories: gettingstarted
 permalink: /docs/gettingstarted/terminology.html
-version: v1.0
-since: v0.5.x
 ---
  
-
 Here are some domain terms we are using in Apache Kylin, please check them for your reference.   
 They are basic knowledge of Apache Kylin which also will help to well understand such concerpt, term, knowledge, theory and others about Data Warehouse, Business Intelligence for analycits. 
 

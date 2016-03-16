@@ -1,6 +1,6 @@
 ---
 layout: docs15
-title:  Kylin ODBC Driver Tutorial
+title:  Kylin ODBC Driver
 categories: tutorial
 permalink: /docs15/tutorial/odbc.html
 since: v0.7.1

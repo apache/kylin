@@ -3,7 +3,6 @@ layout: docs15
 title:  "Advance Settings of Kylin Environment"
 categories: install
 permalink: /docs15/install/advance_settings.html
-since: v0.7.1
 ---
 
 ## Enable LZO compression

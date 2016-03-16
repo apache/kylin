@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  Tableau 9 Tutorial
+title:  Tableau 9
 categories: tutorial
 permalink: /docs/tutorial/tableau_91.html
-version: v1.2
-since: v1.2
 ---
 
 Tableau 9.x has been released a while, there are many users are asking about support this version with Apache Kylin. With updated Kylin ODBC Driver, now user could interactive with Kylin service through Tableau 9.x.

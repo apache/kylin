@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  How to Optimize Cubes
+title:  Optimize Cubes
 categories: howto
 permalink: /docs/howto/howto_optimize_cubes.html
-version: v0.7.2
-since: v0.7.1
 ---
 
 ## Hierarchies:

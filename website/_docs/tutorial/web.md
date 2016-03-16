@@ -1,20 +1,16 @@
 ---
 layout: docs
-title:  Kylin Web Tutorial
+title:  Kylin Web Interface
 categories: tutorial
 permalink: /docs/tutorial/web.html
-version: v1.2
-since: v0.7.1
 ---
 
 > **Supported Browsers**
-> 
 > Windows: Google Chrome, FireFox
-> 
 > Mac: Google Chrome, FireFox, Safari
 
 ## 1. Access & Login
-Host to access: http://your_sandbox_ip:9080
+Host to access: http://your_sandbox_ip:7070
 Login with username/password: ADMIN/KYLIN
 
 ![](/images/Kylin-Web-Tutorial/1 login.png)
@@ -133,7 +129,3 @@ There's one simple pivot and visualization analysis tool in Kylin's web for user
 
    ![](/images/Kylin-Web-Tutorial/17 line-chart.png)
 
-## 6. Cube Build Job Monitoring
-Monitor and manage cube build process, diagnostic into the detail and even link to Hadoop's job information directly:
-
-![](/images/Kylin-Web-Tutorial/7 job-steps.png)

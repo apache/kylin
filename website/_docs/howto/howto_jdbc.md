@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  How to Use kylin Remote JDBC Driver
+title:  Use kylin JDBC Driver
 categories: howto
 permalink: /docs/howto/howto_jdbc.html
-version: v1.2
-since: v0.7.1
 ---
 
 ### Authentication

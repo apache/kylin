@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  How to Clean/Backup HBase Tables
+title:  Clean/Backup HBase Tables
 categories: howto
 permalink: /docs/howto/howto_backup_hbase.html
-version: v1.0
-since: v0.7.1
 ---
 
 Kylin persists all data (meta data and cube) in HBase; You may want to export the data sometimes for whatever purposes 

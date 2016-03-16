@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  Tableau Tutorial
+title:  Tableau 8
 categories: tutorial
 permalink: /docs/tutorial/tableau.html
-version: v1.2
-since: v0.7.1
 ---
 
 > There are some limitations of Kylin ODBC driver with Tableau, please read carefully this instruction before you try it.

@@ -3,8 +3,6 @@ layout: docs
 title:  "FAQ"
 categories: gettingstarted
 permalink: /docs/gettingstarted/faq.html
-version: v0.7.2
-since: v0.6.x
 ---
 
 ### Some NPM error causes ERROR exit (中国大陆地区用户请特别注意此问题)?  

@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  How to Backup Metadata
+title:  Backup Metadata
 categories: howto
 permalink: /docs/howto/howto_backup_metadata.html
-version: v1.0
-since: v0.7.1
 ---
 
 Kylin organizes all of its metadata (including cube descriptions and instances, projects, inverted index description and instances, jobs, tables and dictionaries) as a hierarchy file system. However, Kylin uses hbase to store it, rather than normal file system. If you check your kylin configuration file(kylin.properties) you will find such a line:
