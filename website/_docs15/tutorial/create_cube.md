@@ -100,16 +100,16 @@ Before create a cube, need define a data model. The data model defines the star 
 After the data model be created, you can start to create cube. 
 
 Click `Model` in top bar, and then click `Models` tab. Click `+New` button, in the drop-down list select `New Cube`.
-
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 new-cube.png)
+
 
 **Step 1. Cube Info**
 
 Select the data model, enter the cube name; Click `Next` to enter the next step.
 
 You can use letters, numbers and '_' to name your cube (blank space in name is not allowed). `Notification List` is a list of email addresses which be notified on cube job success/failure.
-
     ![]( /images/tutorial/1.5/Kylin-Cube-Creation-Tutorial/7 cube-info.png)
+    
 
 **Step 2. Dimensions**
 
