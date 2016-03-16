@@ -1,10 +1,8 @@
 ---
 layout: docs
-title:  "Multiple Kylin REST servers"
+title:  "Deploy in cluster mode"
 categories: install
 permalink: /docs/install/kylin_cluster.html
-version: v0.7.2
-since: v0.7.1
 ---
 
 
@@ -27,4 +25,8 @@ If you are running Kylin in a cluster or you have multiple Kylin REST server ins
   
 2. kylin.server.mode
 	Make sure there is only one instance whose "kylin.server.mode" is set to "all" if there are multiple instances.
+
+## Setup load balancer 
+
+To enable Kylin high availability, you need setup a load balancer in front of these servers, let it routing the incoming requests to the cluster. Client sides send all requests to the load balancer, instead of talk with a specific instance.
 	
