@@ -244,7 +244,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws IOException, JobException {
+    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName, boolean forceUpdate) throws IOException, JobException {
 
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
@@ -252,7 +252,8 @@ public class CubeService extends BasicService {
         }
 
         try {
-            if (!cube.getDescriptor().consistentWith(desc)) {
+            //double check again
+            if (!forceUpdate && !cube.getDescriptor().consistentWith(desc) ) {
                 throw new IllegalStateException("cube's desc is not consistent with the new desc");
             }
 
@@ -594,6 +595,7 @@ public class CubeService extends BasicService {
     }
 
     private void keepCubeRetention(String cubeName) {
+        logger.info("checking keepCubeRetention");
         CubeInstance cube = getCubeManager().getCube(cubeName);
         CubeDesc desc = cube.getDescriptor();
         if (desc.getRetentionRange() > 0) {

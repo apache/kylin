@@ -47,7 +47,7 @@ public class SandboxMetastoreCLI {
             throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
         }
 
-        if (args.length < 2) {
+        if (args.length < 1) {
             printUsage();
             return;
         }

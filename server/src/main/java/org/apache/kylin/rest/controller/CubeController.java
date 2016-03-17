@@ -380,19 +380,26 @@ public class CubeController extends BasicController {
         // Check if the cube is editable
         isCubeDescFreeEditable = cubeService.isCubeDescFreeEditable(desc);
 
-        //cube renaming is not allowed
-        if (!cubeRequest.getCubeName().equalsIgnoreCase(CubeService.getCubeNameFromDesc(desc.getName()))) {
-            String error = "Cube Desc renaming is not allowed: " + desc.getName();
-            updateRequest(cubeRequest, false, error);
-            return cubeRequest;
-        }
-
         String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
         try {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeRequest.getCubeName());
+
+            if (cube == null) {
+                String error = "The cube named " + cubeRequest.getCubeName() + " does not exist ";
+                updateRequest(cubeRequest, false, error);
+                return cubeRequest;
+            }
+
+            //cube renaming is not allowed
+            if (!cube.getDescriptor().getName().equalsIgnoreCase(desc.getName())) {
+                String error = "Cube Desc renaming is not allowed: desc.getName(): " + desc.getName() + ", cubeRequest.getCubeName(): " + cubeRequest.getCubeName();
+                updateRequest(cubeRequest, false, error);
+                return cubeRequest;
+            }
+
             oldCubeDesc = cube.getDescriptor();
             if (isCubeDescFreeEditable || oldCubeDesc.consistentWith(desc)) {
-                desc = cubeService.updateCubeAndDesc(cube, desc, projectName);
+                desc = cubeService.updateCubeAndDesc(cube, desc, projectName, true);
             } else {
                 logger.warn("Won't update the cube desc due to inconsistency");
                 updateRequest(cubeRequest, false, "CubeDesc " + desc.getName() + " is inconsistent with existing. Try purge that cube first or avoid updating key cube desc fields.");
