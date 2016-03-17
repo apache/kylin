@@ -121,8 +121,8 @@ $ read -s GPG_PASSPHRASE
 $ git clean -xn
 $ mvn clean
 
-# Fix any license issues as prompted
-$ mvn -Papache-release -Dgpg.passphrase=${GPG_PASSPHRASE} install
+# Fix any license issues as reported by target/rat.txt
+$ mvn -Papache-release -DskipTests -Dgpg.passphrase=${GPG_PASSPHRASE} install
 {% endhighlight %}
 
 Optionally, when the dry-run has succeeded, change install to deploy:
