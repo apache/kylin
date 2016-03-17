@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -49,12 +51,12 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected ArrayList<String> listResourcesImpl(String resPath) throws IOException {
+    protected NavigableSet<String> listResourcesImpl(String resPath) throws IOException {
         String[] names = file(resPath).list();
         if (names == null) // not a directory
             return null;
 
-        ArrayList<String> r = new ArrayList<String>(names.length);
+        TreeSet<String> r = new TreeSet<>();
         String prefix = resPath.endsWith("/") ? resPath : resPath + "/";
         for (String n : names) {
             r.add(prefix + n);
@@ -75,7 +77,7 @@ public class FileResourceStore extends ResourceStore {
         try {
             String commonPrefix = StringUtils.getCommonPrefix(rangeEnd, rangeStart);
             commonPrefix = commonPrefix.substring(0, commonPrefix.lastIndexOf("/") + 1);
-            final ArrayList<String> resources = listResourcesImpl(commonPrefix);
+            final NavigableSet<String> resources = listResourcesImpl(commonPrefix);
             for (String resource : resources) {
                 if (resource.compareTo(rangeStart) >= 0 && resource.compareTo(rangeEnd) <= 0) {
                     if (existsImpl(resource)) {
