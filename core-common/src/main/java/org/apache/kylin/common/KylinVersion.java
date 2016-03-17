@@ -21,34 +21,50 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 public class KylinVersion {
 
-    static class Version {
-        public int major;
-        public int minor;
-        public int revision;
+    public int major;
+    public int minor;
+    public int revision;
+    public boolean isSnapshot;
 
-        public Version(String version) {
-            String[] splits = version.split("\\.");
-            major = Integer.parseInt(splits[0]);
-            minor = Integer.parseInt(splits[1]);
-            revision = Integer.parseInt(splits[2]);
+    public KylinVersion(String version) {
+
+        Preconditions.checkNotNull(version);
+
+        int index = version.indexOf("-");//index of "-SNAPSHOT"
+        String[] splits;
+        if (index == -1) {
+            splits = version.split("\\.");
+            isSnapshot = false;
+        } else {
+            splits = version.substring(0, index).split("\\.");
+            isSnapshot = true;
         }
+
+        major = Integer.parseInt(splits[0]);
+        minor = Integer.parseInt(splits[1]);
+        revision = Integer.parseInt(splits[2]);
+    }
+
+    @Override
+    public String toString() {
+        return "" + major + "." + minor + "." + revision;
     }
 
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final String CURRENT_KYLIN_VERSION = "1.5.1";
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("1.5.1");
 
-    private static final Set<String> SIGNATURE_INCOMPATIBLE_REVISIONS = new HashSet<String>();
+    private static final Set<KylinVersion> SIGNATURE_INCOMPATIBLE_REVISIONS = new HashSet<KylinVersion>();
 
     static {
-        SIGNATURE_INCOMPATIBLE_REVISIONS.add("1.5.1");
+        SIGNATURE_INCOMPATIBLE_REVISIONS.add(new KylinVersion("1.5.1"));
     }
 
     /**
@@ -58,13 +74,12 @@ public class KylinVersion {
      *
      * @return current kylin version in String
      */
-    public static String getCurrentVersion() {
+    public static KylinVersion getCurrentVersion() {
         return CURRENT_KYLIN_VERSION;
     }
 
-    public static boolean isCompatibleWith(String version) {
-        Version v = new Version(version);
-        Version current = new Version(CURRENT_KYLIN_VERSION);
+    public boolean isCompatibleWith(KylinVersion v) {
+        KylinVersion current = CURRENT_KYLIN_VERSION;
         if (current.major != v.major || current.minor != v.minor) {
             return false;
         } else {
@@ -72,27 +87,25 @@ public class KylinVersion {
         }
     }
 
-    public static boolean isSignatureCompatibleWith(String version) {
-        if (!isCompatibleWith(version)) {
+    public boolean isSignatureCompatibleWith(final KylinVersion v) {
+        if (!isCompatibleWith(v)) {
             return false;
         }
-        final Version v = new Version(version);
+
+        if (v.isSnapshot || isSnapshot) {
+            return false;//for snapshot versions things are undetermined
+        }
+
         boolean signatureIncompatible = Iterables.any(Iterables.filter(
 
-                Iterables.transform(SIGNATURE_INCOMPATIBLE_REVISIONS, new Function<String, Version>() {
-                    @Nullable
+                SIGNATURE_INCOMPATIBLE_REVISIONS, new Predicate<KylinVersion>() {
                     @Override
-                    public Version apply(@Nullable String input) {
-                        return new Version(input);
-                    }
-                }), new Predicate<Version>() {
-                    @Override
-                    public boolean apply(@Nullable Version input) {
+                    public boolean apply(@Nullable KylinVersion input) {
                         return v.major == input.major && v.minor == input.minor;
                     }
-                }), new Predicate<Version>() {
+                }), new Predicate<KylinVersion>() {
                     @Override
-                    public boolean apply(@Nullable Version input) {
+                    public boolean apply(@Nullable KylinVersion input) {
                         return input.revision > v.revision;
                     }
                 });

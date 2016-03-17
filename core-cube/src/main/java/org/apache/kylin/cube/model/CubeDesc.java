@@ -442,11 +442,11 @@ public class CubeDesc extends RootPersistentEntity {
      * this method is to prevent malicious metadata change by checking the saved signature
      * with the calculated signature.
      * 
-     * if you're comparing two cube desc prefer to use consistentWith()
+     * if you're comparing two cube descs, prefer to use consistentWith()
      * @return
      */
     public boolean checkSignature() {
-        if (KylinVersion.isCompatibleWith(getVersion()) && !KylinVersion.isSignatureCompatibleWith(getVersion())) {
+        if (KylinVersion.getCurrentVersion().isCompatibleWith(new KylinVersion(getVersion())) && !KylinVersion.getCurrentVersion().isSignatureCompatibleWith(new KylinVersion(getVersion()))) {
             logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), getVersion());
             return true;
         }
