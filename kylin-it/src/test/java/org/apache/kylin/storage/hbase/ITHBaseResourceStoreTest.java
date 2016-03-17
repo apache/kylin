@@ -27,6 +27,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.NavigableSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -133,7 +134,7 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
         }
 
         // list
-        ArrayList<String> list;
+        NavigableSet<String> list;
 
         list = store.listResources(dir1);
         assertTrue(list.contains(path1));

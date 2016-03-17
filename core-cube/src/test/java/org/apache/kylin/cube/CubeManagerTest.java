@@ -18,17 +18,6 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TimeZone;
-
-import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
@@ -40,6 +29,11 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
+import java.util.NavigableSet;
+
+import static org.junit.Assert.*;
 
 /**
  * @author yangli9
@@ -130,12 +124,12 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     @Test
     public void testGetAllCubes() throws Exception {
         final ResourceStore store = ResourceStore.getStore(getTestConfig());
-        final ArrayList<String> cubePath = store.listResources(ResourceStore.CUBE_RESOURCE_ROOT);
+        final NavigableSet<String> cubePath = store.listResources(ResourceStore.CUBE_RESOURCE_ROOT);
         assertTrue(cubePath.size() > 1);
-        Collections.sort(cubePath);
-        final List<CubeInstance> cubes = store.getAllResources(cubePath.get(0), cubePath.get(cubePath.size() - 1), CubeInstance.class, CubeManager.CUBE_SERIALIZER);
+//        Collections.sort(cubePath);
+        final List<CubeInstance> cubes = store.getAllResources(cubePath.first(), cubePath.last(), CubeInstance.class, CubeManager.CUBE_SERIALIZER);
         assertEquals(cubePath.size(), cubes.size());
-        assertEquals(cubePath.size() - 1, store.getAllResources(cubePath.get(1), cubePath.get(cubePath.size() - 1), CubeInstance.class, CubeManager.CUBE_SERIALIZER).size());
+        assertEquals(cubePath.size() - 1, store.getAllResources(cubePath.first(), cubePath.last(), CubeInstance.class, CubeManager.CUBE_SERIALIZER).size());
     }
 
     @Test

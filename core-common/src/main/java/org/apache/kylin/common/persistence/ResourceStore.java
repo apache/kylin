@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
@@ -116,12 +117,12 @@ abstract public class ResourceStore {
      * return a list of child resources & folders under given path, return null
      * if given path is not a folder
      */
-    final public ArrayList<String> listResources(String resPath) throws IOException {
+    final public NavigableSet<String> listResources(String resPath) throws IOException {
         resPath = norm(resPath);
         return listResourcesImpl(resPath);
     }
 
-    abstract protected ArrayList<String> listResourcesImpl(String resPath) throws IOException;
+    abstract protected NavigableSet<String> listResourcesImpl(String resPath) throws IOException;
 
     /**
      * return true if a resource exists, return false in case of folder or
@@ -278,7 +279,7 @@ abstract public class ResourceStore {
     }
 
     public void scanRecursively(String path, Visitor visitor) throws IOException {
-        ArrayList<String> children = listResources(path);
+        NavigableSet<String> children = listResources(path);
         if (children != null) {
             for (String child : children)
                 scanRecursively(child, visitor);

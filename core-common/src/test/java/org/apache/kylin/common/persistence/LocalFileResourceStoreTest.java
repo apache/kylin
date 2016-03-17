@@ -27,6 +27,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.NavigableSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -91,7 +92,7 @@ public class LocalFileResourceStoreTest extends LocalFileMetadataTestCase {
         }
 
         // list
-        ArrayList<String> list;
+        NavigableSet<String> list;
 
         list = store.listResources(dir1);
         assertTrue(list.contains(path1));

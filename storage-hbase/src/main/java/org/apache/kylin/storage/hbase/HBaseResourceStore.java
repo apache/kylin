@@ -22,11 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -41,10 +37,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.filter.CompareFilter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
-import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
+import org.apache.hadoop.hbase.filter.*;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -117,14 +110,14 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected ArrayList<String> listResourcesImpl(String resPath) throws IOException {
+    protected NavigableSet<String> listResourcesImpl(String resPath) throws IOException {
         assert resPath.startsWith("/");
         String lookForPrefix = resPath.endsWith("/") ? resPath : resPath + "/";
         byte[] startRow = Bytes.toBytes(lookForPrefix);
         byte[] endRow = Bytes.toBytes(lookForPrefix);
         endRow[endRow.length - 1]++;
 
-        ArrayList<String> result = new ArrayList<String>();
+        TreeSet<String> result = new TreeSet<>();
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         Scan scan = new Scan(startRow, endRow);
@@ -136,8 +129,8 @@ public class HBaseResourceStore extends ResourceStore {
                 assert path.startsWith(lookForPrefix);
                 int cut = path.indexOf('/', lookForPrefix.length());
                 String child = cut < 0 ? path : path.substring(0, cut);
-                if (result.contains(child) == false)
-                    result.add(child);
+//                if (!result.contains(child))
+                result.add(child);
             }
         } finally {
             IOUtils.closeQuietly(table);

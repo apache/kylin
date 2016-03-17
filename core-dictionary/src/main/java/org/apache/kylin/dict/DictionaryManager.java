@@ -18,17 +18,8 @@
 
 package org.apache.kylin.dict;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
+import com.google.common.cache.*;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.dimension.Dictionary;
@@ -43,12 +34,15 @@ import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.Lists;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class DictionaryManager {
 
@@ -173,7 +167,7 @@ public class DictionaryManager {
 
     private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<?> dict) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
-        ArrayList<String> existings = store.listResources(dictInfo.getResourceDir());
+        NavigableSet<String> existings = store.listResources(dictInfo.getResourceDir());
         if (existings == null)
             return null;
 
@@ -316,13 +310,13 @@ public class DictionaryManager {
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
-        ArrayList<String> existings = store.listResources(dictInfo.getResourceDir());
+        NavigableSet<String> existings = store.listResources(dictInfo.getResourceDir());
         if (existings == null || existings.isEmpty()) {
             return null;
         }
-        Collections.sort(existings);
+//        Collections.sort(existings);
 
-        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(existings.get(0), existings.get(existings.size() - 1), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
+        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(existings.first(), existings.last(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         TableSignature input = dictInfo.getInput();
 
@@ -336,13 +330,13 @@ public class DictionaryManager {
 
     private DictionaryInfo findLargestDictInfo(DictionaryInfo dictInfo) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
-        ArrayList<String> dictInfos = store.listResources(dictInfo.getResourceDir());
+        NavigableSet<String> dictInfos = store.listResources(dictInfo.getResourceDir());
         if (dictInfos == null || dictInfos.isEmpty()) {
             return null;
         }
-        Collections.sort(dictInfos);
+//        Collections.sort(dictInfos);
 
-        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.get(0), dictInfos.get(dictInfos.size() - 1), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
+        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.first(), dictInfos.last(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         DictionaryInfo largestDict = null;
         for (DictionaryInfo dictionaryInfo : allResources) {
@@ -371,7 +365,7 @@ public class DictionaryManager {
         info.setSourceColumn(srcCol);
 
         ResourceStore store = MetadataManager.getInstance(config).getStore();
-        ArrayList<String> existings = store.listResources(info.getResourceDir());
+        NavigableSet<String> existings = store.listResources(info.getResourceDir());
         if (existings == null)
             return;
 

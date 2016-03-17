@@ -90,6 +90,7 @@ public class JobService extends BasicService {
         return jobs.subList(offset, offset + limit);
     }
 
+
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());

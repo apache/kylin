@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -99,7 +100,7 @@ public class ResourceTool {
 
     public static void list(KylinConfig config, String path) throws IOException {
         ResourceStore store = ResourceStore.getStore(config);
-        ArrayList<String> result = store.listResources(path);
+        NavigableSet<String> result = store.listResources(path);
         System.out.println("" + result);
     }
 
@@ -119,7 +120,7 @@ public class ResourceTool {
     }
 
     public static void copyR(ResourceStore src, ResourceStore dst, String path) throws IOException {
-        ArrayList<String> children = src.listResources(path);
+        NavigableSet<String> children = src.listResources(path);
 
         // case of resource (not a folder)
         if (children == null) {
@@ -164,7 +165,7 @@ public class ResourceTool {
     }
 
     private static void resetR(ResourceStore store, String path) throws IOException {
-        ArrayList<String> children = store.listResources(path);
+        NavigableSet<String> children = store.listResources(path);
         if (children == null) { // path is a resource (not a folder)
             if (matchFilter(path)) {
                 store.deleteResource(path);
