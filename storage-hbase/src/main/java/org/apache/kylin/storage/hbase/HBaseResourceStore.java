@@ -113,6 +113,7 @@ public class HBaseResourceStore extends ResourceStore {
     protected NavigableSet<String> listResourcesImpl(String resPath) throws IOException {
         assert resPath.startsWith("/");
         String lookForPrefix = resPath.endsWith("/") ? resPath : resPath + "/";
+        byte[] prefix = Bytes.toBytes(lookForPrefix);
         byte[] startRow = Bytes.toBytes(lookForPrefix);
         byte[] endRow = Bytes.toBytes(lookForPrefix);
         endRow[endRow.length - 1]++;
@@ -121,15 +122,14 @@ public class HBaseResourceStore extends ResourceStore {
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         Scan scan = new Scan(startRow, endRow);
-        scan.setFilter(new KeyOnlyFilter());
+        scan.setFilter(new PrefixFilter(prefix));
         try {
             ResultScanner scanner = table.getScanner(scan);
             for (Result r : scanner) {
                 String path = Bytes.toString(r.getRow());
-                assert path.startsWith(lookForPrefix);
+                // assert path.startsWith(lookForPrefix);
                 int cut = path.indexOf('/', lookForPrefix.length());
                 String child = cut < 0 ? path : path.substring(0, cut);
-//                if (!result.contains(child))
                 result.add(child);
             }
         } finally {
