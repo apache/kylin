@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
@@ -95,13 +96,12 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs() throws PersistentException {
         try {
-            ArrayList<String> resources = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
+            NavigableSet<String> resources = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
             if (resources == null || resources.isEmpty()) {
                 return Collections.emptyList();
             }
-            Collections.sort(resources);
-            String rangeStart = resources.get(0);
-            String rangeEnd = resources.get(resources.size() - 1);
+            String rangeStart = resources.first();
+            String rangeEnd = resources.last();
             return store.getAllResources(rangeStart, rangeEnd, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
@@ -111,13 +111,12 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs(long timeStartInMillis, long timeEndInMillis) throws PersistentException {
         try {
-            ArrayList<String> resources = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
+            NavigableSet<String> resources = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
             if (resources == null || resources.isEmpty()) {
                 return Collections.emptyList();
             }
-            Collections.sort(resources);
-            String rangeStart = resources.get(0);
-            String rangeEnd = resources.get(resources.size() - 1);
+            String rangeStart = resources.first();
+            String rangeEnd = resources.last();
             return store.getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
@@ -127,13 +126,12 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
-            final List<String> jobIds = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
+            final NavigableSet<String> jobIds = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
             if (jobIds == null || jobIds.isEmpty()) {
                 return Collections.emptyList();
             }
-            Collections.sort(jobIds);
-            String rangeStart = jobIds.get(0);
-            String rangeEnd = jobIds.get(jobIds.size() - 1);
+            String rangeStart = jobIds.first();
+            String rangeEnd = jobIds.last();
             return store.getAllResources(rangeStart, rangeEnd, ExecutablePO.class, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
@@ -143,13 +141,12 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs(long timeStartInMillis, long timeEndInMillis) throws PersistentException {
         try {
-            final List<String> jobIds = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
+            final NavigableSet<String> jobIds = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
             if (jobIds == null || jobIds.isEmpty()) {
                 return Collections.emptyList();
             }
-            Collections.sort(jobIds);
-            String rangeStart = jobIds.get(0);
-            String rangeEnd = jobIds.get(jobIds.size() - 1);
+            String rangeStart = jobIds.first();
+            String rangeEnd = jobIds.last();
             return store.getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis, ExecutablePO.class, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
@@ -159,7 +156,7 @@ public class ExecutableDao {
 
     public List<String> getJobIds() throws PersistentException {
         try {
-            ArrayList<String> resources = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
+            NavigableSet<String> resources = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
             if (resources == null) {
                 return Collections.emptyList();
             }

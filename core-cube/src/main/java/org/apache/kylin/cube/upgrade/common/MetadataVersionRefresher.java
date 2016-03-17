@@ -21,10 +21,9 @@ package org.apache.kylin.cube.upgrade.common;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
 
-import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.slf4j.Logger;
@@ -73,7 +72,7 @@ public class MetadataVersionRefresher {
     }
 
     public static void collectFiles(ResourceStore src, String path, List<String> ret) throws IOException {
-        ArrayList<String> children = src.listResources(path);
+        NavigableSet<String> children = src.listResources(path);
 
         // case of resource (not a folder)
         if (children == null) {
