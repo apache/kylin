@@ -124,12 +124,17 @@ public class ResourceTool {
         // case of resource (not a folder)
         if (children == null) {
             if (matchFilter(path)) {
-                RawResource res = src.getResource(path);
-                if (res != null) {
-                    dst.putResource(path, res.inputStream, res.timestamp);
-                    res.inputStream.close();
-                } else {
-                    System.out.println("Resource not exist for " + path);
+                try {
+                    RawResource res = src.getResource(path);
+                    if (res != null) {
+                        dst.putResource(path, res.inputStream, res.timestamp);
+                        res.inputStream.close();
+                    } else {
+                        System.out.println("Resource not exist for " + path);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Failed to open " + path);
+                    ex.printStackTrace();
                 }
             }
         }
