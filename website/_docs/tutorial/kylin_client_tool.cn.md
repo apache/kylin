@@ -3,8 +3,6 @@ layout: docs-cn
 title:  Kylin Client Tool 使用教程
 categories: 教程
 permalink: /cn/docs/tutorial/kylin_client_tool.html
-version: v1.0
-since: v1.2.0
 ---
   
 > Kylin-client-tool是一个用python编写的，完全基于kylin的rest api的工具。可以实现kylin的cube创建，按时build cube，job的提交、调度、查看、取消与恢复。

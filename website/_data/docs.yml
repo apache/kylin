@@ -44,6 +44,7 @@
   - tutorial/tableau_91
   - tutorial/powerbi
   - tutorial/odbc
+  - tutorial/kylin_client_tool
 
 - title: How To
   docs:

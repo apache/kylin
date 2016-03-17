@@ -3,8 +3,6 @@ layout: docs
 title:  Kylin Client Tool Tutorial
 categories: tutorial
 permalink: /docs/tutorial/kylin_client_tool.html
-version: v1.0
-since: v1.2.0
 ---
   
 > Kylin-client-tool is a tool coded with python, completely based on Kylin's restful apis.
