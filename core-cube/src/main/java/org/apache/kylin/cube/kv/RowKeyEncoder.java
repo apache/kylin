@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
@@ -39,13 +40,24 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
 
     private int bodyLength = 0;
     private RowKeyColumnIO colIO;
+
     protected boolean enableSharding;
+    private int UHCOffset = -1;//it's a offset to the beginning of body
+    private int UHCLength = -1;
 
     public RowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
         super(cubeSeg, cuboid);
         enableSharding = cubeSeg.isEnableSharding();
+        Set<TblColRef> UHCColumns = cubeSeg.getUHCColumns();
+        if (UHCColumns.size() > 1) {
+            throw new IllegalStateException("Does not support multiple UHC now");
+        }
         colIO = new RowKeyColumnIO(cubeSeg.getDimensionEncodingMap());
         for (TblColRef column : cuboid.getColumns()) {
+            if (UHCColumns.contains(column)) {
+                UHCOffset = bodyLength;
+                UHCLength = colIO.getColumnLength(column);
+            }
             bodyLength += colIO.getColumnLength(column);
         }
     }
@@ -60,9 +72,10 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
 
     protected short calculateShard(byte[] key) {
         if (enableSharding) {
-            int bodyOffset = RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN;
+            int shardSeedOffset = UHCOffset == -1 ? 0 : UHCOffset;
+            int shardSeedLength = UHCLength == -1 ? bodyLength : UHCLength;
             short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
-            short shardOffset = ShardingHash.getShard(key, bodyOffset, bodyLength, cuboidShardNum);
+            short shardOffset = ShardingHash.getShard(key, RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN + shardSeedOffset, shardSeedLength, cuboidShardNum);
             return ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), shardOffset, cubeSeg.getTotalShards());
         } else {
             throw new RuntimeException("If enableSharding false, you should never calculate shard");
@@ -90,7 +103,7 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     @Override
     public void encode(ByteArray bodyBytes, ByteArray outputBuf) {
         Preconditions.checkState(bodyBytes.length() == bodyLength);
-        Preconditions.checkState(bodyBytes.length() + getHeaderLength() == outputBuf.length(),//
+        Preconditions.checkState(bodyBytes.length() + getHeaderLength() == outputBuf.length(), //
                 "bodybytes length: " + bodyBytes.length() + " outputBuf length: " + outputBuf.length() + " header length: " + getHeaderLength());
         System.arraycopy(bodyBytes.array(), bodyBytes.offset(), outputBuf.array(), getHeaderLength(), bodyLength);
 

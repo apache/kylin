@@ -18,12 +18,14 @@
 
 package org.apache.kylin.cube;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
@@ -37,12 +39,12 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.IRealizationSegment;
 
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment {
@@ -79,7 +81,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
     private int totalShards = 0;
     @JsonProperty("blackout_cuboids")
     private List<Long> blackoutCuboids = Lists.newArrayList();
-
 
     @JsonProperty("binary_signature")
     private String binarySignature; // a hash of cube schema and dictionary ID, used for sanity check
@@ -280,7 +281,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
     public Dictionary<String> getDictionary(TblColRef col) {
         return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, col);
     }
-    
+
     public CubeDimEncMap getDimensionEncodingMap() {
         return new CubeDimEncMap(this);
     }
@@ -380,6 +381,10 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
 
     public boolean isEnableSharding() {
         return getCubeDesc().isEnableSharding();
+    }
+
+    public Set<TblColRef> getUHCColumns() {
+        return getCubeDesc().getUHCColumns();
     }
 
     public int getRowKeyPreambleSize() {

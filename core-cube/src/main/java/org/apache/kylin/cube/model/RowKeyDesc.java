@@ -20,7 +20,9 @@ package org.apache.kylin.cube.model;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -41,6 +43,7 @@ public class RowKeyDesc {
     private long fullMask;
     private CubeDesc cubeDesc;
     private Map<TblColRef, RowKeyColDesc> columnMap;
+    private Set<TblColRef> UHCColumns;
 
     public RowKeyColDesc[] getRowKeyColumns() {
         return rowkeyColumns;
@@ -65,6 +68,10 @@ public class RowKeyDesc {
         return getColDesc(col).isUsingDictionary();
     }
 
+    public Set<TblColRef> getUHCColumns() {
+        return UHCColumns;
+    }
+
     public void init(CubeDesc cubeDesc) {
 
         setCubeDesc(cubeDesc);
@@ -84,6 +91,7 @@ public class RowKeyDesc {
 
     private void buildRowKey(Map<String, TblColRef> colNameAbbr) {
         columnMap = new HashMap<TblColRef, RowKeyColDesc>();
+        UHCColumns = new HashSet<>();
 
         for (int i = 0; i < rowkeyColumns.length; i++) {
             RowKeyColDesc rowKeyColDesc = rowkeyColumns[i];
@@ -97,6 +105,11 @@ public class RowKeyDesc {
             }
 
             columnMap.put(rowKeyColDesc.getColRef(), rowKeyColDesc);
+
+            if (rowKeyColDesc.isUHC()) {
+                UHCColumns.add(rowKeyColDesc.getColRef());
+              
+            }
         }
 
         this.fullMask = 0L;

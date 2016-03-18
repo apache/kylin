@@ -166,6 +166,11 @@ public class CubeDesc extends RootPersistentEntity {
         return storageType == IStorageAware.ID_SHARDED_HBASE;
     }
 
+    public Set<TblColRef> getUHCColumns() {
+        return getRowkey().getUHCColumns();
+    }
+
+
     /**
      * Error messages during resolving json metadata
      */
