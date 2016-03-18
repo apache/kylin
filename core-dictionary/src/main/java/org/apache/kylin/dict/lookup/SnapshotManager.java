@@ -20,6 +20,7 @@ package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
@@ -139,7 +140,7 @@ public class SnapshotManager {
     private String checkDupByInfo(SnapshotTable snapshot) throws IOException {
         ResourceStore store = MetadataManager.getInstance(this.config).getStore();
         String resourceDir = snapshot.getResourceDir();
-        ArrayList<String> existings = store.listResources(resourceDir);
+        NavigableSet<String> existings = store.listResources(resourceDir);
         if (existings == null)
             return null;
 
@@ -157,7 +158,7 @@ public class SnapshotManager {
     private String checkDupByContent(SnapshotTable snapshot) throws IOException {
         ResourceStore store = MetadataManager.getInstance(this.config).getStore();
         String resourceDir = snapshot.getResourceDir();
-        ArrayList<String> existings = store.listResources(resourceDir);
+        NavigableSet<String> existings = store.listResources(resourceDir);
         if (existings == null)
             return null;
 
