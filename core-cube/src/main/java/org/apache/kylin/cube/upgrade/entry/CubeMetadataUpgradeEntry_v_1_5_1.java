@@ -37,7 +37,7 @@ public class CubeMetadataUpgradeEntry_v_1_5_1 {
             CubeMetadataUpgrade_v_1_4_0.upgradeOrVerify(CubeMetadataUpgrade_v_1_4_0.class, args, true, false);
             CubeMetadataUpgrade_v_1_5_1.upgradeOrVerify(CubeMetadataUpgrade_v_1_5_1.class, new String[] { args[0] + "_workspace" }, false, true);
         } catch (Exception e) {
-            logger.error("something went wrong when upgrading, suggest to roll back metadata", e);
+            logger.error("something went wrong when upgrading, don't override your metadata store with this workspace folder yet!", e);
             return;
         }
 
