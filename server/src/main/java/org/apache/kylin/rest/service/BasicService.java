@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Predicates;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
@@ -122,7 +123,7 @@ public abstract class BasicService {
             public CubingJob apply(AbstractExecutable executable) {
                 return (CubingJob) executable;
             }
-        }).filter(new Predicate<CubingJob>() {
+        }).filter(Predicates.and(new Predicate<CubingJob>() {
             @Override
             public boolean apply(CubingJob executable) {
                 if (null == projectName || null == getProjectManager().getProject(projectName)) {
@@ -132,12 +133,12 @@ public abstract class BasicService {
                     return project.containsRealization(RealizationType.CUBE, CubingExecutableUtil.getCubeName(executable.getParams()));
                 }
             }
-        }).filter(new Predicate<CubingJob>() {
+        },new Predicate<CubingJob>() {
             @Override
             public boolean apply(CubingJob executable) {
                 return statusList.contains(allOutputs.get(executable.getId()).getState());
             }
-        }));
+        })));
         return results;
     }
 

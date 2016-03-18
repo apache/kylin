@@ -122,12 +122,16 @@ public class HBaseResourceStore extends ResourceStore {
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         Scan scan = new Scan(startRow, endRow);
-        scan.setFilter(new PrefixFilter(prefix));
+
+        FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
+        filterList.addFilter(new PrefixFilter(prefix));
+        filterList.addFilter(new KeyOnlyFilter());
+        scan.setFilter(filterList);
+
         try {
             ResultScanner scanner = table.getScanner(scan);
             for (Result r : scanner) {
                 String path = Bytes.toString(r.getRow());
-                // assert path.startsWith(lookForPrefix);
                 int cut = path.indexOf('/', lookForPrefix.length());
                 String child = cut < 0 ? path : path.substring(0, cut);
                 result.add(child);

@@ -131,7 +131,6 @@ public class ExecutableDao {
             if (jobIds == null || jobIds.isEmpty()) {
                 return Collections.emptyList();
             }
-//            Collections.sort(jobIds);
             String rangeStart = jobIds.first();
             String rangeEnd = jobIds.last();
             return store.getAllResources(rangeStart, rangeEnd, ExecutablePO.class, JOB_SERIALIZER);
@@ -147,7 +146,6 @@ public class ExecutableDao {
             if (jobIds == null || jobIds.isEmpty()) {
                 return Collections.emptyList();
             }
-//            Collections.sort(jobIds);
             String rangeStart = jobIds.first();
             String rangeEnd = jobIds.last();
             return store.getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis, ExecutablePO.class, JOB_SERIALIZER);
