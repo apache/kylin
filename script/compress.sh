@@ -33,7 +33,7 @@ package_name=apache-kylin-${version}-bin
 rm -rf dist/${package_name}
 mkdir dist/${package_name}
 # copy files
-cp -r lib bin conf dist/tomcat examples/sample_cube dist/commit.sha1 dist/${package_name}
+cp -r lib bin conf tools dist/tomcat examples/sample_cube  dist/commit.sha1 dist/${package_name}
 # copy license files
 cp LICENSE README.md NOTICE dist/${package_name}
 
