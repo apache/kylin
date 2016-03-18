@@ -103,6 +103,29 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
+    protected List<RawResource> getAllResources(String resourcePath, long timeStartInMillis, long timeEndInMillis) throws IOException {
+        //just ignore time filter
+        List<RawResource> result = Lists.newArrayList();
+        try {
+            resourcePath = resourcePath.substring(0, resourcePath.lastIndexOf("/") + 1);
+            final NavigableSet<String> resources = listResourcesImpl(resourcePath);
+            for (String resource : resources) {
+                if (existsImpl(resource)) {
+                    result.add(getResourceImpl(resource));
+                }
+            }
+            return result;
+        } catch (IOException ex) {
+            for (RawResource rawResource : result) {
+                IOUtils.closeQuietly(rawResource.inputStream);
+            }
+            throw ex;
+        } catch (Exception ex) {
+            throw new UnsupportedOperationException(ex);
+        }
+    }
+
+    @Override
     protected RawResource getResourceImpl(String resPath) throws IOException {
         File f = file(resPath);
         if (f.exists() && f.isFile()) {

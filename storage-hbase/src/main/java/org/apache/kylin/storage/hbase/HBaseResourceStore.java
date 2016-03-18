@@ -166,8 +166,11 @@ public class HBaseResourceStore extends ResourceStore {
         if (filterList != null) {
             scan.setFilter(filterList);
         }
-        tuneScanParameters(scan);
+        return getAllResources(scan);
+    }
 
+    private List<RawResource> getAllResources(Scan scan) throws IOException {
+        tuneScanParameters(scan);
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         List<RawResource> result = Lists.newArrayList();
         try {
@@ -184,6 +187,37 @@ public class HBaseResourceStore extends ResourceStore {
             IOUtils.closeQuietly(table);
         }
         return result;
+    }
+
+    /**
+     * @see #listResourcesImpl(String)
+     * @see #getAllResources(String, String, long, long)
+     *
+     * @param resourcePath
+     * @param timeStartInMillis
+     * @param timeEndInMillis
+     * @return
+     * @throws IOException
+     */
+    @Override
+    protected List<RawResource> getAllResources(String resourcePath, long timeStartInMillis, long timeEndInMillis) throws IOException {
+        // Refer to listResourcesImpl(String resPath)
+        assert resourcePath.startsWith("/");
+        String lookForPrefix = resourcePath.endsWith("/") ? resourcePath : resourcePath + "/";
+        byte[] prefix = Bytes.toBytes(lookForPrefix);
+        byte[] startRow = Bytes.toBytes(lookForPrefix);
+        byte[] endRow = Bytes.toBytes(lookForPrefix);
+        endRow[endRow.length - 1]++;
+
+        // Refer to getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis)
+        Scan scan = new Scan(startRow,endRow);
+        scan.addColumn(B_FAMILY, B_COLUMN_TS);
+        scan.addColumn(B_FAMILY, B_COLUMN);
+        FilterList filterList = generateTimeFilterList(timeStartInMillis, timeEndInMillis);
+        filterList = filterList == null?  new FilterList(FilterList.Operator.MUST_PASS_ALL):filterList;
+        filterList.addFilter(new PrefixFilter(prefix));
+        scan.setFilter(filterList);
+        return getAllResources(scan);
     }
 
     private void tuneScanParameters(Scan scan) {
