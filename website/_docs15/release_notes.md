@@ -19,7 +19,7 @@ or send to Apache Kylin mailing list:
 ## v1.5.0 - 2016-03-12
 _Tag:_ [kylin-1.5.0](https://github.com/apache/kylin/tree/kylin-1.5.0)
 
-Significant changes have taken place in metadata and cube data, upgrade from v1.3 and before is difficult. Recommend build new cube from scratch with this version.
+__This version is not backward compatible.__ The format of cube and metadata has been refactored in order to get times of performance improvement. We recommend this version, but does not suggest upgrade from previous deployment directly. A clean and new deployment of this version is strongly recommended. If you have to upgrade from previous deployment, an upgrade guide will be provided by community later.
 
 __Highlights__
 
