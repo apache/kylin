@@ -27,6 +27,12 @@ For convenience, there's a forum style mailing list archives which not part of o
 ### Social Media 
 The official Kylin Twitter account: [@ApacheKylin](https://twitter.com/ApacheKylin)
 
+### Community Activity Report
+
+* [Git Pulse](https://github.com/apache/kylin/pulse)
+* [Git Graphs](https://github.com/apache/kylin/graphs)
+* [Apache Committee Report](https://reporter.apache.org/?kylin)
+
 ## Apache Kylin Team
 A successful project requires many people to play many roles. Some members write code, provide project mentorship, or author documentation. Others are valuable as testers, submitting patches and suggestions.
 
@@ -37,8 +43,9 @@ A successful project requires many people to play many roles. Some members write
 {% for c in site.data.contributors %}  | {{ c.name }} | <a href="http://home.apache.org/phonebook.html?uid={{ c.apacheId }}">{{ c.apacheId }}</a> | <a href="http://github.com/{{ c.githubId }}"><img width="48" src="{% unless c.avatar %}http://github.com/{{ c.githubId }}.png{% else %}{{ c.avatar }}{% endunless %}"></a> |  {{ c.role }} |
 {% endfor %}
 
-### Contributors
-Contributors has commited code could be found [here](https://github.com/apache/kylin/graphs/contributors).
+Detailed committee info is [here](https://projects.apache.org/committee.html?kylin).
+Detailed code contribution is [here](https://github.com/apache/kylin/graphs/contributors).
+
 __Other contributors__
 
 | Name  | Github    |   |
