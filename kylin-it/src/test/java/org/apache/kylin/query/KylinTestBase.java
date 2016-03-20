@@ -321,7 +321,7 @@ public class KylinTestBase {
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
             // compare the result
-            Assert.assertEquals(expectRowCount, kylinTable.getRowCount());
+            Assert.assertEquals(queryName, expectRowCount, kylinTable.getRowCount());
             // Assertion.assertEquals(expectRowCount, kylinTable.getRowCount());
         }
     }
@@ -426,6 +426,7 @@ public class KylinTestBase {
             IDatabaseConnection h2Conn = new DatabaseConnection(h2Connection);
             h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
             ITable h2Table = executeDynamicQuery(h2Conn, queryName, sql, parameters, needSort);
+
 
             // compare the result
             Assertion.assertEquals(h2Table, kylinTable);

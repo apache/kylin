@@ -159,6 +159,54 @@
       "returntype" : "topn(100)"
     },
     "dependent_measure_ref" : null
+  }, {
+    "name" : "CAL_DT_RAW",
+    "function" : {
+      "expression" : "RAW",
+      "parameter" : {
+        "type" : "column",
+        "value" : "CAL_DT",
+        "next_parameter" : null
+      },
+      "returntype" : "raw"
+    },
+    "dependent_measure_ref" : null
+  }, {
+    "name" : "LSTG_FORMAT_NAME_RAW",
+    "function" : {
+      "expression" : "RAW",
+      "parameter" : {
+        "type" : "column",
+        "value" : "LSTG_FORMAT_NAME",
+        "next_parameter" : null
+      },
+      "returntype" : "raw"
+    },
+    "dependent_measure_ref" : null
+  }, {
+    "name" : "LEAF_CATEG_ID_RAW",
+    "function" : {
+      "expression" : "RAW",
+      "parameter" : {
+        "type" : "column",
+        "value" : "LEAF_CATEG_ID",
+        "next_parameter" : null
+      },
+      "returntype" : "raw"
+    },
+    "dependent_measure_ref" : null
+  }, {
+    "name" : "PRICE_RAW",
+    "function" : {
+      "expression" : "RAW",
+      "parameter" : {
+        "type" : "column",
+        "value" : "PRICE",
+        "next_parameter" : null
+      },
+      "returntype" : "raw"
+    },
+    "dependent_measure_ref" : null
   } ],
   "rowkey" : {
     "rowkey_columns" : [ {
@@ -196,7 +244,7 @@
       "name" : "f1",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt", "item_count_sum" ]
+        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt", "item_count_sum", "CAL_DT_RAW", "LSTG_FORMAT_NAME_RAW", "LEAF_CATEG_ID_RAW", "PRICE_RAW" ]
       } ]
     }, {
       "name" : "f2",

@@ -153,6 +153,9 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
         case "MAX":
           $scope.newMeasure.function.returntype = colType;
           break;
+        case "RAW":
+          $scope.newMeasure.function.returntype = "raw";
+          break;
         case "COUNT":
           $scope.newMeasure.function.returntype = "bigint";
           break;

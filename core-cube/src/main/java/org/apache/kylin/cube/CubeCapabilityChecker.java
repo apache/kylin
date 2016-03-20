@@ -64,9 +64,10 @@ public class CubeCapabilityChecker {
         Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, cube);
         
         // try custom measure types
-        if (!unmatchedDimensions.isEmpty() || !unmatchedAggregations.isEmpty()) {
+        // in RAW query, unmatchedDimensions and unmatchedAggregations will null, so can't chose RAW cube well!
+//        if (!unmatchedDimensions.isEmpty() || !unmatchedAggregations.isEmpty()) {
             tryCustomMeasureTypes(unmatchedDimensions, unmatchedAggregations, digest, cube, result);
-        }
+//        }
         
         // try dimension-as-measure
         if (!unmatchedAggregations.isEmpty()) {
@@ -180,8 +181,8 @@ public class CubeCapabilityChecker {
     private static void tryCustomMeasureTypes(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result) {
         CubeDesc cubeDesc = cube.getDescriptor();
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
-            if (unmatchedDimensions.isEmpty() && unmatchedAggregations.isEmpty())
-                break;
+//            if (unmatchedDimensions.isEmpty() && unmatchedAggregations.isEmpty())
+//                break;
             
             MeasureType<?> measureType = measure.getFunction().getMeasureType();
             if (measureType instanceof BasicMeasureType)

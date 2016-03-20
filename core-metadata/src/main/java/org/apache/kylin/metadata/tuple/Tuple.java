@@ -111,10 +111,17 @@ public class Tuple implements ITuple {
         // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
-        } else if ("integer".equals(dataType) && !(fieldValue instanceof Integer)) {
+        } else if ("integer".equals(dataType) && fieldValue instanceof Number) {
             fieldValue = ((Number) fieldValue).intValue();
         } else if ("float".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).floatValue();
+        } else if ("date".equals(dataType) && fieldValue instanceof Long) {
+            long millis = ((Long)fieldValue).longValue();
+            fieldValue = (int) (millis / (1000 * 3600 * 24));
+        } else if ("smallint".equals(dataType) && fieldValue instanceof Long) {
+            fieldValue = ((Long)fieldValue).shortValue();
+        } else if ((!"varchar".equals(dataType) || !"char".equals(dataType)) && fieldValue instanceof String) {
+            fieldValue = convertOptiqCellValue((String)fieldValue, dataType);
         }
         values[idx] = fieldValue;
     }
