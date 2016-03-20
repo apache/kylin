@@ -40,10 +40,10 @@ import com.google.common.collect.Lists;
  */
 public class ExecutableDao {
 
-    private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<ExecutablePO>(ExecutablePO.class);
-    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(ExecutableOutputPO.class);
+    private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<>(ExecutablePO.class);
+    private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<>(ExecutableOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
-    private static final ConcurrentHashMap<KylinConfig, ExecutableDao> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableDao>();
+    private static final ConcurrentHashMap<KylinConfig, ExecutableDao> CACHE = new ConcurrentHashMap<>();
 
     private ResourceStore store;
 
@@ -96,13 +96,7 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs() throws PersistentException {
         try {
-            NavigableSet<String> resources = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
-            if (resources == null || resources.isEmpty()) {
-                return Collections.emptyList();
-            }
-            String rangeStart = resources.first();
-            String rangeEnd = resources.last();
-            return store.getAllResources(rangeStart, rangeEnd, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -111,13 +105,7 @@ public class ExecutableDao {
 
     public List<ExecutableOutputPO> getJobOutputs(long timeStartInMillis, long timeEndInMillis) throws PersistentException {
         try {
-            NavigableSet<String> resources = store.listResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT);
-            if (resources == null || resources.isEmpty()) {
-                return Collections.emptyList();
-            }
-            String rangeStart = resources.first();
-            String rangeEnd = resources.last();
-            return store.getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT, timeStartInMillis, timeEndInMillis, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -126,13 +114,7 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs() throws PersistentException {
         try {
-            final NavigableSet<String> jobIds = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
-            if (jobIds == null || jobIds.isEmpty()) {
-                return Collections.emptyList();
-            }
-            String rangeStart = jobIds.first();
-            String rangeEnd = jobIds.last();
-            return store.getAllResources(rangeStart, rangeEnd, ExecutablePO.class, JOB_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, ExecutablePO.class, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);
@@ -141,13 +123,7 @@ public class ExecutableDao {
 
     public List<ExecutablePO> getJobs(long timeStartInMillis, long timeEndInMillis) throws PersistentException {
         try {
-            final NavigableSet<String> jobIds = store.listResources(ResourceStore.EXECUTE_RESOURCE_ROOT);
-            if (jobIds == null || jobIds.isEmpty()) {
-                return Collections.emptyList();
-            }
-            String rangeStart = jobIds.first();
-            String rangeEnd = jobIds.last();
-            return store.getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis, ExecutablePO.class, JOB_SERIALIZER);
+            return store.getAllResources(ResourceStore.EXECUTE_RESOURCE_ROOT, timeStartInMillis, timeEndInMillis, ExecutablePO.class, JOB_SERIALIZER);
         } catch (IOException e) {
             logger.error("error get all Jobs:", e);
             throw new PersistentException(e);

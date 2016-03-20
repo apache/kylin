@@ -316,7 +316,6 @@ public class DictionaryManager {
         if (existings == null || existings.isEmpty()) {
             return null;
         }
-
         final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(existings.first(), existings.last(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         TableSignature input = dictInfo.getInput();

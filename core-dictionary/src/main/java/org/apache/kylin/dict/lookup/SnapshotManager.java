@@ -19,7 +19,6 @@
 package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
 

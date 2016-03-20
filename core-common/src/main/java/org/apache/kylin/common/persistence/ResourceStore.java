@@ -168,19 +168,33 @@ abstract public class ResourceStore {
 
     final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis, Class<T> clazz, Serializer<T> serializer) throws IOException {
         final List<RawResource> allResources = getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis);
-        if (allResources.isEmpty()) {
+        return deserialize(allResources,clazz,serializer);
+    }
+
+    final public <T extends RootPersistentEntity> List<T> getAllResources(String resourcePath, long timeStartInMillis, long timeEndInMillis, Class<T> clazz, Serializer<T> serializer) throws IOException {
+        final List<RawResource> allResources = getAllResources(resourcePath, timeStartInMillis, timeEndInMillis);
+        return deserialize(allResources,clazz,serializer);
+    }
+
+    final public <T extends RootPersistentEntity> List<T> getAllResources(String resourcePath, Class<T> clazz, Serializer<T> serializer) throws IOException {
+        final List<RawResource> allResources = getAllResources(resourcePath);
+        return deserialize(allResources,clazz,serializer);
+    }
+
+    private <T extends RootPersistentEntity> List<T> deserialize(List<RawResource> resources, Class<T> clazz, Serializer<T> serializer) throws IOException {
+        if (resources.isEmpty()) {
             return Collections.emptyList();
         }
         List<T> result = Lists.newArrayList();
         try {
-            for (RawResource rawResource : allResources) {
+            for (RawResource rawResource : resources) {
                 final T element = serializer.deserialize(new DataInputStream(rawResource.inputStream));
                 element.setLastModified(rawResource.timestamp);
                 result.add(element);
             }
             return result;
         } finally {
-            for (RawResource rawResource : allResources) {
+            for (RawResource rawResource : resources) {
                 IOUtils.closeQuietly(rawResource.inputStream);
             }
         }
@@ -189,6 +203,12 @@ abstract public class ResourceStore {
     abstract protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException;
 
     abstract protected List<RawResource> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis) throws IOException;
+
+    abstract protected List<RawResource> getAllResources(String resourcePath, long timeStartInMillis, long timeEndInMillis) throws IOException;
+
+    public List<RawResource> getAllResources(String resourcePath) throws IOException {
+        return getAllResources(resourcePath,-1L,-1L);
+    }
 
     /** returns null if not exists */
     abstract protected RawResource getResourceImpl(String resPath) throws IOException;
