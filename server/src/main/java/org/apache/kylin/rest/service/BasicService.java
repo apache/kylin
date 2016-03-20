@@ -45,6 +45,7 @@ import org.apache.kylin.storage.hybrid.HybridManager;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 
@@ -122,7 +123,7 @@ public abstract class BasicService {
             public CubingJob apply(AbstractExecutable executable) {
                 return (CubingJob) executable;
             }
-        }).filter(new Predicate<CubingJob>() {
+        }).filter(Predicates.and(new Predicate<CubingJob>() {
             @Override
             public boolean apply(CubingJob executable) {
                 if (null == projectName || null == getProjectManager().getProject(projectName)) {
@@ -132,12 +133,12 @@ public abstract class BasicService {
                     return project.containsRealization(RealizationType.CUBE, CubingExecutableUtil.getCubeName(executable.getParams()));
                 }
             }
-        }).filter(new Predicate<CubingJob>() {
+        }, new Predicate<CubingJob>() {
             @Override
             public boolean apply(CubingJob executable) {
                 return statusList.contains(allOutputs.get(executable.getId()).getState());
             }
-        }));
+        })));
         return results;
     }
 
