@@ -122,15 +122,7 @@ public class JobService extends BasicService {
     }
 
     private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList, final long timeStartInMillis, final long timeEndInMillis) {
-        Set<ExecutableState> states;
-        if (statusList == null || statusList.isEmpty()) {
-            states = EnumSet.allOf(ExecutableState.class);
-        } else {
-            states = Sets.newHashSet();
-            for (JobStatusEnum status : statusList) {
-                states.add(parseToExecutableState(status));
-            }
-        }
+        Set<ExecutableState> states = convertStatusEnumToStates(statusList);
         final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs(timeStartInMillis, timeEndInMillis);
         return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, timeStartInMillis, timeEndInMillis, allOutputs)).transform(new Function<CubingJob, JobInstance>() {
             @Override
@@ -140,7 +132,7 @@ public class JobService extends BasicService {
         }));
     }
 
-    private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList) {
+    private Set<ExecutableState> convertStatusEnumToStates(List<JobStatusEnum> statusList){
         Set<ExecutableState> states;
         if (statusList == null || statusList.isEmpty()) {
             states = EnumSet.allOf(ExecutableState.class);
@@ -150,6 +142,11 @@ public class JobService extends BasicService {
                 states.add(parseToExecutableState(status));
             }
         }
+        return states;
+    }
+
+    private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList) {
+        Set<ExecutableState> states = convertStatusEnumToStates(statusList);
         final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs();
         return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, allOutputs)).transform(new Function<CubingJob, JobInstance>() {
             @Override
@@ -223,7 +220,7 @@ public class JobService extends BasicService {
                 }
             }
 
-            if (segExists == false) {
+            if (!segExists) {
                 throw new IllegalArgumentException("You can only refresh an existing segment, but there is no ready segment for start time:" + startDate + ", end time: " + endDate);
             }
 
