@@ -78,7 +78,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg().isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create(BatchConstants.ARG_CUBE_NAME);
     protected static final Option OPTION_CUBING_JOB_ID = OptionBuilder.withArgName(BatchConstants.ARG_CUBING_JOB_ID).hasArg().isRequired(false).withDescription("ID of cubing job executable").create(BatchConstants.ARG_CUBING_JOB_ID);
     protected static final Option OPTION_II_NAME = OptionBuilder.withArgName(BatchConstants.ARG_II_NAME).hasArg().isRequired(true).withDescription("II name. For exmaple, some_ii").create(BatchConstants.ARG_II_NAME);
-    protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName( BatchConstants.ARG_SEGMENT_NAME).hasArg().isRequired(true).withDescription("Cube segment name").create( BatchConstants.ARG_SEGMENT_NAME);
+    protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName(BatchConstants.ARG_SEGMENT_NAME).hasArg().isRequired(true).withDescription("Cube segment name").create(BatchConstants.ARG_SEGMENT_NAME);
     protected static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg().isRequired(true).withDescription("Input path").create(BatchConstants.ARG_INPUT);
     protected static final Option OPTION_INPUT_FORMAT = OptionBuilder.withArgName(BatchConstants.ARG_INPUT_FORMAT).hasArg().isRequired(false).withDescription("Input format").create(BatchConstants.ARG_INPUT_FORMAT);
     protected static final Option OPTION_OUTPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_OUTPUT).hasArg().isRequired(true).withDescription("Output path").create(BatchConstants.ARG_OUTPUT);
@@ -89,6 +89,22 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_STATISTICS_ENABLED = OptionBuilder.withArgName(BatchConstants.ARG_STATS_ENABLED).hasArg().isRequired(false).withDescription("Statistics enabled").create(BatchConstants.ARG_STATS_ENABLED);
     protected static final Option OPTION_STATISTICS_OUTPUT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_OUTPUT).hasArg().isRequired(false).withDescription("Statistics output").create(BatchConstants.ARG_STATS_OUTPUT);
     protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_SAMPLING_PERCENT).hasArg().isRequired(false).withDescription("Statistics sampling percentage").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
+
+    private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
+
+    private static final String KYLIN_HIVE_DEPENDENCY_JARS = "[^,]*hive-exec[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-metastore[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[0-9.-]+[^,]*?\\.jar";
+
+    protected static void runJob(Tool job, String[] args) {
+        try {
+            int exitCode = ToolRunner.run(job, args);
+            System.exit(exitCode);
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            System.exit(5);
+        }
+    }
+    
+    // ============================================================================
 
     protected String name;
     protected boolean isAsync = false;
@@ -136,38 +152,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
         return retVal;
     }
-
-    protected static void runJob(Tool job, String[] args) {
-        try {
-            int exitCode = ToolRunner.run(job, args);
-            System.exit(exitCode);
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            System.exit(5);
-        }
-    }
-
-    private static final String KYLIN_HIVE_DEPENDENCY_JARS = "[^,]*hive-exec[0-9.-]+\\.jar|[^,]*hive-metastore[0-9.-]+\\.jar|[^,]*hive-hcatalog-core[0-9.-]+\\.jar";
-
-    String filterKylinHiveDependency(String kylinHiveDependency) {
-        if (StringUtils.isBlank(kylinHiveDependency))
-            return "";
-
-        StringBuilder jarList = new StringBuilder();
-
-        Pattern hivePattern = Pattern.compile(KYLIN_HIVE_DEPENDENCY_JARS);
-        Matcher matcher = hivePattern.matcher(kylinHiveDependency);
-
-        while (matcher.find()) {
-            if (jarList.length() > 0)
-                jarList.append(",");
-            jarList.append(matcher.group());
-        }
-
-        return jarList.toString();
-    }
-
-    private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 
     protected void setJobClasspath(Job job) {
         String jarPath = KylinConfig.getInstanceFromEnv().getKylinJobJarPath();
@@ -252,6 +236,24 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         setJobTmpJarsAndFiles(job, kylinDependency.toString());
+    }
+
+    private String filterKylinHiveDependency(String kylinHiveDependency) {
+        if (StringUtils.isBlank(kylinHiveDependency))
+            return "";
+
+        StringBuilder jarList = new StringBuilder();
+
+        Pattern hivePattern = Pattern.compile(KYLIN_HIVE_DEPENDENCY_JARS);
+        Matcher matcher = hivePattern.matcher(kylinHiveDependency);
+
+        while (matcher.find()) {
+            if (jarList.length() > 0)
+                jarList.append(",");
+            jarList.append(matcher.group());
+        }
+
+        return jarList.toString();
     }
 
     private void setJobTmpJarsAndFiles(Job job, String kylinDependency) {
