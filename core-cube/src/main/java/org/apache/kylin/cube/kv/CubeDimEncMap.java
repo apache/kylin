@@ -29,28 +29,32 @@ import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
 public class CubeDimEncMap implements IDimensionEncodingMap {
 
+    private static final Logger logger = LoggerFactory.getLogger(CubeDimEncMap.class);
+
     final private CubeDesc cubeDesc;
     final private CubeSegment seg;
     final private Map<TblColRef, Dictionary<String>> dictionaryMap;
     final private Map<TblColRef, DimensionEncoding> encMap = Maps.newHashMap();
-    
+
     public CubeDimEncMap(CubeSegment seg) {
         this.cubeDesc = seg.getCubeDesc();
         this.seg = seg;
         this.dictionaryMap = null;
     }
-    
+
     public CubeDimEncMap(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         this.cubeDesc = cubeDesc;
         this.seg = null;
         this.dictionaryMap = dictionaryMap;
     }
-    
+
     @Override
     public DimensionEncoding get(TblColRef col) {
         DimensionEncoding result = encMap.get(col);
@@ -58,9 +62,14 @@ public class CubeDimEncMap implements IDimensionEncodingMap {
             RowKeyColDesc colDesc = cubeDesc.getRowkey().getColDesc(col);
             if (colDesc.isUsingDictionary()) {
                 // dictionary encoding
-                result = new DictionaryDimEnc(getDictionary(col));
-            }
-            else {
+                Dictionary<String> dict = getDictionary(col);
+                if (dict == null) {
+                    logger.warn("No dictionary found for dict-encoding column " + col + ", segment " + seg);
+                    result = new FixedLenDimEnc(0);
+                } else {
+                    result = new DictionaryDimEnc(dict);
+                }
+            } else {
                 // fixed length encoding
                 result = new FixedLenDimEnc(colDesc.getLength());
             }
@@ -68,7 +77,7 @@ public class CubeDimEncMap implements IDimensionEncodingMap {
         }
         return result;
     }
-    
+
     @Override
     public Dictionary<String> getDictionary(TblColRef col) {
         if (seg == null)

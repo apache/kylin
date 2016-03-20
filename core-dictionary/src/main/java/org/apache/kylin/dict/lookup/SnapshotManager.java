@@ -19,7 +19,6 @@
 package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,10 +44,12 @@ public class SnapshotManager {
     public static SnapshotManager getInstance(KylinConfig config) {
         SnapshotManager r = SERVICE_CACHE.get(config);
         if (r == null) {
-            r = new SnapshotManager(config);
-            SERVICE_CACHE.put(config, r);
-            if (SERVICE_CACHE.size() > 1) {
-                logger.warn("More than one singleton exist");
+            synchronized (SnapshotManager.class) {
+                r = SERVICE_CACHE.get(config);
+                if (r == null) {
+                    r = new SnapshotManager(config);
+                    SERVICE_CACHE.put(config, r);
+                }
             }
         }
         return r;

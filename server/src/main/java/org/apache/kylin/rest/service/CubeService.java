@@ -171,27 +171,23 @@ public class CubeService extends BasicService {
             throw new InternalErrorException("The cube named " + cubeName + " already exists");
         }
 
-        String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-        CubeDesc createdDesc = null;
-        CubeInstance createdCube = null;
-
-        boolean isNew = false;
-        if (getCubeDescManager().getCubeDesc(desc.getName()) == null) {
-            createdDesc = getCubeDescManager().createCubeDesc(desc);
-            isNew = true;
-        } else {
-            createdDesc = getCubeDescManager().updateCubeDesc(desc);
+        if (getCubeDescManager().getCubeDesc(desc.getName()) != null) {
+            throw new InternalErrorException("The cube desc named " + desc.getName() + " already exists");
         }
 
+        String owner = SecurityContextHolder.getContext().getAuthentication().getName();
+        CubeDesc createdDesc;
+        CubeInstance createdCube;
+
+        createdDesc = getCubeDescManager().createCubeDesc(desc);
+
         if (!createdDesc.getError().isEmpty()) {
-            if (isNew) {
-                getCubeDescManager().removeCubeDesc(createdDesc);
-            }
+            getCubeDescManager().removeCubeDesc(createdDesc);
             throw new InternalErrorException(createdDesc.getError().get(0));
         }
 
         try {
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc,false);
+            int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
             logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
         } catch (Exception e) {
             getCubeDescManager().removeCubeDesc(createdDesc);
@@ -248,7 +244,7 @@ public class CubeService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName) throws IOException, JobException {
+    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName, boolean forceUpdate) throws IOException, JobException {
 
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
@@ -256,13 +252,13 @@ public class CubeService extends BasicService {
         }
 
         try {
-            if (!cube.getDescriptor().checkSignature()) {
-                logger.info("Releasing all segments due to cube desc conflict");
-                this.releaseAllSegments(cube);
+            //double check again
+            if (!forceUpdate && !cube.getDescriptor().consistentWith(desc) ) {
+                throw new IllegalStateException("cube's desc is not consistent with the new desc");
             }
 
             CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc,false);
+            int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc, false);
             logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
 
             ProjectManager projectManager = getProjectManager();
@@ -290,7 +286,7 @@ public class CubeService extends BasicService {
         accessService.clean(cube, true);
     }
 
-    public boolean isCubeDescEditable(CubeDesc cd) {
+    public boolean isCubeDescFreeEditable(CubeDesc cd) {
         List<CubeInstance> cubes = getCubeManager().getCubesByDesc(cd.getName());
         for (CubeInstance cube : cubes) {
             if (cube.getSegments().size() != 0) {
@@ -300,6 +296,7 @@ public class CubeService extends BasicService {
         }
         return true;
     }
+
     public static String getCubeDescNameFromCube(String cubeName) {
         return cubeName + DESC_SUFFIX;
     }
@@ -311,7 +308,6 @@ public class CubeService extends BasicService {
             return descName;
         }
     }
-
 
     /**
      * Stop all jobs belonging to this cube and clean out all segments
@@ -599,6 +595,7 @@ public class CubeService extends BasicService {
     }
 
     private void keepCubeRetention(String cubeName) {
+        logger.info("checking keepCubeRetention");
         CubeInstance cube = getCubeManager().getCube(cubeName);
         CubeDesc desc = cube.getDescriptor();
         if (desc.getRetentionRange() > 0) {

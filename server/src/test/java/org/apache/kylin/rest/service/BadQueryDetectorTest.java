@@ -22,11 +22,24 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.rest.request.SQLRequest;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-public class BadQueryDetectorTest {
+public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
 
+    @Before
+    public void before() {
+        super.createTestMetadata();
+    }
+    
+    @After
+    public void after() {
+        super.cleanupTestMetadata();
+    }
+    
     @SuppressWarnings("deprecation")
     @Test
     public void test() throws InterruptedException {

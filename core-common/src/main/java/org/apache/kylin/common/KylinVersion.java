@@ -16,21 +16,100 @@
  */
 package org.apache.kylin.common;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class KylinVersion {
+
+    public int major;
+    public int minor;
+    public int revision;
+    public boolean isSnapshot;
+
+    public KylinVersion(String version) {
+
+        Preconditions.checkNotNull(version);
+
+        int index = version.indexOf("-");//index of "-SNAPSHOT"
+        String[] splits;
+        if (index == -1) {
+            splits = version.split("\\.");
+            isSnapshot = false;
+        } else {
+            splits = version.substring(0, index).split("\\.");
+            isSnapshot = true;
+        }
+
+        major = Integer.parseInt(splits[0]);
+        minor = Integer.parseInt(splits[1]);
+        revision = Integer.parseInt(splits[2]);
+    }
+
+    @Override
+    public String toString() {
+        return "" + major + "." + minor + "." + revision;
+    }
+
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final String CURRENT_KYLIN_VERSION = "1.5.0";
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("1.5.1");
+
+    private static final Set<KylinVersion> SIGNATURE_INCOMPATIBLE_REVISIONS = new HashSet<KylinVersion>();
+
+    static {
+        SIGNATURE_INCOMPATIBLE_REVISIONS.add(new KylinVersion("1.5.1"));
+    }
 
     /**
      * Get current Kylin version
-     *
+     * <p/>
      * Currently the implementation is reading directly from constant variable
      *
      * @return current kylin version in String
      */
-    public static String getCurrentVersion(){
+    public static KylinVersion getCurrentVersion() {
         return CURRENT_KYLIN_VERSION;
+    }
+
+    public boolean isCompatibleWith(KylinVersion v) {
+        KylinVersion current = CURRENT_KYLIN_VERSION;
+        if (current.major != v.major || current.minor != v.minor) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean isSignatureCompatibleWith(final KylinVersion v) {
+        if (!isCompatibleWith(v)) {
+            return false;
+        }
+
+        if (v.isSnapshot || isSnapshot) {
+            return false;//for snapshot versions things are undetermined
+        }
+
+        boolean signatureIncompatible = Iterables.any(Iterables.filter(
+
+                SIGNATURE_INCOMPATIBLE_REVISIONS, new Predicate<KylinVersion>() {
+                    @Override
+                    public boolean apply(@Nullable KylinVersion input) {
+                        return v.major == input.major && v.minor == input.minor;
+                    }
+                }), new Predicate<KylinVersion>() {
+                    @Override
+                    public boolean apply(@Nullable KylinVersion input) {
+                        return input.revision > v.revision;
+                    }
+                });
+
+        return !signatureIncompatible;
     }
 }

@@ -70,20 +70,27 @@ public class DeployCoprocessorCLI {
     private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
     public static void main(String[] args) throws IOException {
+
+        if (args == null || args.length <= 1) {
+            printUsageAndExit();
+        }
+
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         FileSystem fileSystem = FileSystem.get(hconf);
         HBaseAdmin hbaseAdmin = new HBaseAdmin(hconf);
 
-        String localCoprocessorJar = new File(args[0]).getAbsolutePath();
+        String localCoprocessorJar;
+        if ("default".equals(args[0])) {
+            localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
+        } else {
+            localCoprocessorJar = new File(args[0]).getAbsolutePath();
+        }
+
         logger.info("Identify coprocessor jar " + localCoprocessorJar);
 
         List<String> tableNames = getHTableNames(kylinConfig);
         logger.info("Identify tables " + tableNames);
-
-        if (args.length <= 1) {
-            printUsageAndExit();
-        }
 
         String filterType = args[1].toLowerCase();
         if (filterType.equals("-table")) {

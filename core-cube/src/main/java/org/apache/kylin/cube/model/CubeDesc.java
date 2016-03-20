@@ -40,6 +40,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
@@ -437,7 +438,19 @@ public class CubeDesc extends RootPersistentEntity {
         return "CubeDesc [name=" + name + "]";
     }
 
+    /**
+     * this method is to prevent malicious metadata change by checking the saved signature
+     * with the calculated signature.
+     * 
+     * if you're comparing two cube descs, prefer to use consistentWith()
+     * @return
+     */
     public boolean checkSignature() {
+        if (KylinVersion.getCurrentVersion().isCompatibleWith(new KylinVersion(getVersion())) && !KylinVersion.getCurrentVersion().isSignatureCompatibleWith(new KylinVersion(getVersion()))) {
+            logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), getVersion());
+            return true;
+        }
+
         if (StringUtils.isBlank(getSignature())) {
             return true;
         }
@@ -447,6 +460,12 @@ public class CubeDesc extends RootPersistentEntity {
         return calculated.equals(saved);
     }
 
+    public boolean consistentWith(CubeDesc another) {
+        if (another == null)
+            return false;
+        return this.calculateSignature().equals(another.calculateSignature());
+    }
+
     public String calculateSignature() {
         MessageDigest md;
         try {
@@ -454,13 +473,18 @@ public class CubeDesc extends RootPersistentEntity {
             StringBuilder sigString = new StringBuilder();
             sigString.append(this.name).append("|")//
                     .append(JsonUtil.writeValueAsString(this.modelName)).append("|")//
+                    .append(JsonUtil.writeValueAsString(this.nullStrings)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.dimensions)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.measures)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.rowkey)).append("|")//
                     .append(JsonUtil.writeValueAsString(this.aggregationGroups)).append("|")//
-                    .append(JsonUtil.writeValueAsString(this.hbaseMapping));
+                    .append(JsonUtil.writeValueAsString(this.hbaseMapping)).append("|")//
+                    .append(JsonUtil.writeValueAsString(this.engineType)).append("|")//
+                    .append(JsonUtil.writeValueAsString(this.storageType)).append("|");
 
-            byte[] signature = md.digest(sigString.toString().toLowerCase().getBytes());
+            String signatureInput = sigString.toString().replaceAll("\\s+", "").toLowerCase();
+
+            byte[] signature = md.digest(signatureInput.getBytes());
             String ret = new String(Base64.encodeBase64(signature));
             return ret;
         } catch (NoSuchAlgorithmException | JsonProcessingException e) {
@@ -573,12 +597,12 @@ public class CubeDesc extends RootPersistentEntity {
             if (CollectionUtils.containsAny(mandatoryDims, jointDims)) {
                 logger.warn("Aggregation group " + index + " mandatory dims overlap with joint dims");
             }
-            
+
             if (CollectionUtils.containsAny(hierarchyDims, jointDims)) {
                 logger.error("Aggregation group " + index + " hierarchy dims overlap with joint dims");
                 throw new IllegalStateException("Aggregation group " + index + " hierarchy dims overlap with joint dims");
             }
-            
+
             if (hasSingle(hierarchyDimsList)) {
                 logger.error("Aggregation group " + index + " require at least 2 dims in a hierarchy");
                 throw new IllegalStateException("Aggregation group " + index + " require at least 2 dims in a hierarchy");
@@ -587,7 +611,7 @@ public class CubeDesc extends RootPersistentEntity {
                 logger.error("Aggregation group " + index + " require at least 2 dims in a joint");
                 throw new IllegalStateException("Aggregation group " + index + " require at least 2 dims in a joint");
             }
-            
+
             if (hasOverlap(hierarchyDimsList, hierarchyDims)) {
                 logger.error("Aggregation group " + index + " a dim exist in more than one hierarchy");
                 throw new IllegalStateException("Aggregation group " + index + " a dim exist in more than one hierarchy");

@@ -56,10 +56,12 @@ public class DictionaryManager {
     public static DictionaryManager getInstance(KylinConfig config) {
         DictionaryManager r = CACHE.get(config);
         if (r == null) {
-            r = new DictionaryManager(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one singleton exist");
+            synchronized (DictionaryManager.class) {
+                r = CACHE.get(config);
+                if (r == null) {
+                    r = new DictionaryManager(config);
+                    CACHE.put(config, r);
+                }
             }
         }
         return r;
@@ -314,8 +316,6 @@ public class DictionaryManager {
         if (existings == null || existings.isEmpty()) {
             return null;
         }
-//        Collections.sort(existings);
-
         final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(existings.first(), existings.last(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         TableSignature input = dictInfo.getInput();
@@ -334,8 +334,6 @@ public class DictionaryManager {
         if (dictInfos == null || dictInfos.isEmpty()) {
             return null;
         }
-//        Collections.sort(dictInfos);
-
         final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.first(), dictInfos.last(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         DictionaryInfo largestDict = null;

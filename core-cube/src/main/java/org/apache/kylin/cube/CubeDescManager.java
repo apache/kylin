@@ -58,7 +58,7 @@ public class CubeDescManager {
         if (r != null) {
             return r;
         }
-        
+
         synchronized (CubeDescManager.class) {
             r = CACHE.get(config);
             if (r != null) {

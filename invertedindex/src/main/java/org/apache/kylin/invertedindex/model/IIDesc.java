@@ -37,7 +37,7 @@ import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.DimensionDesc;
+import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
@@ -79,9 +79,9 @@ public class IIDesc extends RootPersistentEntity {
     @JsonProperty("timestamp_dimension")
     private String timestampDimension;
     @JsonProperty("bitmap_dimensions")
-    private List<DimensionDesc> bitmapDimensions = Collections.emptyList();
+    private List<ModelDimensionDesc> bitmapDimensions = Collections.emptyList();
     @JsonProperty("value_dimensions")
-    private List<DimensionDesc> valueDimensions;
+    private List<ModelDimensionDesc> valueDimensions;
     @JsonProperty("metrics")
     private String[] metricNames;
     @JsonProperty("sharding")
@@ -126,17 +126,17 @@ public class IIDesc extends RootPersistentEntity {
         timestampDimension = timestampDimension.toUpperCase();
 
         // capitalize
-        DimensionDesc.capicalizeStrings(bitmapDimensions);
-        DimensionDesc.capicalizeStrings(valueDimensions);
+        ModelDimensionDesc.capicalizeStrings(bitmapDimensions);
+        ModelDimensionDesc.capicalizeStrings(valueDimensions);
         StringUtil.toUpperCaseArray(metricNames, metricNames);
 
         // retrieve all columns and all tables, and make available measure to ii
         HashSet<String> allTableNames = Sets.newHashSet();
         measureDescs = Lists.newArrayList();
         measureDescs.add(makeCountMeasure());
-        for (DimensionDesc dimensionDesc : Iterables.concat(bitmapDimensions, valueDimensions)) {
-            TableDesc tableDesc = this.getTableDesc(dimensionDesc.getTable());
-            for (String column : dimensionDesc.getColumns()) {
+        for (ModelDimensionDesc modelDimensionDesc : Iterables.concat(bitmapDimensions, valueDimensions)) {
+            TableDesc tableDesc = this.getTableDesc(modelDimensionDesc.getTable());
+            for (String column : modelDimensionDesc.getColumns()) {
                 ColumnDesc columnDesc = tableDesc.findColumnByName(column);
                 TblColRef tcr = new TblColRef(columnDesc);
                 allColumns.add(tcr);
@@ -163,8 +163,8 @@ public class IIDesc extends RootPersistentEntity {
         }
 
         // indexing for each type of columns
-        bitmapCols = new int[DimensionDesc.getColumnCount(bitmapDimensions)];
-        valueCols = new int[DimensionDesc.getColumnCount(valueDimensions)];
+        bitmapCols = new int[ModelDimensionDesc.getColumnCount(bitmapDimensions)];
+        valueCols = new int[ModelDimensionDesc.getColumnCount(valueDimensions)];
         metricsCols = new int[metricNames.length];
         metricsColSet = new BitSet(this.getTableDesc(this.getFactTableName()).getColumnCount());
 

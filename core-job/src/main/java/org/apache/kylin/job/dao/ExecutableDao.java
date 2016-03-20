@@ -50,12 +50,13 @@ public class ExecutableDao {
     public static ExecutableDao getInstance(KylinConfig config) {
         ExecutableDao r = CACHE.get(config);
         if (r == null) {
-            r = new ExecutableDao(config);
-            CACHE.put(config, r);
-            if (CACHE.size() > 1) {
-                logger.warn("More than one singleton exist");
+            synchronized (ExecutableDao.class) {
+                r = CACHE.get(config);
+                if (r == null) {
+                    r = new ExecutableDao(config);
+                    CACHE.put(config, r);
+                }
             }
-
         }
         return r;
     }
@@ -99,7 +100,6 @@ public class ExecutableDao {
             if (resources == null || resources.isEmpty()) {
                 return Collections.emptyList();
             }
-//            Collections.sort(resources);
             String rangeStart = resources.first();
             String rangeEnd = resources.last();
             return store.getAllResources(rangeStart, rangeEnd, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);
@@ -115,7 +115,6 @@ public class ExecutableDao {
             if (resources == null || resources.isEmpty()) {
                 return Collections.emptyList();
             }
-            // Collections.sort(resources);
             String rangeStart = resources.first();
             String rangeEnd = resources.last();
             return store.getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis, ExecutableOutputPO.class, JOB_OUTPUT_SERIALIZER);

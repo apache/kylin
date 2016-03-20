@@ -78,7 +78,7 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
      * User info only, we don't do version control
      */
     @JsonProperty("version")
-    protected String version = KylinVersion.getCurrentVersion();
+    protected String version = KylinVersion.getCurrentVersion().toString();
 
     public String getVersion() {
         return version;

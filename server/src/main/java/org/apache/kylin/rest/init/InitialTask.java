@@ -16,24 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.cube.model.v3;
+package org.apache.kylin.rest.init;
 
 /**
- * @author xduo
- * 
+ * Created by dongli on 3/16/16.
  */
-public enum CubeBuildTypeEnum {
-    /**
-     * rebuild a segment or incremental build
-     */
-    BUILD,
-    /**
-     * merge segments
-     */
-    MERGE,
-
-    /**
-     * refresh segments
-     */
-    REFRESH
+public abstract class InitialTask {
+    public abstract void execute();
 }
