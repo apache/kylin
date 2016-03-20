@@ -160,7 +160,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
     public CapabilityResult.CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc measureDesc) {
         //is raw query
-        if (digest.aggregations.size() != 0 || digest.metricColumns.size() != 0)
+        if (!digest.isRawQuery())
             return null;
 
         TblColRef rawColumn = getRawColumn(measureDesc.getFunction());
@@ -191,7 +191,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
     @Override
     public void adjustSqlDigest(MeasureDesc measureDesc, SQLDigest sqlDigest) {
-        if (sqlDigest.isRawQuery) {
+        if (sqlDigest.isRawQuery()) {
             TblColRef col = this.getRawColumn(measureDesc.getFunction());
             ParameterDesc colParameter = new ParameterDesc();
             colParameter.setType("column");

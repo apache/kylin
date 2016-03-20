@@ -192,7 +192,6 @@ public class CubeEnumerator implements Enumerator<Object[]> {
         if (!sqlDigest.groupbyColumns.isEmpty() || !sqlDigest.metricColumns.isEmpty())
             return;
 
-        sqlDigest.isRawQuery = true;
         // If no group by and metric found, then it's simple query like select ... from ... where ...,
         // But we have no raw data stored, in order to return better results, we hack to output sum of metric column
         logger.info("No group by and aggregation found in this query, will hack some result for better look of output...");
