@@ -114,19 +114,17 @@ abstract public class ResourceStore {
     }
 
     /**
-     * return a list of child resources & folders under given path, return null
-     * if given path is not a folder
+     * List resources and sub-folders under a given folder, return null if given path is not a folder
      */
-    final public NavigableSet<String> listResources(String resPath) throws IOException {
-        resPath = norm(resPath);
-        return listResourcesImpl(resPath);
+    final public NavigableSet<String> listResources(String folderPath) throws IOException {
+        String path = norm(folderPath);
+        return listResourcesImpl(path);
     }
 
-    abstract protected NavigableSet<String> listResourcesImpl(String resPath) throws IOException;
+    abstract protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException;
 
     /**
-     * return true if a resource exists, return false in case of folder or
-     * non-exist
+     * Return true if a resource exists, return false in case of folder or non-exist
      */
     final public boolean exists(String resPath) throws IOException {
         return existsImpl(norm(resPath));
@@ -135,7 +133,7 @@ abstract public class ResourceStore {
     abstract protected boolean existsImpl(String resPath) throws IOException;
 
     /**
-     * read a resource, return null in case of not found
+     * Read a resource, return null in case of not found or is a folder
      */
     final public <T extends RootPersistentEntity> T getResource(String resPath, Class<T> clz, Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
@@ -162,16 +160,22 @@ abstract public class ResourceStore {
         return getResourceTimestampImpl(norm(resPath));
     }
 
-    final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, Class<T> clazz, Serializer<T> serializer) throws IOException {
-        return getAllResources(rangeStart, rangeEnd, -1L, -1L, clazz, serializer);
+    /**
+     * Read all resources under a folder. Return empty list if folder not exist. 
+     */
+    final public <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, Class<T> clazz, Serializer<T> serializer) throws IOException {
+        return getAllResources(folderPath, Long.MIN_VALUE, Long.MAX_VALUE, clazz, serializer);
     }
 
-    final public <T extends RootPersistentEntity> List<T> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis, Class<T> clazz, Serializer<T> serializer) throws IOException {
-        final List<RawResource> allResources = getAllResources(rangeStart, rangeEnd, timeStartInMillis, timeEndInMillis);
-        if (allResources.isEmpty()) {
+    /**
+     * Read all resources under a folder having last modified time between given range. Return empty list if folder not exist. 
+     */
+    final public <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, long timeStart, long timeEndExclusive, Class<T> clazz, Serializer<T> serializer) throws IOException {
+        final List<RawResource> allResources = getAllResourcesImpl(folderPath, timeStart, timeEndExclusive);
+        if (allResources == null || allResources.isEmpty()) {
             return Collections.emptyList();
         }
-        List<T> result = Lists.newArrayList();
+        List<T> result = Lists.newArrayListWithCapacity(allResources.size());
         try {
             for (RawResource rawResource : allResources) {
                 final T element = serializer.deserialize(new DataInputStream(rawResource.inputStream));
@@ -181,14 +185,13 @@ abstract public class ResourceStore {
             return result;
         } finally {
             for (RawResource rawResource : allResources) {
-                IOUtils.closeQuietly(rawResource.inputStream);
+                if (rawResource != null)
+                    IOUtils.closeQuietly(rawResource.inputStream);
             }
         }
     }
 
-    abstract protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException;
-
-    abstract protected List<RawResource> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis) throws IOException;
+    abstract protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException;
 
     /** returns null if not exists */
     abstract protected RawResource getResourceImpl(String resPath) throws IOException;
@@ -211,11 +214,17 @@ abstract public class ResourceStore {
      * check & set, overwrite a resource
      */
     final public <T extends RootPersistentEntity> long putResource(String resPath, T obj, Serializer<T> serializer) throws IOException {
+        return putResource(resPath, obj, System.currentTimeMillis(), serializer);
+    }
+
+    /**
+     * check & set, overwrite a resource
+     */
+    final public <T extends RootPersistentEntity> long putResource(String resPath, T obj, long newTS, Serializer<T> serializer) throws IOException {
         resPath = norm(resPath);
         //logger.debug("Saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
 
         long oldTS = obj.getLastModified();
-        long newTS = System.currentTimeMillis();
         obj.setLastModified(newTS);
 
         try {

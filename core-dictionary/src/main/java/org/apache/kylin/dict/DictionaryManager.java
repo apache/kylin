@@ -311,13 +311,8 @@ public class DictionaryManager {
     }
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(config).getStore();
-        NavigableSet<String> existings = store.listResources(dictInfo.getResourceDir());
-        if (existings == null || existings.isEmpty()) {
-            return null;
-        }
-
-        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(existings.first(), existings.last(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
+        final ResourceStore store = MetadataManager.getInstance(config).getStore();
+        final List<DictionaryInfo> allResources = store.getAllResources(dictInfo.getResourceDir(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         TableSignature input = dictInfo.getInput();
 
@@ -330,13 +325,8 @@ public class DictionaryManager {
     }
 
     private DictionaryInfo findLargestDictInfo(DictionaryInfo dictInfo) throws IOException {
-        ResourceStore store = MetadataManager.getInstance(config).getStore();
-        NavigableSet<String> dictInfos = store.listResources(dictInfo.getResourceDir());
-        if (dictInfos == null || dictInfos.isEmpty()) {
-            return null;
-        }
-
-        final List<DictionaryInfo> allResources = MetadataManager.getInstance(config).getStore().getAllResources(dictInfos.first(), dictInfos.last(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
+        final ResourceStore store = MetadataManager.getInstance(config).getStore();
+        final List<DictionaryInfo> allResources = store.getAllResources(dictInfo.getResourceDir(), DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
 
         DictionaryInfo largestDict = null;
         for (DictionaryInfo dictionaryInfo : allResources) {

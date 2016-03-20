@@ -24,13 +24,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,13 +50,13 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected NavigableSet<String> listResourcesImpl(String resPath) throws IOException {
-        String[] names = file(resPath).list();
+    protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException {
+        String[] names = file(folderPath).list();
         if (names == null) // not a directory
             return null;
 
         TreeSet<String> r = new TreeSet<>();
-        String prefix = resPath.endsWith("/") ? resPath : resPath + "/";
+        String prefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
         for (String n : names) {
             r.add(prefix + n);
         }
@@ -67,39 +66,32 @@ public class FileResourceStore extends ResourceStore {
     @Override
     protected boolean existsImpl(String resPath) throws IOException {
         File f = file(resPath);
-        return f.exists() && f.isFile(); // directory is not considered a
-                                         // resource
+        return f.exists() && f.isFile(); // directory is not considered a resource
     }
 
     @Override
-    protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException {
-        List<RawResource> result = Lists.newArrayList();
+    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
+        NavigableSet<String> resources = listResources(folderPath);
+        if (resources == null)
+            return Collections.emptyList();
+        
+        List<RawResource> result = Lists.newArrayListWithCapacity(resources.size());
         try {
-            String commonPrefix = StringUtils.getCommonPrefix(rangeEnd, rangeStart);
-            commonPrefix = commonPrefix.substring(0, commonPrefix.lastIndexOf("/") + 1);
-            final NavigableSet<String> resources = listResourcesImpl(commonPrefix);
-            for (String resource : resources) {
-                if (resource.compareTo(rangeStart) >= 0 && resource.compareTo(rangeEnd) <= 0) {
-                    if (existsImpl(resource)) {
-                        result.add(getResourceImpl(resource));
-                    }
+            for (String res : resources) {
+                long ts = getResourceTimestampImpl(res);
+                if (timeStart <= ts && ts < timeEndExclusive) {
+                    RawResource resource = getResourceImpl(res);
+                    if (resource != null) // can be null if is a sub-folder
+                        result.add(resource);
                 }
             }
-            return result;
         } catch (IOException ex) {
             for (RawResource rawResource : result) {
                 IOUtils.closeQuietly(rawResource.inputStream);
             }
             throw ex;
-        } catch (Exception ex) {
-            throw new UnsupportedOperationException(ex);
         }
-    }
-
-    @Override
-    protected List<RawResource> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis) throws IOException {
-        //just ignore time filter
-        return getAllResources(rangeStart, rangeEnd);
+        return result;
     }
 
     @Override

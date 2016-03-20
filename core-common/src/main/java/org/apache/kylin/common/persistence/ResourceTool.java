@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NavigableSet;
 
@@ -169,7 +168,7 @@ public class ResourceTool {
         resetR(store, "/");
     }
 
-    private static void resetR(ResourceStore store, String path) throws IOException {
+    public static void resetR(ResourceStore store, String path) throws IOException {
         NavigableSet<String> children = store.listResources(path);
         if (children == null) { // path is a resource (not a folder)
             if (matchFilter(path)) {

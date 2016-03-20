@@ -22,7 +22,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.List;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -37,7 +39,11 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.filter.*;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -88,18 +94,44 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     @Override
-    protected NavigableSet<String> listResourcesImpl(String resPath) throws IOException {
-        assert resPath.startsWith("/");
-        String lookForPrefix = resPath.endsWith("/") ? resPath : resPath + "/";
+    protected boolean existsImpl(String resPath) throws IOException {
+        Result r = getFromHTable(resPath, false, false);
+        return r != null;
+    }
+
+    @Override
+    protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException {
+        final TreeSet<String> result = new TreeSet<>();
+
+        visitFolder(folderPath, new KeyOnlyFilter(), new FolderVisitor() {
+            @Override
+            public void visit(String childPath, String fullPath, Result hbaseResult) {
+                result.add(childPath);
+            }
+        });
+        // return null to indicate not a folder
+        return result.isEmpty() ? null : result;
+    }
+
+    private void visitFolder(String folderPath, Filter filter, FolderVisitor visitor) throws IOException {
+        assert folderPath.startsWith("/");
+        String lookForPrefix = folderPath.endsWith("/") ? folderPath : folderPath + "/";
         byte[] startRow = Bytes.toBytes(lookForPrefix);
         byte[] endRow = Bytes.toBytes(lookForPrefix);
         endRow[endRow.length - 1]++;
 
-        TreeSet<String> result = new TreeSet<>();
-
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         Scan scan = new Scan(startRow, endRow);
-        scan.setFilter(new KeyOnlyFilter());
+        if ((filter != null && filter instanceof KeyOnlyFilter) == false) {
+            scan.addColumn(B_FAMILY, B_COLUMN_TS);
+            scan.addColumn(B_FAMILY, B_COLUMN);
+        }
+        if (filter != null) {
+            scan.setFilter(filter);
+        }
+
+        tuneScanParameters(scan);
+
         try {
             ResultScanner scanner = table.getScanner(scan);
             for (Result r : scanner) {
@@ -107,56 +139,11 @@ public class HBaseResourceStore extends ResourceStore {
                 assert path.startsWith(lookForPrefix);
                 int cut = path.indexOf('/', lookForPrefix.length());
                 String child = cut < 0 ? path : path.substring(0, cut);
-                result.add(child);
+                visitor.visit(child, path, r);
             }
         } finally {
             IOUtils.closeQuietly(table);
         }
-        // return null to indicate not a folder
-        return result.isEmpty() ? null : result;
-    }
-
-    @Override
-    protected boolean existsImpl(String resPath) throws IOException {
-        Result r = getFromHTable(resPath, false, false);
-        return r != null;
-    }
-
-    @Override
-    protected List<RawResource> getAllResources(String rangeStart, String rangeEnd) throws IOException {
-        return getAllResources(rangeStart, rangeEnd, -1L, -1L);
-    }
-
-    @Override
-    protected List<RawResource> getAllResources(String rangeStart, String rangeEnd, long timeStartInMillis, long timeEndInMillis) throws IOException {
-        byte[] startRow = Bytes.toBytes(rangeStart);
-        byte[] endRow = plusZero(Bytes.toBytes(rangeEnd));
-
-        Scan scan = new Scan(startRow, endRow);
-        scan.addColumn(B_FAMILY, B_COLUMN_TS);
-        scan.addColumn(B_FAMILY, B_COLUMN);
-        FilterList filterList = generateTimeFilterList(timeStartInMillis, timeEndInMillis);
-        if (filterList != null) {
-            scan.setFilter(filterList);
-        }
-        tuneScanParameters(scan);
-
-        HTableInterface table = getConnection().getTable(getAllInOneTableName());
-        List<RawResource> result = Lists.newArrayList();
-        try {
-            ResultScanner scanner = table.getScanner(scan);
-            for (Result r : scanner) {
-                result.add(new RawResource(getInputStream(Bytes.toString(r.getRow()), r), getTimestamp(r)));
-            }
-        } catch (IOException e) {
-            for (RawResource rawResource : result) {
-                IOUtils.closeQuietly(rawResource.inputStream);
-            }
-            throw e;
-        } finally {
-            IOUtils.closeQuietly(table);
-        }
-        return result;
     }
 
     private void tuneScanParameters(Scan scan) {
@@ -166,14 +153,40 @@ public class HBaseResourceStore extends ResourceStore {
         scan.setCacheBlocks(true);
     }
 
-    private FilterList generateTimeFilterList(long timeStartInMillis, long timeEndInMillis) {
+    interface FolderVisitor {
+        void visit(String childPath, String fullPath, Result hbaseResult) throws IOException;
+    }
+
+    @Override
+    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
+        FilterList filter = generateTimeFilterList(timeStart, timeEndExclusive);
+        final List<RawResource> result = Lists.newArrayList();
+        try {
+            visitFolder(folderPath, filter, new FolderVisitor() {
+                @Override
+                public void visit(String childPath, String fullPath, Result hbaseResult) throws IOException {
+                    // is a direct child (not grand child)?
+                    if (childPath.equals(fullPath))
+                        result.add(new RawResource(getInputStream(childPath, hbaseResult), getTimestamp(hbaseResult)));
+                }
+            });
+        } catch (IOException e) {
+            for (RawResource rawResource : result) {
+                IOUtils.closeQuietly(rawResource.inputStream);
+            }
+            throw e;
+        }
+        return result;
+    }
+
+    private FilterList generateTimeFilterList(long timeStart, long timeEndExclusive) {
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-        if (timeStartInMillis != -1L) {
-            SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.GREATER, Bytes.toBytes(timeStartInMillis));
+        if (timeStart != Long.MIN_VALUE) {
+            SingleColumnValueFilter timeStartFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.GREATER_OR_EQUAL, Bytes.toBytes(timeStart));
             filterList.addFilter(timeStartFilter);
         }
-        if (timeEndInMillis != -1L) {
-            SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.LESS_OR_EQUAL, Bytes.toBytes(timeEndInMillis));
+        if (timeEndExclusive != Long.MAX_VALUE) {
+            SingleColumnValueFilter timeEndFilter = new SingleColumnValueFilter(B_FAMILY, B_COLUMN_TS, CompareFilter.CompareOp.LESS, Bytes.toBytes(timeEndExclusive));
             filterList.addFilter(timeEndFilter);
         }
         return filterList.getFilters().size() == 0 ? null : filterList;
@@ -297,12 +310,6 @@ public class HBaseResourceStore extends ResourceStore {
         } finally {
             IOUtils.closeQuietly(table);
         }
-    }
-
-    private byte[] plusZero(byte[] startRow) {
-        byte[] endRow = Arrays.copyOf(startRow, startRow.length + 1);
-        endRow[endRow.length - 1] = 0;
-        return endRow;
     }
 
     private Path writeLargeCellToHdfs(String resPath, byte[] largeColumn, HTableInterface table) throws IOException {
