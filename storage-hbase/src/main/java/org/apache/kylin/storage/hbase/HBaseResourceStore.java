@@ -60,21 +60,8 @@ public class HBaseResourceStore extends ResourceStore {
     private static final String COLUMN_TS = "t";
     private static final byte[] B_COLUMN_TS = Bytes.toBytes(COLUMN_TS);
 
-    private static final Map<String, String> TABLE_SUFFIX_MAP = new LinkedHashMap<String, String>();
-
-    static {
-        TABLE_SUFFIX_MAP.put(CUBE_RESOURCE_ROOT + "/", "_cube");
-        TABLE_SUFFIX_MAP.put(DICT_RESOURCE_ROOT + "/", "_dict");
-        TABLE_SUFFIX_MAP.put("/invertedindex/", "_invertedindex");
-        TABLE_SUFFIX_MAP.put(PROJECT_RESOURCE_ROOT + "/", "_proj");
-        TABLE_SUFFIX_MAP.put(SNAPSHOT_RESOURCE_ROOT + "/", "_table_snapshot");
-        TABLE_SUFFIX_MAP.put("", ""); // DEFAULT CASE
-    }
-
     final String tableNameBase;
     final String hbaseUrl;
-
-    //    final Map<String, String> tableNameMap; // path prefix ==> HBase table name
 
     private HConnection getConnection() throws IOException {
         return HBaseConnection.get(hbaseUrl);
@@ -90,15 +77,6 @@ public class HBaseResourceStore extends ResourceStore {
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
 
         createHTableIfNeeded(getAllInOneTableName());
-
-        //        tableNameMap = new LinkedHashMap<String, String>();
-        //        for (Entry<String, String> entry : TABLE_SUFFIX_MAP.entrySet()) {
-        //            String pathPrefix = entry.getKey();
-        //            String tableName = tableNameBase + entry.getValue();
-        //            tableNameMap.put(pathPrefix, tableName);
-        //            createHTableIfNeeded(tableName);
-        //        }
-
     }
 
     private void createHTableIfNeeded(String tableName) throws IOException {
@@ -113,7 +91,6 @@ public class HBaseResourceStore extends ResourceStore {
     protected NavigableSet<String> listResourcesImpl(String resPath) throws IOException {
         assert resPath.startsWith("/");
         String lookForPrefix = resPath.endsWith("/") ? resPath : resPath + "/";
-        byte[] prefix = Bytes.toBytes(lookForPrefix);
         byte[] startRow = Bytes.toBytes(lookForPrefix);
         byte[] endRow = Bytes.toBytes(lookForPrefix);
         endRow[endRow.length - 1]++;
@@ -122,16 +99,12 @@ public class HBaseResourceStore extends ResourceStore {
 
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         Scan scan = new Scan(startRow, endRow);
-
-        FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-        filterList.addFilter(new PrefixFilter(prefix));
-        filterList.addFilter(new KeyOnlyFilter());
-        scan.setFilter(filterList);
-
+        scan.setFilter(new KeyOnlyFilter());
         try {
             ResultScanner scanner = table.getScanner(scan);
             for (Result r : scanner) {
                 String path = Bytes.toString(r.getRow());
+                assert path.startsWith(lookForPrefix);
                 int cut = path.indexOf('/', lookForPrefix.length());
                 String child = cut < 0 ? path : path.substring(0, cut);
                 result.add(child);

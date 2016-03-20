@@ -48,7 +48,8 @@ public class PartitionDesc {
     private String partitionTimeColumn;
 
     @JsonProperty("partition_date_start")
-    private long partitionDateStart = 0L;
+    private long partitionDateStart = 0L;//Deprecated
+    
     @JsonProperty("partition_date_format")
     private String partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
 
@@ -57,6 +58,7 @@ public class PartitionDesc {
 
     @JsonProperty("partition_type")
     private PartitionType partitionType = PartitionType.APPEND;
+    
     @JsonProperty("partition_condition_builder")
     private String partitionConditionBuilderClz = DefaultPartitionConditionBuilder.class.getName();
 

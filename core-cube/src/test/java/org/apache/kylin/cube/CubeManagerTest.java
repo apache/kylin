@@ -30,6 +30,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.NavigableSet;
 
@@ -125,11 +126,15 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     public void testGetAllCubes() throws Exception {
         final ResourceStore store = ResourceStore.getStore(getTestConfig());
         final NavigableSet<String> cubePath = store.listResources(ResourceStore.CUBE_RESOURCE_ROOT);
+        final Iterator<String> iterator = cubePath.iterator();
+        final String firstPath = iterator.next();
+        final String secondPath = iterator.next();
+        final String lastPath = cubePath.last();
         assertTrue(cubePath.size() > 1);
-//        Collections.sort(cubePath);
-        final List<CubeInstance> cubes = store.getAllResources(cubePath.first(), cubePath.last(), CubeInstance.class, CubeManager.CUBE_SERIALIZER);
+        
+        final List<CubeInstance> cubes = store.getAllResources(firstPath, lastPath, CubeInstance.class, CubeManager.CUBE_SERIALIZER);
         assertEquals(cubePath.size(), cubes.size());
-        assertEquals(cubePath.size() - 1, store.getAllResources(cubePath.first(), cubePath.last(), CubeInstance.class, CubeManager.CUBE_SERIALIZER).size());
+        assertEquals(cubePath.size() - 1, store.getAllResources(secondPath, lastPath, CubeInstance.class, CubeManager.CUBE_SERIALIZER).size());
     }
 
     @Test

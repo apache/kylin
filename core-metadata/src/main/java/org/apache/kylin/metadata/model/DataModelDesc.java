@@ -58,13 +58,14 @@ public class DataModelDesc extends RootPersistentEntity {
     private LookupDesc[] lookups;
 
     @JsonProperty("dimensions")
-    private List<DimensionDesc> dimensions;
+    private List<ModelDimensionDesc> dimensions;
 
     @JsonProperty("metrics")
     private String[] metrics;
 
     @JsonProperty("filter_condition")
     private String filterCondition;
+    
     @JsonProperty("partition_desc")
     PartitionDesc partitionDesc;
 
@@ -72,6 +73,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
     private TableDesc factTableDesc;
+    
     private List<TableDesc> lookupTableDescs = Lists.newArrayList();
 
     /**
@@ -188,7 +190,7 @@ public class DataModelDesc extends RootPersistentEntity {
         }
 
         initJoinColumns(tables);
-        DimensionDesc.capicalizeStrings(dimensions);
+        ModelDimensionDesc.capicalizeStrings(dimensions);
         initPartitionDesc(tables);
     }
 
@@ -321,7 +323,7 @@ public class DataModelDesc extends RootPersistentEntity {
         return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
-    public List<DimensionDesc> getDimensions() {
+    public List<ModelDimensionDesc> getDimensions() {
         return dimensions;
     }
 
@@ -329,7 +331,7 @@ public class DataModelDesc extends RootPersistentEntity {
         return metrics;
     }
 
-    public void setDimensions(List<DimensionDesc> dimensions) {
+    public void setDimensions(List<ModelDimensionDesc> dimensions) {
         this.dimensions = dimensions;
     }
 

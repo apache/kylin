@@ -210,7 +210,7 @@ public class CubeSegmentTupleIterator implements ITupleIterator {
 
     private void logScan(HBaseKeyRange keyRange) {
         StringBuilder info = new StringBuilder();
-        info.append(" Scan hbase table ").append(tableName).append(": ");
+        info.append("Scan hbase table ").append(tableName).append(": ");
         if (keyRange.getCuboid().requirePostAggregation()) {
             info.append(" cuboid require post aggregation, from ");
         } else {

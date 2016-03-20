@@ -6,17 +6,17 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.cube.upgrade;
+package org.apache.kylin.cube.cli;
 
 import java.util.List;
 
@@ -34,53 +34,21 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import com.google.common.collect.Lists;
 
 /**
- * Created by dongli on 11/17/15.
+ * used to bulk refresh the cube's signature in metadata store.
+ * won't be useful unless something went wrong.
  */
-public class CubeDescSignatureUpdate {
-    private static final Log logger = LogFactory.getLog(CubeDescSignatureUpdate.class);
+public class CubeSignatureRefresher {
+    private static final Log logger = LogFactory.getLog(CubeSignatureRefresher.class);
     private KylinConfig config = null;
     private ResourceStore store;
     private String[] cubeNames;
     private List<String> updatedResources = Lists.newArrayList();
     private List<String> errorMsgs = Lists.newArrayList();
 
-    public CubeDescSignatureUpdate(String[] cubes) {
+    public CubeSignatureRefresher(String[] cubes) {
         config = KylinConfig.getInstanceFromEnv();
         store = ResourceStore.getStore(config);
         cubeNames = cubes;
-    }
-
-    public static void main(String args[]) {
-        if (args != null && args.length > 1) {
-            System.out.println("Usage: java CubeDescSignatureUpdate [Cubes]; e.g, cube1,cube2 ");
-            return;
-        }
-
-        CubeDescSignatureUpdate metadataUpgrade = new CubeDescSignatureUpdate(args);
-        metadataUpgrade.update();
-
-        logger.info("=================================================================");
-        logger.info("Run CubeDescSignatureUpdate completed;");
-
-        if (!metadataUpgrade.updatedResources.isEmpty()) {
-            logger.info("Following resources are updated successfully:");
-            for (String s : metadataUpgrade.updatedResources) {
-                logger.info(s);
-            }
-        } else {
-            logger.warn("No resource updated.");
-        }
-
-        if (!metadataUpgrade.errorMsgs.isEmpty()) {
-            logger.info("Here are the error/warning messages, you may need to check:");
-            for (String s : metadataUpgrade.errorMsgs) {
-                logger.warn(s);
-            }
-        } else {
-            logger.info("No error or warning messages; The update succeeds.");
-        }
-
-        logger.info("=================================================================");
     }
 
     public void update() {
@@ -113,18 +81,55 @@ public class CubeDescSignatureUpdate {
         ProjectManager.getInstance(config);
     }
 
+    public List<String> getErrorMsgs() {
+        return errorMsgs;
+    }
+
     private void updateCubeDesc(CubeDesc cubeDesc) {
         try {
-            cubeDesc.setPartitionDateStart(cubeDesc.getModel().getPartitionDesc().getPartitionDateStart());
             String calculatedSign = cubeDesc.calculateSignature();
-            if (!cubeDesc.getSignature().equals(calculatedSign)) {
+            if (cubeDesc.getSignature() == null || (!cubeDesc.getSignature().equals(calculatedSign)) ){
                 cubeDesc.setSignature(calculatedSign);
                 store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
                 updatedResources.add(cubeDesc.getResourcePath());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("error", e);
             errorMsgs.add("Update CubeDesc[" + cubeDesc.getName() + "] failed: " + e.getLocalizedMessage());
         }
     }
+
+    public static void main(String args[]) {
+        if (args != null && args.length > 1) {
+            System.out.println("Usage: java CubeDescSignatureUpdate [Cubes]; e.g, cube1,cube2 ");
+            return;
+        }
+
+        CubeSignatureRefresher metadataUpgrade = new CubeSignatureRefresher(args);
+        metadataUpgrade.update();
+
+        logger.info("=================================================================");
+        logger.info("Run CubeDescSignatureUpdate completed;");
+
+        if (!metadataUpgrade.updatedResources.isEmpty()) {
+            logger.info("Following resources are updated successfully:");
+            for (String s : metadataUpgrade.updatedResources) {
+                logger.info(s);
+            }
+        } else {
+            logger.warn("No resource updated.");
+        }
+
+        if (!metadataUpgrade.errorMsgs.isEmpty()) {
+            logger.info("Here are the error/warning messages, you may need to check:");
+            for (String s : metadataUpgrade.errorMsgs) {
+                logger.warn(s);
+            }
+        } else {
+            logger.info("No error or warning messages; The update succeeds.");
+        }
+
+        logger.info("=================================================================");
+    }
+
 }

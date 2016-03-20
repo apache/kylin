@@ -122,7 +122,7 @@ public class KylinConfigBase implements Serializable {
     public boolean isDevEnv() {
         return "DEV".equals(getOptional("deploy.env", "DEV"));
     }
-    
+
     public String getMetadataUrl() {
         return getOptional("kylin.metadata.url");
     }
@@ -179,10 +179,7 @@ public class KylinConfigBase implements Serializable {
         if (!root.endsWith("/")) {
             root += "/";
         }
-        return new StringBuffer(root)
-                .append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-'))
-                .append("/")
-                .toString();
+        return new StringBuffer(root).append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).append("/").toString();
     }
 
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
@@ -487,12 +484,12 @@ public class KylinConfigBase implements Serializable {
         percent = Math.min(percent, 100);
         return percent;
     }
-    
+
     public Map<String, String> getCubingInMemMRJobConfOverride() {
         // in-mem cubing requires big memory, however dev env (sandbox) may not have that much
         String defaultOverride = isDevEnv() ? "" : "mapreduce.map.java.opts=-Xmx2700m;  mapreduce.map.memory.mb=3072;  mapreduce.task.io.sort.mb=200";
         String override = getOptional("kylin.job.cubing.inmem.mrjob_conf_override", defaultOverride);
-        
+
         Map<String, String> result = Maps.newHashMap();
         for (String pair : override.split(";")) {
             int cut = pair.indexOf('=');
@@ -581,6 +578,10 @@ public class KylinConfigBase implements Serializable {
 
     public String getDeployEnv() {
         return getOptional("deploy.env", "DEV");
+    }
+
+    public String getInitTasks() {
+        return getOptional("kylin.init.tasks");
     }
 
 }
