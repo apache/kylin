@@ -29,7 +29,9 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
+import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -62,26 +64,32 @@ public class CubeCapabilityChecker {
         Collection<FunctionDesc> aggrFunctions = digest.aggregations;
         Collection<TblColRef> unmatchedDimensions = unmatchedDimensions(dimensionColumns, cube);
         Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, cube);
-        
+
         // try custom measure types
         // in RAW query, unmatchedDimensions and unmatchedAggregations will null, so can't chose RAW cube well!
-//        if (!unmatchedDimensions.isEmpty() || !unmatchedAggregations.isEmpty()) {
-            tryCustomMeasureTypes(unmatchedDimensions, unmatchedAggregations, digest, cube, result);
-//        }
-        
+        //        if (!unmatchedDimensions.isEmpty() || !unmatchedAggregations.isEmpty()) {
+        tryCustomMeasureTypes(unmatchedDimensions, unmatchedAggregations, digest, cube, result);
+        //        }
+
         // try dimension-as-measure
         if (!unmatchedAggregations.isEmpty()) {
             tryDimensionAsMeasures(unmatchedAggregations, digest, cube, result);
         }
-        
+
         if (!unmatchedDimensions.isEmpty()) {
             logger.info("Exclude cube " + cube.getName() + " because unmatched dimensions");
             return result;
         }
-        
+
         if (!unmatchedAggregations.isEmpty()) {
             logger.info("Exclude cube " + cube.getName() + " because unmatched aggregations");
             return result;
+        }
+
+        if (cube.getStorageType() == IStorageAware.ID_HBASE && MassInTupleFilter.constainsMassInTupleFilter(digest.filter)) {
+            logger.info("Exclude cube " + cube.getName() + " because only v2 storage + v2 query engine supports massin");
+            return result;
+
         }
 
         // cost will be minded by caller
@@ -155,7 +163,7 @@ public class CubeCapabilityChecker {
         Iterator<FunctionDesc> it = unmatchedAggregations.iterator();
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();
-            
+
             if (cubeFuncs.contains(functionDesc)) {
                 it.remove();
                 continue;
@@ -181,13 +189,13 @@ public class CubeCapabilityChecker {
     private static void tryCustomMeasureTypes(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result) {
         CubeDesc cubeDesc = cube.getDescriptor();
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
-//            if (unmatchedDimensions.isEmpty() && unmatchedAggregations.isEmpty())
-//                break;
-            
+            //            if (unmatchedDimensions.isEmpty() && unmatchedAggregations.isEmpty())
+            //                break;
+
             MeasureType<?> measureType = measure.getFunction().getMeasureType();
             if (measureType instanceof BasicMeasureType)
                 continue;
-            
+
             CapabilityInfluence inf = measureType.influenceCapabilityCheck(unmatchedDimensions, unmatchedAggregations, digest, measure);
             if (inf != null)
                 result.influences.add(inf);

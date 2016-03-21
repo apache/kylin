@@ -57,7 +57,7 @@ import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.DynamicTupleFilter;
 import org.apache.kylin.metadata.filter.ExtractTupleFilter;
-import org.apache.kylin.metadata.filter.FunctionTupleFilter;
+import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
@@ -130,12 +130,12 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
                 if (op.getName().equalsIgnoreCase("extract_date")) {
                     filter = new ExtractTupleFilter(FilterOperatorEnum.EXTRACT);
                 } else {
-                    filter = new FunctionTupleFilter(op.getName());
+                    filter = Functions.getFunctionTupleFilter(op.getName());
                 }
                 break;
             case LIKE:
             case OTHER_FUNCTION:
-                filter = new FunctionTupleFilter(op.getName());
+                filter = Functions.getFunctionTupleFilter(op.getName());
                 break;
             default:
                 throw new UnsupportedOperationException(op.getName());

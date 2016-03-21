@@ -24,7 +24,7 @@ import java.util.Set;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.DictCodeSystem;
-import org.apache.kylin.dict.TupleFilterFunctionTransformer;
+import org.apache.kylin.dict.BuildInFunctionTransformer;
 import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
@@ -151,7 +151,7 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         if (filter == null)
             return null;
 
-        TupleFilterFunctionTransformer translator = new TupleFilterFunctionTransformer(dimEncMap);
+        BuildInFunctionTransformer translator = new BuildInFunctionTransformer(dimEncMap);
         filter = translator.transform(filter);
 
         // un-evaluatable filter is replaced with TRUE

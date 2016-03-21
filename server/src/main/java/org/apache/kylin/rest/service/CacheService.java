@@ -200,6 +200,11 @@ public class CacheService extends BasicService {
                 IIDescManager.clearCache();
                 CubeDescManager.clearCache();
                 break;
+            case EXTERNAL_FILTER:
+                getMetadataManager().reloadTableCache(cacheKey);
+                IIDescManager.clearCache();
+                CubeDescManager.clearCache();
+                break;
             case DATA_MODEL:
                 getMetadataManager().reloadDataModelDesc(cacheKey);
                 IIDescManager.clearCache();
@@ -261,6 +266,8 @@ public class CacheService extends BasicService {
                 getIIDescManager().removeIIDescLocal(cacheKey);
                 break;
             case TABLE:
+                throw new UnsupportedOperationException(log);
+            case EXTERNAL_FILTER:
                 throw new UnsupportedOperationException(log);
             case DATA_MODEL:
                 getMetadataManager().removeModelCache(cacheKey);

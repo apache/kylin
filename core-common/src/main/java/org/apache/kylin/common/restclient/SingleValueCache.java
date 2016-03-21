@@ -29,7 +29,6 @@ import org.apache.kylin.common.KylinConfig;
 
 /**
  * @author xjiang
- * 
  */
 public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 

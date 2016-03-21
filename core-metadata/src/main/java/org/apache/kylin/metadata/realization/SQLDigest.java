@@ -19,7 +19,6 @@
 package org.apache.kylin.metadata.realization;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;

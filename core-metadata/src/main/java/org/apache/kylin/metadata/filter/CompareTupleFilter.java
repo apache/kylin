@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
@@ -150,7 +151,7 @@ public class CompareTupleFilter extends TupleFilter {
         // extract tuple value
         Object tupleValue = null;
         for (TupleFilter filter : this.children) {
-            if (isConstant(filter) == false) {
+            if (!isConstant(filter)) {
                 filter.evaluate(tuple, cs);
                 tupleValue = filter.getValues().iterator().next();
             }

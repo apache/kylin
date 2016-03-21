@@ -51,6 +51,7 @@ abstract public class ResourceStore {
     public static final String SNAPSHOT_RESOURCE_ROOT = "/table_snapshot";
     public static final String TABLE_EXD_RESOURCE_ROOT = "/table_exd";
     public static final String TABLE_RESOURCE_ROOT = "/table";
+    public static final String EXTERNAL_FILTER_RESOURCE_ROOT = "/ext_filter";
     public static final String HYBRID_RESOURCE_ROOT = "/hybrid";
     public static final String EXECUTE_RESOURCE_ROOT = "/execute";
     public static final String EXECUTE_OUTPUT_RESOURCE_ROOT = "/execute_output";

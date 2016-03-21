@@ -135,7 +135,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             }
             try {
                 current++;
-                return queue.poll(timeout, TimeUnit.MILLISECONDS);
+                byte[] ret = queue.poll(timeout, TimeUnit.MILLISECONDS);
+                if (ret == null) {
+                    throw new RuntimeException("Timeout visiting cube!");
+                } else {
+                    return ret;
+                }
             } catch (InterruptedException e) {
                 throw new RuntimeException("error when waiting queue", e);
             }
@@ -236,7 +241,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             return Lists.newArrayList(Pair.newPair(getByteArrayForShort(baseShard), getByteArrayForShort((short) (baseShard + shardNum - 1))));
         } else {
             //0,1,2,3,4 wants 4,0
-            return Lists.newArrayList(Pair.newPair(getByteArrayForShort(baseShard), getByteArrayForShort((short) (totalShards - 1))),//
+            return Lists.newArrayList(Pair.newPair(getByteArrayForShort(baseShard), getByteArrayForShort((short) (totalShards - 1))), //
                     Pair.newPair(getByteArrayForShort((short) 0), getByteArrayForShort((short) (baseShard + shardNum - totalShards - 1))));
         }
     }

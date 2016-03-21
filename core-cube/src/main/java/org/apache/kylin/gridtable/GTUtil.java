@@ -88,7 +88,7 @@ public class GTUtil {
                 }
 
                 // shortcut for unEvaluatable filter
-                if (filter.isEvaluable() == false) {
+                if (!filter.isEvaluable()) {
                     TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
                     return ConstantTupleFilter.TRUE;
                 }

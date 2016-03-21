@@ -40,7 +40,8 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dict.TupleFilterFunctionTransformer;
+import org.apache.kylin.dict.BuildInFunctionTransformer;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.EmptyGTScanner;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
@@ -52,8 +53,10 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.hbase.cube.v2.filter.MassInValueProviderFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +76,7 @@ public class CubeSegmentScanner implements IGTScanner {
     final Cuboid cuboid;
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Collection<FunctionDesc> metrics, TupleFilter filter, boolean allowPreAggregate)  {
+            Collection<FunctionDesc> metrics, TupleFilter filter, boolean allowPreAggregate) {
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
         this.info = CubeGridTable.newGTInfo(cubeSeg, cuboid.getId());
@@ -81,7 +84,7 @@ public class CubeSegmentScanner implements IGTScanner {
         CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
 
         // translate FunctionTupleFilter to IN clause
-        ITupleFilterTransformer translator = new TupleFilterFunctionTransformer(cubeSeg.getDimensionEncodingMap());
+        ITupleFilterTransformer translator = new BuildInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
         filter = translator.transform(filter);
 
         //replace the constant values in filter to dictionary codes 
@@ -242,6 +245,12 @@ public class CubeSegmentScanner implements IGTScanner {
         public Scanner() {
             CubeHBaseRPC rpc;
             if ("scan".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryProtocol())) {
+                MassInTupleFilter.VALUE_PROVIDER_FACTORY = new MassInValueProviderFactoryImpl(new MassInValueProviderFactoryImpl.DimEncAware() {
+                    @Override
+                    public DimensionEncoding getDimEnc(TblColRef col) {
+                        return info.getCodeSystem().getDimEnc(col.getColumnDesc().getZeroBasedIndex());
+                    }
+                });
                 rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
             } else {
                 rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);//default behavior

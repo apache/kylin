@@ -6,24 +6,22 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.metadata.model;
+package org.apache.kylin.metadata.filter.UDF;
 
-public interface ISourceAware {
+import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.metadata.filter.function.Functions;
+import org.apache.kylin.metadata.model.TblColRef;
 
-    public static final int ID_HIVE = 0;
-    public static final int ID_STREAMING = 1;
-    public static final int ID_SPARKSQL = 5;
-    public static final int ID_EXTERNAL = 7;
-
-    int getSourceType();
+public interface MassInValueProviderFactory {
+    MassInValueProvider getProvider(Functions.FilterTableType filterTableType, String filterResourceIdentifier, TblColRef col);
 }

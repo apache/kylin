@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
@@ -63,6 +64,11 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
     @Override
     public int maxCodeLength(int col) {
         return serializers[col].maxLength();
+    }
+
+    @Override
+    public DimensionEncoding getDimEnc(int col) {
+        return null;
     }
 
     @Override

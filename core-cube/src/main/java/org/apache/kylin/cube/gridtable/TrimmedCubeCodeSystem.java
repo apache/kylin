@@ -20,15 +20,18 @@
 
 package org.apache.kylin.cube.gridtable;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.DefaultGTComparator;
 import org.apache.kylin.gridtable.GTInfo;
@@ -40,8 +43,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import com.google.common.collect.Maps;
 
 /**
- * A limited code system where dimension value ser/des is disabled.
- * Used inside coprocessor only. Because dictionary is not available. 
+ * A limited code system which trims DictionaryDimEnc to TrimmedDimEnc (to avoid pushing down the useless dictionary)
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class TrimmedCubeCodeSystem implements IGTCodeSystem {
@@ -69,8 +71,8 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
 
             // for dimensions
             if (dimEnc != null) {
-                // use trimmed serializer cause no dictionary in coprocessor
-                serializers[i] = new TrimmedDimensionSerializer(dimEnc.getLengthOfEncoding());
+
+                serializers[i] = dimEnc.asDataTypeSerializer();
             }
             // for measures
             else {
@@ -92,6 +94,15 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
     @Override
     public int maxCodeLength(int col) {
         return serializers[col].maxLength();
+    }
+
+    @Override
+    public DimensionEncoding getDimEnc(int col) {
+        if (col < dimEncs.length) {
+            return dimEncs[col];
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -139,6 +150,43 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
         return result;
     }
 
+    private static void writeDimensionEncoding(DimensionEncoding encoding, ByteBuffer out) {
+        try {
+            if (encoding == null) {
+                BytesUtil.writeVInt(1, out);
+            } else {
+                BytesUtil.writeVInt(0, out);
+
+                if (encoding instanceof DictionaryDimEnc) {
+                    encoding = new TrimmedDimEnc(encoding.getLengthOfEncoding());
+                }
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(encoding);
+                BytesUtil.writeByteArray(baos.toByteArray(), out);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static DimensionEncoding readDimensionEncoding(ByteBuffer in) {
+        try {
+            int isNull = BytesUtil.readVInt(in);
+            if (isNull == 1) {
+                return null;
+            }
+
+            byte[] bytes = BytesUtil.readByteArray(in);
+            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+            ObjectInputStream ois = new ObjectInputStream(bais);
+            DimensionEncoding ret = (DimensionEncoding) ois.readObject();
+            return ret;
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static final BytesSerializer<TrimmedCubeCodeSystem> serializer = new BytesSerializer<TrimmedCubeCodeSystem>() {
         @Override
         public void serialize(TrimmedCubeCodeSystem value, ByteBuffer out) {
@@ -151,7 +199,8 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
             BytesUtil.writeVInt(value.dimEncs.length, out);
             for (int i = 0; i < value.dimEncs.length; i++) {
                 DimensionEncoding enc = value.dimEncs[i];
-                BytesUtil.writeVInt(enc == null ? 0 : enc.getLengthOfEncoding(), out);
+
+                writeDimensionEncoding(enc, out);
             }
         }
 
@@ -168,85 +217,11 @@ public class TrimmedCubeCodeSystem implements IGTCodeSystem {
 
             DimensionEncoding[] dimEncs = new DimensionEncoding[BytesUtil.readVInt(in)];
             for (int i = 0; i < dimEncs.length; i++) {
-                int fixedLen = BytesUtil.readVInt(in);
-                if (fixedLen > 0)
-                    dimEncs[i] = new TrimmedDimEnc(fixedLen);
+                dimEncs[i] = readDimensionEncoding(in);
             }
 
             return new TrimmedCubeCodeSystem(dimEncs, dependentMetricsMap);
         }
     };
-
-    static class TrimmedDimEnc extends DimensionEncoding {
-        final int fixedLen;
-
-        TrimmedDimEnc(int fixedLen) {
-            this.fixedLen = fixedLen;
-        }
-        
-        @Override
-        public int getLengthOfEncoding() {
-            return fixedLen;
-        }
-
-        @Override
-        public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String decode(byte[] bytes, int offset, int len) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public DataTypeSerializer<Object> asDataTypeSerializer() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void writeExternal(ObjectOutput out) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-            throw new UnsupportedOperationException();
-        }
-    }
-    
-    static class TrimmedDimensionSerializer extends DataTypeSerializer<Object> {
-
-        final int fixedLen;
-
-        public TrimmedDimensionSerializer(int fixedLen) {
-            this.fixedLen = fixedLen;
-        }
-
-        @Override
-        public int peekLength(ByteBuffer in) {
-            return fixedLen;
-        }
-
-        @Override
-        public int maxLength() {
-            return fixedLen;
-        }
-
-        @Override
-        public int getStorageBytesEstimate() {
-            return fixedLen;
-        }
-
-        @Override
-        public void serialize(Object value, ByteBuffer out) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Object deserialize(ByteBuffer in) {
-            throw new UnsupportedOperationException();
-        }
-    }
 
 }

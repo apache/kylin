@@ -21,6 +21,7 @@ package org.apache.kylin.gridtable;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.measure.MeasureAggregator;
 
 public interface IGTCodeSystem {
@@ -34,6 +35,8 @@ public interface IGTCodeSystem {
 
     /** Return the max possible length of a column */
     int maxCodeLength(int col);
+    
+    DimensionEncoding getDimEnc(int col);
 
     /**
      * Encode a value into code.

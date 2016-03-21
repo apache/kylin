@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -185,7 +186,10 @@ public class TupleFilterSerializer {
             filter = new DynamicTupleFilter(null);
             break;
         case FUNCTION:
-            filter = new FunctionTupleFilter(null);
+            filter = new BuildInFunctionTupleFilter(null);
+            break;
+        case MASSIN:
+            filter = new MassInTupleFilter();
             break;
         default:
             throw new IllegalStateException("Error FilterOperatorEnum: " + op.getValue());

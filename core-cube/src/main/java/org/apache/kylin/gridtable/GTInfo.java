@@ -58,6 +58,7 @@ public class GTInfo {
     private GTInfo() {
     }
 
+    
     public String getTableName() {
         return tableName;
     }

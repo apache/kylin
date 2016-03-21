@@ -23,10 +23,10 @@ import java.util.ListIterator;
 
 import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
+import org.apache.kylin.metadata.filter.BuildInFunctionTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
-import org.apache.kylin.metadata.filter.FunctionTupleFilter;
 import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -41,12 +41,12 @@ import com.google.common.primitives.Primitives;
 /**
  * only take effect when the compare filter has function
  */
-public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
-    public static final Logger logger = LoggerFactory.getLogger(TupleFilterFunctionTransformer.class);
+public class BuildInFunctionTransformer implements ITupleFilterTransformer {
+    public static final Logger logger = LoggerFactory.getLogger(BuildInFunctionTransformer.class);
 
     private IDimensionEncodingMap dimEncMap;
 
-    public TupleFilterFunctionTransformer(IDimensionEncodingMap dimEncMap) {
+    public BuildInFunctionTransformer(IDimensionEncodingMap dimEncMap) {
         this.dimEncMap = dimEncMap;
     }
 
@@ -54,12 +54,14 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
     public TupleFilter transform(TupleFilter tupleFilter) {
         TupleFilter translated = null;
         if (tupleFilter instanceof CompareTupleFilter) {
+            //normal case
             translated = translateCompareTupleFilter((CompareTupleFilter) tupleFilter);
             if (translated != null) {
                 logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
             }
-        } else if (tupleFilter instanceof FunctionTupleFilter) {
-            translated = translateFunctionTupleFilter((FunctionTupleFilter) tupleFilter);
+        } else if (tupleFilter instanceof BuildInFunctionTupleFilter) {
+            //like case
+            translated = translateFunctionTupleFilter((BuildInFunctionTupleFilter) tupleFilter);
             if (translated != null) {
                 logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
             }
@@ -75,11 +77,11 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
         return translated == null ? tupleFilter : translated;
     }
 
-    private TupleFilter translateFunctionTupleFilter(FunctionTupleFilter functionTupleFilter) {
-        if (!functionTupleFilter.isValid())
+    private TupleFilter translateFunctionTupleFilter(BuildInFunctionTupleFilter buildInFunctionTupleFilter) {
+        if (!buildInFunctionTupleFilter.isValid())
             return null;
 
-        TblColRef columnRef = functionTupleFilter.getColumn();
+        TblColRef columnRef = buildInFunctionTupleFilter.getColumn();
         Dictionary<?> dict = dimEncMap.getDictionary(columnRef);
         if (dict == null)
             return null;
@@ -90,7 +92,7 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
         try {
             for (int i = dict.getMinId(); i <= dict.getMaxId(); i++) {
                 Object dictVal = dict.getValueFromId(i);
-                if ((Boolean) functionTupleFilter.invokeFunction(dictVal)) {
+                if ((Boolean) buildInFunctionTupleFilter.invokeFunction(dictVal)) {
                     translated.addChild(new ConstantTupleFilter(dictVal));
                 }
             }
@@ -103,14 +105,15 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private TupleFilter translateCompareTupleFilter(CompareTupleFilter compTupleFilter) {
-        if (compTupleFilter.getFunction() == null)
+        if (compTupleFilter.getFunction() == null || (!(compTupleFilter.getFunction() instanceof BuildInFunctionTupleFilter)))
             return null;
 
-        FunctionTupleFilter functionTupleFilter = compTupleFilter.getFunction();
-        if (!functionTupleFilter.isValid())
+        BuildInFunctionTupleFilter buildInFunctionTupleFilter = (BuildInFunctionTupleFilter) compTupleFilter.getFunction();
+        
+        if (!buildInFunctionTupleFilter.isValid())
             return null;
 
-        TblColRef columnRef = functionTupleFilter.getColumn();
+        TblColRef columnRef = buildInFunctionTupleFilter.getColumn();
         Dictionary<?> dict = dimEncMap.getDictionary(columnRef);
         if (dict == null)
             return null;
@@ -122,7 +125,7 @@ public class TupleFilterFunctionTransformer implements ITupleFilterTransformer {
             Collection<Object> inValues = Lists.newArrayList();
             for (int i = dict.getMinId(); i <= dict.getMaxId(); i++) {
                 Object dictVal = dict.getValueFromId(i);
-                Object computedVal = functionTupleFilter.invokeFunction(dictVal);
+                Object computedVal = buildInFunctionTupleFilter.invokeFunction(dictVal);
                 Class clazz = Primitives.wrap(computedVal.getClass());
                 Object targetVal = compTupleFilter.getFirstValue();
                 if (Primitives.isWrapperType(clazz))

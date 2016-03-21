@@ -40,10 +40,13 @@ import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
+import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.cube.v2.CellListIterator;
 import org.apache.kylin.storage.hbase.cube.v2.CubeHBaseRPC;
@@ -51,6 +54,7 @@ import org.apache.kylin.storage.hbase.cube.v2.HBaseReadonlyStore;
 import org.apache.kylin.storage.hbase.cube.v2.RawScan;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList;
+import org.apache.kylin.storage.hbase.cube.v2.filter.MassInValueProviderFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,6 +145,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
     @Override
     public void visitCube(RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
+
         RegionScanner innerScanner = null;
         HRegion region = null;
 
@@ -153,8 +158,15 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             region = env.getRegion();
             region.startRegionOperation();
 
-            GTScanRequest scanReq = GTScanRequest.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
-            RawScan hbaseRawScan = RawScan.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getHbaseRawScan())));
+            final GTScanRequest scanReq = GTScanRequest.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
+            final RawScan hbaseRawScan = RawScan.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getHbaseRawScan())));
+
+            MassInTupleFilter.VALUE_PROVIDER_FACTORY = new MassInValueProviderFactoryImpl(new MassInValueProviderFactoryImpl.DimEncAware() {
+                @Override
+                public DimensionEncoding getDimEnc(TblColRef col) {
+                    return scanReq.getInfo().getCodeSystem().getDimEnc(col.getColumnDesc().getZeroBasedIndex());
+                }
+            });
 
             List<List<Integer>> hbaseColumnsToGT = Lists.newArrayList();
             for (IntList intList : request.getHbaseColumnsToGTList()) {
@@ -165,7 +177,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 //if has shard, fill region shard to raw scan start/end
                 updateRawScanByCurrentRegion(hbaseRawScan, region, request.getRowkeyPreambleSize() - RowConstants.ROWKEY_CUBOIDID_LEN);
             }
-            
+
             Scan scan = CubeHBaseRPC.buildScan(hbaseRawScan);
 
             appendProfileInfo(sb);
@@ -181,8 +193,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScan.hbaseColumns, hbaseColumnsToGT, request.getRowkeyPreambleSize());
             IGTScanner rawScanner = store.scan(scanReq);
 
-            IGTScanner finalScanner = scanReq.decorateScanner(rawScanner,//
-                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal(),//
+            IGTScanner finalScanner = scanReq.decorateScanner(rawScanner, //
+                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal(), //
                     behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal());
 
             ByteBuffer buffer = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
@@ -226,7 +238,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                             setFreeSwapSpaceSize(freeSwapSpaceSize).//
                             setHostname(InetAddress.getLocalHost().getHostName()).// 
                             setEtcMsg(sb.toString()).//
-                            build()).//
+                            build())
+                    .//
                     build());
 
         } catch (IOException ioe) {

@@ -29,15 +29,21 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaFactory;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.util.ConversionUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.DatabaseDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class OLAPSchemaFactory implements SchemaFactory {
+    public static final Logger logger = LoggerFactory.getLogger(OLAPSchemaFactory.class);
+
 
     static {
         /*
@@ -107,7 +113,13 @@ public class OLAPSchemaFactory implements SchemaFactory {
                 out.write("            \"factory\": \"org.apache.kylin.query.schema.OLAPSchemaFactory\",\n");
                 out.write("            \"operand\": {\n");
                 out.write("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
-                out.write("            }\n");
+                out.write("            },\n");
+                out.write("            \"functions\": [\n");
+                out.write("               {\n");
+                out.write("                   name: 'MASSIN',\n");
+                out.write("                   className: 'org.apache.kylin.query.udf.MassInUDF'\n");
+                out.write("               }\n");
+                out.write("              ]\n");
                 out.write("        }\n");
 
                 if (++counter != schemaCounts.size()) {
@@ -118,8 +130,10 @@ public class OLAPSchemaFactory implements SchemaFactory {
             out.write("    ]\n");
             out.write("}\n");
             out.close();
-
             tmp.deleteOnExit();
+
+            logger.info("Schema json:" + StringUtils.join(FileUtils.readLines(tmp), "\n"));
+
             return tmp;
 
         } catch (IOException e) {

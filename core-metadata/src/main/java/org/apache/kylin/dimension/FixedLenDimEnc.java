@@ -59,8 +59,28 @@ public class FixedLenDimEnc extends DimensionEncoding {
 
     transient private int avoidVerbose = 0;
 
+    //no-arg constructor is required for Externalizable
+    public FixedLenDimEnc() {
+    }
+    
     public FixedLenDimEnc(int len) {
         this.fixedLen = len;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FixedLenDimEnc that = (FixedLenDimEnc) o;
+
+        return fixedLen == that.fixedLen;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return fixedLen;
     }
 
     @Override

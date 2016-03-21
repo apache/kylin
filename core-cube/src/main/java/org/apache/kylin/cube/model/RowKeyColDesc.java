@@ -44,7 +44,6 @@ public class RowKeyColDesc {
     @JsonProperty("isUHC")
     private boolean isUHC;//is ultra high cardinality column
 
-
     // computed
     private String encodingName;
     private String[] encodingArgs;

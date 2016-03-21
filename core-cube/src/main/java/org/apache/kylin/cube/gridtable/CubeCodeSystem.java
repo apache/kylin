@@ -98,6 +98,15 @@ public class CubeCodeSystem implements IGTCodeSystem {
     }
 
     @Override
+    public DimensionEncoding getDimEnc(int col) {
+        if (col < dimEncs.length) {
+            return dimEncs[col];
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     public void encodeColumnValue(int col, Object value, ByteBuffer buf) {
         encodeColumnValue(col, value, 0, buf);
     }

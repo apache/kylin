@@ -41,6 +41,7 @@ import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -67,6 +68,7 @@ public class MetadataManager {
 
     public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
     public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
+    public static final Serializer<ExternalFilterDesc> EXTERNAL_FILTER_DESC_SERIALIZER = new JsonSerializer<ExternalFilterDesc>(ExternalFilterDesc.class);
 
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
@@ -109,13 +111,11 @@ public class MetadataManager {
     private CaseInsensitiveStringCache<Map<String, String>> srcTableExdMap;
     // name => DataModelDesc
     private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap;
+    // name => External Filter Desc
+    private CaseInsensitiveStringCache<ExternalFilterDesc> extFilterMap;
 
     private MetadataManager(KylinConfig config) throws IOException {
         init(config);
-    }
-
-    public static String concatDataModelResourcePath(String modelName) {
-        return ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT + "/" + modelName + MetadataConstants.FILE_SURFIX;
     }
 
     /**
@@ -165,6 +165,11 @@ public class MetadataManager {
         return result;
     }
 
+    public ExternalFilterDesc getExtFilterDesc(String filterTableName) {
+        ExternalFilterDesc result = extFilterMap.get(filterTableName);
+        return result;
+    }
+
     /**
      * Get table extended info. Keys are defined in {@link MetadataConstants}
      * 
@@ -209,13 +214,15 @@ public class MetadataManager {
 
     private void init(KylinConfig config) throws IOException {
         this.config = config;
-        this.srcTableMap = new CaseInsensitiveStringCache<TableDesc>(config, Broadcaster.TYPE.TABLE);
-        this.srcTableExdMap = new CaseInsensitiveStringCache<Map<String, String>>(config, Broadcaster.TYPE.TABLE);
-        this.dataModelDescMap = new CaseInsensitiveStringCache<DataModelDesc>(config, Broadcaster.TYPE.DATA_MODEL);
+        this.srcTableMap = new CaseInsensitiveStringCache<>(config, Broadcaster.TYPE.TABLE);
+        this.srcTableExdMap = new CaseInsensitiveStringCache<>(config, Broadcaster.TYPE.TABLE);
+        this.dataModelDescMap = new CaseInsensitiveStringCache<>(config, Broadcaster.TYPE.DATA_MODEL);
+        this.extFilterMap = new CaseInsensitiveStringCache<>(config, Broadcaster.TYPE.EXTERNAL_FILTER);
 
         reloadAllSourceTable();
         reloadAllSourceTableExd();
         reloadAllDataModel();
+        reloadAllExternalFilter();
     }
 
     private void reloadAllSourceTableExd() throws IOException {
@@ -263,6 +270,20 @@ public class MetadataManager {
         return attrs;
     }
 
+    private void reloadAllExternalFilter() throws IOException {
+        ResourceStore store = getStore();
+        logger.debug("Reloading ExternalFilter from folder " + store.getReadableResourcePath(ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT));
+
+        extFilterMap.clear();
+
+        List<String> paths = store.collectResourceRecursively(ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
+        for (String path : paths) {
+            reloadExternalFilterAt(path);
+        }
+
+        logger.debug("Loaded " + extFilterMap.size() + " SourceTable(s)");
+    }
+
     private void reloadAllSourceTable() throws IOException {
         ResourceStore store = getStore();
         logger.debug("Reloading SourceTable from folder " + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
@@ -288,6 +309,19 @@ public class MetadataManager {
         String tableIdentity = t.getIdentity();
 
         srcTableMap.putLocal(tableIdentity, t);
+
+        return t;
+    }
+
+    private ExternalFilterDesc reloadExternalFilterAt(String path) throws IOException {
+        ResourceStore store = getStore();
+        ExternalFilterDesc t = store.getResource(path, ExternalFilterDesc.class, EXTERNAL_FILTER_DESC_SERIALIZER);
+        if (t == null) {
+            return null;
+        }
+        t.init();
+
+        extFilterMap.putLocal(t.getName(), t);
 
         return t;
     }
