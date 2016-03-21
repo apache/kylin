@@ -109,25 +109,25 @@
   } ],
   "rowkey" : {
     "rowkey_columns" : [ {
-      "column" : "part_dt",
+      "column" : "PART_DT",
       "encoding" : "dict"
     }, {
-      "column" : "leaf_categ_id",
+      "column" : "LEAF_CATEG_ID",
       "encoding" : "dict"
     }, {
-      "column" : "meta_categ_name",
+      "column" : "META_CATEG_NAME",
       "encoding" : "dict"
     }, {
-      "column" : "categ_lvl2_name",
+      "column" : "CATEG_LVL2_NAME",
       "encoding" : "dict"
     }, {
-      "column" : "categ_lvl3_name",
+      "column" : "CATEG_LVL3_NAME",
       "encoding" : "dict"
     }, {
-      "column" : "lstg_format_name",
+      "column" : "LSTG_FORMAT_NAME",
       "encoding" : "fixed_length:12"
     }, {
-      "column" : "lstg_site_id",
+      "column" : "LSTG_SITE_ID",
       "encoding" : "dict"
     } ]
   },
@@ -139,18 +139,18 @@
       "name" : "f1",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt" ]
+        "measure_refs" : [ "GMV_SUM", "GMV_MIN", "GMV_MAX", "TRANS_CNT" ]
       } ]
     }, {
       "name" : "f2",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "seller_cnt_hll", "seller_format_cnt" ]
+        "measure_refs" : [ "SELLER_CNT_HLL", "SELLER_FORMAT_CNT" ]
       } ]
     } ]
   },
   "aggregation_groups" : [ {
-    "includes" : [ "categ_lvl2_name", "categ_lvl3_name", "leaf_categ_id", "lstg_format_name", "lstg_site_id", "meta_categ_name", "part_dt" ],
+    "includes" : [ "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "META_CATEG_NAME", "PART_DT" ],
     "select_rule" : {
       "hierarchy_dims" : [ [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ] ],
       "mandatory_dims" : [ ],
