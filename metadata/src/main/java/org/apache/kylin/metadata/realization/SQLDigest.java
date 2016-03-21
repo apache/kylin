@@ -49,7 +49,7 @@ public class SQLDigest {
         this.filterColumns = filterColumns;
         this.metricColumns = aggregatedColumns;
         this.aggregations = aggregateFunnc;
-        this.isRawQuery = this.groupbyColumns.isEmpty() && this.metricColumns.isEmpty();
+        this.isRawQuery = this.groupbyColumns.isEmpty() && this.aggregations.isEmpty();
     }
 
     public boolean isRawQuery() {
