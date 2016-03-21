@@ -3,33 +3,33 @@ layout: download-cn
 title: 下载
 ---
 
-__最新发布(源代码)__  
+__1.5.0 最新发布(源代码)__
 最新发布的Apache Kylin™可以从ASF网站下载：:
+
+* [Apache Kylin v1.5.0](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.0/)
+* [发布日志](http://kylin.apache.org/docs15/release_notes.html)
+* Git 标签: [kylin-1.5.0](https://github.com/apache/kylin/tree/kylin-1.5.0)
+* Git Commit: [64d02018fcf082745d4104d604646058fcb7e17c](https://github.com/apache/kylin/commit/64d02018fcf082745d4104d604646058fcb7e17c)
+
+__1.5.0 二进制包 for HBase 0.98/0.99__
+为方便使用，我们提供预打包的二进制安装包：
+
+* [apache-kylin-1.5.0-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.0/apache-kylin-1.5.0-bin.tar.gz)
+* [安装帮助](http://kylin.apache.org/docs15/install)
+
+__1.3.0 发布(源代码)__
+1.3.0发布的Apache Kylin™可以从ASF网站下载：:
 
 * [Apache Kylin v1.3.0](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.3.0/)
 * [发布日志](http://kylin.apache.org/docs/release_notes.html)
 * Git 标签: [kylin-1.3.0](https://github.com/apache/kylin/tree/kylin-1.3.0)
 * Git Commit: [b95e47c4dde42ec752916013f67ed1221f092cb7](https://github.com/apache/kylin/commit/b95e47c4dde42ec752916013f67ed1221f092cb7)
 
-__二进制包 for HBase 0.98/0.99__
+__1.3.0 二进制包 for HBase 0.98/0.99__
 为方便使用，我们提供预打包的二进制安装包：
 
-  * [apache-kylin-1.3.0-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.3.0/apache-kylin-1.3.0-bin.tar.gz)
-  * [安装帮助](http://kylin.apache.org/docs/install)
-
-__1.2发布(源代码)__  
-1.2发布的Apache Kylin™可以从ASF网站下载：:
-
-* [Apache Kylin v1.2](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.2/)
-* [发布日志](http://kylin.apache.org/docs/release_notes.html)
-* Git 标签: [kylin-1.2](https://github.com/apache/kylin/tree/kylin-1.2)
-* Git Commit: [c2589aee4ac5537b460b3b02fa89cdb3a922d64e](https://github.com/apache/kylin/commit/c2589aee4ac5537b460b3b02fa89cdb3a922d64e)
-
-__1.2二进制包 for HBase 0.98/0.99__
-为方便使用，我们提供预打包的二进制安装包：
-
-  * [apache-kylin-1.2-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.2/apache-kylin-1.2-bin.tar.gz)
-  * [安装帮助](http://kylin.apache.org/docs/install)
+* [apache-kylin-1.3.0-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.3.0/apache-kylin-1.3.0-bin.tar.gz)
+* [安装帮助](http://kylin.apache.org/docs/install)
 
 __特别二进制包 for HBase 1.1.3及更高版本__
 越来越多的用户开始部署使用HBase 1.1或更高版本，我们提供一个在HBase 1.1上编译的Kylin快照二进制包；
@@ -51,4 +51,5 @@ __ODBC 驱动__
 Kylin ODBC 驱动要求首先安装[Microsoft Visual C++ 2012 Redistributable]()。 
 Kylin ODBC 驱动可以从这里下载:
 
-  * [Kylin ODBC 驱动 v1.2](http://kylin.apache.org/download/KylinODBCDriver-1.2.zip)
+* [Kylin ODBC 驱动 v1.5](http://kylin.apache.org/download/KylinODBCDriver-1.5.zip) (推荐，兼容所有Kylin版本)
+* [Kylin ODBC 驱动 v1.2](http://kylin.apache.org/download/KylinODBCDriver-1.2.zip)
