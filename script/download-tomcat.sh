@@ -22,21 +22,26 @@ cd ${dir}/..
 cd dist
 rm -rf tomcat
 
+alias md5cmd="md5sum"
+if [[ `uname -a` =~ "Darwin" ]]; then
+    alias md5cmd="md5 -q"
+fi
+
 if [ ! -f "apache-tomcat-7.0.59.tar.gz" ]
 then
     echo "not binary file found"
-    wget  http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.59/bin/apache-tomcat-7.0.59.tar.gz || echo "download tomcat failed"
+    wget http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.59/bin/apache-tomcat-7.0.59.tar.gz || echo "download tomcat failed"
 else
-    if [ `md5sum apache-tomcat-7.0.59.tar.gz | awk '{print $1}'` != "ec570258976edf9a833cd88fd9220909" ]
+    if [ `md5cmd apache-tomcat-7.0.59.tar.gz | awk '{print $1}'` != "ec570258976edf9a833cd88fd9220909" ]
     then
         echo "md5 check failed"
         rm apache-tomcat-7.0.59.tar.gz
-        wget  http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.59/bin/apache-tomcat-7.0.59.tar.gz || echo "download tomcat failed"
+        wget http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.59/bin/apache-tomcat-7.0.59.tar.gz || echo "download tomcat failed"
     fi
 fi
+unalias md5cmd
 
 tar -zxvf apache-tomcat-7.0.59.tar.gz
-
 mv apache-tomcat-7.0.59 tomcat
 rm -rf tomcat/webapps/*
 
