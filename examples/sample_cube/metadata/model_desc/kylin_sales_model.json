@@ -1,6 +1,6 @@
 {
   "uuid" : "0928468a-9fab-4185-9a14-6f2e7c74823f",
- 
+
   "name" : "kylin_sales_model",
   "lookups" : [ {
     "table" : "DEFAULT.KYLIN_CAL_DT",
@@ -28,7 +28,7 @@
     "columns" : [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ]
   }, {
     "table" : "DEFAULT.KYLIN_SALES",
-    "columns" : [ "LSTG_FORMAT_NAME" ]
+    "columns" : [ "LSTG_FORMAT_NAME", "SELLER_ID" ]
   } ],
   "metrics": [
     "PRICE",
