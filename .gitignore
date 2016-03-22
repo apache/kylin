@@ -101,5 +101,7 @@ commit.sha1
 website/_site
 website/.sass-cache
 
-
-
+# python
+*.pyc
+tools/kylin_client_tool/APScheduler-3.0.5
+tools/kylin_client_tool/requests-2.9.1
