@@ -112,4 +112,21 @@ public class KylinVersion {
 
         return !signatureIncompatible;
     }
+
+    public static void main(String[] args) {
+        System.out.println(getKylinDetailInformation());
+    }
+
+    public static String getKylinDetailInformation() {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append("kylin.version:").append(KylinVersion.getCurrentVersion()).append("\n");
+        buf.append("os.name:").append(System.getProperty("os.name")).append("\n");
+        buf.append("os.arch:").append(System.getProperty("os.arch")).append("\n");
+        buf.append("os.version:").append(System.getProperty("os.version")).append("\n");
+        buf.append("java.version:").append(System.getProperty("java.version")).append("\n");
+        buf.append("java.vendor:").append(System.getProperty("java.vendor"));
+
+        return buf.toString();
+    }
 }

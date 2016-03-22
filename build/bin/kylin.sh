@@ -193,6 +193,12 @@ then
     org.apache.kylin.engine.streaming.cli.MonitorCLI $@ > ${KYLIN_HOME}/logs/monitor.log 2>&1
     exit 0
 
+elif [ "$1" = "version" ]
+then
+    export HBASE_CLASSPATH=${KYLIN_HOME}/lib/*
+    exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.common.KylinVersion
+    exit 0
+
 # tool command
 elif [[ "$1" = org.apache.kylin.* ]]
 then

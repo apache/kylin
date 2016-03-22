@@ -31,9 +31,12 @@ public class ClientInfoTask extends InitialTask {
 
     @Override
     public void execute() {
+        logger.info(getClientDetailInformation());
+    }
+
+    public static String getClientDetailInformation() {
         StringBuilder buf = new StringBuilder();
 
-        buf.append("Client information:").append("\n");
         buf.append("kylin.version:").append(KylinVersion.getCurrentVersion()).append("\n");
         buf.append("os.name:").append(System.getProperty("os.name")).append("\n");
         buf.append("os.arch:").append(System.getProperty("os.arch")).append("\n");
@@ -43,7 +46,6 @@ public class ClientInfoTask extends InitialTask {
         buf.append("java.vendor:").append(System.getProperty("java.vendor")).append("\n");
         buf.append("java.library.path:").append(System.getProperty("java.library.path"));
 
-        logger.info(buf.toString());
+        return buf.toString();
     }
-
 }
