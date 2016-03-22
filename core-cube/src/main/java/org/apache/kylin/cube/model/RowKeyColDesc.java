@@ -19,7 +19,9 @@
 package org.apache.kylin.cube.model;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.dimension.DictionaryDimEnc;
+import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -35,45 +37,30 @@ import com.google.common.base.Preconditions;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyColDesc {
 
-    public enum ColEncodingType {
-        DICT, FIXED_LEN
-    }
-
-    public class ColEncoding {
-        public ColEncodingType type;
-        public Object param;
-
-        public ColEncoding(ColEncodingType type, Object param) {
-            this.type = type;
-            this.param = param;
-        }
-    }
-
     @JsonProperty("column")
     private String column;
     @JsonProperty("encoding")
     private String encoding;
 
     // computed
-    private ColEncoding colEncoding;
+    private String encodingName;
+    private String[] encodingArgs;
     private int bitIndex;
     private TblColRef colRef;
 
     public void init() {
-
-        //dict or fix length?
         Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
-        if (this.encoding.equalsIgnoreCase("dict")) {
-            this.colEncoding = new ColEncoding(ColEncodingType.DICT, null);
-        } else if (this.encoding.startsWith("fixed_length")) {
-            int length = RowConstants.ROWKEY_COL_DEFAULT_LENGTH;
-            if (this.encoding.indexOf(":") > 0) {
-                length = Integer.parseInt(this.encoding.substring(this.encoding.indexOf(":") + 1));
-            }
-            this.colEncoding = new ColEncoding(ColEncodingType.FIXED_LEN, length);
-        } else {
-            throw new IllegalArgumentException("Not supported row key col encoding:" + this.encoding);
-        }
+
+        String[] parts = this.encoding.split("\\s*[(),:]\\s*");
+        if (parts == null || parts.length == 0 || parts[0].isEmpty())
+            throw new IllegalArgumentException("Not supported row key col encoding: '" + this.encoding + "'");
+
+        this.encodingName = parts[0];
+        this.encodingArgs = parts[parts.length - 1].isEmpty() //
+                ? StringUtil.subArray(parts, 1, parts.length - 1) : StringUtil.subArray(parts, 1, parts.length);
+
+        if (!DimensionEncodingFactory.isVaildEncoding(this.encodingName))
+            throw new IllegalArgumentException("Not supported row key col encoding: '" + this.encoding + "'");
     }
 
     public String getEncoding() {
@@ -92,17 +79,16 @@ public class RowKeyColDesc {
         this.column = column;
     }
 
-    public boolean isUsingDictionary() {
-        return this.colEncoding.type == ColEncodingType.DICT;
-
+    public String getEncodingName() {
+        return encodingName;
     }
 
-    public int getLength() {
-        if (this.colEncoding.type == ColEncodingType.FIXED_LEN) {
-            return (Integer) this.colEncoding.param;
-        } else {
-            return 0;
-        }
+    public String[] getEncodingArgs() {
+        return encodingArgs;
+    }
+
+    public boolean isUsingDictionary() {
+        return DictionaryDimEnc.ENCODING_NAME.equals(encodingName);
     }
 
     public int getBitIndex() {

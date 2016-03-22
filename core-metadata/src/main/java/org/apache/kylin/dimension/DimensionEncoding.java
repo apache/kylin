@@ -18,6 +18,8 @@
 
 package org.apache.kylin.dimension;
 
+import java.io.Externalizable;
+
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 /**
@@ -29,7 +31,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
  * hard to enumerate all values of a encoding, thus TupleFilterDictionaryTranslater 
  * cannot work on DimensionEncoding.
  */
-public abstract class DimensionEncoding {
+public abstract class DimensionEncoding implements Externalizable {
 
     // it's convention that all 0xff means NULL
     public static final byte NULL = (byte) 0xff;

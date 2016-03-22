@@ -18,6 +18,9 @@
 
 package org.apache.kylin.dimension;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.Bytes;
@@ -29,6 +32,10 @@ import org.slf4j.LoggerFactory;
 public class DictionaryDimEnc extends DimensionEncoding {
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryDimEnc.class);
+
+    public static final String ENCODING_NAME = "dict";
+
+    // ============================================================================
 
     // could use a lazy loading trick here, to prevent loading all dictionaries of a segment at once
     private final Dictionary<String> dict;
@@ -52,21 +59,21 @@ public class DictionaryDimEnc extends DimensionEncoding {
     public int getRoundingFlag() {
         return roundingFlag;
     }
-    
+
     public DictionaryDimEnc copy(int roundingFlag) {
         if (this.roundingFlag == roundingFlag)
             return this;
         else
             return new DictionaryDimEnc(dict, roundingFlag, defaultByte);
     }
-    
+
     public DictionaryDimEnc copy(int roundingFlag, byte defaultByte) {
         if (this.roundingFlag == roundingFlag && this.defaultByte == defaultByte)
             return this;
         else
             return new DictionaryDimEnc(dict, roundingFlag, defaultByte);
     }
-    
+
     public Dictionary<String> getDictionary() {
         return dict;
     }
@@ -133,5 +140,16 @@ public class DictionaryDimEnc extends DimensionEncoding {
         public int getStorageBytesEstimate() {
             return dict.getSizeOfId();
         }
-    };
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        throw new UnsupportedOperationException();
+    }
+
 }

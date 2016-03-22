@@ -26,6 +26,7 @@ import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -61,7 +62,7 @@ public class CubeDimEncMap implements IDimensionEncodingMap {
         if (result == null) {
             RowKeyColDesc colDesc = cubeDesc.getRowkey().getColDesc(col);
             if (colDesc.isUsingDictionary()) {
-                // dictionary encoding
+                // special dictionary encoding
                 Dictionary<String> dict = getDictionary(col);
                 if (dict == null) {
                     logger.warn("No dictionary found for dict-encoding column " + col + ", segment " + seg);
@@ -70,8 +71,8 @@ public class CubeDimEncMap implements IDimensionEncodingMap {
                     result = new DictionaryDimEnc(dict);
                 }
             } else {
-                // fixed length encoding
-                result = new FixedLenDimEnc(colDesc.getLength());
+                // normal case
+                DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs());
             }
             encMap.put(col, result);
         }

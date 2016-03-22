@@ -46,19 +46,6 @@ public class RowKeyDesc {
         return rowkeyColumns;
     }
 
-    //    public int getNCuboidBuildLevels() {
-    //        // N aggregation columns requires N levels of cuboid build
-    //        // - N columns requires N-1 levels build
-    //        // - zero tail cuboid needs one more additional level
-    //        Set<String> aggDims = new HashSet<String>();
-    //        for (String[] aggrGroup : aggregationGroups) {
-    //            for (String dim : aggrGroup) {
-    //                aggDims.add(dim);
-    //            }
-    //        }
-    //        return aggDims.size();
-    //    }
-
     public void setCubeDesc(CubeDesc cubeRef) {
         this.cubeDesc = cubeRef;
     }

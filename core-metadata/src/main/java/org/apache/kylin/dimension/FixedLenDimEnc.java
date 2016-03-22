@@ -18,6 +18,9 @@
 
 package org.apache.kylin.dimension;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -33,7 +36,26 @@ public class FixedLenDimEnc extends DimensionEncoding {
     // row key fixed length place holder
     public static final byte ROWKEY_PLACE_HOLDER_BYTE = 9;
 
-    private final int fixedLen;
+    public static final String ENCODING_NAME = "fixed_length";
+    
+    public static DimensionEncodingFactory getFactory() {
+        return new DimensionEncodingFactory() {
+
+            @Override
+            public String getSupportedEncodingName() {
+                return ENCODING_NAME;
+            }
+
+            @Override
+            public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
+                return new FixedLenDimEnc(Integer.parseInt(args[0]));
+            }
+        };
+    };
+
+    // ============================================================================
+
+    private int fixedLen;
 
     transient private int avoidVerbose = 0;
 
@@ -131,6 +153,16 @@ public class FixedLenDimEnc extends DimensionEncoding {
         public Object valueOf(String str) {
             return str;
         }
-    };
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeShort(fixedLen);
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        fixedLen = in.readShort();
+    }
 
 }
