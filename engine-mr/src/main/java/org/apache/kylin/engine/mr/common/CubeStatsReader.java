@@ -84,7 +84,8 @@ public class CubeStatsReader {
         try {
             Configuration hadoopConf = HadoopUtil.getCurrentConfiguration();
 
-            Option seqInput = SequenceFile.Reader.file(new Path("file://" + tmpSeqFile.getAbsolutePath()));
+            Path path = new Path(HadoopUtil.fixWindowsPath("file://" + tmpSeqFile.getAbsolutePath()));
+            Option seqInput = SequenceFile.Reader.file(path);
             reader = new SequenceFile.Reader(hadoopConf, seqInput);
 
             int percentage = 100;
