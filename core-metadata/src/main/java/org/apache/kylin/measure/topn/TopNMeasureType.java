@@ -267,7 +267,8 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         final int literalTupleIdx = tupleInfo.hasColumn(literalCol) ? tupleInfo.getColumnIndex(literalCol) : -1;
         // for TopN, the aggr must be SUM, so the number fill into the column position (without rewrite)
         final int numericTupleIdx = tupleInfo.hasColumn(numericCol) ? tupleInfo.getColumnIndex(numericCol) : -1;
-
+        final DataType numericField = DataType.getType(tupleInfo.getDataTypeName(numericTupleIdx));
+        final boolean isIntFamily = numericField.isIntegerFamily();
         return new IAdvMeasureFiller() {
             private TopNCounter<ByteArray> topNCounter;
             private Iterator<Counter<ByteArray>> topNCounterIterator;
@@ -295,7 +296,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 int key = BytesUtil.readUnsigned(counter.getItem().array(), counter.getItem().offset(), counter.getItem().length());
                 String colValue = topNColDict.getValueFromId(key);
                 tuple.setDimensionValue(literalTupleIdx, colValue);
-                tuple.setMeasureValue(numericTupleIdx, counter.getCount());
+                tuple.setMeasureValue(numericTupleIdx, isIntFamily ? (long) counter.getCount() : counter.getCount());
             }
         };
     }
