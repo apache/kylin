@@ -19,16 +19,9 @@
 package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -39,17 +32,14 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
-import org.apache.hadoop.hbase.util.Threads;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -61,19 +51,14 @@ public class HBaseConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
 
-    private static final Map<String, Configuration> configCache = new ConcurrentHashMap<String, Configuration>();
-    private static final Map<String, HConnection> connPool = new ConcurrentHashMap<String, HConnection>();
-    private static final ThreadLocal<Configuration> configThreadLocal = new ThreadLocal<>();
-
-    private static ExecutorService coprocessorPool = null;
+    private static final Map<String, Configuration> ConfigCache = new ConcurrentHashMap<String, Configuration>();
+    private static final Map<String, Connection> ConnPool = new ConcurrentHashMap<String, Connection>();
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                closeCoprocessorPool();
-
-                for (HConnection conn : connPool.values()) {
+                for (Connection conn : ConnPool.values()) {
                     try {
                         conn.close();
                     } catch (IOException e) {
@@ -83,64 +68,24 @@ public class HBaseConnection {
             }
         });
     }
-
-    public static ExecutorService getCoprocessorPool() {
-        if (coprocessorPool != null) {
-            return coprocessorPool;
-        }
-
-        synchronized (HBaseConnection.class) {
-            if (coprocessorPool != null) {
-                return coprocessorPool;
-            }
-
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-
-            // copy from HConnectionImplementation.getBatchPool()
-            int maxThreads = config.getHBaseMaxConnectionThreads();
-            int coreThreads = config.getHBaseCoreConnectionThreads();
-            long keepAliveTime = config.getHBaseConnectionThreadPoolAliveSeconds();
-            LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>(maxThreads * 100);
-            ThreadPoolExecutor tpe = new ThreadPoolExecutor(coreThreads, maxThreads, keepAliveTime, TimeUnit.SECONDS, workQueue, //
-                    Threads.newDaemonThreadFactory("kylin-coproc-"));
-            tpe.allowCoreThreadTimeOut(true);
-
-            logger.info("Creating coprocessor thread pool with max of {}, core of {}", maxThreads, coreThreads);
-
-            coprocessorPool = tpe;
-            return coprocessorPool;
-        }
-    }
-
-    private static void closeCoprocessorPool() {
-        if (coprocessorPool == null)
-            return;
-
-        coprocessorPool.shutdown();
-        try {
-            if (!coprocessorPool.awaitTermination(10, TimeUnit.SECONDS)) {
-                coprocessorPool.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            coprocessorPool.shutdownNow();
-        }
-    }
-
+    
     public static void clearConnCache() {
-        connPool.clear();
+        ConnPool.clear();
     }
+
+    private static final ThreadLocal<Configuration> hbaseConfig = new ThreadLocal<>();
 
     public static Configuration getCurrentHBaseConfiguration() {
-        if (configThreadLocal.get() == null) {
+        if (hbaseConfig.get() == null) {
             String storageUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-            configThreadLocal.set(newHBaseConfiguration(storageUrl));
+            hbaseConfig.set(newHBaseConfiguration(storageUrl));
         }
-        return configThreadLocal.get();
+        return hbaseConfig.get();
     }
 
     private static Configuration newHBaseConfiguration(String url) {
         Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
-
+        
         // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
         if (!(StringUtils.isEmpty(url) || "hbase".equals(url)))
             throw new IllegalArgumentException("to use hbase storage, pls set 'kylin.storage.url=hbase' in kylin.properties");
@@ -150,7 +95,7 @@ public class HBaseConnection {
         if (StringUtils.isNotEmpty(hbaseClusterFs)) {
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
         }
-
+        
         // https://issues.apache.org/jira/browse/KYLIN-953
         if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
             conf.set("hadoop.tmp.dir", "/tmp");
@@ -167,7 +112,7 @@ public class HBaseConnection {
 
         return conf;
     }
-
+    
     public static String makeQualifiedPathInHBaseCluster(String path) {
         try {
             FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
@@ -178,25 +123,25 @@ public class HBaseConnection {
     }
 
     // ============================================================================
-
-    // returned HConnection can be shared by multiple threads and does not require close()
+    
+    // returned Connection can be shared by multiple threads and does not require close()
     @SuppressWarnings("resource")
-    public static HConnection get(String url) {
+    public static Connection get(String url) {
         // find configuration
-        Configuration conf = configCache.get(url);
+        Configuration conf = ConfigCache.get(url);
         if (conf == null) {
             conf = newHBaseConfiguration(url);
-            configCache.put(url, conf);
+            ConfigCache.put(url, conf);
         }
 
-        HConnection connection = connPool.get(url);
+        Connection connection = ConnPool.get(url);
         try {
             while (true) {
                 // I don't use DCL since recreate a connection is not a big issue.
                 if (connection == null || connection.isClosed()) {
                     logger.info("connection is null or closed, creating a new one");
-                    connection = HConnectionManager.createConnection(conf);
-                    connPool.put(url, connection);
+                    connection = ConnectionFactory.createConnection(conf);
+                    ConnPool.put(url, connection);
                 }
 
                 if (connection == null || connection.isClosed()) {
@@ -214,8 +159,8 @@ public class HBaseConnection {
         return connection;
     }
 
-    public static boolean tableExists(HConnection conn, String tableName) throws IOException {
-        HBaseAdmin hbase = new HBaseAdmin(conn);
+    public static boolean tableExists(Connection conn, String tableName) throws IOException {
+        Admin hbase = conn.getAdmin();
         try {
             return hbase.tableExists(TableName.valueOf(tableName));
         } finally {
@@ -235,39 +180,23 @@ public class HBaseConnection {
         deleteTable(HBaseConnection.get(hbaseUrl), tableName);
     }
 
-    public static void createHTableIfNeeded(HConnection conn, String table, String... families) throws IOException {
-        HBaseAdmin hbase = new HBaseAdmin(conn);
+    public static void createHTableIfNeeded(Connection conn, String tableName, String... families) throws IOException {
+        Admin hbase = conn.getAdmin();
 
         try {
-            if (tableExists(conn, table)) {
-                logger.debug("HTable '" + table + "' already exists");
-                Set<String> existingFamilies = getFamilyNames(hbase.getTableDescriptor(TableName.valueOf(table)));
-                boolean wait = false;
-                for (String family : families) {
-                    if (existingFamilies.contains(family) == false) {
-                        logger.debug("Adding family '" + family + "' to HTable '" + table + "'");
-                        hbase.addColumn(table, newFamilyDescriptor(family));
-                        // addColumn() is async, is there a way to wait it finish?
-                        wait = true;
-                    }
-                }
-                if (wait) {
-                    try {
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        logger.warn("", e);
-                    }
-                }
+            if (tableExists(conn, tableName)) {
+                logger.debug("HTable '" + tableName + "' already exists");
                 return;
             }
 
-            logger.debug("Creating HTable '" + table + "'");
+            logger.debug("Creating HTable '" + tableName + "'");
 
-            HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(table));
+            HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
 
             if (null != families && families.length > 0) {
                 for (String family : families) {
-                    HColumnDescriptor fd = newFamilyDescriptor(family);
+                    HColumnDescriptor fd = new HColumnDescriptor(family);
+                    fd.setInMemory(true); // metadata tables are best in memory
                     desc.addFamily(fd);
                 }
             }
@@ -275,32 +204,14 @@ public class HBaseConnection {
             desc.setValue(HTABLE_UUID_TAG, UUID.randomUUID().toString());
             hbase.createTable(desc);
 
-            logger.debug("HTable '" + table + "' created");
+            logger.debug("HTable '" + tableName + "' created");
         } finally {
             hbase.close();
         }
     }
 
-    private static Set<String> getFamilyNames(HTableDescriptor desc) {
-        HashSet<String> result = Sets.newHashSet();
-        for (byte[] bytes : desc.getFamiliesKeys()) {
-            try {
-                result.add(new String(bytes, "UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                logger.error(e.toString());
-            }
-        }
-        return result;
-    }
-
-    private static HColumnDescriptor newFamilyDescriptor(String family) {
-        HColumnDescriptor fd = new HColumnDescriptor(family);
-        fd.setInMemory(true); // metadata tables are best in memory
-        return fd;
-    }
-
-    public static void deleteTable(HConnection conn, String tableName) throws IOException {
-        HBaseAdmin hbase = new HBaseAdmin(conn);
+    public static void deleteTable(Connection conn, String tableName) throws IOException {
+        Admin hbase = conn.getAdmin();
 
         try {
             if (!tableExists(conn, tableName)) {
@@ -310,10 +221,10 @@ public class HBaseConnection {
 
             logger.debug("delete HTable '" + tableName + "'");
 
-            if (hbase.isTableEnabled(tableName)) {
-                hbase.disableTable(tableName);
+            if (hbase.isTableEnabled(TableName.valueOf(tableName))) {
+                hbase.disableTable(TableName.valueOf(tableName));
             }
-            hbase.deleteTable(tableName);
+            hbase.deleteTable(TableName.valueOf(tableName));
 
             logger.debug("HTable '" + tableName + "' deleted");
         } finally {

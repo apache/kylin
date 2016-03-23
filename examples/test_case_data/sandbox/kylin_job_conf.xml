@@ -1,20 +1,18 @@
 <?xml version="1.0"?>
 <!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. See accompanying LICENSE file.
 -->
+
 <configuration>
 
     <property>
@@ -26,44 +24,41 @@
         </description>
     </property>
 
-    <property>
-        <name>mapreduce.map.maxattempts</name>
-        <value>2</value>
-    </property>
+    <!-- uncomment the following 5 properties to enable lzo compressing
 
-    <!--
-    <property>
-        <name>mapred.compress.map.output</name>
-        <value>true</value>
-        <description>Compress map outputs</description>
-    </property>
+	<property>
+		<name>mapred.compress.map.output</name>
+		<value>true</value>
+		<description>Compress map outputs</description>
+	</property>
 
-    <property>
-        <name>mapred.map.output.compression.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description>The compression codec to use for map outputs
-        </description>
-    </property>
+	<property>
+		<name>mapred.map.output.compression.codec</name>
+		<value>com.hadoop.compression.lzo.LzoCodec</value>
+		<description>The compression codec to use for map outputs
+		</description>
+	</property>
 
-    <property>
-        <name>mapred.output.compress</name>
-        <value>true</value>
-        <description>Compress the output of a MapReduce job</description>
-    </property>
+	<property>
+		<name>mapred.output.compress</name>
+		<value>true</value>
+		<description>Compress the output of a MapReduce job</description>
+	</property>
 
-    <property>
-        <name>mapred.output.compression.codec</name>
-        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
-        <description>The compression codec to use for job outputs
-        </description>
-    </property>
+	<property>
+		<name>mapred.output.compression.codec</name>
+		<value>com.hadoop.compression.lzo.LzoCodec</value>
+		<description>The compression codec to use for job outputs
+		</description>
+	</property>
 
-    <property>
-        <name>mapred.output.compression.type</name>
-        <value>BLOCK</value>
-        <description>The compression type to use for job outputs</description>
-    </property>
--->
+	<property>
+		<name>mapred.output.compression.type</name>
+		<value>BLOCK</value>
+		<description>The compression type to use for job outputs</description>
+	</property>
+
+	!-->
 
     <property>
         <name>mapreduce.job.max.split.locations</name>
@@ -76,5 +71,4 @@
         <value>2</value>
         <description>Block replication</description>
     </property>
-
 </configuration>
