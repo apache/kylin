@@ -35,6 +35,7 @@ import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.hadoop.hbase.regionserver.ScannerContext;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.metadata.datatype.LongMutable;
@@ -229,15 +230,8 @@ public class AggregateRegionObserverTest {
             return nextRaw(results);
         }
 
-        /*
-         * (non-Javadoc)
-         * 
-         * @see
-         * org.apache.hadoop.hbase.regionserver.InternalScanner#next(java.util
-         * .List, int)
-         */
         @Override
-        public boolean next(List<Cell> result, int limit) throws IOException {
+        public boolean next(List<Cell> result, ScannerContext scannerContext) throws IOException {
             return next(result);
         }
 
@@ -306,6 +300,11 @@ public class AggregateRegionObserverTest {
             return 0;
         }
 
+        @Override
+        public int getBatch() {
+            return 0;
+        }
+
         /*
          * (non-Javadoc)
          * 
@@ -322,16 +321,9 @@ public class AggregateRegionObserverTest {
             return i < input.size();
         }
 
-        /*
-         * (non-Javadoc)
-         * 
-         * @see
-         * org.apache.hadoop.hbase.regionserver.RegionScanner#nextRaw(java.util
-         * .List, int)
-         */
         @Override
-        public boolean nextRaw(List<Cell> result, int limit) throws IOException {
-            return nextRaw(result);
+        public boolean nextRaw(List<Cell> list, ScannerContext scannerContext) throws IOException {
+            return false;
         }
 
     }
