@@ -645,5 +645,8 @@ abstract public class KylinConfigBase implements Serializable {
     public int getCubeStatsHLLPrecision() {
         return Integer.parseInt(getOptional("kylin.job.cubing.inmem.sampling.hll.precision", "14"));
     }
-
+    
+    public String getPatchedFuzzyRowFilterVersion() {
+        return this.getOptional("kylin.hbase.filter.fuzzy.row.filter.version", "1.1.3");
+    }
 }

@@ -20,7 +20,7 @@ package org.apache.kylin.storage.hbase.ii;
 
 import java.util.ArrayList;
 
-import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -53,8 +53,8 @@ public class InvertedIndexStorageQuery implements IStorageQuery {
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
         String tableName = seg.getStorageLocationIdentifier();
 
-        //HConnection is cached, so need not be closed
-        HConnection conn = HBaseConnection.get(context.getConnUrl());
+        //Connection is cached, so need not be closed
+        Connection conn = HBaseConnection.get(context.getConnUrl());
         try {
             dataIterator = new EndpointTupleIterator(seg, sqlDigest.filter, sqlDigest.groupbyColumns, new ArrayList<>(sqlDigest.aggregations), context, conn, returnTupleInfo);
             return dataIterator;

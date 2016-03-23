@@ -18,7 +18,7 @@
 
     <property>
         <name>io.sort.mb</name>
-        <value>128</value>
+        <value>64</value>
     </property>
 
     <property>
@@ -28,12 +28,12 @@
 
     <property>
         <name>mapred.job.map.memory.mb</name>
-        <value>512</value>
+        <value>250</value>
     </property>
 
     <property>
         <name>mapred.job.reduce.memory.mb</name>
-        <value>512</value>
+        <value>250</value>
     </property>
 
     <property>
@@ -58,7 +58,7 @@
 
     <property>
         <name>mapreduce.application.classpath</name>
-        <value>/tmp/kylin/*,$HADOOP_CONF_DIR,/usr/hdp/${hdp.version}/hbase/lib/hbase-common.jar,/usr/hdp/current/hive-client/conf/,$PWD/mr-framework/hadoop/share/hadoop/mapreduce/*:$PWD/mr-framework/hadoop/share/hadoop/mapreduce/lib/*:$PWD/mr-framework/hadoop/share/hadoop/common/*:$PWD/mr-framework/hadoop/share/hadoop/common/lib/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/lib/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*:/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar:/usr/hdp/${hdp.version}/hadoop/lib/snappy-java-1.0.4.1.jar:/etc/hadoop/conf/secure</value>
+        <value>/tmp/kylin/*,$HADOOP_CONF_DIR,/usr/hdp/${hdp.version}/hbase/lib/hbase-common.jar,/usr/hdp/current/hive-client/conf/,$PWD/mr-framework/hadoop/share/hadoop/mapreduce/*:$PWD/mr-framework/hadoop/share/hadoop/mapreduce/lib/*:$PWD/mr-framework/hadoop/share/hadoop/common/*:$PWD/mr-framework/hadoop/share/hadoop/common/lib/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/lib/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*:/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar:/etc/hadoop/conf/secure</value>
     </property>
 
     <property>
@@ -81,10 +81,9 @@
         <value>false</value>
     </property>
 
-    <!--the default value on hdp is 0.05, however for test environments we need to be conservative on resource -->
     <property>
         <name>mapreduce.job.reduce.slowstart.completedmaps</name>
-        <value>1</value>
+        <value>0.05</value>
     </property>
 
     <property>
@@ -114,7 +113,7 @@
 
     <property>
         <name>mapreduce.map.java.opts</name>
-        <value>-Xmx512m</value>
+        <value>-Xmx200m</value>
     </property>
 
     <property>
@@ -124,7 +123,7 @@
 
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>512</value>
+        <value>250</value>
     </property>
 
     <property>
@@ -169,7 +168,7 @@
 
     <property>
         <name>mapreduce.reduce.memory.mb</name>
-        <value>512</value>
+        <value>250</value>
     </property>
 
     <property>
@@ -219,7 +218,7 @@
 
     <property>
         <name>mapreduce.task.io.sort.mb</name>
-        <value>128</value>
+        <value>64</value>
     </property>
 
     <property>
@@ -234,7 +233,7 @@
 
     <property>
         <name>yarn.app.mapreduce.am.command-opts</name>
-        <value>-Xmx512m</value>
+        <value>-Xmx200m</value>
     </property>
 
     <property>
@@ -244,7 +243,7 @@
 
     <property>
         <name>yarn.app.mapreduce.am.resource.mb</name>
-        <value>512</value>
+        <value>250</value>
     </property>
 
     <property>
