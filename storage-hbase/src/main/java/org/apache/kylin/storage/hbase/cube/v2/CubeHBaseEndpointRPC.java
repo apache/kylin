@@ -435,4 +435,21 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         return sb.toString();
 
     }
+
+    private Map<byte[], CubeVisitProtos.CubeVisitResponse> getResults(final CubeVisitProtos.CubeVisitRequest request, Table table, byte[] startKey, byte[] endKey) throws Throwable {
+        Map<byte[], CubeVisitProtos.CubeVisitResponse> results = table.coprocessorService(CubeVisitProtos.CubeVisitService.class, startKey, endKey, new Batch.Call<CubeVisitProtos.CubeVisitService, CubeVisitProtos.CubeVisitResponse>() {
+            public CubeVisitProtos.CubeVisitResponse call(CubeVisitProtos.CubeVisitService rowsService) throws IOException {
+                ServerRpcController controller = new ServerRpcController();
+                BlockingRpcCallback<CubeVisitProtos.CubeVisitResponse> rpcCallback = new BlockingRpcCallback<>();
+                rowsService.visitCube(controller, request, rpcCallback);
+                CubeVisitProtos.CubeVisitResponse response = rpcCallback.get();
+                if (controller.failedOnException()) {
+                    throw controller.getFailedOn();
+                }
+                return response;
+            }
+        });
+
+        return results;
+    }
 }

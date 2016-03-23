@@ -128,15 +128,15 @@ public class HBaseCuboidWriter implements ICuboidWriter {
 
     @Override
     public final void flush() throws IOException {
-        if (!puts.isEmpty()) {
-            long t = System.currentTimeMillis();
-            if (hTable != null) {
-                hTable.put(puts);
+
+            if (!puts.isEmpty()) {
+                long t = System.currentTimeMillis();
+                if (hTable != null) {
+                    hTable.put(puts);
+                }
+                logger.info("commit total " + puts.size() + " puts, totally cost:" + (System.currentTimeMillis() - t) + "ms");
+                puts.clear();
             }
-            logger.info("commit total " + puts.size() + " puts, totally cost:" + (System.currentTimeMillis() - t) + "ms");
-            puts.clear();
-        }
-        puts.clear();
     }
 
     @Override

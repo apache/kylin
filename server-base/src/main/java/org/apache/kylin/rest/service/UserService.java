@@ -152,7 +152,6 @@ public class UserService implements UserDetailsManager {
             Put put = new Put(pair.getKey());
 
             put.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
-
             htable.put(put);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);

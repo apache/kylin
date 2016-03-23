@@ -781,4 +781,8 @@ abstract public class KylinConfigBase implements Serializable {
     public void setAppendDictCacheSize(int cacheSize) {
         setProperty("kylin.dict.append.cache.size", String.valueOf(cacheSize));
     }
+        
+    public String getPatchedFuzzyRowFilterVersion() {
+        return this.getOptional("kylin.hbase.filter.fuzzy.row.filter.version", "1.1.3");
+    }
 }

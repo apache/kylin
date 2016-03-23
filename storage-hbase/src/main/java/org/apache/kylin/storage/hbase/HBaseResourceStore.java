@@ -33,8 +33,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
@@ -324,9 +322,13 @@ public class HBaseResourceStore extends ResourceStore {
                 get.addColumn(B_FAMILY, B_COLUMN_TS);
         }
 
-        Result result = table.get(get);
-        boolean exists = result != null && (!result.isEmpty() || (result.getExists() != null && result.getExists()));
-        return exists ? result : null;
+        try {
+            Result result = table.get(get);
+            boolean exists = result != null && (!result.isEmpty() || (result.getExists() != null && result.getExists()));
+            return exists ? result : null;
+        } finally {
+            IOUtils.closeQuietly(table);
+        }
     }
 
     private Path writeLargeCellToHdfs(String resPath, byte[] largeColumn, Table table) throws IOException {
