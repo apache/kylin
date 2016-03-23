@@ -38,6 +38,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.hadoop.hbase.regionserver.ScannerContext;
 import org.apache.kylin.common.util.FIFOIterable;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
@@ -222,6 +223,11 @@ public class IITest extends LocalFileMetadataTestCase {
             }
 
             @Override
+            public int getBatch() {
+                return -1;
+            }
+
+            @Override
             public boolean nextRaw(List<Cell> result) throws IOException {
                 if (iiRowIterator.hasNext()) {
                     IIRow iiRow = iiRowIterator.next();
@@ -233,7 +239,7 @@ public class IITest extends LocalFileMetadataTestCase {
             }
 
             @Override
-            public boolean nextRaw(List<Cell> result, int limit) throws IOException {
+            public boolean nextRaw(List<Cell> result, ScannerContext scannerContext) throws IOException {
                 throw new NotImplementedException();
             }
 
@@ -243,7 +249,7 @@ public class IITest extends LocalFileMetadataTestCase {
             }
 
             @Override
-            public boolean next(List<Cell> result, int limit) throws IOException {
+            public boolean next(List<Cell> result, ScannerContext scannerContext) throws IOException {
                 throw new NotImplementedException();
             }
 

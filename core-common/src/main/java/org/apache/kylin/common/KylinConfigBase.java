@@ -579,4 +579,7 @@ public class KylinConfigBase implements Serializable {
         return getOptional("kylin.hive.beeline.params", "");
     }
 
+    public String getPatchedFuzzyRowFilterVersion() {
+        return this.getOptional("kylin.hbase.filter.fuzzy.row.filter.version", "1.1.3");
+    }
 }

@@ -20,9 +20,7 @@ package org.apache.kylin.storage.hbase.ii;
 
 import java.util.List;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
@@ -49,7 +47,7 @@ public class ITInvertedIndexHBaseTest extends HBaseMetadataTestCase {
 
     IIInstance ii;
     IISegment seg;
-    HConnection hconn;
+    Connection hconn;
 
     TableRecordInfo info;
 
@@ -60,8 +58,7 @@ public class ITInvertedIndexHBaseTest extends HBaseMetadataTestCase {
         this.ii = IIManager.getInstance(getTestConfig()).getII("test_kylin_ii_left_join");
         this.seg = ii.getFirstSegment();
 
-        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
-        hconn = HConnectionManager.createConnection(hconf);
+        hconn = HBaseConnection.get(getTestConfig().getStorageUrl());
 
         this.info = new TableRecordInfo(seg);
     }

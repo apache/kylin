@@ -28,7 +28,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -55,7 +56,7 @@ public class HBaseStreamingOutput implements IStreamingOutput {
         try {
             CubeSegment cubeSegment = (CubeSegment) buildable;
 
-            final HTableInterface hTable;
+            final Table hTable;
             hTable = createHTable(cubeSegment);
             List<ICuboidWriter> cuboidWriters = Lists.newArrayList();
             cuboidWriters.add(new HBaseCuboidWriter(cubeSegment, hTable));
@@ -87,10 +88,10 @@ public class HBaseStreamingOutput implements IStreamingOutput {
         }
     }
 
-    private HTableInterface createHTable(final CubeSegment cubeSegment) throws IOException {
+    private Table createHTable(final CubeSegment cubeSegment) throws IOException {
         final String hTableName = cubeSegment.getStorageLocationIdentifier();
         CubeHTableUtil.createHTable(cubeSegment, null);
-        final HTableInterface hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(hTableName);
+        final Table hTable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(TableName.valueOf(hTableName));
         logger.info("hTable:" + hTableName + " for segment:" + cubeSegment.getName() + " created!");
         return hTable;
     }

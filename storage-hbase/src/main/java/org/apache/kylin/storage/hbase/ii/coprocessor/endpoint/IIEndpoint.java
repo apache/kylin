@@ -89,7 +89,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
 
         if (request.hasTsRange()) {
             Range<Long> tsRange = (Range<Long>) SerializationUtils.deserialize(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getTsRange()));
-            byte[] regionStartKey = region.getStartKey();
+            byte[] regionStartKey = region.getRegionInfo().getStartKey();
             if (!ArrayUtils.isEmpty(regionStartKey)) {
                 shard = BytesUtil.readUnsigned(regionStartKey, 0, IIKeyValueCodec.SHARD_LEN);
             } else {
@@ -143,7 +143,7 @@ public class IIEndpoint extends IIProtos.RowsService implements Coprocessor, Cop
         HRegion region = null;
 
         try {
-            region = env.getRegion();
+            region = (HRegion)env.getRegion();
             region.startRegionOperation();
 
             innerScanner = region.getScanner(prepareScan(request, region));
