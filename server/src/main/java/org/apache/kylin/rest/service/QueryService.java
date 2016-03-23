@@ -203,7 +203,7 @@ public class QueryService extends BasicService {
         final Set<String> realizationNames = new HashSet<String>();
         final Set<Long> cuboidIds = new HashSet<Long>();
         float duration = response.getDuration() / (float) 1000;
-        boolean storageCacheUsed = false;
+        boolean storageCacheUsed = response.isStorageCacheUsed();
 
         if (!response.isHitExceptionCache() && null != OLAPContext.getThreadLocalContexts()) {
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
@@ -218,10 +218,6 @@ public class QueryService extends BasicService {
                     realizationNames.add(realizationName);
                 }
 
-                if (ctx.storageContext.getReusedPeriod() != null) {
-                    response.setStorageCacheUsed(true);
-                    storageCacheUsed = true;
-                }
             }
         }
 
@@ -340,7 +336,6 @@ public class QueryService extends BasicService {
         Connection conn = null;
         Statement stat = null;
         ResultSet resultSet = null;
-        long startTime = System.currentTimeMillis();
 
         List<List<String>> results = new LinkedList<List<String>>();
         List<SelectedColumnMeta> columnMetas = new LinkedList<SelectedColumnMeta>();
@@ -386,6 +381,7 @@ public class QueryService extends BasicService {
 
         boolean isPartialResult = false;
         String cube = "";
+        StringBuilder sb = new StringBuilder("Scan count for each storageContext: ");
         long totalScanCount = 0;
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
@@ -393,13 +389,14 @@ public class QueryService extends BasicService {
                     isPartialResult |= ctx.storageContext.isPartialResultReturned();
                     cube = ctx.realization.getName();
                     totalScanCount += ctx.storageContext.getTotalScanCount();
+                    sb.append(ctx.storageContext.getTotalScanCount() + ",");
                 }
             }
         }
+        logger.info(sb.toString());
 
         SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult);
         response.setTotalScanCount(totalScanCount);
-        response.setDuration(System.currentTimeMillis() - startTime);
 
         return response;
     }

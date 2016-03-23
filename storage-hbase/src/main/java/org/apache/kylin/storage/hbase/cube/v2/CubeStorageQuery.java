@@ -45,17 +45,16 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
-import org.apache.kylin.storage.ICachableStorageQuery;
+import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.translate.DerivedFilterTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 
-public class CubeStorageQuery implements ICachableStorageQuery {
+public class CubeStorageQuery implements IStorageQuery {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeStorageQuery.class);
 
@@ -377,23 +376,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
             MeasureType<?> measureType = measure.getFunction().getMeasureType();
             measureType.adjustSqlDigest(measure, sqlDigest);
         }
-    }
-
-    // ============================================================================
-
-    @Override
-    public Range<Long> getVolatilePeriod() {
-        return null;
-    }
-
-    @Override
-    public String getStorageUUID() {
-        return cubeInstance.getUuid();
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return false;
     }
 
 }

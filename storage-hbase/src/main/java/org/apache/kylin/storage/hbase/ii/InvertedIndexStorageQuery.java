@@ -26,19 +26,17 @@ import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
-import org.apache.kylin.storage.ICachableStorageQuery;
+import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.EndpointTupleIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Range;
-
 /**
  * @author yangli9
  */
-public class InvertedIndexStorageQuery implements ICachableStorageQuery {
+public class InvertedIndexStorageQuery implements IStorageQuery {
 
     private static Logger logger = LoggerFactory.getLogger(InvertedIndexStorageQuery.class);
 
@@ -66,18 +64,4 @@ public class InvertedIndexStorageQuery implements ICachableStorageQuery {
         }
     }
 
-    @Override
-    public Range<Long> getVolatilePeriod() {
-        return dataIterator.getCacheExcludedPeriod();
-    }
-
-    @Override
-    public String getStorageUUID() {
-        return this.uuid;
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return true;
-    }
 }

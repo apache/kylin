@@ -31,11 +31,8 @@ import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.storage.ICachableStorageQuery;
 import org.apache.kylin.storage.IStorage;
 import org.apache.kylin.storage.IStorageQuery;
-import org.apache.kylin.storage.cache.CacheFledgedDynamicQuery;
-import org.apache.kylin.storage.cache.CacheFledgedStaticQuery;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput;
 import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
 
@@ -54,22 +51,15 @@ public class HBaseStorage implements IStorage {
     @Override
     public IStorageQuery createQuery(IRealization realization) {
 
-        boolean queryCacheGloballyEnabled = KylinConfig.getInstanceFromEnv().isQueryCacheEnabled();
-        boolean queryCacheQueryLevelEnabled = !BackdoorToggles.getDisableCache();
-
         if (realization.getType() == RealizationType.INVERTED_INDEX) {
-            ICachableStorageQuery ret;
+            IStorageQuery ret;
             try {
-                ret = (ICachableStorageQuery) Class.forName(defaultIIStorageQuery).getConstructor(IIInstance.class).newInstance((IIInstance) realization);
+                ret = (IStorageQuery) Class.forName(defaultIIStorageQuery).getConstructor(IIInstance.class).newInstance((IIInstance) realization);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to initialize storage query for " + defaultIIStorageQuery, e);
             }
+            return ret;
 
-            if (queryCacheGloballyEnabled && queryCacheQueryLevelEnabled) {
-                return wrapWithCache(ret, realization);
-            } else {
-                return ret;
-            }
         } else if (realization.getType() == RealizationType.CUBE) {
 
             CubeInstance cubeInstance = (CubeInstance) realization;
@@ -84,28 +74,16 @@ public class HBaseStorage implements IStorage {
                 cubeStorageQuery = v2CubeStorageQuery;//by default use v2
             }
 
-            ICachableStorageQuery ret;
+            IStorageQuery ret;
             try {
-                ret = (ICachableStorageQuery) Class.forName(cubeStorageQuery).getConstructor(CubeInstance.class).newInstance((CubeInstance) realization);
+                ret = (IStorageQuery) Class.forName(cubeStorageQuery).getConstructor(CubeInstance.class).newInstance((CubeInstance) realization);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to initialize storage query for " + cubeStorageQuery, e);
             }
 
-            if (queryCacheGloballyEnabled && queryCacheQueryLevelEnabled) {
-                return wrapWithCache(ret, realization);
-            } else {
-                return ret;
-            }
+            return ret;
         } else {
             throw new IllegalArgumentException("Unknown realization type " + realization.getType());
-        }
-    }
-
-    private static IStorageQuery wrapWithCache(ICachableStorageQuery underlyingStorageEngine, IRealization realization) {
-        if (underlyingStorageEngine.isDynamic()) {
-            return new CacheFledgedDynamicQuery(underlyingStorageEngine, getPartitionCol(realization));
-        } else {
-            return new CacheFledgedStaticQuery(underlyingStorageEngine);
         }
     }
 

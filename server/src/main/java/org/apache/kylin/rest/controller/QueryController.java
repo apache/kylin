@@ -46,7 +46,6 @@ import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.QueryUtil;
-import org.apache.kylin.storage.cache.AbstractCacheFledgedQuery;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +74,7 @@ public class QueryController extends BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryController.class);
 
+    public static final String SUCCESS_QUERY_CACHE = "StorageCache";
     public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
 
     @Autowired
@@ -86,7 +86,6 @@ public class QueryController extends BasicController {
     @PostConstruct
     public void init() throws IOException {
         Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
-        AbstractCacheFledgedQuery.setCacheManager(cacheManager);
     }
 
     @RequestMapping(value = "/query", method = RequestMethod.POST)
@@ -185,10 +184,23 @@ public class QueryController extends BasicController {
                 throw new InternalErrorException("Not Supported SQL.");
             }
 
+            long startTime = System.currentTimeMillis();
+
             SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
             try {
                 if (null == sqlResponse) {
                     sqlResponse = queryService.query(sqlRequest);
+
+                    long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
+                    long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
+                    sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+                    logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
+                            new String[] { String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()), String.valueOf(sqlResponse.getTotalScanCount()) });
+                    if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                        cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
+                    }
+                } else {
+                    sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                 }
 
                 checkQueryAuth(sqlResponse);
@@ -221,13 +233,20 @@ public class QueryController extends BasicController {
     private SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
         SQLResponse response = null;
         Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+        Cache successCache = cacheManager.getCache(SUCCESS_QUERY_CACHE);
 
-        if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && //
-                !BackdoorToggles.getDisableCache() && //
-                exceptionCache.get(sqlRequest) != null) {
-            Element element = exceptionCache.get(sqlRequest);
-            response = (SQLResponse) element.getObjectValue();
-            response.setHitExceptionCache(true);
+        if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && !BackdoorToggles.getDisableCache()) {
+            if (exceptionCache.get(sqlRequest) != null) {
+                logger.info("The sqlResponse is found in EXCEPTION_QUERY_CACHE");
+                Element element = exceptionCache.get(sqlRequest);
+                response = (SQLResponse) element.getObjectValue();
+                response.setHitExceptionCache(true);
+            } else if (successCache.get(sqlRequest) != null) {
+                logger.info("The sqlResponse is found in SUCCESS_QUERY_CACHE");
+                Element element = successCache.get(sqlRequest);
+                response = (SQLResponse) element.getObjectValue();
+                response.setStorageCacheUsed(true);
+            }
         }
 
         return response;

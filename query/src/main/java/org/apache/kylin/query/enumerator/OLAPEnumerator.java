@@ -125,7 +125,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         ITupleIterator iterator = storageEngine.search(olapContext.storageContext, sqlDigest, olapContext.returnTupleInfo);
         if (logger.isDebugEnabled()) {
             logger.debug("return TupleIterator...");
-            logger.debug("Storage cache used for this storage query:" + olapContext.storageContext.getReusedPeriod());
         }
 
         return iterator;

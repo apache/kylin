@@ -35,6 +35,9 @@ public class SQLResponse implements Serializable {
     // the results rows, each row contains several columns
     private List<List<String>> results;
 
+    /**
+     * for historical reasons it is named "cube", however it might also refer to any realizations like hybrid, II or etc.
+     */
     private String cube;
 
     // if not select query, only return affected row count

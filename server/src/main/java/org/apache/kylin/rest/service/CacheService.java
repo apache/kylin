@@ -49,6 +49,7 @@ import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
+import org.apache.kylin.rest.controller.QueryController;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hybrid.HybridManager;
@@ -101,9 +102,10 @@ public class CacheService extends BasicService {
     }
 
     protected void cleanDataCache(String storageUUID) {
-        if (cacheManager != null && cacheManager.getCache(storageUUID) != null) {
-            logger.info("cleaning cache for " + storageUUID);
-            cacheManager.getCache(storageUUID).removeAll();
+        if (cacheManager != null) {
+            logger.info("cleaning cache for " + storageUUID + " (currently remove all entries)");
+            cacheManager.getCache(QueryController.SUCCESS_QUERY_CACHE).removeAll();
+            cacheManager.getCache(QueryController.EXCEPTION_QUERY_CACHE).removeAll();
         } else {
             logger.warn("skip cleaning cache for " + storageUUID);
         }

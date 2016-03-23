@@ -33,7 +33,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.kylin.common.KylinVersion;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;

@@ -25,16 +25,14 @@ import java.sql.DriverManager;
 import java.util.List;
 import java.util.Properties;
 
-import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
-import org.apache.kylin.storage.cache.AbstractCacheFledgedQuery;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.junit.AfterClass;
@@ -44,7 +42,6 @@ import org.junit.Test;
 
 @Ignore("KylinQueryTest is contained by ITCombinationTest")
 public class ITKylinQueryTest extends KylinTestBase {
-    private static CacheManager cacheManager;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -77,8 +74,6 @@ public class ITKylinQueryTest extends KylinTestBase {
         H2Database h2DB = new H2Database(h2Connection, config);
         h2DB.loadAllTables();
 
-        cacheManager = CacheManager.newInstance("../server/src/main/resources/ehcache-test.xml");
-        AbstractCacheFledgedQuery.setCacheManager(cacheManager);
     }
 
     protected static void clean() {
@@ -90,10 +85,6 @@ public class ITKylinQueryTest extends KylinTestBase {
         ObserverEnabler.forceCoprocessorUnset();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
 
-        if (cacheManager != null) {
-            cacheManager.shutdown();
-        }
-        AbstractCacheFledgedQuery.setCacheManager(null);
     }
 
     @Ignore("this is only for debug")

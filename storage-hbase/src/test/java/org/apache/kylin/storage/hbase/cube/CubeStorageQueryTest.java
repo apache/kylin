@@ -41,7 +41,7 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.ICachableStorageQuery;
+import org.apache.kylin.storage.IStorageQuery;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,7 +77,7 @@ public class CubeStorageQueryTest extends LocalFileMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
-    private void validateIdentifyCuboidOnStorageQnery(CubeDesc cubeDesc, ICachableStorageQuery query) {
+    private void validateIdentifyCuboidOnStorageQnery(CubeDesc cubeDesc, IStorageQuery query) {
         long baseCuboidId = cubeDesc.getRowkey().getFullMask();
 
         try {
@@ -113,14 +113,14 @@ public class CubeStorageQueryTest extends LocalFileMetadataTestCase {
     @Test
     public void testIdentifyCuboidV1() {
         CubeDesc cubeDesc = cube.getDescriptor();
-        ICachableStorageQuery query = new org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery(cube);
+        IStorageQuery query = new org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery(cube);
         validateIdentifyCuboidOnStorageQnery(cubeDesc, query);
     }
 
     @Test
     public void testIdentifyCuboidV2() {
         CubeDesc cubeDesc = cube.getDescriptor();
-        ICachableStorageQuery query = new org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery(cube);
+        IStorageQuery query = new org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery(cube);
         validateIdentifyCuboidOnStorageQnery(cubeDesc, query);
     }
 

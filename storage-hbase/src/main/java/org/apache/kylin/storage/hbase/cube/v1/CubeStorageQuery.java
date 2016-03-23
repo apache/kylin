@@ -62,7 +62,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
-import org.apache.kylin.storage.ICachableStorageQuery;
+import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
@@ -75,11 +75,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 
 @SuppressWarnings("unused")
-public class CubeStorageQuery implements ICachableStorageQuery {
+public class CubeStorageQuery implements IStorageQuery {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeStorageQuery.class);
 
@@ -152,21 +151,6 @@ public class CubeStorageQuery implements ICachableStorageQuery {
 
         // notice we're passing filterD down to storage instead of flatFilter
         return new SerializedHBaseTupleIterator(conn, scans, cubeInstance, dimensionsD, filterD, groupsCopD, valueDecoders, context, returnTupleInfo);
-    }
-
-    @Override
-    public Range<Long> getVolatilePeriod() {
-        return null;
-    }
-
-    @Override
-    public String getStorageUUID() {
-        return this.uuid;
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return false;
     }
 
     private void buildDimensionsAndMetrics(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics, SQLDigest sqlDigest) {
@@ -493,7 +477,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         List<Collection<ColumnValueRange>> result = Lists.newArrayList();
 
         if (flatFilter == null) {
-            result.add(Collections.<ColumnValueRange>emptyList());
+            result.add(Collections.<ColumnValueRange> emptyList());
             return result;
         }
 
@@ -535,7 +519,7 @@ public class CubeStorageQuery implements ICachableStorageQuery {
         }
         if (globalAlwaysTrue) {
             orAndRanges.clear();
-            orAndRanges.add(Collections.<ColumnValueRange>emptyList());
+            orAndRanges.add(Collections.<ColumnValueRange> emptyList());
         }
         return orAndRanges;
     }
