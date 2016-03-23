@@ -73,7 +73,7 @@ public class CubeMigrationCLI {
     private static ResourceStore srcStore;
     private static ResourceStore dstStore;
     private static FileSystem hdfsFS;
-    private static HBaseAdmin hbaseAdmin;
+    private static Admin hbaseAdmin;
 
     public static final String ACL_INFO_FAMILY = "i";
     private static final String ACL_TABLE_NAME = "_acl";
@@ -117,8 +117,8 @@ public class CubeMigrationCLI {
 
         checkAndGetHbaseUrl();
 
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        hbaseAdmin = new HBaseAdmin(conf);
+        Connection conn = HBaseConnection.get(srcConfig.getStorageUrl());
+        hbaseAdmin = conn.getAdmin();
 
         hdfsFS = FileSystem.get(new Configuration());
 
@@ -142,6 +142,10 @@ public class CubeMigrationCLI {
         } else {
             showOpts();
         }
+        
+        checkMigrationSuccess(dstConfig, cubeName, true);
+
+        IOUtils.closeQuietly(hbaseAdmin);
     }
 
     public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl, String purgeAndDisable, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {
@@ -311,10 +315,10 @@ public class CubeMigrationCLI {
             case CHANGE_HTABLE_HOST: {
                 String tableName = (String) opt.params[0];
                 HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-                hbaseAdmin.disableTable(tableName);
+                hbaseAdmin.disableTable(TableName.valueOf(tableName));
                 desc.setValue(IRealizationConstants.HTableTag, dstConfig.getMetadataUrlPrefix());
-                hbaseAdmin.modifyTable(tableName, desc);
-                hbaseAdmin.enableTable(tableName);
+                hbaseAdmin.modifyTable(TableName.valueOf(tableName), desc);
+                hbaseAdmin.enableTable(TableName.valueOf(tableName));
                 logger.info("CHANGE_HTABLE_HOST is completed");
                 break;
             }
@@ -425,11 +429,11 @@ public class CubeMigrationCLI {
                 Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
                 ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
                 String projUUID = project.getUuid();
-                HTableInterface srcAclHtable = null;
-                HTableInterface destAclHtable = null;
+                Table srcAclHtable = null;
+                Table destAclHtable = null;
                 try {
-                    srcAclHtable = HBaseConnection.get(srcConfig.getStorageUrl()).getTable(srcConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME);
-                    destAclHtable = HBaseConnection.get(dstConfig.getStorageUrl()).getTable(dstConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME);
+                    srcAclHtable = HBaseConnection.get(srcConfig.getStorageUrl()).getTable(TableName.valueOf(srcConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME));
+                    destAclHtable = HBaseConnection.get(dstConfig.getStorageUrl()).getTable(TableName.valueOf(dstConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME));
 
                     // cube acl
                     Result result  = srcAclHtable.get(new Get(Bytes.toBytes(cubeId)));
@@ -445,11 +449,10 @@ public class CubeMigrationCLI {
                                 value = Bytes.toBytes(valueString);
                             }
                             Put put = new Put(Bytes.toBytes(cubeId));
-                            put.add(family, column, value);
+                            put.addColumn(CellUtil.cloneFamily(cell), CellUtil.cloneQualifier(cell), CellUtil.cloneValue(cell));
                             destAclHtable.put(put);
                         }
                     }
-                    destAclHtable.flushCommits();
                 } finally {
                     IOUtils.closeQuietly(srcAclHtable);
                     IOUtils.closeQuietly(destAclHtable);
@@ -476,10 +479,10 @@ public class CubeMigrationCLI {
             case CHANGE_HTABLE_HOST: {
                 String tableName = (String) opt.params[0];
                 HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-                hbaseAdmin.disableTable(tableName);
+                hbaseAdmin.disableTable(TableName.valueOf(tableName));
                 desc.setValue(IRealizationConstants.HTableTag, srcConfig.getMetadataUrlPrefix());
-                hbaseAdmin.modifyTable(tableName, desc);
-                hbaseAdmin.enableTable(tableName);
+                hbaseAdmin.modifyTable(TableName.valueOf(tableName), desc);
+                hbaseAdmin.enableTable(TableName.valueOf(tableName));
                 break;
             }
             case COPY_FILE_IN_META: {
@@ -509,13 +512,12 @@ public class CubeMigrationCLI {
             case COPY_ACL: {
                 String cubeId = (String) opt.params[0];
                 String modelId = (String) opt.params[1];
-                HTableInterface destAclHtable = null;
+                Table destAclHtable = null;
                 try {
-                    destAclHtable = HBaseConnection.get(dstConfig.getStorageUrl()).getTable(dstConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME);
+                    destAclHtable = HBaseConnection.get(dstConfig.getStorageUrl()).getTable(TableName.valueOf(dstConfig.getMetadataUrlPrefix() + ACL_TABLE_NAME));
 
                     destAclHtable.delete(new Delete(Bytes.toBytes(cubeId)));
                     destAclHtable.delete(new Delete(Bytes.toBytes(modelId)));
-                    destAclHtable.flushCommits();
                 } finally {
                     IOUtils.closeQuietly(destAclHtable);
                 }
