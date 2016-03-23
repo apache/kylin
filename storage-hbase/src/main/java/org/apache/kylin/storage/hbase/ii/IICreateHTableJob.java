@@ -24,7 +24,8 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.io.compress.Compression;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
@@ -32,6 +33,7 @@ import org.apache.hadoop.hbase.security.User;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.IIDeployCoprocessorCLI;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
@@ -47,7 +49,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
-        HBaseAdmin admin = null;
+        Admin admin = null;
         try {
             options.addOption(OPTION_II_NAME);
             options.addOption(OPTION_HTABLE_NAME);
@@ -63,10 +65,11 @@ public class IICreateHTableJob extends AbstractHadoopJob {
 
 
             Configuration conf = HBaseConfiguration.create(getConf());
+            Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
             // check if the table already exists
-            admin = new HBaseAdmin(conf);
-            if (admin.tableExists(tableName)) {
-                if (admin.isTableEnabled(tableName)) {
+            admin = conn.getAdmin();
+            if (admin.tableExists(TableName.valueOf(tableName))) {
+                if (admin.isTableEnabled(TableName.valueOf(tableName))) {
                     logger.info("Table " + tableName + " already exists and is enabled, no need to create.");
                     return 0;
                 } else {

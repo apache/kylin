@@ -45,7 +45,8 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.util.ToolRunner;
@@ -208,7 +209,7 @@ public class BuildIIWithStream {
             }
         }
         final IISegment segment = createSegment(iiName);
-        final HTableInterface htable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(segment.getStorageLocationIdentifier());
+        final Table htable = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl()).getTable(TableName.valueOf(segment.getStorageLocationIdentifier()));
         String[] args = new String[] { "-iiname", iiName, "-htablename", segment.getStorageLocationIdentifier() };
         ToolRunner.run(new IICreateHTableJob(), args);
 
@@ -246,7 +247,7 @@ public class BuildIIWithStream {
         }
     }
 
-    private void build(SliceBuilder sliceBuilder, StreamingBatch batch, HTableInterface htable) throws IOException {
+    private void build(SliceBuilder sliceBuilder, StreamingBatch batch, Table htable) throws IOException {
         final Slice slice = sliceBuilder.buildSlice(batch);
         try {
             loadToHBase(htable, slice, new IIKeyValueCodec(slice.getInfo()));
@@ -255,17 +256,17 @@ public class BuildIIWithStream {
         }
     }
 
-    private void loadToHBase(HTableInterface hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
+    private void loadToHBase(Table hTable, Slice slice, IIKeyValueCodec codec) throws IOException {
         List<Put> data = Lists.newArrayList();
         for (IIRow row : codec.encodeKeyValue(slice)) {
             final byte[] key = row.getKey().get();
             final byte[] value = row.getValue().get();
             Put put = new Put(key);
-            put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
+            put.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_QUALIFIER_BYTES, value);
             final ImmutableBytesWritable dictionary = row.getDictionary();
             final byte[] dictBytes = dictionary.get();
             if (dictionary.getOffset() == 0 && dictionary.getLength() == dictBytes.length) {
-                put.add(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES, dictBytes);
+                put.addColumn(IIDesc.HBASE_FAMILY_BYTES, IIDesc.HBASE_DICTIONARY_BYTES, dictBytes);
             } else {
                 throw new RuntimeException("dict offset should be 0, and dict length should be " + dictBytes.length + " but they are" + dictionary.getOffset() + " " + dictionary.getLength());
             }
