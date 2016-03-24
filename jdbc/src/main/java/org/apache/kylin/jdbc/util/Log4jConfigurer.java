@@ -29,7 +29,7 @@ import org.apache.log4j.PatternLayout;
  * Created by dongli on 11/24/15.
  */
 public class Log4jConfigurer {
-    private final static String DEFAULT_PATTERN_LAYOUT = "L4J [%d{yyyy-MM-dd HH:mm:ss,SSS}][%p][%c] - %m%n";
+    private final static String DEFAULT_PATTERN_LAYOUT = "%d{ISO8601} %-5p [%t] %c{2}:%L : %m%n";
     private static boolean INITIALIZED = false;
 
     public static void initLogger() {
