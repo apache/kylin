@@ -9,7 +9,7 @@ categories: blog
 
 ## Background
 
-Find the Top-N (or Top-K) entities from a dataset is a common scenario and requirement in data minding; We often see the reports or news like "Top 100 companies in the world", "Most popular 20 electronics sold on eBay", etc. Exploring and analysising the top entities can always find some high value information.
+Find the Top-N (or Top-K) entities from a dataset is a common scenario and requirement in data minding; We often see the reports or news like "Top 100 companies in the world", "Most popular 20 electronics" sold on a big e-commerce platform, etc. Exploring and analysising the top entities can always find some high value information.
 
 Within the era of big data, this need is much stronger than ever before, as both the raw dataset and the number of entities can be vast; Without certain pre-calculation, get the Top-K entities among a distributed big dataset may take a long time, makes the ad-hoc query inefficient. 
 
@@ -84,77 +84,92 @@ Kylin's Top-N implementation referred to [stream-lib](https://github.com/addthis
 
 A couple of modifications are made to let it better fit with Kylin:
 
-* Use double as the counter data type;
-* Simplfy the data strucutre, using one linked list for all entries;
-* Use a more compact serializer;
+* Using double as the counter data type;
+* Simplfied data strucutre, using one linked list for all entries;
+* A more compact serializer;
 
 Besides, in order to run SpaceSaving in parallel on Hadoop, we make it mergable with the algorithm introduced in <i>[2] A parallel space saving algorithm for frequent items and the Hurwitz zeta distribution</i>.
 
 
 ## Accuracy
 
-Although the experiments in paper [1] has proved SpaceSaving's efficiency and accuracy for realistic Zipfian data, it doesn't ensure 100% correctness for all cases. SpaceSaving uses a fixed space to put the most frequent candidates; when the size exceeds the space, the tail elements will be truncated, causing data loss. The parallel algorithm will merge multiple SpaceSavings into one, at that moment for the elements appeared in one but not in the other it had some assumptions, this will also cause some data loss. Finally, the result from Top-N measure may have minor difference with the real result.
+Although the experiments in paper [1] has proved SpaceSaving's efficiency and accuracy for realistic Zipfian data, it doesn't ensure 100% accuracy for all scenarios. SpaceSaving uses a fixed space to put the most frequent candidates;  when the entities exceeds the space size, the tail entities will be truncated, causing data loss. The parallel algorithm merges multiple SpaceSavings into one, at that moment for the entities appeared in one but not in the other it had some assumptions, this will also cause some data distortion. Finally, the result from Top-N measure may have minor difference with the real result.
 
 A couple of factors can affect the accuracy:
 
 * Zipfian distribution
 
-Many rankings in the world follows the **[3] Zipfian distribution**, such as the population ranks of cities in various countries, corporation sizes, income rankings, etc. But the exponent of the distribution varies in different scenarios, this will affect the correctness of the result. The higher the exponent is (the distribution is more sharp), the more accurate answer will get. When using SpaceSaving, you'd better have an calculation on your data distribution.
+Many rankings in the world follows the **[3] Zipfian distribution**, such as the population ranks of cities in various countries, corporation sizes, income rankings, etc. But the exponent of the distribution varies in different scenarios, this will affect the correctness of the result to some extend. The higher the exponent is (the distribution is more sharp), the more accurate answer will get. If the distribution is very flat, entities' values are very close, the rankings from SpaceSaving will be less accurate. When using SpaceSaving, you'd better have an calculation on your data distribution.
 
 * Space in SpaceSaving
 
-As mentioned above, SpaceSaving use a small space to put the most frequent elements. Giving more space it will provide more accurate answer. For example, to calculate Top N elements, using 100 \* N space would provide more accurate answer than 50 \* N space. But more space will take more CPU, memory and storage, this need be balanced.
+As mentioned above, SpaceSaving use a limited space to put the most frequent elements. Giving more space it will provide more accurate answer. For example, to calculate Top N elements, using 100 \* N space would provide more accurate answer than 50 \* N space. If the space is more than the entity's cardinality, the result will be accurate. More space will take more CPU, memory and storage, this need be balanced.
 
-* Element cardinality
+* Entity cardinality
 
 Element cardinality is also a factor to consider. Calculating Top 100 among 10 thousands is easiser than among 10 million.
 
+* Dataset size
+
+Error ratio from a big dataset is less than from a small dataset. The same for Top-N calculation.
+
+
 ## Statistics
 
-We designed a test case to calculate the top 100 elements using the parallel SpaceSaving among a data set; The element's occurancy follows the Zipfian distribution, adjust the Zipfian exponent, space, and cardinality time to times, compare the result with the accurate result to collect the statistics, we get a rough accuracy report in below. 
+We designed a test case to calculate the top 100 elements using the parallel SpaceSaving among a generated data set (with commons-math3's ZipfDistribution); The entity's occurancy follows the Zipfian distribution, adjusting the parameters of Zipfian exponent, space, entity cardinality and dataset size time to times, compare the result with the accurate result (using mergesort) to collect the statistics, we get a rough accuracy report in below. 
 
-The first column is the element cardinality, means among how many elements to identify the top 100 elements; The other three columns represent how much space using in the algorithm: 20X means using 2,000, 50X means use 5,000. Each cell of the table shows how many records are exactly matched with the real result. The calculation is executed in parallel with 10 threads. 
+The first column is the entity cardinality, means among how many entities to identify the top 100 elements; The other three columns represent how much space using in the algorithm: 20X means using 2,000, 50X means use 5,000, and so on. Each cell of the table shows how many records are matched with the real result; if the error (or see difference) is less than 5/million of total data size we would think it is matched. E.g, for a 1 million data set, if the difference < 5. The SpaceSaving is calculated in parallel with 10 threads. 
 
-### Test 1. Calculate top-100 in 1 million records, zif exponent = 0.5
+### Test 1. Calculate top-100 in 1 million records, Zipf distribution exponent = 0.5, error tolerance < 5
 
 | Element cardinality| 20X space| 	50X space| 100X space|
-|-------------: |:---------------:|:---------------:|:---------------:| | 10,000	| 100%	| 100%	| 100% ||20,000	|100%	|100%	|100% ||100,000	|70%	|100%	|100% ||1,000,000|	8%	|45%	|98% |
+|-------------: |:---------------:|:---------------:|:---------------:| | 1,000	| 100%	| 100%	| 100% ||10,000	|78%	|100%	|100% ||100,000	|12%	|50%	|95% |
 
-Test 1: More space can get better accuracy.
+Conclusion: More space can get better accuracy.
 
-### Test 2. Calculate top-100 in 100 million records, zif exponent = 0.5
 
-| Element cardinality	| 20X space| 	50X space| 100X space|
-|-------------: |:---------------:|:---------------:|:---------------:| | 10,000	| 100%	| 100%	| 100% ||20,000	|100%	|100%	|100% ||100,000	|60%	|100%	|100% ||1,000,000|	8%	|56%	|96% |
-
-Test 2: The data size doesn't impact much.
-
-### Test 3. Calculate top-100 in 1 million records, zif exponent = 0.6
+### Test 2. Calculate top-100 in 1 million records, Zipf distribution exponent = 0.6, error tolerance < 5
 
 | Element cardinality	| 20X space| 	50X space| 100X space|
-|-------------: |:---------------:|:---------------:|:---------------:| | 10,000	| 100%	| 100%	| 100% ||20,000	|100%	|100%	|100% ||100,000	|94%	|100%	|100% ||1,000,000|	31%	|93%	|100% |
+|-------------: |:---------------:|:---------------:|:---------------:| | 1,000	| 100%	| 100%	| 100% ||10,000	|93%	|100%	|100% ||100,000	|30%	|89%	|99% |
 
-Test 3: more sharp the elements distribute, the better answer it prvoides
+Conclusion: more sharp the entities distribute, the better answer SpaceSaving prvoides
 
-### Test 4. Calculate top-100 in 1 million records, zif exponent = 0.7
+
+### Test 3. Calculate top-100 in 20 million records, Zif distribution exponent = 0.5, error tolerance < 100
 
 | Element cardinality	| 20X space| 	50X space| 100X space|
-|-------------: |:---------------:|:---------------:|:---------------:| | 10,000	| 100%	| 100%	| 100% ||20,000	|100%	|100%	|100% ||100,000	|100%	|100%	|100% ||1,000,000|	62%	|100%	|100% |
+|-------------: |:---------------:|:---------------:|:---------------:| | 1,000	| 100%	| 100%	| 100% || 10,000	|100%	|100%	|100% ||100,000	|100%	|100%	|100% ||1,000,000|	99%	|100%	|100% |
 
-Test 4: same conclusion as test 3.
+Conclusion: The result from SpaceSaving will be close to actual when the dataset is enough big.
+
+
+### Test 4. Calculate top-100 in 20 million records, Zif distribution exponent = 0.6, error tolerance < 100
+
+| Element cardinality	| 20X space| 	50X space| 100X space|
+|-------------: |:---------------:|:---------------:|:---------------:| | 10,000	| 100%	| 100%	| 100% ||20,000	|100%	|100%	|100% ||100,000	|100%	|100%	|100% ||1,000,000|	99%	|100%	|100% |
+
+Conclusion: same conclusion as test 3.
 
 These statistics matches with what we expected above. It just gives us a rough estimation on the result correctness. To use this feature well in Kylin, you need know about all these variables, and do some pilots before publish it to the analysts. 
+
+
+## Query performance
+
+Coming soon.
 
 
 ##Futher works
 
 This feature in v1.5.0 is a basic version, which may solve 80% cases; While it has some limitations or hard-codings that deserve your attention:
 
-* use SUM() as the default aggregation function;
-* sort in descending order always;
-* use 50X space always;
-* use dictionary encoding for the literal column;
-* the UI only allow selecting top 10, 100 and 1000;
+* SUM() is the default aggregation function;
+* Sort in descending order always;
+* Use 50X space always;
+* Use dictionary encoding for the literal column;
+* UI only allow selecting topn(10), topn(100) and topn(1000) as the return type;
+
+Please note here, if you select "topn(10)" as the return type, it doesn't mean you have to use "limit 10" in your query; You can use other limit numbers, Kylin can at most return the top 500 entities for one combination, but the precision after 10 are not tested. 
 
 Whether or not to support more aggregations/sortings/encodings are totally based on user need. If you have any comment or suggestion, please subscribe and then drop email to our dev mailing list <dev@kylin.apache.org>, thanks for your feedbak.
  
