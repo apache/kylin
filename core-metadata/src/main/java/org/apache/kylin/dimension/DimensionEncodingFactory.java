@@ -19,21 +19,27 @@
 package org.apache.kylin.dimension;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public abstract class DimensionEncodingFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(DimensionEncodingFactory.class);
 
     private static Map<String, DimensionEncodingFactory> factoryMap;
 
     /** Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs. */
     public static DimensionEncoding create(String encodingName, String[] args) {
-        if (factoryMap == null) {
+        if (factoryMap == null)
             initFactoryMap();
-        }
 
         DimensionEncodingFactory factory = factoryMap.get(encodingName);
         if (factory == null) {
@@ -44,10 +50,19 @@ public abstract class DimensionEncodingFactory {
         return factory.createDimensionEncoding(encodingName, args);
     }
 
-    public static boolean isVaildEncoding(String encodingName) {
-        if (factoryMap == null) {
+    public static Set<String> getValidEncodings() {
+        if (factoryMap == null)
             initFactoryMap();
-        }
+        
+        TreeSet<String> result = Sets.newTreeSet();
+        result.addAll(factoryMap.keySet());
+        result.add(DictionaryDimEnc.ENCODING_NAME);
+        return result;
+    }
+    
+    public static boolean isVaildEncoding(String encodingName) {
+        if (factoryMap == null)
+            initFactoryMap();
 
         // note dictionary is a special case
         return DictionaryDimEnc.ENCODING_NAME.equals(encodingName) || factoryMap.containsKey(encodingName);
@@ -58,15 +73,19 @@ public abstract class DimensionEncodingFactory {
             Map<String, DimensionEncodingFactory> map = Maps.newConcurrentMap();
 
             // built-in encodings, note dictionary is a special case
-            map.put(FixedLenDimEnc.ENCODING_NAME, FixedLenDimEnc.getFactory());
+            map.put(FixedLenDimEnc.ENCODING_NAME, new FixedLenDimEnc.Factory());
 
             // custom encodings
             String[] clsNames = KylinConfig.getInstanceFromEnv().getCubeDimensionCustomEncodingFactories();
             for (String clsName : clsNames) {
-                DimensionEncodingFactory factory = (DimensionEncodingFactory) ClassUtil.newInstance(clsName);
-                map.put(factory.getSupportedEncodingName(), factory);
+                try {
+                    DimensionEncodingFactory factory = (DimensionEncodingFactory) ClassUtil.newInstance(clsName);
+                    map.put(factory.getSupportedEncodingName(), factory);
+                } catch (Exception ex) {
+                    logger.error("Failed to init dimension encoding factory " + clsName, ex);
+                }
             }
-            
+
             factoryMap = map;
         }
     }

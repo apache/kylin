@@ -37,20 +37,17 @@ public class FixedLenDimEnc extends DimensionEncoding {
     public static final byte ROWKEY_PLACE_HOLDER_BYTE = 9;
 
     public static final String ENCODING_NAME = "fixed_length";
-    
-    public static DimensionEncodingFactory getFactory() {
-        return new DimensionEncodingFactory() {
 
-            @Override
-            public String getSupportedEncodingName() {
-                return ENCODING_NAME;
-            }
+    public static class Factory extends DimensionEncodingFactory {
+        @Override
+        public String getSupportedEncodingName() {
+            return ENCODING_NAME;
+        }
 
-            @Override
-            public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
-                return new FixedLenDimEnc(Integer.parseInt(args[0]));
-            }
-        };
+        @Override
+        public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
+            return new FixedLenDimEnc(Integer.parseInt(args[0]));
+        }
     };
 
     // ============================================================================
