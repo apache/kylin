@@ -495,11 +495,6 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>mvn-adamgent</id>
-            <url>http://mvn-adamgent.googlecode.com/svn/maven/release</url>
-            <name>Adam Gent Maven Repository</name>
-        </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
