@@ -996,7 +996,7 @@ Get descriptor for specified cube instance.
 ***
 
 ## Wipe cache
-`GET /cache/{type}/{name}/{action}`
+`PUT /cache/{type}/{name}/{action}`
 
 #### Path variable
 * type - `required` `string` 'METADATA' or 'CUBE'
