@@ -25,6 +25,8 @@
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>16</version>
+        <relativePath/>
+        <!-- no parent resolution -->
     </parent>
 
     <groupId>org.apache.kylin</groupId>
