@@ -143,6 +143,10 @@ public class MetadataManager {
         return Lists.newArrayList(srcTableMap.values());
     }
 
+    public List<ExternalFilterDesc> listAllExternalFilters(){
+        return Lists.newArrayList(extFilterMap.values());
+    }
+
     public Map<String, TableDesc> getAllTablesMap() {
         return Collections.unmodifiableMap(srcTableMap.getMap());
     }
@@ -211,6 +215,28 @@ public class MetadataManager {
         getStore().deleteResource(path);
         srcTableMap.remove(tableIdentity);
     }
+
+    public void saveExternalFilter(ExternalFilterDesc desc) throws IOException {
+        if(desc.getUuid() == null){
+            throw new IllegalArgumentException("UUID not set.");
+        }
+        desc.init();
+        String path = desc.getResourcePath();
+        getStore().putResource(path,desc,EXTERNAL_FILTER_DESC_SERIALIZER);
+        extFilterMap.put(desc.getName(),desc);
+
+    }
+
+    public void removeExternalFilter(String name) throws IOException {
+        if(name !=null ){
+            name = name.toLowerCase();
+        }
+        String path = ExternalFilterDesc.concatResourcePath(name);
+        getStore().deleteResource(path);
+        extFilterMap.remove(name);
+
+    }
+
 
     private void init(KylinConfig config) throws IOException {
         this.config = config;

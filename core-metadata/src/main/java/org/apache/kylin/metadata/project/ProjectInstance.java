@@ -74,6 +74,9 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("models")
     private List<String> models;
 
+    @JsonProperty("ext_filters")
+    private Set<String> extFilters = new TreeSet<String>();
+
     public String getResourcePath() {
         return concatResourcePath(name);
     }
@@ -208,6 +211,10 @@ public class ProjectInstance extends RootPersistentEntity {
         tables.remove(tableName.toUpperCase());
     }
 
+    public void removeExtFilter(String filterName) {
+        extFilters.remove(filterName.toUpperCase());
+    }
+
     public int getTablesCount() {
         return this.getTables().size();
     }
@@ -218,6 +225,14 @@ public class ProjectInstance extends RootPersistentEntity {
 
     public Set<String> getTables() {
         return tables;
+    }
+
+    public void addExtFilter(String extFilterName){
+        this.getExtFilters().add(extFilterName.toLowerCase());
+    }
+
+    public Set<String> getExtFilters(){
+        return extFilters;
     }
 
     public String getOwner() {

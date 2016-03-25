@@ -32,6 +32,7 @@ import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -295,6 +296,33 @@ public class ProjectManager {
         }
 
         projectInstance.removeTable(table.getIdentity());
+        updateProject(projectInstance);
+    }
+
+    public ProjectInstance addExtFilterToProject(String[] filters, String projectName) throws IOException {
+        MetadataManager metaMgr = getMetadataManager();
+        ProjectInstance projectInstance = getProject(projectName);
+        for (String filterName : filters) {
+            ExternalFilterDesc extFilter = metaMgr.getExtFilterDesc(filterName);
+            if (extFilter == null) {
+                throw new IllegalStateException("Cannot find external filter '" + filterName + "' in metadata manager");
+            }
+            projectInstance.addExtFilter(filterName);
+        }
+
+        updateProject(projectInstance);
+        return projectInstance;
+    }
+
+    public void removeExtFilterFromProject(String filterName, String projectName) throws IOException {
+        MetadataManager metaMgr = getMetadataManager();
+        ProjectInstance projectInstance = getProject(projectName);
+        ExternalFilterDesc filter = metaMgr.getExtFilterDesc(filterName);
+        if (filter == null) {
+            throw new IllegalStateException("Cannot find external filter '" + filterName + "' in metadata manager");
+        }
+
+        projectInstance.removeExtFilter(filterName);
         updateProject(projectInstance);
     }
 

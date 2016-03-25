@@ -45,13 +45,15 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
     private Functions.FilterTableType filterTableType;
     @JsonProperty("source_type")
     private int sourceType = ISourceAware.ID_EXTERNAL;
+    @JsonProperty("description")
+    private String description;
 
     public String getResourcePath() {
         return concatResourcePath(getName());
     }
 
     public static String concatResourcePath(String name) {
-        return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + name + ".json";
+        return ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT + "/" + name + ".json";
     }
 
     // ============================================================================
@@ -82,6 +84,8 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
     }
 
     public void init() {
+        if (name != null)
+            name = name.toUpperCase();
     }
 
     @Override
@@ -103,5 +107,13 @@ public class ExternalFilterDesc extends RootPersistentEntity implements ISourceA
 
     public void setSourceType(int sourceType) {
         this.sourceType = sourceType;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

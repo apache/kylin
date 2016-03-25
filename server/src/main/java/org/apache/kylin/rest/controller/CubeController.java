@@ -20,12 +20,9 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -34,6 +31,7 @@ import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
@@ -97,6 +95,19 @@ public class CubeController extends BasicController {
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return cubeService.getCubes(cubeName, projectName, modelName, limit, offset);
     }
+
+    @RequestMapping(value = "validEncodings", method = { RequestMethod.GET })
+    @ResponseBody
+    public Set<String> getValidEncodings() {
+        Set<String> encodings;
+        try {
+            encodings = DimensionEncodingFactory.getValidEncodings();
+        }catch (Exception e){
+            return Sets.newTreeSet();
+        }
+        return encodings;
+    }
+
 
     @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
     @ResponseBody
