@@ -483,7 +483,7 @@ public class KylinConfigBase implements Serializable {
     }
 
     public int getCubingInMemSamplingPercent() {
-        int percent = Integer.parseInt(this.getOptional("kylin.job.cubing.inmem.sampling.percent", "30"));
+        int percent = Integer.parseInt(this.getOptional("kylin.job.cubing.inmem.sampling.percent", "100"));
         percent = Math.max(percent, 1);
         percent = Math.min(percent, 100);
         return percent;
