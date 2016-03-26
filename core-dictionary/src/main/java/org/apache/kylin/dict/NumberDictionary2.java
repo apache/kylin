@@ -18,31 +18,31 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Bytes;
-
 /**
- * @author yangli9
- * 
+ * This class uses MAX_DIGITS_BEFORE_DECIMAL_POINT (=19) instead of legacy (=16).
  */
-public class NumberDictionaryBuilder<T> extends TrieDictionaryBuilder<T> {
+@SuppressWarnings("serial")
+public class NumberDictionary2<T> extends NumberDictionary<T> {
 
-    NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec(NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT);
+    static ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
 
-    public NumberDictionaryBuilder(BytesConverter<T> bytesConverter) {
-        super(bytesConverter);
+    // ============================================================================
+
+    public NumberDictionary2() { // default constructor for Writable interface
+        super();
     }
 
-    @Override
-    public void addValue(byte[] value) {
-        codec.encodeNumber(value, 0, value.length);
-        byte[] copy = Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
-        super.addValue(copy);
+    public NumberDictionary2(byte[] trieBytes) {
+        super(trieBytes);
     }
 
-    public NumberDictionary<T> build(int baseId) {
-        byte[] trieBytes = buildTrieBytes(baseId);
-        NumberDictionary2<T> r = new NumberDictionary2<T>(trieBytes);
-        return r;
+    protected NumberBytesCodec getCodec() {
+        NumberBytesCodec codec = localCodec.get();
+        if (codec == null) {
+            codec = new NumberBytesCodec(MAX_DIGITS_BEFORE_DECIMAL_POINT);
+            localCodec.set(codec);
+        }
+        return codec;
     }
 
 }

@@ -24,18 +24,27 @@ import org.apache.kylin.common.util.Bytes;
  * @author yangli9
  * 
  */
+@SuppressWarnings("serial")
 public class NumberDictionary<T> extends TrieDictionary<T> {
 
+    public static final int MAX_DIGITS_BEFORE_DECIMAL_POINT_LEGACY = 16;
     public static final int MAX_DIGITS_BEFORE_DECIMAL_POINT = 19;
 
     // encode a number into an order preserving byte sequence
     // for positives -- padding '0'
     // for negatives -- '-' sign, padding '9', invert digits, and terminate by ';'
     static class NumberBytesCodec {
+        int maxDigitsBeforeDecimalPoint;
+        byte[] buf;
+        int bufOffset;
+        int bufLen;
 
-        byte[] buf = new byte[MAX_DIGITS_BEFORE_DECIMAL_POINT * 2];
-        int bufOffset = 0;
-        int bufLen = 0;
+        NumberBytesCodec(int maxDigitsBeforeDecimalPoint) {
+            this.maxDigitsBeforeDecimalPoint = maxDigitsBeforeDecimalPoint;
+            this.buf = new byte[maxDigitsBeforeDecimalPoint * 2];
+            this.bufOffset = 0;
+            this.bufLen = 0;
+        }
 
         void encodeNumber(byte[] value, int offset, int len) {
             if (len == 0) {
@@ -73,9 +82,9 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
             }
 
             // prepend '0'
-            int nZeroPadding = MAX_DIGITS_BEFORE_DECIMAL_POINT - (decimalPoint - start);
+            int nZeroPadding = maxDigitsBeforeDecimalPoint - (decimalPoint - start);
             if (nZeroPadding < 0 || nZeroPadding + 1 > start)
-                throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len) + ". Expect " + MAX_DIGITS_BEFORE_DECIMAL_POINT + " digits before decimal point at max.");
+                throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len) + ". Expect " + maxDigitsBeforeDecimalPoint + " digits before decimal point at max.");
             for (int i = 0; i < nZeroPadding; i++) {
                 buf[--start] = '0';
             }
@@ -156,10 +165,10 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
         super(trieBytes);
     }
 
-    private NumberBytesCodec getCodec() {
+    protected NumberBytesCodec getCodec() {
         NumberBytesCodec codec = localCodec.get();
         if (codec == null) {
-            codec = new NumberBytesCodec();
+            codec = new NumberBytesCodec(MAX_DIGITS_BEFORE_DECIMAL_POINT_LEGACY);
             localCodec.set(codec);
         }
         return codec;

@@ -42,7 +42,7 @@ import com.google.common.collect.Sets;
  */
 public class NumberDictionaryTest {
 
-    NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec();
+    NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec(NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT);
     Random rand = new Random();
 
     @Test
@@ -58,6 +58,7 @@ public class NumberDictionaryTest {
         assertEquals(1, maxId);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testEmptyInput() throws IOException{
         String[] ints = new String[] { "", "0", "5", "100", "13" };
