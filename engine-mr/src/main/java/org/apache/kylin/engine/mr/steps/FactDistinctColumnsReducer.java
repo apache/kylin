@@ -60,6 +60,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     private List<ByteArray> colValues;
     private TblColRef col = null;
     private boolean isStatistics = false;
+    private boolean outputTouched = false;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -148,6 +149,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         } finally {
             IOUtils.closeQuietly(out);
             IOUtils.closeQuietly(fs);
+            outputTouched = true;
         }
     }
 
@@ -155,7 +157,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     protected void cleanup(Context context) throws IOException, InterruptedException {
 
         if (isStatistics == false) {
-            if (colValues.size() > 0) {
+            if (!outputTouched || colValues.size() > 0) {
                 outputDistinctValues(col, colValues, context);
                 colValues.clear();
             }
