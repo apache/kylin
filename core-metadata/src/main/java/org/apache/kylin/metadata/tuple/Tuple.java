@@ -122,7 +122,10 @@ public class Tuple implements ITuple {
             fieldValue = ((Long)fieldValue).shortValue();
         } else if ((!"varchar".equals(dataType) || !"char".equals(dataType)) && fieldValue instanceof String) {
             fieldValue = convertOptiqCellValue((String)fieldValue, dataType);
+        } else if ("bigint".equals(dataType) && fieldValue instanceof Double) {
+            fieldValue = ((Double)fieldValue).longValue();
         }
+
         values[idx] = fieldValue;
     }
 
