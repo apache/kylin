@@ -368,7 +368,7 @@ public class KylinConfigBase implements Serializable {
     }
 
     public double getCubeAlgorithmAutoThreshold() {
-        return Double.parseDouble(getOptional("kylin.cube.algorithm.autoThreshold", "8"));
+        return Double.parseDouble(getOptional("kylin.cube.algorithm.auto.threshold", "8"));
     }
 
     public int getCubeAggrGroupMaxSize() {
