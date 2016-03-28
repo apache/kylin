@@ -34,7 +34,7 @@ public class DoubleDeltaSerializer {
     static final long[] MASKS = new long[64];
     {
         for (int i = 0; i < MASKS.length; i++) {
-            MASKS[i] = (1 << i) - 1;
+            MASKS[i] = (1L << i) - 1;
         }
     }
 

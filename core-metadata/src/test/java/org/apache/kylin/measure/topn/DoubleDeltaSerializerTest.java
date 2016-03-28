@@ -76,10 +76,29 @@ public class DoubleDeltaSerializerTest {
         System.out.println("doubles size of " + (n * 8) + " bytes serialized to " + buf.limit() + " bytes");
     }
 
+    @Test
+    public void testRandom2() {
+        Random rand = new Random();
+        int n = 1000;
+
+        double[] nums = new double[n];
+        for (int i = 0; i < n; i++) {
+            nums[i] = rand.nextInt();
+        }
+        Arrays.sort(nums);
+
+        buf.clear();
+        dds.serialize(nums, buf);
+        buf.flip();
+        double[] r = dds.deserialize(buf);
+        assertArrayEquals(nums, r);
+        System.out.println("doubles size of " + (n * 8) + " bytes serialized to " + buf.limit() + " bytes");
+    }
+
     private static void assertArrayEquals(double[] expected, double[] actual) {
         assertEquals(expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], actual[i], 0.01);
+            assertEquals(expected[i], actual[i], 0.02);
         }
     }
 }
