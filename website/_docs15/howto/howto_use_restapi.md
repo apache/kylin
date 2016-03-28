@@ -24,6 +24,7 @@ This page lists all the RESTful APIs provided by Kylin; The base of the URL is `
 * JOB
    * [Resume job](#resume-job)
    * [Discard job](#discard-job)
+   * [Get job status](#get-job-status)
    * [Get job step output](#get-job-step-output)
 * Metadata
    * [Get Hive Table](#get-hive-table)
@@ -847,6 +848,15 @@ Get descriptor for specified cube instance.
 
 #### Response Sample
 (Same as "Resume job")
+
+## Get Job Status
+`GET /jobs/{jobId}`
+
+#### Path variable
+* jobId - `required` `string` Job id.
+
+#### Response Sample
+(Same as "Resume Job")
 
 ## Get job step output
 `GET /{jobId}/steps/{stepId}/output`
