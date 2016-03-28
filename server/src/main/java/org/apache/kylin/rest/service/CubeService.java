@@ -495,6 +495,27 @@ public class CubeService extends BasicService {
         return cube;
     }
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
+
+        if (!segmentName.equals(cube.getSegments().get(0).getName()) && !segmentName.equals(cube.getSegments().get(cube.getSegments().size() - 1).getName())) {
+            throw new IllegalArgumentException("Cannot delete segment '" + segmentName + "' as it is neither the first nor the last segment.");
+        }
+        CubeSegment toDelete = null;
+        for (CubeSegment seg : cube.getSegments()) {
+            if (seg.getName().equals(segmentName)) {
+                toDelete = seg;
+            }
+        }
+
+        if (toDelete.getStatus() != SegmentStatusEnum.READY) {
+            throw new IllegalArgumentException("Cannot delete segment '" + segmentName + "' as its status is not READY. Discard the on-going job for it.");
+        }
+
+        cube.getSegments().remove(toDelete);
+        return CubeManager.getInstance(getConfig()).updateCube(cube);
+    }
+
     /**
      * purge the cube
      *

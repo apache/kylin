@@ -27,6 +27,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
@@ -225,4 +226,48 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeRequest res = cubeController.updateCubeDesc(req);
         Assert.assertFalse(res.getSuccessful());
     }
+
+    @Test (expected=InternalErrorException.class)
+    public void testDeleteSegmentNew() throws IOException {
+        String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
+        CubeDesc[] cubes = cubeDescController.getCube(cubeName);
+        Assert.assertNotNull(cubes);
+
+        cubeController.deleteSegment(cubeName, "20131212000000_20140112000000");
+    }
+
+    @Test (expected=InternalErrorException.class)
+    public void testDeleteSegmentNotExist() throws IOException {
+        String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
+        CubeDesc[] cubes = cubeDescController.getCube(cubeName);
+        Assert.assertNotNull(cubes);
+
+        cubeController.deleteSegment(cubeName, "not_exist_segment");
+    }
+
+
+    @Test (expected=InternalErrorException.class)
+    public void testDeleteSegmentInMiddle() throws IOException {
+        String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
+        CubeDesc[] cubes = cubeDescController.getCube(cubeName);
+        Assert.assertNotNull(cubes);
+
+        cubeController.deleteSegment(cubeName, "20131112000000_20131212000000");
+    }
+
+    @Test
+    public void testDeleteSegmentFromHead() throws IOException {
+        String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
+        CubeDesc[] cubes = cubeDescController.getCube(cubeName);
+        Assert.assertNotNull(cubes);
+
+        int segNumber = cubeService.getCubeManager().getCube(cubeName).getSegments().size();
+
+        cubeController.deleteSegment(cubeName, "19691231160000_20131112000000");
+
+        int newSegNumber = cubeService.getCubeManager().getCube(cubeName).getSegments().size();
+
+        Assert.assertTrue(segNumber == newSegNumber + 1);
+    }
+
 }
