@@ -209,6 +209,33 @@ public class CubeController extends BasicController {
     }
 
     /**
+     * Delete a cube segment
+     *
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}", method = { RequestMethod.DELETE })
+    @ResponseBody
+    public CubeInstance deleteSegment(@PathVariable String cubeName, @PathVariable String segmentName) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+
+        CubeSegment segment = cube.getSegment(segmentName, null);
+        if (segment == null) {
+            throw new InternalErrorException("Cannot find segment '" + segmentName + "'");
+        }
+
+        try {
+            return cubeService.deleteSegment(cube, segmentName);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e.getLocalizedMessage());
+        }
+    }
+
+    /**
      * Send a rebuild cube job
      *
      * @param cubeName Cube ID

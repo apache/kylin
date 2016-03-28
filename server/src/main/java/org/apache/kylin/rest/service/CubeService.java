@@ -19,17 +19,11 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.mapred.Merger;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -525,6 +519,28 @@ public class CubeService extends BasicService {
         cubeMgr.buildSnapshotTable(seg, lookupTable);
 
         return cube;
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
+
+        if (!segmentName.equals(cube.getSegments().get(0).getName()) && !segmentName.equals(cube.getSegments().get(cube.getSegments().size() - 1).getName())) {
+            throw new IllegalArgumentException("Cannot delete segment '" + segmentName + "' as it is neither the first nor the last segment.");
+        }
+        CubeSegment toDelete = null;
+        for (CubeSegment seg : cube.getSegments()) {
+            if (seg.getName().equals(segmentName)) {
+                toDelete = seg;
+            }
+        }
+
+        if (toDelete.getStatus() != SegmentStatusEnum.READY) {
+            throw new IllegalArgumentException("Cannot delete segment '" + segmentName + "' as its status is not READY. Discard the on-going job for it.");
+        }
+
+        CubeUpdate update = new CubeUpdate(cube);
+        update.setToRemoveSegs(new CubeSegment[]{toDelete});
+        return CubeManager.getInstance(getConfig()).updateCube(update);
     }
 
     /**
