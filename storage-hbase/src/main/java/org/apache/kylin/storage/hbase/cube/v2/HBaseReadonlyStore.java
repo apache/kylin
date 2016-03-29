@@ -114,7 +114,7 @@ public class HBaseReadonlyStore implements IGTStore {
                         // metrics
                         for (int i = 0; i < hbaseColumns.size(); i++) {
                             Pair<byte[], byte[]> hbaseColumn = hbaseColumns.get(i);
-                            Cell cell = HBaseReadonlyStore.findCell(oneRow, hbaseColumn.getFirst(), hbaseColumn.getSecond());
+                            Cell cell = findCell(oneRow, hbaseColumn.getFirst(), hbaseColumn.getSecond());
                             Preconditions.checkNotNull(cell);
                             buf = byteBuffer(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
                             oneRecord.loadColumns(hbaseColumnsToGT.get(i), buf);

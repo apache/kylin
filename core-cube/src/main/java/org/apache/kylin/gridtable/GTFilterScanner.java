@@ -70,13 +70,13 @@ public class GTFilterScanner implements IGTScanner {
         return new Iterator<GTRecord>() {
 
             private Iterator<GTRecord> inputIterator = inputScanner.iterator();
+            private IFilterCodeSystem<ByteArray> filterCodeSystem = GTUtil.wrap(getInfo().codeSystem.getComparator());
 
             @Override
             public boolean hasNext() {
                 if (next != null)
                     return true;
 
-                IFilterCodeSystem<ByteArray> filterCodeSystem = GTUtil.wrap(getInfo().codeSystem.getComparator());
 
                 while (inputIterator.hasNext()) {
                     next = inputIterator.next();
