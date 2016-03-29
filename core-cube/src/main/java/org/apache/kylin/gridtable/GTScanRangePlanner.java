@@ -154,6 +154,7 @@ public class GTScanRangePlanner {
             logger.info("The execution of this query will not use fuzzy key");
             return result;
         }
+        
 
         List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, MAX_HBASE_FUZZY_KEYS);
 

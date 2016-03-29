@@ -88,6 +88,7 @@ public class ModelController extends BasicController {
         if (modelDesc == null || StringUtils.isEmpty(modelDesc.getName())) {
             return modelRequest;
         }
+        
         if (StringUtils.isEmpty(modelDesc.getName())) {
             logger.info("Model name should not be empty.");
             throw new BadRequestException("Model name should not be empty.");

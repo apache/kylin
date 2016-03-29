@@ -322,7 +322,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
                         for (Map.Entry<byte[], CubeVisitProtos.CubeVisitResponse> result : results.entrySet()) {
                             totalScannedCount.addAndGet(result.getValue().getStats().getScannedRowCount());
-                            logger.info("<spawned by " + currentThreadName + ">" + getStatsString(result));
+                            logger.info("<spawned by " + currentThreadName + "> " + getStatsString(result));
                             try {
                                 epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getValue().getCompressedRows())));
                             } catch (IOException | DataFormatException e) {

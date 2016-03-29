@@ -87,7 +87,7 @@ public class GTScanRequest {
 
             if (columns == null)
                 columns = ImmutableBitSet.EMPTY;
-            
+
             columns = columns.or(aggrGroupBy);
             columns = columns.or(aggrMetrics);
         }
@@ -143,8 +143,8 @@ public class GTScanRequest {
     public IGTScanner decorateScanner(IGTScanner scanner, boolean doFilter, boolean doAggr) throws IOException {
         IGTScanner result = scanner;
         if (!doFilter) { //Skip reading this section if you're not profiling! 
-            lookAndForget(result);
-            return new EmptyGTScanner();
+            int scanned = lookAndForget(result);
+            return new EmptyGTScanner(scanned);
         } else {
 
             if (this.hasFilterPushDown()) {
@@ -152,8 +152,8 @@ public class GTScanRequest {
             }
 
             if (!doAggr) {//Skip reading this section if you're not profiling! 
-                lookAndForget(result);
-                return new EmptyGTScanner();
+                int scanned = lookAndForget(result);
+                return new EmptyGTScanner(scanned);
             }
 
             if (this.allowPreAggregation && this.hasAggregation()) {
@@ -164,9 +164,11 @@ public class GTScanRequest {
     }
 
     //touch every byte of the cell so that the cost of scanning will be truly reflected
-    private void lookAndForget(IGTScanner scanner) {
+    private int lookAndForget(IGTScanner scanner) {
         byte meaninglessByte = 0;
+        int scanned = 0;
         for (GTRecord gtRecord : scanner) {
+            scanned++;
             for (ByteArray col : gtRecord.getInternal()) {
                 if (col != null) {
                     int endIndex = col.offset() + col.length();
@@ -176,6 +178,8 @@ public class GTScanRequest {
                 }
             }
         }
+        System.out.println("Meaningless byte is " + meaninglessByte);
+        return scanned;
     }
 
     public boolean hasFilterPushDown() {
@@ -239,7 +243,6 @@ public class GTScanRequest {
     public String toString() {
         return "GTScanRequest [range=" + range + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
     }
-
 
     public static final BytesSerializer<GTScanRequest> serializer = new BytesSerializer<GTScanRequest>() {
         @Override
@@ -307,6 +310,5 @@ public class GTScanRequest {
         }
 
     };
-
 
 }

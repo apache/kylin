@@ -511,6 +511,14 @@ public class KylinConfigBase implements Serializable {
     public String getHbaseDefaultCompressionCodec() {
         return getOptional("kylin.hbase.default.compression.codec", "");
     }
+    
+    public String getHbaseDefaultEncoding() {
+        return getOptional("kylin.hbase.default.encoding", "FAST_DIFF");
+    }
+
+    public String getHbaseDefaultBlockSize() {
+        return getOptional("kylin.hbase.default.block.size", "4194304");
+    }
 
     public boolean isHiveKeepFlatTable() {
         return Boolean.parseBoolean(this.getOptional("kylin.hive.keep.flat.table", "false"));

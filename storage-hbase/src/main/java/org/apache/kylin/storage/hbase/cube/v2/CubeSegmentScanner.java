@@ -261,7 +261,7 @@ public class CubeSegmentScanner implements IGTScanner {
             try {
                 if (scanRequests.size() == 0) {
                     logger.info("Segment {} will be skipped", cubeSeg);
-                    internal = new EmptyGTScanner();
+                    internal = new EmptyGTScanner(0);
                 } else {
                     internal = rpc.getGTScanner(scanRequests);
                 }

@@ -29,6 +29,7 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
+import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.kylin.common.KylinConfig;
@@ -107,13 +108,25 @@ public class CubeHTableUtil {
                     break;
                 }
                 default: {
-                    logger.info("hbase will not user any compression codec to compress data");
+                    logger.info("hbase will not user any compression algorithm to compress data");
+                    cf.setCompressionType(Algorithm.NONE);
                 }
                 }
 
-                cf.setDataBlockEncoding(DataBlockEncoding.FAST_DIFF);
+                int blockSize = Integer.valueOf(kylinConfig.getHbaseDefaultBlockSize());
+                cf.setBlocksize(blockSize);
+
+                try {
+                    String encodingStr = kylinConfig.getHbaseDefaultEncoding();
+                    DataBlockEncoding encoding = DataBlockEncoding.valueOf(encodingStr);
+                    cf.setDataBlockEncoding(encoding);
+                } catch (Exception e) {
+                    logger.info("hbase will not user any encoding");
+                    cf.setDataBlockEncoding(DataBlockEncoding.NONE);
+                }
+
                 cf.setInMemory(false);
-                cf.setBlocksize(4 * 1024 * 1024); // set to 4MB
+                cf.setBloomFilterType(BloomType.NONE);
                 tableDesc.addFamily(cf);
             }
 
