@@ -19,11 +19,13 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -262,12 +264,20 @@ public class CubeControllerTest extends ServiceTestBase {
         Assert.assertNotNull(cubes);
 
         int segNumber = cubeService.getCubeManager().getCube(cubeName).getSegments().size();
+        String segmentName = "19691231160000_20131112000000";
+        CubeSegment segment = cubeService.getCubeManager().getCube(cubeName).getSegment(segmentName, null);
 
-        cubeController.deleteSegment(cubeName, "19691231160000_20131112000000");
+        cubeController.deleteSegment(cubeName, segmentName);
 
         int newSegNumber = cubeService.getCubeManager().getCube(cubeName).getSegments().size();
 
         Assert.assertTrue(segNumber == newSegNumber + 1);
+
+        // addback the segment
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        cube.getSegments().add(segment);
+        Collections.sort(cube.getSegments());
+        cubeService.getCubeManager().updateCube(cube);
     }
 
 }
