@@ -37,6 +37,7 @@ import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.gridtable.GTFilterScanner.FilterResultCache;
 import org.apache.kylin.gridtable.GTInfo.Builder;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -232,15 +233,15 @@ public class DictGridTableTest {
 
     @Test
     public void verifyFirstRow() throws IOException {
-        doScanAndVerify(table, new GTScanRequest(table.getInfo(), null, null, null), "[1421193600000, 30, Yang, 10, 10.5]",//
-                "[1421193600000, 30, Luke, 10, 10.5]",//
-                "[1421280000000, 20, Dong, 10, 10.5]",//
-                "[1421280000000, 20, Jason, 10, 10.5]",//
-                "[1421280000000, 30, Xu, 10, 10.5]",//
-                "[1421366400000, 20, Mahone, 10, 10.5]",//
-                "[1421366400000, 20, Qianhao, 10, 10.5]",//
-                "[1421366400000, 30, George, 10, 10.5]",//
-                "[1421366400000, 30, Shaofeng, 10, 10.5]",//
+        doScanAndVerify(table, new GTScanRequest(table.getInfo(), null, null, null), "[1421193600000, 30, Yang, 10, 10.5]", //
+                "[1421193600000, 30, Luke, 10, 10.5]", //
+                "[1421280000000, 20, Dong, 10, 10.5]", //
+                "[1421280000000, 20, Jason, 10, 10.5]", //
+                "[1421280000000, 30, Xu, 10, 10.5]", //
+                "[1421366400000, 20, Mahone, 10, 10.5]", //
+                "[1421366400000, 20, Qianhao, 10, 10.5]", //
+                "[1421366400000, 30, George, 10, 10.5]", //
+                "[1421366400000, 30, Shaofeng, 10, 10.5]", //
                 "[1421452800000, 10, Kejia, 10, 10.5]");
     }
 
@@ -286,6 +287,39 @@ public class DictGridTableTest {
         assertEquals("GTScanRequest [range=[null, null]-[null, null], columns={0, 1, 3}, filterPushDown=AND [NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], NULL.GT_MOCKUP_TABLE.1 GT [\\x00]], aggrGroupBy={0}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
 
         doScanAndVerify(table, useDeserializedGTScanRequest(req), "[1421280000000, 20, null, 30, null]", "[1421366400000, 20, null, 40, null]");
+    }
+
+    @Test
+    public void testFilterScannerPerf() throws IOException {
+        GridTable table = newTestPerfTable();
+        GTInfo info = table.getInfo();
+
+        CompareTupleFilter fComp1 = compare(info.colRef(0), FilterOperatorEnum.GT, enc(info, 0, "2015-01-14"));
+        CompareTupleFilter fComp2 = compare(info.colRef(1), FilterOperatorEnum.GT, enc(info, 1, "10"));
+        LogicalTupleFilter filter = and(fComp1, fComp2);
+
+        FilterResultCache.ENABLED = false;
+        testFilterScannerPerfInner(table, info, filter);
+        FilterResultCache.ENABLED = true;
+        testFilterScannerPerfInner(table, info, filter);
+        FilterResultCache.ENABLED = false;
+        testFilterScannerPerfInner(table, info, filter);
+        FilterResultCache.ENABLED = true;
+        testFilterScannerPerfInner(table, info, filter);
+    }
+
+    @SuppressWarnings("unused")
+    private void testFilterScannerPerfInner(GridTable table, GTInfo info, LogicalTupleFilter filter) throws IOException {
+        long start = System.currentTimeMillis();
+        GTScanRequest req = new GTScanRequest(info, null, null, filter);
+        IGTScanner scanner = table.scan(req);
+        int i = 0;
+        for (GTRecord r : scanner) {
+            i++;
+        }
+        scanner.close();
+        long end = System.currentTimeMillis();
+        System.out.println((end - start) + "ms with filter cache enabled=" + FilterResultCache.ENABLED + ", " + i + " rows");
     }
 
     @Test
@@ -443,6 +477,50 @@ public class DictGridTableTest {
         builder.write(r.setValues("2015-01-16", "30", "George", new LongMutable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-16", "30", "Shaofeng", new LongMutable(10), new BigDecimal("10.5")));
         builder.write(r.setValues("2015-01-17", "10", "Kejia", new LongMutable(10), new BigDecimal("10.5")));
+        builder.close();
+
+        return table;
+    }
+
+    static GridTable newTestPerfTable() throws IOException {
+        GTInfo info = newInfo();
+        GTSimpleMemStore store = new GTSimpleMemStore(info);
+        GridTable table = new GridTable(info, store);
+
+        GTRecord r = new GTRecord(table.getInfo());
+        GTBuilder builder = table.rebuild();
+
+        for (int i = 0; i < 100000; i++) {
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-14", "30", "Yang", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-14", "30", "Luke", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-15", "20", "Dong", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-15", "20", "Jason", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-15", "30", "Xu", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-16", "20", "Mahone", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-16", "20", "Qianhao", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-16", "30", "George", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-16", "30", "Shaofeng", new LongMutable(10), new BigDecimal("10.5")));
+
+            for (int j = 0; j < 10; j++)
+                builder.write(r.setValues("2015-01-17", "10", "Kejia", new LongMutable(10), new BigDecimal("10.5")));
+        }
         builder.close();
 
         return table;
