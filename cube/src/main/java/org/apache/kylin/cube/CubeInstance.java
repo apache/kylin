@@ -292,7 +292,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization {
 
     public CubeSegment getSegment(String name, SegmentStatusEnum status) {
         for (CubeSegment segment : segments) {
-            if ((null != segment.getName() && segment.getName().equals(name)) && segment.getStatus() == status) {
+            if ((null != segment.getName() && segment.getName().equals(name)) && (status == null || segment.getStatus() == status)) {
                 return segment;
             }
         }
