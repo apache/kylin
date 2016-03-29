@@ -478,8 +478,9 @@ public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.dict.growing.enabled", "false"));
     }
 
+    //don't change this per https://issues.apache.org/jira/browse/KYLIN-1545
     public int getHBaseScanMaxResultSize() {
-        return Integer.parseInt(this.getOptional("kylin.hbase.scan.max_result_size", "" + (5 * 1024 * 1024))); // 5 MB
+        return Integer.parseInt(this.getOptional("kylin.hbase.scan.max_result_size", "-1")); 
     }
 
     public int getCubingInMemSamplingPercent() {
