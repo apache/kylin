@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.job;
+package org.apache.kylin.admin;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -149,7 +150,7 @@ public class CubeMetaExtractor extends AbstractApplication {
             if (projectInstance == null) {
                 throw new IllegalArgumentException("Project " + optionsHelper.getOptionValue(OPTION_PROJECT) + " does not exist");
             }
-            addRequired(requiredResources, ProjectInstance.concatResourcePath(projectInstance.getName()));
+            addRequired(ProjectInstance.concatResourcePath(projectInstance.getName()));
             List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
             for (RealizationEntry realizationEntry : realizationEntries) {
                 retrieveResourcePath(getRealization(realizationEntry));
@@ -175,6 +176,8 @@ public class CubeMetaExtractor extends AbstractApplication {
         }
 
         executeExtraction(dest);
+
+        logger.info("Extracted metadata files located at: " + new File(dest).getAbsolutePath());
     }
 
     private void executeExtraction(String dest) {
@@ -190,7 +193,7 @@ public class CubeMetaExtractor extends AbstractApplication {
         }
 
         if (dest == null) {
-            logger.info("Dest is not set, exit directly without extracting");
+            logger.info("destDir is not set, exit directly without extracting");
         } else {
             try {
                 ResourceStore src = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
@@ -228,8 +231,8 @@ public class CubeMetaExtractor extends AbstractApplication {
     private void dealWithStreaming(CubeInstance cube) {
         for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
             if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getFactTable())) {
-                requiredResources.add(StreamingConfig.concatResourcePath(streamingConfig.getName()));
-                requiredResources.add(KafkaConfig.concatResourcePath(streamingConfig.getName()));
+                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
+                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
             }
         }
     }
@@ -248,36 +251,36 @@ public class CubeMetaExtractor extends AbstractApplication {
             dealWithStreaming(cube);
 
             for (String tableName : modelDesc.getAllTables()) {
-                addRequired(requiredResources, TableDesc.concatResourcePath(tableName));
-                addOptional(optionalResources, TableDesc.concatExdResourcePath(tableName));
+                addRequired(TableDesc.concatResourcePath(tableName));
+                addOptional(TableDesc.concatExdResourcePath(tableName));
             }
 
-            addRequired(requiredResources, DataModelDesc.concatResourcePath(modelDesc.getName()));
-            addRequired(requiredResources, CubeDesc.concatResourcePath(cubeDesc.getName()));
+            addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
+            addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
 
             if (includeSegments) {
-                addRequired(requiredResources, CubeInstance.concatResourcePath(cube.getName()));
+                addRequired(CubeInstance.concatResourcePath(cube.getName()));
                 for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
                     for (String dictPat : segment.getDictionaryPaths()) {
-                        addRequired(requiredResources, dictPat);
+                        addRequired(dictPat);
                     }
                     for (String snapshotPath : segment.getSnapshotPaths()) {
-                        addRequired(requiredResources, snapshotPath);
+                        addRequired(snapshotPath);
                     }
-                    addRequired(requiredResources, segment.getStatisticsResourcePath());
+                    addRequired(segment.getStatisticsResourcePath());
 
                     if (includeJobs) {
                         String lastJobId = segment.getLastBuildJobID();
-                        if (!StringUtils.isEmpty(lastJobId)) {
+                        if (StringUtils.isEmpty(lastJobId)) {
                             throw new RuntimeException("No job exist for segment :" + segment);
                         } else {
                             try {
                                 ExecutablePO executablePO = executableDao.getJob(lastJobId);
-                                addRequired(requiredResources, ExecutableDao.pathOfJob(lastJobId));
-                                addRequired(requiredResources, ExecutableDao.pathOfJobOutput(lastJobId));
+                                addRequired(ExecutableDao.pathOfJob(lastJobId));
+                                addRequired(ExecutableDao.pathOfJobOutput(lastJobId));
                                 for (ExecutablePO task : executablePO.getTasks()) {
-                                    addRequired(requiredResources, ExecutableDao.pathOfJob(task.getUuid()));
-                                    addRequired(requiredResources, ExecutableDao.pathOfJobOutput(task.getUuid()));
+                                    addRequired(ExecutableDao.pathOfJob(task.getUuid()));
+                                    addRequired(ExecutableDao.pathOfJobOutput(task.getUuid()));
                                 }
                             } catch (PersistentException e) {
                                 throw new RuntimeException("PersistentException", e);
@@ -296,7 +299,7 @@ public class CubeMetaExtractor extends AbstractApplication {
             }
         } else if (realization instanceof HybridInstance) {
             HybridInstance hybridInstance = (HybridInstance) realization;
-            addRequired(requiredResources, HybridInstance.concatResourcePath(hybridInstance.getName()));
+            addRequired(HybridInstance.concatResourcePath(hybridInstance.getName()));
             for (IRealization iRealization : hybridInstance.getRealizations()) {
                 if (iRealization.getType() != RealizationType.CUBE) {
                     throw new RuntimeException("Hybrid " + iRealization.getName() + " contains non cube child " + iRealization.getName() + " with type " + iRealization.getType());
@@ -310,14 +313,14 @@ public class CubeMetaExtractor extends AbstractApplication {
         }
     }
 
-    private void addRequired(List<String> resourcePaths, String record) {
+    private void addRequired(String record) {
         logger.info("adding required resource {}", record);
-        resourcePaths.add(record);
+        requiredResources.add(record);
     }
 
-    private void addOptional(List<String> optionalPaths, String record) {
+    private void addOptional(String record) {
         logger.info("adding optional resource {}", record);
-        optionalPaths.add(record);
+        optionalResources.add(record);
     }
 
     public static void main(String[] args) {
