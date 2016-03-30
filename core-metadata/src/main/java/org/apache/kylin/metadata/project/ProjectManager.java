@@ -31,6 +31,7 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -168,6 +169,7 @@ public class ProjectManager {
         logger.info("Dropping project '" + projectInstance.getName() + "'");
 
         removeProject(projectInstance);
+        BadQueryHistoryManager.getInstance(config).removeBadQueryHistory(projectName);
 
         return projectInstance;
     }

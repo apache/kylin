@@ -18,11 +18,15 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,11 +41,19 @@ public class BadQueryDetector extends Thread {
     private final long detectionInterval;
     private final int alertMB;
     private final int alertRunningSec;
+    private KylinConfig kylinConfig;
 
     private ArrayList<Notifier> notifiers = new ArrayList<Notifier>();
 
     public BadQueryDetector() {
-        this(60 * 1000, 100, 90); // 1 minute, 100 MB, 90 seconds
+        super("BadQueryDetector");
+        this.setDaemon(true);
+        this.kylinConfig = KylinConfig.getInstanceFromEnv();
+        this.detectionInterval = 60 * 1000;
+        this.alertMB = 100;
+        this.alertRunningSec = kylinConfig.getBadQueryDefaultAlertingSeconds();
+
+        initNotifiers();
     }
 
     public BadQueryDetector(long detectionInterval, int alertMB, int alertRunningSec) {
@@ -50,23 +62,24 @@ public class BadQueryDetector extends Thread {
         this.detectionInterval = detectionInterval;
         this.alertMB = alertMB;
         this.alertRunningSec = alertRunningSec;
+        this.kylinConfig = KylinConfig.getInstanceFromEnv();
 
-        this.notifiers.add(new Notifier() {
-            @Override
-            public void badQueryFound(String adj, int runningSec, String sql, Thread t) {
-                logger.info(adj + " query has been running " + runningSec + " seconds (thread id 0x" + Long.toHexString(t.getId()) + ") -- " + sql);
-            }
-        });
+        initNotifiers();
+    }
+
+    private void initNotifiers() {
+        this.notifiers.add(new LoggerNotifier());
+        this.notifiers.add(new PersistenceNotifier());
     }
 
     public void registerNotifier(Notifier notifier) {
         notifiers.add(notifier);
     }
 
-    private void notify(String adj, int runningSec, String sql, Thread t) {
+    private void notify(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
         for (Notifier notifier : notifiers) {
             try {
-                notifier.badQueryFound(adj, runningSec, sql, t);
+                notifier.badQueryFound(adj, runningSec, startTime, project, sql, t);
             } catch (Exception e) {
                 logger.error("", e);
             }
@@ -74,7 +87,37 @@ public class BadQueryDetector extends Thread {
     }
 
     public interface Notifier {
-        void badQueryFound(String adj, int runningSec, String sql, Thread t);
+        void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t);
+    }
+
+    private class LoggerNotifier implements Notifier {
+        @Override
+        public void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
+            logger.info(adj + " query has been running " + runningSec + " seconds (project:" + project + ", thread: 0x" + Long.toHexString(t.getId()) + ") -- " + sql);
+        }
+    }
+
+    private class PersistenceNotifier implements Notifier {
+        BadQueryHistoryManager badQueryManager = BadQueryHistoryManager.getInstance(kylinConfig);
+        String serverHostname;
+
+        public PersistenceNotifier() {
+            try {
+                serverHostname = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                serverHostname = "Unknow";
+                logger.warn("Error in get current hostname.", e);
+            }
+        }
+
+        @Override
+        public void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
+            try {
+                badQueryManager.addEntryToProject(sql, adj, startTime, serverHostname, t.getName(), project);
+            } catch (IOException e) {
+                logger.error("Error in bad query persistence.", e);
+            }
+        }
     }
 
     public void queryStart(Thread thread, SQLRequest sqlRequest) {
@@ -128,7 +171,7 @@ public class BadQueryDetector extends Thread {
         for (Entry e : entries) {
             int runningSec = (int) ((now - e.startTime) / 1000);
             if (runningSec >= alertRunningSec) {
-                notify("Slow", runningSec, e.sqlRequest.getSql(), e.thread);
+                notify("Slow", runningSec, e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.thread);
                 dumpStackTrace(e.thread);
             } else {
                 break; // entries are sorted by startTime
@@ -143,7 +186,7 @@ public class BadQueryDetector extends Thread {
 
     // log the stack trace of bad query thread for further analysis
     private void dumpStackTrace(Thread t) {
-        int maxStackTraceDepth = KylinConfig.getInstanceFromEnv().getBadQueryStackTraceDepth();
+        int maxStackTraceDepth = kylinConfig.getBadQueryStackTraceDepth();
         int current = 0;
 
         StackTraceElement[] stackTrace = t.getStackTrace();

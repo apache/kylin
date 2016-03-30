@@ -438,6 +438,14 @@ public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.badquery.stacktrace.depth", "10"));
     }
 
+    public int getBadQueryHistoryNum() {
+        return Integer.parseInt(getOptional("kylin.query.badquery.history.num", "10"));
+    }
+
+    public int getBadQueryDefaultAlertingSeconds() {
+        return Integer.parseInt(getOptional("kylin.query.badquery.default.alerting.seconds", "90"));
+    }
+
     public int getCachedDictMaxEntrySize() {
         return Integer.parseInt(getOptional("kylin.dict.cache.max.entry", "3000"));
     }
