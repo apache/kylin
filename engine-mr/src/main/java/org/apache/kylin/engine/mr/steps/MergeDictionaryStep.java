@@ -49,11 +49,11 @@ public class MergeDictionaryStep extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        KylinConfig conf = context.getConfig();
-        final CubeManager mgr = CubeManager.getInstance(conf);
+        final CubeManager mgr = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = mgr.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final CubeSegment newSegment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
         final List<CubeSegment> mergingSegments = getMergingSegments(cube);
+        KylinConfig conf = cube.getConfig();
 
         Collections.sort(mergingSegments);
 

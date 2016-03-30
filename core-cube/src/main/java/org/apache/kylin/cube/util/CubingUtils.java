@@ -194,7 +194,7 @@ public class CubingUtils {
             signature.setSize(endOffset - startOffset);
             DictionaryInfo dictInfo = new DictionaryInfo(tblColRef.getTable(), tblColRef.getName(), tblColRef.getColumnDesc().getZeroBasedIndex(), tblColRef.getDatatype(), signature);
             logger.info("writing dictionary for TblColRef:" + tblColRef.toString());
-            DictionaryManager dictionaryManager = DictionaryManager.getInstance(KylinConfig.getInstanceFromEnv());
+            DictionaryManager dictionaryManager = DictionaryManager.getInstance(cubeSegment.getCubeDesc().getConfig());
             try {
                 DictionaryInfo realDict = dictionaryManager.trySaveNewDict(dictionary, dictInfo);
                 cubeSegment.putDictResPath(tblColRef, realDict.getResourcePath());

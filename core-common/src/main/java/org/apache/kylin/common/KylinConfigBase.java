@@ -66,8 +66,16 @@ public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     private volatile Properties properties = new Properties();
+    
+    public KylinConfigBase() {
+        this(new Properties());
+    }
+    
+    public KylinConfigBase(Properties props) {
+        this.properties = props;
+    }
 
-    protected String getOptional(String prop) {
+    final protected String getOptional(String prop) {
         return getOptional(prop, null);
     }
 
@@ -76,7 +84,11 @@ public class KylinConfigBase implements Serializable {
         return property != null ? property : properties.getProperty(prop, dft);
     }
 
-    protected String[] getOptionalStringArray(String prop, String[] dft) {
+    protected Properties getAllProperties() {
+        return properties;
+    }
+
+    final protected String[] getOptionalStringArray(String prop, String[] dft) {
         final String property = getOptional(prop);
         if (!StringUtils.isBlank(property)) {
             return property.split("\\s*,\\s*");
@@ -85,7 +97,7 @@ public class KylinConfigBase implements Serializable {
         }
     }
 
-    public String getRequired(String prop) {
+    final public String getRequired(String prop) {
         String r = getOptional(prop);
         if (StringUtils.isEmpty(r)) {
             throw new IllegalArgumentException("missing '" + prop + "' in conf/kylin_instance.properties");
@@ -96,16 +108,12 @@ public class KylinConfigBase implements Serializable {
     /**
      * Use with care, properties should be read-only. This is for testing mostly.
      */
-    public void setProperty(String key, String value) {
+    final public void setProperty(String key, String value) {
         logger.info("Kylin Config was updated with " + key + " : " + value);
         properties.setProperty(key, value);
     }
 
-    protected Properties getAllProperties() {
-        return properties;
-    }
-
-    protected void reloadKylinConfig(InputStream is) {
+    final protected void reloadKylinConfig(InputStream is) {
         Properties newProperties = new Properties();
         try {
             newProperties.load(is);

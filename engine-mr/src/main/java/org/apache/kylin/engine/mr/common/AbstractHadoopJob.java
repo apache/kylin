@@ -409,11 +409,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected void attachKylinPropsAndMetadata(TableDesc table, Configuration conf) throws IOException {
         ArrayList<String> dumpList = new ArrayList<String>();
         dumpList.add(table.getResourcePath());
-        attachKylinPropsAndMetadata(dumpList, conf);
+        attachKylinPropsAndMetadata(dumpList, KylinConfig.getInstanceFromEnv(), conf);
     }
 
     protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
-        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        MetadataManager metaMgr = MetadataManager.getInstance(cube.getConfig());
 
         // write cube / model_desc / cube_desc / dict / table
         ArrayList<String> dumpList = new ArrayList<String>();
@@ -429,11 +429,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             dumpList.addAll(segment.getDictionaryPaths());
         }
 
-        attachKylinPropsAndMetadata(dumpList, conf);
+        attachKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
     }
 
     protected void attachKylinPropsAndMetadata(IIInstance ii, Configuration conf) throws IOException {
-        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        MetadataManager metaMgr = MetadataManager.getInstance(ii.getConfig());
 
         // write II / model_desc / II_desc / dict / table
         ArrayList<String> dumpList = new ArrayList<String>();
@@ -446,10 +446,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             dumpList.add(table.getResourcePath());
         }
 
-        attachKylinPropsAndMetadata(dumpList, conf);
+        attachKylinPropsAndMetadata(dumpList, ii.getConfig(), conf);
     }
 
-    protected void attachKylinPropsAndMetadata(ArrayList<String> dumpList, Configuration conf) throws IOException {
+    protected void attachKylinPropsAndMetadata(ArrayList<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
@@ -457,7 +457,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         metaDir.mkdirs();
 
         // write kylin.properties
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         File kylinPropsFile = new File(metaDir, "kylin.properties");
         kylinConfig.writeProperties(kylinPropsFile);
 

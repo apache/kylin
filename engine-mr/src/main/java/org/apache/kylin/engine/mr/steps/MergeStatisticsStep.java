@@ -62,10 +62,10 @@ public class MergeStatisticsStep extends AbstractExecutable {
     @Override
     @SuppressWarnings("deprecation")
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        KylinConfig kylinConf = context.getConfig();
-        final CubeManager mgr = CubeManager.getInstance(kylinConf);
+        final CubeManager mgr = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = mgr.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final CubeSegment newSegment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
+        KylinConfig kylinConf = cube.getConfig();
 
         Configuration conf = HadoopUtil.getCurrentConfiguration();
         ResourceStore rs = ResourceStore.getStore(kylinConf);

@@ -34,7 +34,7 @@ public class CuboidShardUtil {
     protected static final Logger logger = LoggerFactory.getLogger(CuboidShardUtil.class);
 
     public static void saveCuboidShards(CubeSegment segment, Map<Long, Short> cuboidShards, int totalShards) throws IOException {
-        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubeManager cubeManager = CubeManager.getInstance(segment.getConfig());
 
         Map<Long, Short> filered = Maps.newHashMap();
         for (Map.Entry<Long, Short> entry : cuboidShards.entrySet()) {

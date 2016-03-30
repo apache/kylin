@@ -64,8 +64,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
             FileSystem fs = FileSystem.get(conf);
 
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            CubeManager cubeMgr = CubeManager.getInstance(config);
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
             CubeDesc cubeDesc = cube.getDescriptor();
             FsPermission permission = new FsPermission((short) 0777);

@@ -90,7 +90,6 @@ public class CubeControllerTest extends ServiceTestBase {
         newCube.setDimensions(cube.getDimensions());
         newCube.setHbaseMapping(cube.getHbaseMapping());
         newCube.setMeasures(cube.getMeasures());
-        newCube.setConfig(cube.getConfig());
         newCube.setRowkey(cube.getRowkey());
         newCube.setAggregationGroups(cube.getAggregationGroups());
 

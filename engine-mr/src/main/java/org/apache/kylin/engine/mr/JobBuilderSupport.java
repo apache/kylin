@@ -51,7 +51,7 @@ public class JobBuilderSupport {
 
     public JobBuilderSupport(IRealizationSegment seg, String submitter) {
         Preconditions.checkNotNull(seg, "segment cannot be null");
-        this.config = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
+        this.config = new JobEngineConfig(seg.getConfig());
         this.seg = seg;
         this.submitter = submitter;
     }

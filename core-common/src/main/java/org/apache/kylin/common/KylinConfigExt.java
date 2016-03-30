@@ -18,6 +18,34 @@
 
 package org.apache.kylin.common;
 
-public class KylinConfigExt {
+import java.util.Map;
+import java.util.Properties;
 
+/**
+ * Extends a KylinConfig with additional overrides.
+ */
+@SuppressWarnings("serial")
+public class KylinConfigExt extends KylinConfig {
+
+    final private Map<String, String> overrides;
+
+    public KylinConfigExt(KylinConfig base, Map<String, String> overrides) {
+        super(base.getAllProperties());
+        this.overrides = overrides;
+    }
+    
+    protected String getOptional(String prop, String dft) {
+        String value = overrides.get(prop);
+        if (value != null)
+            return value;
+        else
+            return super.getOptional(prop, dft);
+    }
+
+    protected Properties getAllProperties() {
+        Properties result = new Properties(super.getAllProperties());
+        result.putAll(overrides);
+        return result;
+    }
+    
 }

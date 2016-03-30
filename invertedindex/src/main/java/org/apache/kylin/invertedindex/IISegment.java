@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIJoinedFlatTableDesc;
@@ -102,6 +103,11 @@ public class IISegment implements Comparable<IISegment>, IRealizationSegment {
 
     // ============================================================================
 
+    @Override
+    public KylinConfig getConfig() {
+        return iiInstance.getConfig();
+    }
+    
     @Override
     public String getUuid() {
         return uuid;

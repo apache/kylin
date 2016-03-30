@@ -49,6 +49,7 @@ public class MergeCuboidJob extends CuboidJob {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
+            config = cube.getConfig();
 
             // start job
             String jobName = getOptionValue(OPTION_JOB_NAME);

@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
@@ -387,7 +388,7 @@ public class CubeManager implements IRealizationProvider {
         cubeMap.put(cube.getName(), cube);
 
         //this is a duplicate call to take care of scenarios where REST cache service unavailable
-        ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).clearL2Cache();
+        ProjectManager.getInstance(cube.getConfig()).clearL2Cache();
 
         return cube;
     }
@@ -822,7 +823,12 @@ public class CubeManager implements IRealizationProvider {
         CubeInstance cubeInstance;
         try {
             cubeInstance = store.getResource(path, CubeInstance.class, CUBE_SERIALIZER);
-            cubeInstance.setConfig(config);
+            
+            CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(cubeInstance.getDescName());
+            if (cubeDesc == null)
+                throw new IllegalStateException("CubeInstance desc not found '" + cubeInstance.getDescName() + "', at " + path);
+            
+            cubeInstance.setConfig((KylinConfigExt) cubeDesc.getConfig());
 
             if (StringUtils.isBlank(cubeInstance.getName()))
                 throw new IllegalStateException("CubeInstance name must not be blank, at " + path);

@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
@@ -115,6 +116,11 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
 
     // ============================================================================
 
+    @Override
+    public KylinConfig getConfig() {
+        return cubeInstance.getConfig();
+    }
+    
     public String getUuid() {
         return uuid;
     }

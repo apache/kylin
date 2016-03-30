@@ -53,10 +53,10 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        KylinConfig kylinConf = context.getConfig();
-        final CubeManager mgr = CubeManager.getInstance(kylinConf);
+        final CubeManager mgr = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = mgr.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final CubeSegment newSegment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
+        KylinConfig kylinConf = cube.getConfig();
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {

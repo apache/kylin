@@ -243,6 +243,14 @@ public class KylinConfig extends KylinConfigBase {
 
     // ============================================================================
 
+    public KylinConfig() {
+        super();
+    }
+
+    public KylinConfig(Properties props) {
+        super(props);
+    }
+
     public void writeProperties(File file) throws IOException {
         FileOutputStream fos = null;
         try {

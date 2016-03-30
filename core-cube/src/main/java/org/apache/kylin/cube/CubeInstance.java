@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -57,7 +58,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     public static CubeInstance create(String cubeName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
 
-        cubeInstance.setConfig(cubeDesc.getConfig());
+        cubeInstance.setConfig((KylinConfigExt) cubeDesc.getConfig());
         cubeInstance.setName(cubeName);
         cubeInstance.setDescName(cubeDesc.getName());
         cubeInstance.setCreateTimeUTC(System.currentTimeMillis());
@@ -69,7 +70,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     @JsonIgnore
-    private KylinConfig config;
+    private KylinConfigExt config;
     @JsonProperty("name")
     private String name;
     @JsonProperty("owner")
@@ -189,7 +190,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return config;
     }
 
-    public void setConfig(KylinConfig config) {
+    void setConfig(KylinConfigExt config) {
         this.config = config;
     }
 
@@ -429,7 +430,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         newCube.setName(cubeInstance.getName());
         newCube.setSegments(cubeInstance.getSegments());
         newCube.setDescName(cubeInstance.getDescName());
-        newCube.setConfig(cubeInstance.getConfig());
+        newCube.setConfig((KylinConfigExt) cubeInstance.getConfig());
         newCube.setStatus(cubeInstance.getStatus());
         newCube.setOwner(cubeInstance.getOwner());
         newCube.setCost(cubeInstance.getCost());

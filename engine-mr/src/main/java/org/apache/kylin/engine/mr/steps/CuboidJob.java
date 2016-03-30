@@ -174,6 +174,7 @@ public class CuboidJob extends AbstractHadoopJob {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
         CubeDesc cubeDesc = CubeManager.getInstance(config).getCube(cubeName).getDescriptor();
+        kylinConfig = cubeDesc.getConfig();
 
         double perReduceInputMB = kylinConfig.getDefaultHadoopJobReducerInputMB();
         double reduceCountRatio = kylinConfig.getDefaultHadoopJobReducerCountRatio();

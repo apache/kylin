@@ -89,6 +89,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             CubeManager cubeMgr = CubeManager.getInstance(config);
             CubeInstance cube = cubeMgr.getCube(cubeName);
+            config = cube.getConfig();
             CubeSegment cubeSeg = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
             String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
 
@@ -155,7 +156,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
     }
 
     private int calculateReducerNum(CubeSegment cubeSeg) throws IOException {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        KylinConfig kylinConfig = cubeSeg.getConfig();
 
         Map<Long, Double> cubeSizeMap = new CubeStatsReader(cubeSeg, kylinConfig).getCuboidSizeMap();
         double totalSizeInM = 0;

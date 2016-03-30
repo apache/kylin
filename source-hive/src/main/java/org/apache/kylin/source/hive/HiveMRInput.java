@@ -165,7 +165,7 @@ public class HiveMRInput implements IMRInput {
             final String hiveTable = this.getIntermediateTableIdentity();
             if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
                 final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-                hiveCmdBuilder.addStatement("USE " + context.getConfig().getHiveDatabaseForIntermediateTable() + ";");
+                hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
                 hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTable + ";");
                 try {
                     config.getCliCommandExecutor().execute(hiveCmdBuilder.build());

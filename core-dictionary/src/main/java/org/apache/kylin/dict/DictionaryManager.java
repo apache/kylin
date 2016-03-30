@@ -86,7 +86,7 @@ public class DictionaryManager {
             public void onRemoval(RemovalNotification<String, DictionaryInfo> notification) {
                 DictionaryManager.logger.info("Dict with resource path " + notification.getKey() + " is removed due to " + notification.getCause());
             }
-        }).maximumSize(KylinConfig.getInstanceFromEnv().getCachedDictMaxEntrySize())//
+        }).maximumSize(config.getCachedDictMaxEntrySize())//
                 .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, DictionaryInfo>() {
                     @Override
                     public DictionaryInfo load(String key) throws Exception {
@@ -136,7 +136,7 @@ public class DictionaryManager {
 
         initDictInfo(newDict, newDictInfo);
 
-        if (KylinConfig.getInstanceFromEnv().isGrowingDictEnabled()) {
+        if (config.isGrowingDictEnabled()) {
             DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
             if (largestDictInfo != null) {
                 largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());

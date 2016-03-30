@@ -40,6 +40,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -108,7 +109,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     }
 
-    private KylinConfig config;
+    private KylinConfigExt config;
     private DataModelDesc model;
 
     @JsonProperty("name")
@@ -294,7 +295,7 @@ public class CubeDesc extends RootPersistentEntity {
         return config;
     }
 
-    public void setConfig(KylinConfig config) {
+    private void setConfig(KylinConfigExt config) {
         this.config = config;
     }
 
@@ -400,6 +401,14 @@ public class CubeDesc extends RootPersistentEntity {
 
     public void setStatusNeedNotify(List<String> statusNeedNotify) {
         this.statusNeedNotify = statusNeedNotify;
+    }
+    
+    public LinkedHashMap<String, String> getOverrideKylinProps() {
+        return overrideKylinProps;
+    }
+
+    private void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
+        this.overrideKylinProps = overrideKylinProps;
     }
 
     @Override
@@ -507,7 +516,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.errors.clear();
-        this.config = config;
+        this.config = new KylinConfigExt(config, overrideKylinProps);
 
         if (this.modelName == null || this.modelName.length() == 0) {
             this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
@@ -649,15 +658,6 @@ public class CubeDesc extends RootPersistentEntity {
                 dimsList.add(temp);
             }
         }
-    }
-
-    private boolean containsAll(Set<String> includeDims, ArrayList<Set<String>> dimsList) {
-        boolean b = true;
-        for (Set<String> dims : dimsList) {
-            if (!includeDims.containsAll(dims))
-                b = false;
-        }
-        return b;
     }
 
     private boolean hasSingle(ArrayList<Set<String>> dimsList) {
@@ -1026,7 +1026,8 @@ public class CubeDesc extends RootPersistentEntity {
         newCubeDesc.setEngineType(cubeDesc.getEngineType());
         newCubeDesc.setStorageType(cubeDesc.getStorageType());
         newCubeDesc.setAggregationGroups(cubeDesc.getAggregationGroups());
-        newCubeDesc.setConfig(cubeDesc.getConfig());
+        newCubeDesc.setOverrideKylinProps(cubeDesc.getOverrideKylinProps());
+        newCubeDesc.setConfig((KylinConfigExt) cubeDesc.getConfig());
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }

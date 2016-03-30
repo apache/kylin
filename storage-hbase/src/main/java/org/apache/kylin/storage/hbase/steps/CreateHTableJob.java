@@ -83,10 +83,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
         boolean statsEnabled = Boolean.parseBoolean(getOptionValue(OPTION_STATISTICS_ENABLED));
 
         String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-        kylinConfig = KylinConfig.getInstanceFromEnv();
-        CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
+        CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         cube = cubeMgr.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
+        kylinConfig = cube.getConfig();
         segmentName = getOptionValue(OPTION_SEGMENT_NAME);
         CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
