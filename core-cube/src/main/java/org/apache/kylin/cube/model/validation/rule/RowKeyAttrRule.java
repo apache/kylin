@@ -48,6 +48,7 @@ public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
             if (rd.getColumn() == null || rd.getColumn().length() == 0) {
                 context.addResult(ResultLevel.ERROR, "Rowkey column empty");
             }
+
         }
 
     }

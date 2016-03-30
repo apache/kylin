@@ -37,6 +37,16 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   }
 
 
+  //init encoding list
+  $scope.store = {
+    supportedEncoding:[]
+  }
+  CubeService.getValidEncodings({}, function (encodings) {
+    $scope.store.supportedEncoding = encodings;
+  },function(e){
+    $scope.store.supportedEncoding = $scope.cubeConfig.encodings;
+  })
+
   $scope.getColumnsByTable = function (tableName) {
     var temp = [];
     angular.forEach(TableModel.selectProjectTables, function (table) {

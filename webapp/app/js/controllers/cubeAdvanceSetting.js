@@ -25,17 +25,23 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   //rowkey
   $scope.convertedRowkeys = [];
   angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
-    var _isDictionary = item.encoding === "dict"?"true":"false";
+    //var _isDictionary = item.encoding === "dict"?"true":"false";
     var _isFixedLength = item.encoding.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
-    var _fixedLength ;
-    if(_isFixedLength){
-      _fixedLength = item.encoding.substring(13,item.encoding.length);
+    var _isIntLength = item.encoding.substring(0,3) === "int"?"true":"false";//fixed_length:12
+    var _encoding = "dict";
+    var _valueLength ;
+    if(_isFixedLength !=="false"){
+      _valueLength = item.encoding.substring(13,item.encoding.length);
+      _encoding = "fixed_length";
+    }
+    if(_isIntLength!="false"){
+      _valueLength = item.encoding.substring(4,item.encoding.length);
+      _encoding = "int";
     }
     var rowkeyObj = {
       column:item.column,
-      isDictionary:_isDictionary,
-      isFixedLength:_isFixedLength,
-      fixedLength:_fixedLength
+      encoding:_encoding,
+      valueLength:_valueLength
     }
 
     $scope.convertedRowkeys.push(rowkeyObj);
@@ -45,10 +51,15 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   $scope.refreshRowKey = function(list,index,item){
     var encoding = "dict";
     var column = item.column;
-    if(item.isDictionary!=="true"){
-      if(item.fixedLength){
-        encoding = "fixed_length:"+item.fixedLength;
+    if(item.encoding!=="dict"){
+      if(item.encoding=="fixed_length" && item.valueLength){
+        encoding = "fixed_length:"+item.valueLength;
       }
+      else if(item.encoding=="int" && item.valueLength){
+        encoding = "int:"+item.valueLength;
+      }
+    }else{
+      item.valueLength=0;
     }
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].column = column;
     $scope.cubeMetaFrame.rowkey.rowkey_columns[index].encoding = encoding;
@@ -72,9 +83,8 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   $scope.addNewRowkeyColumn = function () {
     var rowkeyObj = {
       column:"",
-      isDictionary:"true",
-      isFixedLength:"false",
-      fixedLength:0
+      encoding:"dict",
+      valueLength:0
     }
 
     $scope.convertedRowkeys.push(rowkeyObj);
@@ -84,6 +94,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     });
 
   };
+
   $scope.addNewHierarchy = function(grp){
     grp.select_rule.hierarchy_dims.push([]);
   }
