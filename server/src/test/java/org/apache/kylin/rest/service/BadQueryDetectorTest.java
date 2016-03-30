@@ -34,12 +34,12 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
     public void before() {
         super.createTestMetadata();
     }
-    
+
     @After
     public void after() {
         super.cleanupTestMetadata();
     }
-    
+
     @SuppressWarnings("deprecation")
     @Test
     public void test() throws InterruptedException {
@@ -59,7 +59,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
 
         {
             Thread.sleep(1000);
-            
+
             SQLRequest sqlRequest = new SQLRequest();
             sqlRequest.setSql(mockSql);
             badQueryDetector.queryStart(Thread.currentThread(), sqlRequest);

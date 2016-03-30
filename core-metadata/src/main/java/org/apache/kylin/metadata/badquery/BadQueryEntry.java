@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.badquery;
 
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.DateFormat;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -91,6 +92,11 @@ public class BadQueryEntry extends RootPersistentEntity implements Comparable<Ba
 
     @Override
     public int compareTo(BadQueryEntry obj) {
-        return (int) (this.startTime - obj.startTime);
+        return this.startTime >= obj.startTime ? 1 : -1;
+    }
+
+    @Override
+    public String toString() {
+        return "BadQueryEntry [ adj=" + adj + ", server=" + server + ", startTime=" + DateFormat.formatToTimeStr(startTime) + "]";
     }
 }

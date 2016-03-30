@@ -18,9 +18,9 @@
 #
 
 # This script is for production metadata store manipulation
-# It is desinged to run in hadoop CLI, both in sandbox or in real hadoop environment
+# It is designed to run in hadoop CLI, both in sandbox or in real hadoop environment
 #
-# If you're a developper of Kylin and want to download sandbox's metadata into your dev machine,
+# If you're a developer of Kylin and want to download sandbox's metadata into your dev machine,
 # take a look at SandboxMetastoreCLI
 
 
