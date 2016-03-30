@@ -166,8 +166,8 @@ public class CubeDesc extends RootPersistentEntity {
         return storageType == IStorageAware.ID_SHARDED_HBASE;
     }
 
-    public Set<TblColRef> getUHCColumns() {
-        return getRowkey().getUHCColumns();
+    public Set<TblColRef> getShardByColumns() {
+        return getRowkey().getShardByColumns();
     }
 
 

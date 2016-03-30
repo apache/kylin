@@ -43,7 +43,7 @@ public class RowKeyDesc {
     private long fullMask;
     private CubeDesc cubeDesc;
     private Map<TblColRef, RowKeyColDesc> columnMap;
-    private Set<TblColRef> UHCColumns;
+    private Set<TblColRef> shardByColumns;
 
     public RowKeyColDesc[] getRowKeyColumns() {
         return rowkeyColumns;
@@ -68,8 +68,8 @@ public class RowKeyDesc {
         return getColDesc(col).isUsingDictionary();
     }
 
-    public Set<TblColRef> getUHCColumns() {
-        return UHCColumns;
+    public Set<TblColRef> getShardByColumns() {
+        return shardByColumns;
     }
 
     public void init(CubeDesc cubeDesc) {
@@ -91,7 +91,7 @@ public class RowKeyDesc {
 
     private void buildRowKey(Map<String, TblColRef> colNameAbbr) {
         columnMap = new HashMap<TblColRef, RowKeyColDesc>();
-        UHCColumns = new HashSet<>();
+        shardByColumns = new HashSet<>();
 
         for (int i = 0; i < rowkeyColumns.length; i++) {
             RowKeyColDesc rowKeyColDesc = rowkeyColumns[i];
@@ -106,9 +106,8 @@ public class RowKeyDesc {
 
             columnMap.put(rowKeyColDesc.getColRef(), rowKeyColDesc);
 
-            if (rowKeyColDesc.isUHC()) {
-                UHCColumns.add(rowKeyColDesc.getColRef());
-              
+            if (rowKeyColDesc.isShardBy()) {
+                shardByColumns.add(rowKeyColDesc.getColRef());
             }
         }
 

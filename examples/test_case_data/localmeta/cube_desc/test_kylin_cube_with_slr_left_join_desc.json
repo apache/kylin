@@ -113,7 +113,7 @@
   "rowkey" : {
     "rowkey_columns" : [ {
       "column" : "seller_id",
-      "encoding" : "fixed_length:18"
+      "encoding" : "int:4"
     }, {
       "column" : "cal_dt",
       "encoding" : "dict"

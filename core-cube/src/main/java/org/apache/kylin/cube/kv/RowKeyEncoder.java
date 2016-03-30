@@ -48,13 +48,13 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     public RowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
         super(cubeSeg, cuboid);
         enableSharding = cubeSeg.isEnableSharding();
-        Set<TblColRef> UHCColumns = cubeSeg.getUHCColumns();
-        if (UHCColumns.size() > 1) {
+        Set<TblColRef> shardByColumns = cubeSeg.getShardByColumns();
+        if (shardByColumns.size() > 1) {
             throw new IllegalStateException("Does not support multiple UHC now");
         }
         colIO = new RowKeyColumnIO(cubeSeg.getDimensionEncodingMap());
         for (TblColRef column : cuboid.getColumns()) {
-            if (UHCColumns.contains(column)) {
+            if (shardByColumns.contains(column)) {
                 UHCOffset = bodyLength;
                 UHCLength = colIO.getColumnLength(column);
             }

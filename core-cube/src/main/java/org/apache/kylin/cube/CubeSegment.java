@@ -383,8 +383,8 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
         return getCubeDesc().isEnableSharding();
     }
 
-    public Set<TblColRef> getUHCColumns() {
-        return getCubeDesc().getUHCColumns();
+    public Set<TblColRef> getShardByColumns() {
+        return getCubeDesc().getShardByColumns();
     }
 
     public int getRowKeyPreambleSize() {

@@ -41,8 +41,8 @@ public class RowKeyColDesc {
     private String column;
     @JsonProperty("encoding")
     private String encoding;
-    @JsonProperty("isUHC")
-    private boolean isUHC;//is ultra high cardinality column
+    @JsonProperty("isShardBy")
+    private boolean isShardBy;//usually it is ultra high cardinality column, shard by such column can reduce the agg cache for each shard
 
     // computed
     private String encodingName;
@@ -81,15 +81,13 @@ public class RowKeyColDesc {
         this.column = column;
     }
 
-    public boolean isUHC() {
-        return isUHC;
+    public boolean isShardBy() {
+        return isShardBy;
     }
 
-    public void setUHC(boolean UHC) {
-        isUHC = UHC;
+    public void setShardBy(boolean shardBy) {
+        isShardBy = shardBy;
     }
-
-
 
     public String getEncodingName() {
         return encodingName;

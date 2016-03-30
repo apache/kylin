@@ -113,7 +113,8 @@
   "rowkey" : {
     "rowkey_columns" : [ {
       "column" : "seller_id",
-      "encoding" : "fixed_length:18"
+      "encoding" : "fixed_length:18",
+      "isShardBy" : true
     }, {
       "column" : "cal_dt",
       "encoding" : "dict"
