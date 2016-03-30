@@ -78,9 +78,11 @@ public class CubeMetaExtractor extends AbstractApplication {
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info, related dicts, etc. Default true").create("includeSegments");
+    private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info. Default true").create("includeSegments");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("set this to true if want to extract job info/outputs too. Default true").create("includeJobs");
+    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("set this to true if want to extract job info/outputs too. Default false").create("includeJobs");
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_SEGMENT_DETAILS = OptionBuilder.withArgName("includeSegmentDetails").hasArg().isRequired(false).withDescription("set this to true if want to extract segment details too, such as dict, tablesnapshot. Default false").create("includeSegmentDetails");
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_DEST = OptionBuilder.withArgName("destDir").hasArg().isRequired(false).withDescription("specify the dest dir to save the related metadata").create("destDir");
@@ -99,6 +101,7 @@ public class CubeMetaExtractor extends AbstractApplication {
 
     boolean includeSegments;
     boolean includeJobs;
+    boolean includeSegmentDetails;
 
     List<String> requiredResources = Lists.newArrayList();
     List<String> optionalResources = Lists.newArrayList();
@@ -116,6 +119,7 @@ public class CubeMetaExtractor extends AbstractApplication {
         options.addOptionGroup(realizationOrProject);
         options.addOption(OPTION_INCLUDE_SEGMENTS);
         options.addOption(OPTION_INCLUDE_JOB);
+        options.addOption(OPTION_INCLUDE_SEGMENT_DETAILS);
         options.addOption(OPTION_DEST);
 
     }
@@ -128,10 +132,20 @@ public class CubeMetaExtractor extends AbstractApplication {
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         includeSegments = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENTS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENTS)) : true;
-        includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : true;
+        includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : false;
+        includeSegmentDetails = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENT_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENT_DETAILS)) : false;
+
         String dest = null;
         if (optionsHelper.hasOption(OPTION_DEST)) {
             dest = optionsHelper.getOptionValue(OPTION_DEST);
+        }
+
+        if (StringUtils.isEmpty(dest)) {
+            throw new RuntimeException("destDir is not set, exit directly without extracting");
+        }
+
+        if (!dest.endsWith("/")) {
+            dest = dest + "/";
         }
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -192,35 +206,31 @@ public class CubeMetaExtractor extends AbstractApplication {
             logger.info("Cube {} will be trimmed and extracted", cube);
         }
 
-        if (dest == null) {
-            logger.info("destDir is not set, exit directly without extracting");
-        } else {
-            try {
-                ResourceStore src = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-                ResourceStore dst = ResourceStore.getStore(KylinConfig.createInstanceFromUri(dest));
+        try {
+            ResourceStore src = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+            ResourceStore dst = ResourceStore.getStore(KylinConfig.createInstanceFromUri(dest));
 
-                for (String path : requiredResources) {
-                    ResourceTool.copyR(src, dst, path);
-                }
-
-                for (String path : optionalResources) {
-                    try {
-                        ResourceTool.copyR(src, dst, path);
-                    } catch (Exception e) {
-                        logger.warn("Exception when copying optional resource {}. May be caused by resource missing. Ignore it.");
-                    }
-                }
-
-                for (CubeInstance cube : cubesToTrimAndSave) {
-                    CubeInstance trimmedCube = CubeInstance.getCopyOf(cube);
-                    trimmedCube.getSegments().clear();
-                    trimmedCube.setUuid(cube.getUuid());
-                    dst.putResource(trimmedCube.getResourcePath(), trimmedCube, CubeManager.CUBE_SERIALIZER);
-                }
-
-            } catch (IOException e) {
-                throw new RuntimeException("IOException", e);
+            for (String path : requiredResources) {
+                ResourceTool.copyR(src, dst, path);
             }
+
+            for (String path : optionalResources) {
+                try {
+                    ResourceTool.copyR(src, dst, path);
+                } catch (Exception e) {
+                    logger.warn("Exception when copying optional resource {}. May be caused by resource missing. Ignore it.");
+                }
+            }
+
+            for (CubeInstance cube : cubesToTrimAndSave) {
+                CubeInstance trimmedCube = CubeInstance.getCopyOf(cube);
+                trimmedCube.getSegments().clear();
+                trimmedCube.setUuid(cube.getUuid());
+                dst.putResource(trimmedCube.getResourcePath(), trimmedCube, CubeManager.CUBE_SERIALIZER);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("IOException", e);
         }
     }
 
@@ -261,13 +271,15 @@ public class CubeMetaExtractor extends AbstractApplication {
             if (includeSegments) {
                 addRequired(CubeInstance.concatResourcePath(cube.getName()));
                 for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
-                    for (String dictPat : segment.getDictionaryPaths()) {
-                        addRequired(dictPat);
+                    if (includeSegmentDetails) {
+                        for (String dictPat : segment.getDictionaryPaths()) {
+                            addRequired(dictPat);
+                        }
+                        for (String snapshotPath : segment.getSnapshotPaths()) {
+                            addRequired(snapshotPath);
+                        }
+                        addRequired(segment.getStatisticsResourcePath());
                     }
-                    for (String snapshotPath : segment.getSnapshotPaths()) {
-                        addRequired(snapshotPath);
-                    }
-                    addRequired(segment.getStatisticsResourcePath());
 
                     if (includeJobs) {
                         String lastJobId = segment.getLastBuildJobID();
@@ -286,8 +298,6 @@ public class CubeMetaExtractor extends AbstractApplication {
                                 throw new RuntimeException("PersistentException", e);
                             }
                         }
-                    } else {
-                        logger.info("Job info will not be extracted");
                     }
                 }
             } else {

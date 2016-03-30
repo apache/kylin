@@ -19,7 +19,7 @@
 
 dir=$(dirname ${0})
 
-# We should set KYLIN_HOME here for multiple tomcat instsances that are on the same node.
+# We should set KYLIN_HOME here for multiple tomcat instances that are on the same node.
 # In addition, we should set a KYLIN_HOME for the global use as normal.
 export KYLIN_HOME=${dir}/../
 

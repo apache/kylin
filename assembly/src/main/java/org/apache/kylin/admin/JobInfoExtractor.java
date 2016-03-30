@@ -21,6 +21,7 @@ package org.apache.kylin.admin;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -32,9 +33,10 @@ import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
+import org.apache.kylin.job.common.ShellExecutable;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
-import org.apache.kylin.job.manager.ExecutableManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,16 +64,14 @@ public class JobInfoExtractor extends AbstractApplication {
 
     private KylinConfig kylinConfig;
     private CubeMetaExtractor cubeMetaExtractor;
-    private YarnLogExtractor yarnLogExtractor;
 
     private ExecutableDao executableDao;
-    private ExecutableManager executableManager;
 
     List<String> requiredResources = Lists.newArrayList();
+    List<String> yarnLogsResources = Lists.newArrayList();
 
     public JobInfoExtractor() {
         cubeMetaExtractor = new CubeMetaExtractor();
-        yarnLogExtractor = new YarnLogExtractor();
 
         options = new Options();
         options.addOption(OPTION_JOB_ID);
@@ -81,7 +81,6 @@ public class JobInfoExtractor extends AbstractApplication {
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         executableDao = ExecutableDao.getInstance(kylinConfig);
-        executableManager = ExecutableManager.getInstance(kylinConfig);
     }
 
     @Override
@@ -110,6 +109,9 @@ public class JobInfoExtractor extends AbstractApplication {
         for (ExecutablePO task : executablePO.getTasks()) {
             addRequired(ExecutableDao.pathOfJob(task.getUuid()));
             addRequired(ExecutableDao.pathOfJobOutput(task.getUuid()));
+            if (includeYarnLogs) {
+                yarnLogsResources.add(task.getUuid());
+            }
         }
         executeExtraction(dest);
 
@@ -121,9 +123,10 @@ public class JobInfoExtractor extends AbstractApplication {
         }
 
         if (includeYarnLogs) {
-            String[] yarnLogsArgs = { "-jobId", jobId, "-destDir", dest + "yarn_" + jobId + "/" };
-            logger.info("Start to related yarn job logs: " + StringUtils.join(yarnLogsArgs));
-            yarnLogExtractor.execute(yarnLogsArgs);
+            logger.info("Start to related yarn job logs: " + jobId);
+            for (String taskId : yarnLogsResources) {
+                extractYarnLog(taskId, dest + "yarn_" + jobId + "/");
+            }
         }
 
         logger.info("Extracted kylin jobs located at: " + new File(dest).getAbsolutePath());
@@ -145,6 +148,21 @@ public class JobInfoExtractor extends AbstractApplication {
 
         } catch (IOException e) {
             throw new RuntimeException("IOException", e);
+        }
+    }
+
+    private void extractYarnLog(String taskId, String dest) throws Exception {
+        final Map<String, String> jobInfo = executableDao.getJobOutput(taskId).getInfo();
+        if (jobInfo.containsKey(ExecutableConstants.MR_JOB_ID)) {
+            String applicationId = jobInfo.get(ExecutableConstants.MR_JOB_ID).replace("job", "application");
+            File destFile = new File(dest + applicationId + ".log");
+
+            ShellExecutable yarnExec = new ShellExecutable();
+            yarnExec.setCmd("yarn logs -applicationId " + applicationId + " > " + destFile.getAbsolutePath());
+            yarnExec.setName(yarnExec.getCmd());
+
+            logger.info(yarnExec.getCmd());
+            kylinConfig.getCliCommandExecutor().execute(yarnExec.getCmd(), null);
         }
     }
 
