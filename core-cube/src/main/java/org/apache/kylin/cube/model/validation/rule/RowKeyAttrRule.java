@@ -26,7 +26,6 @@ import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 
 /**
- * Validate that only one of "length" and "dictionary" appears on rowkey_column
  */
 public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
 
@@ -48,10 +47,6 @@ public class RowKeyAttrRule implements IValidatorRule<CubeDesc> {
             RowKeyColDesc rd = rcd[i];
             if (rd.getColumn() == null || rd.getColumn().length() == 0) {
                 context.addResult(ResultLevel.ERROR, "Rowkey column empty");
-                continue;
-            }
-            if (!rd.getEncoding().equalsIgnoreCase("dict") && !rd.getEncoding().toLowerCase().startsWith("fixed_length")) {
-                context.addResult(ResultLevel.ERROR, "Rowkey column " + rd.getColumn() + " encoding not dict nor fixed_length");
             }
         }
 
