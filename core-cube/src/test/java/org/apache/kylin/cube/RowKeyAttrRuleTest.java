@@ -49,13 +49,11 @@ public class RowKeyAttrRuleTest {
     public void testBadDesc() throws IOException {
         ValidateContext vContext = new ValidateContext();
         CubeDesc desc = JsonUtil.readValue(new FileInputStream("../examples/test_case_data/localmeta/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
-        desc.getRowkey().getRowKeyColumns()[1].setEncoding("non-supported-encoding");
         desc.getRowkey().getRowKeyColumns()[2].setColumn("");
         IValidatorRule<CubeDesc> rule = new RowKeyAttrRule();
         rule.validate(desc, vContext);
         vContext.print(System.out);
-        assertTrue(vContext.getResults().length == 2);
-        assertTrue("Rowkey column cal_dt encoding not dict nor fixed_length".equals(vContext.getResults()[0].getMessage()));
-        assertTrue("Rowkey column empty".equalsIgnoreCase(vContext.getResults()[1].getMessage()));
+        assertTrue(vContext.getResults().length == 1);
+        assertTrue("Rowkey column empty".equalsIgnoreCase(vContext.getResults()[0].getMessage()));
     }
 }
