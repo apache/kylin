@@ -63,7 +63,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
     public void testAddEntryToProject() throws IOException {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
-        BadQueryHistory history = manager.addEntryToProject("sql", "adj", 1459362239992L, "server", "t-0", "default");
+        BadQueryHistory history = manager.addEntryToProject("sql", "adj", 1459362239992L, 100, "server", "t-0", "default");
         NavigableSet<BadQueryEntry> entries = history.getEntries();
         assertEquals(3, entries.size());
 
@@ -77,7 +77,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         assertEquals("t-0", newEntry.getThread());
 
         for (int i = 0; i < kylinConfig.getBadQueryHistoryNum(); i++) {
-            history = manager.addEntryToProject("sql", "adj", 1459362239993L + i, "server", "t-0", "default");
+            history = manager.addEntryToProject("sql", "adj", 1459362239993L + i, 100 + i, "server", "t-0", "default");
         }
         assertEquals(kylinConfig.getBadQueryHistoryNum(), history.getEntries().size());
     }

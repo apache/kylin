@@ -33,21 +33,32 @@ public class BadQueryEntry extends RootPersistentEntity implements Comparable<Ba
     private String sql;
     @JsonProperty("start_time")
     private long startTime;
+    @JsonProperty("running_seconds")
+    private int runningSec;
     @JsonProperty("server")
     private String server;
     @JsonProperty("thread")
     private String thread;
 
-    public BadQueryEntry(String sql, String adj, long startTime, String server, String thread) {
+    public BadQueryEntry(String sql, String adj, long startTime, int runningSec, String server, String thread) {
         this.updateRandomUuid();
         this.adj = adj;
         this.sql = sql;
         this.startTime = startTime;
+        this.runningSec = runningSec;
         this.server = server;
         this.thread = thread;
     }
 
     public BadQueryEntry() {
+    }
+
+    public int getRunningSec() {
+        return runningSec;
+    }
+
+    public void setRunningSec(int runningSec) {
+        this.runningSec = runningSec;
     }
 
     public String getAdj() {

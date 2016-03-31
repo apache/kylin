@@ -23,9 +23,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.slf4j.Logger;
@@ -49,7 +53,7 @@ public class BadQueryDetector extends Thread {
         super("BadQueryDetector");
         this.setDaemon(true);
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
-        this.detectionInterval = 60 * 1000;
+        this.detectionInterval = kylinConfig.getBadQueryDefaultDetectIntervalSeconds() * 1000;
         this.alertMB = 100;
         this.alertRunningSec = kylinConfig.getBadQueryDefaultAlertingSeconds();
 
@@ -100,6 +104,18 @@ public class BadQueryDetector extends Thread {
     private class PersistenceNotifier implements Notifier {
         BadQueryHistoryManager badQueryManager = BadQueryHistoryManager.getInstance(kylinConfig);
         String serverHostname;
+        NavigableSet<Pair<Long, String>> cacheQueue = new TreeSet<>(new Comparator<Pair<Long, String>>() {
+            @Override
+            public int compare(Pair<Long, String> o1, Pair<Long, String> o2) {
+                if (o1.equals(o2)){
+                    return 0;
+                } else if (o1.getFirst().equals(o2.getFirst())) {
+                    return o2.getSecond().compareTo(o2.getSecond());
+                } else {
+                    return (int)(o1.getFirst() - o2.getFirst());
+                }
+            }
+        });
 
         public PersistenceNotifier() {
             try {
@@ -113,7 +129,18 @@ public class BadQueryDetector extends Thread {
         @Override
         public void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
             try {
-                badQueryManager.addEntryToProject(sql, adj, startTime, serverHostname, t.getName(), project);
+                long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 10;
+                Pair<Long, String> sqlPair = new Pair<>(startTime, sql);
+                if (!cacheQueue.contains(sqlPair)) {
+                    badQueryManager.addEntryToProject(sql, adj, startTime, runningSec, serverHostname, t.getName(), project);
+                    cacheQueue.add(sqlPair);
+                    logger.info(Long.toString(System.currentTimeMillis() - cacheQueue.first().getFirst()));
+                    logger.info(Long.toString(cachingSeconds * 1000));
+                    while (!cacheQueue.isEmpty() && (System.currentTimeMillis() - cacheQueue.first().getFirst() > cachingSeconds * 1000 || cacheQueue.size() > kylinConfig.getBadQueryHistoryNum() * 3)) {
+                        cacheQueue.pollFirst();
+                        logger.info("Poll first");
+                    }
+                }
             } catch (IOException e) {
                 logger.error("Error in bad query persistence.", e);
             }

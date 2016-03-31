@@ -100,8 +100,8 @@ public class BadQueryHistoryManager {
         return badQueryHistory;
     }
 
-    public BadQueryHistory addEntryToProject(String sql, String adj, long startTime, String server, String threadName, String project) throws IOException {
-        return addEntryToProject(new BadQueryEntry(sql, adj, startTime, server, threadName), project);
+    public BadQueryHistory addEntryToProject(String sql, String adj, long startTime, int runningSecs, String server, String threadName, String project) throws IOException {
+        return addEntryToProject(new BadQueryEntry(sql, adj, startTime, runningSecs, server, threadName), project);
     }
 
     public void removeBadQueryHistory(String project) throws IOException {

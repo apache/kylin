@@ -21,7 +21,6 @@ package org.apache.kylin.tool;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 
 import org.apache.commons.cli.Option;
@@ -49,33 +48,29 @@ public class DiagnosisInfoCLI extends AbstractApplication {
     @SuppressWarnings("static-access")
     private static final Option OPTION_COMPRESS = OptionBuilder.withArgName("compress").hasArg().isRequired(false).withDescription("specify whether to compress the output with zip. Default false.").create("compress");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_DEST = OptionBuilder.withArgName("destDir").hasArg().isRequired(true).withDescription("specify the dest dir to save the related metadata").create("destDir");
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
+
     private CubeMetaExtractor cubeMetaExtractor;
-    private JobInfoExtractor jobInfoExtractor;
     private Options options;
-    private String type;
     private String exportDest;
 
-    public DiagnosisInfoCLI(String type) {
-        this.type = type;
-
-        jobInfoExtractor = new JobInfoExtractor();
+    public DiagnosisInfoCLI() {
         cubeMetaExtractor = new CubeMetaExtractor();
 
-        if (this.type.equalsIgnoreCase("job")) {
-            options = jobInfoExtractor.getOptions();
-        } else if (this.type.equalsIgnoreCase("metadata")) {
-            options = cubeMetaExtractor.getOptions();
-        } else {
-            throw new RuntimeException("Only job and metadata are allowed.");
-        }
-
+        options = new Options();
         options.addOption(OPTION_LOG_PERIOD);
         options.addOption(OPTION_COMPRESS);
+        options.addOption(OPTION_DEST);
+        options.addOption(OPTION_PROJECT);
     }
 
     public static void main(String args[]) {
-        DiagnosisInfoCLI diagnosisInfoCLI = new DiagnosisInfoCLI(args[0]);
-        diagnosisInfoCLI.execute(Arrays.copyOfRange(args, 1, args.length));
+        DiagnosisInfoCLI diagnosisInfoCLI = new DiagnosisInfoCLI();
+        diagnosisInfoCLI.execute(args);
     }
 
     @Override
@@ -85,14 +80,8 @@ public class DiagnosisInfoCLI extends AbstractApplication {
 
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
-
-        if (this.type.equals("job")) {
-            jobInfoExtractor.execute(optionsHelper);
-            exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
-        } else if (this.type.equals("metadata")) {
-            cubeMetaExtractor.execute(optionsHelper);
-            exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
-        }
+        final String project = optionsHelper.getOptionValue(options.getOption("project"));
+        exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
 
         if (StringUtils.isEmpty(exportDest)) {
             throw new RuntimeException("destDir is not set, exit directly without extracting");
@@ -101,9 +90,14 @@ public class DiagnosisInfoCLI extends AbstractApplication {
             exportDest = exportDest + "/";
         }
 
+        // export cube metadata
+        String[] cubeMetaArgs = { "-destDir", exportDest + File.pathSeparator, "-project", project };
+        cubeMetaExtractor.execute(cubeMetaArgs);
+
         int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
         boolean compress = optionsHelper.hasOption(OPTION_COMPRESS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : false;
 
+        // export logs
         if (logPeriod > 0) {
             logger.info("Start to extract kylin logs in {} days", logPeriod);
 
@@ -131,6 +125,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
             }
         }
 
+        // compress to zip package
         if (compress) {
             File tempZipFile = File.createTempFile("diagnosis_", ".zip");
             ZipFileUtils.compressZipFile(exportDest, tempZipFile.getAbsolutePath());

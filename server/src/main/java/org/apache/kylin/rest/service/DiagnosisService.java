@@ -38,7 +38,7 @@ public class DiagnosisService extends BasicService {
     public String dumpDiagnosisInfo(String project) throws IOException {
         String tempLocation = System.getProperty("java.io.tmpdir");
         String[] args = { "-project", project, "-destDir", tempLocation, "-compress", "true" };
-        DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI("metadata");
+        DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
         diagnosisInfoCli.execute(args);
         return diagnosisInfoCli.getExportDest();
     }

@@ -443,7 +443,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getBadQueryDefaultAlertingSeconds() {
-        return Integer.parseInt(getOptional("kylin.query.badquery.default.alerting.seconds", "90"));
+        return Integer.parseInt(getOptional("kylin.query.badquery.alerting.seconds", "90"));
+    }
+
+    public int getBadQueryDefaultDetectIntervalSeconds() {
+        return Integer.parseInt(getOptional("kylin.query.badquery.detect.interval.seconds", "60"));
     }
 
     public int getCachedDictMaxEntrySize() {
