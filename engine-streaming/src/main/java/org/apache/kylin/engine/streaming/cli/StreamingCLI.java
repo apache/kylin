@@ -36,6 +36,7 @@ package org.apache.kylin.engine.streaming.cli;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
@@ -76,6 +77,9 @@ public class StreamingCLI {
                 case "-fillGap":
                     bootstrapConfig.setFillGap(Boolean.parseBoolean(args[++i]));
                     break;
+                case "-maxFillGapRange":
+                    bootstrapConfig.setMaxFillGapRange(Long.parseLong(args[++i]));
+                    break;
                 default:
                     logger.warn("ignore this arg:" + argName);
                 }
@@ -85,7 +89,12 @@ public class StreamingCLI {
                 final List<Pair<Long, Long>> gaps = StreamingMonitor.findGaps(bootstrapConfig.getCubeName());
                 logger.info("all gaps:" + StringUtils.join(gaps, ","));
                 for (Pair<Long, Long> gap : gaps) {
-                    startOneOffCubeStreaming(bootstrapConfig.getCubeName(), gap.getFirst(), gap.getSecond());
+                    List<Pair<Long, Long>> splitGaps = splitGap(gap, bootstrapConfig.getMaxFillGapRange());
+                    for (Pair<Long, Long> splitGap : splitGaps) {
+                        logger.info("start filling the gap from " + splitGap.getFirst() + " to " + splitGap.getSecond());
+                        startOneOffCubeStreaming(bootstrapConfig.getCubeName(), splitGap.getFirst(), splitGap.getSecond());
+                        logger.info("finish filling the gap from " + splitGap.getFirst() + " to " + splitGap.getSecond());
+                    }
                 }
             } else {
                 startOneOffCubeStreaming(bootstrapConfig.getCubeName(), bootstrapConfig.getStart(), bootstrapConfig.getEnd());
@@ -98,7 +107,20 @@ public class StreamingCLI {
             System.exit(-1);
         }
     }
-    
+
+    private static List<Pair<Long, Long>> splitGap(Pair<Long, Long> gap, long maxFillGapRange) {
+        List<Pair<Long, Long>> gaps = Lists.newArrayList();
+        Long startTime = gap.getFirst();
+
+        while (startTime < gap.getSecond()) {
+            Long endTime = gap.getSecond() <= startTime + maxFillGapRange ? gap.getSecond() : startTime + maxFillGapRange;
+            gaps.add(Pair.newPair(startTime, endTime));
+            startTime = endTime;
+        }
+
+        return gaps;
+    }
+
     private static void startOneOffCubeStreaming(String cubeName, long start, long end) {
         final Runnable runnable = new OneOffStreamingBuilder(RealizationType.CUBE, cubeName, start, end).build();
         runnable.run();

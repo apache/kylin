@@ -27,6 +27,7 @@ public class BootstrapConfig {
     private long end = 0L;
 
     private boolean fillGap;
+    private long maxFillGapRange = 4 * 3600 * 1000L;
 
     public long getStart() {
         return start;
@@ -58,5 +59,13 @@ public class BootstrapConfig {
 
     public void setFillGap(boolean fillGap) {
         this.fillGap = fillGap;
+    }
+
+    public long getMaxFillGapRange() {
+        return maxFillGapRange;
+    }
+
+    public void setMaxFillGapRange(long maxFillGapRange) {
+        this.maxFillGapRange = maxFillGapRange;
     }
 }
