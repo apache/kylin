@@ -399,13 +399,13 @@ abstract public class KylinConfigBase implements Serializable {
         String cut;
         switch (capacity) {
         case "SMALL":
-            cut = getOptional("kylin.hbase.region.cut.small", "10");
+            cut = getOptional("kylin.hbase.region.cut.small", "5");
             break;
         case "MEDIUM":
-            cut = getOptional("kylin.hbase.region.cut.medium", "20");
+            cut = getOptional("kylin.hbase.region.cut.medium", "10");
             break;
         case "LARGE":
-            cut = getOptional("kylin.hbase.region.cut.large", "100");
+            cut = getOptional("kylin.hbase.region.cut.large", "50");
             break;
         default:
             throw new IllegalArgumentException("Capacity not recognized: " + capacity);
