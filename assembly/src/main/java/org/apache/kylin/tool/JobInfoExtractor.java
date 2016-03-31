@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.admin;
+package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;

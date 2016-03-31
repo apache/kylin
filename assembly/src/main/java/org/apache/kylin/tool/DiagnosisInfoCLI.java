@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.admin;
+package org.apache.kylin.tool;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -38,8 +38,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class DataExtractorCLI extends AbstractApplication {
-    private static final Logger logger = LoggerFactory.getLogger(DataExtractorCLI.class);
+public class DiagnosisInfoCLI extends AbstractApplication {
+    private static final Logger logger = LoggerFactory.getLogger(DiagnosisInfoCLI.class);
 
     private static final int DEFAULT_LOG_PERIOD = 3;
 
@@ -53,8 +53,9 @@ public class DataExtractorCLI extends AbstractApplication {
     private JobInfoExtractor jobInfoExtractor;
     private Options options;
     private String type;
+    private String exportDest;
 
-    public DataExtractorCLI(String type) {
+    public DiagnosisInfoCLI(String type) {
         this.type = type;
 
         jobInfoExtractor = new JobInfoExtractor();
@@ -72,6 +73,11 @@ public class DataExtractorCLI extends AbstractApplication {
         options.addOption(OPTION_COMPRESS);
     }
 
+    public static void main(String args[]) {
+        DiagnosisInfoCLI diagnosisInfoCLI = new DiagnosisInfoCLI(args[0]);
+        diagnosisInfoCLI.execute(Arrays.copyOfRange(args, 1, args.length));
+    }
+
     @Override
     protected Options getOptions() {
         return options;
@@ -79,20 +85,20 @@ public class DataExtractorCLI extends AbstractApplication {
 
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
-        String dest = null;
+
         if (this.type.equals("job")) {
             jobInfoExtractor.execute(optionsHelper);
-            dest = optionsHelper.getOptionValue(options.getOption("destDir"));
+            exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
         } else if (this.type.equals("metadata")) {
             cubeMetaExtractor.execute(optionsHelper);
-            dest = optionsHelper.getOptionValue(options.getOption("destDir"));
+            exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
         }
 
-        if (StringUtils.isEmpty(dest)) {
+        if (StringUtils.isEmpty(exportDest)) {
             throw new RuntimeException("destDir is not set, exit directly without extracting");
         }
-        if (!dest.endsWith("/")) {
-            dest = dest + "/";
+        if (!exportDest.endsWith("/")) {
+            exportDest = exportDest + "/";
         }
 
         int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
@@ -103,7 +109,7 @@ public class DataExtractorCLI extends AbstractApplication {
 
             final String logFolder = KylinConfig.getKylinHome() + "/logs/";
             final String defaultLogFilename = "kylin.log";
-            final File logsDir = new File(dest + "/logs/");
+            final File logsDir = new File(exportDest + "/logs/");
             final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
             FileUtils.forceMkdir(logsDir);
@@ -126,17 +132,16 @@ public class DataExtractorCLI extends AbstractApplication {
         }
 
         if (compress) {
-            File tempZipFile = File.createTempFile("extraction_", ".zip");
-            ZipFileUtils.compressZipFile(dest, tempZipFile.getAbsolutePath());
-            FileUtils.forceDelete(new File(dest));
-            FileUtils.moveFileToDirectory(tempZipFile, new File(dest), true);
+            File tempZipFile = File.createTempFile("diagnosis_", ".zip");
+            ZipFileUtils.compressZipFile(exportDest, tempZipFile.getAbsolutePath());
+            FileUtils.forceDelete(new File(exportDest));
+            FileUtils.moveFileToDirectory(tempZipFile, new File(exportDest), true);
+            exportDest = exportDest + tempZipFile.getName();
         }
-
-        logger.info("Extraction finished at: " + new File(dest).getAbsolutePath());
+        logger.info("Diagnosis info locates at: " + new File(exportDest).getAbsolutePath());
     }
 
-    public static void main(String args[]) {
-        DataExtractorCLI dataExtractorCLI = new DataExtractorCLI(args[0]);
-        dataExtractorCLI.execute(Arrays.copyOfRange(args, 1, args.length));
+    public String getExportDest() {
+        return exportDest;
     }
 }

@@ -34,16 +34,16 @@ public class ZipFileUtils {
             throw new RuntimeException("Zipfile must end with .zip");
         }
         ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream(zipFilename));
-        compressDirectoryToZipfile(sourceDir, sourceDir, zipFile);
+        compressDirectoryToZipfile(normDir(new File(sourceDir).getParent()), normDir(sourceDir), zipFile);
         IOUtils.closeQuietly(zipFile);
     }
 
     private static void compressDirectoryToZipfile(String rootDir, String sourceDir, ZipOutputStream out) throws IOException {
         for (File sourceFile : new File(sourceDir).listFiles()) {
             if (sourceFile.isDirectory()) {
-                compressDirectoryToZipfile(rootDir, sourceDir + sourceFile.getName() + File.separator, out);
+                compressDirectoryToZipfile(rootDir, sourceDir + normDir(sourceFile.getName()), out);
             } else {
-                ZipEntry entry = new ZipEntry(sourceDir.replace(rootDir, "") + sourceFile.getName());
+                ZipEntry entry = new ZipEntry(normDir(StringUtils.isEmpty(rootDir) ? sourceDir : sourceDir.replace(rootDir, "")) + sourceFile.getName());
                 out.putNextEntry(entry);
 
                 FileInputStream in = new FileInputStream(sourceDir + sourceFile.getName());
@@ -59,5 +59,12 @@ public class ZipFileUtils {
         }
 
         return false;
+    }
+
+    private static String normDir(String dirName) {
+        if (!StringUtils.isEmpty(dirName) && !dirName.endsWith(File.separator)) {
+            dirName = dirName + File.separator;
+        }
+        return dirName;
     }
 }
