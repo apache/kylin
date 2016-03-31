@@ -629,6 +629,7 @@
         <module>jdbc</module>
         <module>invertedindex</module>
         <module>assembly</module>
+        <module>tool</module>
         <module>kylin-it</module>
     </modules>
 

@@ -68,6 +68,12 @@
             <artifactId>kylin-source-kafka</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-tool</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <!-- Test & Env -->
         <dependency>
             <groupId>org.apache.kylin</groupId>

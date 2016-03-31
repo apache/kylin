@@ -37,6 +37,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -99,6 +100,10 @@ public abstract class BasicService {
 
     public IIManager getIIManager() {
         return IIManager.getInstance(getConfig());
+    }
+
+    public BadQueryHistoryManager getBadQueryHistoryManager() {
+        return BadQueryHistoryManager.getInstance(getConfig());
     }
 
     protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs) {
