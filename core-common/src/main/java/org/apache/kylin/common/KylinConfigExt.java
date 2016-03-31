@@ -28,9 +28,13 @@ import java.util.Properties;
 public class KylinConfigExt extends KylinConfig {
 
     final private Map<String, String> overrides;
+    final KylinConfig base;
 
     public KylinConfigExt(KylinConfig base, Map<String, String> overrides) {
         super(base.getAllProperties());
+        if (base.getClass() != KylinConfig.class)
+            throw new IllegalArgumentException();
+        this.base = base;
         this.overrides = overrides;
     }
     

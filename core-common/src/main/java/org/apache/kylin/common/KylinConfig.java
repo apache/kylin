@@ -276,4 +276,27 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
+    private KylinConfig base() {
+        if (this instanceof KylinConfigExt)
+            return ((KylinConfigExt) this).base;
+        else
+            return this;
+    }
+    
+    private int superHashCode() {
+        return super.hashCode();
+    }
+    
+    @Override
+    public int hashCode() {
+        return base().superHashCode();
+    }
+    
+    @Override
+    public boolean equals(Object another) {
+        if (!(another instanceof KylinConfig))
+            return false;
+        else
+            return this.base() == ((KylinConfig) another).base();
+    }
 }

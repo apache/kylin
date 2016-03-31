@@ -43,7 +43,7 @@ import com.google.common.collect.Sets;
  * Subclass can override methods in this class to extend the content of the 'properties',
  * with some override values for example.
  */
-public class KylinConfigBase implements Serializable {
+abstract public class KylinConfigBase implements Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(KylinConfigBase.class);
 
