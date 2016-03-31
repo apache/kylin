@@ -412,6 +412,19 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     var tmpRowKeyColumns = [];
     var tmpAggregationItems = [];//put all aggregation item
     //var hierarchyItemArray = [];//put all hierarchy items
+
+    var pfkMap = {};
+
+    for( var i=0;i<$scope.metaModel.model.lookups.length;i++){
+      var lookup = $scope.metaModel.model.lookups[i];
+      var table = lookup.table;
+      pfkMap[table] = {};
+      for(var j=0;j<lookup.join.primary_key.length;j++){
+        var pk = lookup.join.primary_key[j];
+        pfkMap[table][pk] = lookup.join.foreign_key[j];
+      }
+
+    }
     angular.forEach($scope.cubeMetaFrame.dimensions, function (dimension, index) {
 
       //derived column
@@ -438,16 +451,26 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       }
       //normal column
       else if (dimension.column  && !dimension.derived) {
+
+        var tableName = dimension.table;
+        var columnName = dimension.column;
+        var rowkeyColumn = dimension.column;
+        if(pfkMap[tableName]&&pfkMap[tableName][columnName]){
+          //lookup table primary key column as dimension
+          rowkeyColumn = pfkMap[tableName][columnName];
+
+        }
+
         for (var i = 0; i < tmpRowKeyColumns.length; i++) {
-          if (tmpRowKeyColumns[i].column == dimension.column)
+          if (tmpRowKeyColumns[i].column == rowkeyColumn)
             break;
         }
         if (i == tmpRowKeyColumns.length) {
           tmpRowKeyColumns.push({
-            "column": dimension.column,
+            "column": rowkeyColumn,
             "encoding": "dict"
           });
-          tmpAggregationItems.push(dimension.column);
+          tmpAggregationItems.push(rowkeyColumn);
         }
       }
 
