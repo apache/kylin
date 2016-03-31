@@ -48,7 +48,7 @@ public class RowKeySplitterTest extends LocalFileMetadataTestCase {
 
         RowKeySplitter rowKeySplitter = new RowKeySplitter(cube.getFirstSegment(), 11, 20);
         // base cuboid rowkey
-        byte[] input = { 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 49, 48, 48, 48, 48, 48, 48, 48, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 54, -105, 55, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
+        byte[] input = { 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0,-104,-106,-128, 11, 54, -105, 55,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,     13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
         rowKeySplitter.split(input);
 
         assertEquals(11, rowKeySplitter.getBufferSize());

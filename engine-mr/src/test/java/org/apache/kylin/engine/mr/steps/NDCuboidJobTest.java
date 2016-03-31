@@ -29,8 +29,10 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("as it require specify data input")
 public class NDCuboidJobTest extends LocalFileMetadataTestCase {
 
     private Configuration conf;
