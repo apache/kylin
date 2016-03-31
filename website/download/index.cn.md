@@ -17,27 +17,13 @@ __1.5.0 二进制包 for HBase 0.98/0.99__
 * [apache-kylin-1.5.0-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.0/apache-kylin-1.5.0-bin.tar.gz)
 * [安装帮助](http://kylin.apache.org/docs15/install)
 
-__1.3.0 发布(源代码)__
-1.3.0发布的Apache Kylin™可以从ASF网站下载：:
-
-* [Apache Kylin v1.3.0](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.3.0/)
-* [发布日志](http://kylin.apache.org/docs/release_notes.html)
-* Git 标签: [kylin-1.3.0](https://github.com/apache/kylin/tree/kylin-1.3.0)
-* Git Commit: [b95e47c4dde42ec752916013f67ed1221f092cb7](https://github.com/apache/kylin/commit/b95e47c4dde42ec752916013f67ed1221f092cb7)
-
-__1.3.0 二进制包 for HBase 0.98/0.99__
-为方便使用，我们提供预打包的二进制安装包：
-
-* [apache-kylin-1.3.0-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.3.0/apache-kylin-1.3.0-bin.tar.gz)
-* [安装帮助](http://kylin.apache.org/docs/install)
-
 __特别二进制包 for HBase 1.1.3及更高版本__
 越来越多的用户开始部署使用HBase 1.1或更高版本，我们提供一个在HBase 1.1上编译的Kylin快照二进制包；
 请注意此安装包需要HBase 1.1.3或更高版本，之前版本中有一个已知的关于fuzzy key过滤器的缺陷，会导致Kylin查询结果缺少记录: [HBASE-14269](https://issues.apache.org/jira/browse/HBASE-14269)
 此外请注意，这不是一个正式的发布版(每隔几周rebase KYLIN 1.3.x 分支上最新的改动)，没有经过完整的测试。
 
-  * [apache-kylin-1.3-HBase-1.1-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.3-snapshot/apache-kylin-1.3-HBase-1.1-SNAPSHOT-bin.tar.gz)
-  * Git commit [a3b8eb04955310abec158ea30f61deb0119679d1](https://github.com/apache/kylin/commit/a3b8eb04955310abec158ea30f61deb0119679d1) 
+* [apache-kylin-1.5.0-HBase1.1.3-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.0/apache-kylin-1.5.0-HBase1.1.3-bin.tar.gz)
+* Git commit [dffbbf3bb4ff4414a751d5635974362513b36513](https://github.com/apache/kylin/commit/dffbbf3bb4ff4414a751d5635974362513b36513) 
 
 对于HBase 1.0用户，建议您升级到1.1.3或降级到0.98/0.99.
 
