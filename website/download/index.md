@@ -33,7 +33,7 @@ __Build Binary Package__
 To build binary package from any version even latest development branch, please refer to this [guide](https://kylin.apache.org/development/howto_package.html)
 
 __Previous Release__  
- Older releases may be found in the [archives](https://archive.apache.org/dist/kylin/).
+ Older releases can be found in the [archives](https://archive.apache.org/dist/kylin/).
     
 __ODBC Driver__  
 Kylin ODBC driver requires [Microsoft Visual C++ 2012 Redistributable](http://www.microsoft.com/en-us/download/details.aspx?id=30679) installed first. 
