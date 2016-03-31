@@ -7,7 +7,7 @@ since: v1.2
 ---
  
 Here are some basic technical concepts used in Apache Kylin, please check them for your reference.
-For terminology in domain, please refer to: [Terminology](terminology.md)
+For terminology in domain, please refer to: [Terminology](terminology.html)
 
 ## CUBE
 * __Table__ - This is definition of hive tables as source of cubes, which must be synced before building cubes.
