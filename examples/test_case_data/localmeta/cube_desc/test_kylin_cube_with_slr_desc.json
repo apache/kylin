@@ -113,7 +113,7 @@
   "rowkey" : {
     "rowkey_columns" : [ {
       "column" : "seller_id",
-      "encoding" : "fixed_length:18",
+      "encoding" : "int:4",
       "isShardBy" : true
     }, {
       "column" : "cal_dt",
@@ -123,7 +123,7 @@
       "encoding" : "dict"
     }, {
       "column" : "meta_categ_name",
-      "encoding" : "dict"
+      "encoding" : "fixed_length:18"
     }, {
       "column" : "categ_lvl2_name",
       "encoding" : "dict"

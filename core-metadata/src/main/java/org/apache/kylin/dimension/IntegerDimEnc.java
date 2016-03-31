@@ -56,6 +56,10 @@ public class IntegerDimEnc extends DimensionEncoding {
 
     transient private int avoidVerbose = 0;
 
+    //no-arg constructor is required for Externalizable
+    public IntegerDimEnc() {
+    }
+
     public IntegerDimEnc(int len) {
         if (len <= 0 || len >= CAP.length)
             throw new IllegalArgumentException();
