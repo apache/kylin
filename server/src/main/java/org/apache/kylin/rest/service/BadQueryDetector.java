@@ -129,14 +129,13 @@ public class BadQueryDetector extends Thread {
         @Override
         public void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
             try {
-                long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 10;
+                long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 30;
                 Pair<Long, String> sqlPair = new Pair<>(startTime, sql);
                 if (!cacheQueue.contains(sqlPair)) {
                     badQueryManager.addEntryToProject(sql, adj, startTime, runningSec, serverHostname, t.getName(), project);
                     cacheQueue.add(sqlPair);
                     while (!cacheQueue.isEmpty() && (System.currentTimeMillis() - cacheQueue.first().getFirst() > cachingSeconds * 1000 || cacheQueue.size() > kylinConfig.getBadQueryHistoryNum() * 3)) {
                         cacheQueue.pollFirst();
-                        logger.info("Poll first");
                     }
                 }
             } catch (IOException e) {

@@ -54,6 +54,9 @@ public class DiagnosisInfoCLI extends AbstractApplication {
     @SuppressWarnings("static-access")
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_CONF = OptionBuilder.withArgName("includeConf").hasArg().isRequired(false).withDescription("Specify whether to include conf files to extract. Default true.").create("includeConf");
+
     private CubeMetaExtractor cubeMetaExtractor;
     private Options options;
     private String exportDest;
@@ -66,6 +69,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         options.addOption(OPTION_COMPRESS);
         options.addOption(OPTION_DEST);
         options.addOption(OPTION_PROJECT);
+        options.addOption(OPTION_INCLUDE_CONF);
     }
 
     public static void main(String args[]) {
@@ -91,11 +95,12 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         }
 
         // export cube metadata
-        String[] cubeMetaArgs = { "-destDir", exportDest + File.pathSeparator, "-project", project };
+        String[] cubeMetaArgs = { "-destDir", exportDest + "metadata", "-project", project };
         cubeMetaExtractor.execute(cubeMetaArgs);
 
         int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
         boolean compress = optionsHelper.hasOption(OPTION_COMPRESS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : false;
+        boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF)) : true;
 
         // export logs
         if (logPeriod > 0) {
@@ -103,7 +108,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
 
             final String logFolder = KylinConfig.getKylinHome() + "/logs/";
             final String defaultLogFilename = "kylin.log";
-            final File logsDir = new File(exportDest + "/logs/");
+            final File logsDir = new File(exportDest + "logs/");
             final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
             FileUtils.forceMkdir(logsDir);
@@ -125,6 +130,12 @@ public class DiagnosisInfoCLI extends AbstractApplication {
             }
         }
 
+        // export conf
+        if (includeConf) {
+            logger.info("Start to extract kylin conf files.");
+            FileUtils.copyDirectoryToDirectory(new File(getConfFolder()), new File(exportDest));
+        }
+
         // compress to zip package
         if (compress) {
             File tempZipFile = File.createTempFile("diagnosis_", ".zip");
@@ -138,5 +149,17 @@ public class DiagnosisInfoCLI extends AbstractApplication {
 
     public String getExportDest() {
         return exportDest;
+    }
+
+    private String getConfFolder() {
+        String path = System.getProperty(KylinConfig.KYLIN_CONF);
+        if (StringUtils.isNotEmpty(path)) {
+            return path;
+        }
+        path = KylinConfig.getKylinHome();
+        if (StringUtils.isNotEmpty(path)) {
+            return path + File.separator + "conf";
+        }
+        return null;
     }
 }
