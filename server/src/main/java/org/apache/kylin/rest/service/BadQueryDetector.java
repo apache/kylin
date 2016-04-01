@@ -134,8 +134,6 @@ public class BadQueryDetector extends Thread {
                 if (!cacheQueue.contains(sqlPair)) {
                     badQueryManager.addEntryToProject(sql, adj, startTime, runningSec, serverHostname, t.getName(), project);
                     cacheQueue.add(sqlPair);
-                    logger.info(Long.toString(System.currentTimeMillis() - cacheQueue.first().getFirst()));
-                    logger.info(Long.toString(cachingSeconds * 1000));
                     while (!cacheQueue.isEmpty() && (System.currentTimeMillis() - cacheQueue.first().getFirst() > cachingSeconds * 1000 || cacheQueue.size() > kylinConfig.getBadQueryHistoryNum() * 3)) {
                         cacheQueue.pollFirst();
                         logger.info("Poll first");
