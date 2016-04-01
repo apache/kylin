@@ -44,6 +44,7 @@ import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -98,6 +99,7 @@ public class CubeMetaExtractor extends AbstractApplication {
     private CubeDescManager cubeDescManager;
     private ExecutableDao executableDao;
     private RealizationRegistry realizationRegistry;
+    private BadQueryHistoryManager badQueryHistoryManager;
 
     boolean includeSegments;
     boolean includeJobs;
@@ -158,17 +160,20 @@ public class CubeMetaExtractor extends AbstractApplication {
         kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
         executableDao = ExecutableDao.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
+        badQueryHistoryManager = BadQueryHistoryManager.getInstance(kylinConfig);
 
         if (optionsHelper.hasOption(OPTION_PROJECT)) {
-            ProjectInstance projectInstance = projectManager.getProject(optionsHelper.getOptionValue(OPTION_PROJECT));
+            String projectName = optionsHelper.getOptionValue(OPTION_PROJECT);
+            ProjectInstance projectInstance = projectManager.getProject(projectName);
             if (projectInstance == null) {
-                throw new IllegalArgumentException("Project " + optionsHelper.getOptionValue(OPTION_PROJECT) + " does not exist");
+                throw new IllegalArgumentException("Project " + projectName + " does not exist");
             }
-            addRequired(ProjectInstance.concatResourcePath(projectInstance.getName()));
+            addRequired(projectInstance.getResourcePath());
             List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
             for (RealizationEntry realizationEntry : realizationEntries) {
                 retrieveResourcePath(getRealization(realizationEntry));
             }
+            addOptional(badQueryHistoryManager.getBadQueriesForProject(projectName).getResourcePath());
         } else if (optionsHelper.hasOption(OPTION_CUBE)) {
             String cubeName = optionsHelper.getOptionValue(OPTION_CUBE);
             IRealization realization;

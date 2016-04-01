@@ -63,7 +63,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
     public void testAddEntryToProject() throws IOException {
         KylinConfig kylinConfig = getTestConfig();
         BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
-        BadQueryHistory history = manager.addEntryToProject("sql", "adj", 1459362239992L, 100, "server", "t-0", "default");
+        BadQueryHistory history = manager.addEntryToProject("sql", 1459362239992L, "adj", 100, "server", "t-0", "default");
         NavigableSet<BadQueryEntry> entries = history.getEntries();
         assertEquals(3, entries.size());
 
@@ -77,9 +77,26 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         assertEquals("t-0", newEntry.getThread());
 
         for (int i = 0; i < kylinConfig.getBadQueryHistoryNum(); i++) {
-            history = manager.addEntryToProject("sql", "adj", 1459362239993L + i, 100 + i, "server", "t-0", "default");
+            history = manager.addEntryToProject("sql", 1459362239993L + i, "adj", 100 + i, "server", "t-0", "default");
         }
         assertEquals(kylinConfig.getBadQueryHistoryNum(), history.getEntries().size());
+    }
+
+    @Test
+    public void testUpdateEntryToProject() throws IOException {
+        KylinConfig kylinConfig = getTestConfig();
+        BadQueryHistoryManager manager = BadQueryHistoryManager.getInstance(kylinConfig);
+
+        manager.addEntryToProject("sql", 1459362239000L, "adj", 100, "server", "t-0", "default");
+        BadQueryHistory history = manager.updateEntryToProject("sql", 1459362239000L, "adj2", 120, "server2", "t-1", "default");
+
+        NavigableSet<BadQueryEntry> entries = history.getEntries();
+        BadQueryEntry newEntry = entries.floor(new BadQueryEntry("sql", "adj2", 1459362239000L, 120, "server2", "t-1"));
+        System.out.println(newEntry);
+        assertEquals("adj2", newEntry.getAdj());
+        assertEquals("server2", newEntry.getServer());
+        assertEquals("t-1", newEntry.getThread());
+        assertEquals(120, newEntry.getRunningSec());
     }
 
 }

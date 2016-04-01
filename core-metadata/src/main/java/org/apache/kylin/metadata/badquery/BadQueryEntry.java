@@ -103,11 +103,35 @@ public class BadQueryEntry extends RootPersistentEntity implements Comparable<Ba
 
     @Override
     public int compareTo(BadQueryEntry obj) {
-        return this.startTime >= obj.startTime ? 1 : -1;
+        if (this.startTime == obj.startTime) {
+            return 0;
+        } else if (this.startTime > obj.startTime) {
+            return 1;
+        } else {
+            return -1;
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        BadQueryEntry entry = (BadQueryEntry) o;
+
+        if (!sql.equals(entry.sql))
+            return false;
+
+        if (startTime != entry.startTime)
+            return false;
+
+        return true;
     }
 
     @Override
     public String toString() {
-        return "BadQueryEntry [ adj=" + adj + ", server=" + server + ", startTime=" + DateFormat.formatToTimeStr(startTime) + "]";
+        return "BadQueryEntry [ adj=" + adj + ", server=" + server + ", startTime=" + DateFormat.formatToTimeStr(startTime) + " ]";
     }
 }

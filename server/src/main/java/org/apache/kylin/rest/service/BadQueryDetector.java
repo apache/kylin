@@ -24,6 +24,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class BadQueryDetector extends Thread {
 
@@ -73,7 +75,9 @@ public class BadQueryDetector extends Thread {
 
     private void initNotifiers() {
         this.notifiers.add(new LoggerNotifier());
-        this.notifiers.add(new PersistenceNotifier());
+        if (kylinConfig.getBadQueryPersistentEnabled()) {
+            this.notifiers.add(new PersistenceNotifier());
+        }
     }
 
     public void registerNotifier(Notifier notifier) {
@@ -116,7 +120,6 @@ public class BadQueryDetector extends Thread {
                 }
             }
         });
-
         public PersistenceNotifier() {
             try {
                 serverHostname = InetAddress.getLocalHost().getHostName();
@@ -132,11 +135,13 @@ public class BadQueryDetector extends Thread {
                 long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 30;
                 Pair<Long, String> sqlPair = new Pair<>(startTime, sql);
                 if (!cacheQueue.contains(sqlPair)) {
-                    badQueryManager.addEntryToProject(sql, adj, startTime, runningSec, serverHostname, t.getName(), project);
+                    badQueryManager.addEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), project);
                     cacheQueue.add(sqlPair);
                     while (!cacheQueue.isEmpty() && (System.currentTimeMillis() - cacheQueue.first().getFirst() > cachingSeconds * 1000 || cacheQueue.size() > kylinConfig.getBadQueryHistoryNum() * 3)) {
                         cacheQueue.pollFirst();
                     }
+                } else {
+                    badQueryManager.updateEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), project);
                 }
             } catch (IOException e) {
                 logger.error("Error in bad query persistence.", e);
