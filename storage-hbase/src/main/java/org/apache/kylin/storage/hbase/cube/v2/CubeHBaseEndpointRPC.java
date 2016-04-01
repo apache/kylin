@@ -237,6 +237,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         return split;
     }
 
+    @SuppressWarnings("unchecked")
     private List<Pair<byte[], byte[]>> getEPKeyRanges(short baseShard, short shardNum, int totalShards) {
         if (baseShard + shardNum <= totalShards) {
             //endpoint end key is inclusive, so no need to append 0 or anything

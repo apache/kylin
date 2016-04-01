@@ -251,12 +251,10 @@ public class CubeSegmentScanner implements IGTScanner {
                         return info.getCodeSystem().getDimEnc(col.getColumnDesc().getZeroBasedIndex());
                     }
                 });
-                rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
+                rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info); // for local debug
             } else {
-                rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info);//default behavior
+                rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info); // default behavior
             }
-            //change previous line to CubeHBaseRPC rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info);
-            //to debug locally
 
             try {
                 if (scanRequests.size() == 0) {
