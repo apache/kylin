@@ -412,8 +412,8 @@ abstract public class KylinConfigBase implements Serializable {
         setProperty("kylin.hbase.hfile.size.gb", String.valueOf(size));
     }
 
-    public int getHBaseHFileSizeGB() {
-        return Integer.parseInt(getOptional("kylin.hbase.hfile.size.gb", "5"));
+    public float getHBaseHFileSizeGB() {
+        return Float.parseFloat(getOptional("kylin.hbase.hfile.size.gb", "5.0"));
     }
 
     public int getScanThreshold() {
@@ -508,16 +508,12 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.dict.growing.enabled", "false"));
     }
 
-    public float getKylinHBaseRegionCutSmall() {
-        return Float.valueOf(getOptional("kylin.hbase.region.cut.small", "10"));
-    }
-
-    public float getKylinHBaseRegionCutMedium() {
-        return Float.valueOf(getOptional("kylin.hbase.region.cut.medium", "20"));
-    }
-
-    public float getKylinHBaseRegionCutLarge() {
-        return Float.valueOf(getOptional("kylin.hbase.region.cut.large", "100"));
+    /**
+     * HBase region cut size, in GB
+     * @return
+     */
+    public float getKylinHBaseRegionCut() {
+        return Float.valueOf(getOptional("kylin.hbase.region.cut", "1.0"));
     }
 
     public int getHBaseScanMaxResultSize() {

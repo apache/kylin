@@ -25,7 +25,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.storage.hbase.steps.CreateHTableJob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +59,7 @@ public class CreateHTableTest extends LocalFileMetadataTestCase {
 
         String input = "src/test/resources/partition_list/part-r-00000";
 
-        byte[][] splits = c.getSplits(conf, new Path(input));
+        byte[][] splits = c.getRegionSplits(conf, new Path(input));
 
         assertEquals(497, splits.length);
         assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 0, 15, -1, 11, 51, -45, 2 }, splits[0]);

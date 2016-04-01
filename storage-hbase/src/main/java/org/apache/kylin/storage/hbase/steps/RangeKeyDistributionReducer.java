@@ -116,21 +116,21 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
         System.out.println(hfilePerRegion + " hfile per region");
 
         Path hfilePartitionFile = new Path(output + "/part-r-00000_hfile");
-        try (SequenceFile.Writer hfilePartitionWriter = new SequenceFile.Writer(
+        SequenceFile.Writer hfilePartitionWriter = new SequenceFile.Writer(
                 hfilePartitionFile.getFileSystem(context.getConfiguration()),
-                context.getConfiguration(), hfilePartitionFile, ImmutableBytesWritable.class, NullWritable.class)) {
-            int hfileCountInOneRegion = 0;
-            for (int i = hfileSizeGB; i < gbPoints.size(); i += hfileSizeGB) {
-                hfilePartitionWriter.append(new ImmutableBytesWritable(gbPoints.get(i).getBytes()), NullWritable.get());
-                if (++hfileCountInOneRegion >= hfilePerRegion) {
-                    Text key = gbPoints.get(i);
-                    outputValue.set(i);
-                    System.out.println(StringUtils.byteToHexString(key.getBytes()) + "\t" + outputValue.get());
-                    context.write(key, outputValue);
+                context.getConfiguration(), hfilePartitionFile, ImmutableBytesWritable.class, NullWritable.class);
+        int hfileCountInOneRegion = 0;
+        for (int i = hfileSizeGB; i < gbPoints.size(); i += hfileSizeGB) {
+            hfilePartitionWriter.append(new ImmutableBytesWritable(gbPoints.get(i).getBytes()), NullWritable.get());
+            if (++hfileCountInOneRegion >= hfilePerRegion) {
+                Text key = gbPoints.get(i);
+                outputValue.set(i);
+                System.out.println(StringUtils.byteToHexString(key.getBytes()) + "\t" + outputValue.get());
+                context.write(key, outputValue);
 
-                    hfileCountInOneRegion = 0;
-                }
+                hfileCountInOneRegion = 0;
             }
         }
+        hfilePartitionWriter.close();
     }
 }

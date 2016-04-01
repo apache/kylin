@@ -29,23 +29,7 @@ public class RegionSize {
     protected static final Logger logger = LoggerFactory.getLogger(CreateHTableJob.class);
 
     public static float getReionSize(KylinConfig config, CubeDesc cubeDesc) {
-        if (cubeDesc.getRegionSize() != 0) { 
-            logger.info("Region size specified in Cube desc will be used");
-            return cubeDesc.getRegionSize();
-        } else {
-            logger.info("Region size specified in Model desc will be used");
-            
-            switch (cubeDesc.getModel().getCapacity().toString()) {
-            case "SMALL":
-                return config.getKylinHBaseRegionCutSmall();
-            case "MEDIUM":
-                return config.getKylinHBaseRegionCutMedium();
-            case "LARGE":
-                return config.getKylinHBaseRegionCutLarge();
-            default:
-                throw new IllegalArgumentException("Capacity not recognized: " + cubeDesc.getModel().getCapacity().toString());
-            }
-        }
+        return cubeDesc.getConfig().getKylinHBaseRegionCut();
     }
 
 }

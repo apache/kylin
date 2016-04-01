@@ -36,6 +36,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,8 +96,14 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
             KylinConfig config = cube.getConfig();
-            int hfileSizeGB = config.getHBaseHFileSizeGB();
-            float regionSplitSize = RegionSize.getReionSize(config,cube.getDescriptor());
+            float hfileSizeGB = config.getHBaseHFileSizeGB();
+            float regionSplitSize = config.getKylinHBaseRegionCut();
+
+            int compactionThreshold = Integer.valueOf(HBaseConnection.getCurrentHBaseConfiguration().get("hbase.hstore.compactionThreshold", "3"));
+            if (hfileSizeGB > 0 && hfileSizeGB * compactionThreshold < regionSplitSize) {
+                hfileSizeGB = regionSplitSize / compactionThreshold;
+                logger.info("Adjust hfile size' to " + hfileSizeGB);
+            }
             int maxRegionCount = config.getHBaseRegionCountMax();
             int minRegionCount = config.getHBaseRegionCountMin();
             job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
