@@ -43,6 +43,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSerializer;
@@ -120,6 +121,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             this.expectedSize = expectedSize;
             this.queue = new ArrayBlockingQueue<byte[]>(expectedSize);
             this.timeout = HadoopUtil.getCurrentConfiguration().getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
+            this.timeout *= KylinConfig.getInstanceFromEnv().getCubeVisitTimeoutTimes();
             logger.info("Timeout for ExpectedSizeIterator is " + this.timeout);
         }
 

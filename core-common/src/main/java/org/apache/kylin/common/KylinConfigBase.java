@@ -399,13 +399,13 @@ abstract public class KylinConfigBase implements Serializable {
         String cut;
         switch (capacity) {
         case "SMALL":
-            cut = getOptional("kylin.hbase.region.cut.small", "5");
+            cut = getOptional("kylin.hbase.region.cut.small", "10");
             break;
         case "MEDIUM":
-            cut = getOptional("kylin.hbase.region.cut.medium", "10");
+            cut = getOptional("kylin.hbase.region.cut.medium", "20");
             break;
         case "LARGE":
-            cut = getOptional("kylin.hbase.region.cut.large", "50");
+            cut = getOptional("kylin.hbase.region.cut.large", "100");
             break;
         default:
             throw new IllegalArgumentException("Capacity not recognized: " + capacity);
@@ -433,6 +433,10 @@ abstract public class KylinConfigBase implements Serializable {
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
+    
+    public int getCubeVisitTimeoutTimes() {
+        return Integer.parseInt(getOptional("kylin.query.cube.visit.timeout.times", "1"));
+    }
 
     public int getBadQueryStackTraceDepth() {
         return Integer.parseInt(getOptional("kylin.query.badquery.stacktrace.depth", "10"));
@@ -443,11 +447,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getBadQueryDefaultAlertingSeconds() {
-        return Integer.parseInt(getOptional("kylin.query.badquery.alerting.seconds", "90"));
-    }
-
-    public int getBadQueryDefaultDetectIntervalSeconds() {
-        return Integer.parseInt(getOptional("kylin.query.badquery.detect.interval.seconds", "60"));
+        return Integer.parseInt(getOptional("kylin.query.badquery.default.alerting.seconds", "90"));
     }
 
     public int getCachedDictMaxEntrySize() {
