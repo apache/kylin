@@ -185,6 +185,15 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             innerScanner = region.getScanner(scan);
             CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
 
+            if (behavior.ordinal() < CoprocessorBehavior.SCAN.ordinal()) {
+                List<Cell> temp = Lists.newArrayList();
+                int counter = 0;
+                while (innerScanner.nextRaw(temp)) {
+                    counter++;
+                }
+                sb.append("Scanned " + counter + " rows in " + (System.currentTimeMillis() - serviceStartTime) + ",");
+            }
+
             InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
             if (behavior.ordinal() < CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
                 scanReq.setAggrCacheGB(0); // disable mem check if so told
