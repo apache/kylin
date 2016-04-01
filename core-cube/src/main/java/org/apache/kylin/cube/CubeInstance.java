@@ -343,7 +343,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     private int getCost(SQLDigest digest) {
         int calculatedCost = cost;
 
-        calculatedCost += getAllDimensions().size() * COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
+        //the number of dimensions is not as accurate as number of row key cols
+        calculatedCost += getRowKeyColumnCount() * COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
 
         for (LookupDesc lookupDesc : this.getDescriptor().getModel().getLookups()) {
             // more tables, more cost
@@ -352,7 +353,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
                 calculatedCost += COST_WEIGHT_INNER_JOIN;
             }
         }
-        
+
         return calculatedCost;
     }
 
@@ -396,6 +397,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     @Override
     public String getModelName() {
         return this.getDescriptor().getModelName();
+    }
+
+    public int getRowKeyColumnCount() {
+        return getDescriptor().getRowkey().getRowKeyColumns().length;
     }
 
     @Override

@@ -66,11 +66,11 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     private volatile Properties properties = new Properties();
-    
+
     public KylinConfigBase() {
         this(new Properties());
     }
-    
+
     public KylinConfigBase(Properties props) {
         this.properties = props;
     }
@@ -433,7 +433,7 @@ abstract public class KylinConfigBase implements Serializable {
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
-    
+
     public int getCubeVisitTimeoutTimes() {
         return Integer.parseInt(getOptional("kylin.query.cube.visit.timeout.times", "1"));
     }
@@ -447,7 +447,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getBadQueryDefaultAlertingSeconds() {
-        return Integer.parseInt(getOptional("kylin.query.badquery.default.alerting.seconds", "90"));
+        return Integer.parseInt(getOptional("kylin.query.badquery.alerting.seconds", "90"));
+    }
+
+    public int getBadQueryDefaultDetectIntervalSeconds() {
+        return Integer.parseInt(getOptional("kylin.query.badquery.default.alerting.seconds", "60"));
     }
 
     public int getCachedDictMaxEntrySize() {
@@ -500,7 +504,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     //don't change this per https://issues.apache.org/jira/browse/KYLIN-1545
     public int getHBaseScanMaxResultSize() {
-        return Integer.parseInt(this.getOptional("kylin.hbase.scan.max_result_size", "-1")); 
+        return Integer.parseInt(this.getOptional("kylin.hbase.scan.max_result_size", "-1"));
     }
 
     public int getCubingInMemSamplingPercent() {
@@ -532,7 +536,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getHbaseDefaultCompressionCodec() {
         return getOptional("kylin.hbase.default.compression.codec", "");
     }
-    
+
     public String getHbaseDefaultEncoding() {
         return getOptional("kylin.hbase.default.encoding", "FAST_DIFF");
     }

@@ -24,7 +24,6 @@ import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.storage.hybrid.HybridInstance;
 
 import com.google.common.collect.Maps;
 
@@ -34,10 +33,10 @@ public class Candidate implements Comparable<Candidate> {
 
     static {
         PRIORITIES.put(RealizationType.HYBRID, 0);
-        PRIORITIES.put(RealizationType.CUBE, 0);
-        PRIORITIES.put(RealizationType.INVERTED_INDEX, 1);
+        PRIORITIES.put(RealizationType.CUBE, 1);
+        PRIORITIES.put(RealizationType.INVERTED_INDEX, 2);
     }
-    
+
     /** for test only */
     public static void setPriorities(Map<RealizationType, Integer> priorities) {
         PRIORITIES.clear();
@@ -56,11 +55,11 @@ public class Candidate implements Comparable<Candidate> {
         this.sqlDigest = sqlDigest;
         this.priority = PRIORITIES.get(realization.getType());
     }
-    
+
     public IRealization getRealization() {
         return realization;
     }
-    
+
     public SQLDigest getSqlDigest() {
         return sqlDigest;
     }
@@ -88,13 +87,8 @@ public class Candidate implements Comparable<Candidate> {
         if (comp != 0) {
             return comp;
         }
-
-        if (this.realization instanceof HybridInstance)
-            return -1;
-        else if (o.realization instanceof HybridInstance)
-            return 1;
-        else
-            return 0;
+        
+        return 0;
     }
 
 }

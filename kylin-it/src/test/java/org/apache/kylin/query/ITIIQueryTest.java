@@ -43,8 +43,8 @@ public class ITIIQueryTest extends ITKylinQueryTest {
         // give II higher priority than other realizations
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.INVERTED_INDEX, 0);
-        priorities.put(RealizationType.CUBE, 1);
         priorities.put(RealizationType.HYBRID, 1);
+        priorities.put(RealizationType.CUBE, 2);
         Candidate.setPriorities(priorities);
 
     }
