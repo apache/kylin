@@ -18,6 +18,12 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.rest.request.ExternalFilterRequest;
@@ -26,13 +32,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import com.google.common.collect.Lists;
 
 /**
  * @author jiazhong
@@ -45,8 +52,6 @@ public class ExternalFilterController extends BasicController {
     @Autowired
     private ExtFilterService extFilterService;
 
-
-
     @RequestMapping(value = "/saveExtFilter", method = { RequestMethod.POST })
     @ResponseBody
     public Map<String, String> saveExternalFilter(@RequestBody ExternalFilterRequest request) throws IOException {
@@ -55,8 +60,8 @@ public class ExternalFilterController extends BasicController {
         ExternalFilterDesc desc = JsonUtil.readValue(request.getExtFilter(), ExternalFilterDesc.class);
         desc.setUuid(UUID.randomUUID().toString());
         extFilterService.saveExternalFilter(desc);
-        extFilterService.syncExtFilterToProject(new String[]{desc.getName()},filterProject);
-        result.put("success","true");
+        extFilterService.syncExtFilterToProject(new String[] { desc.getName() }, filterProject);
+        result.put("success", "true");
         return result;
     }
 
@@ -66,7 +71,7 @@ public class ExternalFilterController extends BasicController {
         Map<String, String> result = new HashMap();
         ExternalFilterDesc desc = JsonUtil.readValue(request.getExtFilter(), ExternalFilterDesc.class);
         extFilterService.updateExternalFilter(desc);
-        result.put("success","true");
+        result.put("success", "true");
         return result;
     }
 
@@ -74,12 +79,11 @@ public class ExternalFilterController extends BasicController {
     @ResponseBody
     public Map<String, String> unLoadHiveTables(@PathVariable String filter, @PathVariable String project) throws IOException {
         Map<String, String> result = new HashMap<String, String>();
-        extFilterService.removeExtFilterFromProject(filter,project);
+        extFilterService.removeExtFilterFromProject(filter, project);
         extFilterService.removeExternalFilter(filter);
         result.put("success", "true");
         return result;
     }
-
 
     /**
      * Get available table list of the input database
@@ -90,12 +94,9 @@ public class ExternalFilterController extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<ExternalFilterDesc> getExternalFilters(@RequestParam(value = "project", required = true) String project) throws IOException {
-        List<ExternalFilterDesc> filterDescs;
-        filterDescs = extFilterService.listProjectFilters(project);
+        List<ExternalFilterDesc> filterDescs = Lists.newArrayList();
+        filterDescs.addAll(extFilterService.getProjectManager().listExternalFilterDescs(project).values());
         return filterDescs;
     }
-
-
-
 
 }

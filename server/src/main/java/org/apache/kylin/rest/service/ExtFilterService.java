@@ -33,11 +33,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Stateless & lightweight service facade of cube management functions.
- *
- * @author jiazhong
- */
 @Component("extFilterService")
 public class ExtFilterService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(ExtFilterService.class);
@@ -46,22 +41,6 @@ public class ExtFilterService extends BasicService {
     @Autowired
     private AccessService accessService;
 
-
-
-    public List<ExternalFilterDesc> listProjectFilters(String project) throws IOException {
-        List<ExternalFilterDesc> filterDescs = Lists.newArrayList();
-        if(project == null){
-            return filterDescs;
-        }
-        ProjectInstance projectInstance = getProjectManager().getProject(project);
-        for(String filter:projectInstance.getExtFilters()){
-            ExternalFilterDesc filterDesc = getMetadataManager().getExtFilterDesc(filter);
-            if(filterDesc!=null){
-                filterDescs.add(filterDesc);
-            }
-        }
-        return filterDescs;
-    }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void saveExternalFilter(ExternalFilterDesc desc) throws IOException {

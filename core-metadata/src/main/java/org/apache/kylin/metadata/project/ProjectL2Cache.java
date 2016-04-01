@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -57,6 +58,16 @@ class ProjectL2Cache {
 
     public void clear() {
         projectCaches.clear();
+    }
+
+    public ExternalFilterDesc getExternalFilterDesc(String project, String extFilterName) {
+        ProjectCache prjCache = getCache(project);
+        return prjCache.extFilters.get(extFilterName);
+    }
+
+    public Map<String, ExternalFilterDesc> listExternalFilterDesc(String project) {
+        ProjectCache prjCache = getCache(project);
+        return Collections.unmodifiableMap(prjCache.extFilters);
     }
 
     public List<TableDesc> listDefinedTables(String project) {
@@ -159,7 +170,7 @@ class ProjectL2Cache {
 
     private ProjectCache loadCache(String project) {
         logger.info("Loading L2 project cache for " + project);
-        ProjectCache result = new ProjectCache(project);
+        ProjectCache projectCache = new ProjectCache(project);
 
         ProjectInstance pi = mgr.getProject(project);
 
@@ -171,9 +182,18 @@ class ProjectL2Cache {
         for (String tableName : pi.getTables()) {
             TableDesc tableDesc = metaMgr.getTableDesc(tableName);
             if (tableDesc != null) {
-                result.tables.put(tableDesc.getIdentity(), new TableCache(tableDesc));
+                projectCache.tables.put(tableDesc.getIdentity(), new TableCache(tableDesc));
             } else {
                 logger.warn("Table '" + tableName + "' defined under project '" + project + "' is not found");
+            }
+        }
+
+        for (String extFilterName : pi.getExtFilters()) {
+            ExternalFilterDesc filterDesc = metaMgr.getExtFilterDesc(extFilterName);
+            if (filterDesc != null) {
+                projectCache.extFilters.put(extFilterName, filterDesc);
+            } else {
+                logger.warn("External Filter '" + extFilterName + "' defined under project '" + project + "' is not found");
             }
         }
 
@@ -181,20 +201,20 @@ class ProjectL2Cache {
         for (RealizationEntry entry : pi.getRealizationEntries()) {
             IRealization realization = registry.getRealization(entry.getType(), entry.getRealization());
             if (realization != null) {
-                result.realizations.add(realization);
+                projectCache.realizations.add(realization);
             } else {
                 logger.warn("Realization '" + entry + "' defined under project '" + project + "' is not found");
             }
         }
 
-        for (IRealization realization : result.realizations) {
-            if (sanityCheck(result, realization)) {
-                mapTableToRealization(result, realization);
-                markExposedTablesAndColumns(result, realization);
+        for (IRealization realization : projectCache.realizations) {
+            if (sanityCheck(projectCache, realization)) {
+                mapTableToRealization(projectCache, realization);
+                markExposedTablesAndColumns(projectCache, realization);
             }
         }
 
-        return result;
+        return projectCache;
     }
 
     // check all columns reported by realization does exists
@@ -257,6 +277,7 @@ class ProjectL2Cache {
         private Map<String, TableCache> tables = Maps.newHashMap();
         private Set<TableDesc> exposedTables = Sets.newHashSet();
         private Set<IRealization> realizations = Sets.newHashSet();
+        private Map<String, ExternalFilterDesc> extFilters = Maps.newHashMap();
 
         ProjectCache(String project) {
             this.project = project;

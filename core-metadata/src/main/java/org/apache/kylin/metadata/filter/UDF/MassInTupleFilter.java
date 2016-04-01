@@ -32,6 +32,7 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

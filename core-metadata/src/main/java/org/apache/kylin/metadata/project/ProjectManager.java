@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.project;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -350,6 +351,14 @@ public class ProjectManager {
         }
 
         return projects;
+    }
+
+    public ExternalFilterDesc getExternalFilterDesc(String project, String extFilter) {
+        return l2Cache.getExternalFilterDesc(project, extFilter);
+    }
+
+    public Map<String, ExternalFilterDesc> listExternalFilterDescs(String project) {
+        return l2Cache.listExternalFilterDesc(project);
     }
 
     public List<TableDesc> listDefinedTables(String project) throws IOException {
