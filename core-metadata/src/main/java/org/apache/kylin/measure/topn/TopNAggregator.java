@@ -18,12 +18,8 @@
 
 package org.apache.kylin.measure.topn;
 
-import java.util.Map;
-
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.measure.MeasureAggregator;
-
-import com.google.common.collect.Maps;
 
 /**
  * 
@@ -33,7 +29,6 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
 
     int capacity = 0;
     TopNCounter<ByteArray> sum = null;
-    Map<ByteArray, Double> sanityCheckMap;
 
     @Override
     public void reset() {
@@ -44,16 +39,14 @@ public class TopNAggregator extends MeasureAggregator<TopNCounter<ByteArray>> {
     public void aggregate(TopNCounter<ByteArray> value) {
         if (sum == null) {
             capacity = value.getCapacity();
-            sum = new TopNCounter<>(capacity);
-            sanityCheckMap = Maps.newHashMap();
+            sum = new TopNCounter<>(capacity * 10);
         }
         sum.merge(value);
     }
 
     @Override
     public TopNCounter<ByteArray> getState() {
-        
-        //sum.retain(capacity);
+        sum.retain(capacity);
         return sum;
     }
 
