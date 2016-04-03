@@ -19,9 +19,7 @@
 package org.apache.kylin.rest.service;
 
 
-import com.google.common.collect.Lists;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.slf4j.Logger;

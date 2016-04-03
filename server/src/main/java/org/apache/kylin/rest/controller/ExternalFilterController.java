@@ -77,7 +77,7 @@ public class ExternalFilterController extends BasicController {
 
     @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE })
     @ResponseBody
-    public Map<String, String> unLoadHiveTables(@PathVariable String filter, @PathVariable String project) throws IOException {
+    public Map<String, String> removeFilter(@PathVariable String filter, @PathVariable String project) throws IOException {
         Map<String, String> result = new HashMap<String, String>();
         extFilterService.removeExtFilterFromProject(filter, project);
         extFilterService.removeExternalFilter(filter);
