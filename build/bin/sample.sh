@@ -18,11 +18,22 @@
 #
 
 dir=$(dirname ${0})
+
 source ${dir}/check-env.sh
 job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
+
 echo "Going to create sample tables in hive..."
 cd ${KYLIN_HOME}/sample_cube/data
-hive -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+
+hive_client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.client`
+if [ "${hive_client_mode}" == "beeline" ]
+then
+    beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.beeline.params`
+    beeline ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+else
+    hive -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+fi
+
 echo "Sample hive tables are created successfully; Going to create sample cube..."
 cd ${KYLIN_HOME}
 hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
