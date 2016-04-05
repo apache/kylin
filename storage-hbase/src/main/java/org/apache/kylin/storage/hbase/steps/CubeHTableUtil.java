@@ -70,6 +70,8 @@ public class CubeHTableUtil {
         //HTableUser is the cube owner, which will be the "user"
         tableDesc.setValue(IRealizationConstants.HTableUser, cubeInstance.getOwner());
 
+        tableDesc.setValue(IRealizationConstants.HTableSegmentTag, cubeSegment.toString());
+
         Configuration conf = HBaseConfiguration.create();
         HBaseAdmin admin = new HBaseAdmin(conf);
 

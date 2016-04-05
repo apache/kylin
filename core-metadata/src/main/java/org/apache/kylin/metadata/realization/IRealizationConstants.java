@@ -38,4 +38,6 @@ public class IRealizationConstants {
 
     public final static String HTableCreationTime = "CREATION_TIME";
 
+    public final static String HTableSegmentTag = "SEGMENT";
+
 }
