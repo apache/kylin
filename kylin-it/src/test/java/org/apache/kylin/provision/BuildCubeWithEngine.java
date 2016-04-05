@@ -59,6 +59,7 @@ import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
@@ -357,7 +358,10 @@ public class BuildCubeWithEngine {
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
-        checkHFilesInHBase(segment);
+        if (segment.getCubeDesc().getEngineType() == IEngineAware.ID_MR_V1
+                || segment.getCubeDesc().getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
+            checkHFilesInHBase(segment);
+        }
         return job.getId();
     }
 
