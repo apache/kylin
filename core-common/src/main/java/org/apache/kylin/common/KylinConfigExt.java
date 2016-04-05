@@ -30,14 +30,28 @@ public class KylinConfigExt extends KylinConfig {
     final private Map<String, String> overrides;
     final KylinConfig base;
 
-    public KylinConfigExt(KylinConfig base, Map<String, String> overrides) {
+    public static KylinConfigExt createInstance(KylinConfig kylinConfig, Map<String, String> overrides) {
+        if (kylinConfig instanceof KylinConfigExt) {
+            return new KylinConfigExt((KylinConfigExt) kylinConfig, overrides);
+        } else {
+            return new KylinConfigExt(kylinConfig, overrides);
+        }
+    }
+
+    private KylinConfigExt(KylinConfig base, Map<String, String> overrides) {
         super(base.getAllProperties());
-        if (base.getClass() != KylinConfig.class)
+        if (base.getClass() != KylinConfig.class) {
             throw new IllegalArgumentException();
+        }
         this.base = base;
         this.overrides = overrides;
     }
-    
+
+    private KylinConfigExt(KylinConfigExt ext, Map<String, String> overrides) {
+        this.base = ext.base;
+        this.overrides = overrides;
+    }
+
     protected String getOptional(String prop, String dft) {
         String value = overrides.get(prop);
         if (value != null)
@@ -51,5 +65,5 @@ public class KylinConfigExt extends KylinConfig {
         result.putAll(overrides);
         return result;
     }
-    
+
 }

@@ -171,7 +171,6 @@ public class CubeDesc extends RootPersistentEntity {
         return getRowkey().getShardByColumns();
     }
 
-
     /**
      * Error messages during resolving json metadata
      */
@@ -402,7 +401,7 @@ public class CubeDesc extends RootPersistentEntity {
     public void setStatusNeedNotify(List<String> statusNeedNotify) {
         this.statusNeedNotify = statusNeedNotify;
     }
-    
+
     public LinkedHashMap<String, String> getOverrideKylinProps() {
         return overrideKylinProps;
     }
@@ -516,7 +515,7 @@ public class CubeDesc extends RootPersistentEntity {
 
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.errors.clear();
-        this.config = new KylinConfigExt(config, overrideKylinProps);
+        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
 
         if (this.modelName == null || this.modelName.length() == 0) {
             this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
@@ -590,7 +589,6 @@ public class CubeDesc extends RootPersistentEntity {
             if (jointDimsList.size() > 0) {
                 combination = combination * (1 << jointDimsList.size());
             }
-
 
             if (!includeDims.containsAll(mandatoryDims) || !includeDims.containsAll(hierarchyDims) || !includeDims.containsAll(jointDims)) {
                 logger.error("Aggregation group " + index + " Include dims not containing all the used dims");
