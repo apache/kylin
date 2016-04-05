@@ -607,6 +607,7 @@ public class CubeDesc extends RootPersistentEntity {
 
             if (combination > config.getCubeAggrGroupMaxCombination()) {
                 String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max.combination' to a bigger value.";
+                logger.error("Aggregation group " + index + " has " + combination + " combinations;");
                 logger.error(msg);
                 throw new IllegalStateException(msg);
             }
