@@ -379,8 +379,13 @@ abstract public class KylinConfigBase implements Serializable {
         return Double.parseDouble(getOptional("kylin.cube.algorithm.auto.threshold", "8"));
     }
 
+    @Deprecated
     public int getCubeAggrGroupMaxSize() {
         return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max.size", "12"));
+    }
+
+    public int getCubeAggrGroupMaxCombination() {
+        return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max.combination", "4096"));
     }
 
     public String[] getCubeDimensionCustomEncodingFactories() {

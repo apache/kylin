@@ -557,20 +557,20 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public void validate() {
-        int maxSize = config.getCubeAggrGroupMaxSize();
         int index = 0;
 
         for (AggregationGroup agg : getAggregationGroups()) {
             if (agg.getIncludes() == null) {
-                logger.error("Aggregation group " + index + " includes field not set");
+                logger.error("Aggregation group " + index + " 'includes' field not set");
                 throw new IllegalStateException("Aggregation group " + index + " includes field not set");
             }
 
             if (agg.getSelectRule() == null) {
-                logger.error("Aggregation group " + index + " includes field not set");
+                logger.error("Aggregation group " + index + " 'select_rule' field not set");
                 throw new IllegalStateException("Aggregation group " + index + " select rule field not set");
             }
 
+            int combination = 1;
             Set<String> includeDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(includeDims, agg.getIncludes());
 
@@ -580,10 +580,17 @@ public class CubeDesc extends RootPersistentEntity {
             ArrayList<Set<String>> hierarchyDimsList = Lists.newArrayList();
             Set<String> hierarchyDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(hierarchyDimsList, hierarchyDims, agg.getSelectRule().hierarchy_dims);
+            for (Set<String> hierarchy : hierarchyDimsList) {
+                combination = combination * (hierarchy.size() + 1);
+            }
 
             ArrayList<Set<String>> jointDimsList = Lists.newArrayList();
             Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(jointDimsList, jointDims, agg.getSelectRule().joint_dims);
+            if (jointDimsList.size() > 0) {
+                combination = combination * (1 << jointDimsList.size());
+            }
+
 
             if (!includeDims.containsAll(mandatoryDims) || !includeDims.containsAll(hierarchyDims) || !includeDims.containsAll(jointDims)) {
                 logger.error("Aggregation group " + index + " Include dims not containing all the used dims");
@@ -596,13 +603,12 @@ public class CubeDesc extends RootPersistentEntity {
             normalDims.removeAll(hierarchyDims);
             normalDims.removeAll(jointDims);
 
-            int normalDimSize = normalDims.size();
-            int hierarchyDimSize = hierarchyDimsList.size();
-            int jointDimSize = jointDimsList.size();
+            combination = combination * (1 << normalDims.size());
 
-            if (mandatoryDims.size() + normalDimSize + hierarchyDimSize + jointDimSize > maxSize) {
-                logger.error("Aggregation group " + index + " has too many dimensions");
-                throw new IllegalStateException("Aggregation group " + index + " has too many dimensions");
+            if (combination > config.getCubeAggrGroupMaxCombination()) {
+                String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max.combination' to a bigger value.";
+                logger.error(msg);
+                throw new IllegalStateException(msg);
             }
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
