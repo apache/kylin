@@ -174,6 +174,11 @@ public class CreateHTableJob extends AbstractHadoopJob {
         Collections.sort(allCuboids);
 
         int nRegion = Math.round((float) (totalSizeInM / (cut * 1024L)));
+        if (kylinConfig.isDevEnv()) {
+            // for regression test in sandbox
+            nRegion = Math.round((float) (totalSizeInM / cut));
+        }
+
         nRegion = Math.max(kylinConfig.getHBaseRegionCountMin(), nRegion);
         nRegion = Math.min(kylinConfig.getHBaseRegionCountMax(), nRegion);
 

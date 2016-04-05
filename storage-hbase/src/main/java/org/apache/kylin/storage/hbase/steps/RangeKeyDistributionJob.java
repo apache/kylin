@@ -114,11 +114,6 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             // The partition file for hfile is sequenece file consists of ImmutableBytesWritable and NullWritable
             TableMapReduceUtil.addDependencyJars(job.getConfiguration(), ImmutableBytesWritable.class, NullWritable.class);
 
-            // Passed the sandbox property to mapper, to simulate large dataset
-            if (System.getProperty("useSandbox") != null && System.getProperty("useSandbox").equals("true")) {
-                job.getConfiguration().setBoolean("useSandbox", true);
-            }
-            
             return waitForCompletion(job);
         } catch (Exception e) {
             printUsage(options);
