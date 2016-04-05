@@ -18,7 +18,9 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
 import org.apache.kylin.rest.constant.Constant;
@@ -36,8 +38,7 @@ public class DiagnosisService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String dumpDiagnosisInfo(String project) throws IOException {
-        String tempLocation = System.getProperty("java.io.tmpdir");
-        String[] args = { "-project", project, "-destDir", tempLocation, "-compress", "true" };
+        String[] args = { "-project", project, "-destDir", System.getProperty("java.io.tmpdir") + UUID.randomUUID(), "-compress", "true" };
         DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
         diagnosisInfoCli.execute(args);
         return diagnosisInfoCli.getExportDest();
