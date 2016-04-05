@@ -114,6 +114,10 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             // The partition file for hfile is sequenece file consists of ImmutableBytesWritable and NullWritable
             TableMapReduceUtil.addDependencyJars(job.getConfiguration(), ImmutableBytesWritable.class, NullWritable.class);
 
+            if (KylinConfig.getInstanceFromEnv().isDevEnv()) {
+                job.getConfiguration().setBoolean("isDevEnv", true);
+            }
+
             return waitForCompletion(job);
         } catch (Exception e) {
             printUsage(options);

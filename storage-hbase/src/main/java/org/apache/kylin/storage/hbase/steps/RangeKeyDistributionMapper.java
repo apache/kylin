@@ -22,9 +22,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.KylinMapper;
-import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 
 /**
  * @author ysong1
@@ -45,8 +43,7 @@ public class RangeKeyDistributionMapper extends KylinMapper<Text, Text, Text, Lo
     @Override
     protected void setup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
-        KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
-        if (config.isDevEnv()) {
+        if (context.getConfiguration().getBoolean("isDevEnv", false)) {
             scaleFactorForSandbox = 1024L;
         }
     }
