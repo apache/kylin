@@ -23,8 +23,8 @@
 
     <property>
         <name>dfs.block.size</name>
-        <value>32000000</value>
-        <description>Want more mappers for in-mem cubing, thus smaller the DFS block size</description>
+        <value>33554432</value>
+        <description>32MB, want more mappers for in-mem cubing, thus smaller the DFS block size</description>
     </property>
 
     <property>
