@@ -84,7 +84,7 @@ public class BadQueryDetector extends Thread {
         notifiers.add(notifier);
     }
 
-    private void notify(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
+    private void notify(String adj, float runningSec, long startTime, String project, String sql, Thread t) {
         for (Notifier notifier : notifiers) {
             try {
                 notifier.badQueryFound(adj, runningSec, startTime, project, sql, t);
@@ -95,12 +95,12 @@ public class BadQueryDetector extends Thread {
     }
 
     public interface Notifier {
-        void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t);
+        void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, Thread t);
     }
 
     private class LoggerNotifier implements Notifier {
         @Override
-        public void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
+        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, Thread t) {
             logger.info(adj + " query has been running " + runningSec + " seconds (project:" + project + ", thread: 0x" + Long.toHexString(t.getId()) + ") -- " + sql);
         }
     }
@@ -130,7 +130,7 @@ public class BadQueryDetector extends Thread {
         }
 
         @Override
-        public void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
+        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, Thread t) {
             try {
                 long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 30;
                 Pair<Long, String> sqlPair = new Pair<>(startTime, sql);
@@ -198,7 +198,7 @@ public class BadQueryDetector extends Thread {
 
         // report if query running long
         for (Entry e : entries) {
-            int runningSec = (int) ((now - e.startTime) / 1000);
+            float runningSec = (float) (now - e.startTime) / 1000;
             if (runningSec >= alertRunningSec) {
                 notify("Slow", runningSec, e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.thread);
                 dumpStackTrace(e.thread);

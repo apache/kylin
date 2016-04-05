@@ -96,7 +96,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         assertEquals("adj2", newEntry.getAdj());
         assertEquals("server2", newEntry.getServer());
         assertEquals("t-1", newEntry.getThread());
-        assertEquals(120, newEntry.getRunningSec());
+        assertEquals(120, (int)newEntry.getRunningSec());
     }
 
 }

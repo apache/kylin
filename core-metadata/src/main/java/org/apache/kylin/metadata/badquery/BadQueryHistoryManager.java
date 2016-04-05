@@ -116,11 +116,11 @@ public class BadQueryHistoryManager {
         return badQueryHistory;
     }
 
-    public BadQueryHistory addEntryToProject(String sql, long startTime, String adj, int runningSecs, String server, String threadName, String project) throws IOException {
+    public BadQueryHistory addEntryToProject(String sql, long startTime, String adj, float runningSecs, String server, String threadName, String project) throws IOException {
         return addEntryToProject(new BadQueryEntry(sql, adj, startTime, runningSecs, server, threadName), project);
     }
 
-    public BadQueryHistory updateEntryToProject(String sql, long startTime, String adj, int runningSecs, String server, String threadName, String project) throws IOException {
+    public BadQueryHistory updateEntryToProject(String sql, long startTime, String adj, float runningSecs, String server, String threadName, String project) throws IOException {
         return updateEntryToProject(new BadQueryEntry(sql, adj, startTime, runningSecs, server, threadName), project);
     }
 

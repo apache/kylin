@@ -18,7 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 

@@ -51,7 +51,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
         BadQueryDetector badQueryDetector = new BadQueryDetector(alertRunningSec * 1000, alertMB, alertRunningSec);
         badQueryDetector.registerNotifier(new BadQueryDetector.Notifier() {
             @Override
-            public void badQueryFound(String adj, int runningSec, long startTime, String project, String sql, Thread t) {
+            public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, Thread t) {
                 alerts.add(new String[] { adj, sql });
             }
         });
