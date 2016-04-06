@@ -24,6 +24,7 @@ import static org.apache.kylin.metadata.model.IEngineAware.ID_MR_V2;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -35,8 +36,8 @@ public class EngineFactory {
     private static ImplementationSwitch<IStreamingCubingEngine> streamingEngines;
     static {
         Map<Integer, String> impls = new HashMap<>();
-        impls.put(ID_MR_V1, "org.apache.kylin.engine.mr.MRBatchCubingEngine");
-        impls.put(ID_MR_V2, "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
+        impls.put(ID_MR_V1, KylinConfig.getInstanceFromEnv().getMRBatchEngineV1Class());
+        impls.put(ID_MR_V2, KylinConfig.getInstanceFromEnv().getMRBatchEngineV2Class());
         batchEngines = new ImplementationSwitch<IBatchCubingEngine>(impls, IBatchCubingEngine.class);
 
         impls.clear();

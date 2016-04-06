@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
@@ -56,7 +57,7 @@ import com.google.common.collect.Lists;
 /**
  */
 public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, Text, Text> {
-    protected static final Logger logger = LoggerFactory.getLogger(HiveToBaseCuboidMapper.class);
+    protected static final Logger logger = LoggerFactory.getLogger(BaseCuboidMapperBase.class);
     public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
     public static final byte[] ONE = Bytes.toBytes("1");
     protected String cubeName;
@@ -78,8 +79,8 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     protected AbstractRowKeyEncoder rowKeyEncoder;
     protected MeasureCodec measureCodec;
     private int errorRecordCounter;
-    private Text outputKey = new Text();
-    private Text outputValue = new Text();
+    protected Text outputKey = new Text();
+    protected Text outputValue = new Text();
     private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
     @Override
@@ -132,7 +133,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         }
     }
 
-    private boolean isNull(byte[] v) {
+    protected boolean isNull(byte[] v) {
         for (byte[] nullByte : nullBytes) {
             if (Bytes.equals(v, nullByte))
                 return true;
@@ -140,7 +141,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         return false;
     }
 
-    private byte[] buildKey(SplittedBytes[] splitBuffers) {
+    protected byte[] buildKey(SplittedBytes[] splitBuffers) {
         int[] rowKeyColumnIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
         for (int i = 0; i < baseCuboid.getColumns().size(); i++) {
             int index = rowKeyColumnIndexes[i];
@@ -205,6 +206,14 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         buildValue(bytesSplitter.getSplitBuffers());
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
         context.write(outputKey, outputValue);
+    }
+
+    protected byte[][] convertUTF8Bytes(String[] row) throws UnsupportedEncodingException {
+        byte[][] result = new byte[row.length][];
+        for (int i = 0; i < row.length; i++) {
+            result[i] = row[i] == null ? HIVE_NULL : row[i].getBytes("UTF-8");
+        }
+        return result;
     }
 
     protected void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {

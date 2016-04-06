@@ -631,4 +631,13 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.init.tasks");
     }
 
+    public String getMRBatchEngineV1Class() {
+        return getOptional("kylin.cube.mr.engine.v1.class", "org.apache.kylin.engine.mr.MRBatchCubingEngine");
+    }
+
+    public String getMRBatchEngineV2Class() {
+        return getOptional("kylin.cube.mr.engine.v2.class", "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
+    }
+
+
 }

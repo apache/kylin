@@ -59,6 +59,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         result.addTask(createFactDistinctColumnsStepWithStats(jobId));
         result.addTask(createBuildDictionaryStep(jobId));
         result.addTask(createSaveStatisticsStep(jobId));
+        addOtherStepBeforeCubing(result);
         outputSide.addStepPhase2_BuildDictionary(result);
 
         // Phase 3: Build Cube
@@ -96,6 +97,10 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         CubingExecutableUtil.setStatisticsPath(getStatisticsPath(jobId), result.getParams());
         CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
         return result;
+    }
+
+    protected void addOtherStepBeforeCubing(CubingJob result) {
+
     }
 
     private MapReduceExecutable createInMemCubingStep(String jobId, String cuboidRootPath) {
@@ -162,18 +167,4 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         ndCuboidStep.setMapReduceJobClass(NDCuboidJob.class);
         return ndCuboidStep;
     }
-
-    private String[] getCuboidOutputPaths(String cuboidRootPath, int totalRowkeyColumnCount, int groupRowkeyColumnsCount) {
-        String[] paths = new String[groupRowkeyColumnsCount + 1];
-        for (int i = 0; i <= groupRowkeyColumnsCount; i++) {
-            int dimNum = totalRowkeyColumnCount - i;
-            if (dimNum == totalRowkeyColumnCount) {
-                paths[i] = cuboidRootPath + "base_cuboid";
-            } else {
-                paths[i] = cuboidRootPath + dimNum + "d_cuboid";
-            }
-        }
-        return paths;
-    }
-
 }

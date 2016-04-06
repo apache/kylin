@@ -64,6 +64,7 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
         // Phase 1: Merge Dictionary
         result.addTask(createMergeDictionaryStep(mergingSegmentIds));
         result.addTask(createMergeStatisticsStep(cubeSegment, mergingSegmentIds, getStatisticsPath(jobId)));
+        addOtherStepBeforeMerge(result);
         outputSide.addStepPhase1_MergeDictionary(result);
 
         // Phase 2: Merge Cube Files
@@ -105,6 +106,10 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
         mergeCuboidDataStep.setMapReduceParams(cmd.toString());
         mergeCuboidDataStep.setMapReduceJobClass(MergeCuboidJob.class);
         return mergeCuboidDataStep;
+    }
+
+    protected void addOtherStepBeforeMerge(CubingJob result) {
+
     }
 
 }

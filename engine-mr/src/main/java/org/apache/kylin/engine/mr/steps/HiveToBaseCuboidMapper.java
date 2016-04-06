@@ -57,12 +57,4 @@ public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, O
         }
     }
 
-    private byte[][] convertUTF8Bytes(String[] row) throws UnsupportedEncodingException {
-        byte[][] result = new byte[row.length][];
-        for (int i = 0; i < row.length; i++) {
-            result[i] = row[i] == null ? HIVE_NULL : row[i].getBytes("UTF-8");
-        }
-        return result;
-    }
-
 }
