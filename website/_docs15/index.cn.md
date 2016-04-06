@@ -1,8 +1,8 @@
 ---
-layout: docs-cn
+layout: docs15-cn
 title: 概述
-categories: docs
-permalink: /cn/docs/index.html
+categories: docs15
+permalink: /cn/docs15/index.html
 ---
 
 欢迎来到 Apache Kylin™
@@ -11,11 +11,11 @@ permalink: /cn/docs/index.html
 
 Apache Kylin™是一个开源的分布式分析引擎，提供Hadoop之上的SQL查询接口及多维分析（OLAP）能力以支持超大规模数据，最初由eBay Inc.开发并贡献至开源社区。
 
-查看新版本文档: [v1.5](/cn/docs15/)
+查看旧版本文档: [v1.3](/cn/docs/)
 
 安装 
 ------------  
-请参考安装文档以安装Apache Kylin: [安装向导](/cn/docs/install/)
+请参考安装文档以安装Apache Kylin: [安装向导](/cn/docs15/install/)
 
 
 

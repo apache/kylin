@@ -21,7 +21,7 @@ Make sure you have avaliable account and privilege for following applications:
 ## Setup PGP signing keys  
 Follow instructions at [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) to create a key pair  
 Install gpg (On Mac OS X as sample):  
-`brew install gpg and gpg --gen-key`
+`brew install gpg`
 
 Generate gpg key:  
 Reference: [https://www.gnupg.org/gph/en/manual/c14.html](https://www.gnupg.org/gph/en/manual/c14.html)  

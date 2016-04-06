@@ -1,0 +1,28 @@
+{% assign items = include.items %}
+
+
+
+{% for item in items %}
+
+  {% assign item_url = item | prepend:"/cn/docs15/" | append:".html" %}
+
+  {% if item_url == page.url %}
+    {% assign c = "current" %}
+  {% else %}
+    {% assign c = "" %}
+  {% endif %}
+
+
+
+  {% for p in site.docs15 %}
+    {% if p.url == item_url %}
+      <li><a href="{{ p.url }}" class="list-group-item-lay pjaxlink" id="navlist">{{p.title}}</a></li>      
+      {% break %}
+    {% endif %}
+  {% endfor %}
+
+{% endfor %}
+
+
+
+

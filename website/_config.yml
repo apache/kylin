@@ -59,6 +59,8 @@ collections:
   docs15:
     output: true
   docs-cn:
+    output: true
+  docs15-cn:
     output: true    
   dev:
     output: true  
