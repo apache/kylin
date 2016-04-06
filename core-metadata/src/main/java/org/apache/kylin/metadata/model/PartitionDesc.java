@@ -166,14 +166,14 @@ public class PartitionDesc {
             String partitionDateColumnName = partDesc.getPartitionDateColumn();
             String partitionTimeColumnName = partDesc.getPartitionTimeColumn();
 
-            if (partitionDateColumnName != null) {
+            if (partitionDateColumnName != null && partitionTimeColumnName == null) {
                 buildSingleColumnRangeCondition(builder, partitionDateColumnName, startInclusive, endExclusive, partDesc.getPartitionDateFormat(), tableAlias);
-            }
-            if (partitionTimeColumnName != null) {
-                if (partitionDateColumnName != null)
-                    builder.append(" AND ");
+            } else if (partitionDateColumnName == null && partitionTimeColumnName != null) {
                 buildSingleColumnRangeCondition(builder, partitionTimeColumnName, startInclusive, endExclusive, partDesc.getPartitionTimeFormat(), tableAlias);
+            } else if (partitionDateColumnName != null && partitionTimeColumnName != null) {
+                buildMultipleColumnRangeCondition(builder, partitionDateColumnName, partitionTimeColumnName, startInclusive, endExclusive, partDesc.getPartitionDateFormat(), partDesc.getPartitionTimeFormat(), tableAlias);
             }
+
             return builder.toString();
         }
 
@@ -197,6 +197,33 @@ public class PartitionDesc {
                 builder.append(" AND ");
             }
             builder.append(partitionColumnName + " < '" + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat) + "'");
+        }
+
+        private static void buildMultipleColumnRangeCondition(StringBuilder builder, String partitionDateColumnName, String partitionTimeColumnName, long startInclusive, long endExclusive, String partitionColumnDateFormat, String partitionColumnTimeFormat, Map<String, String> tableAlias) {
+            partitionDateColumnName = replaceColumnNameWithAlias(partitionDateColumnName, tableAlias);
+            partitionTimeColumnName = replaceColumnNameWithAlias(partitionTimeColumnName, tableAlias);
+            if (startInclusive > 0) {
+                builder.append("(");
+                builder.append("(");
+                builder.append(partitionDateColumnName + " = '" + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'").append(" AND ").append(partitionTimeColumnName + " >= '" + DateFormat.formatToDateStr(startInclusive, partitionColumnTimeFormat) + "'");
+                builder.append(")");
+                builder.append(" OR ");
+                builder.append("(");
+                builder.append(partitionDateColumnName + " > '" + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'");
+                builder.append(")");
+                builder.append(")");
+                builder.append(" AND ");
+            }
+
+            builder.append("(");
+            builder.append("(");
+            builder.append(partitionDateColumnName + " = '" + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat) + "'").append(" AND ").append(partitionTimeColumnName + " < '" + DateFormat.formatToDateStr(endExclusive, partitionColumnTimeFormat) + "'");
+            builder.append(")");
+            builder.append(" OR ");
+            builder.append("(");
+            builder.append(partitionDateColumnName + " < '" + DateFormat.formatToDateStr(endExclusive, partitionColumnDateFormat) + "'");
+            builder.append(")");
+            builder.append(")");
         }
     }
 
