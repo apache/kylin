@@ -22,6 +22,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -93,6 +94,9 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         if (!exportDest.endsWith("/")) {
             exportDest = exportDest + "/";
         }
+
+        // create new folder to contain the output
+        exportDest = exportDest + "diagnosis_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date()) + "/";
 
         // export cube metadata
         String[] cubeMetaArgs = { "-destDir", exportDest + "metadata", "-project", project };
