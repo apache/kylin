@@ -369,30 +369,31 @@ public class BuildCubeWithEngine {
     private void checkHFilesInHBase(CubeSegment segment) throws IOException {
         Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
         String tableName = segment.getStorageLocationIdentifier();
-        HTable table = new HTable(conf, tableName);
-        HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(table);
-        Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
-        long totalSize = 0;
-        for (Long size : sizeMap.values()) {
-            totalSize += size;
-        }
-        if (totalSize == 0) {
-            return;
-        }
-        Map<byte[], Pair<Integer, Integer>> countMap = cal.getRegionHFileCountMap();
-        // check if there's region contains more than one hfile, which means the hfile config take effects
-        boolean hasMultiHFileRegions = false;
-        for (Pair<Integer, Integer> count : countMap.values()) {
-            // check if hfile count is greater than store count
-            if (count.getSecond() > count.getFirst()) {
-                hasMultiHFileRegions = true;
-                break;
+        try (HTable table = new HTable(conf, tableName)) {
+            HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(table);
+            Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
+            long totalSize = 0;
+            for (Long size : sizeMap.values()) {
+                totalSize += size;
             }
-        }
-        if (KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB() == 0 && hasMultiHFileRegions) {
-            throw new IOException("hfile size set to 0, but found region contains more than one hfiles");
-        } else if (KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB() > 0 && !hasMultiHFileRegions) {
-            throw new IOException("hfile size set greater than 0, but all regions still has only one hfile");
+            if (totalSize == 0) {
+                return;
+            }
+            Map<byte[], Pair<Integer, Integer>> countMap = cal.getRegionHFileCountMap();
+            // check if there's region contains more than one hfile, which means the hfile config take effects
+            boolean hasMultiHFileRegions = false;
+            for (Pair<Integer, Integer> count : countMap.values()) {
+                // check if hfile count is greater than store count
+                if (count.getSecond() > count.getFirst()) {
+                    hasMultiHFileRegions = true;
+                    break;
+                }
+            }
+            if (KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB() == 0 && hasMultiHFileRegions) {
+                throw new IOException("hfile size set to 0, but found region contains more than one hfiles");
+            } else if (KylinConfig.getInstanceFromEnv().getHBaseHFileSizeGB() > 0 && !hasMultiHFileRegions) {
+                throw new IOException("hfile size set greater than 0, but all regions still has only one hfile");
+            }
         }
     }
 
