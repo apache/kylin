@@ -156,6 +156,14 @@ public class JobBuilderSupport {
         return getCuboidRootPath(seg.getLastBuildJobID());
     }
 
+    public String getSecondaryIndexPath(CubeSegment seg) {
+        return getSecondaryIndexPath(seg.getLastBuildJobID());
+    }
+
+    public String getSecondaryIndexPath(String jobId) {
+        return getRealizationRootPath(jobId) + "/secondary_index/";
+    }
+
     public void appendMapReduceParameters(StringBuilder buf, DataModelDesc modelDesc) {
         try {
             String jobConf = config.getHadoopJobConfFilePath(modelDesc.getCapacity());

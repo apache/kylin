@@ -91,6 +91,9 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
     @JsonProperty("snapshots")
     private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
 
+    @JsonProperty("index_path")
+    private String indexPath;
+
     private volatile Map<Long, Short> cuboidBaseShards = Maps.newHashMap();//cuboid id ==> base(starting) shard for this cuboid
 
     public CubeDesc getCubeDesc() {
@@ -444,6 +447,14 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
     @Override
     public IJoinedFlatTableDesc getJoinedFlatTableDesc() {
         return new CubeJoinedFlatTableDesc(this.getCubeDesc(), this);
+    }
+
+    public String getIndexPath() {
+        return indexPath;
+    }
+
+    public void setIndexPath(String indexPath) {
+        this.indexPath = indexPath;
     }
 
 }
