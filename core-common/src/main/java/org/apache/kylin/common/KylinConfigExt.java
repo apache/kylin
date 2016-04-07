@@ -48,6 +48,7 @@ public class KylinConfigExt extends KylinConfig {
     }
 
     private KylinConfigExt(KylinConfigExt ext, Map<String, String> overrides) {
+        super(ext.base.getAllProperties());
         this.base = ext.base;
         this.overrides = overrides;
     }
