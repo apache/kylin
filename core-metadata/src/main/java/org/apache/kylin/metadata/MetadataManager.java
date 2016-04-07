@@ -223,6 +223,7 @@ public class MetadataManager {
         desc.init();
         String path = desc.getResourcePath();
         getStore().putResource(path,desc,EXTERNAL_FILTER_DESC_SERIALIZER);
+        desc = reloadExternalFilterAt(path);
         extFilterMap.put(desc.getName(),desc);
 
     }
