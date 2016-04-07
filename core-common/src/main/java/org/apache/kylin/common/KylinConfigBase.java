@@ -100,7 +100,7 @@ abstract public class KylinConfigBase implements Serializable {
     final public String getRequired(String prop) {
         String r = getOptional(prop);
         if (StringUtils.isEmpty(r)) {
-            throw new IllegalArgumentException("missing '" + prop + "' in conf/kylin_instance.properties");
+            throw new IllegalArgumentException("missing '" + prop + "' in conf/kylin.properties");
         }
         return r;
     }
