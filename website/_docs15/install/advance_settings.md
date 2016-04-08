@@ -5,9 +5,17 @@ categories: install
 permalink: /docs15/install/advance_settings.html
 ---
 
-## Enable LZO compression
+## Settings for compression
 
-By default Kylin leverages snappy compression to compress the output of MR jobs, as well as hbase table storage, reducing the storage overhead. We do not choose LZO compression in Kylin because hadoop venders tend to not include LZO in their distributions due to license(GPL) issues. To enable LZO in Kylin, follow these steps:
+### Disable compression (Easiest way to address compression related issues)
+
+By default Kylin leverages snappy compression to compress the output of MR jobs, as well as hbase table storage, to reduce the storage overhead. We do not choose LZO compression in Kylin because hadoop venders tend to not include LZO in their distributions due to license(GPL) issues. If you compression related issues happened in your cubing job, you have two options: 1. Disable compression 2. Choose other compression algorithms like LZO. 
+
+#### Disable HBase compression
+
+Compression settings only take effect after restarting Kylin server instance (by `./kylin.sh start` and `./kylin.sh stop`). To disable compressing MR jobs you need to modify $KYLIN_HOME/conf/kylin_job_conf.xml by removing all configuration entries related to compression(Just grep the keyword "compress"). To disable compressing hbase tables you need to open $KYLIN_HOME/conf/kylin.properties and remove the line starting with kylin.hbase.default.compression.codec.
+
+### LZO compression
 
 #### Make sure LZO is working in your environment
 
@@ -25,18 +33,9 @@ To test if the hbase cluster is ready to create LZO compressed tables, test foll
 create 'lzoTable', {NAME => 'colFam',COMPRESSION => 'LZO'}
 {% endhighlight %}
 
-#### Use LZO for HBase compression
+#### Use LZO compression
 
-You'll need to stop Kylin first by running `./kylin.sh stop`, and then modify $KYLIN_HOME/conf/kylin_job_conf.xml by uncommenting some configuration entries related to LZO compression. 
-After this, you need to run `./kylin.sh start` to start Kylin again. Now Kylin will use LZO to compress MR outputs and hbase tables.
-
-Goto $KYLIN_HOME/conf/kylin.properties, change kylin.hbase.default.compression.codec=snappy to kylin.hbase.default.compression.codec=lzo
-
-#### Use LZO for MR jobs
-
-Modify $KYLIN_HOME/conf/kylin_job_conf.xml by changing all org.apache.hadoop.io.compress.SnappyCodec to com.hadoop.compression.lzo.LzoCodec. 
-
-Start Kylin again. Now Kylin will use LZO to compress MR outputs and HBase tables.
+Compression settings only take effect after restarting Kylin server instance (by `./kylin.sh start` and `./kylin.sh stop`). To use LZO for compressing MR jobs you need to modify $KYLIN_HOME/conf/kylin_job_conf.xml by replacing configuration entries related to compression from org.apache.hadoop.io.compress.SnappyCodec to com.hadoop.compression.lzo. You can refer to other documents for details: http://xiaming.me/posts/2014/05/03/enable-lzo-compression-on-hadoop-pig-and-spark.  To use LZO for compressing hbase tables you need to open $KYLIN_HOME/conf/kylin.properties, change kylin.hbase.default.compression.codec=snappy to kylin.hbase.default.compression.codec=lzo.
 
 ## Enable LDAP or SSO authentication
 
