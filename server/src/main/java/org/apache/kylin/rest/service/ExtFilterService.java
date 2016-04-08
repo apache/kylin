@@ -62,8 +62,6 @@ public class ExtFilterService extends BasicService {
         getMetadataManager().removeExternalFilter(name);
     }
 
-
-
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void syncExtFilterToProject(String[] filters, String project) throws IOException {
         getProjectManager().addExtFilterToProject(filters, project);

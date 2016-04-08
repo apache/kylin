@@ -201,7 +201,7 @@ public class CacheService extends BasicService {
                 CubeDescManager.clearCache();
                 break;
             case EXTERNAL_FILTER:
-                getMetadataManager().reloadTableCache(cacheKey);
+                getMetadataManager().reloadExtFilter(cacheKey);
                 IIDescManager.clearCache();
                 CubeDescManager.clearCache();
                 break;

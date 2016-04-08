@@ -353,6 +353,10 @@ public class MetadataManager {
         return t;
     }
 
+    public void reloadExtFilter(String extFilterName) throws IOException {
+        reloadExternalFilterAt(ExternalFilterDesc.concatResourcePath(extFilterName));
+    }
+
     public void reloadSourceTableExt(String tableIdentity) throws IOException {
         reloadSourceTableExdAt(TableDesc.concatExdResourcePath(tableIdentity));
     }

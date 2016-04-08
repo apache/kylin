@@ -71,6 +71,7 @@ public class ExternalFilterController extends BasicController {
         Map<String, String> result = new HashMap();
         ExternalFilterDesc desc = JsonUtil.readValue(request.getExtFilter(), ExternalFilterDesc.class);
         extFilterService.updateExternalFilter(desc);
+        extFilterService.syncExtFilterToProject(new String[] { desc.getName() }, request.getProject());
         result.put("success", "true");
         return result;
     }
