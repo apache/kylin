@@ -64,7 +64,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     @JsonProperty("cost")
     private int cost = 50;
 
-    private IRealization[] realizations = null;
+    private volatile IRealization[] realizations = null;
     private List<TblColRef> allDimensions = null;
     private List<TblColRef> allColumns = null;
     private List<MeasureDesc> allMeasures = null;
@@ -72,7 +72,6 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     private long dateRangeEnd;
     private boolean isReady = false;
 
-    private boolean initiated = false;
     private final static Logger logger = LoggerFactory.getLogger(HybridInstance.class);
 
     public List<RealizationEntry> getRealizationEntries() {
@@ -91,11 +90,11 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     }
 
     private void init() {
-        if (initiated == true)
+        if (realizations != null)
             return;
 
         synchronized (this) {
-            if (initiated == true)
+            if (realizations != null)
                 return;
 
             if (realizationEntries == null || realizationEntries.size() == 0)
@@ -163,7 +162,6 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             });
 
             this.realizations = realizationList.toArray(new IRealization[realizationList.size()]);
-            initiated = true;
         }
     }
 

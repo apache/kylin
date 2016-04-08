@@ -89,9 +89,11 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
         String encryptMethod = args[0];
         String passwordTxt = args[1];
         if ("AES".equalsIgnoreCase(encryptMethod)) {
+            // for encrypt password like LDAP password
             System.out.println(encryptMethod + " encrypted password is: ");
             System.out.println(encrypt(passwordTxt));
         } else if ("BCrypt".equalsIgnoreCase(encryptMethod)) {
+            // for encrypt the predefined user password, like ADMIN, MODELER.
             BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
             System.out.println(encryptMethod + " encrypted password is: ");
             System.out.println(bCryptPasswordEncoder.encode(passwordTxt));
