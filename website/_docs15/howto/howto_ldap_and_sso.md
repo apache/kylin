@@ -11,7 +11,7 @@ Kylin supports LDAP authentication for enterprise or production deployment; This
 
 #### Configure LDAP server info
 
-Firstly, provide LDAP URL, and username/password if the LDAP server is secured; The password in kylin.properties need be salted; You can run org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES <your_password> to get a hash.
+Firstly, provide LDAP URL, and username/password if the LDAP server is secured; The password in kylin.properties need be salted; You can run "org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES your_password" to get a hash.
 
 ```
 ldap.server=ldap://<your_ldap_host>:<port>
