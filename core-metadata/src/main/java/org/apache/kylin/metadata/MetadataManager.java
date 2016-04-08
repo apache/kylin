@@ -220,7 +220,6 @@ public class MetadataManager {
         if(desc.getUuid() == null){
             throw new IllegalArgumentException("UUID not set.");
         }
-        desc.init();
         String path = desc.getResourcePath();
         getStore().putResource(path,desc,EXTERNAL_FILTER_DESC_SERIALIZER);
         desc = reloadExternalFilterAt(path);
@@ -346,8 +345,6 @@ public class MetadataManager {
         if (t == null) {
             return null;
         }
-        t.init();
-
         extFilterMap.putLocal(t.getName(), t);
 
         return t;
