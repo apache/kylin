@@ -35,6 +35,7 @@ public class CubingExecutableUtil {
     public static final String STATISTICS_PATH = "statisticsPath";
     public static final String CUBING_JOB_ID = "cubingJobId";
     public static final String MERGED_STATISTICS_PATH = "mergedStatisticsPath";
+    public static final String INDEX_PATH = "indexPath";
 
     public static void setStatisticsPath(String path, Map<String, String> params) {
         params.put(STATISTICS_PATH, path);
@@ -93,4 +94,13 @@ public class CubingExecutableUtil {
     public static String getMergedStatisticsPath(Map<String, String> params) {
         return params.get(MERGED_STATISTICS_PATH);
     }
+
+    public static void setIndexPath(String indexPath, Map<String, String> params) {
+        params.put(INDEX_PATH, indexPath);
+    }
+
+    public static String getIndexPath(Map<String, String> params) {
+        return params.get(INDEX_PATH);
+    }
+
 }

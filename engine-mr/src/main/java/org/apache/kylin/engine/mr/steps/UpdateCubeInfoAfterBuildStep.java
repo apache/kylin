@@ -49,6 +49,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         long cubeSizeBytes = cubingJob.findCubeSizeBytes();
 
         segment.setLastBuildJobID(CubingExecutableUtil.getCubingJobId(this.getParams()));
+        segment.setIndexPath(CubingExecutableUtil.getIndexPath(this.getParams()));
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(cubeSizeBytes / 1024);
         segment.setInputRecords(sourceCount);
