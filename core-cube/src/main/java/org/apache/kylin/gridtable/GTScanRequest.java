@@ -37,7 +37,7 @@ import com.google.common.collect.Sets;
 public class GTScanRequest {
 
     private GTInfo info;
-    private GTScanRange range;
+    private List<GTScanRange> ranges;
     private ImmutableBitSet columns;
     private transient ImmutableBitSet selectedColBlocks;
 
@@ -53,18 +53,26 @@ public class GTScanRequest {
     private boolean allowPreAggregation = true;
     private double aggrCacheGB = 0; // no limit
 
-    public GTScanRequest(GTInfo info, GTScanRange range, ImmutableBitSet columns, TupleFilter filterPushDown) {
+    public GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet columns, TupleFilter filterPushDown) {
         this.info = info;
-        this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
+        if (ranges == null) {
+            this.ranges = Lists.newArrayList(new GTScanRange(new GTRecord(info), new GTRecord(info)));
+        } else {
+            this.ranges = ranges;
+        }
         this.columns = columns;
         this.filterPushDown = filterPushDown;
         validate(info);
     }
 
-    public GTScanRequest(GTInfo info, GTScanRange range, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
+    public GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
             ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, boolean allowPreAggregation, double aggrCacheGB) {
         this.info = info;
-        this.range = range == null ? new GTScanRange(new GTRecord(info), new GTRecord(info)) : range;
+        if (ranges == null) {
+            this.ranges = Lists.newArrayList(new GTScanRange(new GTRecord(info), new GTRecord(info)));
+        } else {
+            this.ranges = ranges;
+        }
         this.columns = dimensions;
         this.filterPushDown = filterPushDown;
 
@@ -137,7 +145,7 @@ public class GTScanRequest {
     /**
      * doFilter,doAggr,doMemCheck are only for profiling use.
      * in normal cases they are all true.
-     * 
+     * <p/>
      * Refer to CoprocessorBehavior for explanation
      */
     public IGTScanner decorateScanner(IGTScanner scanner, boolean doFilter, boolean doAggr) throws IOException {
@@ -195,16 +203,12 @@ public class GTScanRequest {
         return info;
     }
 
-    public GTRecord getPkStart() {
-        return range.pkStart;
+    public List<GTScanRange> getGTScanRanges() {
+        return ranges;
     }
 
-    public GTRecord getPkEnd() {
-        return range.pkEnd;
-    }
-
-    public List<GTRecord> getFuzzyKeys() {
-        return range.fuzzyKeys;
+    public void setGTScanRanges(List<GTScanRange> ranges) {
+        this.ranges = ranges;
     }
 
     public ImmutableBitSet getSelectedColBlocks() {
@@ -241,7 +245,7 @@ public class GTScanRequest {
 
     @Override
     public String toString() {
-        return "GTScanRequest [range=" + range + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
+        return "GTScanRequest [range=" + ranges + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
     }
 
     public static final BytesSerializer<GTScanRequest> serializer = new BytesSerializer<GTScanRequest>() {
@@ -249,11 +253,14 @@ public class GTScanRequest {
         public void serialize(GTScanRequest value, ByteBuffer out) {
             GTInfo.serializer.serialize(value.info, out);
 
-            serializeGTRecord(value.range.pkStart, out);
-            serializeGTRecord(value.range.pkEnd, out);
-            BytesUtil.writeVInt(value.range.fuzzyKeys.size(), out);
-            for (GTRecord f : value.range.fuzzyKeys) {
-                serializeGTRecord(f, out);
+            BytesUtil.writeVInt(value.ranges.size(), out);
+            for (GTScanRange range : value.ranges) {
+                serializeGTRecord(range.pkStart, out);
+                serializeGTRecord(range.pkEnd, out);
+                BytesUtil.writeVInt(range.fuzzyKeys.size(), out);
+                for (GTRecord f : range.fuzzyKeys) {
+                    serializeGTRecord(f, out);
+                }
             }
 
             ImmutableBitSet.serializer.serialize(value.columns, out);
@@ -270,14 +277,19 @@ public class GTScanRequest {
         public GTScanRequest deserialize(ByteBuffer in) {
             GTInfo sInfo = GTInfo.serializer.deserialize(in);
 
-            GTRecord sPkStart = deserializeGTRecord(in, sInfo);
-            GTRecord sPkEnd = deserializeGTRecord(in, sInfo);
-            List<GTRecord> sFuzzyKeys = Lists.newArrayList();
-            int sFuzzyKeySize = BytesUtil.readVInt(in);
-            for (int i = 0; i < sFuzzyKeySize; i++) {
-                sFuzzyKeys.add(deserializeGTRecord(in, sInfo));
+            List<GTScanRange> sRanges = Lists.newArrayList();
+            int sRangesCount = BytesUtil.readVInt(in);
+            for (int rangeIdx = 0; rangeIdx < sRangesCount; rangeIdx++) {
+                GTRecord sPkStart = deserializeGTRecord(in, sInfo);
+                GTRecord sPkEnd = deserializeGTRecord(in, sInfo);
+                List<GTRecord> sFuzzyKeys = Lists.newArrayList();
+                int sFuzzyKeySize = BytesUtil.readVInt(in);
+                for (int i = 0; i < sFuzzyKeySize; i++) {
+                    sFuzzyKeys.add(deserializeGTRecord(in, sInfo));
+                }
+                GTScanRange sRange = new GTScanRange(sPkStart, sPkEnd, sFuzzyKeys);
+                sRanges.add(sRange);
             }
-            GTScanRange sRange = new GTScanRange(sPkStart, sPkEnd, sFuzzyKeys);
 
             ImmutableBitSet sColumns = ImmutableBitSet.serializer.deserialize(in);
             TupleFilter sGTFilter = GTUtil.deserializeGTFilter(BytesUtil.readByteArray(in), sInfo);
@@ -288,7 +300,7 @@ public class GTScanRequest {
             boolean sAllowPreAggr = (BytesUtil.readVInt(in) == 1);
             double sAggrCacheGB = in.getDouble();
 
-            return new GTScanRequest(sInfo, sRange, sColumns, sAggGroupBy, sAggrMetrics, sAggrMetricFuncs, sGTFilter, sAllowPreAggr, sAggrCacheGB);
+            return new GTScanRequest(sInfo, sRanges, sColumns, sAggGroupBy, sAggrMetrics, sAggrMetricFuncs, sGTFilter, sAllowPreAggr, sAggrCacheGB);
         }
 
         private void serializeGTRecord(GTRecord gtRecord, ByteBuffer out) {

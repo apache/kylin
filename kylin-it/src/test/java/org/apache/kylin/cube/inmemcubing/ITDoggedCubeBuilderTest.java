@@ -1,18 +1,21 @@
 /*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements. See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License. You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  * Licensed to the Apache Software Foundation (ASF) under one
+ *  * or more contributor license agreements.  See the NOTICE file
+ *  * distributed with this work for additional information
+ *  * regarding copyright ownership.  The ASF licenses this file
+ *  * to you under the Apache License, Version 2.0 (the
+ *  * "License"); you may not use this file except in compliance
+ *  * with the License.  You may obtain a copy of the License at
+ *  * 
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  * 
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ * /
  */
 
 package org.apache.kylin.cube.inmemcubing;
@@ -47,10 +50,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
+public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = LoggerFactory.getLogger(DoggedCubeBuilderTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ITDoggedCubeBuilderTest.class);
 
     private static final int INPUT_ROWS = 10000;
     private static final int SPLIT_ROWS = 5000;
@@ -68,8 +71,8 @@ public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
 
         cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
-        flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
-        dictionaryMap = InMemCubeBuilderTest.getDictionaryMap(cube, flatTable);
+        flatTable = LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/data/flatten_data_for_without_slr_left_join.csv";
+        dictionaryMap = ITInMemCubeBuilderTest.getDictionaryMap(cube, flatTable);
     }
 
     @AfterClass
@@ -91,7 +94,7 @@ public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
 
         {
             Future<?> future = executorService.submit(doggedBuilder.buildAsRunnable(queue, doggedResult));
-            InMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
+            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
             future.get();
             doggedResult.close();
         }
@@ -102,7 +105,7 @@ public class DoggedCubeBuilderTest extends LocalFileMetadataTestCase {
 
         {
             Future<?> future = executorService.submit(inmemBuilder.buildAsRunnable(queue, inmemResult));
-            InMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
+            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
             future.get();
             inmemResult.close();
         }

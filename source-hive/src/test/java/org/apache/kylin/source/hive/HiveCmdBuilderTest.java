@@ -24,18 +24,16 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Created by dongli on 2/22/16.
- */
 public class HiveCmdBuilderTest {
 
     @Before
     public void setup() {
-        System.setProperty("KYLIN_CONF", "../examples/test_case_data/localmeta");
+        System.setProperty("KYLIN_CONF", LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
     }
 
     @After

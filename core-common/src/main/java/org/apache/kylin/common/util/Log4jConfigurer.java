@@ -21,6 +21,7 @@ package org.apache.kylin.common.util;
 import java.util.Enumeration;
 
 import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -35,6 +36,7 @@ public class Log4jConfigurer {
     public static void initLogger() {
         if (!INITIALIZED && !isConfigured()) {
             org.apache.log4j.BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(DEFAULT_PATTERN_LAYOUT)));
+            LogManager.getRootLogger().setLevel(Level.DEBUG);
         }
         INITIALIZED = true;
     }

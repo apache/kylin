@@ -18,7 +18,6 @@
 
 package org.apache.kylin.metadata.filter.UDF;
 
-import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
 

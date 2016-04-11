@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
@@ -33,6 +34,7 @@ import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.AggregationGroup.HierarchyMask;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Function;
@@ -51,6 +53,20 @@ public class Cuboid implements Comparable<Cuboid> {
             return ComparisonChain.start().compare(Long.bitCount(o1), Long.bitCount(o2)).compare(o1, o2).result();
         }
     };
+
+    public static Cuboid identifyCuboid(CubeDesc cubeDesc, Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
+        for (FunctionDesc metric : metrics) {
+            if (metric.getMeasureType().onlyAggrInBaseCuboid())
+                return Cuboid.getBaseCuboid(cubeDesc);
+        }
+
+        long cuboidID = 0;
+        for (TblColRef column : dimensions) {
+            int index = cubeDesc.getRowkey().getColumnBitIndex(column);
+            cuboidID |= 1L << index;
+        }
+        return Cuboid.findById(cubeDesc, cuboidID);
+    }
 
     public static Cuboid findById(CubeDesc cube, byte[] cuboidID) {
         return findById(cube, Bytes.toLong(cuboidID));
@@ -396,6 +412,8 @@ public class Cuboid implements Comparable<Cuboid> {
         }
         return cuboidToGridTableMapping;
     }
+
+   
 
     public static String getDisplayName(long cuboidID, int dimensionCount) {
         StringBuilder sb = new StringBuilder();

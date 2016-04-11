@@ -19,204 +19,48 @@
 package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.BitSet;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.debug.BackdoorToggles;
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.common.util.ImmutableBitSet;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.gridtable.CubeGridTable;
-import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.BuildInFunctionTransformer;
-import org.apache.kylin.dimension.DimensionEncoding;
-import org.apache.kylin.gridtable.EmptyGTScanner;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.GTScanRangePlanner;
 import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.GTUtil;
 import org.apache.kylin.gridtable.IGTScanner;
-import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.gridtable.ScannerWorker;
 import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.hbase.cube.v2.filter.MassInValueProviderFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public class CubeSegmentScanner implements IGTScanner {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeSegmentScanner.class);
 
-    private static final int MAX_SCAN_RANGES = 200;
-
     final CubeSegment cubeSeg;
-    final GTInfo info;
-    final List<GTScanRequest> scanRequests;
-    final Scanner scanner;
+    final ScannerWorker scanner;
     final Cuboid cuboid;
+
+    final GTScanRequest scanRequest;
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
             Collection<FunctionDesc> metrics, TupleFilter filter, boolean allowPreAggregate) {
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
-        this.info = CubeGridTable.newGTInfo(cubeSeg, cuboid.getId());
-
-        CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
 
         // translate FunctionTupleFilter to IN clause
         ITupleFilterTransformer translator = new BuildInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
         filter = translator.transform(filter);
 
-        //replace the constant values in filter to dictionary codes 
-        TupleFilter gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, mapping.getCuboidDimensionsInGTOrder(), groups);
-
-        ImmutableBitSet gtDimensions = makeGridTableColumns(mapping, dimensions);
-        ImmutableBitSet gtAggrGroups = makeGridTableColumns(mapping, replaceDerivedColumns(groups, cubeSeg.getCubeDesc()));
-        ImmutableBitSet gtAggrMetrics = makeGridTableColumns(mapping, metrics);
-        String[] gtAggrFuncs = makeAggrFuncs(mapping, metrics);
-
-        GTScanRangePlanner scanRangePlanner;
-        if (cubeSeg.getCubeDesc().getModel().getPartitionDesc().isPartitioned()) {
-            TblColRef tblColRef = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
-            TblColRef partitionColOfGT = null;
-            Pair<ByteArray, ByteArray> segmentStartAndEnd = null;
-            int index = mapping.getIndexOf(tblColRef);
-            if (index >= 0) {
-                segmentStartAndEnd = getSegmentStartAndEnd(index);
-                partitionColOfGT = info.colRef(index);
-            }
-            scanRangePlanner = new GTScanRangePlanner(info, segmentStartAndEnd, partitionColOfGT);
-        } else {
-            scanRangePlanner = new GTScanRangePlanner(info, null, null);
-        }
-        List<GTScanRange> scanRanges = scanRangePlanner.planScanRanges(gtFilter, MAX_SCAN_RANGES);
-
-        scanRequests = Lists.newArrayListWithCapacity(scanRanges.size());
-
-        KylinConfig config = cubeSeg.getCubeInstance().getConfig();
-        for (GTScanRange range : scanRanges) {
-            GTScanRequest req = new GTScanRequest(info, range, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate, config.getQueryCoprocessorMemGB());
-            scanRequests.add(req);
-        }
-
-        scanner = new Scanner();
-    }
-
-    private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(int index) {
-        ByteArray start;
-        if (cubeSeg.getDateRangeStart() != Long.MIN_VALUE) {
-            start = encodeTime(cubeSeg.getDateRangeStart(), index, 1);
-        } else {
-            start = new ByteArray();
-        }
-
-        ByteArray end;
-        if (cubeSeg.getDateRangeEnd() != Long.MAX_VALUE) {
-            end = encodeTime(cubeSeg.getDateRangeEnd(), index, -1);
-        } else {
-            end = new ByteArray();
-        }
-        return Pair.newPair(start, end);
-
-    }
-
-    private ByteArray encodeTime(long ts, int index, int roundingFlag) {
-        String value;
-        DataType partitionColType = info.getColumnType(index);
-        if (partitionColType.isDate()) {
-            value = DateFormat.formatToDateStr(ts);
-        } else if (partitionColType.isDatetime() || partitionColType.isTimestamp()) {
-            value = DateFormat.formatToTimeWithoutMilliStr(ts);
-        } else if (partitionColType.isStringFamily()) {
-            String partitionDateFormat = cubeSeg.getCubeDesc().getModel().getPartitionDesc().getPartitionDateFormat();
-            if (StringUtils.isEmpty(partitionDateFormat))
-                partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
-            value = DateFormat.formatToDateStr(ts, partitionDateFormat);
-        } else {
-            throw new RuntimeException("Type " + partitionColType + " is not valid partition column type");
-        }
-
-        ByteBuffer buffer = ByteBuffer.allocate(info.getMaxColumnLength());
-        info.getCodeSystem().encodeColumnValue(index, value, roundingFlag, buffer);
-
-        return ByteArray.copyOf(buffer.array(), 0, buffer.position());
-    }
-
-    private Set<TblColRef> replaceDerivedColumns(Set<TblColRef> input, CubeDesc cubeDesc) {
-        Set<TblColRef> ret = Sets.newHashSet();
-        for (TblColRef col : input) {
-            if (cubeDesc.hasHostColumn(col)) {
-                for (TblColRef host : cubeDesc.getHostInfo(col).columns) {
-                    ret.add(host);
-                }
-            } else {
-                ret.add(col);
-            }
-        }
-        return ret;
-    }
-
-    private ImmutableBitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Set<TblColRef> dimensions) {
-        BitSet result = new BitSet();
-        for (TblColRef dim : dimensions) {
-            int idx = mapping.getIndexOf(dim);
-            if (idx >= 0)
-                result.set(idx);
-        }
-        return new ImmutableBitSet(result);
-    }
-
-    private ImmutableBitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Collection<FunctionDesc> metrics) {
-        BitSet result = new BitSet();
-        for (FunctionDesc metric : metrics) {
-            int idx = mapping.getIndexOf(metric);
-            if (idx < 0)
-                throw new IllegalStateException(metric + " not found in " + mapping);
-            result.set(idx);
-        }
-        return new ImmutableBitSet(result);
-    }
-
-    private String[] makeAggrFuncs(final CuboidToGridTableMapping mapping, Collection<FunctionDesc> metrics) {
-
-        //metrics are represented in ImmutableBitSet, which loses order information
-        //sort the aggrFuns to align with metrics natural order 
-        List<FunctionDesc> metricList = Lists.newArrayList(metrics);
-        Collections.sort(metricList, new Comparator<FunctionDesc>() {
-            @Override
-            public int compare(FunctionDesc o1, FunctionDesc o2) {
-                int a = mapping.getIndexOf(o1);
-                int b = mapping.getIndexOf(o2);
-                return a - b;
-            }
-        });
-
-        String[] result = new String[metricList.size()];
-        int i = 0;
-        for (FunctionDesc metric : metricList) {
-            result[i++] = metric.getExpression();
-        }
-        return result;
+        GTScanRangePlanner scanRangePlanner = new GTScanRangePlanner(cubeSeg, cuboid, filter, dimensions, groups, metrics);
+        scanRequest = scanRangePlanner.planScanRequest(allowPreAggregate);
+        scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest);
     }
 
     @Override
@@ -231,55 +75,12 @@ public class CubeSegmentScanner implements IGTScanner {
 
     @Override
     public GTInfo getInfo() {
-        return info;
+        return scanRequest == null ? null : scanRequest.getInfo();
     }
 
     @Override
     public int getScannedRowCount() {
         return scanner.getScannedRowCount();
-    }
-
-    private class Scanner {
-        IGTScanner internal = null;
-
-        public Scanner() {
-            CubeHBaseRPC rpc;
-            if ("scan".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryProtocol())) {
-                MassInTupleFilter.VALUE_PROVIDER_FACTORY = new MassInValueProviderFactoryImpl(new MassInValueProviderFactoryImpl.DimEncAware() {
-                    @Override
-                    public DimensionEncoding getDimEnc(TblColRef col) {
-                        return info.getCodeSystem().getDimEnc(col.getColumnDesc().getZeroBasedIndex());
-                    }
-                });
-                rpc = new CubeHBaseScanRPC(cubeSeg, cuboid, info); // for local debug
-            } else {
-                rpc = new CubeHBaseEndpointRPC(cubeSeg, cuboid, info); // default behavior
-            }
-
-            try {
-                if (scanRequests.size() == 0) {
-                    logger.info("Segment {} will be skipped", cubeSeg);
-                    internal = new EmptyGTScanner(0);
-                } else {
-                    internal = rpc.getGTScanner(scanRequests);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("error", e);
-            }
-        }
-
-        public Iterator<GTRecord> iterator() {
-            return internal.iterator();
-        }
-
-        public void close() throws IOException {
-            internal.close();
-        }
-
-        public int getScannedRowCount() {
-            return internal.getScannedRowCount();
-        }
-
     }
 
 }

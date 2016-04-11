@@ -27,9 +27,15 @@ import org.apache.kylin.common.persistence.ResourceStore;
 
 public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
 
+    public static String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
+
     @Override
     public void createTestMetadata() {
-        staticCreateTestMetadata();
+        staticCreateTestMetadata(getLocalMetaTestData());
+    }
+
+    protected String getLocalMetaTestData() {
+        return LOCALMETA_TEST_DATA;
     }
 
     public static void staticCreateTestMetadata() {

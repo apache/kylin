@@ -28,16 +28,14 @@ import org.apache.kylin.common.KylinConfig;
  */
 public abstract class AbstractKylinTestCase {
 
-    public static final String LOCALMETA_TEST_DATA = "../examples/test_case_data/localmeta";
 
-    public static final String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
-
-    public static final String[] SERVICES_WITH_CACHE = {//
-    "org.apache.kylin.cube.CubeManager",//
+    public static final String[] SERVICES_WITH_CACHE = { //
+            "org.apache.kylin.cube.CubeManager", //
             "org.apache.kylin.cube.CubeDescManager", //
-            "org.apache.kylin.invertedindex.IIDescManager",//
-            "org.apache.kylin.invertedindex.IIManager",//
-            "org.apache.kylin.storage.hybrid.HybridManager", "org.apache.kylin.metadata.realization.RealizationRegistry", //
+            "org.apache.kylin.invertedindex.IIDescManager", //
+            "org.apache.kylin.invertedindex.IIManager", //
+            "org.apache.kylin.storage.hybrid.HybridManager", //
+            "org.apache.kylin.metadata.realization.RealizationRegistry", //
             "org.apache.kylin.metadata.project.ProjectManager", //
             "org.apache.kylin.metadata.MetadataManager" //
     };

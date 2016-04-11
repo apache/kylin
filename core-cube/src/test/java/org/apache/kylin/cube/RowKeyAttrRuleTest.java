@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ValidateContext;
@@ -35,7 +36,7 @@ public class RowKeyAttrRuleTest {
 
     @Test
     public void testGoodDesc() throws IOException {
-        for (File f : new File("../examples/test_case_data/localmeta/cube_desc/").listFiles()) {
+        for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/").listFiles()) {
             CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
             ValidateContext vContext = new ValidateContext();
             IValidatorRule<CubeDesc> rule = new RowKeyAttrRule();
@@ -48,7 +49,7 @@ public class RowKeyAttrRuleTest {
     @Test
     public void testBadDesc() throws IOException {
         ValidateContext vContext = new ValidateContext();
-        CubeDesc desc = JsonUtil.readValue(new FileInputStream("../examples/test_case_data/localmeta/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
+        CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
         desc.getRowkey().getRowKeyColumns()[2].setColumn("");
         IValidatorRule<CubeDesc> rule = new RowKeyAttrRule();
         rule.validate(desc, vContext);

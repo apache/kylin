@@ -100,7 +100,12 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
     }
 
     public ByteArray copy() {
-        ByteArray copy = new ByteArray(length);
+        ByteArray copy;
+        if (data != null) {
+            copy = new ByteArray(length);
+        } else {
+            copy = new ByteArray(null);
+        }
         copy.copyFrom(this);
         return copy;
     }
@@ -116,7 +121,9 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
     }
 
     public void copyFrom(ByteArray other) {
-        System.arraycopy(other.array(), other.offset, data, offset, other.length);
+        if (other.data != null) {
+            System.arraycopy(other.array(), other.offset, data, offset, other.length);
+        }
         this.length = other.length;
     }
 

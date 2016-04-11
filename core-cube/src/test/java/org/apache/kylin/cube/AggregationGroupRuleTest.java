@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ValidateContext;
@@ -39,7 +40,7 @@ public class AggregationGroupRuleTest {
     public void testGoodDesc() throws IOException {
         AggregationGroupRule rule = getAggregationGroupRule();
 
-        for (File f : new File("../examples/test_case_data/localmeta/cube_desc/").listFiles()) {
+        for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/").listFiles()) {
             CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
             ValidateContext vContext = new ValidateContext();
             rule.validate(desc, vContext);
@@ -57,7 +58,7 @@ public class AggregationGroupRuleTest {
             }
         };
 
-        for (File f : new File("../examples/test_case_data/localmeta/cube_desc/").listFiles()) {
+        for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/").listFiles()) {
             System.out.println(f.getName());
             CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
             ValidateContext vContext = new ValidateContext();
@@ -72,9 +73,9 @@ public class AggregationGroupRuleTest {
     public void testGoodDesc2() throws IOException {
 
         ValidateContext vContext = new ValidateContext();
-        CubeDesc desc = JsonUtil.readValue(new FileInputStream("../examples/test_case_data/localmeta/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
-        desc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] {//
-        new String[] { "lstg_format_name", "lstg_site_id", "slr_segment_cd", "CATEG_LVL2_NAME" } };
+        CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
+        desc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { //
+                new String[] { "lstg_format_name", "lstg_site_id", "slr_segment_cd", "CATEG_LVL2_NAME" } };
 
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
         rule.validate(desc, vContext);
@@ -86,7 +87,7 @@ public class AggregationGroupRuleTest {
     public void testBadDesc1() throws IOException {
 
         ValidateContext vContext = new ValidateContext();
-        CubeDesc desc = JsonUtil.readValue(new FileInputStream("../examples/test_case_data/localmeta/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
+        CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
         String[] temp = Arrays.asList(desc.getAggregationGroups().get(0).getIncludes()).subList(0, 3).toArray(new String[3]);
 
         desc.getAggregationGroups().get(0).setIncludes(temp);
@@ -103,9 +104,9 @@ public class AggregationGroupRuleTest {
     public void testBadDesc2() throws IOException {
 
         ValidateContext vContext = new ValidateContext();
-        CubeDesc desc = JsonUtil.readValue(new FileInputStream("../examples/test_case_data/localmeta/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
-        desc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] {//
-        new String[] { "lstg_format_name", "lstg_site_id", "slr_segment_cd", "META_CATEG_NAME", "CATEG_LVL2_NAME" } };
+        CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
+        desc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { //
+                new String[] { "lstg_format_name", "lstg_site_id", "slr_segment_cd", "META_CATEG_NAME", "CATEG_LVL2_NAME" } };
 
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
         rule.validate(desc, vContext);

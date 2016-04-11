@@ -47,6 +47,16 @@ public class RawScan {
         this.hbaseMaxResultSize = hbaseMaxResultSize;
     }
 
+    public RawScan(RawScan other) {
+
+        this.startKey = other.startKey;
+        this.endKey = other.endKey;
+        this.hbaseColumns = other.hbaseColumns;
+        this.fuzzyKeys = other.fuzzyKeys;
+        this.hbaseCaching = other.hbaseCaching;
+        this.hbaseMaxResultSize = other.hbaseMaxResultSize;
+    }
+
     public String getStartKeyAsString() {
         return BytesUtil.toHex(this.startKey);
     }

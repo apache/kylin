@@ -1,22 +1,24 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  * Licensed to the Apache Software Foundation (ASF) under one
+ *  * or more contributor license agreements.  See the NOTICE file
+ *  * distributed with this work for additional information
+ *  * regarding copyright ownership.  The ASF licenses this file
+ *  * to you under the Apache License, Version 2.0 (the
+ *  * "License"); you may not use this file except in compliance
+ *  * with the License.  You may obtain a copy of the License at
+ *  * 
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  * 
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ * /
  */
 
-package org.apache.kylin.storage.cache;
+package org.apache.kylin.storage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +71,26 @@ public class StorageMockUtils {
         groups.add(cf2);
 
         return groups;
+    }
+
+    public static List<FunctionDesc> buildAggregations1() {
+        List<FunctionDesc> functions = new ArrayList<FunctionDesc>();
+
+        TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
+        TblColRef priceCol = new TblColRef(ColumnDesc.mockup(t1, 7, "PRICE", "decimal(19,4)"));
+
+        FunctionDesc f1 = new FunctionDesc();
+        f1.setExpression("SUM");
+        ParameterDesc p1 = new ParameterDesc();
+        p1.setType("column");
+        p1.setValue("PRICE");
+        p1.setColRefs(ImmutableList.of(priceCol));
+        f1.setParameter(p1);
+        f1.setReturnType("decimal(19,4)");
+        functions.add(f1);
+
+
+        return functions;
     }
 
     public static List<FunctionDesc> buildAggregations() {
@@ -136,6 +158,16 @@ public class StorageMockUtils {
         compareFilter.addChild(constantFilter2);
         return compareFilter;
     }
+
+    public static CompareTupleFilter buildFilter3(TblColRef column) {
+        CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
+        ColumnTupleFilter columnFilter1 = new ColumnTupleFilter(column);
+        compareFilter.addChild(columnFilter1);
+        ConstantTupleFilter constantFilter1 = new ConstantTupleFilter("2012-05-23");
+        compareFilter.addChild(constantFilter1);
+        return compareFilter;
+    }
+
 
     public static TupleFilter buildAndFilter(List<TblColRef> columns) {
         CompareTupleFilter compareFilter1 = buildFilter1(columns.get(0));

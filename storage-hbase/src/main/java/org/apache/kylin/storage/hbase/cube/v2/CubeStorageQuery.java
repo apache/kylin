@@ -79,26 +79,26 @@ public class CubeStorageQuery implements IStorageQuery {
         Set<FunctionDesc> metrics = new LinkedHashSet<FunctionDesc>();
         buildDimensionsAndMetrics(sqlDigest, dimensions, metrics);
 
-        // all dimensions = groups + filter dimensions
-        Set<TblColRef> filterDims = Sets.newHashSet(dimensions);
-        filterDims.removeAll(groups);
+        // all dimensions = groups + other(like filter) dimensions
+        Set<TblColRef> otherDims = Sets.newHashSet(dimensions);
+        otherDims.removeAll(groups);
 
         // expand derived (xxxD means contains host columns only, derived columns were translated)
         Set<TblColRef> derivedPostAggregation = Sets.newHashSet();
         Set<TblColRef> groupsD = expandDerived(groups, derivedPostAggregation);
-        Set<TblColRef> filterDimsD = expandDerived(filterDims, derivedPostAggregation);
-        filterDimsD.removeAll(groupsD);
+        Set<TblColRef> otherDimsD = expandDerived(otherDims, derivedPostAggregation);
+        otherDimsD.removeAll(groupsD);
 
         // identify cuboid
         Set<TblColRef> dimensionsD = new LinkedHashSet<TblColRef>();
         dimensionsD.addAll(groupsD);
-        dimensionsD.addAll(filterDimsD);
-        Cuboid cuboid = identifyCuboid(dimensionsD, metrics);
+        dimensionsD.addAll(otherDimsD);
+        Cuboid cuboid = Cuboid.identifyCuboid(cubeDesc,dimensionsD, metrics);
         context.setCuboid(cuboid);
 
         // isExactAggregation? meaning: tuples returned from storage requires no further aggregation in query engine
         Set<TblColRef> singleValuesD = findSingleValueColumns(filter);
-        boolean isExactAggregation = isExactAggregation(cuboid, groups, filterDimsD, singleValuesD, derivedPostAggregation);
+        boolean isExactAggregation = isExactAggregation(cuboid, groups, otherDimsD, singleValuesD, derivedPostAggregation);
         context.setExactAggregation(isExactAggregation);
 
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
@@ -169,19 +169,7 @@ public class CubeStorageQuery implements IStorageQuery {
         return expanded;
     }
 
-    private Cuboid identifyCuboid(Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
-        for (FunctionDesc metric : metrics) {
-            if (metric.getMeasureType().onlyAggrInBaseCuboid())
-                return Cuboid.getBaseCuboid(cubeDesc);
-        }
-
-        long cuboidID = 0;
-        for (TblColRef column : dimensions) {
-            int index = cubeDesc.getRowkey().getColumnBitIndex(column);
-            cuboidID |= 1L << index;
-        }
-        return Cuboid.findById(cubeDesc, cuboidID);
-    }
+   
 
     @SuppressWarnings("unchecked")
     private Set<TblColRef> findSingleValueColumns(TupleFilter filter) {

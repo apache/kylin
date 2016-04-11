@@ -18,7 +18,6 @@
 
 package org.apache.kylin.storage.hbase.cube.v2;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -43,16 +42,15 @@ import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.gridtable.GTScanRange;
+import org.apache.kylin.gridtable.IGTStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public abstract class CubeHBaseRPC {
+public abstract class CubeHBaseRPC implements IGTStorage {
 
     public static final Logger logger = LoggerFactory.getLogger(CubeHBaseRPC.class);
 
@@ -70,8 +68,6 @@ public abstract class CubeHBaseRPC {
         this.fuzzyKeyEncoder = new FuzzyKeyEncoder(cubeSeg, cuboid);
         this.fuzzyMaskEncoder = new FuzzyMaskEncoder(cubeSeg, cuboid);
     }
-
-    abstract IGTScanner getGTScanner(final List<GTScanRequest> scanRequests) throws IOException;
 
     public static Scan buildScan(RawScan rawScan) {
         Scan scan = new Scan();
@@ -96,7 +92,7 @@ public abstract class CubeHBaseRPC {
         return scan;
     }
 
-    protected RawScan preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
+    private RawScan preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
         final List<Pair<byte[], byte[]>> selectedColumns = makeHBaseColumns(selectedColBlocks);
 
         LazyRowKeyEncoder encoder = new LazyRowKeyEncoder(cubeSeg, cuboid);
@@ -123,46 +119,12 @@ public abstract class CubeHBaseRPC {
         return new RawScan(start, end, selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize);
     }
 
-    protected List<RawScan> preparedHBaseScans(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
-        final List<Pair<byte[], byte[]>> selectedColumns = makeHBaseColumns(selectedColBlocks);
-        List<RawScan> ret = Lists.newArrayList();
-
-        LazyRowKeyEncoder encoder = new LazyRowKeyEncoder(cubeSeg, cuboid);
-        byte[] start = encoder.createBuf();
-        byte[] end = encoder.createBuf();
-        List<byte[]> startKeys;
-        List<byte[]> endKeys;
-
-        encoder.setBlankByte(RowConstants.ROWKEY_LOWER_BYTE);
-        encoder.encode(pkStart, pkStart.getInfo().getPrimaryKey(), start);
-        startKeys = encoder.getRowKeysDifferentShards(start);
-
-        encoder.setBlankByte(RowConstants.ROWKEY_UPPER_BYTE);
-        encoder.encode(pkEnd, pkEnd.getInfo().getPrimaryKey(), end);
-        endKeys = encoder.getRowKeysDifferentShards(end);
-        endKeys = Lists.transform(endKeys, new Function<byte[], byte[]>() {
-            @Override
-            public byte[] apply(byte[] input) {
-                byte[] shardEnd = new byte[input.length + 1];//append extra 0 to the end key to make it inclusive while scanning
-                System.arraycopy(input, 0, shardEnd, 0, input.length);
-                return shardEnd;
-            }
-        });
-
-        Preconditions.checkState(startKeys.size() == endKeys.size());
-        List<Pair<byte[], byte[]>> hbaseFuzzyKeys = translateFuzzyKeys(fuzzyKeys);
-
-        KylinConfig config = cubeSeg.getCubeDesc().getConfig();
-        int hbaseCaching = config.getHBaseScanCacheRows();
-        int hbaseMaxResultSize = config.getHBaseScanMaxResultSize();
-        if (isMemoryHungry(selectedColBlocks))
-            hbaseCaching /= 10;
-
-        for (short i = 0; i < startKeys.size(); ++i) {
-            ret.add(new RawScan(startKeys.get(i), endKeys.get(i), selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize));
+    protected List<RawScan> preparedHBaseScans(List<GTScanRange> ranges, ImmutableBitSet selectedColBlocks) {
+        List<RawScan> allRawScans = Lists.newArrayList();
+        for (GTScanRange range : ranges) {
+            allRawScans.add(preparedHBaseScan(range.pkStart, range.pkEnd, range.fuzzyKeys, selectedColBlocks));
         }
-        return ret;
-
+        return allRawScans;
     }
 
     private boolean isMemoryHungry(ImmutableBitSet selectedColBlocks) {

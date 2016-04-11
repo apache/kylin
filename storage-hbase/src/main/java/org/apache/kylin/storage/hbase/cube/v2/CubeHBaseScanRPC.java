@@ -19,10 +19,9 @@
 package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -30,19 +29,25 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.kv.RowConstants;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
+import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hbase.cube.v2.filter.MassInValueProviderFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -84,53 +89,77 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         }
     }
 
-    public CubeHBaseScanRPC(CubeSegment cubeSeg, Cuboid cuboid, GTInfo fullGTInfo) {
+    public CubeHBaseScanRPC(CubeSegment cubeSeg, Cuboid cuboid, final GTInfo fullGTInfo) {
         super(cubeSeg, cuboid, fullGTInfo);
+        MassInTupleFilter.VALUE_PROVIDER_FACTORY = new MassInValueProviderFactoryImpl(new MassInValueProviderFactoryImpl.DimEncAware() {
+            @Override
+            public DimensionEncoding getDimEnc(TblColRef col) {
+                return fullGTInfo.getCodeSystem().getDimEnc(col.getColumnDesc().getZeroBasedIndex());
+            }
+        });
     }
 
     @Override
-    public IGTScanner getGTScanner(final List<GTScanRequest> scanRequests) throws IOException {
-        final List<IGTScanner> scanners = Lists.newArrayList();
-        for (GTScanRequest request : scanRequests) {
-            scanners.add(getGTScanner(request));
-        }
+    public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
+        final IGTScanner scanner = getGTScannerInternal(scanRequest);
 
         return new IGTScanner() {
             @Override
             public GTInfo getInfo() {
-                return scanners.get(0).getInfo();
+                return scanner.getInfo();
             }
 
             @Override
             public int getScannedRowCount() {
                 int sum = 0;
-                for (IGTScanner s : scanners) {
-                    sum += s.getScannedRowCount();
-                }
+                sum += scanner.getScannedRowCount();
                 return sum;
             }
 
             @Override
             public void close() throws IOException {
-                for (IGTScanner s : scanners) {
-                    s.close();
-                }
+                scanner.close();
             }
 
             @Override
             public Iterator<GTRecord> iterator() {
-                return Iterators.concat(Iterators.transform(scanners.iterator(), new Function<IGTScanner, Iterator<GTRecord>>() {
-                    @Nullable
-                    @Override
-                    public Iterator<GTRecord> apply(IGTScanner input) {
-                        return input.iterator();
-                    }
-                }));
+                return scanner.iterator();
             }
         };
     }
 
-    private IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
+    //for non-sharding cases it will only return one byte[] with not shard at beginning
+    private List<byte[]> getRowKeysDifferentShards(byte[] halfCookedKey) {
+        final short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
+
+        if (!cubeSeg.isEnableSharding()) {
+            return Lists.newArrayList(halfCookedKey);//not shard to append at head, so it is already well cooked
+        } else {
+            List<byte[]> ret = Lists.newArrayList();
+            for (short i = 0; i < cuboidShardNum; ++i) {
+                short shard = ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), i, cubeSeg.getTotalShards());
+                byte[] cookedKey = Arrays.copyOf(halfCookedKey, halfCookedKey.length);
+                BytesUtil.writeShort(shard, cookedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
+                ret.add(cookedKey);
+            }
+            return ret;
+        }
+    }
+
+    private List<RawScan> spawnRawScansForAllShards(RawScan rawScan) {
+        List<RawScan> ret = Lists.newArrayList();
+        List<byte[]> startKeys = getRowKeysDifferentShards(rawScan.startKey);
+        List<byte[]> endKeys = getRowKeysDifferentShards(rawScan.endKey);
+        for (int i = 0; i < startKeys.size(); i++) {
+            RawScan temp = new RawScan(rawScan);
+            temp.startKey = startKeys.get(i);
+            temp.endKey = endKeys.get(i);
+            ret.add(temp);
+        }
+        return ret;
+    }
+
+    private IGTScanner getGTScannerInternal(final GTScanRequest scanRequest) throws IOException {
 
         // primary key (also the 0th column block) is always selected
         final ImmutableBitSet selectedColBlocks = scanRequest.getSelectedColBlocks().set(0);
@@ -138,22 +167,23 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         HConnection hbaseConn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
         final HTableInterface hbaseTable = hbaseConn.getTable(cubeSeg.getStorageLocationIdentifier());
 
-        List<RawScan> rawScans = preparedHBaseScans(scanRequest.getPkStart(), scanRequest.getPkEnd(), scanRequest.getFuzzyKeys(), selectedColBlocks);
+        List<RawScan> rawScans = preparedHBaseScans(scanRequest.getGTScanRanges(), selectedColBlocks);
         List<List<Integer>> hbaseColumnsToGT = getHBaseColumnsGTMapping(selectedColBlocks);
 
         final List<ResultScanner> scanners = Lists.newArrayList();
         final List<Iterator<Result>> resultIterators = Lists.newArrayList();
 
         for (RawScan rawScan : rawScans) {
+            for (RawScan rawScanWithShard : spawnRawScansForAllShards(rawScan)) {
+                logScan(rawScanWithShard, cubeSeg.getStorageLocationIdentifier());
+                Scan hbaseScan = buildScan(rawScanWithShard);
 
-            logScan(rawScan, cubeSeg.getStorageLocationIdentifier());
-            Scan hbaseScan = buildScan(rawScan);
+                final ResultScanner scanner = hbaseTable.getScanner(hbaseScan);
+                final Iterator<Result> iterator = scanner.iterator();
 
-            final ResultScanner scanner = hbaseTable.getScanner(hbaseScan);
-            final Iterator<Result> iterator = scanner.iterator();
-
-            scanners.add(scanner);
-            resultIterators.add(iterator);
+                scanners.add(scanner);
+                resultIterators.add(iterator);
+            }
         }
 
         final Iterator<Result> allResultsIterator = Iterators.concat(resultIterators.iterator());

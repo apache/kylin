@@ -63,8 +63,8 @@ public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
 
         cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
-        flatTable = "../examples/test_case_data/localmeta/data/flatten_data_for_without_slr_left_join.csv";
-        dictionaryMap = InMemCubeBuilderTest.getDictionaryMap(cube, flatTable);
+        flatTable = LOCALMETA_TEST_DATA + "/data/flatten_data_for_without_slr_left_join.csv";
+        dictionaryMap = ITInMemCubeBuilderTest.getDictionaryMap(cube, flatTable);
     }
 
     @AfterClass
@@ -84,7 +84,7 @@ public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
 
         {
             Future<?> future = executorService.submit(doggedBuilder.buildAsRunnable(queue, new NoopWriter()));
-            InMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
+            ITInMemCubeBuilderTest.feedData(cube, flatTable, queue, INPUT_ROWS, randSeed);
             future.get();
         }
     }
@@ -101,7 +101,7 @@ public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
 
         @Override
         public void close() {
-            
+
         }
     }
 }

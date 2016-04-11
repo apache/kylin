@@ -900,6 +900,11 @@ public class CubeDesc extends RootPersistentEntity {
         }
     }
 
+    public TblColRef getColumnByBitIndex(int bitIndex) {
+        RowKeyColDesc[] rowKeyColumns = this.getRowkey().getRowKeyColumns();
+        return rowKeyColumns[rowKeyColumns.length - 1 - bitIndex].getColRef();
+    }
+
     public boolean hasMemoryHungryMeasures() {
         for (MeasureDesc measure : measures) {
             if (measure.getFunction().getMeasureType().isMemoryHungry()) {

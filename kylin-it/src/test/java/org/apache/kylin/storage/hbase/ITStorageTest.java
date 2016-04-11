@@ -38,7 +38,7 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageFactory;
-import org.apache.kylin.storage.cache.StorageMockUtils;
+import org.apache.kylin.storage.StorageMockUtils;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.junit.After;
 import org.junit.AfterClass;

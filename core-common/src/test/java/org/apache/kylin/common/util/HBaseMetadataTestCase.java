@@ -26,9 +26,11 @@ import org.apache.kylin.common.KylinConfig;
  */
 public class HBaseMetadataTestCase extends AbstractKylinTestCase {
 
+    public static String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
+    
     static {
         try {
-            ClassUtil.addClasspath(new File("../examples/test_case_data/sandbox/").getAbsolutePath());
+            ClassUtil.addClasspath(new File(SANDBOX_TEST_DATA).getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
         }

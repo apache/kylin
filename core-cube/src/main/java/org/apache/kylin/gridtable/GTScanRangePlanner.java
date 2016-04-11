@@ -18,69 +18,166 @@
 
 package org.apache.kylin.gridtable;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.FuzzyValueCombination;
+import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.gridtable.CubeGridTable;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class GTScanRangePlanner {
 
     private static final Logger logger = LoggerFactory.getLogger(GTScanRangePlanner.class);
 
+    private static final int MAX_SCAN_RANGES = 200;
     private static final int MAX_HBASE_FUZZY_KEYS = 100;
 
-    final private GTInfo info;
-    final private Pair<ByteArray, ByteArray> segmentStartAndEnd;
-    final private TblColRef partitionColRef;
+    protected int maxScanRanges;
 
-    final private RecordComparator rangeStartComparator;
-    final private RecordComparator rangeEndComparator;
-    final private RecordComparator rangeStartEndComparator;
+    //non-GT
+    protected CubeSegment cubeSegment;
+    protected CubeDesc cubeDesc;
+    protected Cuboid cuboid;
+    protected TupleFilter filter;
+    protected Set<TblColRef> dimensions;
+    protected Set<TblColRef> groupbyDims;
+    protected Set<TblColRef> filterDims;
+    protected Collection<FunctionDesc> metrics;
 
-    /**
-     * @param info
-     * @param segmentStartAndEnd in GT encoding
-     * @param partitionColRef the TblColRef in GT
-     */
-    public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> segmentStartAndEnd, TblColRef partitionColRef) {
+    //GT 
+    protected TupleFilter gtFilter;
+    protected GTInfo gtInfo;
+    protected Pair<ByteArray, ByteArray> gtStartAndEnd;
+    protected TblColRef gtPartitionCol;
+    protected ImmutableBitSet gtDimensions;
+    protected ImmutableBitSet gtAggrGroups;
+    protected ImmutableBitSet gtAggrMetrics;
+    protected String[] gtAggrFuncs;
+    final protected RecordComparator rangeStartComparator;
+    final protected RecordComparator rangeEndComparator;
+    final protected RecordComparator rangeStartEndComparator;
 
-        this.info = info;
-        this.segmentStartAndEnd = segmentStartAndEnd;
-        this.partitionColRef = partitionColRef;
+    public GTScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, Set<TblColRef> groupbyDims, //
+            Collection<FunctionDesc> metrics) {
 
-        IGTComparator comp = info.codeSystem.getComparator();
+        this.maxScanRanges = MAX_SCAN_RANGES;
 
+        this.cubeSegment = cubeSegment;
+        this.cubeDesc = cubeSegment.getCubeDesc();
+        this.cuboid = cuboid;
+        this.dimensions = dimensions;
+        this.groupbyDims = groupbyDims;
+        this.filter = filter;
+        this.metrics = metrics;
+        this.filterDims = Sets.newHashSet();
+        TupleFilter.collectColumns(filter, this.filterDims);
+
+        this.gtInfo = CubeGridTable.newGTInfo(cubeSegment, cuboid.getId());
+        CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
+
+        IGTComparator comp = gtInfo.codeSystem.getComparator();
         //start key GTRecord compare to start key GTRecord
         this.rangeStartComparator = getRangeStartComparator(comp);
         //stop key GTRecord compare to stop key GTRecord
         this.rangeEndComparator = getRangeEndComparator(comp);
         //start key GTRecord compare to stop key GTRecord
         this.rangeStartEndComparator = getRangeStartEndComparator(comp);
+
+        //replace the constant values in filter to dictionary codes 
+        this.gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getCuboidDimensionsInGTOrder(), this.groupbyDims);
+
+        this.gtDimensions = makeGridTableColumns(mapping, dimensions);
+        this.gtAggrGroups = makeGridTableColumns(mapping, replaceDerivedColumns(groupbyDims, cubeSegment.getCubeDesc()));
+        this.gtAggrMetrics = makeGridTableColumns(mapping, metrics);
+        this.gtAggrFuncs = makeAggrFuncs(mapping, metrics);
+
+        if (cubeSegment.getCubeDesc().getModel().getPartitionDesc().isPartitioned()) {
+            int index = mapping.getIndexOf(cubeSegment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef());
+            if (index >= 0) {
+                this.gtStartAndEnd = getSegmentStartAndEnd(index);
+                this.gtPartitionCol = gtInfo.colRef(index);
+            }
+        }
+
     }
 
-    // return empty list meaning filter is always false
-    public List<GTScanRange> planScanRanges(TupleFilter filter) {
-        return planScanRanges(filter, Integer.MAX_VALUE);
+    /**
+     * constrcut GTScanRangePlanner with incomplete information. only be used for UT  
+     * @param info
+     * @param gtStartAndEnd
+     * @param gtPartitionCol
+     * @param gtFilter
+     */
+    public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> gtStartAndEnd, TblColRef gtPartitionCol, TupleFilter gtFilter) {
+
+        this.maxScanRanges = MAX_SCAN_RANGES;
+        this.gtInfo = info;
+
+        IGTComparator comp = gtInfo.codeSystem.getComparator();
+        //start key GTRecord compare to start key GTRecord
+        this.rangeStartComparator = getRangeStartComparator(comp);
+        //stop key GTRecord compare to stop key GTRecord
+        this.rangeEndComparator = getRangeEndComparator(comp);
+        //start key GTRecord compare to stop key GTRecord
+        this.rangeStartEndComparator = getRangeStartEndComparator(comp);
+
+
+        this.gtFilter = gtFilter;
+        this.gtStartAndEnd = gtStartAndEnd;
+        this.gtPartitionCol = gtPartitionCol;
+    }
+    
+
+    public GTScanRequest planScanRequest(boolean allowPreAggregate) {
+        GTScanRequest scanRequest;
+        List<GTScanRange> scanRanges = this.planScanRanges();
+        if (scanRanges != null && scanRanges.size() != 0) {
+            scanRequest = new GTScanRequest(gtInfo, scanRanges, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate, cubeSegment.getCubeInstance().getConfig().getQueryCoprocessorMemGB());
+        } else {
+            scanRequest = null;
+        }
+        return scanRequest;
     }
 
-    // return empty list meaning filter is always false
-    public List<GTScanRange> planScanRanges(TupleFilter filter, int maxRanges) {
-
-        TupleFilter flatFilter = flattenToOrAndFilter(filter);
+    /**
+     * Overwrite this method to provide smarter storage visit plans
+     * @return
+     */
+    public List<GTScanRange> planScanRanges() {
+        TupleFilter flatFilter = flattenToOrAndFilter(gtFilter);
 
         List<Collection<ColumnRange>> orAndDimRanges = translateToOrAndDimRanges(flatFilter);
 
@@ -92,9 +189,106 @@ public class GTScanRangePlanner {
         }
 
         List<GTScanRange> mergedRanges = mergeOverlapRanges(scanRanges);
-        mergedRanges = mergeTooManyRanges(mergedRanges, maxRanges);
+        mergedRanges = mergeTooManyRanges(mergedRanges, maxScanRanges);
 
         return mergedRanges;
+    }
+
+    private Pair<ByteArray, ByteArray> getSegmentStartAndEnd(int index) {
+        ByteArray start;
+        if (cubeSegment.getDateRangeStart() != Long.MIN_VALUE) {
+            start = encodeTime(cubeSegment.getDateRangeStart(), index, 1);
+        } else {
+            start = new ByteArray();
+        }
+
+        ByteArray end;
+        if (cubeSegment.getDateRangeEnd() != Long.MAX_VALUE) {
+            end = encodeTime(cubeSegment.getDateRangeEnd(), index, -1);
+        } else {
+            end = new ByteArray();
+        }
+        return Pair.newPair(start, end);
+
+    }
+
+    private ByteArray encodeTime(long ts, int index, int roundingFlag) {
+        String value;
+        DataType partitionColType = gtInfo.getColumnType(index);
+        if (partitionColType.isDate()) {
+            value = DateFormat.formatToDateStr(ts);
+        } else if (partitionColType.isDatetime() || partitionColType.isTimestamp()) {
+            value = DateFormat.formatToTimeWithoutMilliStr(ts);
+        } else if (partitionColType.isStringFamily()) {
+            String partitionDateFormat = cubeSegment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateFormat();
+            if (StringUtils.isEmpty(partitionDateFormat))
+                partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
+            value = DateFormat.formatToDateStr(ts, partitionDateFormat);
+        } else {
+            throw new RuntimeException("Type " + partitionColType + " is not valid partition column type");
+        }
+
+        ByteBuffer buffer = ByteBuffer.allocate(gtInfo.getMaxColumnLength());
+        gtInfo.getCodeSystem().encodeColumnValue(index, value, roundingFlag, buffer);
+
+        return ByteArray.copyOf(buffer.array(), 0, buffer.position());
+    }
+
+    private Set<TblColRef> replaceDerivedColumns(Set<TblColRef> input, CubeDesc cubeDesc) {
+        Set<TblColRef> ret = Sets.newHashSet();
+        for (TblColRef col : input) {
+            if (cubeDesc.hasHostColumn(col)) {
+                for (TblColRef host : cubeDesc.getHostInfo(col).columns) {
+                    ret.add(host);
+                }
+            } else {
+                ret.add(col);
+            }
+        }
+        return ret;
+    }
+
+    private ImmutableBitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Set<TblColRef> dimensions) {
+        BitSet result = new BitSet();
+        for (TblColRef dim : dimensions) {
+            int idx = mapping.getIndexOf(dim);
+            if (idx >= 0)
+                result.set(idx);
+        }
+        return new ImmutableBitSet(result);
+    }
+
+    private ImmutableBitSet makeGridTableColumns(CuboidToGridTableMapping mapping, Collection<FunctionDesc> metrics) {
+        BitSet result = new BitSet();
+        for (FunctionDesc metric : metrics) {
+            int idx = mapping.getIndexOf(metric);
+            if (idx < 0)
+                throw new IllegalStateException(metric + " not found in " + mapping);
+            result.set(idx);
+        }
+        return new ImmutableBitSet(result);
+    }
+
+    private String[] makeAggrFuncs(final CuboidToGridTableMapping mapping, Collection<FunctionDesc> metrics) {
+
+        //metrics are represented in ImmutableBitSet, which loses order information
+        //sort the aggrFuns to align with metrics natural order 
+        List<FunctionDesc> metricList = Lists.newArrayList(metrics);
+        Collections.sort(metricList, new Comparator<FunctionDesc>() {
+            @Override
+            public int compare(FunctionDesc o1, FunctionDesc o2) {
+                int a = mapping.getIndexOf(o1);
+                int b = mapping.getIndexOf(o2);
+                return a - b;
+            }
+        });
+
+        String[] result = new String[metricList.size()];
+        int i = 0;
+        for (FunctionDesc metric : metricList) {
+            result[i++] = metric.getExpression();
+        }
+        return result;
     }
 
     private String makeReadable(ByteArray byteArray) {
@@ -105,29 +299,29 @@ public class GTScanRangePlanner {
         }
     }
 
-    private GTScanRange newScanRange(Collection<ColumnRange> andDimRanges) {
-        GTRecord pkStart = new GTRecord(info);
-        GTRecord pkEnd = new GTRecord(info);
+    protected GTScanRange newScanRange(Collection<ColumnRange> andDimRanges) {
+        GTRecord pkStart = new GTRecord(gtInfo);
+        GTRecord pkEnd = new GTRecord(gtInfo);
         Map<Integer, Set<ByteArray>> fuzzyValues = Maps.newHashMap();
 
         List<GTRecord> fuzzyKeys;
 
         for (ColumnRange range : andDimRanges) {
-            if (partitionColRef != null && range.column.equals(partitionColRef)) {
-                if (rangeStartEndComparator.comparator.compare(segmentStartAndEnd.getFirst(), range.end) <= 0 //
-                        && (rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) < 0 //
-                        || rangeStartEndComparator.comparator.compare(range.begin, segmentStartAndEnd.getSecond()) == 0 //
-                        && (range.op == FilterOperatorEnum.EQ || range.op == FilterOperatorEnum.LTE || range.op == FilterOperatorEnum.GTE || range.op == FilterOperatorEnum.IN))) {
+            if (gtPartitionCol != null && range.column.equals(gtPartitionCol)) {
+                if (rangeStartEndComparator.comparator.compare(gtStartAndEnd.getFirst(), range.end) <= 0 //
+                        && (rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond()) < 0 //
+                                || rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond()) == 0 //
+                                        && (range.op == FilterOperatorEnum.EQ || range.op == FilterOperatorEnum.LTE || range.op == FilterOperatorEnum.GTE || range.op == FilterOperatorEnum.IN))) {
                     //segment range is [Closed,Open), but segmentStartAndEnd.getSecond() might be rounded, so use <= when has equals in condition. 
                 } else {
-                    logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}",//
-                            new Object[] { partitionColRef, makeReadable(segmentStartAndEnd.getFirst()), makeReadable(segmentStartAndEnd.getSecond()), makeReadable(range.begin), makeReadable(range.end) });
+                    logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}", //
+                            new Object[] { gtPartitionCol, makeReadable(gtStartAndEnd.getFirst()), makeReadable(gtStartAndEnd.getSecond()), makeReadable(range.begin), makeReadable(range.end) });
                     return null;
                 }
             }
 
             int col = range.column.getColumnDesc().getZeroBasedIndex();
-            if (!info.primaryKey.get(col))
+            if (!gtInfo.primaryKey.get(col))
                 continue;
 
             pkStart.set(col, range.begin);
@@ -139,7 +333,6 @@ public class GTScanRangePlanner {
         }
 
         fuzzyKeys = buildFuzzyKeys(fuzzyValues);
-
         return new GTScanRange(pkStart, pkEnd, fuzzyKeys);
     }
 
@@ -154,17 +347,16 @@ public class GTScanRangePlanner {
             logger.info("The execution of this query will not use fuzzy key");
             return result;
         }
-        
 
         List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, MAX_HBASE_FUZZY_KEYS);
 
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
 
-            BitSet bitSet = new BitSet(info.getColumnCount());
+            BitSet bitSet = new BitSet(gtInfo.getColumnCount());
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 bitSet.set(entry.getKey());
             }
-            GTRecord fuzzy = new GTRecord(info, new ImmutableBitSet(bitSet));
+            GTRecord fuzzy = new GTRecord(gtInfo, new ImmutableBitSet(bitSet));
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 fuzzy.set(entry.getKey(), entry.getValue());
             }
@@ -174,7 +366,7 @@ public class GTScanRangePlanner {
         return result;
     }
 
-    private TupleFilter flattenToOrAndFilter(TupleFilter filter) {
+    protected TupleFilter flattenToOrAndFilter(TupleFilter filter) {
         if (filter == null)
             return null;
 
@@ -193,7 +385,7 @@ public class GTScanRangePlanner {
         return flatFilter;
     }
 
-    private List<Collection<ColumnRange>> translateToOrAndDimRanges(TupleFilter flatFilter) {
+    protected List<Collection<ColumnRange>> translateToOrAndDimRanges(TupleFilter flatFilter) {
         List<Collection<ColumnRange>> result = Lists.newArrayList();
 
         if (flatFilter == null) {
@@ -272,7 +464,7 @@ public class GTScanRangePlanner {
         return orAndRanges;
     }
 
-    private List<GTScanRange> mergeOverlapRanges(List<GTScanRange> ranges) {
+    protected List<GTScanRange> mergeOverlapRanges(List<GTScanRange> ranges) {
         if (ranges.size() <= 1) {
             return ranges;
         }
@@ -339,7 +531,7 @@ public class GTScanRangePlanner {
         return new GTScanRange(start, end, newFuzzyKeys);
     }
 
-    private List<GTScanRange> mergeTooManyRanges(List<GTScanRange> ranges, int maxRanges) {
+    protected List<GTScanRange> mergeTooManyRanges(List<GTScanRange> ranges, int maxRanges) {
         if (ranges.size() <= maxRanges) {
             return ranges;
         }
@@ -351,7 +543,15 @@ public class GTScanRangePlanner {
         return result;
     }
 
-    private class ColumnRange {
+    public int getMaxScanRanges() {
+        return maxScanRanges;
+    }
+
+    public void setMaxScanRanges(int maxScanRanges) {
+        this.maxScanRanges = maxScanRanges;
+    }
+
+    protected class ColumnRange {
         private TblColRef column;
         private ByteArray begin = ByteArray.EMPTY;
         private ByteArray end = ByteArray.EMPTY;
@@ -412,7 +612,7 @@ public class GTScanRangePlanner {
             if (valueSet != null) {
                 return valueSet.isEmpty();
             } else if (begin.array() != null && end.array() != null) {
-                return info.codeSystem.getComparator().compare(begin, end) > 0;
+                return gtInfo.codeSystem.getComparator().compare(begin, end) > 0;
             } else {
                 return false;
             }

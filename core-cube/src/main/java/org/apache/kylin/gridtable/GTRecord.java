@@ -47,7 +47,6 @@ public class GTRecord implements Comparable<GTRecord> {
         }
         this.info = info;
         this.maskForEqualHashComp = maskForEqualHashComp;
-
     }
 
     public GTRecord(GTInfo info) {
@@ -56,6 +55,15 @@ public class GTRecord implements Comparable<GTRecord> {
 
     public GTRecord(GTInfo info, ByteArray[] cols) {
         this(info, info.colAll, cols);
+    }
+
+    public GTRecord(GTRecord other) {
+        this.info = other.info;
+        this.maskForEqualHashComp = other.maskForEqualHashComp;
+        this.cols = new ByteArray[info.getColumnCount()];
+        for (int i = 0; i < other.cols.length; i++) {
+            this.cols[i] = other.cols[i].copy();
+        } 
     }
 
     public GTInfo getInfo() {

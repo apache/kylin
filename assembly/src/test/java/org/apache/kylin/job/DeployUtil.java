@@ -34,7 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
-import org.apache.kylin.common.util.AbstractKylinTestCase;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeUpdate;
@@ -66,7 +66,7 @@ public class DeployUtil {
     public static void deployMetadata() throws IOException {
         // install metadata to hbase
         ResourceTool.reset(config());
-        ResourceTool.copy(KylinConfig.createInstanceFromUri(AbstractKylinTestCase.LOCALMETA_TEST_DATA), config());
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA), config());
 
         // update cube desc signature.
         for (CubeInstance cube : CubeManager.getInstance(config()).listAllCubes()) {
