@@ -342,27 +342,34 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                     builder.setBehavior(toggle);
                     builder.setStartTime(System.currentTimeMillis());
                     builder.setTimeout(epResultItr.getTimeout());
+                    String logHeader = "<sub-thread for GTScanRequest " + Integer.toHexString(System.identityHashCode(scanRequest)) + "> ";
 
                     Map<byte[], CubeVisitProtos.CubeVisitResponse> results;
                     try {
                         results = getResults(builder.build(), conn.getTable(cubeSeg.getStorageLocationIdentifier()), epRange.getFirst(), epRange.getSecond());
                     } catch (Throwable throwable) {
-                        throw new RuntimeException("<sub-thread for GTScanRequest " + Integer.toHexString(System.identityHashCode(scanRequest)) + "> " + "Error when visiting cubes by endpoint", throwable);
+                        throw new RuntimeException(logHeader + "Error when visiting cubes by endpoint", throwable);
                     }
 
+                    boolean abnormalFinish = false;
                     for (Map.Entry<byte[], CubeVisitProtos.CubeVisitResponse> result : results.entrySet()) {
                         totalScannedCount.addAndGet(result.getValue().getStats().getScannedRowCount());
-                        logger.info("<sub-thread for GTScanRequest " + Integer.toHexString(System.identityHashCode(scanRequest)) + "> " + getStatsString(result));
+                        logger.info(logHeader + getStatsString(result));
 
                         if (result.getValue().getStats().getNormalComplete() != 1) {
-                            throw new RuntimeException("The coprocessor thread stopped itself due to scan timeout.");
+                            abnormalFinish = true;
                         }
+                        else {
+                            try {
+                                epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getValue().getCompressedRows())));
+                            } catch (IOException | DataFormatException e) {
+                                throw new RuntimeException(logHeader + "Error when decompressing", e);
+                            }
+                        }
+                    }
 
-                        try {
-                            epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getValue().getCompressedRows())));
-                        } catch (IOException | DataFormatException e) {
-                            throw new RuntimeException("Error when decompressing", e);
-                        }
+                    if (abnormalFinish) {
+                        throw new RuntimeException(logHeader + "The coprocessor thread stopped itself due to scan timeout, failing current query...");
                     }
                 }
             });
