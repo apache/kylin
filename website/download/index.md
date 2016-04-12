@@ -7,15 +7,15 @@ permalink: /download/index.html
 __Latest Release (Source Code)__  
 The latest release of Apache Kylin™ can be downloaded from the ASF:
 
-* [Apache Kylin v1.5.0](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.0/)
+* [Apache Kylin v1.5.1](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.1/)
 * [Release Notes](http://kylin.apache.org/docs15/release_notes.html)
-* Git Tag: [kylin-1.5.0](https://github.com/apache/kylin/tree/kylin-1.5.0)
-* Git Commit: [64d02018fcf082745d4104d604646058fcb7e17c](https://github.com/apache/kylin/commit/64d02018fcf082745d4104d604646058fcb7e17c)
+* Git Tag: [kylin-1.5.1](https://github.com/apache/kylin/tree/kylin-1.5.1)
+* Git Commit: [aa98875c1b603e79b866b5e91bc3288e61a0b679](https://github.com/apache/kylin/commit/aa98875c1b603e79b866b5e91bc3288e61a0b679)
 
 __Binary Package (for running on HBase 0.98/0.99)__
 For convenience, there’s binary package also available: 
 
-* [apache-kylin-1.5.0-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.0/apache-kylin-1.5.0-bin.tar.gz)
+* [apache-kylin-1.5.1-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.1/apache-kylin-1.5.1-bin.tar.gz)
 * [Installation Guide](http://kylin.apache.org/docs15/install)
 
 __Special Binary Package (for running on HBase 1.1.3 or above)__

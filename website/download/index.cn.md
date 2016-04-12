@@ -6,15 +6,15 @@ title: 下载
 __1.5.0 最新发布(源代码)__
 最新发布的Apache Kylin™可以从ASF网站下载：:
 
-* [Apache Kylin v1.5.0](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.0/)
+* [Apache Kylin v1.5.1](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.1/)
 * [发布日志](http://kylin.apache.org/docs15/release_notes.html)
-* Git 标签: [kylin-1.5.0](https://github.com/apache/kylin/tree/kylin-1.5.0)
-* Git Commit: [64d02018fcf082745d4104d604646058fcb7e17c](https://github.com/apache/kylin/commit/64d02018fcf082745d4104d604646058fcb7e17c)
+* Git 标签: [kylin-1.5.1](https://github.com/apache/kylin/tree/kylin-1.5.1)
+* Git Commit: [aa98875c1b603e79b866b5e91bc3288e61a0b679](https://github.com/apache/kylin/commit/aa98875c1b603e79b866b5e91bc3288e61a0b679)
 
 __1.5.0 二进制包 for HBase 0.98/0.99__
 为方便使用，我们提供预打包的二进制安装包：
 
-* [apache-kylin-1.5.0-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.0/apache-kylin-1.5.0-bin.tar.gz)
+* [apache-kylin-1.5.1-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.1/apache-kylin-1.5.1-bin.tar.gz)
 * [安装帮助](http://kylin.apache.org/docs15/install)
 
 __特别二进制包 for HBase 1.1.3及更高版本__

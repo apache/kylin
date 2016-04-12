@@ -353,9 +353,6 @@ No 0s or -1s.
 Therefore I am delighted to announce that the proposal to release
 Apache-Kylin-X.Y.Z has passed.
 
-I'll now start a vote on the general list. Those of you in the IPMC,
-please recast your vote on the new thread.
-
 Luke
 
 {% endhighlight %}

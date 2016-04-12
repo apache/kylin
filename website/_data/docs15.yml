@@ -56,3 +56,4 @@
   - howto/howto_jdbc
   - howto/howto_upgrade
   - howto/howto_ldap_and_sso
+  - howto/howto_update_coprocessor
