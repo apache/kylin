@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common.util;
 
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -25,6 +26,7 @@ import java.util.TreeMap;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.Range;
 import com.google.common.collect.Ranges;
 
 /**
@@ -62,5 +64,12 @@ public class RangeUtilTest {
 
         subMap = RangeUtil.filter(map, Ranges.lessThan(0));
         Assert.assertEquals(subMap.size(), 0);
+    }
+
+    @Test
+    public void testBuildRanges() {
+        int[] test1 = { 1, 2, 3, 5, 7, 8, 10, 4 };
+        List<Range<Integer>> ranges = RangeUtil.buildRanges(test1, true);
+        Assert.assertEquals(3, ranges.size());
     }
 }

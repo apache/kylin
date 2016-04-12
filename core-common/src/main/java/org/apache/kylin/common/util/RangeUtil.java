@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableMap;
@@ -194,5 +196,27 @@ public class RangeUtil {
             sb.append("+∞)");
         }
         return sb.toString();
+    }
+
+    public static List<Range<Integer>> buildRanges(int[] values, boolean needSort) {
+        ArrayList ranges = Lists.newArrayList();
+
+        if (values == null || values.length == 0)
+            return ranges;
+
+        if (needSort) {
+            Arrays.sort(values);
+        }
+        int lastBegin = values[0];
+        int lastEnd = lastBegin;
+        for (int index = 1; index < values.length; index++) {
+            if (values[index] - lastEnd != 1) {
+                ranges.add(Ranges.closed(lastBegin, lastEnd));
+                lastBegin = values[index];
+            }
+            lastEnd = values[index];
+        }
+        ranges.add(Ranges.closed(lastBegin, lastEnd));
+        return ranges;
     }
 }
