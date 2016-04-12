@@ -41,7 +41,6 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.AbstractKylinTestCase;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
@@ -76,15 +75,20 @@ public class BuildCubeWithEngine {
     private static final Log logger = LogFactory.getLog(BuildCubeWithEngine.class);
 
     public static void main(String[] args) throws Exception {
-        beforeClass();
+        try {
+            beforeClass();
 
-        BuildCubeWithEngine buildCubeWithEngine = new BuildCubeWithEngine();
-        buildCubeWithEngine.before();
-        buildCubeWithEngine.build();
-        logger.info("Build is done");
-        afterClass();
-        logger.info("Going to exit");
-        System.exit(0);
+            BuildCubeWithEngine buildCubeWithEngine = new BuildCubeWithEngine();
+            buildCubeWithEngine.before();
+            buildCubeWithEngine.build();
+            logger.info("Build is done");
+            afterClass();
+            logger.info("Going to exit");
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("error", e);
+            System.exit(1);
+        }
     }
 
     public static void beforeClass() throws Exception {
@@ -99,7 +103,7 @@ public class BuildCubeWithEngine {
             logger.info("Will not use fast build mode");
         }
 
-        System.setProperty(KylinConfig.KYLIN_CONF,HBaseMetadataTestCase.SANDBOX_TEST_DATA);
+        System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
         if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
             throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
         }

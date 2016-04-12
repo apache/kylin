@@ -227,7 +227,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             }
 
             final MutableBoolean normalComplete = new MutableBoolean(true);
-            final long startTime = request.getStartTime();
+            final long startTime = this.serviceStartTime;//request.getStartTime();
             final long timeout = (long) (request.getTimeout() * 0.95);
 
             final CellListIterator cellListIterator = new CellListIterator() {
@@ -294,7 +294,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 allRows = new byte[0];
             }
             compressedAllRows = CompressionUtils.compress(allRows);
-            
+
             appendProfileInfo(sb, "compress done");
 
             OperatingSystemMXBean operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
