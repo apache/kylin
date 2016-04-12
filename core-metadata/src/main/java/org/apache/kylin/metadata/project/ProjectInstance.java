@@ -210,9 +210,13 @@ public class ProjectInstance extends RootPersistentEntity {
     public void removeTable(String tableName) {
         tables.remove(tableName.toUpperCase());
     }
+    
+    public void addExtFilter(String extFilterName){
+        this.getExtFilters().add(extFilterName);
+    }
 
     public void removeExtFilter(String filterName) {
-        extFilters.remove(filterName.toUpperCase());
+        extFilters.remove(filterName);
     }
 
     public int getTablesCount() {
@@ -227,9 +231,6 @@ public class ProjectInstance extends RootPersistentEntity {
         return tables;
     }
 
-    public void addExtFilter(String extFilterName){
-        this.getExtFilters().add(extFilterName.toLowerCase());
-    }
 
     public Set<String> getExtFilters(){
         return extFilters;
