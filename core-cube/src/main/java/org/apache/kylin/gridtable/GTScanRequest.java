@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
@@ -187,6 +188,7 @@ public class GTScanRequest {
             }
         }
         System.out.println("Meaningless byte is " + meaninglessByte);
+        IOUtils.closeQuietly(scanner);
         return scanned;
     }
 

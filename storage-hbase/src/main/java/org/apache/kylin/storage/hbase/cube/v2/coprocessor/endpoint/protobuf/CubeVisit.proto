@@ -35,6 +35,8 @@ message CubeVisitRequest {
     required bytes hbaseRawScan = 3;
     required int32 rowkeyPreambleSize = 4;
     repeated IntList hbaseColumnsToGT = 5;
+    required int64 startTime = 6;//when client start the request
+    required int64 timeout = 7;//how long client will wait
     message IntList {
         repeated int32 ints = 1;
     }
@@ -51,6 +53,7 @@ message CubeVisitResponse {
         optional double freeSwapSpaceSize = 7;
         optional string hostname = 8;
         optional string etcMsg = 9;
+        optional int32 normalComplete =10;//when time outs, normalComplete will be false
     }
     required bytes compressedRows = 1;
     required Stats stats = 2;

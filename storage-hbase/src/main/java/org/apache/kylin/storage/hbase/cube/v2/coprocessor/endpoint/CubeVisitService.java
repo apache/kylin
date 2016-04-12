@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
@@ -152,17 +153,17 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
     }
 
     private void appendProfileInfo(StringBuilder sb, String info) {
-        sb.append(System.currentTimeMillis() - this.serviceStartTime);
         if (info != null) {
-            sb.append(":").append(info);
+            sb.append(info);
         }
+        sb.append("@" + (System.currentTimeMillis() - this.serviceStartTime));
         sb.append(",");
     }
 
     @Override
     public void visitCube(RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
 
-        RegionScanner innerScanner = null;
+        List<RegionScanner> regionScanners = Lists.newArrayList();
         HRegion region = null;
 
         StringBuilder sb = new StringBuilder();
@@ -182,6 +183,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
             final List<RawScan> hbaseRawScans = deserializeRawScans(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getHbaseRawScan())));
 
+            appendProfileInfo(sb, "start latency: " + (this.serviceStartTime - request.getStartTime()));
+
             MassInTupleFilter.VALUE_PROVIDER_FACTORY = new MassInValueProviderFactoryImpl(new MassInValueProviderFactoryImpl.DimEncAware() {
                 @Override
                 public DimensionEncoding getDimEnc(TblColRef col) {
@@ -190,6 +193,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             });
 
             final List<InnerScannerAsIterator> cellListsForeachRawScan = Lists.newArrayList();
+
             for (RawScan hbaseRawScan : hbaseRawScans) {
                 if (request.getRowkeyPreambleSize() - RowConstants.ROWKEY_CUBOIDID_LEN > 0) {
                     //if has shard, fill region shard to raw scan start/end
@@ -197,20 +201,23 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 }
 
                 Scan scan = CubeHBaseRPC.buildScan(hbaseRawScan);
-                innerScanner = region.getScanner(scan);
+                RegionScanner innerScanner = region.getScanner(scan);
+                regionScanners.add(innerScanner);
 
                 InnerScannerAsIterator cellListIterator = new InnerScannerAsIterator(innerScanner);
                 cellListsForeachRawScan.add(cellListIterator);
             }
-            
+
             final Iterator<List<Cell>> allCellLists = Iterators.concat(cellListsForeachRawScan.iterator());
 
             if (behavior.ordinal() < CoprocessorBehavior.SCAN.ordinal()) {
                 //this is only for CoprocessorBehavior.RAW_SCAN case to profile hbase scan speed
                 List<Cell> temp = Lists.newArrayList();
                 int counter = 0;
-                while (innerScanner.nextRaw(temp)) {
-                    counter++;
+                for (RegionScanner innerScanner : regionScanners) {
+                    while (innerScanner.nextRaw(temp)) {
+                        counter++;
+                    }
                 }
                 appendProfileInfo(sb, "scanned " + counter);
             }
@@ -219,7 +226,14 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 scanReq.setAggrCacheGB(0); // disable mem check if so told
             }
 
-            IGTStore store = new HBaseReadonlyStore(new CellListIterator() {
+            final MutableBoolean normalComplete = new MutableBoolean(true);
+            final long startTime = request.getStartTime();
+            final long timeout = (long) (request.getTimeout() * 0.95);
+
+            final CellListIterator cellListIterator = new CellListIterator() {
+
+                int counter = 0;
+
                 @Override
                 public void close() throws IOException {
                     for (CellListIterator closeable : cellListsForeachRawScan) {
@@ -229,6 +243,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
                 @Override
                 public boolean hasNext() {
+                    if (counter++ % 1000 == 1) {
+                        if (System.currentTimeMillis() - startTime > timeout) {
+                            normalComplete.setValue(false);
+                            return false;
+                        }
+                    }
                     return allCellLists.hasNext();
                 }
 
@@ -241,7 +261,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 public void remove() {
                     throw new UnsupportedOperationException();
                 }
-            }, scanReq, hbaseRawScans.get(0).hbaseColumns, hbaseColumnsToGT, request.getRowkeyPreambleSize());
+            };
+
+            IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScans.get(0).hbaseColumns, hbaseColumnsToGT, request.getRowkeyPreambleSize());
 
             IGTScanner rawScanner = store.scan(scanReq);
             IGTScanner finalScanner = scanReq.decorateScanner(rawScanner, //
@@ -260,13 +282,19 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 outputStream.write(buffer.array(), buffer.arrayOffset() - buffer.position(), buffer.remaining());
                 finalRowCount++;
             }
+            finalScanner.close();
 
             appendProfileInfo(sb, "agg done");
 
             //outputStream.close() is not necessary
-            allRows = outputStream.toByteArray();
-            byte[] compressedAllRows = CompressionUtils.compress(allRows);
-
+            byte[] compressedAllRows;
+            if (normalComplete.booleanValue()) {
+                allRows = outputStream.toByteArray();
+            } else {
+                allRows = new byte[0];
+            }
+            compressedAllRows = CompressionUtils.compress(allRows);
+            
             appendProfileInfo(sb, "compress done");
 
             OperatingSystemMXBean operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
@@ -289,7 +317,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                             setFreeSwapSpaceSize(freeSwapSpaceSize).//
                             setHostname(InetAddress.getLocalHost().getHostName()).// 
                             setEtcMsg(sb.toString()).//
-                            build())
+                            setNormalComplete(normalComplete.booleanValue() ? 1 : 0).build())
                     .//
                     build());
 
@@ -297,7 +325,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             logger.error(ioe.toString());
             ResponseConverter.setControllerException(controller, ioe);
         } finally {
-            IOUtils.closeQuietly(innerScanner);
+            for (RegionScanner innerScanner : regionScanners) {
+                IOUtils.closeQuietly(innerScanner);
+            }
             if (region != null) {
                 try {
                     region.closeRegionOperation();
