@@ -96,7 +96,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
         if (isStatistics == false) {
-            colValues.add(new ByteArray(Bytes.copy(key.getBytes(), Bytes.SIZEOF_LONG, key.getLength() - Bytes.SIZEOF_LONG)));
+            colValues.add(new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1)));
             if (colValues.size() == 1000000) { //spill every 1 million
                 System.out.println("spill values to disk...");
                 outputDistinctValues(col, colValues, context);
@@ -104,7 +104,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             }
         } else {
             // for hll
-            long cuboidId = 0 - Bytes.toLong(key.getBytes(), 0, Bytes.SIZEOF_LONG);
+            long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
             for (Text value : values) {
                 HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
                 ByteBuffer bf = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());

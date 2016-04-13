@@ -37,7 +37,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 /**
- * @author yangli9
  */
 public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, Object> {
 
@@ -53,6 +52,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private ByteArray[] row_hashcodes = null;
     private ByteBuffer keyBuffer;
     private static final Text EMPTY_TEXT = new Text();
+    public static final byte MARK_FOR_HLL = (byte) 0xFF;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -115,7 +115,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                     continue;
 
                 keyBuffer.clear();
-                keyBuffer.putLong((long)i);
+                keyBuffer.put(Bytes.toBytes(i)[3]); // one byte is enough
                 keyBuffer.put(Bytes.toBytes(fieldValue));
                 outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
                 context.write(outputKey, EMPTY_TEXT);
@@ -164,7 +164,11 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             HyperLogLogPlusCounter hll;
             for (int i = 0; i < cuboidIds.length; i++) {
                 hll = allCuboidsHLL[i];
-                outputKey.set(Bytes.toBytes(0 - cuboidIds[i]));
+
+                keyBuffer.clear();
+                keyBuffer.put(MARK_FOR_HLL); // one byte
+                keyBuffer.putLong(cuboidIds[i]);
+                outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
                 hllBuf.clear();
                 hll.writeRegisters(hllBuf);
                 outputValue.set(hllBuf.array(), 0, hllBuf.position());
@@ -172,5 +176,4 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             }
         }
     }
-
 }
