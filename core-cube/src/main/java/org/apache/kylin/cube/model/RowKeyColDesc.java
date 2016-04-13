@@ -43,6 +43,8 @@ public class RowKeyColDesc {
     private String encoding;
     @JsonProperty("isShardBy")
     private boolean isShardBy;//usually it is ultra high cardinality column, shard by such column can reduce the agg cache for each shard
+    @JsonProperty("index")
+    private String index;
 
     // computed
     private String encodingName;
@@ -117,6 +119,13 @@ public class RowKeyColDesc {
         this.colRef = colRef;
     }
 
+    public String getIndex() {
+        return index;
+    }
+
+    public void setIndex(String index) {
+        this.index = index;
+    }
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();

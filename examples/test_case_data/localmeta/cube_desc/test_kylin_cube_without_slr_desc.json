@@ -214,23 +214,28 @@
     "rowkey_columns": [
       {
         "column": "cal_dt",
-        "encoding": "dict"
+        "encoding": "dict",
+        "index": "true"
       },
       {
         "column": "leaf_categ_id",
-        "encoding": "dict"
+        "encoding": "dict",
+        "index": "true"
       },
       {
         "column": "meta_categ_name",
-        "encoding": "dict"
+        "encoding": "dict",
+        "index": "true"
       },
       {
         "column": "categ_lvl2_name",
-        "encoding": "dict"
+        "encoding": "dict",
+        "index": "true"
       },
       {
         "column": "categ_lvl3_name",
-        "encoding": "dict"
+        "encoding": "dict",
+        "index": "true"
       },
       {
         "column": "lstg_format_name",

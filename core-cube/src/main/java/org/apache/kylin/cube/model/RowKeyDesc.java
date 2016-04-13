@@ -18,12 +18,10 @@
 
 package org.apache.kylin.cube.model;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -44,6 +42,7 @@ public class RowKeyDesc {
     private CubeDesc cubeDesc;
     private Map<TblColRef, RowKeyColDesc> columnMap;
     private Set<TblColRef> shardByColumns;
+    private int[] columnsNeedIndex;
 
     public RowKeyColDesc[] getRowKeyColumns() {
         return rowkeyColumns;
@@ -78,6 +77,18 @@ public class RowKeyDesc {
         Map<String, TblColRef> colNameAbbr = cubeDesc.buildColumnNameAbbreviation();
 
         buildRowKey(colNameAbbr);
+
+        int[] tmp = new int[100];
+        int x = 0;
+        for (int i = 0, n = rowkeyColumns.length; i < n; i++) {
+            if ("true".equalsIgnoreCase(rowkeyColumns[i].getIndex())
+                    && DictionaryDimEnc.ENCODING_NAME.equalsIgnoreCase(rowkeyColumns[i].getEncoding())) {
+                tmp[x] = i;
+                x++;
+            }
+        }
+
+        columnsNeedIndex = ArrayUtils.subarray(tmp, 0, x);
     }
 
     public void setRowkeyColumns(RowKeyColDesc[] rowkeyColumns) {
@@ -118,8 +129,14 @@ public class RowKeyDesc {
         }
     }
 
+
     public long getFullMask() {
         return this.fullMask;
+    }
+
+    public int[] getColumnsNeedIndex() {
+        return columnsNeedIndex;
+
     }
 
 }
