@@ -177,7 +177,7 @@ public class CubeCapabilityChecker {
 
             // calcite can do aggregation from columns on-the-fly
             List<TblColRef> neededCols = functionDesc.getParameter().getColRefs();
-            if (neededCols.size() > 0 && cubeDesc.listDimensionColumnsIncludingDerived().containsAll(neededCols)) {
+            if (neededCols.size() > 0 && cubeDesc.listDimensionColumnsIncludingDerived().containsAll(neededCols) && FunctionDesc.BUILT_IN_AGGREGATIONS.contains(functionDesc.getExpression())) {
                 result.influences.add(new CapabilityResult.DimensionAsMeasure(functionDesc));
                 it.remove();
                 continue;

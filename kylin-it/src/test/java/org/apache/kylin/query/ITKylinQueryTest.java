@@ -23,14 +23,18 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.sql.DriverManager;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.dbunit.database.DatabaseConnection;
@@ -45,6 +49,12 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        Map<RealizationType, Integer> priorities = Maps.newHashMap();
+        priorities.put(RealizationType.INVERTED_INDEX, 2);
+        priorities.put(RealizationType.HYBRID, 0);
+        priorities.put(RealizationType.CUBE, 0);
+        Candidate.setPriorities(priorities);
+        
         printInfo("setUp in KylinQueryTest");
         joinType = "left";
 
@@ -53,6 +63,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @AfterClass
     public static void tearDown() throws Exception {
+        Candidate.restorePriorities();
         printInfo("tearDown in KylinQueryTest");
         clean();
     }

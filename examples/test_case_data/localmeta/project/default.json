@@ -39,11 +39,6 @@
       "realization": "test_streaming_table_cube"
     },
     {
-      "name": "test_kylin_hybrid_left_join",
-      "type": "HYBRID",
-      "realization": "test_kylin_hybrid_left_join"
-    },
-    {
       "name": "test_kylin_hybrid_inner_join",
       "type": "HYBRID",
       "realization": "test_kylin_hybrid_inner_join"

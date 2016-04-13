@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
@@ -31,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -41,6 +43,14 @@ public class FunctionDesc {
     public static final String FUNC_MIN = "MIN";
     public static final String FUNC_MAX = "MAX";
     public static final String FUNC_COUNT = "COUNT";
+    public static final Set<String> BUILT_IN_AGGREGATIONS = Sets.newHashSet();
+
+    static {
+        BUILT_IN_AGGREGATIONS.add(FUNC_COUNT);
+        BUILT_IN_AGGREGATIONS.add(FUNC_MAX);
+        BUILT_IN_AGGREGATIONS.add(FUNC_MIN);
+        BUILT_IN_AGGREGATIONS.add(FUNC_SUM);
+    }
 
     public static final String PARAMETER_TYPE_CONSTANT = "constant";
     public static final String PARAMETER_TYPE_COLUMN = "column";
@@ -67,7 +77,7 @@ public class FunctionDesc {
         ArrayList<TblColRef> colRefs = Lists.newArrayList();
         for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
             if (p.isColumnType()) {
-                ColumnDesc sourceColumn = findColumn(factTable,lookupTables,p.getValue());
+                ColumnDesc sourceColumn = findColumn(factTable, lookupTables, p.getValue());
                 TblColRef colRef = new TblColRef(sourceColumn);
                 colRefs.add(colRef);
             }

@@ -46,18 +46,12 @@ public class ITIIQueryTest extends ITKylinQueryTest {
         priorities.put(RealizationType.HYBRID, 1);
         priorities.put(RealizationType.CUBE, 2);
         Candidate.setPriorities(priorities);
-
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         ITKylinQueryTest.tearDown();//invoke super class
-
-        Map<RealizationType, Integer> priorities = Maps.newHashMap();
-        priorities.put(RealizationType.INVERTED_INDEX, 1);
-        priorities.put(RealizationType.CUBE, 0);
-        priorities.put(RealizationType.HYBRID, 0);
-        Candidate.setPriorities(priorities);
+        Candidate.restorePriorities();
     }
 
     @Parameterized.Parameters
