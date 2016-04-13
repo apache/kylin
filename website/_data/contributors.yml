@@ -27,12 +27,12 @@
 - name: Hongbin Ma (马洪宾)
   apacheId: mahongbin
   githubId: binmahone
-  org: eBay
+  org: Kyligence Inc.
   role: PMC
 - name: Jason Zhong (仲俭)
   apacheId: zhongjian
   githubId: janzhongi
-  org: eBay
+  org: Kyligence Inc.
   role: PMC
 - name: Julian Hyde
   apacheId: jhyde
@@ -42,7 +42,7 @@
 - name: Luke Han (韩卿) (Chair)
   apacheId: lukehan
   githubId: lukehan
-  org: eBay
+  org: Kyligence Inc.
   role: PMC
 - name: Owen O'Malley
   apacheId: omalley
@@ -68,7 +68,7 @@
 - name: Shaofeng Shi (史少锋) 
   apacheId: shaofengshi
   githubId: shaofengshi
-  org: eBay
+  org: Kyligence Inc.
   role: PMC
 - name: Xiaodong Duo (朵晓东)
   apacheId: xduo
@@ -88,7 +88,7 @@
 - name: Yang Li (李扬)
   apacheId: liyang
   githubId: liyang-gmt8
-  org: eBay
+  org: Kyligence Inc.
   role: PMC
 - name: Dayue Gao (高大月)
   apacheId: gaodayue
@@ -103,16 +103,26 @@
 - name: Dong Li (李栋)
   apacheId: lidong
   githubId: lidongsjtu
-  org: eBay
-  role: committer
+  org: Kyligence Inc.
+  role: PMC
 - name: Xiaoyu Wang (王晓雨)
   apacheId: wangxiaoyu
   githubId: xiaowangyu
   org: JD.com
-  role: committer
+  role: PMC
 - name: Yerui Sun (孙叶锐)
   apacheId: sunyerui
   githubId: sunyerui
   org: Meituan
   role: PMC
+- name: Luwei Chen (陈露薇)
+  apacheId: chenluwei
+  githubId: LouisaChen
+  org: 
+  role: committer
+- name: Yanghong Zhong (钟阳红)
+  apacheId: 
+  githubId: kyotoYaho
+  org: eBay
+  role: committer
 
