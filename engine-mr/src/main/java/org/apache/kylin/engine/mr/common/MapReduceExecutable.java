@@ -74,7 +74,7 @@ public class MapReduceExecutable extends AbstractExecutable {
             try {
                 Configuration conf = HadoopUtil.getCurrentConfiguration();
                 Job job = new Cluster(conf).getJob(JobID.forName(mrJobId));
-                if (job.getJobState() == JobStatus.State.FAILED) {
+                if (job == null || job.getJobState() == JobStatus.State.FAILED) {
                     //remove previous mr job info
                     super.onExecuteStart(executableContext);
                 } else {
