@@ -15,10 +15,10 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
-## v1.5.1 - 2016-04-11
+## v1.5.1 - 2016-04-13
 _Tag:_ [kylin-1.5.1](https://github.com/apache/kylin/tree/kylin-1.5.1)
 
-This version is backward compatiple with v1.5.0. But you need to update coprocessor after deploy Kylin v1.5.1 instance, refer to [How to update coprocessor](/docs15/howto/howto_update_coprocessor.html).
+This version is backward compatiple with v1.5.0. But after upgrade to v1.5.1 from v1.5.0, you need to update coprocessor, refer to [How to update coprocessor](/docs15/howto/howto_update_coprocessor.html).
 
 __Highlights__
 
