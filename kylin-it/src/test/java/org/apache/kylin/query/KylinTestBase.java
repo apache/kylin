@@ -84,6 +84,7 @@ public class KylinTestBase {
 
     protected static int compQueryCount = 0;
     protected static ArrayList<String> zeroResultQueries = new ArrayList<String>();
+    protected static String ITDirHeader = "";
 
     protected static void closeConnection(Connection connection) {
         if (connection != null) {
@@ -108,6 +109,7 @@ public class KylinTestBase {
      * @return
      */
     protected static List<File> getFilesFromFolder(final File folder, final String fileType) {
+        System.out.println(folder.getAbsolutePath());
         Set<File> set = new TreeSet<>(new FileByNameComparator());
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.getName().toLowerCase().endsWith(fileType.toLowerCase())) {
@@ -429,7 +431,7 @@ public class KylinTestBase {
     protected int runSQL(File sqlFile, boolean debug, boolean explain) throws Exception {
         if (debug) {
             System.setProperty("calcite.debug", "true");
-            InputStream inputStream = new FileInputStream("src/test/resources/logging.properties");
+            InputStream inputStream = new FileInputStream(ITDirHeader + "src/test/resources/logging.properties");
             LogManager.getLogManager().readConfiguration(inputStream);
         }
 

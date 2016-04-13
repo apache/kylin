@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.dict.BuildInFunctionTransformer;
@@ -58,7 +59,13 @@ public class CubeSegmentScanner implements IGTScanner {
         ITupleFilterTransformer translator = new BuildInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
         filter = translator.transform(filter);
 
-        GTScanRangePlanner scanRangePlanner = new GTScanRangePlanner(cubeSeg, cuboid, filter, dimensions, groups, metrics);
+        String plannerName = KylinConfig.getInstanceFromEnv().getQueryStorageVisitPlanner();
+        GTScanRangePlanner scanRangePlanner;
+        try {
+            scanRangePlanner = (GTScanRangePlanner) Class.forName(plannerName).getConstructor(CubeSegment.class, Cuboid.class, TupleFilter.class, Set.class, Set.class, Collection.class).newInstance(cubeSeg, cuboid, filter, dimensions, groups, metrics);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         scanRequest = scanRangePlanner.planScanRequest(allowPreAggregate);
         scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest);
     }

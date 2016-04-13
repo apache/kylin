@@ -499,6 +499,18 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.ignore_unknown_function", "false"));
     }
 
+    public String getQueryStorageVisitPlanner() {
+        return this.getOptional("kylin.query.storage.visit.planner", "org.apache.kylin.gridtable.GTScanRangePlanner");
+    }
+
+    public void setQueryStorageVisitPlanner(String v) {
+        setProperty("kylin.query.storage.visit.planner", v);
+    }
+
+    public int getQueryStorageVisitScanRangeMax() {
+        return Integer.valueOf(this.getOptional("kylin.query.storage.visit.scanrange.max", "1000000"));
+    }
+
     public int getHBaseKeyValueSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
     }
@@ -638,6 +650,5 @@ abstract public class KylinConfigBase implements Serializable {
     public String getMRBatchEngineV2Class() {
         return getOptional("kylin.cube.mr.engine.v2.class", "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
     }
-
 
 }
