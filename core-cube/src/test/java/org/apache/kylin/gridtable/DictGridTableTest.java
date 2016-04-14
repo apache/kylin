@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
 import org.apache.kylin.dict.NumberDictionaryBuilder;
@@ -52,13 +53,14 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class DictGridTableTest {
+public class DictGridTableTest  extends LocalFileMetadataTestCase {
 
     private GridTable table;
     private GTInfo info;
@@ -74,8 +76,17 @@ public class DictGridTableTest {
     private CompareTupleFilter ageComp3;
     private CompareTupleFilter ageComp4;
 
+    @After
+    public void after() throws Exception {
+        
+        this.cleanupTestMetadata();
+    }
+
     @Before
     public void setup() throws IOException {
+        
+        this.createTestMetadata();
+        
         table = newTestTable();
         info = table.getInfo();
 
