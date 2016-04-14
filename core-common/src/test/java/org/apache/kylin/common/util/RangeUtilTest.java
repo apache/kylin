@@ -21,13 +21,16 @@ package org.apache.kylin.common.util;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.Ranges;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -69,7 +72,11 @@ public class RangeUtilTest {
     @Test
     public void testBuildRanges() {
         int[] test1 = { 1, 2, 3, 5, 7, 8, 10, 4 };
-        List<Range<Integer>> ranges = RangeUtil.buildRanges(test1, true);
+        TreeSet<Integer> treeSet = Sets.newTreeSet();
+        for (int t : test1) {
+            treeSet.add(t);
+        }
+        List<Range<Integer>> ranges = RangeUtil.buildRanges(new TreeSet<Integer>(treeSet));
         Assert.assertEquals(3, ranges.size());
     }
 }

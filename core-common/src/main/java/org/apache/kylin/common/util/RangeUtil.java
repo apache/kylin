@@ -21,8 +21,11 @@ package org.apache.kylin.common.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NavigableMap;
+import java.util.Set;
+import java.util.SortedSet;
 
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Lists;
@@ -198,23 +201,23 @@ public class RangeUtil {
         return sb.toString();
     }
 
-    public static List<Range<Integer>> buildRanges(int[] values, boolean needSort) {
-        ArrayList ranges = Lists.newArrayList();
+    public static ArrayList<Range<Integer>> buildRanges(SortedSet<Integer> values) {
+        ArrayList<Range<Integer>> ranges = Lists.newArrayList();
 
-        if (values == null || values.length == 0)
+        if (values == null || values.isEmpty())
             return ranges;
 
-        if (needSort) {
-            Arrays.sort(values);
-        }
-        int lastBegin = values[0];
+        Iterator<Integer> iter = values.iterator();
+        int lastBegin = iter.next();
         int lastEnd = lastBegin;
-        for (int index = 1; index < values.length; index++) {
-            if (values[index] - lastEnd != 1) {
+        int temp = 0;
+        for (int index = 1; index < values.size(); index++) {
+            temp = iter.next();
+            if (temp - lastEnd != 1) {
                 ranges.add(Ranges.closed(lastBegin, lastEnd));
-                lastBegin = values[index];
+                lastBegin = temp;
             }
-            lastEnd = values[index];
+            lastEnd = temp;
         }
         ranges.add(Ranges.closed(lastBegin, lastEnd));
         return ranges;
