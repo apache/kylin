@@ -74,6 +74,45 @@
           </div>
         </div>
 
+        <!--Partition Time Column-->
+        <div class="form-group">
+          <div class="row">
+            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Time Column</b></label>
+            <div class="col-xs-12 col-sm-6">
+
+              <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
+                      ng-model="modelsManager.selectedModel.partition_desc.partition_time_column"
+                      ng-if="state.mode=='edit'"
+                      data-placement=""
+                      ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonTimeColumns(modelsManager.selectedModel.fact_table)" >
+                <option value="">--Select Partition Column--</option>
+              </select>
+              <small class="help-block text-red" ng-show="state.mode=='edit'">(Column Type should be TIME Type)</small>
+
+                    <span ng-if="state.mode=='view'">
+                        {{!!(modelsManager.selectedModel.partition_desc.partition_time_column)?modelsManager.selectedModel.partition_desc.partition_time_column: ''}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!--Time Format-->
+        <div class="form-group">
+          <div class="row">
+            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Time Format</b></label>
+            <div class="col-xs-12 col-sm-6">
+              <select style="width: 100%" chosen
+                      ng-required="modelsManager.selectedModel.partition_desc.partition_time_format"
+                      ng-model="modelsManager.selectedModel.partition_desc.partition_time_format"
+                      ng-if="state.mode=='edit'"
+                      data-placement=""
+                      ng-options="ddt as ddt for ddt in cubeConfig.partitionTimeFormatOpt">
+                <option value="">--Select Time Format--</option>
+              </select>
+              <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_time_column">{{(modelsManager.selectedModel.partition_desc.partition_time_format)}}</span>
+            </div>
+          </div>
+        </div>
+
           <div class="form-group" ng-show="userService.hasRole('ROLE_ADMIN')">
               <div class="row">
                   <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Cube Size</b></label>

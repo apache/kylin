@@ -248,7 +248,45 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
         });
       }
     };
-  }).directive("parametertree", function($compile) {
+  }).directive('dateTimepickerTimezone', function () {
+  // this directive workaround to convert GMT0 timestamp to GMT date for datepicker
+  return {
+    restrict: 'A',
+    priority: 1,
+    require: 'ngModel',
+    link: function (scope, element, attrs, ctrl) {
+      ctrl.$formatters.push(function (value) {
+
+        //set null for 0
+        if(value===0){
+          return '';
+        }
+
+        //return value;
+        var newDate = new Date(value + (60000 * new Date().getTimezoneOffset()));
+
+        var year = newDate.getFullYear();
+        var month = (newDate.getMonth()+1)<10?'0'+(newDate.getMonth()+1):(newDate.getMonth()+1);
+        var date = newDate.getDate()<10?'0'+newDate.getDate():newDate.getDate();
+
+        var hour = newDate.getHours()<10?'0'+newDate.getHours():newDate.getHours();
+        var mins = newDate.getMinutes()<10?'0'+newDate.getMinutes():newDate.getMinutes();
+        var seconds = newDate.getSeconds()<10?'0'+newDate.getSeconds():getSeconds();
+
+        var viewVal = year+"-"+month+"-"+date+" "+hour+":"+mins+":"+seconds;
+        return viewVal;
+      });
+
+      ctrl.$parsers.push(function (value) {
+        if (isNaN(value)||value==null) {
+          return value;
+        }
+        //value = new Date(value.getFullYear(), value.getMonth(), value.getDate(), 0, 0, 0, 0);
+        return value.getTime()-(60000 * value.getTimezoneOffset());
+      });
+    }
+  };
+}).directive("parametertree", function($compile) {
     return {
       restrict: "E",
       transclude: true,

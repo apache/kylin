@@ -65,6 +65,7 @@
                 "app/components/angular-bootstrap-nav-tree/dist/abn_tree.css",
                 "app/components/angular-toggle-switch/angular-toggle-switch.css",
                 "app/components/angular-ui-select/dist/select.css",
+                "app/components/angular-bootstrap-datetimepicker/src/css/datetimepicker.css",
                 "tmp/css/styles.css"
             ],
             "dest": "tmp/css/styles.min.css"

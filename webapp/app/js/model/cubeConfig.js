@@ -89,5 +89,10 @@ KylinApp.constant('cubeConfig', {
   partitionDateFormatOpt:[
     'yyyy-MM-dd',
     'yyyyMMdd'
+  ],
+  partitionTimeFormatOpt:[
+    'HH:mm:ss',
+    'HH:mm',
+    'HH'
   ]
 });

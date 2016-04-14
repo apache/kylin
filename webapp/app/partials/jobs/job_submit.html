@@ -50,12 +50,24 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>End Date (Exclude)</td>
-                            <td>
-                                <input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%" datepicker-timezone
-                                       ng-model="jobBuildRequest.endTime"
-                                       placeholder="Click to choose END date..." is-open="opened" />
-                            </td>
+                          <td width="50%;">End Date (Exclude)</td>
+                          <td width="50%;">
+                            <!--<input type="text" datepicker-popup="yyyy-MM-dd" class="input-sm" style="width: 98%" datepicker-timezone-->
+                            <!--ng-model="jobBuildRequest.endTime"-->
+                            <!--placeholder="Click to choose END date..." is-open="opened" />-->
+
+                            <div class="dropdown" style="width: 98%;">
+                              <a class="dropdown-toggle" id="dropdown2" role="button" data-toggle="dropdown" data-target="#" href="#">
+                                <div class="input-group"><input type="text" class="form-control" date-timepicker-timezone data-ng-model="jobBuildRequest.endTime">
+                                  <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                                </div>
+                              </a>
+                              <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                                <datetimepicker  data-ng-model="jobBuildRequest.endTime" data-datetimepicker-config="{ dropdownSelector: '#dropdown2' }"/>
+                              </ul>
+                            </div>
+
+                          </td>
                         </tr>
                         </tbody>
                     </table>

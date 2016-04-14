@@ -40,6 +40,13 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         return columns;
     };
 
+    $scope.getPartitonTimeColumns = function(tableName){
+        var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
+            return column.datatype==="time"||column.datatype==="timestamp"||column.datatype==="string"||column.datatype.startsWith("varchar");
+        });
+        return columns;
+    };
+
     $scope.getColumnsByTable = function (tableName) {
         var temp = [];
         angular.forEach(TableModel.selectProjectTables, function (table) {
