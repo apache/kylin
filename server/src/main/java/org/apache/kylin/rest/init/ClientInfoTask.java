@@ -38,6 +38,7 @@ public class ClientInfoTask extends InitialTask {
         StringBuilder buf = new StringBuilder();
 
         buf.append("kylin.version:").append(KylinVersion.getCurrentVersion()).append("\n");
+        buf.append("commit:").append(KylinVersion.getGitCommitInfo());
         buf.append("os.name:").append(System.getProperty("os.name")).append("\n");
         buf.append("os.arch:").append(System.getProperty("os.arch")).append("\n");
         buf.append("os.version:").append(System.getProperty("os.version")).append("\n");

@@ -137,7 +137,18 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         // export conf
         if (includeConf) {
             logger.info("Start to extract kylin conf files.");
-            FileUtils.copyDirectoryToDirectory(new File(getConfFolder()), new File(exportDest));
+            try {
+                FileUtils.copyDirectoryToDirectory(new File(getConfFolder()), new File(exportDest));
+            } catch (Exception e) {
+                logger.warn("Error in export conf.", e);
+            }
+        }
+
+        // export commit id
+        try {
+            FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), "commit_SHA1"), new File(exportDest));
+        } catch (Exception e) {
+            logger.warn("Error in export commit id.", e);
         }
 
         // compress to zip package

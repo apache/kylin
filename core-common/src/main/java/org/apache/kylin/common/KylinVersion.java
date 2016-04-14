@@ -16,16 +16,23 @@
  */
 package org.apache.kylin.common;
 
+import java.io.File;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 public class KylinVersion {
+    private static final String COMMIT_SHA1 = "commit_SHA1";
 
     public int major;
     public int minor;
@@ -121,6 +128,7 @@ public class KylinVersion {
         StringBuilder buf = new StringBuilder();
 
         buf.append("kylin.version:").append(KylinVersion.getCurrentVersion()).append("\n");
+        buf.append("commit:").append(getGitCommitInfo());
         buf.append("os.name:").append(System.getProperty("os.name")).append("\n");
         buf.append("os.arch:").append(System.getProperty("os.arch")).append("\n");
         buf.append("os.version:").append(System.getProperty("os.version")).append("\n");
@@ -128,5 +136,21 @@ public class KylinVersion {
         buf.append("java.vendor:").append(System.getProperty("java.vendor"));
 
         return buf.toString();
+    }
+
+    public static String getGitCommitInfo() {
+        try {
+            File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1);
+            List<String> lines = FileUtils.readLines(commitFile);
+            StringBuilder sb = new StringBuilder();
+            for (String line : lines) {
+                if (!line.startsWith("#")) {
+                    sb.append(line).append("\n");
+                }
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return StringUtils.EMPTY;
+        }
     }
 }
