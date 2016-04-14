@@ -488,6 +488,10 @@ abstract public class KylinConfigBase implements Serializable {
         setProperty("kylin.query.storage.visit.planner", v);
     }
 
+    public int getQueryScanFuzzyKeyMax() {
+        return Integer.parseInt(this.getOptional("kylin.query.scan.fuzzykey.max","200"));
+    }
+
     public int getQueryStorageVisitScanRangeMax() {
         return Integer.valueOf(this.getOptional("kylin.query.storage.visit.scanrange.max", "1000000"));
     }

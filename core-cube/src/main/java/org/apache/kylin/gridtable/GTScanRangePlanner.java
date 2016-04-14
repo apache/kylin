@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.DateFormat;
@@ -62,7 +63,6 @@ public class GTScanRangePlanner {
 
     private static final Logger logger = LoggerFactory.getLogger(GTScanRangePlanner.class);
 
-    private static final int MAX_SCAN_RANGES = 200;
     private static final int MAX_HBASE_FUZZY_KEYS = 100;
 
     protected int maxScanRanges;
@@ -93,7 +93,7 @@ public class GTScanRangePlanner {
     public GTScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, Set<TblColRef> groupbyDims, //
             Collection<FunctionDesc> metrics) {
 
-        this.maxScanRanges = MAX_SCAN_RANGES;
+        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
 
         this.cubeSegment = cubeSegment;
         this.cubeDesc = cubeSegment.getCubeDesc();
@@ -143,7 +143,7 @@ public class GTScanRangePlanner {
      */
     public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> gtStartAndEnd, TblColRef gtPartitionCol, TupleFilter gtFilter) {
 
-        this.maxScanRanges = MAX_SCAN_RANGES;
+        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
         this.gtInfo = info;
 
         IGTComparator comp = gtInfo.codeSystem.getComparator();
@@ -154,12 +154,10 @@ public class GTScanRangePlanner {
         //start key GTRecord compare to stop key GTRecord
         this.rangeStartEndComparator = getRangeStartEndComparator(comp);
 
-
         this.gtFilter = gtFilter;
         this.gtStartAndEnd = gtStartAndEnd;
         this.gtPartitionCol = gtPartitionCol;
     }
-    
 
     public GTScanRequest planScanRequest(boolean allowPreAggregate) {
         GTScanRequest scanRequest;
