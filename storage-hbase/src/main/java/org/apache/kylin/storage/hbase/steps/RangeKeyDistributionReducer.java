@@ -66,7 +66,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
         }
 
         if (context.getConfiguration().get(BatchConstants.CFG_REGION_SPLIT_SIZE) != null) {
-            cut = Integer.valueOf(context.getConfiguration().get(BatchConstants.CFG_REGION_SPLIT_SIZE));
+            cut = Float.valueOf(context.getConfiguration().get(BatchConstants.CFG_REGION_SPLIT_SIZE));
         }
 
         if (context.getConfiguration().get(BatchConstants.CFG_REGION_NUMBER_MIN) != null) {
