@@ -277,14 +277,14 @@ public class QueryService extends BasicService {
         Connection conn = null;
         ResultSet columnMeta = null;
         List<TableMeta> tableMetas = null;
-
+        ResultSet JDBCTableMeta = null;
         try {
             DataSource dataSource = getOLAPDataSource(project);
             conn = dataSource.getConnection();
             DatabaseMetaData metaData = conn.getMetaData();
 
             logger.debug("getting table metas");
-            ResultSet JDBCTableMeta = metaData.getTables(null, null, null, null);
+            JDBCTableMeta = metaData.getTables(null, null, null, null);
 
             tableMetas = new LinkedList<TableMeta>();
             Map<String, TableMeta> tableMap = new HashMap<String, TableMeta>();
@@ -318,6 +318,9 @@ public class QueryService extends BasicService {
             logger.debug("done column metas");
         } finally {
             close(columnMeta, null, conn);
+            if (JDBCTableMeta != null) {
+                JDBCTableMeta.close();
+            }
         }
 
         return tableMetas;
