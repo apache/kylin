@@ -47,7 +47,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
 
     private int minRegionCount = 1;
     private int maxRegionCount = 500;
-    private int cut = 10;
+    private float cut = 10.0f;
     private int hfileSizeGB = 1;
     private long bytesRead = 0;
     private List<Text> gbPoints = new ArrayList<Text>();
@@ -98,7 +98,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        int nRegion = Math.round((float) gbPoints.size() / (float) cut);
+        int nRegion = Math.round((float) gbPoints.size() / cut);
         nRegion = Math.max(minRegionCount, nRegion);
         nRegion = Math.min(maxRegionCount, nRegion);
 

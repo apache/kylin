@@ -96,8 +96,7 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
             KylinConfig config = cube.getConfig();
             int hfileSizeGB = config.getHBaseHFileSizeGB();
-            DataModelDesc.RealizationCapacity cubeCapacity = cube.getDescriptor().getModel().getCapacity();
-            int regionSplitSize = config.getHBaseRegionCut(cubeCapacity.toString());
+            float regionSplitSize = RegionSize.getReionSize(config,cube.getDescriptor());
             int maxRegionCount = config.getHBaseRegionCountMax();
             int minRegionCount = config.getHBaseRegionCountMin();
             job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());

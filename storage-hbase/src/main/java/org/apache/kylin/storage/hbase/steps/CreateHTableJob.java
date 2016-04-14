@@ -48,8 +48,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.CuboidShardUtil;
-import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
-import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
@@ -159,11 +157,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
     public static byte[][] getSplitsFromCuboidStatistics(final Map<Long, Double> cubeSizeMap, KylinConfig kylinConfig, CubeSegment cubeSegment) throws IOException {
 
         final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
+        float cut = RegionSize.getReionSize(kylinConfig, cubeDesc);
 
-        DataModelDesc.RealizationCapacity cubeCapacity = cubeDesc.getModel().getCapacity();
-        int cut = kylinConfig.getHBaseRegionCut(cubeCapacity.toString());
-
-        logger.info("Cube capacity " + cubeCapacity.toString() + ", chosen cut for HTable is " + cut + "GB");
+        logger.info("chosen cut for HTable is " + cut + "GB");
 
         double totalSizeInM = 0;
         for (Double cuboidSize : cubeSizeMap.values()) {

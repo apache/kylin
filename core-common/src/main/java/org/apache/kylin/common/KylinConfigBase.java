@@ -400,25 +400,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.table.snapshot.max_mb", "300"));
     }
 
-    public int getHBaseRegionCut(String capacity) {
-        String cut;
-        switch (capacity) {
-        case "SMALL":
-            cut = getOptional("kylin.hbase.region.cut.small", "10");
-            break;
-        case "MEDIUM":
-            cut = getOptional("kylin.hbase.region.cut.medium", "20");
-            break;
-        case "LARGE":
-            cut = getOptional("kylin.hbase.region.cut.large", "100");
-            break;
-        default:
-            throw new IllegalArgumentException("Capacity not recognized: " + capacity);
-        }
-
-        return Integer.valueOf(cut);
-    }
-
     public int getHBaseRegionCountMin() {
         return Integer.parseInt(getOptional("kylin.hbase.region.count.min", "1"));
     }
@@ -523,10 +504,20 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.dict.growing.enabled", "false"));
     }
 
+    public float getKylinHBaseRegionCutSmall() {
+        return Float.valueOf(getOptional("kylin.hbase.region.cut.small", "10"));
+    }
+
+    public float getKylinHBaseRegionCutMedium() {
+        return Float.valueOf(getOptional("kylin.hbase.region.cut.medium", "20"));
+    }
+
+    public float getKylinHBaseRegionCutLarge() {
+        return Float.valueOf(getOptional("kylin.hbase.region.cut.large", "100"));
+    }
+
     public int getHBaseScanMaxResultSize() {
-
         return Integer.parseInt(this.getOptional("kylin.hbase.scan.max_result_size", "" + (5 * 1024 * 1024))); // 5 MB
-
     }
 
     public int getCubingInMemSamplingPercent() {
