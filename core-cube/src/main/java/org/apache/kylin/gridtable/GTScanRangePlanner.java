@@ -63,9 +63,8 @@ public class GTScanRangePlanner {
 
     private static final Logger logger = LoggerFactory.getLogger(GTScanRangePlanner.class);
 
-    private static final int MAX_HBASE_FUZZY_KEYS = 100;
-
     protected int maxScanRanges;
+    protected int maxFuzzyKeys;
 
     //non-GT
     protected CubeSegment cubeSegment;
@@ -93,7 +92,8 @@ public class GTScanRangePlanner {
     public GTScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, Set<TblColRef> groupbyDims, //
             Collection<FunctionDesc> metrics) {
 
-        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
+        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
+        this.maxFuzzyKeys = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
 
         this.cubeSegment = cubeSegment;
         this.cubeDesc = cubeSegment.getCubeDesc();
@@ -143,7 +143,9 @@ public class GTScanRangePlanner {
      */
     public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> gtStartAndEnd, TblColRef gtPartitionCol, TupleFilter gtFilter) {
 
-        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
+        this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
+        this.maxFuzzyKeys = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
+        
         this.gtInfo = info;
 
         IGTComparator comp = gtInfo.codeSystem.getComparator();
@@ -154,10 +156,12 @@ public class GTScanRangePlanner {
         //start key GTRecord compare to stop key GTRecord
         this.rangeStartEndComparator = getRangeStartEndComparator(comp);
 
+
         this.gtFilter = gtFilter;
         this.gtStartAndEnd = gtStartAndEnd;
         this.gtPartitionCol = gtPartitionCol;
     }
+
 
     public GTScanRequest planScanRequest(boolean allowPreAggregate) {
         GTScanRequest scanRequest;
@@ -308,8 +312,8 @@ public class GTScanRangePlanner {
             if (gtPartitionCol != null && range.column.equals(gtPartitionCol)) {
                 if (rangeStartEndComparator.comparator.compare(gtStartAndEnd.getFirst(), range.end) <= 0 //
                         && (rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond()) < 0 //
-                                || rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond()) == 0 //
-                                        && (range.op == FilterOperatorEnum.EQ || range.op == FilterOperatorEnum.LTE || range.op == FilterOperatorEnum.GTE || range.op == FilterOperatorEnum.IN))) {
+                        || rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond()) == 0 //
+                        && (range.op == FilterOperatorEnum.EQ || range.op == FilterOperatorEnum.LTE || range.op == FilterOperatorEnum.GTE || range.op == FilterOperatorEnum.IN))) {
                     //segment range is [Closed,Open), but segmentStartAndEnd.getSecond() might be rounded, so use <= when has equals in condition. 
                 } else {
                     logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}", //
@@ -346,7 +350,7 @@ public class GTScanRangePlanner {
             return result;
         }
 
-        List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, MAX_HBASE_FUZZY_KEYS);
+        List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, maxFuzzyKeys);
 
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
 
@@ -522,7 +526,7 @@ public class GTScanRangePlanner {
 
         // if any range is non-fuzzy, then all fuzzy keys must be cleared
         // also too many fuzzy keys will slow down HBase scan
-        if (hasNonFuzzyRange || newFuzzyKeys.size() > MAX_HBASE_FUZZY_KEYS) {
+        if (hasNonFuzzyRange || newFuzzyKeys.size() > maxFuzzyKeys) {
             newFuzzyKeys.clear();
         }
 
