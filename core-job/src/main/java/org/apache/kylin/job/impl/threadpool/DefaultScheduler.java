@@ -182,9 +182,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                 logger.debug("Closing zk connection");
                 try {
                     shutdown();
-                    jobLock.unlock();
                 } catch (SchedulerException e) {
                     logger.error("error shutdown scheduler", e);
+                } finally {
+                    jobLock.unlock();
                 }
             }
         });

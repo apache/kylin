@@ -20,7 +20,6 @@
 
 package org.apache.kylin.job.impl.threadpool;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -42,7 +41,7 @@ import org.junit.Test;
 
 /**
  */
-public class ITDefaultSchedulerTest extends BaseSchedulerTest {
+public class DefaultSchedulerTest extends BaseSchedulerTest {
 
     @Test
     public void testSingleTaskJob() throws Exception {

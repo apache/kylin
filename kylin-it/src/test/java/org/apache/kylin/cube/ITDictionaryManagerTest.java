@@ -43,7 +43,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Sets;
 
-public class DictionaryManagerTest extends LocalFileMetadataTestCase {
+public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
 
     DictionaryManager dictMgr;
 
