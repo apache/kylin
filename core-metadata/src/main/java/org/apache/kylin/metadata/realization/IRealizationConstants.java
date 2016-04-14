@@ -40,4 +40,6 @@ public class IRealizationConstants {
 
     public final static String HTableSegmentTag = "SEGMENT";
 
+    public final static String HTableGitTag = "GIT_COMMIT";
+
 }

@@ -43,6 +43,7 @@ import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -51,6 +52,7 @@ import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
@@ -210,6 +212,13 @@ public class DeployCoprocessorCLI {
             desc.removeCoprocessor(IIEndpointClassOld);
         }
         addCoprocessorOnHTable(desc, hdfsCoprocessorJar);
+
+        // update commit tags
+        String commitInfo = KylinVersion.getGitCommitInfo();
+        if (!StringUtils.isEmpty(commitInfo)) {
+            desc.setValue(IRealizationConstants.HTableGitTag, commitInfo);
+        }
+
         hbaseAdmin.modifyTable(tableName, desc);
 
         logger.info("Enable " + tableName);

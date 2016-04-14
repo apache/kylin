@@ -33,6 +33,7 @@ import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -65,6 +66,11 @@ public class CubeHTableUtil {
         if (!StringUtils.isEmpty(kylinConfig.getKylinOwner())) {
             //HTableOwner is the team that provides kylin service
             tableDesc.setValue(IRealizationConstants.HTableOwner, kylinConfig.getKylinOwner());
+        }
+
+        String commitInfo = KylinVersion.getGitCommitInfo();
+        if (!StringUtils.isEmpty(commitInfo)) {
+            tableDesc.setValue(IRealizationConstants.HTableGitTag, commitInfo);
         }
 
         //HTableUser is the cube owner, which will be the "user"
