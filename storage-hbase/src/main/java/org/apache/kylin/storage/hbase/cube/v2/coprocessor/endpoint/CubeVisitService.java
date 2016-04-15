@@ -50,6 +50,7 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.cube.v2.CellListIterator;
 import org.apache.kylin.storage.hbase.cube.v2.CubeHBaseRPC;
@@ -168,12 +169,15 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
         StringBuilder sb = new StringBuilder();
         byte[] allRows;
+        String debugGitTag = "";
 
         try {
             this.serviceStartTime = System.currentTimeMillis();
 
             region = env.getRegion();
             region.startRegionOperation();
+            debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);
+
 
             final GTScanRequest scanReq = GTScanRequest.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
             List<List<Integer>> hbaseColumnsToGT = Lists.newArrayList();
@@ -303,6 +307,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             double freeSwapSpaceSize = operatingSystemMXBean.getFreeSwapSpaceSize();
 
             appendProfileInfo(sb, "server stats done");
+            sb.append(" debugGitTag:" + debugGitTag);
+
 
             CubeVisitProtos.CubeVisitResponse.Builder responseBuilder = CubeVisitProtos.CubeVisitResponse.newBuilder();
             done.run(responseBuilder.//
@@ -323,7 +329,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
         } catch (IOException ioe) {
             logger.error(ioe.toString());
-            ResponseConverter.setControllerException(controller, ioe);
+            IOException wrapped = new IOException("Error in coprocessor " + debugGitTag, ioe);
+            ResponseConverter.setControllerException(controller, wrapped);
         } finally {
             for (RegionScanner innerScanner : regionScanners) {
                 IOUtils.closeQuietly(innerScanner);
