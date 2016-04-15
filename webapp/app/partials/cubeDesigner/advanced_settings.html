@@ -19,6 +19,8 @@
 <div ng-controller="CubeAdvanceSettingCtrl">
   <ng-form name="forms.cube_setting_form">
     <div>
+
+
       <div class="form-group">
         <h4 style="margin-left:42px">Aggregation Groups</h4>
         <table style="margin-left:42px; width:92%"
@@ -267,6 +269,24 @@
                 ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i>
         </button>
       </div>
+
+      <div class="form-group">
+        <h4 style="margin-left:42px;border-bottom:1px solid #ddd;padding-bottom:10px;">Region</h4>
+        <ng-form class="form-horizontal">
+          <div class="form-group form-group-lg">
+            <label class="col-sm-2 control-label" for="regionsize">Region Size</label>
+            <div class="col-sm-9">
+            <div class="col-sm-9" ng-style='{"padding-top":(state.mode=="edit"?0:7)+"px"}'>
+              <input type="text" id="regionsize" class="form-control ng-scope ng-pristine ng-valid"
+                     placeholder="input a number between 0.01 and 100 as region size" ng-model="cubeMetaFrame.region_size"
+                     ng-if="state.mode=='edit'">
+              <small class="help-block text-red" ng-show="state.mode=='edit'">region size should  between 0.01 and 100 (G)</small>
+              <span   ng-if="state.mode=='view'&&cubeMetaFrame.region_size">{{cubeMetaFrame.region_size}} (G)</span>
+            </div>
+          </div>
+        </ng-form>
+      </div>
+
     </div>
   </ng-form>
 </div>

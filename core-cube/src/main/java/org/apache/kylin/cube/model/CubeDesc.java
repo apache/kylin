@@ -417,6 +417,10 @@ public class CubeDesc extends RootPersistentEntity {
         return regionSize;
     }
 
+    public void setRegionSize(float regionSize){
+        this.regionSize = regionSize;
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -1046,6 +1050,7 @@ public class CubeDesc extends RootPersistentEntity {
         newCubeDesc.setAggregationGroups(cubeDesc.getAggregationGroups());
         newCubeDesc.setOverrideKylinProps(cubeDesc.getOverrideKylinProps());
         newCubeDesc.setConfig((KylinConfigExt) cubeDesc.getConfig());
+        newCubeDesc.setRegionSize(cubeDesc.getRegionSize());
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
