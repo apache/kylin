@@ -144,7 +144,7 @@ public class KylinVersion {
             StringBuilder sb = new StringBuilder();
             for (String line : lines) {
                 if (!line.startsWith("#")) {
-                    sb.append(line).append("\n");
+                    sb.append(line).append(";");
                 }
             }
             return sb.toString();
