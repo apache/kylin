@@ -531,25 +531,6 @@ abstract public class KylinConfigBase implements Serializable {
         return percent;
     }
 
-    public Map<String, String> getCubingInMemMRJobConfOverride() {
-        // in-mem cubing requires big memory, however dev env (sandbox) may not have that much
-        String defaultOverride = isDevEnv() ? "" : "mapreduce.map.java.opts=-Xmx2700m;  mapreduce.map.memory.mb=3072;  mapreduce.task.io.sort.mb=200";
-        String override = getOptional("kylin.job.cubing.inmem.mrjob_conf_override", defaultOverride);
-
-        Map<String, String> result = Maps.newHashMap();
-        for (String pair : override.split(";")) {
-            int cut = pair.indexOf('=');
-            if (cut < 0)
-                continue;
-            String k = pair.substring(0, cut).trim();
-            String v = pair.substring(cut + 1).trim();
-            if (k.isEmpty() || v.isEmpty())
-                continue;
-            result.put(k, v);
-        }
-        return result;
-    }
-
     public String getHbaseDefaultCompressionCodec() {
         return getOptional("kylin.hbase.default.compression.codec", "");
     }

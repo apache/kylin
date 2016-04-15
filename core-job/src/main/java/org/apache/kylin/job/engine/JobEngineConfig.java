@@ -33,8 +33,10 @@ import org.slf4j.LoggerFactory;
  */
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
-    public static String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
-    public static String HIVE_CONF_FILENAME = "kylin_hive_conf";
+    public static final String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
+    public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
+    public static final String DEFAUL_JOB_CONF_SUFFIX = "";
+    public static final String IN_MEM_JOB_CONF_SUFFIX = "inmem";
 
     private static File getJobConfig(String fileName) {
         String path = System.getProperty(KylinConfig.KYLIN_CONF);
@@ -49,10 +51,10 @@ public class JobEngineConfig {
         return null;
     }
 
-    private String getHadoopJobConfFilePath(RealizationCapacity capaticy, boolean appendSuffix) throws IOException {
+    private String getHadoopJobConfFilePath(String suffix, boolean appendSuffix) throws IOException {
         String hadoopJobConfFile;
-        if (capaticy != null && appendSuffix) {
-            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + capaticy.toString().toLowerCase() + ".xml");
+        if (suffix != null && appendSuffix) {
+            hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + "_" + suffix.toLowerCase() + ".xml");
         } else {
             hadoopJobConfFile = (HADOOP_JOB_CONF_FILENAME + ".xml");
         }
@@ -69,19 +71,31 @@ public class JobEngineConfig {
         return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
     }
 
-    public String getHadoopJobConfFilePath(RealizationCapacity capaticy) throws IOException {
-        String path = getHadoopJobConfFilePath(capaticy, true);
-        if (!StringUtils.isEmpty(path)) {
-            logger.info("Chosen job conf is : " + path);
-            return path;
+    /**
+     *
+     * @param suffix job config file suffix name; if be null, will use the default job conf
+     * @return the job config file path
+     * @throws IOException
+     */
+    public String getHadoopJobConfFilePath(String jobType, String capacity) throws IOException {
+        String suffix;
+        if(!StringUtils.isEmpty(jobType)) {
+            suffix = jobType + "_" + capacity;
         } else {
-            path = getHadoopJobConfFilePath(capaticy, false);
-            if (!StringUtils.isEmpty(path)) {
-                logger.info("Chosen job conf is : " + path);
-                return path;
+            suffix = capacity;
+        }
+        String path = getHadoopJobConfFilePath(suffix, true);
+        if (StringUtils.isEmpty(path)) {
+            path = getHadoopJobConfFilePath(jobType, true);
+            if (StringUtils.isEmpty(path)) {
+                path = getHadoopJobConfFilePath(jobType, false);
+                if (StringUtils.isEmpty(path)) {
+                    path = "";
+                }
             }
         }
-        return "";
+        logger.info("Chosen job conf is : " + path);
+        return path;
     }
 
     public String getHiveConfFilePath() throws IOException {

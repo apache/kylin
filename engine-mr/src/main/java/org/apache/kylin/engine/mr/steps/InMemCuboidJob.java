@@ -101,9 +101,6 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());
             
-            // some special tuning for in-mem MR job
-            overrideJobConf(job.getConfiguration(), config);
-
             setJobClasspath(job);
 
             // add metadata to distributed cache
@@ -112,8 +109,6 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
-            long timeout = 1000 * 60 * 60L; // 1 hour
-            job.getConfiguration().set("mapred.task.timeout", String.valueOf(timeout));
 
             // set input
             IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
@@ -146,12 +141,6 @@ public class InMemCuboidJob extends AbstractHadoopJob {
         } finally {
             if (job != null)
                 cleanupTempConfFile(job.getConfiguration());
-        }
-    }
-
-    private void overrideJobConf(Configuration jobConf, KylinConfig kylinConfig) {
-        for (Entry<String, String> entry : kylinConfig.getCubingInMemMRJobConfOverride().entrySet()) {
-            jobConf.set(entry.getKey(), entry.getValue());
         }
     }
 

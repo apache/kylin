@@ -21,7 +21,6 @@ package org.apache.kylin.engine.mr;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
@@ -162,9 +161,17 @@ public class JobBuilderSupport {
         return getRealizationRootPath(jobId) + "/secondary_index/";
     }
 
-    public void appendMapReduceParameters(StringBuilder buf, DataModelDesc modelDesc) {
+    public void appendMapReduceParameters(StringBuilder buf, DataModelDesc dataModelDesc) {
+        appendMapReduceParameters(buf, JobEngineConfig.DEFAUL_JOB_CONF_SUFFIX, dataModelDesc.getCapacity().toString());
+    }
+
+    public void appendMapReduceParameters(StringBuilder buf, String jobType, DataModelDesc dataModelDesc) {
+        appendMapReduceParameters(buf, jobType, dataModelDesc.getCapacity().toString());
+    }
+
+    public void appendMapReduceParameters(StringBuilder buf, String jobType, String capacity) {
         try {
-            String jobConf = config.getHadoopJobConfFilePath(modelDesc.getCapacity());
+            String jobConf = config.getHadoopJobConfFilePath(jobType, capacity);
             if (jobConf != null && jobConf.length() > 0) {
                 buf.append(" -conf ").append(jobConf);
             }

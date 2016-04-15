@@ -71,7 +71,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             Configuration conf = getConf();
 
             JobEngineConfig jobEngineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
-            conf.addResource(jobEngineConfig.getHadoopJobConfFilePath(null));
+            conf.addResource(jobEngineConfig.getHadoopJobConfFilePath(null, null));
 
             job = Job.getInstance(conf, jobName);
 
