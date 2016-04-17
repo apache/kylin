@@ -47,9 +47,7 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
@@ -164,7 +162,7 @@ public class CubeManager implements IRealizationProvider {
             return null;
 
         DictionaryManager dictMgr = getDictionaryManager();
-        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(),true, col, factTableValueProvider);
+        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), true, col, factTableValueProvider);
 
         if (dictInfo != null) {
             Dictionary dict = dictInfo.getDictionaryObject();
@@ -206,7 +204,13 @@ public class CubeManager implements IRealizationProvider {
         MetadataManager metaMgr = getMetadataManager();
         SnapshotManager snapshotMgr = getSnapshotManager();
 
-        TableDesc tableDesc = metaMgr.getTableDesc(lookupTable);
+        TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable));
+        if (tableDesc.isSourceTableHiveView()) {
+            tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
+            String tableName = tableDesc.getHiveViewIntermediateTableName();
+            tableDesc.setName(tableName);
+        }
+
         ReadableTable hiveTable = SourceFactory.createReadableTable(tableDesc);
         SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 

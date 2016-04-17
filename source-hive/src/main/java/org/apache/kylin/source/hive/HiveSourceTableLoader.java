@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.kylin.common.KylinConfig;
@@ -115,6 +116,11 @@ public class HiveSourceTableLoader {
                 tableDesc.setName(tableName.toUpperCase());
                 tableDesc.setUuid(UUID.randomUUID().toString());
                 tableDesc.setLastModified(0);
+            }
+            if(table.getTableType().equals(TableType.VIRTUAL_VIEW.toString())) {
+                tableDesc.setSourceTableHiveViewFlag(true);
+            } else {
+                tableDesc.setSourceTableHiveViewFlag(false);
             }
 
             int columnNumber = fields.size();

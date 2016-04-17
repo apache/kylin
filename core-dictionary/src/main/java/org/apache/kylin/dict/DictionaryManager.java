@@ -28,6 +28,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.IRealizationSegment;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableSignature;
 import org.apache.kylin.source.SourceFactory;
@@ -273,8 +274,16 @@ public class DictionaryManager {
         if (model.isFactTable(srcTable)) {
             inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
         } else {
-            TableDesc tableDesc = MetadataManager.getInstance(config).getTableDesc(srcTable);
-            inpTable = SourceFactory.createReadableTable(tableDesc);
+            MetadataManager metadataManager = MetadataManager.getInstance(config);
+            TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
+            if (tableDesc.isSourceTableHiveView()) {
+                tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
+                String tableName = tableDesc.getHiveViewIntermediateTableName();
+                tableDesc.setName(tableName);
+                inpTable = SourceFactory.createReadableTable(tableDesc);
+            } else {
+                inpTable = SourceFactory.createReadableTable(tableDesc);
+            }
         }
 
         TableSignature inputSig = inpTable.getSignature();

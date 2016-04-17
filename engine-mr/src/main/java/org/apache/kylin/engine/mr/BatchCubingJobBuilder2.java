@@ -53,7 +53,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         final String jobId = result.getId();
         final String cuboidRootPath = getCuboidRootPath(jobId);
 
-        // Phase 1: Create Flat Table
+        // Phase 1: Create Flat Table & Materialize Hive View in Lookup Tables
         inputSide.addStepPhase1_CreateFlatTable(result);
 
         // Phase 2: Build Dictionary
