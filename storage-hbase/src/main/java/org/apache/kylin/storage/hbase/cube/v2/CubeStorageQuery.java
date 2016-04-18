@@ -136,7 +136,7 @@ public class CubeStorageQuery implements IStorageQuery {
 
         for (TblColRef column : sqlDigest.allColumns) {
             // skip measure columns
-            if (sqlDigest.metricColumns.contains(column)) {
+            if (sqlDigest.metricColumns.contains(column) && !(sqlDigest.groupbyColumns.contains(column) || sqlDigest.filterColumns.contains(column))) {
                 continue;
             }
 
