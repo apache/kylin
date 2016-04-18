@@ -53,7 +53,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
 
-        byte[] key = { 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
+        byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
 
         rowKeyDecoder.decode(key);
         List<String> values = rowKeyDecoder.getValues();

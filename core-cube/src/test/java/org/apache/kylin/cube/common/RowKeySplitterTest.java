@@ -48,7 +48,7 @@ public class RowKeySplitterTest extends LocalFileMetadataTestCase {
 
         RowKeySplitter rowKeySplitter = new RowKeySplitter(cube.getFirstSegment(), 11, 20);
         // base cuboid rowkey
-        byte[] input = { 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0,-104,-106,-128, 11, 54, -105, 55,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,     13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
+        byte[] input = { 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, -104, -106, -128, 11, 54, -105, 55, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
         rowKeySplitter.split(input);
 
         assertEquals(11, rowKeySplitter.getBufferSize());
@@ -61,9 +61,9 @@ public class RowKeySplitterTest extends LocalFileMetadataTestCase {
 
         RowKeySplitter rowKeySplitter = new RowKeySplitter(cube.getFirstSegment(), 11, 20);
         // base cuboid rowkey
-        byte[] input = { 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
+        byte[] input = { 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 };
         rowKeySplitter.split(input);
 
-        assertEquals(9, rowKeySplitter.getBufferSize());
+        assertEquals(10, rowKeySplitter.getBufferSize());
     }
 }

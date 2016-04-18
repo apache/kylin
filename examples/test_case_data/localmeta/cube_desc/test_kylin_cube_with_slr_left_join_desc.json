@@ -165,7 +165,7 @@
   "status_need_notify" : [ ],
   "auto_merge_time_ranges" : null,
   "retention_range" : 0,
-  "engine_type" : 0,
+  "engine_type" : 2,
   "storage_type" : 2,
   "partition_date_start" : 0
 }
