@@ -241,6 +241,7 @@ public class CubeMigrationCLI {
         }
 
         for (CubeSegment segment : cube.getSegments()) {
+            metaResource.add(segment.getStatisticsResourcePath());
             dictAndSnapshot.addAll(segment.getSnapshotPaths());
             dictAndSnapshot.addAll(segment.getDictionaryPaths());
         }
