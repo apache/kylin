@@ -63,7 +63,7 @@ public class ITMassInQueryTest extends KylinTestBase {
     public void setup() throws Exception {
 
         ITKylinQueryTest.clean();
-        ITKylinQueryTest.joinType = "inner";
+        ITKylinQueryTest.joinType = "left";
         ITKylinQueryTest.setupAll();
 
         Configuration hconf = HadoopUtil.getCurrentConfiguration();
@@ -94,6 +94,31 @@ public class ITMassInQueryTest extends KylinTestBase {
     @Test
     public void testMassInQuery() throws Exception {
         compare("src/test/resources/query/sql_massin", null, true);
+    }
+
+    @Test
+    public void testMassInWithDistinctCount() throws Exception {
+        run("src/test/resources/query/sql_massin_distinct", null, true);
+    }
+
+    protected void run(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
+        printInfo("---------- test folder: " + queryFolder);
+        Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
+
+        List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
+        for (File sqlFile : sqlFiles) {
+            String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
+            if (exclusiveSet.contains(queryName)) {
+                continue;
+            }
+            String sql = getTextFromFile(sqlFile);
+
+            // execute Kylin
+            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
+
+        }
     }
 
     protected void compare(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
