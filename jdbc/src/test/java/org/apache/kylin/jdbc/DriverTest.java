@@ -65,6 +65,10 @@ public class DriverTest {
             assertEquals("bar", resultSet.getString(2));
             assertEquals("tool", resultSet.getString(3));
         }
+
+        resultSet.close();
+        state.close();
+        conn.close();
     }
 
     @Test
@@ -86,6 +90,10 @@ public class DriverTest {
             assertEquals("bar", resultSet.getString(2));
             assertEquals("tool", resultSet.getString(3));
         }
+
+        resultSet.close();
+        state.close();
+        conn.close();
     }
 
     @Ignore("require dev sandbox")
@@ -118,7 +126,14 @@ public class DriverTest {
 
             printResultSetMetaData(resultSet);
             printResultSet(resultSet);
+
+            resultSet.close();
         }
+
+        catalogs.close();
+        schemas.close();
+        tables.close();
+        conn.close();
     }
 
     @Ignore("require dev sandbox")
@@ -136,6 +151,10 @@ public class DriverTest {
 
         printResultSetMetaData(resultSet);
         printResultSet(resultSet);
+
+        resultSet.close();
+        state.close();
+        conn.close();
     }
 
     private void printResultSet(ResultSet rs) throws SQLException {

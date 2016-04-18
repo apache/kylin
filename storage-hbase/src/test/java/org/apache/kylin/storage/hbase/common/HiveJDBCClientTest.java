@@ -130,6 +130,9 @@ public class HiveJDBCClientTest {
             System.out.println(res.getInt(1));
         }
         res.close();
+
+        stmt.close();
+        con.close();
     }
 
     //@Test
@@ -150,6 +153,8 @@ public class HiveJDBCClientTest {
             System.out.println("---" + res.getString(1) + " | " + res.getString(2));
         }
 
+        res.close();
+        con.close();
     }
 
     protected ResultSet executeSQL(Connection con, String sql) throws SQLException {

@@ -132,6 +132,8 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
             catalogList.add(catalog);
 
         }
+
+        resultSet.close();
         Assert.assertTrue(catalogList.size() > 0 && catalogList.contains("defaultCatalog"));
 
         /** //Disable the test on getTableTypes() as it is not ready
