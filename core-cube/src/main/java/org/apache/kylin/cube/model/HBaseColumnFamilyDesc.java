@@ -20,6 +20,8 @@ package org.apache.kylin.cube.model;
 
 import java.util.Arrays;
 
+import org.apache.kylin.metadata.model.MeasureDesc;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -53,6 +55,17 @@ public class HBaseColumnFamilyDesc {
     @Override
     public String toString() {
         return "HBaseColumnFamilyDesc [name=" + name + ", columns=" + Arrays.toString(columns) + "]";
+    }
+
+    public boolean isMemoryHungry() {
+        for (HBaseColumnDesc hBaseColumnDesc : columns) {
+            for (MeasureDesc measureDesc : hBaseColumnDesc.getMeasures()) {
+                if (measureDesc.getFunction().getMeasureType().isMemoryHungry()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

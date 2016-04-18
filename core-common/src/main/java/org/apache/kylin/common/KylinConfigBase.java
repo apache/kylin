@@ -489,7 +489,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getQueryScanFuzzyKeyMax() {
-        return Integer.parseInt(this.getOptional("kylin.query.scan.fuzzykey.max","200"));
+        return Integer.parseInt(this.getOptional("kylin.query.scan.fuzzykey.max", "200"));
     }
 
     public int getQueryStorageVisitScanRangeMax() {
@@ -558,8 +558,12 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.hbase.default.encoding", "FAST_DIFF");
     }
 
-    public String getHbaseDefaultBlockSize() {
-        return getOptional("kylin.hbase.default.block.size", "4194304");
+    public int getHbaseDefaultBlockSize() {
+        return Integer.valueOf(getOptional("kylin.hbase.default.block.size", "1048576"));
+    }
+
+    public int getHbaseSmallFamilyBlockSize() {
+        return Integer.valueOf(getOptional("kylin.hbase.small.family.block.size", "65536"));
     }
 
     public boolean isHiveKeepFlatTable() {

@@ -93,6 +93,12 @@ public class CubeHTableUtil {
 
                 String hbaseDefaultCC = kylinConfig.getHbaseDefaultCompressionCodec().toLowerCase();
 
+                if (cfDesc.isMemoryHungry()) {
+                    cf.setBlocksize(kylinConfig.getHbaseDefaultBlockSize());
+                } else {
+                    cf.setBlocksize(kylinConfig.getHbaseSmallFamilyBlockSize());
+                }
+
                 switch (hbaseDefaultCC) {
                 case "snappy": {
                     logger.info("hbase will use snappy to compress data");
@@ -120,9 +126,6 @@ public class CubeHTableUtil {
                     cf.setCompressionType(Algorithm.NONE);
                 }
                 }
-
-                int blockSize = Integer.valueOf(kylinConfig.getHbaseDefaultBlockSize());
-                cf.setBlocksize(blockSize);
 
                 try {
                     String encodingStr = kylinConfig.getHbaseDefaultEncoding();
