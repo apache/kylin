@@ -157,7 +157,7 @@
     "includes" : [ "cal_dt", "categ_lvl2_name", "categ_lvl3_name", "leaf_categ_id", "lstg_format_name", "lstg_site_id", "meta_categ_name", "seller_id", "slr_segment_cd" ],
     "select_rule" : {
       "hierarchy_dims" : [ [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ] ],
-      "mandatory_dims" : [ "seller_id" ],
+      "mandatory_dims" : [ ],
       "joint_dims" : [ [ "lstg_format_name", "lstg_site_id", "slr_segment_cd" ] ]
     }
   } ],
