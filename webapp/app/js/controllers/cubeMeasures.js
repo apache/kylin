@@ -179,8 +179,8 @@ var NextParameterModalCtrl = function ($scope, scope,para,$modalInstance,cubeCon
     $modalInstance.dismiss('cancel');
   };
 
-  $scope. getMetricColumns = function(){
-    return scope.getMetricColumns();
+  $scope.getCommonMetricColumns = function(measure){
+    return scope.getCommonMetricColumns(measure);
   }
 
   $scope.nextPara = {

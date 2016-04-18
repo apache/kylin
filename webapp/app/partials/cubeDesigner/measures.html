@@ -146,18 +146,10 @@
                                       ng-init="newMeasure.function.parameter.value = 1"><b>&nbsp;&nbsp;1</b></span>
                                 <!--!COUNT_DISTINCT-->
                                 <select class="form-control" chosen
-                                        ng-if="newMeasure.function.parameter.type == 'column' && newMeasure.function.expression!=='COUNT_DISTINCT'&& newMeasure.function.expression!=='TOP_N'"
+                                        ng-if="newMeasure.function.parameter.type == 'column'"
                                         ng-model="newMeasure.function.parameter.value"
                                         ng-change="measureReturnTypeUpdate();"
-                                        ng-options="column as column for column in getCommonMetricColumns()" >
-                                  <option value="">-- Select a Column --</option>
-                                </select>
-                                <!--COUNT_DISTINCT-->
-                                <select class="form-control" chosen
-                                        ng-if="newMeasure.function.parameter.type == 'column' && (newMeasure.function.expression=='COUNT_DISTINCT' || newMeasure.function.expression=='TOP_N')"
-                                        ng-model="newMeasure.function.parameter.value"
-                                        ng-change="measureReturnTypeUpdate();"
-                                        ng-options="column as column for column in getMetricColumns()" >
+                                        ng-options="column as column for column in getCommonMetricColumns(newMeasure)" >
                                   <option value="">-- Select a Column --</option>
                                 </select>
                               </div>
@@ -313,7 +305,7 @@
               <div class="col-xs-12 col-sm-6">
                 <select class="form-control" chosen ng-if="nextPara.type !== 'constant'"
                         ng-model="nextPara.value"
-                        ng-options="column as column for column in getMetricColumns()" >
+                        ng-options="column as column for column in getCommonMetricColumns(newmea.measure)" >
                   <option value=""></option>
                 </select>
                <span class="font-color-default"
@@ -328,7 +320,7 @@
               <div class="col-xs-12 col-sm-6">
                 <select class="form-control" chosen
                         ng-model="nextPara.value"
-                        ng-options="column as column for column in getMetricColumns()" >
+                        ng-options="column as column for column in getCommonMetricColumns(newmea.measure)" >
                   <option value=""></option>
                 </select>
               </div>
