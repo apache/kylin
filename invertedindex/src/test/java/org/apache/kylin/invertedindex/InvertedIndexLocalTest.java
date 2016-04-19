@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -171,7 +172,11 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
                 @Nullable
                 @Override
                 public byte[] apply(String input) {
-                    return input.getBytes();
+                    try {
+                        return input.getBytes("UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             })));
         }
