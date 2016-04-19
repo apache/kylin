@@ -34,6 +34,7 @@ import org.dbunit.Assertion;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
+import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITable;
 import org.dbunit.ext.h2.H2Connection;
 import org.junit.After;
@@ -88,7 +89,6 @@ public class ITMassInQueryTest extends KylinTestBase {
     @After
     public void after() throws Exception {
         ITKylinQueryTest.clean();
-
     }
 
     @Test
@@ -117,9 +117,11 @@ public class ITMassInQueryTest extends KylinTestBase {
             printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
+            printResult(kylinTable);
 
         }
     }
+
 
     protected void compare(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
         printInfo("---------- test folder: " + queryFolder);
