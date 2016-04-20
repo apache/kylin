@@ -631,4 +631,7 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.cube.mr.engine.v2.class", "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
     }
 
+    public int getDimCountDistinctMaxCardinality() {
+        return Integer.parseInt(getOptional("kylin.query.dim.distinct.max", "5000000"));
+    }
 }

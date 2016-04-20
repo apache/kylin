@@ -163,7 +163,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
             TblColRef aggCol = null;
-            if (aggFunc.needRewrite()) {
+            if (aggFunc.needRewriteField()) {
                 aggCol = buildRewriteColumn(aggFunc);
             } else {
                 AggregateCall aggCall = this.rewriteAggCalls.get(i);
@@ -179,7 +179,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     private TblColRef buildRewriteColumn(FunctionDesc aggFunc) {
         TblColRef colRef;
-        if (aggFunc.needRewrite()) {
+        if (aggFunc.needRewriteField()) {
             ColumnDesc column = new ColumnDesc();
             column.setName(aggFunc.getRewriteFieldName());
             TableDesc table = this.context.firstTableScan.getOlapTable().getSourceTable();
@@ -234,7 +234,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             translateAggregation();
             buildRewriteFieldsAndMetricsColumns();
         }
-        
+
         implementor.visitChild(this, getInput());
 
         // only rewrite the innermost aggregation
@@ -280,18 +280,18 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     private void buildRewriteFieldsAndMetricsColumns() {
         fillbackOptimizedColumn();
-        
+
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
-            
+
             if (aggFunc.isDimensionAsMetric()) {
                 this.context.groupByColumns.addAll(aggFunc.getParameter().getColRefs());
                 continue; // skip rewrite, let calcite handle
             }
-            
-            if (aggFunc.needRewrite()) {
+
+            if (aggFunc.needRewriteField()) {
                 String rewriteFieldName = aggFunc.getRewriteFieldName();
                 RelDataType rewriteFieldType = OLAPTable.createSqlType(typeFactory, aggFunc.getRewriteFieldType(), true);
                 this.context.rewriteFields.put(rewriteFieldName, rewriteFieldType);
@@ -327,12 +327,14 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     }
 
     private AggregateCall rewriteAggregateCall(AggregateCall aggCall, FunctionDesc func) {
-
         // rebuild parameters
-        List<Integer> newArgList = new ArrayList<Integer>(1);
-        String fieldName = func.getRewriteFieldName();
-        RelDataTypeField field = getInput().getRowType().getField(fieldName, true, false);
-        newArgList.add(field.getIndex());
+        List<Integer> newArgList = Lists.newArrayListWithCapacity(1);
+        if (func.needRewriteField()) {
+            RelDataTypeField field = getInput().getRowType().getField(func.getRewriteFieldName(), true, false);
+            newArgList.add(field.getIndex());
+        } else {
+            newArgList = aggCall.getArgList();
+        }
 
         // rebuild function
         RelDataType fieldType = aggCall.getType();

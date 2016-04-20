@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
+import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
 import org.apache.kylin.measure.raw.RawMeasureType;
@@ -130,6 +131,15 @@ abstract public class MeasureTypeFactory<T> {
 
     public static MeasureType<?> create(String funcName, String dataType) {
         return create(funcName, DataType.getType(dataType));
+    }
+
+    public static MeasureType<?> createNoRewriteFieldsMeasureType(String funcName, DataType dataType) {
+        // currently only has DimCountDistinctAgg
+        if (funcName.equalsIgnoreCase("COUNT_DISTINCT")) {
+            return new DimCountDistinctMeasureType.DimCountDistinctMeasureTypeFactory().createMeasureType(funcName, dataType);
+        }
+
+        throw new UnsupportedOperationException("No measure type found.");
     }
 
     public static MeasureType<?> create(String funcName, DataType dataType) {

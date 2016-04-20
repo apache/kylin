@@ -127,8 +127,7 @@ public interface OLAPRel extends RelNode {
 
         public static boolean needRewrite(OLAPContext ctx) {
             boolean hasFactTable = ctx.hasJoin || ctx.firstTableScan.getTableName().equals(ctx.realization.getFactTable());
-            boolean hasRewriteFields = !ctx.rewriteFields.isEmpty();
-            return hasRewriteFields && hasFactTable;
+            return hasFactTable;
         }
     }
 

@@ -43,6 +43,7 @@ public class FunctionDesc {
     public static final String FUNC_MIN = "MIN";
     public static final String FUNC_MAX = "MAX";
     public static final String FUNC_COUNT = "COUNT";
+    public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
     public static final Set<String> BUILT_IN_AGGREGATIONS = Sets.newHashSet();
 
     static {
@@ -50,6 +51,7 @@ public class FunctionDesc {
         BUILT_IN_AGGREGATIONS.add(FUNC_MAX);
         BUILT_IN_AGGREGATIONS.add(FUNC_MIN);
         BUILT_IN_AGGREGATIONS.add(FUNC_SUM);
+        BUILT_IN_AGGREGATIONS.add(FUNC_COUNT_DISTINCT);
     }
 
     public static final String PARAMETER_TYPE_CONSTANT = "constant";
@@ -101,21 +103,39 @@ public class FunctionDesc {
         throw new IllegalStateException("Column is not found in any table from the model: " + columnName);
     }
 
-    public MeasureType<?> getMeasureType() {
-        if (isDimensionAsMetric)
-            return null;
-
-        if (measureType == null) {
+    private void reInitMeasure() {
+        if (isDimensionAsMetric && isCountDistinct()) {
+            // create DimCountDis
+            measureType = MeasureTypeFactory.createNoRewriteFieldsMeasureType(getExpression(), getReturnDataType());
+        } else {
             measureType = MeasureTypeFactory.create(getExpression(), getReturnDataType());
         }
+    }
+
+    public MeasureType<?> getMeasureType() {
+        if (isDimensionAsMetric && !isCountDistinct()) {
+            return null;
+        }
+
+        if (measureType == null) {
+            reInitMeasure();
+        }
+
         return measureType;
     }
 
     public boolean needRewrite() {
-        if (isDimensionAsMetric)
+        if (getMeasureType() == null)
             return false;
 
         return getMeasureType().needRewrite();
+    }
+
+    public boolean needRewriteField() {
+        if (!needRewrite())
+            return false;
+
+        return getMeasureType().needRewriteField();
     }
 
     public String getRewriteFieldName() {
@@ -163,6 +183,10 @@ public class FunctionDesc {
         return FUNC_COUNT.equalsIgnoreCase(expression);
     }
 
+    public boolean isCountDistinct() {
+        return FUNC_COUNT_DISTINCT.equalsIgnoreCase(expression);
+    }
+
     /**
      * Get Full Expression such as sum(amount), count(1), count(*)...
      */
@@ -182,6 +206,9 @@ public class FunctionDesc {
 
     public void setDimensionAsMetric(boolean isDimensionAsMetric) {
         this.isDimensionAsMetric = isDimensionAsMetric;
+        if (measureType != null) {
+            reInitMeasure();
+        }
     }
 
     public String getExpression() {

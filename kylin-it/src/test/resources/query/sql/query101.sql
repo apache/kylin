@@ -16,7 +16,6 @@
 -- limitations under the License.
 --
 
-select count(*) as c,sum(PRICE) as GMV, LSTG_FORMAT_NAME as FORMAT_NAME
+select seller_id, lstg_site_id, count(DISTINCT leaf_categ_id) as CategCount
 from test_kylin_fact
-where (LSTG_FORMAT_NAME in ('ABIN')) or  (LSTG_FORMAT_NAME>='FP-GTC' and LSTG_FORMAT_NAME<='Others')
-group by LSTG_FORMAT_NAME
+group by seller_id, lstg_site_id
