@@ -70,12 +70,11 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
 
         byte[] encodedKey = rowKeyEncoder.encode(data);
         assertEquals(22 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
-        byte[] cuboidId = Arrays.copyOfRange(encodedKey, 0, rowKeyEncoder.getHeaderLength());
+        byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, rowKeyEncoder.getHeaderLength());
         byte[] rest = Arrays.copyOfRange(encodedKey, rowKeyEncoder.getHeaderLength(), encodedKey.length);
         assertEquals(255, Bytes.toLong(cuboidId));
         assertArrayEquals(new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
     }
-
 
     @Test
     public void testEncodeWithSlr() throws Exception {

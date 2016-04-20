@@ -169,7 +169,6 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf/kylin.git</url>
-        <tag>apache-kylin-2.1</tag>
     </scm>
 
     <dependencyManagement>
@@ -785,6 +784,7 @@
                                 <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
                                 <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
                                 <exclude>webapp/app/js/directives/datetimepicker.js</exclude>
+                                <exclude>webapp/app/js/directives/select.js</exclude>
 
                                 <!--configuration file -->
                                 <exclude>webapp/app/routes.json</exclude>

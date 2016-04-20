@@ -1,0 +1,70 @@
+<!--
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<div class="row" ng-controller="CubeOverWriteCtrl" style="padding-left:40px;">
+    <div class="col-xs-8">
+        <ng-form name="forms.cube_overwrite_prop_form" novalidate>
+            <!--Project-->
+            <div ng-repeat=" prop in convertedProperties track by $index " class="form-group">
+                <div class="row">
+                  <label class="col-xs-12 col-sm-6 control-label no-padding-right" ng-class="{'has-error':prop.name==''}">
+                    <b ng-if="state.mode=='view'">{{prop.name}}</b>
+                    <input ng-model="prop.name" placeholder="key" ng-change="refreshProperty(convertedProperties,$index,prop)" class="form-control" ng-if="state.mode=='edit'"/>
+                    <small style="font-weight: normal !important;" class="help-block" ng-show="prop.name==''">Property name is required.</small>
+                  </label>
+                  <div class="col-xs-12 col-sm-5" ng-class="{'has-error':prop.value==''}">
+                    <input ng-model="prop.value" placeholder="value" ng-change="refreshProperty(convertedProperties,$index,prop)" class="form-control" ng-if="state.mode=='edit'"/>
+                    <small class="help-block" ng-show="prop.value==''">Property value is required.</small>
+                    <span ng-if="state.mode=='view'">{{prop.value}}</span>
+                  </div>
+                  <div class="col-sm-1" ng-if="state.mode=='edit'">
+                    <button class="btn btn-xs btn-info" ng-click="removeProperty(convertedProperties,$index,prop)"><i class="fa fa-minus"></i>
+                    </button>
+                  </div>
+
+                </div>
+            </div>
+        </ng-form>
+        <!--Add Measures Property-->
+        <div class="form-group">
+          <button class="btn btn-sm btn-info" ng-click="addNewProperty();" ng-show="state.mode=='edit'">
+            <i class="fa fa-plus"></i> Property
+          </button>
+        </div>
+
+    </div>
+
+  <!--Tips-->
+  <div class="col-xs-4">
+    <div class="box box-solid">
+      <div class="box-header widget-header-flat">
+        <h4 class="box-title">Tips</h4>
+      </div>
+      <div class="box-body">
+        <div class="row">
+          <div class="col-xs-12">
+            <ol class="text-info">
+              <li>Cube level properties will overwrite configuration in kylin.prperties</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

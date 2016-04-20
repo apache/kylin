@@ -138,11 +138,10 @@ public class CubeMigrationCLI {
 
         if (realExecute.equalsIgnoreCase("true")) {
             doOpts();
+            checkMigrationSuccess(dstConfig, cubeName, true);
         } else {
             showOpts();
         }
-
-        checkMigrationSuccess(dstConfig, cubeName, true);
     }
 
     public static void moveCube(String srcCfgUri, String dstCfgUri, String cubeName, String projectName, String copyAcl, String purgeAndDisable, String overwriteIfExists, String realExecute) throws IOException, InterruptedException {

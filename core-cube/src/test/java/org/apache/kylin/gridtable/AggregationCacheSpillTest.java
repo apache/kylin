@@ -88,7 +88,7 @@ public class AggregationCacheSpillTest {
             assertEquals(21, ((BigDecimal) returnRecord[4]).longValue());
             count++;
 
-            System.out.println(record);
+            //System.out.println(record);
         }
         assertEquals(DATA_CARDINALITY, count);
         scanner.close();
@@ -130,7 +130,7 @@ public class AggregationCacheSpillTest {
             assertEquals(84000, ((BigDecimal) returnRecord[4]).longValue());
             count++;
 
-            System.out.println(record);
+            //System.out.println(record);
         }
         assertEquals(10, count);
         scanner.close();
