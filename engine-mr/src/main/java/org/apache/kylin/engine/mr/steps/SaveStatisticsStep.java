@@ -92,16 +92,15 @@ public class SaveStatisticsStep extends AbstractExecutable {
         } else if (AlgorithmEnum.LAYER.name().equalsIgnoreCase(algPref)) {
             alg = AlgorithmEnum.LAYER;
         } else {
-            boolean memoryHungry = false;
+            int memoryHungryMeasures = 0;
             for (MeasureDesc measure : seg.getCubeDesc().getMeasures()) {
                 if (measure.getFunction().getMeasureType().isMemoryHungry()) {
                     logger.info("This cube has memory-hungry measure " + measure.getFunction().getExpression());
-                    memoryHungry = true;
-                    break;
+                    memoryHungryMeasures++;
                 }
             }
 
-            if (memoryHungry == true) {
+            if (memoryHungryMeasures > 4 || (kylinConf.isDevEnv() && memoryHungryMeasures > 0)) {
                 alg = AlgorithmEnum.LAYER;
             } else if ("random".equalsIgnoreCase(algPref)) { // for testing
                 alg = new Random().nextBoolean() ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
