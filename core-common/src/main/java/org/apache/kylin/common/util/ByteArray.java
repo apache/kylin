@@ -138,10 +138,16 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
 
     @Override
     public int hashCode() {
-        if (data == null)
+        if (data == null) {
             return 0;
-        else
+        } else {
+            if (length <= Bytes.SIZEOF_LONG) {
+                //to avoid hash collision of byte arrays those are converted from nearby integers/longs, 
+                //which is the case for kylin dictionary
+                return Long.valueOf(Bytes.toLong(data, offset, length)).hashCode();
+            }
             return Bytes.hashCode(data, offset, length);
+        }
     }
 
     @Override
