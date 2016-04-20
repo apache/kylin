@@ -176,6 +176,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testDimDistinctCountQuery() throws Exception {
+        execAndCompQuery("src/test/resources/query/sql_distinct_dim", null, true);
+    }
+
+    @Test
     public void testPreciselyDistinctCountQuery() throws Exception {
         if ("left".equalsIgnoreCase(joinType)) {
             execAndCompQuery("src/test/resources/query/sql_distinct_precisely", null, true);
