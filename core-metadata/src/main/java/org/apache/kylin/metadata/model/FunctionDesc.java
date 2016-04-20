@@ -103,7 +103,7 @@ public class FunctionDesc {
         throw new IllegalStateException("Column is not found in any table from the model: " + columnName);
     }
 
-    private void reInitMeasure() {
+    private void reInitMeasureType() {
         if (isDimensionAsMetric && isCountDistinct()) {
             // create DimCountDis
             measureType = MeasureTypeFactory.createNoRewriteFieldsMeasureType(getExpression(), getReturnDataType());
@@ -118,7 +118,7 @@ public class FunctionDesc {
         }
 
         if (measureType == null) {
-            reInitMeasure();
+            reInitMeasureType();
         }
 
         return measureType;
@@ -207,7 +207,7 @@ public class FunctionDesc {
     public void setDimensionAsMetric(boolean isDimensionAsMetric) {
         this.isDimensionAsMetric = isDimensionAsMetric;
         if (measureType != null) {
-            reInitMeasure();
+            reInitMeasureType();
         }
     }
 
