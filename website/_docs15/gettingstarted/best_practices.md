@@ -18,4 +18,4 @@ List of articles about Kylin best practices contributed by community. Some of th
 
 * [Big Data MDX with Mondrian and Apache Kylin](https://www.inovex.de/fileadmin/files/Vortraege/2015/big-data-mdx-with-mondrian-and-apache-kylin-sebastien-jelsch-pcm-11-2015.pdf)
 
-* [Kylin und Mondrain Interaction](https://github.com/mustangore/kylin-mondrian-interaction)
+* [Kylin and Mondrain Interaction](https://github.com/mustangore/kylin-mondrian-interaction)
