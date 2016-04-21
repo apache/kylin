@@ -5,12 +5,9 @@ categories: gettingstarted
 permalink: /docs/gettingstarted/events.html
 ---
 
-__Coming Events__
-
-* ApacheCon EU 2015
-
 __Conferences__
 
+* [The Evolution of Apache Kylin: Realtime and Plugin Architecture in Kylin](https://www.youtube.com/watch?v=n74zvLmIgF0)([slides](http://www.slideshare.net/YangLi43/apache-kylin-15-updates)) by [Li Yang](https://github.com/liyang-gmt8), at [Hadoop Summit 2016 Dublin](http://hadoopsummit.org/dublin/agenda/), Ireland, 2016-04-14
 * [Apache Kylin - Balance Between Space and Time](http://www.chinahadoop.com/2015/July/Shanghai/agenda.php) ([slides](http://www.slideshare.net/qhzhou/apache-kylin-china-hadoop-summit-2015-shanghai)) by [Qianhao Zhou](https://github.com/qhzhou), at Hadoop Summit 2015 in Shanghai, China, 2015-07-24
 * [Apache Kylin - Balance Between Space and Time](https://www.youtube.com/watch?v=jgvZSFaXPgI), [slides](http://www.slideshare.net/DebashisSaha/apache-kylin-balance-between-space-and-time-hadop-summit-2015) ([video](https://www.youtube.com/watch?v=jgvZSFaXPgI), [slides](http://www.slideshare.net/DebashisSaha/apache-kylin-balance-between-space-and-time-hadop-summit-2015)) by [Debashis Saha](https://twitter.com/debashis_saha) & [Luke Han](https://twitter.com/lukehq), at Hadoop Summit 2015 in San Jose, US, 2015-06-09
 * [HBaseCon 2015: Apache Kylin; Extreme OLAP Engine for Hadoop](https://vimeo.com/128152444) ([video](https://vimeo.com/128152444), [slides](http://www.slideshare.net/HBaseCon/ecosystem-session-3b)) by [Seshu Adunuthula](https://twitter.com/SeshuAd) at HBaseCon 2015 in San Francisco, US, 2015-05-07
