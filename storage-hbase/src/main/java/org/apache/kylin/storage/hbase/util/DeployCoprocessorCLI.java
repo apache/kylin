@@ -260,7 +260,7 @@ public class DeployCoprocessorCLI {
         return path;
     }
 
-    public static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem, Set<String> oldJarPaths) throws IOException {
+    public synchronized static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem, Set<String> oldJarPaths) throws IOException {
         Path uploadPath = null;
         File localCoprocessorFile = new File(localCoprocessorJar);
 
