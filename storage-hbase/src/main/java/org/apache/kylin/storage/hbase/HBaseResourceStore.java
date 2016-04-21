@@ -148,7 +148,9 @@ public class HBaseResourceStore extends ResourceStore {
 
     private void tuneScanParameters(Scan scan) {
         // divide by 10 as some resource like dictionary or snapshot can be very large
-        scan.setCaching(kylinConfig.getHBaseScanCacheRows() / 10);
+        // scan.setCaching(kylinConfig.getHBaseScanCacheRows() / 10);
+        scan.setCaching(kylinConfig.getHBaseScanCacheRows());
+
         scan.setMaxResultSize(kylinConfig.getHBaseScanMaxResultSize());
         scan.setCacheBlocks(true);
     }

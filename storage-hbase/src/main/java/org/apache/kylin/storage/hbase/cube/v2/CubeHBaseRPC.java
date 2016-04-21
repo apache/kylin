@@ -113,8 +113,8 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         KylinConfig config = cubeSeg.getCubeDesc().getConfig();
         int hbaseCaching = config.getHBaseScanCacheRows();
         int hbaseMaxResultSize = config.getHBaseScanMaxResultSize();
-        if (isMemoryHungry(selectedColBlocks))
-            hbaseCaching /= 10;
+//        if (isMemoryHungry(selectedColBlocks))
+//            hbaseCaching /= 10;
 
         return new RawScan(start, end, selectedColumns, hbaseFuzzyKeys, hbaseCaching, hbaseMaxResultSize);
     }
