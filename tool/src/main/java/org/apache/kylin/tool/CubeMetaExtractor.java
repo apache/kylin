@@ -284,7 +284,6 @@ public class CubeMetaExtractor extends AbstractApplication {
                         for (String snapshotPath : segment.getSnapshotPaths()) {
                             addRequired(snapshotPath);
                         }
-                        addRequired(segment.getStatisticsResourcePath());
                     }
 
                     if (includeJobs) {
