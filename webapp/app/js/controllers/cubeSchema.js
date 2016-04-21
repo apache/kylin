@@ -275,6 +275,16 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
             }
         })
 
+        var shardRowkeyList = [];
+        angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(rowkey){
+          if(rowkey.isShardBy == true){
+            shardRowkeyList.push(rowkey.column);
+          }
+        })
+        if(shardRowkeyList.length >1){
+          errors.push("At most one 'shard by' column is allowed.");
+        }
+
         if($scope.cubeMetaFrame.region_size<0.01 || $scope.cubeMetaFrame.region_size>100){
           errors.push("Please input a region size between 0.01 and 100 (G).");
         }

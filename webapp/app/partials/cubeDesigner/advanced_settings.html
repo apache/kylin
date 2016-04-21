@@ -211,6 +211,7 @@
             <th style="width:200px;">Column</th>
             <th>Encoding</th>
             <th>Length</th>
+            <th>Shard By</th>
             <th ng-if="state.mode=='edit'"></th>
           </tr>
           </thead>
@@ -253,6 +254,19 @@
 
               <small class="help-block red" ng-show="state.mode=='edit' && rowkey_column.encoding=='int' && (rowkey_column.valueLength>8 || rowkey_column.valueLength<1)">int encoding column length should between 1 and 8</small>
               <span ng-if="state.mode=='view'">{{rowkey_column.valueLength}}</span>
+            </td>
+
+            <td>
+              <select ng-if="state.mode=='edit'" style="width:180px;"
+                      chosen ng-model="rowkey_column.isShardBy"
+                      tooltip="false by default"
+                      data-placeholder="false by default"
+                      ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column,true)"
+                      ng-options="dt as dt for dt in cubeConfig.rowKeyShardOptions">
+                <option value=""></option>
+              </select>
+              <small class="help-block red" ng-show="state.mode=='edit' && rule.shardColumnAvailable==false && rowkey_column.isShardBy == true">at most one 'shard by' column is allowed.</small>
+              <span ng-if="state.mode=='view'">{{rowkey_column.isShardBy}}</span>
             </td>
 
             <td ng-if="state.mode=='edit'">

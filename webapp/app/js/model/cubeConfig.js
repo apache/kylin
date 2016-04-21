@@ -94,5 +94,8 @@ KylinApp.constant('cubeConfig', {
     'HH:mm:ss',
     'HH:mm',
     'HH'
+  ],
+  rowKeyShardOptions:[
+    true,false
   ]
 });
