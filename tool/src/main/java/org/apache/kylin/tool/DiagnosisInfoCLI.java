@@ -101,9 +101,11 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         }
 
         // create new folder to contain the output
+        String packageName = "diagnosis_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date());
         if (new File(exportDest).exists()) {
-            exportDest = exportDest + "diagnosis_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date()) + "/";
+            exportDest = exportDest + packageName + "/";
         }
+        File exportDir = new File(exportDest);
 
         // export cube metadata
         String[] cubeMetaArgs = { "-destDir", exportDest + "metadata", "-project", project };
@@ -126,7 +128,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
 
             final String logFolder = KylinConfig.getKylinHome() + "/logs/";
             final String defaultLogFilename = "kylin.log";
-            final File logsDir = new File(exportDest + "logs/");
+            final File logsDir = new File(exportDir, "logs");
             final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
             FileUtils.forceMkdir(logsDir);
@@ -152,7 +154,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         if (includeConf) {
             logger.info("Start to extract kylin conf files.");
             try {
-                FileUtils.copyDirectoryToDirectory(new File(getConfFolder()), new File(exportDest));
+                FileUtils.copyDirectoryToDirectory(new File(getConfFolder()), exportDir);
             } catch (Exception e) {
                 logger.warn("Error in export conf.", e);
             }
@@ -160,7 +162,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
 
         // export commit id
         try {
-            FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), "commit_SHA1"), new File(exportDest));
+            FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), "commit_SHA1"), exportDir);
         } catch (Exception e) {
             logger.warn("Error in export commit id.", e);
         }
@@ -168,12 +170,20 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         // compress to zip package
         if (compress) {
             File tempZipFile = File.createTempFile("diagnosis_", ".zip");
-            ZipFileUtils.compressZipFile(exportDest, tempZipFile.getAbsolutePath());
-            FileUtils.forceDelete(new File(exportDest));
-            FileUtils.moveFileToDirectory(tempZipFile, new File(exportDest), true);
-            exportDest = exportDest + tempZipFile.getName();
+            ZipFileUtils.compressZipFile(exportDir.getAbsolutePath(), tempZipFile.getAbsolutePath());
+            FileUtils.cleanDirectory(exportDir);
+
+            File zipFile = new File(exportDir, packageName + ".zip");
+            FileUtils.moveFile(tempZipFile, zipFile);
+            exportDest = zipFile.getAbsolutePath();
+            exportDir = new File(exportDest);
         }
-        logger.info("Diagnosis info locates at: " + new File(exportDest).getAbsolutePath());
+
+        StringBuffer output = new StringBuffer();
+        output.append("\n========================================");
+        output.append("\nDiagnosis package locates at: \n" + exportDir.getAbsolutePath());
+        output.append("\n========================================");
+        logger.info(output.toString());
     }
 
     public String getExportDest() {

@@ -199,6 +199,26 @@ then
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.common.KylinVersion
     exit 0
 
+elif [ "$1" = "diag" ]
+then
+    project="$2"
+    if [ -n "$project" ]
+    then
+        echo "You need to specify a project for diagnosis."
+        exit 1
+    fi
+
+    destDir="$3"
+    if [ -n "$destDir" ]
+    then
+        $destDir="$KYLIN_HOME/diagnosis_dump/"
+        mkdir -p $destDir
+    fi
+
+    export HBASE_CLASSPATH=${KYLIN_HOME}/lib/*
+    exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.DiagnosisInfoCLI -project $project -destDir $destDir
+    exit 0
+
 # tool command
 elif [[ "$1" = org.apache.kylin.* ]]
 then
