@@ -18,15 +18,14 @@
 
 package org.apache.kylin.storage.hbase.ii;
 
+import java.io.IOException;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
-import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
 /**
@@ -47,14 +46,12 @@ public class IIBulkLoadJob extends AbstractHadoopJob {
             String input = getOptionValue(OPTION_INPUT_PATH);
 
             Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-            FileSystem fs = FileSystem.get(conf);
-
-            Path columnFamilyPath = new Path(input, IIDesc.HBASE_FAMILY);
-
-            // File may have already been auto-loaded (in the case of MapR DB)
-            if (fs.exists(columnFamilyPath)) {
-                FsPermission permission = new FsPermission((short) 0777);
-                fs.setPermission(columnFamilyPath, permission);
+            FsShell shell = new FsShell(conf);
+            try {
+                shell.run(new String[] { "-chmod", "-R", "777", input });
+            } catch (Exception e) {
+                logger.error("Couldn't change the file permissions ", e);
+                throw new IOException(e);
             }
 
             return ToolRunner.run(new LoadIncrementalHFiles(conf), new String[] { input, tableName });

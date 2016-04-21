@@ -18,18 +18,13 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
+import java.io.IOException;
+
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
@@ -48,7 +43,7 @@ public class BulkLoadJob extends AbstractHadoopJob {
         Options options = new Options();
 
         try {
-            
+
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_HTABLE_NAME);
             options.addOption(OPTION_CUBE_NAME);
@@ -61,21 +56,12 @@ public class BulkLoadJob extends AbstractHadoopJob {
             String input = getOptionValue(OPTION_INPUT_PATH);
 
             Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-            FileSystem fs = FileSystem.get(conf);
-
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-            CubeInstance cube = cubeMgr.getCube(cubeName);
-            CubeDesc cubeDesc = cube.getDescriptor();
-            FsPermission permission = new FsPermission((short) 0777);
-            for (HBaseColumnFamilyDesc cf : cubeDesc.getHbaseMapping().getColumnFamily()) {
-                String cfName = cf.getName();
-                Path columnFamilyPath = new Path(input, cfName);
-
-                // File may have already been auto-loaded (in the case of MapR DB)
-                if (fs.exists(columnFamilyPath)) {
-                    fs.setPermission(columnFamilyPath, permission);
-                }
+            FsShell shell = new FsShell(conf);
+            try {
+                shell.run(new String[] { "-chmod", "-R", "777", input });
+            } catch (Exception e) {
+                logger.error("Couldn't change the file permissions ", e);
+                throw new IOException(e);
             }
 
             String[] newArgs = new String[2];
