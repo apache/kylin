@@ -276,6 +276,7 @@ public class CubeMetaExtractor extends AbstractApplication {
             if (includeSegments) {
                 addRequired(CubeInstance.concatResourcePath(cube.getName()));
                 for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
+                    addRequired(segment.getStatisticsResourcePath());
                     if (includeSegmentDetails) {
                         for (String dictPat : segment.getDictionaryPaths()) {
                             addRequired(dictPat);
@@ -322,9 +323,9 @@ public class CubeMetaExtractor extends AbstractApplication {
                 retrieveResourcePath(iRealization);
             }
         } else if (realization instanceof IIInstance) {
-            throw new IllegalStateException("Does not support extract II instance or hybrid that contains II");
+            logger.warn("Does not support extract II instance or hybrid that contains II");
         } else {
-            throw new IllegalStateException("Unknown realization type: " + realization.getType());
+            logger.warn("Unknown realization type: " + realization.getType());
         }
     }
 

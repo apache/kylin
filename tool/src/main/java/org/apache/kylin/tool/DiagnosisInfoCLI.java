@@ -58,12 +58,17 @@ public class DiagnosisInfoCLI extends AbstractApplication {
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_CONF = OptionBuilder.withArgName("includeConf").hasArg().isRequired(false).withDescription("Specify whether to include conf files to extract. Default true.").create("includeConf");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_HBASE = OptionBuilder.withArgName("includeHBase").hasArg().isRequired(false).withDescription("Specify whether to include hbase files to extract. Default true.").create("includeHBase");
+
     private CubeMetaExtractor cubeMetaExtractor;
+    private HBaseUsageExtractor hBaseUsageExtractor;
     private Options options;
     private String exportDest;
 
     public DiagnosisInfoCLI() {
         cubeMetaExtractor = new CubeMetaExtractor();
+        hBaseUsageExtractor = new HBaseUsageExtractor();
 
         options = new Options();
         options.addOption(OPTION_LOG_PERIOD);
@@ -96,7 +101,9 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         }
 
         // create new folder to contain the output
-        exportDest = exportDest + "diagnosis_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date()) + "/";
+        if (new File(exportDest).exists()) {
+            exportDest = exportDest + "diagnosis_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date()) + "/";
+        }
 
         // export cube metadata
         String[] cubeMetaArgs = { "-destDir", exportDest + "metadata", "-project", project };
@@ -105,6 +112,13 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
         boolean compress = optionsHelper.hasOption(OPTION_COMPRESS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
         boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF)) : true;
+        boolean includeHBase = optionsHelper.hasOption(OPTION_INCLUDE_HBASE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_HBASE)) : true;
+
+        // export HBase
+        if (includeHBase) {
+            String[] hbaseArgs = { "-destDir", exportDest + "hbase", "-project", project };
+            hBaseUsageExtractor.execute(hbaseArgs);
+        }
 
         // export logs
         if (logPeriod > 0) {
