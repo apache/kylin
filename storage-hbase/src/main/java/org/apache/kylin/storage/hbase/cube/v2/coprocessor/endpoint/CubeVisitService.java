@@ -162,7 +162,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
     }
 
     @Override
-    public void visitCube(RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
+    public void visitCube(final RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
 
         List<RegionScanner> regionScanners = Lists.newArrayList();
         HRegion region = null;
@@ -177,7 +177,6 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             region = env.getRegion();
             region.startRegionOperation();
             debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);
-
 
             final GTScanRequest scanReq = GTScanRequest.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
             List<List<Integer>> hbaseColumnsToGT = Lists.newArrayList();
@@ -230,9 +229,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 scanReq.setAggrCacheGB(0); // disable mem check if so told
             }
 
-            final MutableBoolean normalComplete = new MutableBoolean(true);
-            final long startTime = this.serviceStartTime;//request.getStartTime();
-            final long timeout = (long) (request.getTimeout() * 0.95);
+            final MutableBoolean scanNormalComplete = new MutableBoolean(true);
+            final long startTime = this.serviceStartTime;
+            final long timeout = request.getTimeout();
 
             final CellListIterator cellListIterator = new CellListIterator() {
 
@@ -247,12 +246,18 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
                 @Override
                 public boolean hasNext() {
-                    if (counter++ % 1000 == 1) {
+                    if (counter % 1000 == 1) {
                         if (System.currentTimeMillis() - startTime > timeout) {
-                            normalComplete.setValue(false);
+                            scanNormalComplete.setValue(false);
+                            logger.error("scanner aborted because timeout");
                             return false;
                         }
                     }
+
+                    if (counter % 100000 == 1) {
+                        logger.info("Scanned " + counter + " rows.");
+                    }
+                    counter++;
                     return allCellLists.hasNext();
                 }
 
@@ -279,6 +284,19 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream(RowConstants.ROWVALUE_BUFFER_SIZE);//ByteArrayOutputStream will auto grow
             int finalRowCount = 0;
             for (GTRecord oneRecord : finalScanner) {
+
+                if (!scanNormalComplete.booleanValue()) {
+                    logger.error("aggregate iterator aborted because input iterator aborts");
+                    break;
+                }
+
+                if (finalRowCount % 1000 == 1) {
+                    if (System.currentTimeMillis() - startTime > timeout) {
+                        logger.error("aggregate iterator aborted because timeout");
+                        break;
+                    }
+                }
+
                 buffer.clear();
                 oneRecord.exportColumns(scanReq.getColumns(), buffer);
                 buffer.flip();
@@ -292,7 +310,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             //outputStream.close() is not necessary
             byte[] compressedAllRows;
-            if (normalComplete.booleanValue()) {
+            if (scanNormalComplete.booleanValue()) {
                 allRows = outputStream.toByteArray();
             } else {
                 allRows = new byte[0];
@@ -309,7 +327,6 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             appendProfileInfo(sb, "server stats done");
             sb.append(" debugGitTag:" + debugGitTag);
 
-
             CubeVisitProtos.CubeVisitResponse.Builder responseBuilder = CubeVisitProtos.CubeVisitResponse.newBuilder();
             done.run(responseBuilder.//
                     setCompressedRows(HBaseZeroCopyByteString.wrap(compressedAllRows)).//too many array copies 
@@ -323,7 +340,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                             setFreeSwapSpaceSize(freeSwapSpaceSize).//
                             setHostname(InetAddress.getLocalHost().getHostName()).// 
                             setEtcMsg(sb.toString()).//
-                            setNormalComplete(normalComplete.booleanValue() ? 1 : 0).build())
+                            setNormalComplete(scanNormalComplete.booleanValue() ? 1 : 0).build())
                     .//
                     build());
 

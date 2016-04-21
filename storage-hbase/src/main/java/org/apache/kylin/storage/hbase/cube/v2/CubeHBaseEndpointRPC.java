@@ -124,7 +124,9 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             this.queue = new ArrayBlockingQueue<byte[]>(expectedSize);
             this.timeout = HadoopUtil.getCurrentConfiguration().getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
             this.timeout *= KylinConfig.getInstanceFromEnv().getCubeVisitTimeoutTimes();
-            logger.info("Timeout for ExpectedSizeIterator is " + this.timeout);
+
+            this.timeout *= 1.1;//allow for some delay 
+            logger.info("Timeout for ExpectedSizeIterator is: " + this.timeout);
         }
 
         @Override
@@ -317,7 +319,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         logger.debug("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", scanRequestByteString.size(), rawScanByteString.size());
 
-        logger.info("The scan {} for segment {} is as below with {} separate raw scans, shard part of start/end key is set to 0", Integer.toHexString(System.identityHashCode(scanRequest)), cubeSeg,rawScans.size());
+        logger.info("The scan {} for segment {} is as below with {} separate raw scans, shard part of start/end key is set to 0", Integer.toHexString(System.identityHashCode(scanRequest)), cubeSeg, rawScans.size());
         for (RawScan rs : rawScans) {
             logScan(rs, cubeSeg.getStorageLocationIdentifier());
         }
@@ -358,8 +360,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
                         if (result.getValue().getStats().getNormalComplete() != 1) {
                             abnormalFinish = true;
-                        }
-                        else {
+                        } else {
                             try {
                                 epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getValue().getCompressedRows())));
                             } catch (IOException | DataFormatException e) {
