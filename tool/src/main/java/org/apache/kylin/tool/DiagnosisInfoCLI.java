@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 public class DiagnosisInfoCLI extends AbstractApplication {
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisInfoCLI.class);
@@ -60,6 +61,9 @@ public class DiagnosisInfoCLI extends AbstractApplication {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_HBASE = OptionBuilder.withArgName("includeHBase").hasArg().isRequired(false).withDescription("Specify whether to include hbase files to extract. Default true.").create("includeHBase");
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_LINUX = OptionBuilder.withArgName("includeLinux").hasArg().isRequired(false).withDescription("Specify whether to include os and linux kernel info to extract. Default true.").create("includeLinux");
 
     private CubeMetaExtractor cubeMetaExtractor;
     private HBaseUsageExtractor hBaseUsageExtractor;
@@ -115,6 +119,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         boolean compress = optionsHelper.hasOption(OPTION_COMPRESS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
         boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF)) : true;
         boolean includeHBase = optionsHelper.hasOption(OPTION_INCLUDE_HBASE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_HBASE)) : true;
+        boolean includeLinux = optionsHelper.hasOption(OPTION_INCLUDE_LINUX) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_LINUX)) : true;
 
         // export HBase
         if (includeHBase) {
@@ -157,6 +162,29 @@ public class DiagnosisInfoCLI extends AbstractApplication {
                 FileUtils.copyDirectoryToDirectory(new File(getConfFolder()), exportDir);
             } catch (Exception e) {
                 logger.warn("Error in export conf.", e);
+            }
+        }
+
+        // export os conf - linux
+        if (includeLinux) {
+            File linuxDir = new File(exportDir, "linux");
+            FileUtils.forceMkdir(linuxDir);
+            File transparentHugepageCompactionDir = new File(linuxDir, "transparent_hugepage");
+            FileUtils.forceMkdir(transparentHugepageCompactionDir);
+            File vmSwappinessDir = new File(linuxDir, "vm.swappiness");
+            FileUtils.forceMkdir(vmSwappinessDir);
+            try {
+                String transparentHugepageCompactionPath = "/sys/kernel/mm/transparent_hugepage/defrag";
+                Files.copy(new File(transparentHugepageCompactionPath), new File(transparentHugepageCompactionDir, "defrag"));
+            } catch (Exception e) {
+                logger.warn("Error in export transparent hugepage compaction status.", e);
+            }
+
+            try {
+                String vmSwapinessPath = "/proc/sys/vm/swappiness";
+                Files.copy(new File(vmSwapinessPath), new File(vmSwappinessDir, "swappiness"));
+            } catch (Exception e) {
+                logger.warn("Error in export vm swapiness.", e);
             }
         }
 
