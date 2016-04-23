@@ -64,6 +64,8 @@ public class HiveCmdBuilderTest extends LocalFileMetadataTestCase {
     public void testBeeline() throws IOException {
         System.setProperty("kylin.hive.client", "beeline");
         System.setProperty("kylin.hive.beeline.params", "-u jdbc_url");
+        String lineSeparator = java.security.AccessController.doPrivileged(
+                new sun.security.action.GetPropertyAction("line.separator"));
 
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement("USE default;");
@@ -75,7 +77,9 @@ public class HiveCmdBuilderTest extends LocalFileMetadataTestCase {
 
         String hqlFile = cmd.substring(cmd.lastIndexOf("-f ") + 3).trim();
         String hqlStatement = FileUtils.readFileToString(new File(hqlFile));
-        assertEquals("USE default;\nDROP TABLE test;\nSHOW\n TABLES;\n", hqlStatement);
+        assertEquals("USE default;" +
+                lineSeparator + "DROP TABLE test;" +
+                lineSeparator + "SHOW\n TABLES;" + lineSeparator, hqlStatement);
 
         FileUtils.forceDelete(new File(hqlFile));
     }
