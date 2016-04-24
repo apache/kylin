@@ -140,7 +140,7 @@ public class GTScanRequest {
     }
 
     public IGTScanner decorateScanner(IGTScanner scanner) throws IOException {
-        return decorateScanner(scanner, true, true);//by default do not check mem
+        return decorateScanner(scanner, true, true);
     }
 
     /**

@@ -21,42 +21,42 @@ package org.apache.kylin.metadata.datatype;
 import java.io.Serializable;
 
 @SuppressWarnings("serial")
-public class LongMutable implements Comparable<LongMutable>, Serializable {
+public class IntMutable implements Comparable<IntMutable>, Serializable {
 
-    private long v;
+    private int v;
 
-    public LongMutable() {
+    public IntMutable() {
         this(0);
     }
 
-    public LongMutable(long v) {
+    public IntMutable(int v) {
         set(v);
     }
 
-    public long get() {
+    public int get() {
         return v;
     }
 
-    public void set(long v) {
+    public void set(int v) {
         this.v = v;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof LongMutable)) {
+        if (!(o instanceof IntMutable)) {
             return false;
         }
-        LongMutable other = (LongMutable) o;
+        IntMutable other = (IntMutable) o;
         return this.v == other.v;
     }
 
     @Override
     public int hashCode() {
-        return (int) (v ^ (v >>> 32));
+        return (int) v;
     }
 
     @Override
-    public int compareTo(LongMutable o) {
+    public int compareTo(IntMutable o) {
         long thisValue = this.v;
         long thatValue = o.v;
         return (thisValue < thatValue ? -1 : (thisValue == thatValue ? 0 : 1));
@@ -64,7 +64,7 @@ public class LongMutable implements Comparable<LongMutable>, Serializable {
 
     @Override
     public String toString() {
-        return Long.toString(v);
+        return Integer.toString(v);
     }
 
 }

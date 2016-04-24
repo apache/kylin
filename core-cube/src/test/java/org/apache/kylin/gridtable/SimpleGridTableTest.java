@@ -17,13 +17,10 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.BitSet;
 import java.util.List;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -171,9 +168,6 @@ public class SimpleGridTableTest {
     }
 
     private static ImmutableBitSet setOf(int... values) {
-        BitSet set = new BitSet();
-        for (int i : values)
-            set.set(i);
-        return new ImmutableBitSet(set);
+        return ImmutableBitSet.valueOf(values);
     }
 }

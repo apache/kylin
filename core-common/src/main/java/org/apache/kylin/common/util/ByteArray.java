@@ -142,9 +142,9 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
             return 0;
         } else {
             if (length <= Bytes.SIZEOF_LONG && length > 0) {
-                //to avoid hash collision of byte arrays those are converted from nearby integers/longs, 
-                //which is the case for kylin dictionary
-                return Long.valueOf(BytesUtil.readLong(data, offset, length)).hashCode();
+                // to avoid hash collision of byte arrays those are converted from nearby integers/longs, which is the case for kylin dictionary
+                long value = BytesUtil.readLong(data, offset, length);
+                return (int) (value ^ (value >>> 32));
             }
             return Bytes.hashCode(data, offset, length);
         }

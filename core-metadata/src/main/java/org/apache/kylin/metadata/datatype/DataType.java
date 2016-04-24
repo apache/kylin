@@ -62,6 +62,7 @@ public class DataType implements Serializable {
         register("any", "char", "varchar", "string", //
                 "boolean", "byte", "binary", //
                 "int", "short", "long", "integer", "tinyint", "smallint", "bigint", //
+                "int4", "long8", //
                 "float", "real", "double", "decimal", "numeric", //
                 "date", "time", "datetime", "timestamp", //
                 InnerDataTypeEnum.LITERAL.getDataType(), InnerDataTypeEnum.DERIVED.getDataType());
@@ -77,6 +78,8 @@ public class DataType implements Serializable {
         INTEGER_FAMILY.add("smallint");
         INTEGER_FAMILY.add("integer");
         INTEGER_FAMILY.add("bigint");
+        INTEGER_FAMILY.add("int4");
+        INTEGER_FAMILY.add("long8");
 
         NUMBER_FAMILY.addAll(INTEGER_FAMILY);
         NUMBER_FAMILY.add("float");

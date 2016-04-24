@@ -206,8 +206,6 @@ public class BytesUtil {
     }
 
     public static void writeUnsigned(int num, int size, ByteBuffer out) {
-
-
         int mask = 0xff << ((size - 1) * 8);
         for (int i = size; i > 0; i--) {
             int v = (num & mask) >> (i - 1) * 8;
@@ -227,7 +225,6 @@ public class BytesUtil {
     }
 
     public static void writeLong(long num, ByteBuffer out) {
-
         for (int i = 0; i < 8; i++) {
             out.put((byte) num);
             num >>>= 8;
