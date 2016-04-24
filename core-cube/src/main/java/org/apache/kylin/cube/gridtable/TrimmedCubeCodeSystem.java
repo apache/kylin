@@ -30,14 +30,8 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
-import org.apache.kylin.gridtable.DefaultGTComparator;
-import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.IGTCodeSystem;
-import org.apache.kylin.gridtable.IGTComparator;
-import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 import com.google.common.collect.Maps;
@@ -46,108 +40,16 @@ import com.google.common.collect.Maps;
  * A limited code system which trims DictionaryDimEnc to TrimmedDimEnc (to avoid pushing down the useless dictionary)
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class TrimmedCubeCodeSystem implements IGTCodeSystem {
-
-    private GTInfo info;
-
-    private DimensionEncoding[] dimEncs;
-    private DataTypeSerializer[] serializers;
-    private IGTComparator comparator;
-    private Map<Integer, Integer> dependentMetricsMap;
+public class TrimmedCubeCodeSystem extends CubeCodeSystem {
 
     public TrimmedCubeCodeSystem(DimensionEncoding[] dimEncs, Map<Integer, Integer> dependentMetricsMap) {
-        this.dimEncs = dimEncs;
-        this.comparator = new DefaultGTComparator();
-        this.dependentMetricsMap = dependentMetricsMap;
-    }
-
-    @Override
-    public void init(GTInfo info) {
-        this.info = info;
-
-        this.serializers = new DataTypeSerializer[info.getColumnCount()];
-        for (int i = 0; i < serializers.length; i++) {
-            DimensionEncoding dimEnc = i < dimEncs.length ? dimEncs[i] : null;
-
-            // for dimensions
-            if (dimEnc != null) {
-
-                serializers[i] = dimEnc.asDataTypeSerializer();
-            }
-            // for measures
-            else {
-                serializers[i] = DataTypeSerializer.create(info.getColumnType(i));
-            }
-        }
-    }
-
-    @Override
-    public IGTComparator getComparator() {
-        return comparator;
-    }
-
-    @Override
-    public int codeLength(int col, ByteBuffer buf) {
-        return serializers[col].peekLength(buf);
-    }
-
-    @Override
-    public int maxCodeLength(int col) {
-        return serializers[col].maxLength();
-    }
-
-    @Override
-    public DimensionEncoding getDimEnc(int col) {
-        if (col < dimEncs.length) {
-            return dimEncs[col];
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public void encodeColumnValue(int col, Object value, ByteBuffer buf) {
-        encodeColumnValue(col, value, 0, buf);
+        super(dimEncs, dependentMetricsMap);
     }
 
     @Override
     public void encodeColumnValue(int col, Object value, int roundingFlag, ByteBuffer buf) {
         DataTypeSerializer serializer = serializers[col];
         serializer.serialize(value, buf);
-    }
-
-    @Override
-    public Object decodeColumnValue(int col, ByteBuffer buf) {
-        return serializers[col].deserialize(buf);
-    }
-
-    //TODO: remove duplicate
-    @Override
-    public MeasureAggregator<?>[] newMetricsAggregators(ImmutableBitSet columns, String[] aggrFunctions) {
-        assert columns.trueBitCount() == aggrFunctions.length;
-
-        MeasureAggregator<?>[] result = new MeasureAggregator[aggrFunctions.length];
-        for (int i = 0; i < result.length; i++) {
-            int col = columns.trueBitAt(i);
-            result[i] = MeasureAggregator.create(aggrFunctions[i], info.getColumnType(col));
-        }
-
-        // deal with holistic distinct count
-        if (dependentMetricsMap != null) {
-            for (Integer child : dependentMetricsMap.keySet()) {
-                if (columns.get(child)) {
-                    Integer parent = dependentMetricsMap.get(child);
-                    if (columns.get(parent) == false)
-                        throw new IllegalStateException();
-
-                    int childIdx = columns.trueBitIndexOf(child);
-                    int parentIdx = columns.trueBitIndexOf(parent);
-                    result[childIdx].setDependentAggregator(result[parentIdx]);
-                }
-            }
-        }
-
-        return result;
     }
 
     private static void writeDimensionEncoding(DimensionEncoding encoding, ByteBuffer out) {

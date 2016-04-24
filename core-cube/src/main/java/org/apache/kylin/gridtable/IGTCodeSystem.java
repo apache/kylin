@@ -36,6 +36,7 @@ public interface IGTCodeSystem {
     /** Return the max possible length of a column */
     int maxCodeLength(int col);
     
+    /** Return a DimensionEncoding if the underlying column is backed by a cube dimension, return null otherwise */
     DimensionEncoding getDimEnc(int col);
 
     /**
@@ -46,7 +47,7 @@ public interface IGTCodeSystem {
     void encodeColumnValue(int col, Object value, ByteBuffer buf) throws IllegalArgumentException;
 
     /**
-     * Encode a value into code, with option to floor rounding -1, no rounding 0,  or ceiling rounding 1
+     * Encode a value into code, with option to floor rounding -1, no rounding 0, or ceiling rounding 1
      * 
      * @throws IllegalArgumentException
      * - if rounding=0 and the value is not in dictionary

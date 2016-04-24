@@ -42,12 +42,12 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class CubeCodeSystem implements IGTCodeSystem {
 
-    private GTInfo info;
+    GTInfo info;
 
-    private DimensionEncoding[] dimEncs;
-    private DataTypeSerializer[] serializers;
-    private IGTComparator comparator;
-    private Map<Integer, Integer> dependentMetricsMap;
+    DimensionEncoding[] dimEncs;
+    DataTypeSerializer[] serializers;
+    IGTComparator comparator;
+    Map<Integer, Integer> dependentMetricsMap;
 
     public CubeCodeSystem(DimensionEncoding[] dimEncs) {
         this(dimEncs, Collections.<Integer, Integer> emptyMap());
