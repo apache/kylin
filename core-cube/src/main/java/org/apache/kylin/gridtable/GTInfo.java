@@ -44,15 +44,15 @@ public class GTInfo {
     // column schema
     DataType[] colTypes;
     ImmutableBitSet colPreferIndex;
-    transient int nColumns;
-    transient ImmutableBitSet colAll;
-    transient TblColRef[] colRefs;
+    int nColumns;
+    ImmutableBitSet colAll;
+    TblColRef[] colRefs;
 
     // grid info
     ImmutableBitSet primaryKey; // order by, uniqueness is not required
     ImmutableBitSet[] colBlocks; // primary key must be the first column block
     int rowBlockSize; // 0: disable row block
-    transient ImmutableBitSet colBlocksAll;
+    ImmutableBitSet colBlocksAll;
 
     // must create from builder
     private GTInfo() {
