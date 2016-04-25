@@ -54,6 +54,14 @@ public class BackdoorToggles {
         return getBoolean(DEBUG_TOGGLE_LOCAL_COPROCESSOR);
     }
 
+    public static int getQueryTimeout() {
+        String v = getString(DEBUG_TOGGLE_QUERY_TIMEOUT);
+        if (v == null)
+            return -1;
+        else
+            return Integer.valueOf(v);
+    }
+
     private static String getString(String key) {
         Map<String, String> toggles = _backdoorToggles.get();
         if (toggles == null) {
@@ -135,4 +143,14 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_LOCAL_COPROCESSOR = "DEBUG_TOGGLE_LOCAL_COPROCESSOR";
+
+    /**
+     * set DEBUG_TOGGLE_QUERY_TIMEOUT="timeout_millis" to overwrite the global timeout settings
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_QUERY_TIMEOUT": "120000"
+     }
+     */
+    public final static String DEBUG_TOGGLE_QUERY_TIMEOUT = "DEBUG_TOGGLE_QUERY_TIMEOUT";
 }

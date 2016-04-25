@@ -114,19 +114,28 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
     static class ExpectedSizeIterator implements Iterator<byte[]> {
 
+        BlockingQueue<byte[]> queue;
+
         int expectedSize;
         int current = 0;
-        BlockingQueue<byte[]> queue;
         long timeout;
+        long timeoutTS;
 
         public ExpectedSizeIterator(int expectedSize) {
             this.expectedSize = expectedSize;
             this.queue = new ArrayBlockingQueue<byte[]>(expectedSize);
+
             this.timeout = HadoopUtil.getCurrentConfiguration().getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
             this.timeout *= KylinConfig.getInstanceFromEnv().getCubeVisitTimeoutTimes();
-
             this.timeout *= 1.1;//allow for some delay 
+
+            if (BackdoorToggles.getQueryTimeout() != -1) {
+                this.timeout = BackdoorToggles.getQueryTimeout();
+            }
+
             logger.info("Timeout for ExpectedSizeIterator is: " + this.timeout);
+
+            this.timeoutTS = System.currentTimeMillis() + this.timeout;
         }
 
         @Override
@@ -141,7 +150,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             }
             try {
                 current++;
-                byte[] ret = queue.poll(timeout, TimeUnit.MILLISECONDS);
+                long tsRemaining = this.timeoutTS - System.currentTimeMillis();
+                if (tsRemaining < 0) {
+                    throw new RuntimeException("Timeout visiting cube!");
+                }
+
+                byte[] ret = queue.poll(tsRemaining, TimeUnit.MILLISECONDS);
                 if (ret == null) {
                     throw new RuntimeException("Timeout visiting cube!");
                 } else {
