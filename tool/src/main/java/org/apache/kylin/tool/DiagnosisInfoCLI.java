@@ -19,6 +19,7 @@
 package org.apache.kylin.tool;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -141,10 +142,12 @@ public class DiagnosisInfoCLI extends AbstractApplication {
             final ArrayList<String> logFileNames = Lists.newArrayListWithCapacity(logPeriod);
 
             logFileNames.add(defaultLogFilename);
+            logFileNames.add("kylin.gc");
             for (int i = 1; i < logPeriod; i++) {
                 Calendar todayCal = Calendar.getInstance();
                 todayCal.add(Calendar.DAY_OF_MONTH, 0 - i);
                 logFileNames.add(defaultLogFilename + "." + format.format(todayCal.getTime()));
+                logFileNames.add("kylin.gc." + Integer.toString(i - 1));
             }
 
             for (String logFilename : logFileNames) {
