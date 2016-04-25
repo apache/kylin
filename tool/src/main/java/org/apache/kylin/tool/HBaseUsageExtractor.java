@@ -30,6 +30,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.zookeeper.MasterAddressTracker;
+import org.apache.hadoop.hbase.zookeeper.ZooKeeperWatcher;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -42,6 +46,8 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
+import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,8 +95,12 @@ public class HBaseUsageExtractor extends AbstractApplication {
         return options;
     }
 
-    private String getHBaseMasterUrl() {
+    private String getHBaseMasterUrl() throws IOException, KeeperException {
         String host = conf.get("hbase.master.info.bindAddress");
+        if (host.equals("0.0.0.0")) {
+            host = MasterAddressTracker.getMasterAddress(new ZooKeeperWatcher(conf, null, null)).getHostname();
+        }
+
         String port = conf.get("hbase.master.info.port");
         return "http://" + host + ":" + port + "/";
     }
@@ -184,6 +194,17 @@ public class HBaseUsageExtractor extends AbstractApplication {
             FileUtils.copyURLToFile(srcConfUrl, destConfFile);
         } catch (Exception e) {
             logger.warn("HBase conf fetch failed: ", e);
+        }
+
+        // hbase jmx
+        try {
+            File jmxDir = new File(dest, "jmx");
+            FileUtils.forceMkdir(jmxDir);
+            URL srcJmxUrl = new URL(getHBaseMasterUrl() + "jmx");
+            File jmxDestFile = new File(jmxDir, "jmx.html");
+            FileUtils.copyURLToFile(srcJmxUrl, jmxDestFile);
+        } catch (Exception e) {
+            logger.warn("HBase JMX fetch failed: ", e);
         }
 
         // hbase hdfs status
