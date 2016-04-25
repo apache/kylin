@@ -149,7 +149,7 @@ public class GTInfo {
         if (codeSystem == null)
             throw new IllegalStateException();
 
-        if (primaryKey == null && primaryKey.cardinality() == 0)
+        if (primaryKey == null || primaryKey.cardinality() == 0)
             throw new IllegalStateException();
 
         codeSystem.init(this);
