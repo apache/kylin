@@ -15,7 +15,7 @@ Kylin requires a properly setup hadoop environment to run. Following are the min
 
 * Hadoop: 2.4+
 * Hive: 0.13+
-* HBase: 0.98+
+* HBase: 0.98+, 1.x
 * JDK: 1.7+  
 _Tested with Hortonworks HDP 2.2 and Cloudera Quickstart VM 5.1_
 
