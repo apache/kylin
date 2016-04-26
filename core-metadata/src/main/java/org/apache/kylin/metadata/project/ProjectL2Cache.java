@@ -160,6 +160,7 @@ class ProjectL2Cache {
     // ----------------------------------------------------------------------------
 
     private ProjectCache getCache(String project) {
+        project = ProjectInstance.getNormalizedProjectName(project);
         ProjectCache result = projectCaches.get(project);
         if (result == null) {
             result = loadCache(project);
