@@ -171,16 +171,15 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
                     registerSum++;
                     zeroBuckets++;
                 } else {
-                    registerSum += 1.0 / (1 << registers[i]);
+                    registerSum += 1.0 / (1L << registers[i]);
                 }
             }
         }
 
         public long getCountEstimate() {
-            int m = (int) Math.pow(2, p);
-            double alpha = 1 / (2 * Math.log(2) * (1 + (3 * Math.log(2) - 1) / m));
-            double alphaMM = alpha * m * m;
-            double estimate = alphaMM / registerSum;
+            int m = 1 << p;
+            double alpha = 0.7213 / (1 + 1.079 / m);
+            double estimate = alpha * m * m / registerSum;
 
             // small cardinality adjustment
             if (zeroBuckets >= m * 0.07) { // (reference presto's HLL impl)
