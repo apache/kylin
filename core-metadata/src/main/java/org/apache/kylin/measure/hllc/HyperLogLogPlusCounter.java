@@ -44,6 +44,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
     private final int m;
     private final HashFunction hashFunc;
     byte[] registers;
+    int singleBucket;
 
     public HyperLogLogPlusCounter() {
         this(10);
@@ -64,6 +65,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
         this.m = 1 << p;//(int) Math.pow(2, p);
         this.hashFunc = hashFunc;
         this.registers = new byte[m];
+        this.singleBucket = -1;
     }
 
     public void clear() {
@@ -94,16 +96,33 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
 
         if (firstOnePos > registers[bucket])
             registers[bucket] = (byte) firstOnePos;
+
+        if (singleBucket == -1)
+            singleBucket = bucket;
+        else
+            singleBucket = Integer.MIN_VALUE;
     }
 
     public void merge(HyperLogLogPlusCounter another) {
         assert this.p == another.p;
         assert this.hashFunc == another.hashFunc;
 
-        for (int i = 0; i < m; i++) {
-            if (registers[i] < another.registers[i])
-                registers[i] = another.registers[i];
+        // quick path for single value HLLC
+        if (another.singleBucket == -1) {
+            return;
+        } else if (another.singleBucket >= 0) {
+            int b = another.singleBucket;
+            if (registers[b] < another.registers[b])
+                registers[b] = another.registers[b];
         }
+        // normal path
+        else {
+            for (int i = 0; i < m; i++) {
+                if (registers[i] < another.registers[i])
+                    registers[i] = another.registers[i];
+            }
+        }
+        singleBucket = Integer.MIN_VALUE;
     }
 
     public long getCountEstimate() {
@@ -212,10 +231,19 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
             if (size > m)
                 throw new IllegalArgumentException("register size (" + size + ") cannot be larger than m (" + m + ")");
             int indexLen = getRegisterIndexSize();
+            int key = 0;
             for (int i = 0; i < size; i++) {
-                int key = readUnsigned(in, indexLen);
+                key = readUnsigned(in, indexLen);
                 registers[key] = in.get();
             }
+
+            if (size == 0)
+                singleBucket = -1;
+            else if (size == 1)
+                singleBucket = key;
+            else
+                singleBucket = Integer.MIN_VALUE;
+
         } else if (scheme == 1) { // array scheme
             in.get(registers);
         } else
