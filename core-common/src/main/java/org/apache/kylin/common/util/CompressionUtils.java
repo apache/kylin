@@ -31,7 +31,7 @@ public class CompressionUtils {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CompressionUtils.class);
 
     public static byte[] compress(byte[] data) throws IOException {
-        Deflater deflater = new Deflater();
+        Deflater deflater = new Deflater(1);
         deflater.setInput(data);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
