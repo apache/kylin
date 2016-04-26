@@ -71,6 +71,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
     public void clear() {
         byte zero = (byte) 0;
         Arrays.fill(registers, zero);
+        singleBucket = -1;
     }
 
     public void add(int value) {
@@ -276,6 +277,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
 
     public void readRegistersArray(ByteBuffer in) {
         in.get(registers, 0, m);
+        singleBucket = Integer.MIN_VALUE;
     }
 
     private int getRegisterIndexSize() {

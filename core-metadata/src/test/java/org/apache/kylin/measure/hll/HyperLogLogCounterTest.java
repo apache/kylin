@@ -46,6 +46,17 @@ public class HyperLogLogCounterTest {
     int errorCount3 = 0;
 
     @Test
+    public void testOneAdd() throws IOException {
+        HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(14);
+        HyperLogLogPlusCounter one = new HyperLogLogPlusCounter(14);
+        for (int i = 0; i < 1000000; i++) {
+            one.clear();
+            one.add(rand1.nextInt());
+            hllc.merge(one);
+        }
+    }
+    
+    @Test
     public void testPeekLength() throws IOException {
         HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(10);
         HyperLogLogPlusCounter copy = new HyperLogLogPlusCounter(10);
