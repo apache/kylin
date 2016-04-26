@@ -42,7 +42,6 @@ import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.engine.mr.steps.InMemCuboidJob;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -68,7 +67,7 @@ import java.util.Map;
  */
 public class CubeStatsReader {
 
-    private static final Logger logger = LoggerFactory.getLogger(InMemCuboidJob.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeStatsReader.class);
 
     final CubeSegment seg;
     final int samplingPercentage;
@@ -100,7 +99,7 @@ public class CubeStatsReader {
                 } else if (key.get() == -1) {
                     mapperOverlapRatio = Bytes.toDouble(value.getBytes());
                 } else {
-                    HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
+                    HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(kylinConfig.getCubeStatsHLLPrecision());
                     ByteArray byteArray = new ByteArray(value.getBytes());
                     hll.readRegisters(byteArray.asBuffer());
                     counterMap.put(key.get(), hll);

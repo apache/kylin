@@ -73,7 +73,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
 
             allCuboidsHLL = new HyperLogLogPlusCounter[cuboidIds.length];
             for (int i = 0; i < cuboidIds.length; i++) {
-                allCuboidsHLL[i] = new HyperLogLogPlusCounter(14);
+                allCuboidsHLL[i] = new HyperLogLogPlusCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision());
             }
 
             hf = Hashing.murmur3_32();

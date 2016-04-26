@@ -97,7 +97,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
                             // sampling percentage;
                             averageSamplingPercentage += Bytes.toInt(value.getBytes());
                         } else if (key.get() > 0) {
-                            HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
+                            HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(kylinConf.getCubeStatsHLLPrecision());
                             ByteArray byteArray = new ByteArray(value.getBytes());
                             hll.readRegisters(byteArray.asBuffer());
 

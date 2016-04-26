@@ -246,7 +246,7 @@ public class SparkCubing extends AbstractApplication {
         List<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
         final HashMap<Long, HyperLogLogPlusCounter> zeroValue = Maps.newHashMap();
         for (Long id : allCuboidIds) {
-            zeroValue.put(id, new HyperLogLogPlusCounter(14));
+            zeroValue.put(id, new HyperLogLogPlusCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision()));
         }
 
         CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);

@@ -61,6 +61,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     private TblColRef col = null;
     private boolean isStatistics = false;
     private boolean outputTouched = false;
+    private KylinConfig cubeConfig;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -70,6 +71,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
         String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
+        cubeConfig = cube.getConfig();
         cubeDesc = cube.getDescriptor();
         columnList =  CubeManager.getInstance(config).getAllDictColumnsOnFact(cubeDesc);
 
@@ -106,7 +108,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             // for hll
             long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
             for (Text value : values) {
-                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(14);
+                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(cubeConfig.getCubeStatsHLLPrecision());
                 ByteBuffer bf = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());
                 hll.readRegisters(bf);
 

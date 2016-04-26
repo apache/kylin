@@ -102,7 +102,7 @@ public class CubingUtils {
         });
         final Map<Long, HyperLogLogPlusCounter> result = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
         for (Long cuboidId : allCuboidIds) {
-            result.put(cuboidId, new HyperLogLogPlusCounter(14));
+            result.put(cuboidId, new HyperLogLogPlusCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision()));
             Integer[] cuboidBitSet = new Integer[Long.bitCount(cuboidId)];
 
             long mask = Long.highestOneBit(baseCuboidId);
