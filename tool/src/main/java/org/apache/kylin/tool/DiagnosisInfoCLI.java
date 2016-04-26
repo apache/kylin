@@ -170,7 +170,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
             logger.warn("Error in export commit id.", e);
         }
 
-        // export process info
+        // export basic info
         try {
             File basicDir = new File(exportDir, "basic");
             FileUtils.forceMkdir(basicDir);
@@ -186,30 +186,22 @@ public class DiagnosisInfoCLI extends AbstractApplication {
         if (logPeriod > 0) {
             logger.info("Start to extract kylin logs in {} days", logPeriod);
 
-            final String logFolder = KylinConfig.getKylinHome() + "/logs/";
-            final String defaultLogFilename = "kylin.log";
-            final String defaultGCLogFilename = "kylin.gc";
-            final File logsDir = new File(exportDir, "logs");
-            final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            final File kylinLogDir = new File(KylinConfig.getKylinHome(), "logs");
+            final File exportLogsDir = new File(exportDir, "logs");
+            final ArrayList<File> logFiles = Lists.newArrayList();
+            final long logThresholdTime = System.currentTimeMillis() - logPeriod * 24 * 3600 * 1000;
 
-            FileUtils.forceMkdir(logsDir);
-
-            final ArrayList<String> logFileNames = Lists.newArrayListWithCapacity(logPeriod);
-
-            logFileNames.add(defaultLogFilename);
-            logFileNames.add(defaultGCLogFilename);
-            for (int i = 1; i < logPeriod; i++) {
-                Calendar todayCal = Calendar.getInstance();
-                todayCal.add(Calendar.DAY_OF_MONTH, 0 - i);
-                logFileNames.add(defaultLogFilename + "." + format.format(todayCal.getTime()));
-                logFileNames.add(defaultGCLogFilename + "." + Integer.toString(i - 1));
+            FileUtils.forceMkdir(exportLogsDir);
+            for (File logFile : kylinLogDir.listFiles()) {
+                if (logFile.lastModified() > logThresholdTime) {
+                    logFiles.add(logFile);
+                }
             }
 
-            for (String logFilename : logFileNames) {
-                File logFile = new File(logFolder + logFilename);
+            for (File logFile : logFiles) {
                 logger.info("Log file:" + logFile.getAbsolutePath());
                 if (logFile.exists()) {
-                    FileUtils.copyFileToDirectory(logFile, logsDir);
+                    FileUtils.copyFileToDirectory(logFile, exportLogsDir);
                 }
             }
         }
