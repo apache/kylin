@@ -281,5 +281,8 @@
   "retention_range" : 0,
   "engine_type" : 2,
   "storage_type" : 2,
+  "override_kylin_properties": {
+    "kylin.job.cubing.inmem.sampling.hll.precision": "16"
+  },
   "partition_date_start": 0
 }

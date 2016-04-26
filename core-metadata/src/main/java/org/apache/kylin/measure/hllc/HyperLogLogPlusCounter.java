@@ -110,6 +110,10 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
         return new HLLCSnapshot(this).getCountEstimate();
     }
 
+    public int getPrecision() {
+        return this.p;
+    }
+
     public double getErrorRate() {
         return 1.04 / Math.sqrt(m);
     }

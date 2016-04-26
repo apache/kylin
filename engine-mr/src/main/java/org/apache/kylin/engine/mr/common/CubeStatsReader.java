@@ -223,6 +223,7 @@ public class CubeStatsReader {
         out.println("============================================================================");
         out.println("Statistics of " + seg);
         out.println();
+        out.println("Cube statistics hll precision: " + cuboidRowEstimatesHLL.values().iterator().next().getPrecision());
         out.println("Total cuboids: " + cuboidRows.size());
         out.println("Total estimated rows: " + SumHelper.sumLong(cuboidRows.values()));
         out.println("Total estimated size(MB): " + SumHelper.sumDouble(cuboidSizes.values()));
