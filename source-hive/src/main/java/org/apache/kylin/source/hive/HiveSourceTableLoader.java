@@ -117,10 +117,8 @@ public class HiveSourceTableLoader {
                 tableDesc.setUuid(UUID.randomUUID().toString());
                 tableDesc.setLastModified(0);
             }
-            if(table.getTableType().equals(TableType.VIRTUAL_VIEW.toString())) {
-                tableDesc.setSourceTableHiveViewFlag(true);
-            } else {
-                tableDesc.setSourceTableHiveViewFlag(false);
+            if(table.getTableType() != null) {
+                tableDesc.setTableType(table.getTableType());
             }
 
             int columnNumber = fields.size();

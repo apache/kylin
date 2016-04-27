@@ -5,7 +5,7 @@
   "description" : null,
   "dimensions" : [ {
     "name" : "CAL_DT",
-    "table" : "EDW.TEST_CAL_DT",
+    "table" : "EDW.V_TEST_CAL_DT",
     "column" : "{FK}",
     "derived" : [ "WEEK_BEG_DT" ]
   }, {

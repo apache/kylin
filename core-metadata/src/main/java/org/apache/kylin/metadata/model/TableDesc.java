@@ -35,15 +35,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class TableDesc extends RootPersistentEntity implements ISourceAware {
-    
+
+    public static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
     @JsonProperty("name")
     private String name;
     @JsonProperty("columns")
     private ColumnDesc[] columns;
     @JsonProperty("source_type")
     private int sourceType = ISourceAware.ID_HIVE;
-    @JsonProperty("source_table_type")
-    private boolean sourceTableHiveViewFlag =  false;
+    @JsonProperty("table_type")
+    private String tableType;
     @JsonProperty("hive_view__table_name_prefix")
     private String hiveViewIntermediateTableNamePrefix = "kylin_intermediate_";
 
@@ -194,14 +195,6 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return getIdentity().equals(other.getIdentity());
     }
 
-    public void setSourceTableHiveViewFlag(boolean sourceTableHiveViewFlag) {
-        this.sourceTableHiveViewFlag = sourceTableHiveViewFlag;
-    }
-
-    public boolean isSourceTableHiveView(){
-        return sourceTableHiveViewFlag;
-    }
-
     public String getHiveViewIntermediateTableName() {
         return hiveViewIntermediateTableNamePrefix + "_" + database.getName() + "_" + name;
     }
@@ -225,6 +218,14 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public void setSourceType(int sourceType) {
         this.sourceType = sourceType;
+    }
+
+    public String getTableType() {
+        return tableType;
+    }
+
+    public void setTableType(String tableType) {
+        this.tableType = tableType;
     }
 
     public String getHiveViewIntermediateTableNamePrefix() {

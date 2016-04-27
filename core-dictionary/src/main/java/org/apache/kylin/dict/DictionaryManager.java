@@ -276,7 +276,7 @@ public class DictionaryManager {
         } else {
             MetadataManager metadataManager = MetadataManager.getInstance(config);
             TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
-            if (tableDesc.isSourceTableHiveView()) {
+            if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
                 tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
                 String tableName = tableDesc.getHiveViewIntermediateTableName();
                 tableDesc.setName(tableName);

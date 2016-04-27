@@ -153,7 +153,7 @@ public class HiveMRInput implements IMRInput {
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             hiveCmdBuilder.addStatement(useDatabaseHql);
             for(TableDesc lookUpTableDesc : cubeDesc.getLookupTableDescs()) {
-                if (lookUpTableDesc.isSourceTableHiveView()) {
+                if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(lookUpTableDesc.getTableType())) {
                     findHiveViewLookUpTable = true;
                     lookUpTableDesc.setHiveViewIntermediateTableNamePrefix("kylin_intermediate_" + jobId);
                     StringBuilder createIntermediateTableHql = new StringBuilder();

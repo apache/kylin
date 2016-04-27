@@ -122,6 +122,7 @@ public class DeployUtil {
     // ============================================================================
 
     static final String TABLE_CAL_DT = "edw.test_cal_dt";
+    static final String VIEW_CAL_DT = "edw.v_test_cal_dt";
     static final String TABLE_CATEGORY_GROUPINGS = "default.test_category_groupings";
     static final String TABLE_KYLIN_FACT = "default.test_kylin_fact";
     static final String TABLE_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
@@ -214,6 +215,7 @@ public class DeployUtil {
         // create hive tables
         hiveClient.executeHQL("CREATE DATABASE IF NOT EXISTS EDW");
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
+        hiveClient.executeHQL(generateCreateViewHql(VIEW_CAL_DT, metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM.toUpperCase())));
@@ -251,6 +253,17 @@ public class DeployUtil {
         ddl.append(")" + "\n");
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
         ddl.append("STORED AS TEXTFILE");
+
+        return new String[] { dropsql, ddl.toString() };
+    }
+
+    private static String[] generateCreateViewHql(String viewName, TableDesc tableDesc) {
+
+        String dropsql = "DROP VIEW IF EXISTS " + viewName;
+        StringBuilder ddl = new StringBuilder();
+
+        ddl.append("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableDesc.getIdentity() + "\n");
+        ddl.append("(" + "\n");
 
         return new String[] { dropsql, ddl.toString() };
     }
