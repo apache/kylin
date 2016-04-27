@@ -234,19 +234,21 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         if (sqlDigest.groupbyColumns.contains(topnLiteralCol) == false)
             return;
 
-        if (sqlDigest.aggregations.size() != 1) {
+        if (sqlDigest.aggregations.size() > 1) {
             throw new IllegalStateException("When query with topN, only one metrics is allowed.");
         }
 
-        FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
-        if (origFunc.isSum() == false) {
-            throw new IllegalStateException("When query with topN, only SUM function is allowed.");
+        if (sqlDigest.aggregations.size() > 0) {
+            FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
+            if (origFunc.isSum() == false) {
+                throw new IllegalStateException("When query with topN, only SUM function is allowed.");
+            }
+            logger.info("Rewrite function " + origFunc + " to " + topnFunc);
         }
 
         sqlDigest.aggregations = Lists.newArrayList(topnFunc);
         sqlDigest.groupbyColumns.remove(topnLiteralCol);
         sqlDigest.metricColumns.add(topnLiteralCol);
-        logger.info("Rewrite function " + origFunc + " to " + topnFunc);
     }
 
     @Override

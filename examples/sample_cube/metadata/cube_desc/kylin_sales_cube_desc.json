@@ -106,6 +106,22 @@
       "returntype" : "hllc(10)"
     },
     "dependent_measure_ref" : null
+  }, {
+    "name": "TOP_SELLER",
+    "function": {
+      "expression": "TOP_N",
+      "parameter": {
+        "type": "column",
+        "value": "PRICE",
+        "next_parameter": {
+          "type": "column",
+          "value": "SELLER_ID",
+          "next_parameter": null
+        }
+      },
+      "returntype": "topn(100)"
+    },
+    "dependent_measure_ref": null
   } ],
   "rowkey" : {
     "rowkey_columns" : [ {
