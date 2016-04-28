@@ -32,8 +32,6 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
-import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -42,9 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-/**
- * Created by dongli on 3/29/16.
- */
 public class JobInfoExtractor extends AbstractApplication {
     private static final Logger logger = LoggerFactory.getLogger(JobInfoExtractor.class);
 
@@ -116,7 +111,7 @@ public class JobInfoExtractor extends AbstractApplication {
         executeExtraction(dest);
 
         if (includeCube) {
-            String cubeName = CubingExecutableUtil.getCubeName(executablePO.getParams());
+            String cubeName = executablePO.getParams().get("cubename");
             String[] cubeMetaArgs = { "-cube", cubeName, "-destDir", dest + "cube_" + cubeName + "/", "-includeJobs", "false" };
             logger.info("Start to extract related cube: " + StringUtils.join(cubeMetaArgs));
             cubeMetaExtractor.execute(cubeMetaArgs);
@@ -125,7 +120,7 @@ public class JobInfoExtractor extends AbstractApplication {
         if (includeYarnLogs) {
             logger.info("Start to related yarn job logs: " + jobId);
             for (String taskId : yarnLogsResources) {
-                extractYarnLog(taskId, dest + "yarn_" + jobId + "/");
+                extractYarnLog(taskId, dest + "yarn_" + jobId + "/", true);
             }
         }
 
@@ -151,19 +146,30 @@ public class JobInfoExtractor extends AbstractApplication {
         }
     }
 
-    private void extractYarnLog(String taskId, String dest) throws Exception {
+    private void extractYarnLog(String taskId, String dest, boolean onlySucc) throws Exception {
         final Map<String, String> jobInfo = executableDao.getJobOutput(taskId).getInfo();
         if (jobInfo.containsKey(ExecutableConstants.MR_JOB_ID)) {
             String applicationId = jobInfo.get(ExecutableConstants.MR_JOB_ID).replace("job", "application");
-            File destFile = new File(dest + applicationId + ".log");
+            if (!onlySucc || isYarnAppSucc(applicationId)) {
+                File destFile = new File(dest + applicationId + ".log");
 
-            ShellExecutable yarnExec = new ShellExecutable();
-            yarnExec.setCmd("yarn logs -applicationId " + applicationId + " > " + destFile.getAbsolutePath());
-            yarnExec.setName(yarnExec.getCmd());
-
-            logger.info(yarnExec.getCmd());
-            kylinConfig.getCliCommandExecutor().execute(yarnExec.getCmd(), null);
+                String yarnCmd = "yarn logs -applicationId " + applicationId + " > " + destFile.getAbsolutePath();
+                logger.info(yarnCmd);
+                kylinConfig.getCliCommandExecutor().execute(yarnCmd);
+            }
         }
+    }
+
+    private boolean isYarnAppSucc(String applicationId) throws IOException {
+        final String yarnCmd = "yarn application -status " + applicationId;
+        final String cmdOutput = kylinConfig.getCliCommandExecutor().execute(yarnCmd).getSecond();
+        final String[] cmdOutputLines = cmdOutput.split("\n");
+        for (String cmdOutputLine : cmdOutputLines) {
+            if (cmdOutputLine.equals("Final-State : SUCCEEDED")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void addRequired(String record) {

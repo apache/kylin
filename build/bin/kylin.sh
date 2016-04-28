@@ -202,16 +202,16 @@ then
 elif [ "$1" = "diag" ]
 then
     project="$2"
-    if [ -n "$project" ]
+    if [ -z "$project" ]
     then
         echo "You need to specify a project for diagnosis."
         exit 1
     fi
 
     destDir="$3"
-    if [ -n "$destDir" ]
+    if [ -z "$destDir" ]
     then
-        $destDir="$KYLIN_HOME/diagnosis_dump/"
+        destDir="$KYLIN_HOME/diagnosis_dump/"
         mkdir -p $destDir
     fi
 

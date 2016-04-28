@@ -94,6 +94,9 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
     @JsonProperty("index_path")
     private String indexPath;
 
+    @JsonProperty("rowkey_stats")
+    private List<Object[]> rowkeyStats = Lists.newArrayList();
+
     private volatile Map<Long, Short> cuboidBaseShards = Maps.newHashMap();//cuboid id ==> base(starting) shard for this cuboid
 
     public CubeDesc getCubeDesc() {
@@ -231,8 +234,11 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
 
     @Override
     public String getStorageLocationIdentifier() {
-
         return storageLocationIdentifier;
+    }
+
+    public List<Object[]> getRowkeyStats() {
+        return rowkeyStats;
     }
 
     public Map<String, String> getDictionaries() {

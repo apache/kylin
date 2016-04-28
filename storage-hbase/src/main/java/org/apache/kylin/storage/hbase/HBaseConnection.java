@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
@@ -45,6 +46,8 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class HBaseConnection {
+
+    public static final String HTABLE_UUID_TAG = "UUID";
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
 
@@ -197,6 +200,8 @@ public class HBaseConnection {
                     desc.addFamily(fd);
                 }
             }
+
+            desc.setValue(HTABLE_UUID_TAG, UUID.randomUUID().toString());
             hbase.createTable(desc);
 
             logger.debug("HTable '" + tableName + "' created");

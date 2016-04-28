@@ -120,10 +120,10 @@ public class KylinVersion {
     }
 
     public static void main(String[] args) {
-        System.out.println(getKylinDetailInformation());
+        System.out.println(getKylinClientInformation());
     }
 
-    public static String getKylinDetailInformation() {
+    public static String getKylinClientInformation() {
         StringBuilder buf = new StringBuilder();
 
         buf.append("kylin.version:").append(KylinVersion.getCurrentVersion()).append("\n");

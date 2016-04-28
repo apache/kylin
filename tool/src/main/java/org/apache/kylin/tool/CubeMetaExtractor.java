@@ -39,7 +39,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.engine.streaming.StreamingManager;
-import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
@@ -321,8 +320,6 @@ public class CubeMetaExtractor extends AbstractApplication {
                 }
                 retrieveResourcePath(iRealization);
             }
-        } else if (realization instanceof IIInstance) {
-            logger.warn("Does not support extract II instance or hybrid that contains II");
         } else {
             logger.warn("Unknown realization type: " + realization.getType());
         }

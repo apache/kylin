@@ -19,10 +19,9 @@
 package org.apache.kylin.tool;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.commons.cli.Option;
@@ -30,10 +29,17 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.ZipFileUtils;
+import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,7 +146,7 @@ public class DiagnosisInfoCLI extends AbstractApplication {
             }
         }
 
-        // export os conf - linux
+        // export os (linux)
         if (includeLinux) {
             File linuxDir = new File(exportDir, "linux");
             FileUtils.forceMkdir(linuxDir);
@@ -178,6 +184,11 @@ public class DiagnosisInfoCLI extends AbstractApplication {
             FileUtils.writeStringToFile(new File(basicDir, "process"), output);
             output = kylinConfig.getCliCommandExecutor().execute("lsb_release -a").getSecond();
             FileUtils.writeStringToFile(new File(basicDir, "lsb_release"), output);
+            output = KylinVersion.getKylinClientInformation();
+            FileUtils.writeStringToFile(new File(basicDir, "client"), output);
+            output = getHBaseMetaStoreId();
+            FileUtils.writeStringToFile(new File(basicDir, "client"), output, true);
+
         } catch (Exception e) {
             logger.warn("Error in export process info.", e);
         }
@@ -239,5 +250,12 @@ public class DiagnosisInfoCLI extends AbstractApplication {
             return path + File.separator + "conf";
         }
         return null;
+    }
+
+    private String getHBaseMetaStoreId() throws IOException {
+        HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration()));
+        String metaStoreName = kylinConfig.getMetadataUrlPrefix();
+        HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(metaStoreName));
+        return "MetaStore UUID: " + desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
     }
 }

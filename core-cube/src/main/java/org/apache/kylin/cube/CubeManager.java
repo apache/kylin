@@ -167,7 +167,9 @@ public class CubeManager implements IRealizationProvider {
         DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(),true, col, factTableValueProvider);
 
         if (dictInfo != null) {
+            Dictionary dict = dictInfo.getDictionaryObject();
             cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
+            cubeSeg.getRowkeyStats().add(new Object[]{col.getName(), dict.getSize(), dict.getSizeOfId()});
 
             CubeUpdate cubeBuilder = new CubeUpdate(cubeSeg.getCubeInstance());
             cubeBuilder.setToUpdateSegs(cubeSeg);
