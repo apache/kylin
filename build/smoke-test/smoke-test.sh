@@ -64,10 +64,10 @@ ${KYLIN_HOME}/bin/kylin.sh start
 echo "Wait 3 minutes for service start."
 sleep 3m
 
-cd smoke-test
+cd $dir/smoke-test
 python testBuildCube.py     || { exit 1; }
 python testQuery.py         || { exit 1; }
-cd ..
+cd -
 
 # Tear down stage
 ${KYLIN_HOME}/bin/metastore.sh clean --delete true
