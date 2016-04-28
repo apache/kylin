@@ -36,6 +36,9 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
+/**
+ * Benchmark of processing 10 million GTRecords. 5 dimensions of type int4, and 2 measures of type long8.
+ */
 public class GTScannerBenchmark {
 
     final GTInfo info;
@@ -44,7 +47,9 @@ public class GTScannerBenchmark {
     final ImmutableBitSet dimensions = ImmutableBitSet.valueOf(0, 1, 2, 3, 4);
     final ImmutableBitSet metrics = ImmutableBitSet.valueOf(5, 6);
     final String[] aggrFuncs = new String[] { "SUM", "SUM" };
+
     final long N = 10000000; // 10M
+    final long genTime;
 
     public GTScannerBenchmark() {
         Builder builder = GTInfo.builder();
@@ -63,21 +68,19 @@ public class GTScannerBenchmark {
         gen.addDimension(100, 4, null);
         gen.addMeasure(8);
         gen.addMeasure(8);
+
+        // warm up
+        long t = System.currentTimeMillis();
+        testGenerate();
+        genTime = System.currentTimeMillis() - t;
     }
 
     @SuppressWarnings("unused")
-    @Test
     public void testGenerate() {
         long count = 0;
         for (GTRecord rec : gen.generate(N)) {
             count++;
         }
-        System.out.println(count + " record generated");
-    }
-
-    @Test
-    public void testGenerateAgain() {
-        testGenerate();
     }
 
     @Test
@@ -102,6 +105,7 @@ public class GTScannerBenchmark {
 
     @SuppressWarnings("unused")
     private void testAggregate(ImmutableBitSet groupBy) throws IOException {
+        long t = System.currentTimeMillis();
         GTScanRequest req = new GTScanRequest(info, null, dimensions, groupBy, metrics, aggrFuncs, null, true, 10);
         IGTScanner scanner = req.decorateScanner(gen.generate(N));
 
@@ -109,7 +113,14 @@ public class GTScannerBenchmark {
         for (GTRecord rec : scanner) {
             count++;
         }
-        System.out.println(count + " record aggregated");
+
+        t = System.currentTimeMillis() - t;
+        System.out.println(N + " records aggregated to " + count + ", " + calcSpeed(t) + "K rec/sec");
+    }
+
+    private int calcSpeed(long t) {
+        double sec = (double) (t - genTime) / 1000;
+        return (int) (N / sec / 1000);
     }
 
     @Test
@@ -138,6 +149,7 @@ public class GTScannerBenchmark {
 
     @SuppressWarnings("unused")
     private void testFilter(TupleFilter filter) throws IOException {
+        long t = System.currentTimeMillis();
         GTScanRequest req = new GTScanRequest(info, null, info.colAll, filter);
         IGTScanner scanner = req.decorateScanner(gen.generate(N));
 
@@ -145,7 +157,9 @@ public class GTScannerBenchmark {
         for (GTRecord rec : scanner) {
             count++;
         }
-        System.out.println(count + " record filtered");
+        
+        t = System.currentTimeMillis() - t;
+        System.out.println(N + " records filtered to " + count + ", " + calcSpeed(t) + "K rec/sec");
     }
 
     private LogicalTupleFilter and(TupleFilter... filters) {
