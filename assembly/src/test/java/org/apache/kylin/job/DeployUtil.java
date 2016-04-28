@@ -263,7 +263,6 @@ public class DeployUtil {
         StringBuilder ddl = new StringBuilder();
 
         ddl.append("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableDesc.getIdentity() + "\n");
-        ddl.append("(" + "\n");
 
         return new String[] { dropsql, ddl.toString() };
     }
