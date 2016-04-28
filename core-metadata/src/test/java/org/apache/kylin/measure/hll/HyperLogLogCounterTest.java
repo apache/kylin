@@ -149,32 +149,31 @@ public class HyperLogLogCounterTest {
         hllc.readRegisters(buf);
         Assert.assertEquals(estimate, hllc.getCountEstimate());
     }
-
+    
     @Test
     public void mergeTest() throws IOException {
         double error = 0;
         double absError = 0;
         int n = 100;
         for (int i = 0; i < n; i++) {
-            double e = merge();
+            double e = merge(i);
             error += e;
             absError += Math.abs(e);
         }
-        System.out.println("Total average error is " + error / n + " and absolute error is " + absError / n);
+        System.out.println("Total average error is " + error / n);
         
         System.out.println("  errorRateCount1 is " + errorCount1 + "!");
         System.out.println("  errorRateCount2 is " + errorCount2 + "!");
         System.out.println("  errorRateCount3 is " + errorCount3 + "!");
 
-        Assert.assertTrue(errorCount1 <= n * 0.40);
-        Assert.assertTrue(errorCount2 <= n * 0.08);
+        Assert.assertTrue(errorCount1 <= n * 0.30);
+        Assert.assertTrue(errorCount2 <= n * 0.05);
         Assert.assertTrue(errorCount3 <= n * 0.02);
     }
 
-    private double merge() throws IOException {
-
-        int ln = 50;
-        int dn = 300;
+    private double merge(int round) throws IOException {
+        int ln = 20;
+        int dn = 100 * (round + 1);
         Set<String> testSet = new HashSet<String>();
         HyperLogLogPlusCounter[] hllcs = new HyperLogLogPlusCounter[ln];
         for (int i = 0; i < ln; i++) {
@@ -189,29 +188,39 @@ public class HyperLogLogCounterTest {
         }
         HyperLogLogPlusCounter mergeHllc = newHLLC();
         for (HyperLogLogPlusCounter hllc : hllcs) {
-            mergeHllc.merge(hllc);
-            checkSerialize(mergeHllc);
+            mergeHllc.merge(serDes(hllc));
         }
 
         double errorRate = mergeHllc.getErrorRate();
         long estimate = mergeHllc.getCountEstimate();
-        double actualError = (double) (testSet.size() - estimate) / testSet.size();
+        double actualError = Math.abs((double) (testSet.size() - estimate) / testSet.size());
 
         System.out.println(testSet.size() + "-" + estimate + " ~ " + actualError);
+        Assert.assertTrue(actualError < 0.1);
         
-        if (Math.abs(actualError) > errorRate) {
+        if (actualError > errorRate) {
             errorCount1++;
         }
-        if (Math.abs(actualError) > 2 * errorRate) {
+        if (actualError > 2 * errorRate) {
             errorCount2++;
         }
-        if (Math.abs(actualError) > 3 * errorRate) {
+        if (actualError > 3 * errorRate) {
             errorCount3++;
         }
 
         return actualError;
     }
 
+    private HyperLogLogPlusCounter serDes(HyperLogLogPlusCounter hllc) throws IOException {
+        buf.clear();
+        hllc.writeRegisters(buf);
+        buf.flip();
+        HyperLogLogPlusCounter copy = new HyperLogLogPlusCounter(hllc.getPrecision());
+        copy.readRegisters(buf);
+        Assert.assertEquals(copy.getCountEstimate(), hllc.getCountEstimate());
+        return copy;
+    }
+    
     @Test
     public void testPerformance() throws IOException {
         int N = 3; // reduce N HLLC into one

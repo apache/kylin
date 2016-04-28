@@ -246,6 +246,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
 
         } else if (scheme == 1) { // array scheme
             in.get(registers);
+            singleBucket = Integer.MIN_VALUE;
         } else
             throw new IllegalStateException();
     }
