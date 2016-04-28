@@ -158,9 +158,9 @@ public class InMemCuboidJob extends AbstractHadoopJob {
         // number of reduce tasks
         int numReduceTasks = (int) Math.round(totalSizeInM / perReduceInputMB);
 
-        // at least 1 reducer
-        numReduceTasks = Math.max(1, numReduceTasks);
-        // no more than 5000 reducer by default
+        // at least 1 reducer by default
+        numReduceTasks = Math.max(kylinConfig.getHadoopJobMinReducerNumber(), numReduceTasks);
+        // no more than 500 reducer by default
         numReduceTasks = Math.min(kylinConfig.getHadoopJobMaxReducerNumber(), numReduceTasks);
 
         logger.info("Having total map input MB " + Math.round(totalSizeInM));

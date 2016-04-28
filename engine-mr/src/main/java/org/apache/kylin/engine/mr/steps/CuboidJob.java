@@ -203,9 +203,9 @@ public class CuboidJob extends AbstractHadoopJob {
             numReduceTasks = numReduceTasks * 4;
         }
 
-        // at least 1 reducer
-        numReduceTasks = Math.max(1, numReduceTasks);
-        // no more than 5000 reducer by default
+        // at least 1 reducer by default
+        numReduceTasks = Math.max(kylinConfig.getHadoopJobMinReducerNumber(), numReduceTasks);
+        // no more than 500 reducer by default
         numReduceTasks = Math.min(kylinConfig.getHadoopJobMaxReducerNumber(), numReduceTasks);
 
         jobConf.setInt(MAPRED_REDUCE_TASKS, numReduceTasks);

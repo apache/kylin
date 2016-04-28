@@ -307,6 +307,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Double.parseDouble(getOptional("kylin.job.mapreduce.default.reduce.count.ratio", "1.0"));
     }
 
+    public int getHadoopJobMinReducerNumber() {
+        return Integer.parseInt(getOptional("kylin.job.mapreduce.min.reducer.number", "1"));
+    }
+
     public int getHadoopJobMaxReducerNumber() {
         return Integer.parseInt(getOptional("kylin.job.mapreduce.max.reducer.number", "500"));
     }
