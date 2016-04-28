@@ -289,6 +289,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         float hfileSizeMB = kylinConfig.getHBaseHFileSizeGB() * 1024;
 
+        if (kylinConfig.isDevEnv()) {
+            hfileSizeMB = hfileSizeMB/1024;
+        }
+
         int compactionThreshold = Integer.valueOf(HBaseConnection.getCurrentHBaseConfiguration().get("hbase.hstore.compactionThreshold", "3"));
         if (hfileSizeMB * compactionThreshold < mbPerRegion) {
             hfileSizeMB = mbPerRegion / compactionThreshold;
