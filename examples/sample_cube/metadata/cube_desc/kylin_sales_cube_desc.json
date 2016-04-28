@@ -161,7 +161,7 @@
       "name" : "f2",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "SELLER_CNT_HLL", "SELLER_FORMAT_CNT" ]
+        "measure_refs" : [ "SELLER_CNT_HLL", "SELLER_FORMAT_CNT", "TOP_SELLER" ]
       } ]
     } ]
   },
