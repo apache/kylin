@@ -149,8 +149,8 @@
                                     ng-if="newMeasure.function.parameter.type == 'column'"
                                     ng-model="newMeasure.function.parameter.value"
                                     ng-change="measureReturnTypeUpdate();"
-                                    ng-options="columns.name as columns.name for columns in getColumnsByTable(metaModel.model.fact_table)" >
-                                    <option value="">-- Select a Fact Table Column --</option>
+                                    ng-options="column as column for column in getColumnsByMeasureTable(newMeasure,metaModel.model.fact_table)" >
+                                    <option value="">-- Select a Column --</option>
                                 </select>
                             </div>
                         </div>

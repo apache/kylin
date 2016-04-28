@@ -42,7 +42,40 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     return temp;
   };
 
-  $scope.getPartitonColumns = function (tableName) {
+  $scope.getColumnsByMeasureTable = function (measure,tableName) {
+    var factColumns = [],me_columns = [];
+    angular.forEach(TableModel.selectProjectTables, function (table) {
+      if (table.name == tableName) {
+        factColumns = table.columns;
+      }
+    });
+
+    angular.forEach(factColumns,function(column){
+      me_columns.push(column.name);
+    })
+
+
+    var nonCustomMeasures = ['SUM','MIN','MAX','COUNT'];
+    var expression = measure.function.expression;
+
+    if(nonCustomMeasures.indexOf(expression)==-1){
+      //add cube dimension column for specific measure
+      angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension,index){
+        if(dimension.column && dimension.derived == null && me_columns.indexOf(dimension.column[0] == -1)){
+          me_columns.concat(dimension.column[0]);
+        }
+
+        if(dimension.derived && dimension.derived.length>=1){
+          me_columns = me_columns.concat(dimension.derived);
+        }
+
+      });
+
+    }
+    return me_columns;
+  };
+
+  $scope.getPartitionColumns = function (tableName) {
     var columns = _.filter($scope.getColumnsByTable(tableName), function (column) {
       return column.datatype === "date" || column.datatype === "string";
     });

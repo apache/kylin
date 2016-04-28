@@ -47,7 +47,7 @@
                             ng-model="metaModel.model.partition_desc.partition_date_column"
                             ng-if="state.mode=='edit'"
                             data-placement=""
-                            ng-options="metaModel.model.fact_table+'.'+columns.name as metaModel.model.fact_table+'.'+columns.name for columns in getPartitonColumns(metaModel.model.fact_table)" >
+                            ng-options="metaModel.model.fact_table+'.'+columns.name as metaModel.model.fact_table+'.'+columns.name for columns in getPartitionColumns(metaModel.model.fact_table)" >
                         <option value="">--Select Partition Column--</option>
                     </select>
                     <span ng-if="state.mode=='view'">
