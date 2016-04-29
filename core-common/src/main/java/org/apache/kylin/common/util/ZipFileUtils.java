@@ -44,6 +44,7 @@ public class ZipFileUtils {
                 compressDirectoryToZipfile(rootDir, sourceDir + normDir(sourceFile.getName()), out);
             } else {
                 ZipEntry entry = new ZipEntry(normDir(StringUtils.isEmpty(rootDir) ? sourceDir : sourceDir.replace(rootDir, "")) + sourceFile.getName());
+                entry.setTime(sourceFile.lastModified());
                 out.putNextEntry(entry);
 
                 FileInputStream in = new FileInputStream(sourceDir + sourceFile.getName());
