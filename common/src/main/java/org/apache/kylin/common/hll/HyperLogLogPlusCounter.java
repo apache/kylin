@@ -148,7 +148,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
                     registerSum++;
                     zeroBuckets++;
                 } else {
-                    registerSum += 1.0 / (1 << registers[i]);
+                    registerSum += 1.0 / (1L << registers[i]);
                 }
             }
         }
