@@ -408,7 +408,7 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.hbase.region.count.max", "500"));
     }
 
-    public void setHBaseHFileSizeGB(int size) {
+    public void setHBaseHFileSizeGB(float size) {
         setProperty("kylin.hbase.hfile.size.gb", String.valueOf(size));
     }
 

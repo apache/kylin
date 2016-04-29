@@ -154,10 +154,10 @@ public class BuildCubeWithEngine {
 
     public void build() throws Exception {
         DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_empty");
-        KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(1);
+        KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(1.0f);
         testInner();
         testLeft();
-        KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(0);
+        KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(0.0f);
     }
 
     protected void waitForJob(String jobId) {
