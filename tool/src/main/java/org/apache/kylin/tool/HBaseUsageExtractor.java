@@ -26,14 +26,12 @@ import java.util.List;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.zookeeper.MasterAddressTracker;
 import org.apache.hadoop.hbase.zookeeper.ZooKeeperWatcher;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
@@ -50,15 +48,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-public class HBaseUsageExtractor extends AbstractApplication {
+public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeMetaExtractor.class);
     @SuppressWarnings("static-access")
     private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false).withDescription("Specify which cube to extract").create("cube");
     @SuppressWarnings("static-access")
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
-    @SuppressWarnings("static-access")
-    private static final Option OPTION_DEST = OptionBuilder.withArgName("destDir").hasArg().isRequired(false).withDescription("specify the dest dir to save the related metadata").create("destDir");
 
     private List<String> htables = Lists.newArrayList();
     private Configuration conf;
@@ -66,10 +62,9 @@ public class HBaseUsageExtractor extends AbstractApplication {
     private RealizationRegistry realizationRegistry;
     private KylinConfig kylinConfig;
     private ProjectManager projectManager;
-    private Options options = null;
 
     public HBaseUsageExtractor() {
-        options = new Options();
+        super();
 
         OptionGroup realizationOrProject = new OptionGroup();
         realizationOrProject.addOption(OPTION_CUBE);
@@ -77,19 +72,12 @@ public class HBaseUsageExtractor extends AbstractApplication {
         realizationOrProject.setRequired(true);
 
         options.addOptionGroup(realizationOrProject);
-        options.addOption(OPTION_DEST);
-
         conf = HBaseConfiguration.create();
     }
 
     public static void main(String[] args) {
         HBaseUsageExtractor extractor = new HBaseUsageExtractor();
         extractor.execute(args);
-    }
-
-    @Override
-    protected Options getOptions() {
-        return options;
     }
 
     private String getHBaseMasterUrl() throws IOException, KeeperException {
@@ -103,20 +91,7 @@ public class HBaseUsageExtractor extends AbstractApplication {
     }
 
     @Override
-    protected void execute(OptionsHelper optionsHelper) throws Exception {
-        String dest = null;
-        if (optionsHelper.hasOption(OPTION_DEST)) {
-            dest = optionsHelper.getOptionValue(OPTION_DEST);
-        }
-
-        if (org.apache.commons.lang3.StringUtils.isEmpty(dest)) {
-            throw new RuntimeException("destDir is not set, exit directly without extracting");
-        }
-
-        if (!dest.endsWith("/")) {
-            dest = dest + "/";
-        }
-
+    protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cubeManager = CubeManager.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
@@ -142,13 +117,11 @@ public class HBaseUsageExtractor extends AbstractApplication {
             }
         }
 
-        extractCommonInfo(dest);
-        extractHTables(dest);
-
-        logger.info("Extracted metadata files located at: " + new File(dest).getAbsolutePath());
+        extractCommonInfo(exportDir);
+        extractHTables(exportDir);
     }
 
-    private void extractHTables(String dest) throws IOException {
+    private void extractHTables(File dest) throws IOException {
         logger.info("These htables are going to be extracted:");
         for (String htable : htables) {
             logger.info(htable + "(required)");
@@ -168,7 +141,7 @@ public class HBaseUsageExtractor extends AbstractApplication {
         }
     }
 
-    private void extractCommonInfo(String dest) throws IOException {
+    private void extractCommonInfo(File dest) throws IOException {
         logger.info("The hbase master info/conf are going to be extracted...");
 
         // hbase master page

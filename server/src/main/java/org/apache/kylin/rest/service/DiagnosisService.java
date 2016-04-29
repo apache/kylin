@@ -18,17 +18,28 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.tool.DiagnosisInfoCLI;
+import org.apache.kylin.tool.JobDiagnosisInfoCLI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
+import com.google.common.io.Files;
+
 @Component("diagnosisService")
 public class DiagnosisService extends BasicService {
+
+    private static final Logger logger = LoggerFactory.getLogger(DiagnosisService.class);
+
+    private File getDumpDir() {
+        return Files.createTempDir();
+    }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public BadQueryHistory getProjectBadQueryHistory(String project) throws IOException {
@@ -36,10 +47,20 @@ public class DiagnosisService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public String dumpDiagnosisInfo(String project) throws IOException {
-        String[] args = { "-project", project, "-destDir", System.getProperty("java.io.tmpdir") + UUID.randomUUID(), "-compress", "true" };
+    public String dumpProjectDiagnosisInfo(String project) throws IOException {
+        String[] args = { "-project", project, "-destDir", getDumpDir().getAbsolutePath() };
+        logger.info("DiagnosisInfoCLI args: " + args);
         DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
         diagnosisInfoCli.execute(args);
         return diagnosisInfoCli.getExportDest();
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    public String dumpJobDiagnosisInfo(String jobId) throws IOException {
+        String[] args = { "-jobId", jobId, "-destDir", getDumpDir().getAbsolutePath() };
+        logger.info("JobDiagnosisInfoCLI args: " + args);
+        JobDiagnosisInfoCLI jobInfoExtractor = new JobDiagnosisInfoCLI();
+        jobInfoExtractor.execute(args);
+        return jobInfoExtractor.getExportDest();
     }
 }

@@ -25,12 +25,10 @@ import java.util.List;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
-import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -66,7 +64,7 @@ import com.google.common.collect.Lists;
  * extract cube related info for debugging/distributing purpose
  * TODO: deal with II case
  */
-public class CubeMetaExtractor extends AbstractApplication {
+public class CubeMetaExtractor extends AbstractInfoExtractor {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeMetaExtractor.class);
 
@@ -84,10 +82,6 @@ public class CubeMetaExtractor extends AbstractApplication {
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_SEGMENT_DETAILS = OptionBuilder.withArgName("includeSegmentDetails").hasArg().isRequired(false).withDescription("set this to true if want to extract segment details too, such as dict, tablesnapshot. Default false").create("includeSegmentDetails");
 
-    @SuppressWarnings("static-access")
-    private static final Option OPTION_DEST = OptionBuilder.withArgName("destDir").hasArg().isRequired(false).withDescription("specify the dest dir to save the related metadata").create("destDir");
-
-    private Options options = null;
     private KylinConfig kylinConfig;
     private MetadataManager metadataManager;
     private ProjectManager projectManager;
@@ -109,7 +103,9 @@ public class CubeMetaExtractor extends AbstractApplication {
     List<CubeInstance> cubesToTrimAndSave = Lists.newArrayList();//these cubes needs to be saved skipping segments
 
     public CubeMetaExtractor() {
-        options = new Options();
+        super();
+
+        packagePrefix = "cubemeta";
 
         OptionGroup realizationOrProject = new OptionGroup();
         realizationOrProject.addOption(OPTION_CUBE);
@@ -121,33 +117,13 @@ public class CubeMetaExtractor extends AbstractApplication {
         options.addOption(OPTION_INCLUDE_SEGMENTS);
         options.addOption(OPTION_INCLUDE_JOB);
         options.addOption(OPTION_INCLUDE_SEGMENT_DETAILS);
-        options.addOption(OPTION_DEST);
-
     }
 
     @Override
-    protected Options getOptions() {
-        return options;
-    }
-
-    @Override
-    protected void execute(OptionsHelper optionsHelper) throws Exception {
+    protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         includeSegments = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENTS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENTS)) : true;
         includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : false;
         includeSegmentDetails = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENT_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENT_DETAILS)) : false;
-
-        String dest = null;
-        if (optionsHelper.hasOption(OPTION_DEST)) {
-            dest = optionsHelper.getOptionValue(OPTION_DEST);
-        }
-
-        if (StringUtils.isEmpty(dest)) {
-            throw new RuntimeException("destDir is not set, exit directly without extracting");
-        }
-
-        if (!dest.endsWith("/")) {
-            dest = dest + "/";
-        }
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         metadataManager = MetadataManager.getInstance(kylinConfig);
@@ -193,9 +169,7 @@ public class CubeMetaExtractor extends AbstractApplication {
             }
         }
 
-        executeExtraction(dest);
-
-        logger.info("Extracted metadata files located at: " + new File(dest).getAbsolutePath());
+        executeExtraction(exportDir.getAbsolutePath());
     }
 
     private void executeExtraction(String dest) {
