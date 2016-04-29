@@ -28,7 +28,6 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.IRealizationSegment;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableSignature;
 import org.apache.kylin.source.SourceFactory;
@@ -278,7 +277,7 @@ public class DictionaryManager {
             TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
             if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
                 tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
-                String tableName = tableDesc.getHiveViewIntermediateTableName();
+                String tableName = tableDesc.getMaterializedName();
                 tableDesc.setName(tableName);
                 inpTable = SourceFactory.createReadableTable(tableDesc);
             } else {

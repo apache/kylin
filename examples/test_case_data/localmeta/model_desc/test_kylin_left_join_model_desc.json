@@ -4,6 +4,14 @@
   "name": "test_kylin_left_join_model_desc",
   "lookups": [
     {
+      "table": "EDW.TEST_CAL_DT",
+      "join": {
+        "type": "left",
+        "primary_key": ["CAL_DT"],
+        "foreign_key": ["CAL_DT"]
+      }
+    },
+    {
       "table": "EDW.V_TEST_CAL_DT",
       "join": {
         "type": "left",

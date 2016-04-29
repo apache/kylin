@@ -206,8 +206,8 @@ public class CubeManager implements IRealizationProvider {
 
         TableDesc tableDesc = new TableDesc(metaMgr.getTableDesc(lookupTable));
         if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
+            String tableName = tableDesc.getMaterializedName();
             tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
-            String tableName = tableDesc.getHiveViewIntermediateTableName();
             tableDesc.setName(tableName);
         }
 

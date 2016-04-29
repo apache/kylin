@@ -1,10 +1,10 @@
 {
-  "uuid" : "9ac9b7a8-3929-4dff-b59d-2100aadc8dbf",
-  "name" : "test_kylin_cube_without_slr_left_join_desc",
+  "uuid" : "6789b7a8-3929-4dff-b59d-2100aadc8dbf",
+  "name" : "test_kylin_cube_with_view_desc",
   "description" : null,
   "dimensions" : [ {
     "name" : "CAL_DT",
-    "table" : "EDW.TEST_CAL_DT",
+    "table" : "EDW.V_TEST_CAL_DT",
     "column" : "{FK}",
     "derived" : [ "WEEK_BEG_DT" ]
   }, {
@@ -103,110 +103,7 @@
       "returntype" : "bigint"
     },
     "dependent_measure_ref" : null
-  }, {
-    "name" : "SELLER_CNT_HLL",
-    "function" : {
-      "expression" : "COUNT_DISTINCT",
-      "parameter" : {
-        "type" : "column",
-        "value" : "SELLER_ID",
-        "next_parameter" : null
-      },
-      "returntype" : "hllc(10)"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "name" : "SELLER_FORMAT_CNT",
-    "function" : {
-      "expression" : "COUNT_DISTINCT",
-      "parameter" : {
-        "type" : "column",
-        "value" : "LSTG_FORMAT_NAME",
-        "next_parameter" : {
-          "type" : "column",
-          "value" : "SELLER_ID",
-          "next_parameter" : null
-        }
-      },
-      "returntype" : "hllc(10)"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "name": "LEAF_CATEG_ID_BITMAP",
-    "function": {
-      "expression": "COUNT_DISTINCT",
-      "parameter": {
-        "type": "column",
-        "value": "LEAF_CATEG_ID"
-      },
-      "returntype": "bitmap"
-    },
-    "dependent_measure_ref": null
-  }, {
-    "name" : "TOP_SELLER",
-    "function" : {
-      "expression" : "TOP_N",
-      "parameter" : {
-        "type" : "column",
-        "value" : "PRICE",
-        "next_parameter" : {
-          "type" : "column",
-          "value" : "SELLER_ID",
-          "next_parameter" : null
-        }
-      },
-      "returntype" : "topn(100)"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "name" : "CAL_DT_RAW",
-    "function" : {
-      "expression" : "RAW",
-      "parameter" : {
-        "type" : "column",
-        "value" : "CAL_DT",
-        "next_parameter" : null
-      },
-      "returntype" : "raw"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "name" : "LSTG_FORMAT_NAME_RAW",
-    "function" : {
-      "expression" : "RAW",
-      "parameter" : {
-        "type" : "column",
-        "value" : "LSTG_FORMAT_NAME",
-        "next_parameter" : null
-      },
-      "returntype" : "raw"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "name" : "LEAF_CATEG_ID_RAW",
-    "function" : {
-      "expression" : "RAW",
-      "parameter" : {
-        "type" : "column",
-        "value" : "LEAF_CATEG_ID",
-        "next_parameter" : null
-      },
-      "returntype" : "raw"
-    },
-    "dependent_measure_ref" : null
-  }, {
-    "name" : "PRICE_RAW",
-    "function" : {
-      "expression" : "RAW",
-      "parameter" : {
-        "type" : "column",
-        "value" : "PRICE",
-        "next_parameter" : null
-      },
-      "returntype" : "raw"
-    },
-    "dependent_measure_ref" : null
-  } ],
+  }],
   "rowkey" : {
     "rowkey_columns" : [ {
       "column" : "cal_dt",
@@ -243,21 +140,9 @@
       "name" : "f1",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt", "item_count_sum", "CAL_DT_RAW", "LSTG_FORMAT_NAME_RAW", "LEAF_CATEG_ID_RAW", "PRICE_RAW" ]
+        "measure_refs" : [ "gmv_sum", "gmv_min", "gmv_max", "trans_cnt", "item_count_sum" ]
       } ]
-    }, {
-      "name" : "f2",
-      "columns" : [ {
-        "qualifier" : "m",
-        "measure_refs" : [ "seller_cnt_hll", "seller_format_cnt", "leaf_categ_id_bitmap" ]
-      } ]
-    }, {
-      "name" : "f3",
-      "columns" : [ {
-        "qualifier" : "m",
-        "measure_refs" : [ "top_seller" ]
-      } ]
-    } ]
+    }]
   },
   "aggregation_groups" : [ {
     "includes" : [ "cal_dt", "categ_lvl2_name", "categ_lvl3_name", "leaf_categ_id", "lstg_format_name", "lstg_site_id", "meta_categ_name"],
@@ -280,8 +165,5 @@
   "retention_range" : 0,
   "engine_type" : 2,
   "storage_type" : 2,
-  "override_kylin_properties": {
-    "kylin.job.cubing.inmem.sampling.hll.precision": "16"
-  },
   "partition_date_start": 0
 }

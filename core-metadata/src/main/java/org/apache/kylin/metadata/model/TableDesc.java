@@ -45,8 +45,8 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private int sourceType = ISourceAware.ID_HIVE;
     @JsonProperty("table_type")
     private String tableType;
-    @JsonProperty("hive_view__table_name_prefix")
-    private String hiveViewIntermediateTableNamePrefix = "kylin_intermediate_";
+
+    private static final String materializedTableNamePrefix = "kylin_intermediate_";
 
     private DatabaseDesc database = new DatabaseDesc();
 
@@ -59,6 +59,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         this.name = other.getName();
         this.columns = other.getColumns();
         this.database.setName(other.getDatabase());
+        this.tableType = other.getTableType();
     }
 
     public ColumnDesc findColumnByName(String name) {
@@ -195,8 +196,8 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return getIdentity().equals(other.getIdentity());
     }
 
-    public String getHiveViewIntermediateTableName() {
-        return hiveViewIntermediateTableNamePrefix + "_" + database.getName() + "_" + name;
+    public String getMaterializedName() {
+        return materializedTableNamePrefix + database.getName() + "_" + name;
     }
 
     @Override
@@ -228,11 +229,4 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         this.tableType = tableType;
     }
 
-    public String getHiveViewIntermediateTableNamePrefix() {
-        return hiveViewIntermediateTableNamePrefix;
-    }
-
-    public void setHiveViewIntermediateTableNamePrefix(String hiveViewIntermediateTableNamePrefix) {
-        this.hiveViewIntermediateTableNamePrefix = hiveViewIntermediateTableNamePrefix;
-    }
 }

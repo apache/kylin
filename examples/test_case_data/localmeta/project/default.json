@@ -42,11 +42,17 @@
       "name": "test_kylin_hybrid_inner_join",
       "type": "HYBRID",
       "realization": "test_kylin_hybrid_inner_join"
+    },
+    {
+      "name": "test_kylin_cube_with_view_empty",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_view_empty"
     }
   ], 
   "tables" : [
     "DEFAULT.TEST_KYLIN_FACT",
     "EDW.TEST_CAL_DT",
+    "EDW.V_TEST_CAL_DT",
     "DEFAULT.TEST_CATEGORY_GROUPINGS",
     "EDW.TEST_SITES",
     "EDW.TEST_SELLER_TYPE_DIM",

@@ -155,15 +155,15 @@ public class HiveMRInput implements IMRInput {
             for(TableDesc lookUpTableDesc : cubeDesc.getLookupTableDescs()) {
                 if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(lookUpTableDesc.getTableType())) {
                     findHiveViewLookUpTable = true;
-                    lookUpTableDesc.setHiveViewIntermediateTableNamePrefix("kylin_intermediate_" + jobId);
                     StringBuilder createIntermediateTableHql = new StringBuilder();
+                    createIntermediateTableHql.append("DROP TABLE IF EXISTS " + lookUpTableDesc.getMaterializedName() + ";\n");
                     createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS " +
-                            lookUpTableDesc.getHiveViewIntermediateTableName() + "\n");
+                            lookUpTableDesc.getMaterializedName() + "\n");
                     createIntermediateTableHql.append("LOCATION '" + JobBuilderSupport.getJobWorkingDir(conf, jobId) + "/" +
-                            lookUpTableDesc.getHiveViewIntermediateTableName() + "'\n");
+                            lookUpTableDesc.getMaterializedName() + "'\n");
                     createIntermediateTableHql.append("AS SELECT * FROM " + lookUpTableDesc.getIdentity() + ";\n");
                     hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
-                    hiveViewIntermediateTables = hiveViewIntermediateTables + lookUpTableDesc.getHiveViewIntermediateTableName() + ";";
+                    hiveViewIntermediateTables = hiveViewIntermediateTables + lookUpTableDesc.getMaterializedName() + ";";
                 }
                 if (findHiveViewLookUpTable) {
                     hiveViewIntermediateTables= hiveViewIntermediateTables.substring(0, hiveViewIntermediateTables.length()-1);
@@ -184,7 +184,7 @@ public class HiveMRInput implements IMRInput {
             step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
             step.setIntermediateTableIdentity(getIntermediateTableIdentity());
             step.setExternalDataPath(JoinedFlatTable.getTableDir(flatHiveTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobFlow.getId())));
-            step.setHiveViewIntermediateTableIdentitys(hiveViewIntermediateTables);
+            step.setHiveViewIntermediateTableIdentities(hiveViewIntermediateTables);
             jobFlow.addTask(step);
         }
 
@@ -205,7 +205,8 @@ public class HiveMRInput implements IMRInput {
             StringBuffer output = new StringBuffer();
             try {
                 output.append(cleanUpIntermediateFlatTable(config));
-                output.append(cleanUpHiveViewIntermediateTable(config));
+                // don't drop view to avoid concurrent issue
+                //output.append(cleanUpHiveViewIntermediateTable(config));
             } catch (IOException e) {
                 logger.error("job:" + getId() + " execute finished with exception", e);
                 return new ExecuteResult(ExecuteResult.State.ERROR, e.getMessage());
@@ -251,13 +252,13 @@ public class HiveMRInput implements IMRInput {
             StringBuffer output = new StringBuffer();
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
             hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
-            if (!getHiveViewIntermediateTableIdentitys().isEmpty()) {
-                for(String hiveTableName : getHiveViewIntermediateTableIdentitys().split(";")) {
+            if (getHiveViewIntermediateTableIdentities() != null && !getHiveViewIntermediateTableIdentities().isEmpty()) {
+                for(String hiveTableName : getHiveViewIntermediateTableIdentities().split(";")) {
                     hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTableName + ";");
                 }
             }
             config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
-            output.append("hive view intermediate tables: " + getHiveViewIntermediateTableIdentitys() + " is dropped. \n");
+            output.append("hive view intermediate tables: " + getHiveViewIntermediateTableIdentities() + " is dropped. \n");
             return output.toString();
         }
 
@@ -277,11 +278,11 @@ public class HiveMRInput implements IMRInput {
             return getParam("externalDataPath");
         }
 
-        public void setHiveViewIntermediateTableIdentitys(String tableIdentitys) {
-            setParam("oldHiveViewIntermediateTables", tableIdentitys);
+        public void setHiveViewIntermediateTableIdentities(String tableIdentities) {
+            setParam("oldHiveViewIntermediateTables", tableIdentities);
         }
 
-        private String getHiveViewIntermediateTableIdentitys() {
+        private String getHiveViewIntermediateTableIdentities() {
             return getParam("oldHiveViewIntermediateTables");
         }
     }
