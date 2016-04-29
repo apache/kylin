@@ -134,7 +134,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             output = kylinConfig.getCliCommandExecutor().execute("lsb_release -a").getSecond();
             FileUtils.writeStringToFile(new File(basicDir, "lsb_release"), output);
             output = KylinVersion.getKylinClientInformation();
-            FileUtils.writeStringToFile(new File(basicDir, "client"), output);
+            FileUtils.writeStringToFile(new File(basicDir, "client"), output + "\n");
             output = ToolUtil.getHBaseMetaStoreId();
             FileUtils.writeStringToFile(new File(basicDir, "client"), output, true);
 
