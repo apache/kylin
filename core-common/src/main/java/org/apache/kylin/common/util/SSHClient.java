@@ -246,6 +246,8 @@ public class SSHClient {
                 out.flush();
             }
 
+            in.close();
+            out.close();
             session.disconnect();
         } catch (Exception e) {
             throw e;
