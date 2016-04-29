@@ -242,7 +242,8 @@ public class BuildCubeWithEngine {
     @SuppressWarnings("unused")
     // called by reflection
     private List<String> testInnerJoinCubeWithSlr() throws Exception {
-        clearSegment("test_kylin_cube_with_slr_empty");
+        final String cubeName = "test_kylin_cube_with_slr_empty";
+        clearSegment(cubeName);
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         long date1 = 0;
@@ -251,10 +252,10 @@ public class BuildCubeWithEngine {
         List<String> result = Lists.newArrayList();
 
         if (fastBuildMode) {
-            result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date3));
+            result.add(buildSegment(cubeName, date1, date3));
         } else {
-            result.add(buildSegment("test_kylin_cube_with_slr_empty", date1, date2));
-            result.add(buildSegment("test_kylin_cube_with_slr_empty", date2, date3));//empty segment
+            result.add(buildSegment(cubeName, date1, date2));
+            result.add(buildSegment(cubeName, date2, date3));//empty segment
         }
         return result;
     }
@@ -263,7 +264,8 @@ public class BuildCubeWithEngine {
     // called by reflection
     private List<String> testInnerJoinCubeWithoutSlr() throws Exception {
 
-        clearSegment("test_kylin_cube_without_slr_empty");
+        final String cubeName = "test_kylin_cube_without_slr_empty";
+        clearSegment(cubeName);
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         long date1 = 0;
@@ -273,12 +275,12 @@ public class BuildCubeWithEngine {
         List<String> result = Lists.newArrayList();
 
         if (fastBuildMode) {
-            result.add(buildSegment("test_kylin_cube_without_slr_empty", date1, date4));
+            result.add(buildSegment(cubeName, date1, date4));
         } else {
-            result.add(buildSegment("test_kylin_cube_without_slr_empty", date1, date2));
-            result.add(buildSegment("test_kylin_cube_without_slr_empty", date2, date3));
-            result.add(buildSegment("test_kylin_cube_without_slr_empty", date3, date4));
-            result.add(mergeSegment("test_kylin_cube_without_slr_empty", date1, date3));//don't merge all segments
+            result.add(buildSegment(cubeName, date1, date2));
+            result.add(buildSegment(cubeName, date2, date3));
+            result.add(buildSegment(cubeName, date3, date4));
+            result.add(mergeSegment(cubeName, date1, date3));//don't merge all segments
         }
         return result;
 
@@ -299,12 +301,12 @@ public class BuildCubeWithEngine {
         long date4 = f.parse("2023-01-01").getTime();
 
         if (fastBuildMode) {
-            result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date1, date4));
+            result.add(buildSegment(cubeName, date1, date4));
         } else {
-            result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date1, date2));
-            result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date2, date3));
-            result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date3, date4));//empty segment
-            result.add(mergeSegment("test_kylin_cube_without_slr_left_join_empty", date1, date3));//don't merge all segments
+            result.add(buildSegment(cubeName, date1, date2));
+            result.add(buildSegment(cubeName, date2, date3));
+            result.add(buildSegment(cubeName, date3, date4));//empty segment
+            result.add(mergeSegment(cubeName, date1, date3));//don't merge all segments
         }
 
         return result;
@@ -324,7 +326,7 @@ public class BuildCubeWithEngine {
         long date1 = cubeManager.getCube(cubeName).getDescriptor().getPartitionDateStart();
         long date4 = f.parse("2023-01-01").getTime();
 
-        result.add(buildSegment("test_kylin_cube_without_slr_left_join_empty", date1, date4));
+        result.add(buildSegment(cubeName, date1, date4));
 
         return result;
 
