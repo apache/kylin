@@ -62,7 +62,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
         }
 
         if (context.getConfiguration().get(BatchConstants.CFG_HFILE_SIZE_GB) != null) {
-            hfileSizeGB = Integer.valueOf(context.getConfiguration().get(BatchConstants.CFG_HFILE_SIZE_GB));
+            hfileSizeGB = Float.valueOf(context.getConfiguration().get(BatchConstants.CFG_HFILE_SIZE_GB)).intValue();
         }
 
         if (context.getConfiguration().get(BatchConstants.CFG_REGION_SPLIT_SIZE) != null) {
@@ -108,7 +108,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
         if (hfileSizeGB <= 0) {
             hfileSizeGB = gbPerRegion;
         }
-        int hfilePerRegion = gbPerRegion / hfileSizeGB;
+        int hfilePerRegion = (int) (gbPerRegion / hfileSizeGB);
         hfilePerRegion = Math.max(1, hfilePerRegion);
 
         System.out.println(nRegion + " regions");
