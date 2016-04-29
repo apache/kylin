@@ -139,12 +139,18 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
     }
 
     private int size() {
-        int size = 0;
-        for (int i = 0; i < m; i++) {
-            if (registers[i] > 0)
-                size++;
+        if (singleBucket == -1) {
+            return 0;
+        } else if (singleBucket >= 0) {
+            return 1;
+        } else {
+            int size = 0;
+            for (int i = 0; i < m; i++) {
+                if (registers[i] > 0)
+                    size++;
+            }
+            return size;
         }
-        return size;
     }
 
     @Override
@@ -210,10 +216,17 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
 
         if (scheme == 0) { // map scheme
             BytesUtil.writeVInt(size, out);
-            for (int i = 0; i < m; i++) {
-                if (registers[i] > 0) {
-                    writeUnsigned(i, indexLen, out);
-                    out.put(registers[i]);
+            if (singleBucket == -1) {
+                ; // no non-zero register
+            } else if (singleBucket >= 0) {
+                writeUnsigned(singleBucket, indexLen, out);
+                out.put(registers[singleBucket]);
+            } else {
+                for (int i = 0; i < m; i++) {
+                    if (registers[i] > 0) {
+                        writeUnsigned(i, indexLen, out);
+                        out.put(registers[i]);
+                    }
                 }
             }
         } else if (scheme == 1) { // array scheme

@@ -18,7 +18,7 @@
 
 package org.apache.kylin.measure.hll;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -55,7 +55,7 @@ public class HyperLogLogCounterTest {
             hllc.merge(one);
         }
     }
-    
+
     @Test
     public void testPeekLength() throws IOException {
         HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(10);
@@ -149,19 +149,17 @@ public class HyperLogLogCounterTest {
         hllc.readRegisters(buf);
         Assert.assertEquals(estimate, hllc.getCountEstimate());
     }
-    
+
     @Test
     public void mergeTest() throws IOException {
         double error = 0;
-        double absError = 0;
         int n = 100;
         for (int i = 0; i < n; i++) {
             double e = merge(i);
             error += e;
-            absError += Math.abs(e);
         }
         System.out.println("Total average error is " + error / n);
-        
+
         System.out.println("  errorRateCount1 is " + errorCount1 + "!");
         System.out.println("  errorRateCount2 is " + errorCount2 + "!");
         System.out.println("  errorRateCount3 is " + errorCount3 + "!");
@@ -197,7 +195,7 @@ public class HyperLogLogCounterTest {
 
         System.out.println(testSet.size() + "-" + estimate + " ~ " + actualError);
         Assert.assertTrue(actualError < 0.1);
-        
+
         if (actualError > errorRate) {
             errorCount1++;
         }
@@ -220,7 +218,7 @@ public class HyperLogLogCounterTest {
         Assert.assertEquals(copy.getCountEstimate(), hllc.getCountEstimate());
         return copy;
     }
-    
+
     @Test
     public void testPerformance() throws IOException {
         int N = 3; // reduce N HLLC into one
