@@ -52,6 +52,8 @@ class testQuery(unittest.TestCase):
             actual_result = json.loads(response.text)
             print 'Query duration: ' + str(actual_result['duration']) + 'ms'
             del actual_result['duration']
+            del actual_result['hitExceptionCache']
+            del actual_result['storageCacheUsed']
 
             expect_result = json.loads(open(sql_file[:-4] + '.json').read().strip())
             self.assertEqual(actual_result, expect_result, 'Query result does not equal.')

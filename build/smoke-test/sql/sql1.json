@@ -3,13 +3,11 @@
   "partial": false,
   "affectedRowCount": 0,
   "isException": false,
-  "storageCacheUsed": false,
   "results": [
     [
       "10000"
     ]
   ],
-  "hitExceptionCache": false,
   "exceptionMessage": null,
   "totalScanCount": 1,
   "columnMetas": [
