@@ -46,9 +46,10 @@ public class ToolUtil {
     }
 
     public static String getHBaseMetaStoreId() throws IOException {
-        final HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration()));
-        final String metaStoreName = KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
-        final HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(metaStoreName));
-        return "MetaStore UUID: " + desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
+        try (final HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration()))) {
+            final String metaStoreName = KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
+            final HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(metaStoreName));
+            return "MetaStore UUID: " + desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
+        }
     }
 }
