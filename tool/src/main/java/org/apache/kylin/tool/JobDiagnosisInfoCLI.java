@@ -101,7 +101,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
             if (!StringUtils.isEmpty(cubeName)) {
                 File metaDir = new File(exportDir, "cube");
                 FileUtils.forceMkdir(metaDir);
-                String[] cubeMetaArgs = { "-cube", cubeName, "-destDir", new File(metaDir, cubeName).getAbsolutePath(), "-includeJobs", "false", "-compress", "false", "-quiet", "false" };
+                String[] cubeMetaArgs = { "-cube", cubeName, "-destDir", new File(metaDir, cubeName).getAbsolutePath(), "-includeJobs", "false", "-compress", "false", "-submodule", "true" };
 
                 logger.info("Start to extract related cube: " + StringUtils.join(cubeMetaArgs));
                 CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
@@ -120,13 +120,13 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         }
 
         if (includeClient) {
-            String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-quiet", "false" };
+            String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
             ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
             clientEnvExtractor.execute(clientArgs);
         }
 
         // export kylin logs
-        String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-compress", "false", "-quiet", "false" };
+        String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
         KylinLogExtractor logExtractor = new KylinLogExtractor();
         logExtractor.execute(logsArgs);
     }

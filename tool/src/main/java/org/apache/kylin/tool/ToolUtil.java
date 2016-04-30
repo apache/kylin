@@ -49,7 +49,7 @@ public class ToolUtil {
         try (final HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration()))) {
             final String metaStoreName = KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
             final HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(metaStoreName));
-            return "MetaStore UUID: " + desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
+            return desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
         }
     }
 

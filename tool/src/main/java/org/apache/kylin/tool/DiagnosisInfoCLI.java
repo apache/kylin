@@ -25,7 +25,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,13 +44,10 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_CLIENT = OptionBuilder.withArgName("includeClient").hasArg().isRequired(false).withDescription("Specify whether to include client info to extract. Default true.").create("includeClient");
 
-    private KylinConfig kylinConfig;
-
     public DiagnosisInfoCLI() {
         super();
 
-        packageType = "diagnosis";
-        kylinConfig = KylinConfig.getInstanceFromEnv();
+        packageType = "project";
 
         options.addOption(OPTION_PROJECT);
         options.addOption(OPTION_INCLUDE_CONF);
@@ -72,13 +68,13 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
 
         // export cube metadata
-        String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", project, "-compress", "false", "-quiet", "false" };
+        String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
         CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
         cubeMetaExtractor.execute(cubeMetaArgs);
 
         // export HBase
         if (includeHBase) {
-            String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", project, "-compress", "false", "-quiet", "false" };
+            String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
             HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
             hBaseUsageExtractor.execute(hbaseArgs);
         }
@@ -95,7 +91,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
 
         // export client
         if (includeClient) {
-            String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-quiet", "false" };
+            String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
             ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
             clientEnvExtractor.execute(clientArgs);
         }
@@ -107,21 +103,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             logger.warn("Error in export commit id.", e);
         }
 
-        // export basic info
-        try {
-            File basicDir = new File(exportDir, "basic");
-            FileUtils.forceMkdir(basicDir);
-            String output = KylinVersion.getKylinClientInformation();
-            FileUtils.writeStringToFile(new File(basicDir, "client"), output + "\n");
-            output = ToolUtil.getHBaseMetaStoreId();
-            FileUtils.writeStringToFile(new File(basicDir, "client"), output, true);
-
-        } catch (Exception e) {
-            logger.warn("Error in export process info.", e);
-        }
-
         // export logs
-        String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-compress", "false", "-quiet", "false" };
+        String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
         KylinLogExtractor logExtractor = new KylinLogExtractor();
         logExtractor.execute(logsArgs);
     }

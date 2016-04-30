@@ -126,6 +126,7 @@ public class KylinVersion {
     public static String getKylinClientInformation() {
         StringBuilder buf = new StringBuilder();
 
+        buf.append("kylin.home: ").append(new File(KylinConfig.getKylinHome()).getAbsolutePath()).append("\n");
         buf.append("kylin.version:").append(KylinVersion.getCurrentVersion()).append("\n");
         buf.append("commit:").append(getGitCommitInfo()).append("\n");
         buf.append("os.name:").append(System.getProperty("os.name")).append("\n");

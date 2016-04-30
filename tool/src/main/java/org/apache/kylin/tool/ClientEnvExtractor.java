@@ -47,17 +47,28 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
 
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
+        // dump os info
         addLocalFile("/sys/kernel/mm/transparent_hugepage/defrag", "linux/transparent_hugepage");
         addLocalFile("/proc/sys/vm/swappiness", "linux/swappiness");
+        addLocalFile("/proc/cpuinfo", "linux/cpuinfo");
         addShellOutput("lsb_release -a", "linux", "lsb_release");
-        addShellOutput("ps aux|grep kylin", "kylin", "processes");
+        addShellOutput("df -h", "linux", "disk_usage");
+        addShellOutput("free -m", "linux", "mem_usage_mb");
+        addShellOutput("top -n 1 | head -n 30", "linux", "top");
+        addShellOutput("ps aux|grep kylin", "linux", "kylin_processes");
+
+        // dump hadoop env
+        addShellOutput("hadoop version", "hadoop", "version");
+        addShellOutput("hbase version", "hbase", "version");
+        addShellOutput("hive --version", "hive", "version");
+        addShellOutput("beeline --version", "hive", "beeline_version");
     }
 
     private void addLocalFile(String src, String destDir) {
         try {
             File srcFile = new File(src);
             File destDirFile = null;
-            if (StringUtils.isEmpty(destDir)) {
+            if (!StringUtils.isEmpty(destDir)) {
                 destDirFile = new File(exportDir, destDir);
                 FileUtils.forceMkdir(destDirFile);
             } else {
@@ -73,7 +84,7 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
     private void addShellOutput(String cmd, String destDir, String filename) {
         try {
             File destDirFile = null;
-            if (StringUtils.isEmpty(destDir)) {
+            if (!StringUtils.isEmpty(destDir)) {
                 destDirFile = new File(exportDir, destDir);
                 FileUtils.forceMkdir(destDirFile);
             } else {

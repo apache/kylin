@@ -45,7 +45,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     private static final Option OPTION_COMPRESS = OptionBuilder.withArgName("compress").hasArg().isRequired(false).withDescription("specify whether to compress the output with zip. Default true.").create("compress");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_QUIET = OptionBuilder.withArgName("quiet").hasArg().isRequired(false).withDescription("specify whether to print final result").create("quiet");
+    private static final Option OPTION_SUBMODULE = OptionBuilder.withArgName("submodule").hasArg().isRequired(false).withDescription("specify whether this is a submodule of other CLI tool").create("submodule");
 
     private static final String DEFAULT_PACKAGE_TYPE = "base";
 
@@ -58,7 +58,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         options = new Options();
         options.addOption(OPTION_DEST);
         options.addOption(OPTION_COMPRESS);
-        options.addOption(OPTION_QUIET);
+        options.addOption(OPTION_SUBMODULE);
 
         packageType = DEFAULT_PACKAGE_TYPE;
     }
@@ -71,8 +71,8 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         String exportDest = optionsHelper.getOptionValue(options.getOption("destDir"));
-        boolean compress = optionsHelper.hasOption(OPTION_COMPRESS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
-        boolean quiet = optionsHelper.hasOption(OPTION_QUIET) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_QUIET)) : false;
+        boolean shouldCompress = optionsHelper.hasOption(OPTION_COMPRESS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_COMPRESS)) : true;
+        boolean isSubmodule = optionsHelper.hasOption(OPTION_SUBMODULE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_SUBMODULE)) : false;
 
         if (StringUtils.isEmpty(exportDest)) {
             throw new RuntimeException("destDir is not set, exit directly without extracting");
@@ -88,11 +88,14 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         }
         exportDir = new File(exportDest);
 
-        dumpBasicDiagInfo();
+        if (!isSubmodule) {
+            dumpBasicDiagInfo();
+        }
+
         executeExtract(optionsHelper, exportDir);
 
         // compress to zip package
-        if (compress) {
+        if (shouldCompress) {
             File tempZipFile = File.createTempFile(packageType + "_", ".zip");
             ZipFileUtils.compressZipFile(exportDir.getAbsolutePath(), tempZipFile.getAbsolutePath());
             FileUtils.cleanDirectory(exportDir);
@@ -103,7 +106,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
             exportDir = new File(exportDest);
         }
 
-        if (!quiet) {
+        if (!isSubmodule) {
             StringBuffer output = new StringBuffer();
             output.append("\n========================================");
             output.append("\nDump " + packageType + " package locates at: \n" + exportDir.getAbsolutePath());
@@ -118,7 +121,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
             FileUtils.writeStringToFile(new File(exportDir, "kylin_env"), output);
 
             StringBuilder basicSb = new StringBuilder();
-            basicSb.append(ToolUtil.getHBaseMetaStoreId()).append("\n");
+            basicSb.append("MetaStoreID: ").append(ToolUtil.getHBaseMetaStoreId()).append("\n");
             basicSb.append("PackageType: ").append(packageType.toUpperCase()).append("\n");
             FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString());
         } catch (Exception e) {
