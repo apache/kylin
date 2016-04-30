@@ -52,4 +52,5 @@ public class ToolUtil {
             return "MetaStore UUID: " + desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
         }
     }
+
 }

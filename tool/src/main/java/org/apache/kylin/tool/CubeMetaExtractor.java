@@ -105,7 +105,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     public CubeMetaExtractor() {
         super();
 
-        packagePrefix = "cubemeta";
+        packageType = "cubemeta";
 
         OptionGroup realizationOrProject = new OptionGroup();
         realizationOrProject.addOption(OPTION_CUBE);

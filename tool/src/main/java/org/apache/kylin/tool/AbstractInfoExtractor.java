@@ -28,6 +28,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.ZipFileUtils;
@@ -46,12 +47,11 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     @SuppressWarnings("static-access")
     private static final Option OPTION_QUIET = OptionBuilder.withArgName("quiet").hasArg().isRequired(false).withDescription("specify whether to print final result").create("quiet");
 
-
-    private static final String DEFAULT_PACKAGE_PREFIX = "dump";
+    private static final String DEFAULT_PACKAGE_TYPE = "base";
 
     protected final Options options;
 
-    protected String packagePrefix;
+    protected String packageType;
     protected File exportDir;
 
     public AbstractInfoExtractor() {
@@ -60,7 +60,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         options.addOption(OPTION_COMPRESS);
         options.addOption(OPTION_QUIET);
 
-        packagePrefix = DEFAULT_PACKAGE_PREFIX;
+        packageType = DEFAULT_PACKAGE_TYPE;
     }
 
     @Override
@@ -82,17 +82,18 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         }
 
         // create new folder to contain the output
-        String packageName = packagePrefix + "_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date());
+        String packageName = packageType.toLowerCase() + "_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date());
         if (new File(exportDest).exists()) {
             exportDest = exportDest + packageName + "/";
         }
         exportDir = new File(exportDest);
 
+        dumpBasicDiagInfo();
         executeExtract(optionsHelper, exportDir);
 
         // compress to zip package
         if (compress) {
-            File tempZipFile = File.createTempFile(packagePrefix + "_", ".zip");
+            File tempZipFile = File.createTempFile(packageType + "_", ".zip");
             ZipFileUtils.compressZipFile(exportDir.getAbsolutePath(), tempZipFile.getAbsolutePath());
             FileUtils.cleanDirectory(exportDir);
 
@@ -105,9 +106,23 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         if (!quiet) {
             StringBuffer output = new StringBuffer();
             output.append("\n========================================");
-            output.append("\nDump " + packagePrefix + " package locates at: \n" + exportDir.getAbsolutePath());
+            output.append("\nDump " + packageType + " package locates at: \n" + exportDir.getAbsolutePath());
             output.append("\n========================================");
             logger.info(output.toString());
+        }
+    }
+
+    private void dumpBasicDiagInfo() {
+        try {
+            String output = KylinVersion.getKylinClientInformation() + "\n";
+            FileUtils.writeStringToFile(new File(exportDir, "kylin_env"), output);
+
+            StringBuilder basicSb = new StringBuilder();
+            basicSb.append(ToolUtil.getHBaseMetaStoreId()).append("\n");
+            basicSb.append("PackageType: ").append(packageType.toUpperCase()).append("\n");
+            FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString());
+        } catch (Exception e) {
+            logger.warn("Error in export process info.", e);
         }
     }
 

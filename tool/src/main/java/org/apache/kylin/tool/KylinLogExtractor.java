@@ -43,7 +43,7 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
     public KylinLogExtractor() {
         super();
 
-        packagePrefix = "logs";
+        packageType = "logs";
         options.addOption(OPTION_LOG_PERIOD);
     }
 

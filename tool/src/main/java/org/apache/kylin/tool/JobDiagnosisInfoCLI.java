@@ -52,6 +52,9 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_YARN_LOGS = OptionBuilder.withArgName("includeYarnLogs").hasArg().isRequired(false).withDescription("set this to true if want to extract related yarn logs too. Default true").create("includeYarnLogs");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_CLIENT = OptionBuilder.withArgName("includeClient").hasArg().isRequired(false).withDescription("Specify whether to include client info to extract. Default true.").create("includeClient");
+
     private KylinConfig kylinConfig;
     private ExecutableDao executableDao;
 
@@ -61,10 +64,11 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
     public JobDiagnosisInfoCLI() {
         super();
 
-        packagePrefix = "job";
+        packageType = "job";
 
         options.addOption(OPTION_JOB_ID);
         options.addOption(OPTION_INCLUDE_CUBE);
+        options.addOption(OPTION_INCLUDE_CLIENT);
         options.addOption(OPTION_INCLUDE_YARN_LOGS);
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -76,7 +80,9 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         String jobId = optionsHelper.getOptionValue(OPTION_JOB_ID);
         boolean includeCube = optionsHelper.hasOption(OPTION_INCLUDE_CUBE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CUBE)) : true;
         boolean includeYarnLogs = optionsHelper.hasOption(OPTION_INCLUDE_YARN_LOGS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_YARN_LOGS)) : true;
+        boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
 
+        // dump job output
         ExecutablePO executablePO = executableDao.getJob(jobId);
         addRequired(ExecutableDao.pathOfJob(jobId));
         addRequired(ExecutableDao.pathOfJobOutput(jobId));
@@ -87,9 +93,9 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
                 yarnLogsResources.add(task.getUuid());
             }
         }
-
         extractResources(exportDir);
 
+        // dump cube metadata
         if (includeCube) {
             String cubeName = executablePO.getParams().get("cubeName");
             if (!StringUtils.isEmpty(cubeName)) {
@@ -103,6 +109,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
             }
         }
 
+        // dump yarn logs
         if (includeYarnLogs) {
             logger.info("Start to related yarn job logs: " + jobId);
             File yarnLogDir = new File(exportDir, "yarn");
@@ -110,6 +117,12 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
             for (String taskId : yarnLogsResources) {
                 extractYarnLog(taskId, new File(yarnLogDir, jobId), true);
             }
+        }
+
+        if (includeClient) {
+            String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-quiet", "false" };
+            ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
+            clientEnvExtractor.execute(clientArgs);
         }
 
         // export kylin logs
