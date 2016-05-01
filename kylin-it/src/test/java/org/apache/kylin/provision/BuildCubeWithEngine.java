@@ -126,11 +126,14 @@ public class BuildCubeWithEngine {
         }
     }
 
-    public void before() throws Exception {
-
+    protected void deployEnv() throws IOException {
         DeployUtil.initCliWorkDir();
         DeployUtil.deployMetadata();
         DeployUtil.overrideJobJarLocations();
+    }
+
+    public void before() throws Exception {
+        deployEnv();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);

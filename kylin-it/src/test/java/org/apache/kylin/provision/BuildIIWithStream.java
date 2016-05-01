@@ -116,8 +116,12 @@ public class BuildIIWithStream {
         HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
     }
 
-    public void before() throws Exception {
+    protected void deployEnv() throws Exception {
         DeployUtil.overrideJobJarLocations();
+    }
+
+    public void before() throws Exception {
+        deployEnv();
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         iiManager = IIManager.getInstance(kylinConfig);

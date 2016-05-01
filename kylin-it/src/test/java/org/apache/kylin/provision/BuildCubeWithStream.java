@@ -19,6 +19,7 @@
 package org.apache.kylin.provision;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -80,8 +81,12 @@ public class BuildCubeWithStream {
         HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
     }
 
-    public void before() throws Exception {
+    protected void deployEnv() throws IOException {
         DeployUtil.overrideJobJarLocations();
+    }
+
+    public void before() throws Exception {
+        deployEnv();
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
