@@ -37,7 +37,6 @@ import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
@@ -88,22 +87,22 @@ public class GTScannerBenchmark {
         }
     }
 
-    @Test
+    //@Test
     public void testAggregate2() throws IOException {
         testAggregate(ImmutableBitSet.valueOf(0, 1));
     }
 
-    @Test
+    //@Test
     public void testAggregate2_() throws IOException {
         testAggregate(ImmutableBitSet.valueOf(0, 2));
     }
 
-    @Test
+    //@Test
     public void testAggregate4() throws IOException {
         testAggregate(ImmutableBitSet.valueOf(0, 1, 2, 3));
     }
 
-    @Test
+    //@Test
     public void testAggregate5() throws IOException {
         testAggregate(ImmutableBitSet.valueOf(0, 1, 2, 3, 4));
     }
@@ -128,12 +127,12 @@ public class GTScannerBenchmark {
         return (int) (N / sec / 1000);
     }
 
-    @Test
+    //@Test
     public void testFilter1() throws IOException {
         testFilter(eq(col(1), 1, 5, 7));
     }
 
-    @Test
+    //@Test
     public void testFilter2() throws IOException {
         testFilter( //
                 and( //
@@ -141,7 +140,7 @@ public class GTScannerBenchmark {
                         eq(col(2), 2, 4)));
     }
 
-    @Test
+    //@Test
     public void testFilter3() throws IOException {
         testFilter( //
                 and( //
@@ -213,5 +212,18 @@ public class GTScannerBenchmark {
 
     private ColumnTupleFilter col(int i) {
         return new ColumnTupleFilter(info.colRef(i));
+    }
+    
+    public static void main(String[] args) throws IOException {
+        GTScannerBenchmark benchmark = new GTScannerBenchmark();
+        
+        benchmark.testFilter1();
+        benchmark.testFilter2();
+        benchmark.testFilter3();
+        
+        benchmark.testAggregate2();
+        benchmark.testAggregate2_();
+        benchmark.testAggregate4();
+        benchmark.testAggregate5();
     }
 }

@@ -41,8 +41,6 @@ import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
@@ -51,7 +49,6 @@ import com.google.common.collect.Lists;
  * 
  * All the same as GTScannerBenchmark except for the last measure is single-value HLLC
  */
-@Ignore
 public class GTScannerBenchmark2 {
 
     final GTInfo info;
@@ -112,22 +109,22 @@ public class GTScannerBenchmark2 {
         }
     }
 
-    @Test
+    //@Test
     public void testAggregate2() throws IOException {
         testAggregate(ImmutableBitSet.valueOf(0, 1));
     }
 
-    @Test
+    //@Test
     public void testAggregate2_() throws IOException {
         testAggregate(ImmutableBitSet.valueOf(0, 2));
     }
 
-    @Test
+    //@Test
     public void testAggregate4() throws IOException {
         testAggregate(ImmutableBitSet.valueOf(0, 1, 2, 3));
     }
 
-    @Test
+    //@Test
     public void testAggregate5() throws IOException {
         testAggregate(ImmutableBitSet.valueOf(0, 1, 2, 3, 4));
     }
@@ -152,12 +149,12 @@ public class GTScannerBenchmark2 {
         return (int) (N / sec / 1000);
     }
 
-    @Test
+    //@Test
     public void testFilter1() throws IOException {
         testFilter(eq(col(1), 1, 5, 7));
     }
 
-    @Test
+    //@Test
     public void testFilter2() throws IOException {
         testFilter( //
                 and( //
@@ -165,7 +162,7 @@ public class GTScannerBenchmark2 {
                         eq(col(2), 2, 4)));
     }
 
-    @Test
+    //@Test
     public void testFilter3() throws IOException {
         testFilter( //
                 and( //
@@ -237,5 +234,18 @@ public class GTScannerBenchmark2 {
 
     private ColumnTupleFilter col(int i) {
         return new ColumnTupleFilter(info.colRef(i));
+    }
+
+    public static void main(String[] args) throws IOException {
+        GTScannerBenchmark2 benchmark = new GTScannerBenchmark2();
+        
+        benchmark.testFilter1();
+        benchmark.testFilter2();
+        benchmark.testFilter3();
+        
+        benchmark.testAggregate2();
+        benchmark.testAggregate2_();
+        benchmark.testAggregate4();
+        //benchmark.testAggregate5(); // causes OOM in 4G heap
     }
 }
