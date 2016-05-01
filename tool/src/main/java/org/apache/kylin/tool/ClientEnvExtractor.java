@@ -51,11 +51,11 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
         // dump os info
         addLocalFile("/sys/kernel/mm/transparent_hugepage/defrag", "linux/transparent_hugepage");
         addLocalFile("/proc/sys/vm/swappiness", "linux/swappiness");
-        addLocalFile("/proc/cpuinfo", "linux/cpuinfo");
+        addLocalFile("/proc/cpuinfo", "linux");
         addShellOutput("lsb_release -a", "linux", "lsb_release");
         addShellOutput("df -h", "linux", "disk_usage");
         addShellOutput("free -m", "linux", "mem_usage_mb");
-        addShellOutput("top -n 1 | head -n 30", "linux", "top");
+        addShellOutput("top -b -n 1 | head -n 30", "linux", "top");
         addShellOutput("ps aux|grep kylin", "linux", "kylin_processes");
 
         // dump hadoop env
