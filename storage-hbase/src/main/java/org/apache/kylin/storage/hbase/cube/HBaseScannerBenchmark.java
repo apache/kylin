@@ -34,16 +34,12 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTWriter;
 import org.apache.kylin.gridtable.benchmark.SortedGTRecordGenerator;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Benchmark of processing 10 million GTRecords. 5 dimensions of type int4, and 2 measures of type long8.
  */
-@Ignore
 public class HBaseScannerBenchmark {
 
     static final Logger logger = LoggerFactory.getLogger(HBaseScannerBenchmark.class);
@@ -101,7 +97,6 @@ public class HBaseScannerBenchmark {
         logger.info(count + " rows written, " + speed(t) + "K row/sec");
     }
 
-    @Test
     public void testScan() throws IOException {
         int rounds = 5;
 
@@ -150,7 +145,6 @@ public class HBaseScannerBenchmark {
         return (int) (N / sec / 1000);
     }
 
-    @After
     public void cleanup() throws IOException {
         simpleStore.cleanup();
     }
