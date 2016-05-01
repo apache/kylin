@@ -54,6 +54,7 @@ public class HyperLogLogCounterTest {
             one.add(rand1.nextInt());
             hllc.merge(one);
         }
+        assertTrue(hllc.getCountEstimate() > 1000000 * 0.9);
     }
 
     @Test

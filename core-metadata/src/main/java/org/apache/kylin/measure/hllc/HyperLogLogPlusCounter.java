@@ -70,7 +70,13 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
 
     public void clear() {
         byte zero = (byte) 0;
-        Arrays.fill(registers, zero);
+        if (singleBucket == -1) {
+            ;
+        } else if (singleBucket >= 0) {
+            registers[singleBucket] = 0;
+        } else {
+            Arrays.fill(registers, zero);
+        }
         singleBucket = -1;
     }
 
