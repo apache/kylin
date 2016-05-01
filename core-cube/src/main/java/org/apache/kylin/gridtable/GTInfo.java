@@ -71,10 +71,18 @@ public class GTInfo {
         return colTypes[i];
     }
 
+    public int getColumnBlockCount() {
+        return colBlocks.length;
+    }
+    
+    public ImmutableBitSet getColumnBlock(int i) {
+        return colBlocks[i];
+    }
+
     public ImmutableBitSet getPrimaryKey() {
         return primaryKey;
     }
-
+    
     public ImmutableBitSet getAllColumns() {
         return colAll;
     }

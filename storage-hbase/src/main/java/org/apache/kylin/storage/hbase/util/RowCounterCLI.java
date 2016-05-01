@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +61,7 @@ public class RowCounterCLI {
         System.out.println("start key in binary: " + Bytes.toStringBinary(startKey));
         System.out.println("end key in binary: " + Bytes.toStringBinary(endKey));
 
-        Configuration conf = HBaseConfiguration.create();
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 
         Scan scan = new Scan();
         scan.setCaching(512);

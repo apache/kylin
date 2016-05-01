@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
@@ -39,6 +38,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +78,7 @@ public class CubeHTableUtil {
 
         tableDesc.setValue(IRealizationConstants.HTableSegmentTag, cubeSegment.toString());
 
-        Configuration conf = HBaseConfiguration.create();
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         HBaseAdmin admin = new HBaseAdmin(conf);
 
         try {
@@ -88,56 +88,7 @@ public class CubeHTableUtil {
             }
 
             for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
-                HColumnDescriptor cf = new HColumnDescriptor(cfDesc.getName());
-                cf.setMaxVersions(1);
-
-                String hbaseDefaultCC = kylinConfig.getHbaseDefaultCompressionCodec().toLowerCase();
-
-                if (cfDesc.isMemoryHungry()) {
-                    cf.setBlocksize(kylinConfig.getHbaseDefaultBlockSize());
-                } else {
-                    cf.setBlocksize(kylinConfig.getHbaseSmallFamilyBlockSize());
-                }
-
-                switch (hbaseDefaultCC) {
-                case "snappy": {
-                    logger.info("hbase will use snappy to compress data");
-                    cf.setCompressionType(Algorithm.SNAPPY);
-                    break;
-                }
-                case "lzo": {
-                    logger.info("hbase will use lzo to compress data");
-                    cf.setCompressionType(Algorithm.LZO);
-                    break;
-                }
-                case "gz":
-                case "gzip": {
-                    logger.info("hbase will use gzip to compress data");
-                    cf.setCompressionType(Algorithm.GZ);
-                    break;
-                }
-                case "lz4": {
-                    logger.info("hbase will use lz4 to compress data");
-                    cf.setCompressionType(Algorithm.LZ4);
-                    break;
-                }
-                default: {
-                    logger.info("hbase will not user any compression algorithm to compress data");
-                    cf.setCompressionType(Algorithm.NONE);
-                }
-                }
-
-                try {
-                    String encodingStr = kylinConfig.getHbaseDefaultEncoding();
-                    DataBlockEncoding encoding = DataBlockEncoding.valueOf(encodingStr);
-                    cf.setDataBlockEncoding(encoding);
-                } catch (Exception e) {
-                    logger.info("hbase will not user any encoding");
-                    cf.setDataBlockEncoding(DataBlockEncoding.NONE);
-                }
-
-                cf.setInMemory(false);
-                cf.setBloomFilterType(BloomType.NONE);
+                HColumnDescriptor cf = createColumnFamily(kylinConfig, cfDesc.getName(), cfDesc.isMemoryHungry());
                 tableDesc.addFamily(cf);
             }
 
@@ -152,12 +103,105 @@ public class CubeHTableUtil {
             admin.createTable(tableDesc, splitKeys);
             Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
-        } catch (Exception e) {
-            logger.error("Failed to create HTable", e);
-            throw e;
         } finally {
             admin.close();
         }
 
     }
+
+    public static void deleteHTable(TableName tableName) throws IOException {
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
+        HBaseAdmin admin = new HBaseAdmin(conf);
+        try {
+            if (admin.tableExists(tableName)) {
+                logger.info("disabling hbase table " + tableName);
+                admin.disableTable(tableName);
+                logger.info("deleting hbase table " + tableName);
+                admin.deleteTable(tableName);
+            }
+        } finally {
+            admin.close();
+        }
+    }
+    
+    /** create a HTable that has the same performance settings as normal cube table, for benchmark purpose */
+    public static void createBenchmarkHTable(TableName tableName, String cfName) throws IOException {
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
+        HBaseAdmin admin = new HBaseAdmin(conf);
+        try {
+            if (admin.tableExists(tableName)) {
+                logger.info("disabling hbase table " + tableName);
+                admin.disableTable(tableName);
+                logger.info("deleting hbase table " + tableName);
+                admin.deleteTable(tableName);
+            }
+
+            HTableDescriptor tableDesc = new HTableDescriptor(tableName);
+            tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
+            
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            tableDesc.addFamily(createColumnFamily(kylinConfig, cfName, false));
+
+            logger.info("creating hbase table " + tableName);
+            admin.createTable(tableDesc, null);
+            Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
+            logger.info("create hbase table " + tableName + " done.");
+        } finally {
+            admin.close();
+        }
+    }
+
+    public static HColumnDescriptor createColumnFamily(KylinConfig kylinConfig, String cfName, boolean isMemoryHungry) {
+        HColumnDescriptor cf = new HColumnDescriptor(cfName);
+        cf.setMaxVersions(1);
+
+        if (isMemoryHungry) {
+            cf.setBlocksize(kylinConfig.getHbaseDefaultBlockSize());
+        } else {
+            cf.setBlocksize(kylinConfig.getHbaseSmallFamilyBlockSize());
+        }
+
+        String hbaseDefaultCC = kylinConfig.getHbaseDefaultCompressionCodec().toLowerCase();
+        switch (hbaseDefaultCC) {
+        case "snappy": {
+            logger.info("hbase will use snappy to compress data");
+            cf.setCompressionType(Algorithm.SNAPPY);
+            break;
+        }
+        case "lzo": {
+            logger.info("hbase will use lzo to compress data");
+            cf.setCompressionType(Algorithm.LZO);
+            break;
+        }
+        case "gz":
+        case "gzip": {
+            logger.info("hbase will use gzip to compress data");
+            cf.setCompressionType(Algorithm.GZ);
+            break;
+        }
+        case "lz4": {
+            logger.info("hbase will use lz4 to compress data");
+            cf.setCompressionType(Algorithm.LZ4);
+            break;
+        }
+        default: {
+            logger.info("hbase will not user any compression algorithm to compress data");
+            cf.setCompressionType(Algorithm.NONE);
+        }
+        }
+
+        try {
+            String encodingStr = kylinConfig.getHbaseDefaultEncoding();
+            DataBlockEncoding encoding = DataBlockEncoding.valueOf(encodingStr);
+            cf.setDataBlockEncoding(encoding);
+        } catch (Exception e) {
+            logger.info("hbase will not use any encoding");
+            cf.setDataBlockEncoding(DataBlockEncoding.NONE);
+        }
+
+        cf.setInMemory(false);
+        cf.setBloomFilterType(BloomType.NONE);
+        return cf;
+    }
+
 }

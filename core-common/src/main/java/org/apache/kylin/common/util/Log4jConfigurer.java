@@ -18,25 +18,25 @@
 
 package org.apache.kylin.common.util;
 
+import java.io.InputStream;
 import java.util.Enumeration;
 
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  * Created by dongli on 11/24/15.
  */
 public class Log4jConfigurer {
-    private final static String DEFAULT_PATTERN_LAYOUT = "%d{ISO8601} %-5p [%t] %c{2}:%L : %m%n";
     private static boolean INITIALIZED = false;
 
     public static void initLogger() {
         if (!INITIALIZED && !isConfigured()) {
-            org.apache.log4j.BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(DEFAULT_PATTERN_LAYOUT)));
-            LogManager.getRootLogger().setLevel(Level.DEBUG);
+            InputStream is = Log4jConfigurer.class.getClassLoader().getResourceAsStream("kylin-log4j.properties");
+            PropertyConfigurator.configure(is);
+            IOUtils.closeQuietly(is);
         }
         INITIALIZED = true;
     }

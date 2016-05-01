@@ -35,6 +35,7 @@ import java.util.Properties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Log4jConfigurer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,6 +240,21 @@ public class KylinConfig extends KylinConfigBase {
         config.reloadKylinConfig(is);
 
         return config;
+    }
+    
+    public static void setSandboxEnvIfPossible() {
+        File dir1 = new File("../../kylin/examples/test_case_data/sandbox");
+        File dir2 = new File("../kylin/examples/test_case_data/sandbox");
+        
+        if (dir1.exists()) {
+            logger.info("Setting sandbox env, KYLIN_CONF=" + dir1.getAbsolutePath());
+            ClassUtil.addClasspath(dir1.getAbsolutePath());
+            System.setProperty(KylinConfig.KYLIN_CONF, dir1.getAbsolutePath());
+        } else if (dir2.exists()) {
+            logger.info("Setting sandbox env, KYLIN_CONF=" + dir2.getAbsolutePath());
+            ClassUtil.addClasspath(dir2.getAbsolutePath());
+            System.setProperty(KylinConfig.KYLIN_CONF, dir2.getAbsolutePath());
+        }
     }
 
     // ============================================================================

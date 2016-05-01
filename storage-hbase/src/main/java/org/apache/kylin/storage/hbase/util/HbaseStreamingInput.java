@@ -42,6 +42,7 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -224,7 +225,7 @@ public class HbaseStreamingInput {
     }
 
     private static HConnection getConnection() throws IOException {
-        return HConnectionManager.createConnection(HBaseConfiguration.create());
+        return HConnectionManager.createConnection(HBaseConnection.getCurrentHBaseConfiguration());
     }
 
     private static String formatTime(long time) {
