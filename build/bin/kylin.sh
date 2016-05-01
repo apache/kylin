@@ -201,10 +201,10 @@ then
 
 elif [ "$1" = "diag" ]
 then
-    project="$2"
-    if [ -z "$project" ]
+    patient="$2"
+    if [ -z "$patient" ]
     then
-        echo "You need to specify a project for diagnosis."
+        echo "You need to specify a Project or Job Id for diagnosis."
         exit 1
     fi
 
@@ -216,7 +216,12 @@ then
     fi
 
     export HBASE_CLASSPATH=${KYLIN_HOME}/lib/*
-    exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.DiagnosisInfoCLI -project $project -destDir $destDir
+
+    if [ ${#patient} -gt 31 ]; then
+        exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.JobDiagnosisInfoCLI -jobId $patient -destDir $destDir
+    else
+        exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.DiagnosisInfoCLI -project $patient -destDir $destDir
+    fi
     exit 0
 
 # tool command

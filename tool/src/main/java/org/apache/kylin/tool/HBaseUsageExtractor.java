@@ -65,6 +65,7 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
     public HBaseUsageExtractor() {
         super();
+        packageType = "hbase";
 
         OptionGroup realizationOrProject = new OptionGroup();
         realizationOrProject.addOption(OPTION_CUBE);

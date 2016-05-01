@@ -40,6 +40,7 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
 
     public ClientEnvExtractor() throws IOException {
         super();
+
         packageType = "client";
         kylinConfig = KylinConfig.getInstanceFromEnv();
         cmdExecutor = kylinConfig.getCliCommandExecutor();

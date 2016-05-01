@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,13 +93,6 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
             ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
             clientEnvExtractor.execute(clientArgs);
-        }
-
-        // export commit id
-        try {
-            FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), "commit_SHA1"), exportDir);
-        } catch (Exception e) {
-            logger.warn("Error in export commit id.", e);
         }
 
         // export logs

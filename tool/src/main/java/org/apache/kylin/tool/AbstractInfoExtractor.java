@@ -20,6 +20,7 @@
 package org.apache.kylin.tool;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -28,6 +29,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
@@ -48,6 +50,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     private static final Option OPTION_SUBMODULE = OptionBuilder.withArgName("submodule").hasArg().isRequired(false).withDescription("specify whether this is a submodule of other CLI tool").create("submodule");
 
     private static final String DEFAULT_PACKAGE_TYPE = "base";
+    private static final String COMMIT_SHA1_FILE = "commit_SHA1";
 
     protected final Options options;
 
@@ -115,18 +118,16 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         }
     }
 
-    private void dumpBasicDiagInfo() {
-        try {
-            String output = KylinVersion.getKylinClientInformation() + "\n";
-            FileUtils.writeStringToFile(new File(exportDir, "kylin_env"), output);
+    private void dumpBasicDiagInfo() throws IOException {
+        FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), COMMIT_SHA1_FILE), exportDir);
 
-            StringBuilder basicSb = new StringBuilder();
-            basicSb.append("MetaStoreID: ").append(ToolUtil.getHBaseMetaStoreId()).append("\n");
-            basicSb.append("PackageType: ").append(packageType.toUpperCase()).append("\n");
-            FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString());
-        } catch (Exception e) {
-            logger.warn("Error in export process info.", e);
-        }
+        String output = KylinVersion.getKylinClientInformation() + "\n";
+        FileUtils.writeStringToFile(new File(exportDir, "kylin_env"), output);
+
+        StringBuilder basicSb = new StringBuilder();
+        basicSb.append("MetaStoreID: ").append(ToolUtil.getHBaseMetaStoreId()).append("\n");
+        basicSb.append("PackageType: ").append(packageType.toUpperCase()).append("\n");
+        FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString());
     }
 
     protected abstract void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception;
