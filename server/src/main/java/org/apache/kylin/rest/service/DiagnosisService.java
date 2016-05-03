@@ -63,4 +63,11 @@ public class DiagnosisService extends BasicService {
         jobInfoExtractor.execute(args);
         return jobInfoExtractor.getExportDest();
     }
+
+    public static void main(String args1[]) {
+        String[] args = { "-project", "learn_kylin", "-destDir", Files.createTempDir().getAbsolutePath() };
+        logger.info("DiagnosisInfoCLI args: " + args);
+        DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
+        diagnosisInfoCli.execute(args);
+    }
 }
