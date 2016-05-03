@@ -49,9 +49,7 @@ public class FixedHLLCodec extends FixedLenMeasureCodec<HyperLogLogPlusCounter> 
     @Override
     public HyperLogLogPlusCounter valueOf(String value) {
         current.clear();
-        if (value == null)
-            current.add("__nUlL__");
-        else
+        if (value != null)
             current.add(value.getBytes());
         return current;
     }

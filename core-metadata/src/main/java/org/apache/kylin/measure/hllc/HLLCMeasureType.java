@@ -97,8 +97,10 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
             public HyperLogLogPlusCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 HyperLogLogPlusCounter hllc = current;
                 hllc.clear();
-                for (String v : values)
-                    hllc.add(v == null ? "__nUlL__" : v);
+                for (String v : values) {
+                    if (v != null)
+                        hllc.add(v);
+                }
                 return hllc;
             }
         };
