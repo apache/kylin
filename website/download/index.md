@@ -18,9 +18,7 @@ For convenience, there’s binary package also available:
 * [apache-kylin-1.5.1-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.1/apache-kylin-1.5.1-bin.tar.gz)
 * [Installation Guide](http://kylin.apache.org/docs15/install)
 
-__Special Binary Package (for running on HBase 1.x)__
-As there are more and more HBase 1.x deployments, an binary snapshot build for HBase 1.x is provided; 
-Also, please aware this is not a formal release (rebasing latest changings on KYLIN master branch every couple of weeks), and it is not fully tested:
+__Binary Package (for running on HBase 1.x)__
 
 * [apache-kylin-1.5.1-HBase1.1.3-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.1/apache-kylin-1.5.1-HBase1.1.3-bin.tar.gz)
 * Git commit [c6868990752864822ae3fd72f13d223f18eaa979](https://github.com/apache/kylin/commit/c6868990752864822ae3fd72f13d223f18eaa979) 
