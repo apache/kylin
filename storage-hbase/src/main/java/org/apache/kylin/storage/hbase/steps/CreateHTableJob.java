@@ -287,21 +287,24 @@ public class CreateHTableJob extends AbstractHadoopJob {
             fs.mkdirs(outputFolder);
         }
 
-        float hfileSizeMB = kylinConfig.getHBaseHFileSizeGB() * 1024;
-
-        if (kylinConfig.isDevEnv()) {
-            hfileSizeMB = hfileSizeMB/1024;
+        final float hfileSizeGB = kylinConfig.getHBaseHFileSizeGB();
+        float hfileSizeMB = hfileSizeGB * 1024;
+        if (hfileSizeMB > mbPerRegion) {
+            hfileSizeMB = mbPerRegion;
         }
 
+        if (hfileSizeMB > 0.0 && kylinConfig.isDevEnv()) {
+            hfileSizeMB = mbPerRegion / 2;
+        }
         int compactionThreshold = Integer.valueOf(HBaseConnection.getCurrentHBaseConfiguration().get("hbase.hstore.compactionThreshold", "3"));
-        if (hfileSizeMB * compactionThreshold < mbPerRegion) {
+        logger.info("hbase.hstore.compactionThreshold is " + compactionThreshold);
+        if (hfileSizeMB > 0.0  && hfileSizeMB * compactionThreshold < mbPerRegion) {
             hfileSizeMB = mbPerRegion / compactionThreshold;
         }
 
         if (hfileSizeMB <= 0) {
             hfileSizeMB = mbPerRegion;
         }
-
         logger.info("hfileSizeMB:" + hfileSizeMB);
         final Path hfilePartitionFile = new Path(outputFolder, "part-r-00000_hfile");
         short regionCount = (short) innerRegionSplits.size();

@@ -411,7 +411,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public float getHBaseHFileSizeGB() {
-        return Float.parseFloat(getOptional("kylin.hbase.hfile.size.gb", "5.0"));
+        return Float.parseFloat(getOptional("kylin.hbase.hfile.size.gb", "2.0"));
     }
 
     public int getScanThreshold() {
@@ -511,7 +511,7 @@ abstract public class KylinConfigBase implements Serializable {
      * @return
      */
     public float getKylinHBaseRegionCut() {
-        return Float.valueOf(getOptional("kylin.hbase.region.cut", "1.0"));
+        return Float.valueOf(getOptional("kylin.hbase.region.cut", "5.0"));
     }
 
     public int getHBaseScanMaxResultSize() {
