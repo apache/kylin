@@ -50,6 +50,8 @@ public class ToolUtil {
             final String metaStoreName = KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
             final HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(metaStoreName));
             return desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
+        } catch (Exception e) {
+            return null;
         }
     }
 
