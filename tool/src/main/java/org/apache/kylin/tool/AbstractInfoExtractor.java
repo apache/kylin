@@ -119,7 +119,11 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     }
 
     private void dumpBasicDiagInfo() throws IOException {
-        FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), COMMIT_SHA1_FILE), exportDir);
+        try {
+            FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), COMMIT_SHA1_FILE), exportDir);
+        } catch (IOException e) {
+            logger.warn("Failed to copy commit_SHA1 file.", e);
+        }
 
         String output = KylinVersion.getKylinClientInformation() + "\n";
         FileUtils.writeStringToFile(new File(exportDir, "kylin_env"), output);
