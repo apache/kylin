@@ -100,7 +100,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 }
             }
 
-            if (memoryHungryMeasures > 4 || (kylinConf.isDevEnv() && memoryHungryMeasures > 0)) {
+            if (memoryHungryMeasures > 0) {
                 alg = AlgorithmEnum.LAYER;
             } else if ("random".equalsIgnoreCase(algPref)) { // for testing
                 alg = new Random().nextBoolean() ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
