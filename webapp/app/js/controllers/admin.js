@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, $modal, SweetAlert,kylinConfig) {
+KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, $modal, SweetAlert,kylinConfig,ProjectModel,$window) {
   $scope.configStr = "";
   $scope.envStr = "";
 
@@ -246,6 +246,17 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       });
     }
   };
+
+  $scope.downloadBadQueryFiles = function(){
+    var _project = ProjectModel.selectedProject;
+    if (_project == null){
+      SweetAlert.swal('', "No project selected.", 'info');
+      return;
+    }
+    var downloadUrl = Config.service.url + 'diag/project/'+_project+'/download';
+    $window.open(downloadUrl);
+  }
+
 
   $scope.getEnv();
   $scope.getConfig();

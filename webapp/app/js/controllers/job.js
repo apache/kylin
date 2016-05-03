@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,jobConfig,JobList) {
+    .controller('JobCtrl', function ($scope, $q, $routeParams, $interval, $modal, ProjectService, MessageService, JobService,SweetAlert,loadingRequest,UserService,jobConfig,JobList,$window) {
 
         $scope.jobList = JobList;
         JobList.removeAll();
@@ -40,6 +40,17 @@ KylinApp
         };
 
 
+
+        $scope.tabs=[
+          {
+            "title":"Jobs",
+            "active":true
+          },
+          {
+            "title": "Slow Queries",
+            "active": false
+          }
+        ]
 
         // projectName from page ctrl
         $scope.state = {loading: false, refreshing: false, filterAttr: 'last_modified', filterReverse: true, reverseColumn: 'last_modified', projectName:$scope.projectModel.selectedProject};
@@ -165,6 +176,15 @@ KylinApp
               }
             });
         }
+
+      $scope.diagnosisJob =function(job) {
+        if (!job){
+          SweetAlert.swal('', "No job selected.", 'info');
+          return;
+        }
+        var downloadUrl = Config.service.url + 'diag/job/'+job.uuid+'/download';
+        $window.open(downloadUrl);
+      }
 
         $scope.openModal = function () {
             if (angular.isDefined($scope.state.selectedStep)) {

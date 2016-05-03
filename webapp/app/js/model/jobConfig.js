@@ -38,6 +38,15 @@ KylinApp.constant('jobConfig', {
     {attr: 'progress', name: 'Progress'},
     {attr: 'last_modified', name: 'Last Modified Time'},
     {attr: 'duration', name: 'Duration'}
-  ]
+  ],
+  queryitems: [
+  {attr: 'server', name: 'Server'},
+  {attr: 'sql', name: 'Sql'},
+  {attr: 'adj', name: 'Description'},
+  {attr: 'running_seconds', name: 'Running Seconds'},
+  {attr: 'start_time', name: 'Start Time'},
+  {attr: 'last_modified', name: 'Last Modified'},
+  {attr: 'thread', name: 'Thread'}
+]
 
 });

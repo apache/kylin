@@ -1,0 +1,53 @@
+
+<div class="row" style="margin-top:15px;" ng-controller="BadQueryCtrl">
+
+  <!--No Job-->
+  <div ng-if="!bqstate.loading && badQueryList.length==0">
+    <div ng-if="projectModel.selectedProject==null" no-result text="No project selected"></div>
+    <div ng-if="projectModel.selectedProject!==null" no-result text="No Slow Query."></div>
+  </div>
+  <!--Loading Jobs-->
+  <div ng-if="bqstate.loading">
+    <loading text="Loading Queries ..."></loading>
+  </div>
+  <!--Jobs Table Content-->
+  <table ng-if="badQueryList.length>0" class="table table-striped table-bordered table-hover dataTable no-footer">
+    <thead>
+    <tr style="cursor: pointer">
+      <th ng-repeat="queryitem in jobConfig.queryitems"
+          ng-click="bqstate.filterAttr= queryitem.attr;bqstate.reverseColumn=queryitem.attr;bqstate.filterReverse=!bqstate.filterReverse; ">
+        {{queryitem.name}}
+        <i ng-if="bqstate.reverseColumn!= queryitem.attr"
+           class="fa fa-unsorted"></i>
+        <i ng-if="bqstate.reverseColumn== queryitem.attr && !bqstate.filterReverse"
+           class="fa fa-sort-asc"></i>
+        <i ng-if="bqstate.reverseColumn== queryitem.attr && bqstate.filterReverse"
+           class="fa fa-sort-desc"></i>
+      </th>
+    </tr>
+    </thead>
+    <tbody  class="odd table table-striped table-bordered table-hover dataTable no-footer">
+    <tr
+      ng-repeat="bquery in badQueryList | orderObjectBy:bqstate.filterAttr:bqstate.filterReverse"
+      ng-class="{accordion:true}" ng-click="bqstate.selectedQuery = bquery"
+      style="cursor: pointer"
+      class="{{bquery==bqstate.selectedQuery? 'tr-highlight': ''}} table-bordered">
+      <td style="max-width: 350px;word-wrap: break-word;word-break: normal;">
+        {{bquery.server}}
+      </td>
+      <td>{{bquery.sql}}</td>
+      <td>
+        {{bquery.adj}}
+      </td>
+      <td>{{bquery.running_seconds + '(s)'}}</td>
+      <td>{{bquery.start_time |utcToConfigTimeZone}}</td>
+      <td>
+        {{bquery.last_modified |utcToConfigTimeZone}}
+      </td>
+      <td>
+        {{bquery.thread}}
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
