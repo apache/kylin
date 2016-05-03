@@ -160,6 +160,7 @@ public class BuildCubeWithEngine {
         KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(1.0f);
         testInner();
         testLeft();
+        testViewAsLookup();
         KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(0.0f);
     }
 
@@ -187,6 +188,12 @@ public class BuildCubeWithEngine {
         String[] testCase = new String[] { "testLeftJoinCubeWithSlr", "testLeftJoinCubeWithoutSlr", "testLeftJoinCubeWithView" };
         runTestAndAssertSucceed(testCase);
     }
+
+    private void testViewAsLookup() throws Exception {
+        String[] testCase = new String[] { "testLeftJoinCubeWithView" };
+        runTestAndAssertSucceed(testCase);
+    }
+
 
     private void runTestAndAssertSucceed(String[] testCase) throws Exception {
         ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
