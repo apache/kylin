@@ -134,17 +134,17 @@ public class MapReduceExecutable extends AbstractExecutable {
             final StringBuilder output = new StringBuilder();
             final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, output);
 
-            final String restStatusCheckUrl = getRestStatusCheckUrl(job, context.getConfig());
-            if (restStatusCheckUrl == null) {
-                logger.error("restStatusCheckUrl is null");
-                return new ExecuteResult(ExecuteResult.State.ERROR, "restStatusCheckUrl is null");
-            }
-            String mrJobId = hadoopCmdOutput.getMrJobId();
-            boolean useKerberosAuth = context.getConfig().isGetJobStatusWithKerberos();
-            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
+//            final String restStatusCheckUrl = getRestStatusCheckUrl(job, context.getConfig());
+//            if (restStatusCheckUrl == null) {
+//                logger.error("restStatusCheckUrl is null");
+//                return new ExecuteResult(ExecuteResult.State.ERROR, "restStatusCheckUrl is null");
+//            }
+//            String mrJobId = hadoopCmdOutput.getMrJobId();
+//            boolean useKerberosAuth = context.getConfig().isGetJobStatusWithKerberos();
+//            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
             while (!isDiscarded()) {
-                JobStepStatusEnum newStatus = statusChecker.checkStatus();
+                JobStepStatusEnum newStatus = HadoopJobStatusChecker.checkStatus(job, output);
                 if (status == JobStepStatusEnum.KILLED) {
                     executableManager.updateJobOutput(getId(), ExecutableState.ERROR, Collections.<String, String> emptyMap(), "killed by admin");
                     return new ExecuteResult(ExecuteResult.State.FAILED, "killed by admin");
