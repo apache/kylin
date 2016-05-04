@@ -19,7 +19,9 @@
 package org.apache.kylin.source.hive;
 
 import java.io.IOException;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -29,6 +31,7 @@ import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -43,6 +46,7 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealizationSegment;
 
 public class HiveMRInput implements IMRInput {
@@ -140,7 +144,6 @@ public class HiveMRInput implements IMRInput {
 
 
         public ShellExecutable createLookupHiveViewMaterializationStep(String jobId) {
-            boolean findHiveViewLookUpTable = false;
             ShellExecutable step = new ShellExecutable();;
             step.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP);
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
@@ -150,11 +153,20 @@ public class HiveMRInput implements IMRInput {
             String cubeName = seg.getRealization().getName();
             CubeDesc cubeDesc = cubeMgr.getCube(cubeName).getDescriptor();
 
+            final Set<TableDesc> lookupViewsTables = Sets.newHashSet();
+            for(DimensionDesc dimensionDesc : cubeDesc.getDimensions()) {
+                TableDesc tableDesc = dimensionDesc.getTableDesc();
+                if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
+                    lookupViewsTables.add(tableDesc);
+                }
+            }
+            if(lookupViewsTables.size() == 0) {
+                return null;
+            }
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             hiveCmdBuilder.addStatement(useDatabaseHql);
-            for(TableDesc lookUpTableDesc : cubeDesc.getLookupTableDescs()) {
+            for(TableDesc lookUpTableDesc : lookupViewsTables) {
                 if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(lookUpTableDesc.getTableType())) {
-                    findHiveViewLookUpTable = true;
                     StringBuilder createIntermediateTableHql = new StringBuilder();
                     createIntermediateTableHql.append("DROP TABLE IF EXISTS " + lookUpTableDesc.getMaterializedName() + ";\n");
                     createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS " +
@@ -165,17 +177,12 @@ public class HiveMRInput implements IMRInput {
                     hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
                     hiveViewIntermediateTables = hiveViewIntermediateTables + lookUpTableDesc.getMaterializedName() + ";";
                 }
-                if (findHiveViewLookUpTable) {
-                    hiveViewIntermediateTables= hiveViewIntermediateTables.substring(0, hiveViewIntermediateTables.length()-1);
-                }
             }
 
-            if(findHiveViewLookUpTable) {
-                step.setCmd(hiveCmdBuilder.build());
-                return step;
-            } else {
-                return null;
-            }
+            hiveViewIntermediateTables = hiveViewIntermediateTables.substring(0, hiveViewIntermediateTables.length() - 1);
+
+            step.setCmd(hiveCmdBuilder.build());
+            return step;
         }
 
         @Override
