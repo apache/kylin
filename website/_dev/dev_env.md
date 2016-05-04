@@ -22,7 +22,7 @@ ambari-agent start
 ambari-server start
 {% endhighlight %}
 	
-With both command successfully run you can go to ambari home page at <http://yoursandboxip:8080> (user:admin,password:admin) to check everything's status. By default ambari disables Hbase, you'll need manually start the `Hbase` service.
+With both command successfully run you can go to ambari home page at <http://yoursandboxip:8080> (user:admin,password:admin) to check everything's status. By default ambari disables HBase, you'll need manually start the `HBase` service.
 ![start hbase in ambari](https://raw.githubusercontent.com/KylinOLAP/kylinolap.github.io/master/docs/installation/starthbase.png)
 
 For other hadoop distribution, basically start the hadoop cluster, make sure HDFS, YARN, Hive, HBase are running.
@@ -63,31 +63,32 @@ Local configuration must be modified to point to your hadoop sandbox (or CLI) ma
 * In **examples/test_case_data/sandbox/kylin.properties**
    * Find `sandbox` and replace with your hadoop hosts (if you're using HDP sandbox, this can be skipped)
    * Find `kylin.job.run.as.remote.cmd` and change it to "true" (in code repository the default is false, which assume running it on hadoop CLI)
-   * Find `kylin.job.remote.cli.username` and `kylin.job.remote.cli.password`, fill in the user name and password used to login hadoop cluster for hadoop command execution; If you're using HDP sandbox, the default username is "root" and password is "hadoop".
+   * Find `kylin.job.remote.cli.username` and `kylin.job.remote.cli.password`, fill in the user name and password used to login hadoop cluster for hadoop command execution; If you're using HDP sandbox, the default username is `root` and password is `hadoop`.
 
 * In **examples/test_case_data/sandbox**
-   * For each configuration xml file, find all occurrence of `sandbox` and replace with your hadoop hosts; (if you're using HDP sandbox, this can be skipped)
+   * For each configuration xml file, find all occurrences of `sandbox` and `sandbox.hortonworks.com`, replace with your hadoop hosts; (if you're using HDP sandbox, this can be skipped)
 
 An alternative to the host replacement is updating your `hosts` file to resolve `sandbox` and `sandbox.hortonworks.com` to the IP of your sandbox machine.
 
 ### Run unit tests
+Run unit tests to validate basic function of each classes.
 
-Run a end-to-end cube building test, these special test cases will populate some sample cubes in your metadata store and build them ready.
+{% highlight Groff markup %}
+mvn test -fae -Dhdp.version=<hdp-version> -P sandbox
+{% endhighlight %}
+
+### Run integration tests
+Before actually running integration tests, need to run some end-to-end cube building jobs for test data population, in the meantime validating cubing process. Then comes with the integration tests.
+
 It might take a while (maybe one hour), please keep patient.
  
 {% highlight Groff markup %}
-mvn test -Dtest=org.apache.kylin.job.BuildCubeWithEngineTest -DfailIfNoTests=false -Dhdp.version=<hdp-version> -P sandbox
-	
-mvn test -Dtest=org.apache.kylin.job.BuildIIWithEngineTest -DfailIfNoTests=false -Dhdp.version=<hdp-version> -P sandbox
-{% endhighlight %}
-	
-Run other tests, the end-to-end cube building test is exclueded
-
-{% highlight Groff markup %}
-mvn test -fae -P sandbox
+mvn verify -fae -Dhdp.version=<hdp-version> -P sandbox
 {% endhighlight %}
 
-### Launch Kylin Web Server
+To learn more about test, please refer to [How to test](/development/howto_test.html).
+
+### Launch Kylin Web Server locally
 
 Copy server/src/main/webapp/WEB-INF to webapp/app/WEB-INF 
 
@@ -105,10 +106,9 @@ bower --allow-root install
 
 In IDE, launch `org.apache.kylin.rest.DebugTomcat` with working directory set to the /server folder. (By default Kylin server will listen on 7070 port; If you want to use another port, please specify it as a parameter when run `DebugTomcat)
 
-Check Kylin Web available at http://localhost:7070/kylin (user:ADMIN,password:KYLIN)
+Check Kylin Web at `http://localhost:7070/kylin` (user:ADMIN, password:KYLIN)
 
-For IntelliJ IDEA users, need modify "server/kylin-server.iml" file, replace all "PROVIDED" to "COMPILE", otherwise an "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" error may be thrown;
-
+For IntelliJ IDEA users, need modify "server/kylin-server.iml" file, replace all "PROVIDED" to "COMPILE", otherwise an "java.lang.NoClassDefFoundError: org/apache/catalina/LifecycleListener" error may be thrown.
 
 ## Setup IDE code formatter
 
