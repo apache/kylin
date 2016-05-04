@@ -66,6 +66,7 @@ public class MassInValueProviderImpl implements MassInValueProvider {
             try {
                 synchronized (hdfs_caches) {
 
+                    // directly create hbase configuration here due to no KYLIN_CONF definition.
                     fileSystem = FileSystem.get(HBaseConfiguration.create());
 
                     long modificationTime = fileSystem.getFileStatus(new Path(filterResourceIdentifier)).getModificationTime();
