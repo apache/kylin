@@ -27,12 +27,12 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.metadata.filter.UDF.MassInValueProvider;
 import org.apache.kylin.metadata.filter.function.Functions;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,8 +65,8 @@ public class MassInValueProviderImpl implements MassInValueProvider {
             FileSystem fileSystem = null;
             try {
                 synchronized (hdfs_caches) {
-                    
-                    fileSystem = FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration());
+
+                    fileSystem = FileSystem.get(HBaseConfiguration.create());
 
                     long modificationTime = fileSystem.getFileStatus(new Path(filterResourceIdentifier)).getModificationTime();
                     Pair<Long, Set<ByteArray>> cached = hdfs_caches.getIfPresent(filterResourceIdentifier);
@@ -99,7 +99,7 @@ public class MassInValueProviderImpl implements MassInValueProvider {
 
                     logger.info("Mass In values constructed after " + stopwatch.elapsedMillis() + " millis, containing " + ret.size() + " entries");
                 }
-                
+
             } catch (IOException e) {
                 throw new RuntimeException("error when loading the mass in values", e);
             }
