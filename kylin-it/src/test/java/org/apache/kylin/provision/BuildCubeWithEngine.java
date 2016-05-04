@@ -185,7 +185,7 @@ public class BuildCubeWithEngine {
     }
 
     private void testLeft() throws Exception {
-        String[] testCase = new String[] { "testLeftJoinCubeWithSlr", "testLeftJoinCubeWithoutSlr", "testLeftJoinCubeWithView" };
+        String[] testCase = new String[] { "testLeftJoinCubeWithSlr", "testLeftJoinCubeWithoutSlr" };
         runTestAndAssertSucceed(testCase);
     }
 
