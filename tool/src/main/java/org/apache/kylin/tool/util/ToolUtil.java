@@ -17,7 +17,7 @@
  *
  */
 
-package org.apache.kylin.tool;
+package org.apache.kylin.tool.util;
 
 import java.io.File;
 import java.io.IOException;

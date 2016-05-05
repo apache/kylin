@@ -19,7 +19,6 @@
 package org.apache.kylin.tool;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -28,7 +27,6 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -38,6 +36,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
+import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -51,6 +50,7 @@ import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
+import org.apache.kylin.tool.util.ResourceStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,35 +178,46 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         }
 
         try {
-            ResourceStore src = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-            ResourceStore dst = ResourceStore.getStore(KylinConfig.createInstanceFromUri(dest));
+            KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
+            KylinConfig dstConfig = KylinConfig.createInstanceFromUri(dest);
 
-            for (String path : requiredResources) {
-                ResourceTool.copyR(src, dst, path);
+            ResourceStoreUtil.copy(srcConfig, dstConfig, requiredResources);
+
+            try {
+                ResourceStoreUtil.copy(srcConfig, dstConfig, optionalResources);
+            } catch (Exception e) {
+                logger.warn("Exception when copying optional resource {}. May be caused by resource missing. Ignore it.");
             }
 
-            for (String path : optionalResources) {
-                try {
-                    ResourceTool.copyR(src, dst, path);
-                } catch (Exception e) {
-                    logger.warn("Exception when copying optional resource {}. May be caused by resource missing. Ignore it.");
-                }
-            }
-
+            ResourceStore dstStore = ResourceStore.getStore(dstConfig);
             for (CubeInstance cube : cubesToTrimAndSave) {
-                CubeInstance trimmedCube = CubeInstance.getCopyOf(cube);
+                CubeInstance trimmedCube = copyCubeInstance(cube);
                 trimmedCube.getSegments().clear();
                 trimmedCube.setUuid(cube.getUuid());
-                dst.putResource(trimmedCube.getResourcePath(), trimmedCube, CubeManager.CUBE_SERIALIZER);
+                dstStore.putResource(trimmedCube.getResourcePath(), trimmedCube, CubeManager.CUBE_SERIALIZER);
             }
 
-        } catch (IOException e) {
-            throw new RuntimeException("IOException", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception", e);
         }
     }
 
     private IRealization getRealization(RealizationEntry realizationEntry) {
         return realizationRegistry.getRealization(realizationEntry.getType(), realizationEntry.getRealization());
+    }
+
+    // do not call CubeInstance.getCopyOf() to keep backward compatible with 1.3.x
+    private static CubeInstance copyCubeInstance(CubeInstance cubeInstance) {
+        CubeInstance newCube = new CubeInstance();
+        newCube.setName(cubeInstance.getName());
+        newCube.setSegments(cubeInstance.getSegments());
+        newCube.setDescName(cubeInstance.getDescName());
+        newCube.setStatus(cubeInstance.getStatus());
+        newCube.setOwner(cubeInstance.getOwner());
+        newCube.setCost(cubeInstance.getCost());
+        newCube.setCreateTimeUTC(System.currentTimeMillis());
+        newCube.updateRandomUuid();
+        return newCube;
     }
 
     //    private void dealWithStreaming(CubeInstance cube) {
@@ -218,6 +229,10 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     //            }
     //        }
     //    }
+
+    private static String concatCubeDescResourcePath(String descName) {
+        return ResourceStore.CUBE_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
+    }
 
     private void retrieveResourcePath(IRealization realization) {
 
@@ -238,7 +253,9 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             }
 
             addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
-            addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
+
+            // backward compatible with 1.3
+            addRequired(concatCubeDescResourcePath(cubeDesc.getName()));
 
             if (includeSegments) {
                 addRequired(CubeInstance.concatResourcePath(cube.getName()));
