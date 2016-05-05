@@ -50,7 +50,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     private static final Option OPTION_SUBMODULE = OptionBuilder.withArgName("submodule").hasArg().isRequired(false).withDescription("specify whether this is a submodule of other CLI tool").create("submodule");
 
     private static final String DEFAULT_PACKAGE_TYPE = "base";
-    private static final String COMMIT_SHA1_FILE = "commit_SHA1";
+    private static final String[] COMMIT_SHA1_FILES = {"commit_SHA1", "commit.sha1"};
 
     protected final Options options;
 
@@ -120,7 +120,11 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
 
     private void dumpBasicDiagInfo() throws IOException {
         try {
-            FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), COMMIT_SHA1_FILE), exportDir);
+            for (String commitSHA1File : COMMIT_SHA1_FILES) {
+                if (new File(commitSHA1File).exists()) {
+                    FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), commitSHA1File), exportDir);
+                }
+            }
         } catch (IOException e) {
             logger.warn("Failed to copy commit_SHA1 file.", e);
         }

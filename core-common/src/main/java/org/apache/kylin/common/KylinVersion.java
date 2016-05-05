@@ -31,7 +31,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 public class KylinVersion {
-    private static final String COMMIT_SHA1 = "commit_SHA1";
+    private static final String COMMIT_SHA1_v15 = "commit_SHA1";
+    private static final String COMMIT_SHA1_v13 = "commit.sha1";
 
     public int major;
     public int minor;
@@ -140,7 +141,10 @@ public class KylinVersion {
 
     public static String getGitCommitInfo() {
         try {
-            File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1);
+            File commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v15);
+            if (!commitFile.exists()) {
+                commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v13);
+            }
             List<String> lines = FileUtils.readLines(commitFile);
             StringBuilder sb = new StringBuilder();
             for (String line : lines) {

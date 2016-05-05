@@ -88,7 +88,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private HybridManager hybridManager;
     private CubeManager cubeManager;
     private StreamingManager streamingManager;
-    private KafkaConfigManager kafkaConfigManager;
     private CubeDescManager cubeDescManager;
     private ExecutableDao executableDao;
     private RealizationRegistry realizationRegistry;
@@ -131,8 +130,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         hybridManager = HybridManager.getInstance(kylinConfig);
         cubeManager = CubeManager.getInstance(kylinConfig);
         cubeDescManager = CubeDescManager.getInstance(kylinConfig);
-        streamingManager = StreamingManager.getInstance(kylinConfig);
-        kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
         executableDao = ExecutableDao.getInstance(kylinConfig);
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
         badQueryHistoryManager = BadQueryHistoryManager.getInstance(kylinConfig);
@@ -217,6 +214,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     }
 
     private void dealWithStreaming(CubeInstance cube) {
+        streamingManager = StreamingManager.getInstance(kylinConfig);
         for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
             if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getFactTable())) {
                 addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
@@ -236,7 +234,11 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             String modelName = cubeDesc.getModelName();
             DataModelDesc modelDesc = metadataManager.getDataModelDesc(modelName);
 
-            dealWithStreaming(cube);
+            try {
+                dealWithStreaming(cube);
+            } catch (Exception e) {
+                logger.warn("Failed to deal with streaming.", e);
+            }
 
             for (String tableName : modelDesc.getAllTables()) {
                 addRequired(TableDesc.concatResourcePath(tableName));
