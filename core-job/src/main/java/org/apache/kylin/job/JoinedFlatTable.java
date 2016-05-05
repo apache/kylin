@@ -55,6 +55,36 @@ public class JoinedFlatTable {
         return storageDfsDir + "/" + intermediateTableDesc.getTableName();
     }
 
+    public static String generateHiveSetStatements(JobEngineConfig engineConfig) throws IOException {
+        StringBuilder buffer = new StringBuilder();
+        File hadoopPropertiesFile = new File(engineConfig.getHiveConfFilePath());
+
+        if (hadoopPropertiesFile.exists()) {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder;
+            Document doc;
+            try {
+                builder = factory.newDocumentBuilder();
+                doc = builder.parse(hadoopPropertiesFile);
+                NodeList nl = doc.getElementsByTagName("property");
+                for (int i = 0; i < nl.getLength(); i++) {
+                    String name = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
+                    String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
+                    if (!name.equals("tmpjars")) {
+                        buffer.append("SET " + name + "=" + value + ";\n");
+                    }
+                }
+
+            } catch (ParserConfigurationException e) {
+                throw new IOException(e);
+            } catch (SAXException e) {
+                throw new IOException(e);
+            }
+        }
+
+        return buffer.toString();
+    }
+
     public static String generateCreateTableStatement(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir) {
         StringBuilder ddl = new StringBuilder();
 
@@ -86,35 +116,14 @@ public class JoinedFlatTable {
 
     public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, JobEngineConfig engineConfig) throws IOException {
         StringBuilder sql = new StringBuilder();
-
-        File hadoopPropertiesFile = new File(engineConfig.getHiveConfFilePath());
-
-        if (hadoopPropertiesFile.exists()) {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder;
-            Document doc;
-            try {
-                builder = factory.newDocumentBuilder();
-                doc = builder.parse(hadoopPropertiesFile);
-                NodeList nl = doc.getElementsByTagName("property");
-                for (int i = 0; i < nl.getLength(); i++) {
-                    String name = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
-                    String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
-                    if (name.equals("tmpjars") == false) {
-                        sql.append("SET " + name + "=" + value + ";").append("\n");
-                    }
-                }
-
-            } catch (ParserConfigurationException e) {
-                throw new IOException(e);
-            } catch (SAXException e) {
-                throw new IOException(e);
-            }
-        }
-
+        sql.append(generateHiveSetStatements(engineConfig));
         sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName() + " " + generateSelectDataStatement(intermediateTableDesc) + ";").append("\n");
-
         return sql.toString();
+    }
+
+    public static String generateRedistributeDataStatement(IJoinedFlatTableDesc intermediateTableDesc) {
+        final String tableName = intermediateTableDesc.getTableName();
+        return "INSERT OVERWRITE TABLE " + tableName + " SELECT * FROM " + tableName + " distribute by rand();\n";
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc intermediateTableDesc) {
@@ -133,6 +142,10 @@ public class JoinedFlatTable {
         appendJoinStatement(intermediateTableDesc, sql, tableAliasMap);
         appendWhereStatement(intermediateTableDesc, sql, tableAliasMap);
         return sql.toString();
+    }
+
+    public static String generateSelectRowCountStatement(IJoinedFlatTableDesc intermediateTableDesc, String outputDir) {
+        return "INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + intermediateTableDesc.getTableName() + ";\n";
     }
 
     private static Map<String, String> buildTableAliasMap(DataModelDesc dataModelDesc) {
