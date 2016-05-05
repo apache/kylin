@@ -81,6 +81,29 @@
                 </div>
             </div>
 
+          <div class="form-group">
+            <div class="row">
+              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                <b>Notification Status</b>
+              </label>
+              <div class="col-xs-12 col-sm-6">
+
+                <ui-select
+                  autofocus="true"
+                  close-on-select="false"
+                  ng-if="state.mode=='edit'" style="width: 100%" multiple ng-model="cubeMetaFrame.status_need_notify">
+                  <ui-select-match placeholder="Select Status...">{{$item}}</ui-select-match>
+                  <ui-select-choices
+                    repeat="status as status in cubeConfig.statusNeedNofity | filter:$select.search">
+                    {{status}}
+                  </ui-select-choices>
+                </ui-select>
+
+                <span ng-if="state.mode=='view'">{{cubeMetaFrame.status_need_notify}}</span>
+              </div>
+            </div>
+          </div>
+
             <!--Description-->
             <div class="form-group">
                 <div class="row">
@@ -110,6 +133,7 @@
                             <li>Cube name is unique name of entire system</li>
                             <li>Can not edit cube name after created</li>
                             <li>Cube must belong to project which you have privilege to create</li>
+                            <li>Error status will notify by default</li>
                         </ol>
                     </div>
                 </div>
