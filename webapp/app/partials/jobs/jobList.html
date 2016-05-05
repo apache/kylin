@@ -116,7 +116,7 @@
                 <li ng-if="job.job_status=='ERROR'"><a ng-click="resume(job)">Resume</a></li>
                 <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING' || job.job_status=='ERROR'">
                   <a ng-click="cancel(job)">Discard</a>
-                  <a ng-click="diagnosisJob(job)">Diagnosis</a>
+                  <a ng-click="diagnosisJob(job)" tooltip="Download Diagnosis Info For This Job">Diagnosis</a>
                 </li>
               </ul>
             </div>

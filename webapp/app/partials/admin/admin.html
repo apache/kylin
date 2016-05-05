@@ -40,45 +40,25 @@
       <h3>Actions</h3>
     </div>
     <div style="padding-top: 10px;width: 260px;">
-      <!--<button class="btn btn-primary btn-lg btn-block" ng-click="reloadMeta()">-->
-      <!--<label tooltip="Reload all metadata and clean cache" style="cursor: pointer;">Reload Metadata</label>-->
-      <!--</button>-->
       <a  class="btn btn-primary btn-lg btn-block" tooltip="Reload all metadata and clean cache" ng-click="reloadMeta()">Reload Metadata</a>
     </div>
     <div style="padding-top: 10px;width: 260px;">
       <a ng-click="calCardinality();" tooltip="Calculate cardinality of tables" class="btn btn-primary btn-lg btn-block">Calculate Cardinality</a>
-
-      <!--<button class="btn btn-primary btn-lg btn-block" ng-click="calCardinality()">-->
-      <!--<label tooltip="Calculate cardinality of tables" style="cursor: pointer;">Calculate Cardinality</label>-->
-
-      <!--</button>-->
     </div>
     <div style="padding-top: 10px;width: 260px;" ng-if="false">
-      <!--<button class="btn btn-success btn-lg btn-block" ng-click="cleanStorage()">-->
-      <!--<label tooltip="Clean unused HDFS and HBASE space" style="cursor: pointer;">Clean Up Storage</label>-->
-      <!--</button>-->
       <a class="btn btn-success btn-lg btn-block" tooltip="Clean unused HDFS and HBASE space" ng-click="cleanStorage()">Clean Up Storage</a>
     </div>
     <div style="padding-top: 10px;width: 260px;" ng-if="isCacheEnabled()">
-      <!--<button class="btn btn-primary btn-lg btn-block" ng-click="disableCache()">-->
-      <!--<label tooltip="Disable Query Cache" style="cursor: pointer;">Disable Cache</label>-->
-      <!--</button>-->
       <a class="btn btn-primary btn-lg btn-block" ng-click="disableCache()">Disable Cache</a>
     </div>
     <div style="padding-top: 10px;width: 260px;" ng-if="!isCacheEnabled()">
-      <!--<button class="btn btn-primary btn-lg btn-block" ng-click="enableCache()">-->
-      <!--<label tooltip="Enable Query Cache" style="cursor: pointer;">Enable Cache</label>-->
-      <!--</button>-->
       <a  class="btn btn-primary btn-lg btn-block" tooltip="Enable Query Cache" ng-click="enableCache()">Enable Cache</a>
     </div>
     <div style="padding-top: 10px;width: 260px;">
-      <!--<button class="btn btn-primary btn-lg btn-block" ng-click="toSetConfig()">-->
-      <!--<label tooltip="Update Server Config" style="cursor: pointer;">Set Config</label>-->
-      <!--</button>-->
       <a class="btn btn-primary btn-lg btn-block" tooltip="Update Server Config"  class="btn btn-primary btn-lg"  ng-click="toSetConfig()">Set Config</a>
     </div>
     <div style="padding-top: 10px;width: 260px;">
-      <a ng-click="downloadBadQueryFiles();" tooltip="Download selected project Diagnosis Info" class="btn btn-primary btn-lg btn-block"><i class="fa fa-ambulance"></i> Diagnosis</a>
+      <a ng-click="downloadBadQueryFiles();" tooltip="Download Diagnosis Info For Current Project" class="btn btn-primary btn-lg btn-block"><i class="fa fa-ambulance"></i> Diagnosis</a>
     </div>
 
     <div>
