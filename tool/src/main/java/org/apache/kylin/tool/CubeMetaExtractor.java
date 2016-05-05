@@ -35,8 +35,6 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.engine.streaming.StreamingConfig;
-import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
@@ -51,8 +49,6 @@ import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.source.kafka.KafkaConfigManager;
-import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
@@ -87,7 +83,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private ProjectManager projectManager;
     private HybridManager hybridManager;
     private CubeManager cubeManager;
-    private StreamingManager streamingManager;
+    //    private StreamingManager streamingManager;
     private CubeDescManager cubeDescManager;
     private ExecutableDao executableDao;
     private RealizationRegistry realizationRegistry;
@@ -213,15 +209,15 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         return realizationRegistry.getRealization(realizationEntry.getType(), realizationEntry.getRealization());
     }
 
-    private void dealWithStreaming(CubeInstance cube) {
-        streamingManager = StreamingManager.getInstance(kylinConfig);
-        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
-            if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getFactTable())) {
-                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
-                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
-            }
-        }
-    }
+    //    private void dealWithStreaming(CubeInstance cube) {
+    //        streamingManager = StreamingManager.getInstance(kylinConfig);
+    //        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
+    //            if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getFactTable())) {
+    //                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
+    //                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
+    //            }
+    //        }
+    //    }
 
     private void retrieveResourcePath(IRealization realization) {
 
@@ -234,11 +230,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             String modelName = cubeDesc.getModelName();
             DataModelDesc modelDesc = metadataManager.getDataModelDesc(modelName);
 
-            try {
-                dealWithStreaming(cube);
-            } catch (Exception e) {
-                logger.warn("Failed to deal with streaming.", e);
-            }
+            //            dealWithStreaming(cube);
 
             for (String tableName : modelDesc.getAllTables()) {
                 addRequired(TableDesc.concatResourcePath(tableName));
