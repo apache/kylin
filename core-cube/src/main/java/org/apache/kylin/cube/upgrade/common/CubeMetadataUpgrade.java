@@ -45,7 +45,7 @@ public abstract class CubeMetadataUpgrade {
     protected List<String> errorMsgs = Lists.newArrayList();
 
     public CubeMetadataUpgrade(String newMetadataUrl) {
-        KylinConfig.destoryInstance();
+        KylinConfig.destroyInstance();
         config = KylinConfig.createInstanceFromUri(newMetadataUrl);
         store = ResourceStore.getStore(config);
     }

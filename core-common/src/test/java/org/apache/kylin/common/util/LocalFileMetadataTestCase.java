@@ -43,7 +43,7 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
     }
 
     public static void staticCreateTestMetadata(String testDataFolder) {
-        KylinConfig.destoryInstance();
+        KylinConfig.destroyInstance();
 
         String tempTestMetadataUrl = "../examples/test_metadata";
         try {

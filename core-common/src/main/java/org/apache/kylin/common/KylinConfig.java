@@ -70,7 +70,7 @@ public class KylinConfig extends KylinConfigBase {
         return ENV_INSTANCE;
     }
 
-    public static void destoryInstance() {
+    public static void destroyInstance() {
         ENV_INSTANCE = null;
     }
 
@@ -171,7 +171,7 @@ public class KylinConfig extends KylinConfigBase {
 
     }
 
-    public static InputStream getKylinPropertiesAsInputSteam() {
+    public static InputStream getKylinPropertiesAsInputStream() {
         File propFile = getKylinProperties();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate kylin.properties");
@@ -232,7 +232,7 @@ public class KylinConfig extends KylinConfigBase {
      */
     private static KylinConfig loadKylinConfig() {
 
-        InputStream is = getKylinPropertiesAsInputSteam();
+        InputStream is = getKylinPropertiesAsInputStream();
         if (is == null) {
             throw new IllegalArgumentException("Failed to load kylin config");
         }

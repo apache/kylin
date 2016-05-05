@@ -39,7 +39,7 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
 
     public PasswordPlaceholderConfigurer() {
         Resource[] resources = new Resource[1];
-        resources[0] = new InputStreamResource(KylinConfig.getKylinPropertiesAsInputSteam());
+        resources[0] = new InputStreamResource(KylinConfig.getKylinPropertiesAsInputStream());
         this.setLocations(resources);
     }
 
