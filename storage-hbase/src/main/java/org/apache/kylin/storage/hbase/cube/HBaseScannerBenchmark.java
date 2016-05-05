@@ -56,7 +56,7 @@ public class HBaseScannerBenchmark {
     final TableName htableName = TableName.valueOf("HBaseScannerBenchmark");
     final SimpleHBaseStore simpleStore;
 
-    public HBaseScannerBenchmark() throws IOException {
+    public HBaseScannerBenchmark(boolean createTable) throws IOException {
         Builder builder = GTInfo.builder();
         builder.setCodeSystem(new GTSampleCodeSystem());
         DataType tint = DataType.getType("int4");
@@ -75,7 +75,10 @@ public class HBaseScannerBenchmark {
         gen.addMeasure(8);
 
         simpleStore = new SimpleHBaseStore(info, htableName);
-        buildTable();
+
+        if (createTable) {
+            buildTable();
+        }
     }
 
     private void buildTable() throws IOException {
@@ -150,9 +153,17 @@ public class HBaseScannerBenchmark {
     }
 
     public static void main(String[] args) throws IOException {
+        boolean createTable = true;
+        if (args != null && args.length > 0) {
+            try {
+                createTable = Boolean.parseBoolean(args[0]);
+            } catch (Exception e) {
+                createTable = true;
+            }
+        }
         KylinConfig.setSandboxEnvIfPossible();
 
-        HBaseScannerBenchmark benchmark = new HBaseScannerBenchmark();
+        HBaseScannerBenchmark benchmark = new HBaseScannerBenchmark(createTable);
         benchmark.testScan();
         benchmark.cleanup();
     }
