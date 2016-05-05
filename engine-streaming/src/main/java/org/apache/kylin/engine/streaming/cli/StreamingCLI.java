@@ -57,7 +57,7 @@ public class StreamingCLI {
 
     public static void main(String[] args) {
         try {
-            Preconditions.checkArgument(args[0].equals("cube"));
+            Preconditions.checkArgument(args[0].equals("streaming"));
             Preconditions.checkArgument(args[1].equals("start"));
 
             int i = 2;
