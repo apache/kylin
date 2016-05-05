@@ -32,7 +32,6 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,7 +122,7 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         filterTableType = Functions.FilterTableType.valueOf(BytesUtil.readUTFString(buffer));
     }
 
-    public static boolean constainsMassInTupleFilter(TupleFilter filter) {
+    public static boolean containsMassInTupleFilter(TupleFilter filter) {
         if (filter == null)
             return false;
 
@@ -132,7 +131,7 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         }
 
         for (TupleFilter child : filter.getChildren()) {
-            if (constainsMassInTupleFilter(child))
+            if (containsMassInTupleFilter(child))
                 return true;
         }
         return false;

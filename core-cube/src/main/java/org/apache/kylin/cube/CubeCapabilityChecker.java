@@ -86,7 +86,7 @@ public class CubeCapabilityChecker {
             return result;
         }
 
-        if (cube.getStorageType() == IStorageAware.ID_HBASE && MassInTupleFilter.constainsMassInTupleFilter(digest.filter)) {
+        if (cube.getStorageType() == IStorageAware.ID_HBASE && MassInTupleFilter.containsMassInTupleFilter(digest.filter)) {
             logger.info("Exclude cube " + cube.getName() + " because only v2 storage + v2 query engine supports massin");
             return result;
 
