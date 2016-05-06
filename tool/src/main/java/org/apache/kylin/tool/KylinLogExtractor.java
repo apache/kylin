@@ -59,16 +59,21 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
         logger.info("Start to extract kylin logs in {} days", logPeriod);
 
         final File kylinLogDir = new File(KylinConfig.getKylinHome(), "logs");
-        final ArrayList<File> logFiles = Lists.newArrayList();
+        final ArrayList<File> requiredLogFiles = Lists.newArrayList();
         final long logThresholdTime = System.currentTimeMillis() - logPeriod * 24 * 3600 * 1000;
 
-        for (File logFile : kylinLogDir.listFiles()) {
+        final File[] allLogFiles = kylinLogDir.listFiles();
+        if (allLogFiles == null || allLogFiles.length == 0) {
+            return;
+        }
+
+        for (File logFile : allLogFiles) {
             if (logFile.lastModified() > logThresholdTime) {
-                logFiles.add(logFile);
+                requiredLogFiles.add(logFile);
             }
         }
 
-        for (File logFile : logFiles) {
+        for (File logFile : requiredLogFiles) {
             logger.info("Log file:" + logFile.getAbsolutePath());
             if (logFile.exists()) {
                 FileUtils.copyFileToDirectory(logFile, exportDir);
