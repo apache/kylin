@@ -69,10 +69,13 @@ if [ -z "$HCAT_HOME" ]
 then
     echo "HCAT_HOME not found, try to find hcatalog path from hadoop home"
     hadoop_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
+    hive_home=`echo $hive_exec_path | awk -F '/lib/' '{print $1}'`
     if [ -d "${hadoop_home}/hive-hcatalog" ]; then
       hcatalog_home=${hadoop_home}/hive-hcatalog
     elif [ -d "${hadoop_home}/hive/hcatalog" ]; then
       hcatalog_home=${hadoop_home}/hive/hcatalog
+    elif [ -d "${hive_home}/hcatalog" ]; then
+      hcatalog_home=${hive_home}/hcatalog
     else 
       echo "Couldn't locate hcatalog installation, please make sure it is installed and set HCAT_HOME to the path."
       exit 1
