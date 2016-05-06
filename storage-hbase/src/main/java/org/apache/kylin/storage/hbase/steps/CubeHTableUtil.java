@@ -55,7 +55,7 @@ public class CubeHTableUtil {
         String tableName = cubeSegment.getStorageLocationIdentifier();
         CubeInstance cubeInstance = cubeSegment.getCubeInstance();
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        KylinConfig kylinConfig = cubeDesc.getConfig();
 
         HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(cubeSegment.getStorageLocationIdentifier()));
         // https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/regionserver/ConstantSizeRegionSplitPolicy.html
