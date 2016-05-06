@@ -80,7 +80,7 @@
         </tr>
         </thead>
         <!--Body-->
-        <tbody ng-repeat="cube in cubeList.cubes | orderObjectBy:state.filterAttr:state.filterReverse">
+        <tbody ng-repeat="cube in cubeList.cubes track by $index | orderObjectBy:state.filterAttr:state.filterReverse">
         <tr ng-class="{accordion:true}" style="cursor: pointer"  ng-click="cube.showDetail=!cube.showDetail;loadDetail(cube)">
             <td>
                 <i ng-show="!cube.showDetail" class="fa fa-chevron-circle-right blue"></i>
@@ -112,15 +112,15 @@
                     </button>
                     <ul class="dropdown-menu" role="menu">
                         <li ng-if="cube.status=='DISABLED' && userService.hasRole('ROLE_ADMIN') ">
-                            <a ng-click="dropCube(cube)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
+                            <a ng-click="dropCube(cube, $index)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
                         <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
                             <a ng-click="cubeEdit(cube);">Edit</a></li>
-                        <li><a ng-click="startJobSubmit(cube);">Build</a></li>
-                        <li><a ng-click="startRefresh(cube)">Refresh</a></li>
-                        <li><a ng-click="startMerge(cube)">Merge</a></li>
-                        <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube)">Disable</a></li>
-                        <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube)">Enable</a></li>
-                        <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube)">Purge</a></li>
+                        <li><a ng-click="startJobSubmit(cube, $index);">Build</a></li>
+                        <li><a ng-click="startRefresh(cube, $index)">Refresh</a></li>
+                        <li><a ng-click="startMerge(cube, $index)">Merge</a></li>
+                        <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube, $index)">Disable</a></li>
+                        <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube, $index)">Enable</a></li>
+                        <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube, $index)">Purge</a></li>
                         <li><a ng-click="cloneCube(cube)">Clone</a></li>
 
                     </ul>
