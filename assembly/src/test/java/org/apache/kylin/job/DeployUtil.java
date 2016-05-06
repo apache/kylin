@@ -46,6 +46,7 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.hive.HiveClient;
+import org.apache.kylin.source.hive.HiveCmdBuilder;
 import org.apache.kylin.source.kafka.TimedJsonStreamParser;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.maven.model.Model;
@@ -211,11 +212,9 @@ public class DeployUtil {
         temp.delete();
 
         HiveClient hiveClient = new HiveClient();
-
         // create hive tables
         hiveClient.executeHQL("CREATE DATABASE IF NOT EXISTS EDW");
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
-        hiveClient.executeHQL(generateCreateViewHql(VIEW_CAL_DT, metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM.toUpperCase())));
@@ -228,6 +227,11 @@ public class DeployUtil {
         hiveClient.executeHQL(generateLoadDataHql(TABLE_KYLIN_FACT, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_SELLER_TYPE_DIM, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_SITES, tableFileDir));
+
+        final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.addStatements(generateCreateViewHql(VIEW_CAL_DT, metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
+
+        config().getCliCommandExecutor().execute(hiveCmdBuilder.build());
     }
 
     private static String generateLoadDataHql(String tableName, String tableFileDir) {
@@ -259,10 +263,10 @@ public class DeployUtil {
 
     private static String[] generateCreateViewHql(String viewName, TableDesc tableDesc) {
 
-        String dropsql = "DROP VIEW IF EXISTS " + viewName;
+        String dropsql = "DROP VIEW IF EXISTS " + viewName + ";";
         StringBuilder ddl = new StringBuilder();
 
-        ddl.append("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableDesc.getIdentity() + "\n");
+        ddl.append("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableDesc.getIdentity() + ";\n");
 
         return new String[] { dropsql, ddl.toString() };
     }

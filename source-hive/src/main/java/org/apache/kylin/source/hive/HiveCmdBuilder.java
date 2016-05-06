@@ -99,6 +99,12 @@ public class HiveCmdBuilder {
         statements.add(statement);
     }
 
+    public void addStatements(String[] stats) {
+        for(String s : stats) {
+            statements.add(s);
+        }
+    }
+
     @Override
     public String toString() {
         return build();

@@ -259,23 +259,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- add this for hive-exec, its 0.14 is compiled with calcite 0.9.2 -->
-        <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-core</artifactId>
-            <version>0.9.2-incubating</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>hsqldb</artifactId>
-                    <groupId>org.hsqldb</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>jackson-databind</artifactId>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
 
 
