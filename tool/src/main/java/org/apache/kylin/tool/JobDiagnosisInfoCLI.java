@@ -28,12 +28,11 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
+import org.apache.kylin.tool.util.ResourceStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,14 +137,11 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         }
 
         try {
-            ResourceStore src = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-            ResourceStore dst = ResourceStore.getStore(KylinConfig.createInstanceFromUri(destDir.getAbsolutePath()));
+            KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
+            KylinConfig dstConfig = KylinConfig.createInstanceFromUri(destDir.getAbsolutePath());
 
-            for (String path : requiredResources) {
-                ResourceTool.copyR(src, dst, path);
-            }
-
-        } catch (IOException e) {
+            ResourceStoreUtil.copy(srcConfig, dstConfig, requiredResources);
+        } catch (Exception e) {
             throw new RuntimeException("Failed to extract job resources. ", e);
         }
     }

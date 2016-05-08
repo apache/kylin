@@ -234,6 +234,10 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         return ResourceStore.CUBE_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
     }
 
+    private static String concatCubeSegmentStatisticsResourcePath(String cubeName, String cubeSegmentId) {
+        return ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + cubeSegmentId + ".seq";
+    }
+
     private void retrieveResourcePath(IRealization realization) {
 
         logger.info("Deal with realization {} of type {}", realization.getName(), realization.getType());
@@ -260,7 +264,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             if (includeSegments) {
                 addRequired(CubeInstance.concatResourcePath(cube.getName()));
                 for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
-                    addRequired(segment.getStatisticsResourcePath());
+                    addRequired(concatCubeSegmentStatisticsResourcePath(cube.getName(), segment.getUuid()));
                     if (includeSegmentDetails) {
                         for (String dictPat : segment.getDictionaryPaths()) {
                             addRequired(dictPat);

@@ -84,8 +84,9 @@ package_name=apache-kylin-${version}-diag
 cd build/
 rm -rf ${package_name}
 mkdir ${package_name}
+mkdir ${package_name}/bin
 cp -r lib ${package_name}
-cp deploy/diag.sh ${package_name}
+cp deploy/diag.sh ${package_name}/bin/
 rm -rf lib
 find ${package_name} -type d -exec chmod 755 {} \;
 find ${package_name} -type f -exec chmod 644 {} \;

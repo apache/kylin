@@ -24,7 +24,7 @@ dir=$(dirname ${0})
 export KYLIN_HOME=${dir}/../
 source ${dir}/check-env.sh
 
-if [ $# -gt 1 ]
+if [ $# -eq 1 ] || [ $# -eq 2 ]
 then
     patient="$1"
     if [ -z "$patient" ]
@@ -49,13 +49,19 @@ then
     fi
     export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
 
-    if [ -f "${KYLIN_HOME}/lib/kylin-diagnosis-*.jar" ]; then
-        export HBASE_CLASSPATH=$HBASE_CLASSPATH:${KYLIN_HOME}/lib/kylin-diagnosis-*.jar
+    diagJar=`ls ${KYLIN_HOME}/lib/kylin-diagnosis-*.jar`
+    if [ -f "${diagJar}" ]; then
+        if [ -f "${KYLIN_HOME}/commit_SHA1" ]; then
+            export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${diagJar}:${KYLIN_HOME}/lib/*
+        else
+            export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${KYLIN_HOME}/lib/*
+        fi
     else
-        export HBASE_CLASSPATH=$HBASE_CLASSPATH:${KYLIN_HOME}/lib/*
+        echo "missing diagnosis jar file."
+        exit 1
     fi
 
-    if [ ${#patient} -gt 31 ]; then
+    if [ ${#patient} -eq 36 ]; then
         exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.JobDiagnosisInfoCLI -jobId $patient -destDir $destDir
     else
         exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.DiagnosisInfoCLI -project $patient -destDir $destDir
