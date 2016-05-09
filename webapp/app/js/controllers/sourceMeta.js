@@ -82,6 +82,10 @@ KylinApp
 
 
     $scope.openModal = function () {
+      if(!$scope.projectModel.selectedProject){
+        SweetAlert.swal('Oops...', "Please select a project.", 'info');
+        return;
+      }
       $modal.open({
         templateUrl: 'addHiveTable.html',
         controller: ModalInstanceCtrl,
@@ -101,6 +105,10 @@ KylinApp
     };
 
     $scope.openTreeModal = function () {
+      if(!$scope.projectModel.selectedProject){
+        SweetAlert.swal('Oops...', "Please select a project.", 'info');
+        return;
+      }
       $modal.open({
         templateUrl: 'addHiveTableFromTree.html',
         controller: ModalInstanceCtrl,
@@ -119,6 +127,10 @@ KylinApp
     };
 
     $scope.openUnLoadModal = function () {
+      if(!$scope.projectModel.selectedProject){
+        SweetAlert.swal('Oops...', "Please select a project.", 'info');
+        return;
+      }
       $modal.open({
         templateUrl: 'removeHiveTable.html',
         controller: ModalInstanceCtrl,
@@ -404,6 +416,10 @@ KylinApp
 
     //streaming model
     $scope.openStreamingSourceModal = function () {
+      if(!$scope.projectModel.selectedProject){
+        SweetAlert.swal('Oops...', "Please select a project.", 'info');
+        return;
+      }
       $modal.open({
         templateUrl: 'addStreamingSource.html',
         controller: StreamingSourceCtrl,
@@ -705,7 +721,8 @@ KylinApp
               }, function (request) {
                 if (request.successful) {
                   SweetAlert.swal('', 'Created the streaming successfully.', 'success');
-                  location.reload();
+                  $scope.cancel();
+                  scope.aceSrcTbLoaded(true);
                 } else {
                   var message = request.message;
                   var msg = !!(message) ? message : 'Failed to take action.';
