@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
@@ -107,6 +108,14 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                 if (parameter.getNextParameter() == null) {
                     context.addResult(ResultLevel.ERROR, "Must define 2 parameters for function " + func.getExpression() + " in " + measure.getName());
                     return;
+                }
+
+                String embeded_groupby = parameter.getNextParameter().getValue();
+                for (DimensionDesc dimensionDesc : cube.getDimensions()) {
+                    if (dimensionDesc.getColumn() != null && dimensionDesc.getColumn().equalsIgnoreCase(embeded_groupby)) {
+                        context.addResult(ResultLevel.ERROR, "Couldn't use column " + embeded_groupby + " in Top-N as it is already defined as a dimension.");
+                        return;
+                    }
                 }
             }
         }
