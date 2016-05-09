@@ -366,8 +366,8 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.rest.workers.per.server", "1"));
     }
 
-    public String getAdminDls() {
-        return getOptional("kylin.job.admin.dls", null);
+    public String[] getAdminDls() {
+        return getOptionalStringArray("kylin.job.admin.dls", null);
     }
 
     public long getJobStepTimeout() {
