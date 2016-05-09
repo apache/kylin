@@ -44,6 +44,8 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -62,6 +64,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     private boolean isStatistics = false;
     private boolean outputTouched = false;
     private KylinConfig cubeConfig;
+    protected static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsReducer.class);
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -100,7 +103,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         if (isStatistics == false) {
             colValues.add(new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1)));
             if (colValues.size() == 1000000) { //spill every 1 million
-                System.out.println("spill values to disk...");
+                logger.info("spill values to disk...");
                 outputDistinctValues(col, colValues, context);
                 colValues.clear();
             }
@@ -138,10 +141,10 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         try {
             if (fs.exists(outputFile)) {
                 out = fs.append(outputFile);
-                System.out.println("append file " + outputFile);
+                logger.info("append file " + outputFile);
             } else {
                 out = fs.create(outputFile);
-                System.out.println("create file " + outputFile);
+                logger.info("create file " + outputFile);
             }
 
             for (ByteArray value: values) {
@@ -150,7 +153,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             }
         } finally {
             IOUtils.closeQuietly(out);
-            IOUtils.closeQuietly(fs);
             outputTouched = true;
         }
     }
