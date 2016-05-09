@@ -97,7 +97,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableName}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{tableName}/load", method = { RequestMethod.GET })
     @ResponseBody
     public TableDesc getHiveTable(@PathVariable String tableName) {
         return cubeMgmtService.getMetadataManager().getTableDesc(tableName);

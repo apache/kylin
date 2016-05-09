@@ -20,9 +20,7 @@
 
 
 KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert, $log, cubeConfig, CubeDescModel, MetaModel, TableModel, ModelDescService, modelsManager, cubesManager, ProjectModel, StreamingModel, StreamingService) {
-  var STREAMING_SUFFIX = "_streaming";
   $scope.cubeConfig = cubeConfig;
-
   $scope.metaModel = {};
   $scope.modelsManager = modelsManager;
 
@@ -168,9 +166,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   // ~ init
   if ($scope.isEdit = !!$routeParams.cubeName) {
 
-    $scope.streamingMeta = StreamingModel.createStreamingConfig();
-    $scope.kafkaMeta = StreamingModel.createKafkaConfig();
-
     CubeDescService.query({cube_name: $routeParams.cubeName}, function (detail) {
       if (detail.length > 0) {
         $scope.cubeMetaFrame = detail[0];
@@ -180,19 +175,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if (!modelsManager.getModels().length) {
           ModelDescService.query({model_name: $scope.cubeMetaFrame.model_name}, function (_model) {
             $scope.metaModel.model = _model;
-
-            StreamingService.getConfig({table:$scope.metaModel.model.fact_table}, function (kfkConfigs) {
-              if(!!kfkConfigs[0]){
-                $scope.cubeState.isStreaming = true;
-              }
-              else{
-                return;
-              }
-              $scope.streamingMeta = kfkConfigs[0];
-              StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
-                $scope.kafkaMeta = streamings[0];
-              })
-            })
           });
         }
 
@@ -212,9 +194,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
     //$scope.cubeMetaFrame.model_name = modelName;
     $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
-
-    $scope.streamingMeta = StreamingModel.createStreamingConfig();
-    $scope.kafkaMeta = StreamingModel.createKafkaConfig();
 
   }
 
@@ -244,15 +223,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
     $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
 
-    //streaming meta
-    if($scope.cubeState.isStreaming == true){
-      $scope.streamingMeta.cubeName = $scope.cubeMetaFrame.name;
-      $scope.streamingMeta.name = $scope.cubeMetaFrame.name+STREAMING_SUFFIX;
-      $scope.kafkaMeta.name = $scope.cubeMetaFrame.name+STREAMING_SUFFIX;
-    }
-
-
-
   };
 
   $scope.cubeResultTmpl = function (notification) {
@@ -270,15 +240,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       return;
     }
 
-    if (!$scope.cubeState.isStreaming) {
-      $scope.state.streamingCube = false;
-    } else {
-      $scope.state.streamingCube = true;
-      $scope.state.streamingMeta = angular.toJson($scope.streamingMeta, true);
-      $scope.state.kafkaMeta = angular.toJson($scope.kafkaMeta, true);
-    }
-
-
     SweetAlert.swal({
       title: '',
       text: 'Are you sure to save the cube ?',
@@ -295,10 +256,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           CubeService.update({}, {
             cubeDescData: $scope.state.cubeSchema,
             cubeName: $routeParams.cubeName,
-            project: $scope.state.project,
-            streamingCube: $scope.state.streamingCube,
-            streamingData: $scope.state.streamingMeta,
-            kafkaData: $scope.state.kafkaMeta
+            project: $scope.state.project
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;
@@ -337,10 +295,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         } else {
           CubeService.save({}, {
             cubeDescData: $scope.state.cubeSchema,
-            project: $scope.state.project,
-            streamingCube: $scope.state.streamingCube,
-            streamingData: $scope.state.streamingMeta,
-            kafkaData: $scope.state.kafkaMeta
+            project: $scope.state.project
           }, function (request) {
             if (request.successful) {
               $scope.state.cubeSchema = request.cubeDescData;

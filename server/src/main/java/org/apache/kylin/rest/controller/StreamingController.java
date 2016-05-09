@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -109,7 +110,7 @@ public class StreamingController extends BasicController {
             tableDesc.setUuid(UUID.randomUUID().toString());
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
             metaMgr.saveSourceTable(tableDesc);
-            cubeMgmtService.syncTableToProject(new String[]{tableDesc.getName()}, project);
+            cubeMgmtService.syncTableToProject(new String[]{tableDesc.getIdentity()}, project);
         } catch (IOException e) {
             throw new BadRequestException("Failed to add streaming table.");
         }
@@ -231,6 +232,11 @@ public class StreamingController extends BasicController {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
+
+        String [] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
+        desc.setName(dbTable[1]);
+        desc.setDatabase(dbTable[0]);
+        desc.getIdentity();
         return desc;
     }
 

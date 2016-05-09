@@ -51,6 +51,7 @@
   <div class="col-xs-6" ng-show="table.schemaChecked">
     <ol class="text-info" style="margin-bottom: 30px;">
       <li>Choose 'timestamp' type column for streaming table.</li>
+      <li>By default, system will choose 'Default' as database, you can specify database like this 'database.table'</li>
       <li>derived time dimensions are calculated from timestamp field to help analysis against different time granularities.</li>
     </ol>
     <form class="form-horizontal" name="form.setStreamingSchema" novalidate>
@@ -59,7 +60,7 @@
 
         <div class="col-xs-8"
              ng-class="{'has-error':form.setStreamingSchema.streamingObject.$invalid && (form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$submitted)}">
-          <input type="text" name="streamingObject" required="" ng-model="table.name" class="form-control"/>
+          <input type="text" name="streamingObject" placeholder="database.table" required="" ng-model="table.name" class="form-control"/>
           <small class="help-block"
                  ng-show="form.setStreamingSchema.streamingObject.$error.required&&(form.setStreamingSchema.streamingObject.$dirty||form.setStreamingSchema.$submitted)">
             Table name is required.

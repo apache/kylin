@@ -34,7 +34,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     if (UserService.hasRole("ROLE_ADMIN")) {
             $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false,form:'cube_setting_form'});
     }
-    //$scope.wizardSteps.push({title: 'Streaming', src: 'partials/cubeDesigner/streamingConfig.html', isComplete: false,form:'cube_streaming_form'});
     $scope.wizardSteps.push({title: 'Configuration Overwrites ', src: 'partials/cubeDesigner/cubeOverwriteProp.html', isComplete: false,form:'cube_overwrite_prop_form'});
     $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false,form:null});
 
@@ -146,16 +145,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         model: {}
       }
       $scope.metaModel.model=modelsManager.getModel($scope.cubeMetaFrame.model_name);
-
-      StreamingService.getConfig({cubeName:$scope.cubeMetaFrame.name}, function (kfkConfigs) {
-        if(!!kfkConfigs[0]&&kfkConfigs[0].cubeName == $scope.cubeMetaFrame.name){
-          $scope.cubeState.isStreaming = true;
-          $scope.streamingMeta = kfkConfigs[0];
-          StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
-            $scope.kafkaMeta = streamings[0];
-          })
-        }
-      })
 
     }
   });

@@ -18,15 +18,12 @@
 
 'use strict';
 
-KylinApp
-  .controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, cubeConfig, ProjectModel, ModelService, MetaModel, CubeList,modelsManager,cubesManager,StreamingList,kylinConfig) {
+KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, cubeConfig, ProjectModel, ModelService, MetaModel, CubeList,modelsManager,TableService) {
 
     $scope.cubeConfig = cubeConfig;
     $scope.cubeList = CubeList;
 
     $scope.modelsManager = modelsManager;
-    //$scope.cubesManager = cubesManager;
-
     $scope.listParams = {
       cubeName: $routeParams.cubeName,
       projectName: $routeParams.projectName
@@ -82,13 +79,44 @@ KylinApp
       $scope.loading = true;
 
       return CubeList.list(queryParam).then(function (resp) {
-        angular.forEach($scope.cubeList.cubes,function(item,index){
-          var result = StreamingList.checkCubeExist(item.name);
-          if(result.exist == true){
-            item.streaming = result.streaming;
-            var kfkConfig = StreamingList.getKafkaConfig(result.streaming.name);
-            item.kfkConfig = kfkConfig;
-          }
+        angular.forEach($scope.cubeList.cubes,function(cube,index){
+          cube.streaming = false;
+          CubeDescService.query({cube_name: cube.name}, {}, function (detail) {
+            if (detail.length > 0 && detail[0].hasOwnProperty("name")) {
+              cube.detail = detail[0];
+              ModelService.list({projectName:$scope.projectModel.selectedProject,modelName:cube.detail.model_name}, function (_models) {
+                if(_models && _models.length){
+                  for(var i=0;i<=_models.length;i++){
+                    if(_models[i].name == cube.detail.model_name){
+                      cube.model = _models[i];
+                      var factTable = cube.model.fact_table;
+                      TableService.get({tableName:factTable},function(table){
+                        if(table && table.source_type == 1){
+                          cube.streaming = true;
+                        }
+                      })
+                      break;
+                    }
+                  }
+                }
+
+              })
+              //cube.model = modelsManager.getModel(cube.detail.model_name);
+
+              defer.resolve(cube.detail);
+
+            } else {
+              SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
+            }
+          }, function (e) {
+            if (e.data && e.data.exception) {
+              var message = e.data.exception;
+              var msg = !!(message) ? message : 'Failed to take action.';
+              SweetAlert.swal('Oops...', msg, 'error');
+            } else {
+              SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+            }
+          });
         })
 
         $scope.loading = false;
