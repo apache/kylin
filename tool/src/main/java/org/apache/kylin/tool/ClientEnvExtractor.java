@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.Files;
 
 public class ClientEnvExtractor extends AbstractInfoExtractor {
+    private static final Logger logger = LoggerFactory.getLogger(ClientEnvExtractor.class);
     private KylinConfig kylinConfig;
     private CliCommandExecutor cmdExecutor;
-    private static final Logger logger = LoggerFactory.getLogger(ClientEnvExtractor.class);
 
     public ClientEnvExtractor() throws IOException {
         super();

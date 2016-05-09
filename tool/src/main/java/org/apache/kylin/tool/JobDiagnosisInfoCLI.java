@@ -53,12 +53,10 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_CLIENT = OptionBuilder.withArgName("includeClient").hasArg().isRequired(false).withDescription("Specify whether to include client info to extract. Default true.").create("includeClient");
-
-    private KylinConfig kylinConfig;
-    private ExecutableDao executableDao;
-
     List<String> requiredResources = Lists.newArrayList();
     List<String> yarnLogsResources = Lists.newArrayList();
+    private KylinConfig kylinConfig;
+    private ExecutableDao executableDao;
 
     public JobDiagnosisInfoCLI() {
         super();
@@ -72,6 +70,11 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         executableDao = ExecutableDao.getInstance(kylinConfig);
+    }
+
+    public static void main(String args[]) {
+        JobDiagnosisInfoCLI extractor = new JobDiagnosisInfoCLI();
+        extractor.execute(args);
     }
 
     @Override
@@ -182,10 +185,5 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
     private void addRequired(String record) {
         logger.info("adding required resource {}", record);
         requiredResources.add(record);
-    }
-
-    public static void main(String args[]) {
-        JobDiagnosisInfoCLI extractor = new JobDiagnosisInfoCLI();
-        extractor.execute(args);
     }
 }

@@ -51,7 +51,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     private static final Option OPTION_SUBMODULE = OptionBuilder.withArgName("submodule").hasArg().isRequired(false).withDescription("specify whether this is a submodule of other CLI tool").create("submodule");
 
     private static final String DEFAULT_PACKAGE_TYPE = "base";
-    private static final String[] COMMIT_SHA1_FILES = {"commit_SHA1", "commit.sha1"};
+    private static final String[] COMMIT_SHA1_FILES = { "commit_SHA1", "commit.sha1" };
 
     protected final Options options;
 
