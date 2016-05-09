@@ -114,6 +114,8 @@ public class StreamingController extends BasicController {
             throw new BadRequestException("Failed to add streaming table.");
         }
 
+        streamingConfig.setName(tableDesc.getIdentity());
+        kafkaConfig.setName(tableDesc.getIdentity());
         try {
             if (StringUtils.isEmpty(streamingConfig.getName())) {
                 logger.info("StreamingConfig should not be empty.");
@@ -168,7 +170,7 @@ public class StreamingController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
-        public StreamingRequest updateModelDesc(@RequestBody StreamingRequest streamingRequest) throws JsonProcessingException {
+        public StreamingRequest updateStreamingConfig(@RequestBody StreamingRequest streamingRequest) throws JsonProcessingException {
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
 
@@ -220,10 +222,10 @@ public class StreamingController extends BasicController {
             logger.debug("Saving TableDesc " + streamingRequest.getTableData());
             desc = JsonUtil.readValue(streamingRequest.getTableData(), TableDesc.class);
         } catch (JsonParseException e) {
-            logger.error("The TableDesc definition is not valid.", e);
+            logger.error("The TableDesc definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
         } catch (JsonMappingException e) {
-            logger.error("The data TableDesc definition is not valid.", e);
+            logger.error("The data TableDesc definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
@@ -238,10 +240,10 @@ public class StreamingController extends BasicController {
             logger.debug("Saving StreamingConfig " + streamingRequest.getStreamingConfig());
             desc = JsonUtil.readValue(streamingRequest.getStreamingConfig(), StreamingConfig.class);
         } catch (JsonParseException e) {
-            logger.error("The StreamingConfig definition is not valid.", e);
+            logger.error("The StreamingConfig definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
         } catch (JsonMappingException e) {
-            logger.error("The data StreamingConfig definition is not valid.", e);
+            logger.error("The data StreamingConfig definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
@@ -257,10 +259,10 @@ public class StreamingController extends BasicController {
             logger.debug("Saving KafkaConfig " + streamingRequest.getKafkaConfig());
             desc = JsonUtil.readValue(streamingRequest.getKafkaConfig(), KafkaConfig.class);
         } catch (JsonParseException e) {
-            logger.error("The KafkaConfig definition is not valid.", e);
+            logger.error("The KafkaConfig definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
         } catch (JsonMappingException e) {
-            logger.error("The data KafkaConfig definition is not valid.", e);
+            logger.error("The data KafkaConfig definition is invalid.", e);
             updateRequest(streamingRequest, false, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
