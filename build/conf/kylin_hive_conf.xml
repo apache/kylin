@@ -22,12 +22,6 @@
     </property>
 
     <property>
-        <name>dfs.block.size</name>
-        <value>33554432</value>
-        <description>32MB, want more mappers for in-mem cubing, thus smaller the DFS block size</description>
-    </property>
-
-    <property>
         <name>hive.exec.compress.output</name>
         <value>true</value>
         <description>enable compress</description>
@@ -55,26 +49,11 @@
         <value>org.apache.hadoop.io.compress.SnappyCodec</value>
         <description></description>
     </property>
-    
-    <property>
-        <name>hive.merge.mapfiles</name>
-        <value>true</value>
-        <description>Enable hive file merge on mapper only job</description>
-    </property>
-    <property>
-        <name>hive.merge.mapredfiles</name>
-        <value>true</value>
-        <description>Enable hive file merge on map-reduce job</description>
-    </property>
+
     <property>
         <name>mapred.output.compression.type</name>
         <value>BLOCK</value>
         <description>The compression type to use for job outputs</description>
-    </property>
-    <property>
-        <name>hive.merge.size.per.task</name>
-        <value>256000000</value>
-        <description>Size for the merged file</description>
     </property>
 
     <property>
