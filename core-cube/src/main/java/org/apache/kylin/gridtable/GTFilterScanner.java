@@ -135,7 +135,7 @@ public class GTFilterScanner implements IGTScanner {
     static class FilterResultCache {
         static final int CHECKPOINT = 10000;
         static final double HIT_RATE_THRESHOLD = 0.5;
-        static boolean ENABLED = false; // for debug
+        static boolean ENABLED = true; // enable cache by default
 
         boolean enabled = ENABLED;
         ImmutableBitSet colsInFilter;
