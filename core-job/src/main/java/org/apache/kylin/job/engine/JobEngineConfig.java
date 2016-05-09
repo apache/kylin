@@ -142,7 +142,7 @@ public class JobEngineConfig {
     /**
      * @return the adminDls
      */
-    public String getAdminDls() {
+    public String[] getAdminDls() {
         return config.getAdminDls();
     }
 
