@@ -95,11 +95,14 @@ KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q
     //view model
     if($scope.state.mode == 'view' && $scope.tableModel.selectedSrcTable.source_type==1){
       var table = $scope.tableModel.selectedSrcTable;
-      StreamingService.getConfig({table:table.name}, function (configs) {
-        if(!!configs[0]&&configs[0].name.toUpperCase() == table.name.toUpperCase()){
+      var streamingName = table.database+"."+table.name;
+      $scope.streamingMeta = {};
+      $scope.kafkaMeta = {};
+      StreamingService.getConfig({table:streamingName}, function (configs) {
+        if(!!configs[0]&&configs[0].name.toUpperCase() == streamingName.toUpperCase()){
           $scope.streamingMeta = configs[0];
           StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
-            if(!!streamings[0]&&streamings[0].name.toUpperCase() == table.name.toUpperCase()){
+            if(!!streamings[0]&&streamings[0].name.toUpperCase() == streamingName.toUpperCase()){
               $scope.kafkaMeta = streamings[0];
             }
           })

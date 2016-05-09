@@ -25,18 +25,20 @@ import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.request.StreamingRequest;
 import org.apache.kylin.rest.response.TableDescResponse;
-import org.apache.kylin.rest.service.CubeService;
-import org.apache.kylin.rest.service.ModelService;
-import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.*;
 import org.apache.kylin.source.hive.HiveClient;
+import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +63,10 @@ public class TableController extends BasicController {
     private CubeService cubeMgmtService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private StreamingService streamingService;
+    @Autowired
+    private KafkaConfigService kafkaConfigService;
     @Autowired
     private ModelService modelService;
 
@@ -163,7 +169,15 @@ public class TableController extends BasicController {
      */
     private boolean unLoadHiveTable(String tableName, String project) {
         boolean rtn= false;
-		try {
+        int tableType = 0;
+
+        //remove streaming info
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        TableDesc desc = cubeMgmtService.getMetadataManager().getTableDesc(tableName);
+        tableType = desc.getSourceType();
+
+        try {
 			if (!modelService.isTableInModel(tableName, project)) {
 				cubeMgmtService.removeTableFromProject(tableName, project);
 				rtn = true;
@@ -178,6 +192,21 @@ public class TableController extends BasicController {
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
                 rtn = false;
+            }
+        }
+
+        if(tableType ==1 && !projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)){
+            StreamingConfig config = null;
+            KafkaConfig kafkaConfig = null;
+            try {
+                config = streamingService.getStreamingManager().getStreamingConfig(tableName);
+                kafkaConfig = kafkaConfigService.getKafkaConfig(tableName);
+                streamingService.dropStreamingConfig(config);
+                kafkaConfigService.dropKafkaConfig(kafkaConfig);
+                rtn = true;
+            } catch (Exception e) {
+                rtn = false;
+                logger.error(e.getLocalizedMessage(), e);
             }
         }
         return rtn;
