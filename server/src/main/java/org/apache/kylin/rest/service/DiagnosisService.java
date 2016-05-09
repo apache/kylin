@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
 import org.apache.kylin.rest.constant.Constant;
@@ -49,7 +50,7 @@ public class DiagnosisService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String dumpProjectDiagnosisInfo(String project) throws IOException {
         String[] args = { "-project", project, "-destDir", getDumpDir().getAbsolutePath() };
-        logger.info("DiagnosisInfoCLI args: " + args);
+        logger.info("DiagnosisInfoCLI args: " + Arrays.toString(args));
         DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
         diagnosisInfoCli.execute(args);
         return diagnosisInfoCli.getExportDest();
@@ -58,7 +59,7 @@ public class DiagnosisService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String dumpJobDiagnosisInfo(String jobId) throws IOException {
         String[] args = { "-jobId", jobId, "-destDir", getDumpDir().getAbsolutePath() };
-        logger.info("JobDiagnosisInfoCLI args: " + args);
+        logger.info("JobDiagnosisInfoCLI args: " + Arrays.toString(args));
         JobDiagnosisInfoCLI jobInfoExtractor = new JobDiagnosisInfoCLI();
         jobInfoExtractor.execute(args);
         return jobInfoExtractor.getExportDest();
@@ -66,7 +67,7 @@ public class DiagnosisService extends BasicService {
 
     public static void main(String args1[]) {
         String[] args = { "-project", "learn_kylin", "-destDir", Files.createTempDir().getAbsolutePath() };
-        logger.info("DiagnosisInfoCLI args: " + args);
+        logger.info("DiagnosisInfoCLI args: " + Arrays.toString(args));
         DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
         diagnosisInfoCli.execute(args);
     }

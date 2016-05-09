@@ -20,6 +20,7 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -85,6 +86,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
 
         // dump job output
+        logger.info("Start to dump job output");
         ExecutablePO executablePO = executableDao.getJob(jobId);
         addRequired(ExecutableDao.pathOfJob(jobId));
         addRequired(ExecutableDao.pathOfJobOutput(jobId));
@@ -107,13 +109,14 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
 
                 logger.info("Start to extract related cube: " + StringUtils.join(cubeMetaArgs));
                 CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
+                logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
                 cubeMetaExtractor.execute(cubeMetaArgs);
             }
         }
 
         // dump yarn logs
         if (includeYarnLogs) {
-            logger.info("Start to related yarn job logs: " + jobId);
+            logger.info("Start to dump yarn job logs: " + jobId);
             File yarnLogDir = new File(exportDir, "yarn");
             FileUtils.forceMkdir(yarnLogDir);
             for (String taskId : yarnLogsResources) {
@@ -124,12 +127,14 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         if (includeClient) {
             String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
             ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
+            logger.info("ClientEnvExtractor args: " + Arrays.toString(clientArgs));
             clientEnvExtractor.execute(clientArgs);
         }
 
         // export kylin logs
         String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
         KylinLogExtractor logExtractor = new KylinLogExtractor();
+        logger.info("KylinLogExtractor args: " + Arrays.toString(logsArgs));
         logExtractor.execute(logsArgs);
     }
 

@@ -20,6 +20,7 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -70,12 +71,14 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         // export cube metadata
         String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
         CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
+        logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
         cubeMetaExtractor.execute(cubeMetaArgs);
 
         // export HBase
         if (includeHBase) {
             String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
             HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
+            logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
             hBaseUsageExtractor.execute(hbaseArgs);
         }
 
@@ -93,12 +96,14 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         if (includeClient) {
             String[] clientArgs = { "-destDir", new File(exportDir, "client").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
             ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
+            logger.info("ClientEnvExtractor args: " + Arrays.toString(clientArgs));
             clientEnvExtractor.execute(clientArgs);
         }
 
         // export logs
         String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
         KylinLogExtractor logExtractor = new KylinLogExtractor();
+        logger.info("KylinLogExtractor args: " + Arrays.toString(logsArgs));
         logExtractor.execute(logsArgs);
     }
 }
