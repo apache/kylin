@@ -26,11 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.DataFormatException;
@@ -51,6 +47,7 @@ import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.LoggableCachedThreadPool;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -78,39 +75,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
     public static final Logger logger = LoggerFactory.getLogger(CubeHBaseEndpointRPC.class);
 
-    private static ExecutorService executorService = newLoggableCachedThreadPool();
-
-    public static ExecutorService newLoggableCachedThreadPool() {
-        return new LoggableCachedThreadPool();
-    }
-
-    public static class LoggableCachedThreadPool extends ThreadPoolExecutor {
-
-        public LoggableCachedThreadPool() {
-            super(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
-        }
-
-        @Override
-        protected void afterExecute(Runnable r, Throwable t) {
-            super.afterExecute(r, t);
-            if (t == null && r instanceof Future<?>) {
-                try {
-                    ((Future<?>) r).get();
-                } catch (ExecutionException ee) {
-                    logger.error("Execution exception when running task in " + Thread.currentThread().getName());
-                    t = ee.getCause();
-                } catch (InterruptedException ie) {
-                    logger.error("Thread interrupted: ");
-                    Thread.currentThread().interrupt(); // ignore/reset
-                } catch (Throwable throwable) {
-                    t = throwable;
-                }
-            }
-            if (t != null) {
-                logger.error("Caught exception in thread " + Thread.currentThread().getName() + ": ", t);
-            }
-        }
-    }
+    private static ExecutorService executorService = new LoggableCachedThreadPool();
 
     static class ExpectedSizeIterator implements Iterator<byte[]> {
 
@@ -131,7 +96,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             if (BackdoorToggles.getQueryTimeout() != -1) {
                 this.timeout = BackdoorToggles.getQueryTimeout();
             }
-            
+
             this.timeout *= 1.1;//allow for some delay 
 
             logger.info("Timeout for ExpectedSizeIterator is: " + this.timeout);
@@ -262,7 +227,14 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
     @SuppressWarnings("unchecked")
     private List<Pair<byte[], byte[]>> getEPKeyRanges(short baseShard, short shardNum, int totalShards) {
-        if (baseShard + shardNum <= totalShards) {
+        if (shardNum == 0) {
+            return Lists.newArrayList();
+        }
+
+        if (shardNum == totalShards) {
+            //all shards
+            return Lists.newArrayList(Pair.newPair(getByteArrayForShort((short) 0), getByteArrayForShort((short) (shardNum - 1))));
+        } else if (baseShard + shardNum <= totalShards) {
             //endpoint end key is inclusive, so no need to append 0 or anything
             return Lists.newArrayList(Pair.newPair(getByteArrayForShort(baseShard), getByteArrayForShort((short) (baseShard + shardNum - 1))));
         } else {
@@ -272,6 +244,10 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
     }
 
+    protected Pair<Short, Short> getShardNumAndBaseShard() {
+        return Pair.newPair(cubeSeg.getCuboidShardNum(cuboid.getId()), cubeSeg.getCuboidBaseShard(cuboid.getId()));
+    }
+
     @Override
     public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
 
@@ -279,8 +255,9 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         logger.debug("New scanner for current segment {} will use {} as endpoint's behavior", cubeSeg, toggle);
 
-        short cuboidBaseShard = cubeSeg.getCuboidBaseShard(this.cuboid.getId());
-        short shardNum = cubeSeg.getCuboidShardNum(this.cuboid.getId());
+        Pair<Short, Short> shardNumAndBaseShard = getShardNumAndBaseShard();
+        short shardNum = shardNumAndBaseShard.getFirst();
+        short cuboidBaseShard = shardNumAndBaseShard.getSecond();
         int totalShards = cubeSeg.getTotalShards();
 
         ByteString scanRequestByteString = null;
@@ -339,26 +316,25 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             logScan(rs, cubeSeg.getStorageLocationIdentifier());
         }
 
-        logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", new Object[] { shardNum, cuboidBaseShard, rawScans.size() });
+        logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", shardNum, cuboidBaseShard, rawScans.size());
 
         final AtomicInteger totalScannedCount = new AtomicInteger(0);
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum);
+        final CubeVisitProtos.CubeVisitRequest.Builder builder = CubeVisitProtos.CubeVisitRequest.newBuilder();
+        builder.setGtScanRequest(scanRequestByteString).setHbaseRawScan(rawScanByteString);
+        for (IntList intList : hbaseColumnsToGTIntList) {
+            builder.addHbaseColumnsToGT(intList);
+        }
+        builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
+        builder.setBehavior(toggle);
+        builder.setStartTime(System.currentTimeMillis());
+        builder.setTimeout(epResultItr.getTimeout());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
-            final ByteString finalScanRequestByteString = scanRequestByteString;
-            final ByteString finalRawScanByteString = rawScanByteString;
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    CubeVisitProtos.CubeVisitRequest.Builder builder = CubeVisitProtos.CubeVisitRequest.newBuilder();
-                    builder.setGtScanRequest(finalScanRequestByteString).setHbaseRawScan(finalRawScanByteString);
-                    for (IntList intList : hbaseColumnsToGTIntList) {
-                        builder.addHbaseColumnsToGT(intList);
-                    }
-                    builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
-                    builder.setBehavior(toggle);
-                    builder.setStartTime(System.currentTimeMillis());
-                    builder.setTimeout(epResultItr.getTimeout());
+
                     String logHeader = "<sub-thread for GTScanRequest " + Integer.toHexString(System.identityHashCode(scanRequest)) + "> ";
 
                     Map<byte[], CubeVisitProtos.CubeVisitResponse> results;

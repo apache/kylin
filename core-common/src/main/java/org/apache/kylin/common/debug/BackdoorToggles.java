@@ -20,6 +20,9 @@ package org.apache.kylin.common.debug;
 
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.Pair;
+
 /**
  */
 public class BackdoorToggles {
@@ -60,6 +63,16 @@ public class BackdoorToggles {
             return -1;
         else
             return Integer.valueOf(v);
+    }
+
+    public static Pair<Short, Short> getShardAssignment() {
+        String v = getString(DEBUG_TOGGLE_SHARD_ASSIGNMENT);
+        if (v == null) {
+            return null;
+        } else {
+            String[] parts = StringUtils.split(v, "#");
+            return Pair.newPair(Short.valueOf(parts[0]), Short.valueOf(parts[1]));
+        }
     }
 
     private static String getString(String key) {
@@ -153,4 +166,15 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_QUERY_TIMEOUT = "DEBUG_TOGGLE_QUERY_TIMEOUT";
+
+    /**
+     * set DEBUG_TOGGLE_SHARD_ASSIGNMENT="totalAssignedWorkers#assignedWorkerID" to specify subset of shards to deal with
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_SHARD_ASSIGNMENT": "4#0"
+     }
+     */
+    public final static String DEBUG_TOGGLE_SHARD_ASSIGNMENT = "DEBUG_TOGGLE_SHARD_ASSIGNMENT";
+
 }

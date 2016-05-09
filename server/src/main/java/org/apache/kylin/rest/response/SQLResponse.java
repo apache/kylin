@@ -24,40 +24,40 @@ import java.util.List;
 import org.apache.kylin.rest.model.SelectedColumnMeta;
 
 public class SQLResponse implements Serializable {
-    private static final long serialVersionUID = 1L;
+    protected static final long serialVersionUID = 1L;
 
     // private static final Logger logger =
     // LoggerFactory.getLogger(SQLResponse.class);
 
     // the data type for each column
-    private List<SelectedColumnMeta> columnMetas;
+    protected List<SelectedColumnMeta> columnMetas;
 
     // the results rows, each row contains several columns
-    private List<List<String>> results;
+    protected List<List<String>> results;
 
     /**
      * for historical reasons it is named "cube", however it might also refer to any realizations like hybrid, II or etc.
      */
-    private String cube;
+    protected String cube;
 
     // if not select query, only return affected row count
-    private int affectedRowCount;
+    protected int affectedRowCount;
 
     // flag indicating whether an exception occurred
-    private boolean isException;
+    protected boolean isException;
 
     // if isException, the detailed exception message
-    private String exceptionMessage;
+    protected String exceptionMessage;
 
-    private long duration;
+    protected long duration;
 
-    private boolean isPartial = false;
+    protected boolean isPartial = false;
 
-    private long totalScanCount;
+    protected long totalScanCount;
 
-    private boolean hitExceptionCache = false;
-    
-    private boolean storageCacheUsed = false;
+    protected boolean hitExceptionCache = false;
+
+    protected boolean storageCacheUsed = false;
 
     public SQLResponse() {
     }

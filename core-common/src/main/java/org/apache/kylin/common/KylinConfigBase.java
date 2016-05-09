@@ -361,8 +361,13 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptionalStringArray("kylin.rest.servers", new String[0]);
     }
 
-    public String[] getAdminDls() {
-        return getOptionalStringArray("kylin.job.admin.dls", null);
+    public int getWorkersPerServer() {
+        //for sequence sql use
+        return Integer.parseInt(getOptional("kylin.rest.workers.per.server", "1"));
+    }
+
+    public String getAdminDls() {
+        return getOptional("kylin.job.admin.dls", null);
     }
 
     public long getJobStepTimeout() {
@@ -496,6 +501,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public int getHBaseKeyValueSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
+    }
+
+    public String getDefaultIGTStorage() {
+        return getOptional("kylin.query.storage.default.gtstorage", "org.apache.kylin.storage.hbase.cube.v2.CubeHBaseEndpointRPC");
     }
 
     public int getHBaseScanCacheRows() {
@@ -632,4 +641,5 @@ abstract public class KylinConfigBase implements Serializable {
     public int getCubeStatsHLLPrecision() {
         return Integer.parseInt(getOptional("kylin.job.cubing.inmem.sampling.hll.precision", "14"));
     }
+
 }

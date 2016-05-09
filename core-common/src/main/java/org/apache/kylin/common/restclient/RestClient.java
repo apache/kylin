@@ -39,14 +39,14 @@ import org.apache.kylin.common.util.JsonUtil;
  */
 public class RestClient {
 
-    String host;
-    int port;
-    String baseUrl;
-    String userName;
-    String password;
-    HttpClient client;
+    protected String host;
+    protected int port;
+    protected String baseUrl;
+    protected String userName;
+    protected String password;
+    protected HttpClient client;
 
-    private static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
+    protected static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
 
     public static boolean matchFullRestPattern(String uri) {
         Matcher m = fullRestPattern.matcher(uri);
