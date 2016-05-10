@@ -124,8 +124,7 @@
           <td>{{ job.last_modified == 0 ? '' : (job.last_modified |utcToConfigTimeZone)}}</td>
           <td>{{(job.duration/60 | number:2) + ' mins'}}</td>
           <td>
-            <div class="btn-group"
-                 ng-if="job.job_status!='DISCARDED' && job.job_status!='FINISHED'">
+            <div class="btn-group">
               <button type="button" class="btn btn-default btn-xs dropdown-toggle"
                       data-toggle="dropdown">
                 Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
@@ -134,11 +133,12 @@
                 <li ng-if="job.job_status=='ERROR'"><a ng-click="resume(job)">Resume</a></li>
                 <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING' || job.job_status=='ERROR'">
                   <a ng-click="cancel(job)">Discard</a>
+                </li>
+                <li>
                   <a ng-click="diagnosisJob(job)" tooltip="Download Diagnosis Info For This Job">Diagnosis</a>
                 </li>
               </ul>
             </div>
-            <span ng-if="job.job_status=='DISCARDED' || job.job_status=='FINISHED'">N/A</span>
           </td>
           <td>
             <button class="btn btn-info btn-xs" ng-click="state.showSteps= !state.showSteps; state.selectedJob = job">
