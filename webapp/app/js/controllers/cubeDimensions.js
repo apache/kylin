@@ -264,6 +264,10 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal, MetaModel) {
 
   $scope.removeDim = function (dim) {
     dimList.splice(dimList.indexOf(dim), 1);
+    var cols = dimCols(dim);
+    angular.forEach(cols, function (colName) {
+      $scope.selectedColumns[dim.table][colName] = {selected: false, disabled: false};
+    });
   };
 
   $scope.resetParams = function () {
