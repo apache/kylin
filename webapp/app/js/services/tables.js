@@ -19,7 +19,7 @@
 KylinApp.factory('TableService', ['$resource', function ($resource, config) {
   return $resource(Config.service.url + 'tables/:tableName/:action/:database', {}, {
     list: {method: 'GET', params: {}, cache: true, isArray: true},
-    get: {method: 'GET', params: {action:'load'}, isArray: false},
+    get: {method: 'GET', params: {}, isArray: false},
     getExd: {method: 'GET', params: {action: 'exd-map'}, isArray: false},
     reload: {method: 'PUT', params: {action: 'reload'}, isArray: false},
     loadHiveTable: {method: 'POST', params: {}, isArray: false},
