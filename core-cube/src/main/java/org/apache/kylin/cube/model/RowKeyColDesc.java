@@ -26,6 +26,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -44,6 +45,7 @@ public class RowKeyColDesc {
     @JsonProperty("isShardBy")
     private boolean isShardBy;//usually it is ultra high cardinality column, shard by such column can reduce the agg cache for each shard
     @JsonProperty("index")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String index;
 
     // computed
