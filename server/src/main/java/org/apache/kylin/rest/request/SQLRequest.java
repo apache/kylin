@@ -18,9 +18,11 @@
 
 package org.apache.kylin.rest.request;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class SQLRequest {
+public class SQLRequest implements Serializable {
+    protected static final long serialVersionUID = 1L;
 
     private String sql;
     private String project;
