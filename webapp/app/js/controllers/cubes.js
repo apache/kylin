@@ -450,6 +450,11 @@ var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 
   $scope.cloneCube = function(){
 
+    if(!$scope.targetObj.targetProject){
+      SweetAlert.swal('Oops...', "Please select target project.", 'info');
+      return;
+    }
+
     $scope.cubeRequest = {
       cubeName:$scope.targetObj.cubeName,
       project:$scope.targetObj.targetProject
