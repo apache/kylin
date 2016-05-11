@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel) {
+KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert) {
 
 
   $scope.addNewMeasure = function (measure) {
@@ -98,10 +98,15 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   };
 
   $scope.saveNewMeasure = function () {
+    if ($scope.newMeasure.function.expression === 'TOP_N' && $scope.nextParameters.length == 0) {
+      SweetAlert.swal('', '[TOP_N] Group by Column is required', 'warning');
+      return false;
+    }
     if ($scope.cubeMetaFrame.measures.indexOf($scope.newMeasure) === -1) {
       $scope.cubeMetaFrame.measures.push($scope.newMeasure);
     }
     $scope.newMeasure = null;
+    return true;
   };
 
   //map right return type for param
