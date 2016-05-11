@@ -598,7 +598,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     var groups = [];
     var j = -1;
     for (var i = 0; i < groupItems.length; i++) {
-      if (i % 8 == 0) {
+      if (i % 11 == 0) {
         j++;
         groups[j] = [];
       }
