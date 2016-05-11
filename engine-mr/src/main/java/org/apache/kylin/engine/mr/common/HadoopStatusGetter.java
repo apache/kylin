@@ -109,8 +109,8 @@ public class HadoopStatusGetter {
                 registerEasyHttps();
             }
             if (url.contains("anonymous=true") == false) {
-                url = url.contains("?") ? "&" : "?";
-                url = "anonymous=true";
+                url += url.contains("?") ? "&" : "?";
+                url += "anonymous=true";
             }
             HttpGet httpget = new HttpGet(url);
             httpget.addHeader("accept", "application/json");
