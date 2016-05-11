@@ -274,10 +274,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
           errors.push("At most one 'shard by' column is allowed.");
         }
 
-        if($scope.cubeMetaFrame.region_size<0.01 || $scope.cubeMetaFrame.region_size>100){
-          errors.push("Please input a region size between 0.01 and 100 (G).");
-        }
-
         var errorInfo = "";
         angular.forEach(errors,function(item){
             errorInfo+="\n"+item;

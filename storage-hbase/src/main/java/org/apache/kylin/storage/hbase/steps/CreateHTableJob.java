@@ -160,7 +160,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
     public static byte[][] getRegionSplitsFromCuboidStatistics(final Map<Long, Double> cubeSizeMap, final KylinConfig kylinConfig, final CubeSegment cubeSegment, final Path hfileSplitsOutputFolder) throws IOException {
 
         final CubeDesc cubeDesc = cubeSegment.getCubeDesc();
-        float cut = RegionSize.getReionSize(kylinConfig, cubeDesc);
+        float cut = cubeDesc.getConfig().getKylinHBaseRegionCut();
 
         logger.info("Cut for HBase region is " + cut + "GB");
 

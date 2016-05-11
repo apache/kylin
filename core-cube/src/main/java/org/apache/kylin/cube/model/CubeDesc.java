@@ -145,10 +145,6 @@ public class CubeDesc extends RootPersistentEntity {
     private long[] autoMergeTimeRanges;
     @JsonProperty("retention_range")
     private long retentionRange = 0;
-    
-    @JsonProperty("region_size")
-    private float regionSize = 0;//https://issues.apache.org/jira/browse/KYLIN-1584
-
     @JsonProperty("engine_type")
     private int engineType = IEngineAware.ID_MR_V1;
     @JsonProperty("storage_type")
@@ -412,15 +408,6 @@ public class CubeDesc extends RootPersistentEntity {
     private void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
         this.overrideKylinProps = overrideKylinProps;
     }
-
-    public float getRegionSize() {
-        return regionSize;
-    }
-
-    public void setRegionSize(float regionSize){
-        this.regionSize = regionSize;
-    }
-
 
     @Override
     public boolean equals(Object o) {
@@ -1050,7 +1037,6 @@ public class CubeDesc extends RootPersistentEntity {
         newCubeDesc.setAggregationGroups(cubeDesc.getAggregationGroups());
         newCubeDesc.setOverrideKylinProps(cubeDesc.getOverrideKylinProps());
         newCubeDesc.setConfig((KylinConfigExt) cubeDesc.getConfig());
-        newCubeDesc.setRegionSize(cubeDesc.getRegionSize());
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
