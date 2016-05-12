@@ -49,12 +49,12 @@ then
     fi
     export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
 
-    diagJar=`ls ${KYLIN_HOME}/lib/kylin-diagnosis-*.jar`
+    diagJar=`ls ${KYLIN_HOME}/tool/kylin-diagnosis-*.jar`
     if [ -f "${diagJar}" ]; then
         if [ -f "${KYLIN_HOME}/commit_SHA1" ]; then
             export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${diagJar}:${KYLIN_HOME}/lib/*
         else
-            export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${KYLIN_HOME}/lib/*
+            export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${KYLIN_HOME}/lib/*:${diagJar}
         fi
     else
         echo "missing diagnosis jar file."

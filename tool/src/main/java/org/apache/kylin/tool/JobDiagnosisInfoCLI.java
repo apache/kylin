@@ -88,11 +88,11 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         // dump job output
         logger.info("Start to dump job output");
         ExecutablePO executablePO = executableDao.getJob(jobId);
-        addRequired(ExecutableDao.pathOfJob(jobId));
-        addRequired(ExecutableDao.pathOfJobOutput(jobId));
+        addRequired(ResourceStoreUtil.concatJobPath(jobId));
+        addRequired(ResourceStoreUtil.concatJobOutputPath(jobId));
         for (ExecutablePO task : executablePO.getTasks()) {
-            addRequired(ExecutableDao.pathOfJob(task.getUuid()));
-            addRequired(ExecutableDao.pathOfJobOutput(task.getUuid()));
+            addRequired(ResourceStoreUtil.concatJobPath(task.getUuid()));
+            addRequired(ResourceStoreUtil.concatJobOutputPath(task.getUuid()));
             if (includeYarnLogs) {
                 yarnLogsResources.add(task.getUuid());
             }

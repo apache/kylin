@@ -21,6 +21,7 @@ package org.apache.kylin.tool.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -28,8 +29,11 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+
+import com.google.common.collect.Maps;
 
 public class ToolUtil {
     public static String getConfFolder() {
@@ -53,6 +57,18 @@ public class ToolUtil {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static String decideKylinMajorVersionFromCommitFile() {
+        Map<String, String> majorVersionCommitMap = Maps.newHashMap();
+        majorVersionCommitMap.put("1.3", "commit.sha1");
+        majorVersionCommitMap.put("1.5", "commit_SHA1");
+        for (Map.Entry<String, String> majorVersionEntry : majorVersionCommitMap.entrySet()) {
+            if (new File(KylinConfig.getKylinHome(), majorVersionEntry.getValue()).exists()) {
+                return majorVersionEntry.getKey();
+            }
+        }
+        return null;
     }
 
 }

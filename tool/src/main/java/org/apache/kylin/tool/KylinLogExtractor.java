@@ -21,12 +21,14 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,18 +60,26 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
 
         logger.info("Start to extract kylin logs in {} days", logPeriod);
 
-        final File kylinLogDir = new File(KylinConfig.getKylinHome(), "logs");
+        List<File> logDirs = Lists.newArrayList();
+        logDirs.add(new File(KylinConfig.getKylinHome(), "logs"));
+        String kylinVersion = ToolUtil.decideKylinMajorVersionFromCommitFile();
+        if (kylinVersion != null && kylinVersion.equals("1.3")) {
+            logDirs.add(new File(KylinConfig.getKylinHome(), "tomcat/logs"));
+        }
+
         final ArrayList<File> requiredLogFiles = Lists.newArrayList();
         final long logThresholdTime = System.currentTimeMillis() - logPeriod * 24 * 3600 * 1000;
 
-        final File[] allLogFiles = kylinLogDir.listFiles();
-        if (allLogFiles == null || allLogFiles.length == 0) {
-            return;
-        }
+        for (File kylinLogDir : logDirs) {
+            final File[] allLogFiles = kylinLogDir.listFiles();
+            if (allLogFiles == null || allLogFiles.length == 0) {
+                return;
+            }
 
-        for (File logFile : allLogFiles) {
-            if (logFile.lastModified() > logThresholdTime) {
-                requiredLogFiles.add(logFile);
+            for (File logFile : allLogFiles) {
+                if (logFile.lastModified() > logThresholdTime) {
+                    requiredLogFiles.add(logFile);
+                }
             }
         }
 

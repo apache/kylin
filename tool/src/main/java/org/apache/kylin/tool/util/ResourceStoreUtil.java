@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.metadata.MetadataConstants;
 
 /**
  * Created by dongli on 5/5/16.
@@ -62,5 +63,21 @@ public class ResourceStoreUtil {
             for (String child : children)
                 rCopy(src, dst, child);
         }
+    }
+
+    public static String concatCubeDescResourcePath(String descName) {
+        return ResourceStore.CUBE_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
+    }
+
+    public static String concatCubeSegmentStatisticsResourcePath(String cubeName, String cubeSegmentId) {
+        return ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + cubeSegmentId + ".seq";
+    }
+
+    public static String concatJobPath(String uuid) {
+        return ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + uuid;
+    }
+
+    public static String concatJobOutputPath(String uuid) {
+        return ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + uuid;
     }
 }

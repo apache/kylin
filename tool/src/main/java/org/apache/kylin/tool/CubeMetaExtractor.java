@@ -230,14 +230,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     //        }
     //    }
 
-    private static String concatCubeDescResourcePath(String descName) {
-        return ResourceStore.CUBE_DESC_RESOURCE_ROOT + "/" + descName + MetadataConstants.FILE_SURFIX;
-    }
-
-    private static String concatCubeSegmentStatisticsResourcePath(String cubeName, String cubeSegmentId) {
-        return ResourceStore.CUBE_STATISTICS_ROOT + "/" + cubeName + "/" + cubeSegmentId + ".seq";
-    }
-
     private void retrieveResourcePath(IRealization realization) {
 
         logger.info("Deal with realization {} of type {}", realization.getName(), realization.getType());
@@ -259,12 +251,12 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
 
             // backward compatible with 1.3
-            addRequired(concatCubeDescResourcePath(cubeDesc.getName()));
+            addRequired(ResourceStoreUtil.concatCubeDescResourcePath(cubeDesc.getName()));
 
             if (includeSegments) {
                 addRequired(CubeInstance.concatResourcePath(cube.getName()));
                 for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
-                    addRequired(concatCubeSegmentStatisticsResourcePath(cube.getName(), segment.getUuid()));
+                    addRequired(ResourceStoreUtil.concatCubeSegmentStatisticsResourcePath(cube.getName(), segment.getUuid()));
                     if (includeSegmentDetails) {
                         for (String dictPat : segment.getDictionaryPaths()) {
                             addRequired(dictPat);
@@ -281,11 +273,11 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
                         } else {
                             try {
                                 ExecutablePO executablePO = executableDao.getJob(lastJobId);
-                                addRequired(ExecutableDao.pathOfJob(lastJobId));
-                                addRequired(ExecutableDao.pathOfJobOutput(lastJobId));
+                                addRequired(ResourceStoreUtil.concatJobPath(lastJobId));
+                                addRequired(ResourceStoreUtil.concatJobOutputPath(lastJobId));
                                 for (ExecutablePO task : executablePO.getTasks()) {
-                                    addRequired(ExecutableDao.pathOfJob(task.getUuid()));
-                                    addRequired(ExecutableDao.pathOfJobOutput(task.getUuid()));
+                                    addRequired(ResourceStoreUtil.concatJobPath(task.getUuid()));
+                                    addRequired(ResourceStoreUtil.concatJobOutputPath(task.getUuid()));
                                 }
                             } catch (PersistentException e) {
                                 throw new RuntimeException("PersistentException", e);

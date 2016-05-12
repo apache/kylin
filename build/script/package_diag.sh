@@ -47,37 +47,16 @@ if [ "$version" == "" ];then
 fi
 
 echo "kylin version: ${version}"
-export version
-
-#commit id
-cat << EOF > build/commit_SHA1
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-EOF
-git rev-parse HEAD >> build/commit_SHA1
 
 echo "package libraries"
 mvn clean install -DskipTests	 || { exit 1; }
 
 echo "copy libraries"
-rm -rf build/lib
-mkdir build/lib
-cp tool/target/kylin-tool-${version}-assembly.jar build/lib/kylin-diagnosis-${version}.jar
+rm -rf build/tool
+mkdir build/tool
+cp tool/target/kylin-tool-${version}-assembly.jar build/tool/kylin-diagnosis-${version}.jar
 # Copied file becomes 000 for some env (e.g. my Cygwin)
-chmod 644 build/lib/kylin-diagnosis-${version}.jar
+chmod 644 build/tool/kylin-diagnosis-${version}.jar
 
 echo 'package tar.gz'
 package_name=apache-kylin-${version}-diag
@@ -85,9 +64,9 @@ cd build/
 rm -rf ${package_name}
 mkdir ${package_name}
 mkdir ${package_name}/bin
-cp -r lib ${package_name}
+cp -r tool ${package_name}
 cp deploy/diag.sh ${package_name}/bin/
-rm -rf lib
+rm -rf tool
 find ${package_name} -type d -exec chmod 755 {} \;
 find ${package_name} -type f -exec chmod 644 {} \;
 find ${package_name} -type f -name "*.sh" -exec chmod 755 {} \;
