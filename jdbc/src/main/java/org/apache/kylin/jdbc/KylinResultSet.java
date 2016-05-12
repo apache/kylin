@@ -50,10 +50,9 @@ public class KylinResultSet extends AvaticaResultSet {
         String sql = signature.sql;
         List<AvaticaParameter> params = signature.parameters;
         List<Object> paramValues = null;
-        if(statement instanceof KylinStatement) {
+        if (!(statement instanceof KylinPreparedStatement)) {
             params = null;
-        }
-        if (params != null && params.size() > 0) {
+        } else if (params != null && params.size() > 0) {
             paramValues = ((KylinPreparedStatement) statement).getParameterValues2();
         }
 

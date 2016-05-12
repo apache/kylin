@@ -88,6 +88,10 @@ public class DriverTest {
             assertEquals("bar", resultSet.getString(2));
             assertEquals("tool", resultSet.getString(3));
         }
+
+        resultSet.close();
+        state.close();
+        conn.close();
     }
 
     @Test
