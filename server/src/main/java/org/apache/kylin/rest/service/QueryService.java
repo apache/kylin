@@ -73,6 +73,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Lists;
+
 /**
  * @author xduo
  */
@@ -341,8 +343,8 @@ public class QueryService extends BasicService {
         Statement stat = null;
         ResultSet resultSet = null;
 
-        List<List<String>> results = new LinkedList<List<String>>();
-        List<SelectedColumnMeta> columnMetas = new LinkedList<SelectedColumnMeta>();
+        List<List<String>> results = Lists.newArrayList();
+        List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
 
         try {
             conn = cacheService.getOLAPDataSource(sqlRequest.getProject()).getConnection();
@@ -368,16 +370,14 @@ public class QueryService extends BasicService {
                 columnMetas.add(new SelectedColumnMeta(metaData.isAutoIncrement(i), metaData.isCaseSensitive(i), metaData.isSearchable(i), metaData.isCurrency(i), metaData.isNullable(i), metaData.isSigned(i), metaData.getColumnDisplaySize(i), metaData.getColumnLabel(i), metaData.getColumnName(i), metaData.getSchemaName(i), metaData.getCatalogName(i), metaData.getTableName(i), metaData.getPrecision(i), metaData.getScale(i), metaData.getColumnType(i), metaData.getColumnTypeName(i), metaData.isReadOnly(i), metaData.isWritable(i), metaData.isDefinitelyWritable(i)));
             }
 
-            List<String> oneRow = new LinkedList<String>();
-
             // fill in results
             while (resultSet.next()) {
+                List<String> oneRow = Lists.newArrayListWithCapacity(columnCount);
                 for (int i = 0; i < columnCount; i++) {
                     oneRow.add((resultSet.getString(i + 1)));
                 }
 
-                results.add(new LinkedList<String>(oneRow));
-                oneRow.clear();
+                results.add(oneRow);
             }
         } finally {
             close(resultSet, stat, conn);
