@@ -19,6 +19,9 @@
 package org.apache.kylin.common.util;
 
 import java.util.Iterator;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
 
 public class NumberIterators {
 
@@ -31,4 +34,17 @@ public class NumberIterators {
         return ret;
     }
 
+    public static <T extends Number> long checkSame(Iterator<T> iterator) {
+        Set<Long> values = Sets.newHashSet();
+        while (iterator.hasNext()) {
+            Number element = iterator.next();
+            values.add(element.longValue());
+        }
+
+        if (values.size() > 1) {
+            throw new IllegalStateException("more than one distinct values exist in the collection:" + values);
+        }
+
+        return values.iterator().next();
+    }
 }

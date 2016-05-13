@@ -113,8 +113,16 @@ public class SQLResponse implements Serializable {
         return isException;
     }
 
+    public void setIsException(boolean v) {
+        isException = v;
+    }
+
     public String getExceptionMessage() {
         return exceptionMessage;
+    }
+
+    public void setExceptionMessage(String msg) {
+        exceptionMessage = msg;
     }
 
     public long getDuration() {
