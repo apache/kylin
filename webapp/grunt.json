@@ -15,7 +15,6 @@
                 "app/components/angular-route/angular-route.min.js",
                 "app/components/angular-resource/angular-resource.js",
                 "app/components/angular-bootstrap/ui-bootstrap-tpls.min.js",
-                "app/components/angular-ui-grid/ui-grid.min.js",
                 "app/components/angular-cookies/angular-cookies.js",
                 "app/components/angularLocalStorage/src/angularLocalStorage.js",
                 "app/components/angular-base64/angular-base64.min.js",

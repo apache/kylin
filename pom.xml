@@ -785,6 +785,7 @@
                                 <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
                                 <exclude>webapp/app/js/directives/datetimepicker.js</exclude>
                                 <exclude>webapp/app/js/directives/select.js</exclude>
+                                <exclude>webapp/app/js/directives/ui-grid.js</exclude>
 
                                 <!--configuration file -->
                                 <exclude>webapp/app/routes.json</exclude>
