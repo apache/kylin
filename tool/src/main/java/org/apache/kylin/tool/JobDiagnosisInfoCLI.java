@@ -163,7 +163,11 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
                 File destFile = new File(destDir, applicationId + ".log");
                 String yarnCmd = "yarn logs -applicationId " + applicationId + " > " + destFile.getAbsolutePath();
                 logger.debug(yarnCmd);
-                kylinConfig.getCliCommandExecutor().execute(yarnCmd);
+                try {
+                    kylinConfig.getCliCommandExecutor().execute(yarnCmd);
+                } catch (Exception ex) {
+                    logger.warn("Failed to get yarn logs. ", ex);
+                }
             }
         }
     }
@@ -175,11 +179,18 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         final String[] cmdOutputLines = cmdOutput.split("\n");
         for (String cmdOutputLine : cmdOutputLines) {
             String[] pair = cmdOutputLine.split(":");
-            params.put(pair[0].trim(), pair[1].trim());
+            if (pair.length >= 2) {
+                params.put(pair[0].trim(), pair[1].trim());
+            }
         }
         for (Map.Entry<String, String> e : params.entrySet()) {
             logger.info(e.getKey() + ":" + e.getValue());
         }
+
+        if (params.containsKey("State") && params.get("State").equals("RUNNING")) {
+            return true;
+        }
+
         if (params.containsKey("Final-State") && params.get("Final-State").equals("SUCCEEDED")) {
             return true;
         }
