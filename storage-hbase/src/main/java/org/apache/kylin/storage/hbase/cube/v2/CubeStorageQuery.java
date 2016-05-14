@@ -113,8 +113,9 @@ public class CubeStorageQuery implements IStorageQuery {
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
             CubeSegmentScanner scanner;
             if (cubeSeg.getInputRecords() == 0) {
-                logger.info("Skip cube segment {} because its input record is 0", cubeSeg);
-                continue;
+                logger.warn("cube segment {} input record is 0, " +
+                        "it may caused by kylin failed to the job counter " +
+                        "as the hadoop history server wasn't running", cubeSeg);
             }
             scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation);
             scanners.add(scanner);
