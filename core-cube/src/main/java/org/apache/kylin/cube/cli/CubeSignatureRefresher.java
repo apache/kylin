@@ -101,7 +101,7 @@ public class CubeSignatureRefresher {
 
     public static void main(String args[]) {
         if (args != null && args.length > 1) {
-            System.out.println("Usage: java CubeDescSignatureUpdate [Cubes]; e.g, cube1,cube2 ");
+            System.out.println("Usage: java CubeSignatureRefresher [Cubes]; e.g, cube1,cube2 ");
             return;
         }
 
@@ -109,7 +109,7 @@ public class CubeSignatureRefresher {
         metadataUpgrade.update();
 
         logger.info("=================================================================");
-        logger.info("Run CubeDescSignatureUpdate completed;");
+        logger.info("Run CubeSignatureRefresher completed;");
 
         if (!metadataUpgrade.updatedResources.isEmpty()) {
             logger.info("Following resources are updated successfully:");
