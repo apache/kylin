@@ -15,241 +15,165 @@
   limitations under the License.
 -->
 <configuration>
-
-    <property>
-        <name>io.sort.mb</name>
-        <value>128</value>
-    </property>
-
-    <property>
-        <name>mapred.child.java.opts</name>
-        <value>-Xmx200m</value>
-    </property>
-
-    <property>
-        <name>mapreduce.map.memory.mb</name>
-        <value>512</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.memory.mb</name>
-        <value>512</value>
-    </property>
-
-    <property>
-        <name>mapreduce.admin.map.child.java.opts</name>
-        <value>-server -XX:NewRatio=8 -Djava.net.preferIPv4Stack=true -Dhdp.version=${hdp.version}</value>
-    </property>
-
-    <property>
-        <name>mapreduce.admin.reduce.child.java.opts</name>
-        <value>-server -XX:NewRatio=8 -Djava.net.preferIPv4Stack=true -Dhdp.version=${hdp.version}</value>
-    </property>
-
-    <property>
-        <name>mapreduce.admin.user.env</name>
-        <value>LD_LIBRARY_PATH=/usr/hdp/${hdp.version}/hadoop/lib/native:/usr/hdp/${hdp.version}/hadoop/lib/native/Linux-amd64-64</value>
-    </property>
-
-    <property>
-        <name>mapreduce.am.max-attempts</name>
-        <value>2</value>
-    </property>
-
-    <property>
-        <name>mapreduce.application.classpath</name>
-        <value>/tmp/kylin/*,$HADOOP_CONF_DIR,/usr/hdp/${hdp.version}/hbase/lib/hbase-common.jar,/usr/hdp/current/hive-client/conf/,$PWD/mr-framework/hadoop/share/hadoop/mapreduce/*:$PWD/mr-framework/hadoop/share/hadoop/mapreduce/lib/*:$PWD/mr-framework/hadoop/share/hadoop/common/*:$PWD/mr-framework/hadoop/share/hadoop/common/lib/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/lib/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*:/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar:/usr/hdp/${hdp.version}/hadoop/lib/snappy-java-1.0.4.1.jar:/etc/hadoop/conf/secure</value>
-    </property>
-
-    <property>
-        <name>mapreduce.application.framework.path</name>
-        <value>/hdp/apps/${hdp.version}/mapreduce/mapreduce.tar.gz#mr-framework</value>
-    </property>
-
-    <property>
-        <name>mapreduce.cluster.administrators</name>
-        <value>hadoop</value>
-    </property>
-
-    <property>
-        <name>mapreduce.framework.name</name>
-        <value>yarn</value>
-    </property>
-
-    <property>
-        <name>mapreduce.job.emit-timeline-data</name>
-        <value>false</value>
-    </property>
-
-    <!--the default value on hdp is 0.05, however for test environments we need to be conservative on resource -->
-    <property>
-        <name>mapreduce.job.reduce.slowstart.completedmaps</name>
-        <value>1</value>
-    </property>
-
-    <property>
-        <name>mapreduce.jobhistory.address</name>
-        <value>sandbox.hortonworks.com:10020</value>
-    </property>
-
-    <property>
-        <name>mapreduce.jobhistory.bind-host</name>
-        <value>0.0.0.0</value>
-    </property>
-
-    <property>
-        <name>mapreduce.jobhistory.done-dir</name>
-        <value>/mr-history/done</value>
-    </property>
-
-    <property>
-        <name>mapreduce.jobhistory.intermediate-done-dir</name>
-        <value>/mr-history/tmp</value>
-    </property>
-
-    <property>
-        <name>mapreduce.jobhistory.webapp.address</name>
-        <value>sandbox.hortonworks.com:19888</value>
-    </property>
-
-    <property>
-        <name>mapreduce.map.java.opts</name>
-        <value>-Xmx512m</value>
-    </property>
-
-    <property>
-        <name>mapreduce.map.log.level</name>
-        <value>INFO</value>
-    </property>
-
-    <property>
-        <name>mapreduce.map.memory.mb</name>
-        <value>512</value>
-    </property>
-
-    <property>
-        <name>mapreduce.map.output.compress</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>mapreduce.map.sort.spill.percent</name>
-        <value>0.7</value>
-    </property>
-
-    <property>
-        <name>mapreduce.map.speculative</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>mapreduce.output.fileoutputformat.compress</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>mapreduce.output.fileoutputformat.compress.type</name>
-        <value>BLOCK</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.input.buffer.percent</name>
-        <value>0.0</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.java.opts</name>
-        <value>-Xmx200m</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.log.level</name>
-        <value>INFO</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.memory.mb</name>
-        <value>512</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.shuffle.fetch.retry.enabled</name>
-        <value>1</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.shuffle.fetch.retry.interval-ms</name>
-        <value>1000</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.shuffle.fetch.retry.timeout-ms</name>
-        <value>30000</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.shuffle.input.buffer.percent</name>
-        <value>0.7</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.shuffle.merge.percent</name>
-        <value>0.66</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.shuffle.parallelcopies</name>
-        <value>30</value>
-    </property>
-
-    <property>
-        <name>mapreduce.reduce.speculative</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>mapreduce.shuffle.port</name>
-        <value>13562</value>
-    </property>
-
-    <property>
-        <name>mapreduce.task.io.sort.factor</name>
-        <value>100</value>
-    </property>
-
-    <property>
-        <name>mapreduce.task.io.sort.mb</name>
-        <value>128</value>
-    </property>
-
-    <property>
-        <name>mapreduce.task.timeout</name>
-        <value>300000</value>
-    </property>
-
-    <property>
-        <name>yarn.app.mapreduce.am.admin-command-opts</name>
-        <value>-Dhdp.version=${hdp.version}</value>
-    </property>
-
-    <property>
-        <name>yarn.app.mapreduce.am.command-opts</name>
-        <value>-Xmx512m</value>
-    </property>
-
-    <property>
-        <name>yarn.app.mapreduce.am.log.level</name>
-        <value>INFO</value>
-    </property>
-
-    <property>
-        <name>yarn.app.mapreduce.am.resource.mb</name>
-        <value>512</value>
-    </property>
-
-    <property>
-        <name>yarn.app.mapreduce.am.staging-dir</name>
-        <value>/user</value>
-    </property>
-
+<property>
+    <name>mapreduce.job.split.metainfo.maxsize</name>
+    <value>10000000</value>
+</property>
+<property>
+    <name>mapreduce.job.counters.max</name>
+    <value>120</value>
+</property>
+<property>
+    <name>mapreduce.output.fileoutputformat.compress</name>
+    <value>false</value>
+</property>
+<property>
+    <name>mapreduce.output.fileoutputformat.compress.type</name>
+    <value>BLOCK</value>
+</property>
+<property>
+    <name>mapreduce.output.fileoutputformat.compress.codec</name>
+    <value>org.apache.hadoop.io.compress.DefaultCodec</value>
+</property>
+<property>
+    <name>mapreduce.map.output.compress.codec</name>
+    <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+</property>
+<property>
+    <name>mapreduce.map.output.compress</name>
+    <value>true</value>
+</property>
+<property>
+    <name>zlib.compress.level</name>
+    <value>DEFAULT_COMPRESSION</value>
+</property>
+<property>
+    <name>mapreduce.task.io.sort.factor</name>
+    <value>64</value>
+</property>
+<property>
+    <name>mapreduce.map.sort.spill.percent</name>
+    <value>0.8</value>
+</property>
+<property>
+    <name>mapreduce.reduce.shuffle.parallelcopies</name>
+    <value>10</value>
+</property>
+<property>
+    <name>mapreduce.task.timeout</name>
+    <value>600000</value>
+</property>
+<property>
+    <name>mapreduce.client.submit.file.replication</name>
+    <value>1</value>
+</property>
+<property>
+    <name>mapreduce.job.reduces</name>
+    <value>1</value>
+</property>
+<property>
+    <name>mapreduce.task.io.sort.mb</name>
+    <value>16</value>
+</property>
+<property>
+    <name>mapreduce.map.speculative</name>
+    <value>false</value>
+</property>
+<property>
+    <name>mapreduce.reduce.speculative</name>
+    <value>false</value>
+</property>
+<property>
+    <name>mapreduce.job.reduce.slowstart.completedmaps</name>
+    <value>0.8</value>
+</property>
+<property>
+    <name>mapreduce.jobhistory.address</name>
+    <value>quickstart.cloudera:10020</value>
+</property>
+<property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>quickstart.cloudera:19888</value>
+</property>
+<property>
+    <name>mapreduce.jobhistory.webapp.https.address</name>
+    <value>quickstart.cloudera:19890</value>
+</property>
+<property>
+    <name>mapreduce.jobhistory.admin.address</name>
+    <value>quickstart.cloudera:10033</value>
+</property>
+<property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+</property>
+<property>
+    <name>yarn.app.mapreduce.am.staging-dir</name>
+    <value>/user</value>
+</property>
+<property>
+    <name>mapreduce.am.max-attempts</name>
+    <value>2</value>
+</property>
+<property>
+    <name>yarn.app.mapreduce.am.resource.mb</name>
+    <value>128</value>
+</property>
+<property>
+    <name>yarn.app.mapreduce.am.resource.cpu-vcores</name>
+    <value>1</value>
+</property>
+<property>
+    <name>mapreduce.job.ubertask.enable</name>
+    <value>false</value>
+</property>
+<property>
+    <name>yarn.app.mapreduce.am.command-opts</name>
+    <value>-Djava.net.preferIPv4Stack=true -Xmx52428800</value>
+</property>
+<property>
+    <name>mapreduce.map.java.opts</name>
+    <value>-Djava.net.preferIPv4Stack=true -Xmx52428800</value>
+</property>
+<property>
+    <name>mapreduce.reduce.java.opts</name>
+    <value>-Djava.net.preferIPv4Stack=true -Xmx52428800</value>
+</property>
+<property>
+    <name>yarn.app.mapreduce.am.admin.user.env</name>
+    <value>LD_LIBRARY_PATH=$HADOOP_COMMON_HOME/lib/native:$JAVA_LIBRARY_PATH</value>
+</property>
+<property>
+    <name>mapreduce.map.memory.mb</name>
+    <value>128</value>
+</property>
+<property>
+    <name>mapreduce.map.cpu.vcores</name>
+    <value>1</value>
+</property>
+<property>
+    <name>mapreduce.reduce.memory.mb</name>
+    <value>128</value>
+</property>
+<property>
+    <name>mapreduce.reduce.cpu.vcores</name>
+    <value>1</value>
+</property>
+<property>
+    <name>mapreduce.job.heap.memory-mb.ratio</name>
+    <value>0.8</value>
+</property>
+<property>
+    <name>mapreduce.application.classpath</name>
+    <value>/tmp/kylin/*,/usr/lib/hadoop-mapreduce/lib/*,/etc/hadoop/conf:/usr/lib/hadoop/lib/*:/usr/lib/hadoop/.//*:/usr/lib/hadoop-hdfs/./:/usr/lib/hadoop-hdfs/lib/*:/usr/lib/hadoop-hdfs/.//*:/usr/lib/hadoop-yarn/lib/*:/usr/lib/hadoop-yarn/.//*:/usr/lib/hadoop-mapreduce/lib/*:/usr/lib/hadoop-mapreduce/.//*,/usr/lib/hbase/hbase-common.jar,/etc/hive/conf</value>
+</property>
+<property>
+    <name>mapreduce.admin.user.env</name>
+    <value>LD_LIBRARY_PATH=$HADOOP_COMMON_HOME/lib/native:$JAVA_LIBRARY_PATH</value>
+</property>
+<property>
+    <name>mapreduce.shuffle.max.connections</name>
+    <value>80</value>
+</property>
 </configuration>
+

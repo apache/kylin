@@ -77,6 +77,7 @@ public class MockupMapContext {
                     outKV[0] = key;
                     outKV[1] = value;
                 }
+
             }
 
             @Override
@@ -98,6 +99,7 @@ public class MockupMapContext {
             public String getStatus() {
                 throw new NotImplementedException();
             }
+
 
             @Override
             public float getProgress() {
@@ -195,17 +197,17 @@ public class MockupMapContext {
             }
 
             @Override
+            public boolean userClassesTakesPrecedence() {
+                throw new NotImplementedException();
+            }
+
+            @Override
             public RawComparator<?> getSortComparator() {
                 throw new NotImplementedException();
             }
 
             @Override
             public String getJar() {
-                throw new NotImplementedException();
-            }
-
-            @Override
-            public RawComparator<?> getGroupingComparator() {
                 throw new NotImplementedException();
             }
 
@@ -221,7 +223,7 @@ public class MockupMapContext {
 
             @Override
             public boolean getProfileEnabled() {
-                throw new NotImplementedException();
+                return false;
             }
 
             @Override
@@ -307,6 +309,11 @@ public class MockupMapContext {
             @Override
             public RawComparator<?> getCombinerKeyGroupingComparator() {
                 throw new NotImplementedException();
+            }
+
+            @Override
+            public RawComparator<?> getGroupingComparator() {
+                return null;
             }
         });
     }
