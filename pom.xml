@@ -47,13 +47,13 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Hadoop versions -->
-        <hadoop2.version>2.7.1</hadoop2.version>
-        <yarn.version>2.7.1</yarn.version>
-        <zookeeper.version>3.4.6</zookeeper.version>
-        <hive.version>1.2.1</hive.version>
-        <hive-hcatalog.version>1.2.1</hive-hcatalog.version>
-        <hbase-hadoop2.version>1.1.1</hbase-hadoop2.version>
-        <kafka.version>0.8.1</kafka.version>
+        <hadoop2.version>2.6.0-cdh5.7.0</hadoop2.version>
+        <yarn.version>2.6.0-cdh5.7.0</yarn.version>
+        <zookeeper.version>3.4.5-cdh5.7.0</zookeeper.version>
+        <hive.version>1.1.0-cdh5.7.0</hive.version>
+        <hive-hcatalog.version>1.1.0-cdh5.7.0</hive-hcatalog.version>
+        <hbase-hadoop2.version>1.2.0-cdh5.7.0</hbase-hadoop2.version>
+        <kafka.version>0.8.0</kafka.version>
 
         <!-- Dependency versions -->
         <antlr.version>3.4</antlr.version>
@@ -495,6 +495,10 @@
         <repository>
             <id>conjars</id>
             <url>http://conjars.org/repo/</url>
+        </repository>
+        <repository>
+            <id>cloudera</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
         </repository>
     </repositories>
 

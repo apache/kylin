@@ -15,180 +15,104 @@
   limitations under the License.
 -->
 <configuration>
-
     <property>
-        <name>dfs.domain.socket.path</name>
-        <value>/var/lib/hadoop-hdfs/dn_socket</value>
+        <name>hbase.rootdir</name>
+        <value>hdfs://quickstart.cloudera:8020/hbase</value>
     </property>
-
     <property>
-        <name>hbase.client.keyvalue.maxsize</name>
-        <value>10485760</value>
+        <name>hbase.replication</name>
+        <value>true</value>
     </property>
-
+    <property>
+        <name>hbase.client.write.buffer</name>
+        <value>2097152</value>
+    </property>
+    <property>
+        <name>hbase.client.pause</name>
+        <value>100</value>
+    </property>
+    <property>
+        <name>hbase.client.retries.number</name>
+        <value>35</value>
+    </property>
     <property>
         <name>hbase.client.scanner.caching</name>
         <value>100</value>
     </property>
-
     <property>
-        <name>hbase.cluster.distributed</name>
+        <name>hbase.client.keyvalue.maxsize</name>
+        <value>10485760</value>
+    </property>
+    <property>
+        <name>hbase.ipc.client.allowsInterrupt</name>
         <value>true</value>
     </property>
-
     <property>
-        <name>hbase.coprocessor.master.classes</name>
-        <value>com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor</value>
-    </property>
-
-    <property>
-        <name>hbase.coprocessor.region.classes</name>
-        <value>com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor</value>
-    </property>
-
-    <property>
-        <name>hbase.defaults.for.version.skip</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>hbase.hregion.majorcompaction</name>
-        <value>604800000</value>
-    </property>
-
-    <property>
-        <name>hbase.hregion.majorcompaction.jitter</name>
-        <value>0.50</value>
-    </property>
-
-    <property>
-        <name>hbase.hregion.max.filesize</name>
-        <value>10737418240</value>
-    </property>
-
-    <property>
-        <name>hbase.hregion.memstore.block.multiplier</name>
-        <value>4</value>
-    </property>
-
-    <property>
-        <name>hbase.hregion.memstore.flush.size</name>
-        <value>134217728</value>
-    </property>
-
-    <property>
-        <name>hbase.hregion.memstore.mslab.enabled</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>hbase.hstore.blockingStoreFiles</name>
+        <name>hbase.client.primaryCallTimeout.get</name>
         <value>10</value>
     </property>
-
     <property>
-        <name>hbase.hstore.compactionThreshold</name>
-        <value>3</value>
+        <name>hbase.client.primaryCallTimeout.multiget</name>
+        <value>10</value>
     </property>
-
     <property>
-        <name>hbase.local.dir</name>
-        <value>${hbase.tmp.dir}/local</value>
+        <name>hbase.regionserver.thrift.http</name>
+        <value>false</value>
     </property>
-
     <property>
-        <name>hbase.master.info.bindAddress</name>
-        <value>0.0.0.0</value>
+        <name>hbase.thrift.support.proxyuser</name>
+        <value>false</value>
     </property>
-
     <property>
-        <name>hbase.master.info.port</name>
-        <value>60010</value>
-    </property>
-
-    <property>
-        <name>hbase.master.port</name>
+        <name>hbase.rpc.timeout</name>
         <value>60000</value>
     </property>
-
     <property>
-        <name>hbase.regionserver.global.memstore.lowerLimit</name>
-        <value>0.38</value>
+        <name>hbase.snapshot.enabled</name>
+        <value>true</value>
     </property>
-
     <property>
-        <name>hbase.regionserver.global.memstore.upperLimit</name>
-        <value>0.4</value>
+        <name>hbase.snapshot.master.timeoutMillis</name>
+        <value>60000</value>
     </property>
-
     <property>
-        <name>hbase.regionserver.handler.count</name>
-        <value>60</value>
+        <name>hbase.snapshot.region.timeout</name>
+        <value>60000</value>
     </property>
-
     <property>
-        <name>hbase.regionserver.info.port</name>
-        <value>60030</value>
+        <name>hbase.snapshot.master.timeout.millis</name>
+        <value>60000</value>
     </property>
-
-    <property>
-        <name>hbase.rootdir</name>
-        <value>hdfs://sandbox.hortonworks.com:8020/apps/hbase/data</value>
-    </property>
-
-    <property>
-        <name>hbase.rpc.protection</name>
-        <value>PRIVACY</value>
-    </property>
-
     <property>
         <name>hbase.security.authentication</name>
         <value>simple</value>
     </property>
-
     <property>
-        <name>hbase.security.authorization</name>
-        <value>true</value>
+        <name>hbase.rpc.protection</name>
+        <value>authentication</value>
     </property>
-
     <property>
-        <name>hbase.superuser</name>
-        <value>hbase</value>
+        <name>zookeeper.session.timeout</name>
+        <value>60000</value>
     </property>
-
     <property>
-        <name>hbase.tmp.dir</name>
-        <value>/hadoop/hbase</value>
+        <name>zookeeper.znode.parent</name>
+        <value>/hbase</value>
     </property>
-
+    <property>
+        <name>zookeeper.znode.rootserver</name>
+        <value>root-region-server</value>
+    </property>
+    <property>
+        <name>hbase.zookeeper.quorum</name>
+        <value>quickstart.cloudera</value>
+    </property>
     <property>
         <name>hbase.zookeeper.property.clientPort</name>
         <value>2181</value>
     </property>
-
     <property>
-        <name>hbase.zookeeper.quorum</name>
-        <value>sandbox.hortonworks.com</value>
+        <name>hbase.rest.ssl.enabled</name>
+        <value>false</value>
     </property>
-
-    <property>
-        <name>hbase.zookeeper.useMulti</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>hfile.block.cache.size</name>
-        <value>0.40</value>
-    </property>
-
-    <property>
-        <name>zookeeper.session.timeout</name>
-        <value>30000</value>
-    </property>
-
-    <property>
-        <name>zookeeper.znode.parent</name>
-        <value>/hbase-unsecure</value>
-    </property>
-
 </configuration>

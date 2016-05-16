@@ -15,520 +15,128 @@
   limitations under the License.
 -->
 <configuration>
-
-    <property>
-        <name>hadoop.registry.rm.enabled</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>hadoop.registry.zk.quorum</name>
-        <value>sandbox.hortonworks.com:2181</value>
-    </property>
-
     <property>
         <name>yarn.acl.enable</name>
-        <value>false</value>
+        <value>true</value>
     </property>
-
     <property>
         <name>yarn.admin.acl</name>
-        <value></value>
+        <value>*</value>
     </property>
-
-    <property>
-        <name>yarn.application.classpath</name>
-        <value>$HADOOP_CONF_DIR,/usr/hdp/current/hadoop-client/*,/usr/hdp/current/hadoop-client/lib/*,/usr/hdp/current/hadoop-hdfs-client/*,/usr/hdp/current/hadoop-hdfs-client/lib/*,/usr/hdp/current/hadoop-yarn-client/*,/usr/hdp/current/hadoop-yarn-client/lib/*</value>
-    </property>
-
-    <property>
-        <name>yarn.client.nodemanager-connect.max-wait-ms</name>
-        <value>60000</value>
-    </property>
-
-    <property>
-        <name>yarn.client.nodemanager-connect.retry-interval-ms</name>
-        <value>10000</value>
-    </property>
-
-    <property>
-        <name>yarn.http.policy</name>
-        <value>HTTP_ONLY</value>
-    </property>
-
-    <property>
-        <name>yarn.log-aggregation-enable</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.log-aggregation.retain-seconds</name>
-        <value>2592000</value>
-    </property>
-
-    <property>
-        <name>yarn.log.server.url</name>
-        <value>http://sandbox.hortonworks.com:19888/jobhistory/logs</value>
-    </property>
-
-    <property>
-        <name>yarn.node-labels.fs-store.retry-policy-spec</name>
-        <value>2000, 500</value>
-    </property>
-
-    <property>
-        <name>yarn.node-labels.fs-store.root-dir</name>
-        <value>/system/yarn/node-labels</value>
-    </property>
-
-    <property>
-        <name>yarn.node-labels.manager-class</name>
-        <value>org.apache.hadoop.yarn.server.resourcemanager.nodelabels.MemoryRMNodeLabelsManager</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.address</name>
-        <value>0.0.0.0:45454</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.admin-env</name>
-        <value>MALLOC_ARENA_MAX=$MALLOC_ARENA_MAX</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.aux-services</name>
-        <value>mapreduce_shuffle</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
-        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.bind-host</name>
-        <value>0.0.0.0</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.container-executor.class</name>
-        <value>org.apache.hadoop.yarn.server.nodemanager.DefaultContainerExecutor</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.container-monitor.interval-ms</name>
-        <value>3000</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.delete.debug-delay-sec</name>
-        <value>0</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage</name>
-        <value>90</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.disk-health-checker.min-free-space-per-disk-mb</name>
-        <value>1000</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.disk-health-checker.min-healthy-disks</name>
-        <value>0.25</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.health-checker.interval-ms</name>
-        <value>135000</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.health-checker.script.timeout-ms</name>
-        <value>60000</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.linux-container-executor.cgroups.hierarchy</name>
-        <value>hadoop-yarn</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.linux-container-executor.cgroups.mount</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.linux-container-executor.cgroups.strict-resource-usage</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.linux-container-executor.group</name>
-        <value>hadoop</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.linux-container-executor.resources-handler.class</name>
-        <value>org.apache.hadoop.yarn.server.nodemanager.util.DefaultLCEResourcesHandler</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.local-dirs</name>
-        <value>/hadoop/yarn/local</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.log-aggregation.compression-type</name>
-        <value>gz</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.log-aggregation.debug-enabled</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.log-aggregation.num-log-files-per-app</name>
-        <value>30</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.log-aggregation.roll-monitoring-interval-seconds</name>
-        <value>-1</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.log-dirs</name>
-        <value>/hadoop/yarn/log</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.log.retain-second</name>
-        <value>604800</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.pmem-check-enabled</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.recovery.dir</name>
-        <value>/var/log/hadoop-yarn/nodemanager/recovery-state</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.recovery.enabled</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.remote-app-log-dir</name>
-        <value>/app-logs</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.remote-app-log-dir-suffix</name>
-        <value>logs</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.resource.cpu-vcores</name>
-        <value>8</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.resource.memory-mb</name>
-        <value>9216</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.resource.percentage-physical-cpu-limit</name>
-        <value>100</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.vmem-check-enabled</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.vmem-pmem-ratio</name>
-        <value>10</value>
-    </property>
-
     <property>
         <name>yarn.resourcemanager.address</name>
-        <value>sandbox.hortonworks.com:8050</value>
+        <value>quickstart.cloudera:8032</value>
     </property>
-
     <property>
         <name>yarn.resourcemanager.admin.address</name>
-        <value>sandbox.hortonworks.com:8141</value>
+        <value>quickstart.cloudera:8033</value>
     </property>
-
+    <property>
+        <name>yarn.resourcemanager.scheduler.address</name>
+        <value>quickstart.cloudera:8030</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.resource-tracker.address</name>
+        <value>quickstart.cloudera:8031</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.webapp.address</name>
+        <value>quickstart.cloudera:8088</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.webapp.https.address</name>
+        <value>quickstart.cloudera:8090</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.client.thread-count</name>
+        <value>50</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.scheduler.client.thread-count</name>
+        <value>50</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.admin.client.thread-count</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.minimum-allocation-mb</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.increment-allocation-mb</name>
+        <value>512</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.maximum-allocation-mb</name>
+        <value>2816</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.minimum-allocation-vcores</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.increment-allocation-vcores</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.maximum-allocation-vcores</name>
+        <value>2</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.amliveliness-monitor.interval-ms</name>
+        <value>1000</value>
+    </property>
+    <property>
+        <name>yarn.am.liveness-monitor.expiry-interval-ms</name>
+        <value>600000</value>
+    </property>
     <property>
         <name>yarn.resourcemanager.am.max-attempts</name>
         <value>2</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.bind-host</name>
-        <value>0.0.0.0</value>
+        <name>yarn.resourcemanager.container.liveness-monitor.interval-ms</name>
+        <value>600000</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.connect.max-wait.ms</name>
-        <value>900000</value>
+        <name>yarn.resourcemanager.nm.liveness-monitor.interval-ms</name>
+        <value>1000</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.connect.retry-interval.ms</name>
-        <value>30000</value>
+        <name>yarn.nm.liveness-monitor.expiry-interval-ms</name>
+        <value>600000</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.fs.state-store.retry-policy-spec</name>
-        <value>2000, 500</value>
+        <name>yarn.resourcemanager.resource-tracker.client.thread-count</name>
+        <value>50</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.fs.state-store.uri</name>
-        <value></value>
+        <name>yarn.application.classpath</name>
+        <value>$HADOOP_CLIENT_CONF_DIR,$HADOOP_CONF_DIR,$HADOOP_COMMON_HOME/*,$HADOOP_COMMON_HOME/lib/*,$HADOOP_HDFS_HOME/*,$HADOOP_HDFS_HOME/lib/*,$HADOOP_YARN_HOME/*,$HADOOP_YARN_HOME/lib/*</value>
     </property>
-
-    <property>
-        <name>yarn.resourcemanager.ha.enabled</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.hostname</name>
-        <value>sandbox.hortonworks.com</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.nodes.exclude-path</name>
-        <value>/etc/hadoop/conf/yarn.exclude</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.recovery.enabled</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.resource-tracker.address</name>
-        <value>sandbox.hortonworks.com:8025</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.scheduler.address</name>
-        <value>sandbox.hortonworks.com:8030</value>
-    </property>
-
     <property>
         <name>yarn.resourcemanager.scheduler.class</name>
-        <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
+        <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.state-store.max-completed-applications</name>
-        <value>${yarn.resourcemanager.max-completed-applications}</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.store.class</name>
-        <value>org.apache.hadoop.yarn.server.resourcemanager.recovery.ZKRMStateStore</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.system-metrics-publisher.dispatcher.pool-size</name>
-        <value>10</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.system-metrics-publisher.enabled</name>
+        <name>yarn.scheduler.fair.user-as-default-queue</name>
         <value>true</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.webapp.address</name>
-        <value>sandbox.hortonworks.com:8088</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.webapp.delegation-token-auth-filter.enabled</name>
+        <name>yarn.scheduler.fair.preemption</name>
         <value>false</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.webapp.https.address</name>
-        <value>localhost:8090</value>
+        <name>yarn.scheduler.fair.sizebasedweight</name>
+        <value>false</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.webapp.proxyuser.hcat.groups</name>
-        <value>*</value>
+        <name>yarn.scheduler.fair.assignmultiple</name>
+        <value>false</value>
     </property>
-
     <property>
-        <name>yarn.resourcemanager.webapp.proxyuser.hcat.hosts</name>
-        <value>*</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.webapp.proxyuser.oozie.groups</name>
-        <value>*</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.webapp.proxyuser.oozie.hosts</name>
-        <value>*</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.work-preserving-recovery.enabled</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.work-preserving-recovery.scheduling-wait-ms</name>
+        <name>yarn.resourcemanager.max-completed-applications</name>
         <value>10000</value>
     </property>
-
-    <property>
-        <name>yarn.resourcemanager.zk-acl</name>
-        <value>world:anyone:rwcda</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.zk-address</name>
-        <value>localhost:2181</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.zk-num-retries</name>
-        <value>1000</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.zk-retry-interval-ms</name>
-        <value>1000</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.zk-state-store.parent-path</name>
-        <value>/rmstore</value>
-    </property>
-
-    <property>
-        <name>yarn.resourcemanager.zk-timeout-ms</name>
-        <value>10000</value>
-    </property>
-
-    <property>
-        <name>yarn.scheduler.maximum-allocation-mb</name>
-        <value>9216</value>
-    </property>
-
-    <property>
-        <name>yarn.scheduler.minimum-allocation-mb</name>
-        <value>1536</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.address</name>
-        <value>sandbox.hortonworks.com:10200</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.bind-host</name>
-        <value>0.0.0.0</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.client.max-retries</name>
-        <value>30</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.client.retry-interval-ms</name>
-        <value>1000</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.enabled</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.generic-application-history.store-class</name>
-        <value>org.apache.hadoop.yarn.server.applicationhistoryservice.NullApplicationHistoryStore</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.http-authentication.simple.anonymous.allowed</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.http-authentication.type</name>
-        <value>simple</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.leveldb-timeline-store.path</name>
-        <value>/hadoop/yarn/timeline</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.leveldb-timeline-store.read-cache-size</name>
-        <value>104857600</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.leveldb-timeline-store.start-time-read-cache-size</name>
-        <value>10000</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.leveldb-timeline-store.start-time-write-cache-size</name>
-        <value>10000</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.leveldb-timeline-store.ttl-interval-ms</name>
-        <value>300000</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.store-class</name>
-        <value>org.apache.hadoop.yarn.server.timeline.LeveldbTimelineStore</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.ttl-enable</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.ttl-ms</name>
-        <value>2678400000</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.webapp.address</name>
-        <value>sandbox.hortonworks.com:8188</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.webapp.https.address</name>
-        <value>sandbox.hortonworks.com:8190</value>
-    </property>
-
 </configuration>
