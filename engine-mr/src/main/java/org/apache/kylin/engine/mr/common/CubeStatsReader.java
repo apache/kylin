@@ -180,6 +180,7 @@ public class CubeStatsReader {
     private static double estimateCuboidStorageSize(CubeSegment cubeSegment, long cuboidId, long rowCount, long baseCuboidId, List<Integer> rowKeyColumnLength) {
 
         int bytesLength = cubeSegment.getRowKeyPreambleSize();
+        KylinConfig kylinConf = cubeSegment.getConfig();
 
         long mask = Long.highestOneBit(baseCuboidId);
         long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
@@ -204,11 +205,13 @@ public class CubeStatsReader {
 
         double ret = 1.0 * bytesLength * rowCount / (1024L * 1024L);
         if (isMemoryHungry) {
-            logger.info("Cube is memory hungry, storage size estimation multiply 0.05");
-            ret *= 0.05;
+            double cuboidSizeMemHungryRatio = kylinConf.getJobCuboidSizeMemHungryRatio();
+            logger.info("Cube is memory hungry, storage size estimation multiply " + cuboidSizeMemHungryRatio);
+            ret *= cuboidSizeMemHungryRatio;
         } else {
-            logger.info("Cube is not memory hungry, storage size estimation multiply 0.25");
-            ret *= 0.25;
+            double cuboidSizeRatio = kylinConf.getJobCuboidSizeRatio();
+            logger.info("Cube is not memory hungry, storage size estimation multiply " + cuboidSizeRatio);
+            ret *= cuboidSizeRatio;
         }
         logger.info("Cuboid " + cuboidId + " has " + rowCount + " rows, each row size is " + bytesLength + " bytes." + " Total size is " + ret + "M.");
         return ret;

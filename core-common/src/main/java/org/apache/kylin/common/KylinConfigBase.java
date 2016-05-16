@@ -409,6 +409,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.job.step.timeout", String.valueOf(2 * 60 * 60)));
     }
 
+    public double getJobCuboidSizeRatio(){
+        return Double.parseDouble(getOptional("kylin.job.cuboid.size.ratio", "0.25"));
+    }
+
+    public double getJobCuboidSizeMemHungryRatio(){
+        return Double.parseDouble(getOptional("kylin.job.cuboid.size.memhungry.ratio", "0.05"));
+    }
+
     public String getCubeAlgorithm() {
         return getOptional("kylin.cube.algorithm", "auto");
     }
