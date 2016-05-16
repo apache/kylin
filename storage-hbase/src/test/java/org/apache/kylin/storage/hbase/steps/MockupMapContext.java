@@ -100,11 +100,6 @@ public class MockupMapContext {
             }
 
             @Override
-            public float getProgress() {
-                throw new NotImplementedException();
-            }
-
-            @Override
             public Counter getCounter(Enum<?> counterName) {
                 throw new NotImplementedException();
             }
@@ -165,6 +160,11 @@ public class MockupMapContext {
             }
 
             @Override
+            public boolean userClassesTakesPrecedence() {
+                return false;
+            }
+
+            @Override
             public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
                 throw new NotImplementedException();
             }
@@ -214,10 +214,6 @@ public class MockupMapContext {
                 throw new NotImplementedException();
             }
 
-            @Override
-            public boolean getTaskCleanupNeeded() {
-                throw new NotImplementedException();
-            }
 
             @Override
             public boolean getProfileEnabled() {
@@ -226,11 +222,6 @@ public class MockupMapContext {
 
             @Override
             public String getProfileParams() {
-                throw new NotImplementedException();
-            }
-
-            @Override
-            public IntegerRanges getProfileTaskRange(boolean isMap) {
                 throw new NotImplementedException();
             }
 
