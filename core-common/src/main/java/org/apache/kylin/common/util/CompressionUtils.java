@@ -31,6 +31,7 @@ public class CompressionUtils {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CompressionUtils.class);
 
     public static byte[] compress(byte[] data) throws IOException {
+        long startTime = System.currentTimeMillis();
         Deflater deflater = new Deflater(1);
         deflater.setInput(data);
 
@@ -45,11 +46,12 @@ public class CompressionUtils {
         outputStream.close();
         byte[] output = outputStream.toByteArray();
 
-        logger.debug("Original: " + data.length + " bytes. " + "Compressed: " + output.length + " bytes ");
+        logger.debug("Original: " + data.length + " bytes. " + "Compressed: " + output.length + " byte. Time: " + (System.currentTimeMillis() - startTime));
         return output;
     }
 
     public static byte[] decompress(byte[] data) throws IOException, DataFormatException {
+        long startTime = System.currentTimeMillis();
         Inflater inflater = new Inflater();
         inflater.setInput(data);
 
@@ -62,7 +64,7 @@ public class CompressionUtils {
         outputStream.close();
         byte[] output = outputStream.toByteArray();
 
-        logger.debug("Original: " + data.length + " bytes. " + "Decompressed: " + output.length + " bytes");
+        logger.debug("Original: " + data.length + " bytes. " + "Decompressed: " + output.length + " bytes. Time: " + (System.currentTimeMillis() - startTime));
         return output;
     }
 }

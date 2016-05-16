@@ -499,6 +499,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.valueOf(this.getOptional("kylin.query.storage.visit.scanrange.max", "1000000"));
     }
 
+    public long getSequenceExpireTime() {
+        return Long.valueOf(this.getOptional("kylin.query.sequence.expire.time", "86400000"));//default a day
+    }
+
     public int getHBaseKeyValueSize() {
         return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
     }
