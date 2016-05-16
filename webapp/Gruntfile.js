@@ -127,7 +127,7 @@ module.exports = function (grunt) {
                         expand: true,
                         cwd: 'app/components/angular-ui-grid/',
                         src: ['ui-grid.eot', 'ui-grid.svg', 'ui-grid.ttf', 'ui-grid.woff'],
-                        dest: 'dist/'
+                        dest: 'dist/css'
                     },
                     {
                         expand: true,
