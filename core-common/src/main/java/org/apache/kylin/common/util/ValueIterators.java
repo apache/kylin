@@ -23,7 +23,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-public class NumberIterators {
+public class ValueIterators {
 
     public static <T extends Number> long sum(Iterator<T> iterator) {
         long ret = 0;
@@ -34,11 +34,11 @@ public class NumberIterators {
         return ret;
     }
 
-    public static <T extends Number> long checkSame(Iterator<T> iterator) {
-        Set<Long> values = Sets.newHashSet();
+    public static <T> T checkSame(Iterator<T> iterator) {
+        Set<T> values = Sets.newHashSet();
         while (iterator.hasNext()) {
-            Number element = iterator.next();
-            values.add(element.longValue());
+            T element = iterator.next();
+            values.add(element);
         }
 
         if (values.size() > 1) {

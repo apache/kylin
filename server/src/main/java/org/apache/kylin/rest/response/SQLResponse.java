@@ -105,6 +105,10 @@ public class SQLResponse implements Serializable {
         return cube;
     }
 
+    public void setCube(String cube) {
+        this.cube = cube;
+    }
+
     public int getAffectedRowCount() {
         return affectedRowCount;
     }
