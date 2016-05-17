@@ -35,6 +35,7 @@ import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -1013,6 +1014,19 @@ public class CubeDesc extends RootPersistentEntity {
             result.addAll(aggrType.getColumnsNeedDictionary(measure.getFunction()));
         }
         return result;
+    }
+
+    /**
+     * Get a column which can be used in distributing the source table
+     * @return
+     */
+    public TblColRef getDistributedByColumn() {
+        Set<TblColRef> shardBy = getShardByColumns();
+        if (shardBy != null && shardBy.size() > 0) {
+            return shardBy.iterator().next();
+        }
+
+        return null;
     }
 
     public static CubeDesc getCopyOf(CubeDesc cubeDesc) {

@@ -141,11 +141,17 @@ public class JoinedFlatTable {
         }
         appendJoinStatement(intermediateTableDesc, sql, tableAliasMap);
         appendWhereStatement(intermediateTableDesc, sql, tableAliasMap);
+        appendDistributeStatement(intermediateTableDesc, sql, tableAliasMap);
         return sql.toString();
     }
 
-    public static String generateSelectRowCountStatement(IJoinedFlatTableDesc intermediateTableDesc, String outputDir) {
-        return "INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + intermediateTableDesc.getTableName() + ";\n";
+    public static String generateCountDataStatement(IJoinedFlatTableDesc intermediateTableDesc, final String outputDir) {
+        final Map<String, String> tableAliasMap = buildTableAliasMap(intermediateTableDesc.getDataModel());
+        final StringBuilder sql = new StringBuilder();
+        final String factTbl = intermediateTableDesc.getDataModel().getFactTable();
+        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) from " + factTbl + " " + tableAliasMap.get(factTbl) + "\n");
+        appendWhereStatement(intermediateTableDesc, sql, tableAliasMap);
+        return sql.toString();
     }
 
     private static Map<String, String> buildTableAliasMap(DataModelDesc dataModelDesc) {
@@ -208,6 +214,22 @@ public class JoinedFlatTable {
                     dimTableCache.add(dimTableName);
                 }
             }
+        }
+    }
+
+    private static void appendDistributeStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
+        if (!(intermediateTableDesc instanceof CubeJoinedFlatTableDesc)) {
+            return;//TODO: for now only cube segments support distribution
+        }
+        CubeJoinedFlatTableDesc desc = (CubeJoinedFlatTableDesc) intermediateTableDesc;
+
+        TblColRef distDcol = desc.getCubeDesc().getDistributedByColumn();
+
+        if (distDcol != null) {
+            String tblAlias = tableAliasMap.get(distDcol.getTable());
+            sql.append(" distribute by ").append(tblAlias).append(".").append(distDcol.getName());
+        } else {
+            sql.append(" distribute by rand()");
         }
     }
 

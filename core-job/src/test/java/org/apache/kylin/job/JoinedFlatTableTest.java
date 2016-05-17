@@ -71,7 +71,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
     public void testGenDropTableDDL() {
         String ddl = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc);
         System.out.println(ddl);
-        assertEquals(107, ddl.length());
+        assertEquals(101, ddl.length());
     }
 
     @Test
@@ -80,7 +80,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
         System.out.println(sqls);
 
         int length = sqls.length();
-        assertEquals(1155, length);
+        assertEquals(1437, length);
     }
 
 }

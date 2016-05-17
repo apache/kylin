@@ -19,11 +19,9 @@
 package org.apache.kylin.source.hive;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,10 +29,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.BufferedLogger;
-import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
@@ -117,36 +111,36 @@ public class HiveMRInput implements IMRInput {
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
 
-            jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId()));
+            final String rowCountOutputDir = JobBuilderSupport.getJobWorkingDir(conf, jobFlow.getId()) + "/row_count";
+            try {
+                FileSystem fs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
+                fs.mkdirs(new Path(rowCountOutputDir));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create HDFS dir " + rowCountOutputDir, e);
+            }
+            jobFlow.addTask(createCountHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), rowCountOutputDir));
+            jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), cubeName, rowCountOutputDir));
+//            jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId()));
             AbstractExecutable task = createLookupHiveViewMaterializationStep(jobFlow.getId());
             if(task != null) {
                 jobFlow.addTask(task);
             }
-            jobFlow.addTask(createRedistributeFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), cubeName));
         }
 
-        public static AbstractExecutable createFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId) {
+        public static AbstractExecutable createCountHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId, String rowCountOutputDir) {
+            final ShellExecutable step = new ShellExecutable();
 
-            final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
-            final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatTableDesc);
-            final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
-            String insertDataHqls;
+            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
             try {
-                insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc, conf);
+                hiveCmdBuilder.addStatement(JoinedFlatTable.generateHiveSetStatements(conf));
             } catch (IOException e) {
-                throw new RuntimeException("Failed to generate insert data SQL for intermediate table.", e);
+                throw new RuntimeException("Failed to generate hive set statements for createCountHiveTableStep", e);
             }
-
-            ShellExecutable step = new ShellExecutable();
-
-            HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-            hiveCmdBuilder.addStatement(useDatabaseHql);
-            hiveCmdBuilder.addStatement(dropTableHql);
-            hiveCmdBuilder.addStatement(createTableHql);
-            hiveCmdBuilder.addStatement(insertDataHqls);
+            hiveCmdBuilder.addStatement("set hive.exec.compress.output=false;\n");
+            hiveCmdBuilder.addStatement(JoinedFlatTable.generateCountDataStatement(flatTableDesc, rowCountOutputDir));
 
             step.setCmd(hiveCmdBuilder.build());
-            step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
+            step.setName(ExecutableConstants.STEP_NAME_COUNT_HIVE_TABLE);
 
             return step;
         }
@@ -193,24 +187,30 @@ public class HiveMRInput implements IMRInput {
             return step;
         }
 
-        public static AbstractExecutable createRedistributeFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId, String cubeName) {
+        public static AbstractExecutable createFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId, String cubeName, String rowCountOutputDir) {
             StringBuilder hiveInitBuf = new StringBuilder();
-            hiveInitBuf.append("USE ").append(conf.getConfig().getHiveDatabaseForIntermediateTable()).append(";\n");
             try {
                 hiveInitBuf.append(JoinedFlatTable.generateHiveSetStatements(conf));
             } catch (IOException e) {
                 throw new RuntimeException("Failed to generate hive set statements for RedistributeFlatHiveTableStep", e);
             }
 
-            String rowCountOutputDir = JobBuilderSupport.getJobWorkingDir(conf, jobId) + "/row_count";
+            final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
+            final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatTableDesc);
+            final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
+            String insertDataHqls;
+            try {
+                insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc, conf);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to generate insert data SQL for intermediate table.", e);
+            }
 
-            RedistributeFlatHiveTableStep step = new RedistributeFlatHiveTableStep();
+            CreateFlatHiveTableStep step = new CreateFlatHiveTableStep();
             step.setInitStatement(hiveInitBuf.toString());
-            step.setSelectRowCountStatement(JoinedFlatTable.generateSelectRowCountStatement(flatTableDesc, rowCountOutputDir));
             step.setRowCountOutputDir(rowCountOutputDir);
-            step.setRedistributeDataStatement(JoinedFlatTable.generateRedistributeDataStatement(flatTableDesc));
+            step.setCreateTableStatement(useDatabaseHql + dropTableHql + createTableHql + insertDataHqls);
             CubingExecutableUtil.setCubeName(cubeName, step.getParams());
-            step.setName(ExecutableConstants.STEP_NAME_REDISTRIBUTE_FLAT_HIVE_TABLE);
+            step.setName(ExecutableConstants.STEP_NAME_CREATE_FLAT_HIVE_TABLE);
             return step;
         }
 
@@ -231,126 +231,6 @@ public class HiveMRInput implements IMRInput {
 
         private String getIntermediateTableIdentity() {
             return conf.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatHiveTableDesc.getTableName();
-        }
-    }
-
-    public static class RedistributeFlatHiveTableStep extends AbstractExecutable {
-        private final BufferedLogger stepLogger = new BufferedLogger(logger);
-
-        private void computeRowCount(CliCommandExecutor cmdExecutor) throws IOException {
-            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-            hiveCmdBuilder.addStatement(getInitStatement());
-            hiveCmdBuilder.addStatement("set hive.exec.compress.output=false;\n");
-            hiveCmdBuilder.addStatement(getSelectRowCountStatement());
-            final String cmd = hiveCmdBuilder.build();
-
-            stepLogger.log("Compute row count of flat hive table, cmd: ");
-            stepLogger.log(cmd);
-
-            Pair<Integer, String> response = cmdExecutor.execute(cmd, stepLogger);
-            if (response.getFirst() != 0) {
-                throw new RuntimeException("Failed to compute row count of flat hive table");
-            }
-        }
-
-        private long readRowCountFromFile(Path file) throws IOException {
-            FileSystem fs = FileSystem.get(file.toUri(), HadoopUtil.getCurrentConfiguration());
-            InputStream in = fs.open(file);
-            try {
-                String content = IOUtils.toString(in);
-                return Long.valueOf(content.trim()); // strip the '\n' character
-
-            } finally {
-                IOUtils.closeQuietly(in);
-            }
-        }
-
-        private int determineNumReducer(KylinConfig config) throws IOException {
-            computeRowCount(config.getCliCommandExecutor());
-
-            Path rowCountFile = new Path(getRowCountOutputDir(), "000000_0");
-            long rowCount = readRowCountFromFile(rowCountFile);
-            int mapperInputRows = config.getHadoopJobMapperInputRows();
-
-            int numReducers = Math.round(rowCount / ((float) mapperInputRows));
-            numReducers = Math.max(1, numReducers);
-
-            stepLogger.log("total input rows = " + rowCount);
-            stepLogger.log("expected input rows per mapper = " + mapperInputRows);
-            stepLogger.log("num reducers for RedistributeFlatHiveTableStep = " + numReducers);
-
-            return numReducers;
-        }
-
-        private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
-            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-            hiveCmdBuilder.addStatement(getInitStatement());
-            hiveCmdBuilder.addStatement("set mapreduce.job.reduces=" + numReducers + ";\n");
-            hiveCmdBuilder.addStatement("set hive.merge.mapredfiles=false;\n");
-            hiveCmdBuilder.addStatement(getRedistributeDataStatement());
-            final String cmd = hiveCmdBuilder.toString();
-
-            stepLogger.log("Redistribute table, cmd: ");
-            stepLogger.log(cmd);
-
-            Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
-            if (response.getFirst() != 0) {
-                throw new RuntimeException("Failed to redistribute flat hive table");
-            }
-        }
-
-        private KylinConfig getCubeSpecificConfig() {
-            String cubeName = CubingExecutableUtil.getCubeName(getParams());
-            CubeManager manager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-            CubeInstance cube = manager.getCube(cubeName);
-            return cube.getConfig();
-        }
-
-        @Override
-        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-            KylinConfig config = getCubeSpecificConfig();
-
-            try {
-                int numReducers = determineNumReducer(config);
-                redistributeTable(config, numReducers);
-                return new ExecuteResult(ExecuteResult.State.SUCCEED, stepLogger.getBufferedLog());
-
-            } catch (Exception e) {
-                logger.error("job:" + getId() + " execute finished with exception", e);
-                return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
-            }
-        }
-
-        public void setInitStatement(String sql) {
-            setParam("HiveInit", sql);
-        }
-
-        public String getInitStatement() {
-            return getParam("HiveInit");
-        }
-
-        public void setSelectRowCountStatement(String sql) {
-            setParam("HiveSelectRowCount", sql);
-        }
-
-        public String getSelectRowCountStatement() {
-            return getParam("HiveSelectRowCount");
-        }
-
-        public void setRedistributeDataStatement(String sql) {
-            setParam("HiveRedistributeData", sql);
-        }
-
-        public String getRedistributeDataStatement() {
-            return getParam("HiveRedistributeData");
-        }
-
-        public void setRowCountOutputDir(String rowCountOutputDir) {
-            setParam("rowCountOutputDir", rowCountOutputDir);
-        }
-
-        public String getRowCountOutputDir() {
-            return getParam("rowCountOutputDir");
         }
     }
 
