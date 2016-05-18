@@ -18,6 +18,9 @@
 
 package org.apache.kylin.engine.mr;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.GenericOptionsParser;
+import org.apache.hadoop.util.Tool;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
@@ -38,7 +41,7 @@ public class MRUtil {
     public static IMRBatchCubingInputSide getBatchCubingInputSide(IRealizationSegment seg) {
         return SourceFactory.createEngineAdapter(seg, IMRInput.class).getBatchCubingInputSide(seg);
     }
-    
+
     public static IMRTableInputFormat getTableInputFormat(String tableName) {
         return getTableInputFormat(getTableDesc(tableName));
     }
@@ -71,4 +74,24 @@ public class MRUtil {
         return StorageFactory.createEngineAdapter(seg, IMROutput.class).getBatchInvertedIndexingOutputSide(seg);
     }
 
+    // use this method instead of ToolRunner.run() because ToolRunner.run() is not thread-sale
+    // Refer to: http://stackoverflow.com/questions/22462665/is-hadoops-toorunner-thread-safe
+    public static int runMRJob(Tool tool, String[] args) throws Exception {
+        Configuration conf = tool.getConf();
+        if (conf == null) {
+            conf = new Configuration();
+        }
+
+        GenericOptionsParser parser = getParser(conf, args);
+        //set the configuration back, so that Tool can configure itself
+        tool.setConf(conf);
+
+        //get the args w/o generic hadoop args
+        String[] toolArgs = parser.getRemainingArgs();
+        return tool.run(toolArgs);
+    }
+
+    private static synchronized GenericOptionsParser getParser(Configuration conf, String[] args) throws Exception {
+        return new GenericOptionsParser(conf, args);
+    }
 }

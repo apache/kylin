@@ -31,13 +31,13 @@ import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.util.RMHAUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -115,7 +115,10 @@ public class MapReduceExecutable extends AbstractExecutable {
                 String[] args = params.trim().split("\\s+");
                 try {
                     //for async mr job, ToolRunner just return 0;
-                    ToolRunner.run(hadoopJob, args);
+
+                    // use this method instead of ToolRunner.run() because ToolRunner.run() is not thread-sale
+                    // Refer to: http://stackoverflow.com/questions/22462665/is-hadoops-toorunner-thread-safe
+                    MRUtil.runMRJob(hadoopJob, args);
 
                     if (hadoopJob.isSkipped()) {
                         return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped");
@@ -266,5 +269,4 @@ public class MapReduceExecutable extends AbstractExecutable {
     public void setCounterSaveAs(String value) {
         setParam(KEY_COUNTER_SAVEAS, value);
     }
-
 }
