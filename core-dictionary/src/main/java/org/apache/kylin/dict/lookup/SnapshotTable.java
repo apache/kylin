@@ -249,6 +249,9 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
                     this.rowIndices.add(rowIndex);
                 }
             }
+        }else{
+            rowIndices = new ArrayList<int[]>();
+            dict = new TrieDictionary<String>();
         }
     }
 
