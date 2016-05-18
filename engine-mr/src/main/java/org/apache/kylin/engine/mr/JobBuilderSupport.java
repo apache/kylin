@@ -171,7 +171,7 @@ public class JobBuilderSupport {
 
     public void appendMapReduceParameters(StringBuilder buf, String jobType, String capacity) {
         try {
-            String jobConf = config.getHadoopJobConfFilePath(jobType, capacity);
+            String jobConf = config.getHadoopJobConfFilePath(jobType);
             if (jobConf != null && jobConf.length() > 0) {
                 buf.append(" -conf ").append(jobConf);
             }

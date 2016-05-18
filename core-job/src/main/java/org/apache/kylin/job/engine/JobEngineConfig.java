@@ -77,13 +77,12 @@ public class JobEngineConfig {
      * @return the job config file path
      * @throws IOException
      */
-    public String getHadoopJobConfFilePath(String jobType, String capacity) throws IOException {
-        String suffix;
+    public String getHadoopJobConfFilePath(String jobType) throws IOException {
+        String suffix = null;
         if(!StringUtils.isEmpty(jobType)) {
-            suffix = jobType + "_" + capacity;
-        } else {
-            suffix = capacity;
+            suffix = jobType;
         }
+
         String path = getHadoopJobConfFilePath(suffix, true);
         if (StringUtils.isEmpty(path)) {
             path = getHadoopJobConfFilePath(jobType, true);
