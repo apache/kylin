@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -154,7 +155,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     }
 
     protected void setJobClasspath(Job job) {
-        String jarPath = KylinConfig.getInstanceFromEnv().getKylinJobJarPath();
+        KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
+        
+        String jarPath = kylinConf.getKylinJobJarPath();
         File jarFile = new File(jarPath);
         if (jarFile.exists()) {
             job.setJar(jarPath);
@@ -223,7 +226,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         // for KylinJobMRLibDir
-        String mrLibDir = KylinConfig.getInstanceFromEnv().getKylinJobMRLibDir();
+        String mrLibDir = kylinConf.getKylinJobMRLibDir();
         if (!StringUtils.isBlank(mrLibDir)) {
             File dirFileMRLIB = new File(mrLibDir);
             if (dirFileMRLIB.exists()) {
@@ -236,6 +239,14 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         setJobTmpJarsAndFiles(job, kylinDependency.toString());
+        
+        overrideJobConfig(job.getConfiguration(), kylinConf.getMRConfigOverride());
+    }
+
+    private void overrideJobConfig(Configuration jobConf, Map<String, String> override) {
+        for (Entry<String, String> entry : override.entrySet()) {
+            jobConf.set(entry.getKey(), entry.getValue());
+        }
     }
 
     private String filterKylinHiveDependency(String kylinHiveDependency) {

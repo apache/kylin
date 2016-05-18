@@ -16,18 +16,19 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.cube;
+package org.apache.kylin.common;
 
 import static org.junit.Assert.*;
 
+import java.util.Map;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class CubeSpecificConfigTest extends LocalFileMetadataTestCase {
+public class KylinConfigTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setUp() throws Exception {
@@ -40,21 +41,12 @@ public class CubeSpecificConfigTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void test() {
-        KylinConfig baseConfig = KylinConfig.getInstanceFromEnv();
-        CubeDesc cubeDesc = CubeDescManager.getInstance(baseConfig).getCubeDesc("ssb");
-        verifyOverride(baseConfig, cubeDesc.getConfig());
+    public void testMRConfigOverride() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        Map<String, String> override = config.getMRConfigOverride();
+        assertEquals(2, override.size());
+        assertEquals("test1", override.get("test1"));
+        assertEquals("test2", override.get("test2"));
     }
 
-    @Test
-    public void test2() {
-        KylinConfig baseConfig = KylinConfig.getInstanceFromEnv();
-        CubeInstance cube = CubeManager.getInstance(baseConfig).getCube("ssb");
-        verifyOverride(baseConfig, cube.getConfig());
-    }
-
-    private void verifyOverride(KylinConfig base, KylinConfig override) {
-        assertEquals("gzip", base.getHbaseDefaultCompressionCodec());
-        assertEquals("lz4", override.getHbaseDefaultCompressionCodec());
-    }
 }

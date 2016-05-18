@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
@@ -33,6 +35,7 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 @SuppressWarnings("serial")
@@ -84,6 +87,17 @@ abstract public class KylinConfigBase implements Serializable {
 
     protected Properties getAllProperties() {
         return properties;
+    }
+    
+    final protected Map<String, String> getPropertiesByPrefix(String prefix) {
+        Map<String, String> result = Maps.newLinkedHashMap();
+        for (Entry<Object, Object> entry : getAllProperties().entrySet()) {
+            String key = (String) entry.getKey();
+            if (key.startsWith(prefix)) {
+                result.put(key.substring(prefix.length()), (String) entry.getValue());
+            }
+        }
+        return result;
     }
 
     final protected String[] getOptionalStringArray(String prop, String[] dft) {
@@ -223,6 +237,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getKylinJobMRLibDir() {
         return getOptional("kylin.job.mr.lib.dir", "");
+    }
+
+    public Map<String, String> getMRConfigOverride() {
+        return getPropertiesByPrefix("kylin.job.mr.config.override.");
     }
 
     public String getKylinSparkJobJarPath() {
