@@ -17,15 +17,15 @@
 -->
 
 <div class="row">
-    <div class="col-xs-8">
+    <div class="col-xs-12">
         <!--Project-->
         <ng-form name="forms.model_info_form" novalidate>
 
             <!--Model Name-->
-            <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+            <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                        <b>Model Name</b>
+                        <b>Model Name</b> <i class="fa fa-info-circle"  kylinpopover placement="right" title="Model Name" template="modelNameTip.html"></i>
                     </label>
 
                     <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.model_info_form.model_name.$invalid && (forms.model_info_form.model_name.$dirty||forms.model_info_form.$submitted)}">
@@ -61,24 +61,6 @@
         </ng-form>
     </div>
 
-    <!--Tips-->
-    <div class="col-xs-4">
-        <div class="box box-solid">
-            <div class="box-header widget-header-flat">
-                <h4 class="box-title">Tips</h4>
-            </div>
-            <div class="box-body">
-                <div class="row">
-                    <div class="col-xs-12">
-                        <ol class="text-info">
-                            <li>Model must belong to project which you have privilege to create</li>
-                            <li>Model name is unique name of entire system</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="row" ng-hide="true">
@@ -97,3 +79,10 @@
     </div>
     </div>
 </div>
+
+<script type="text/ng-template" id="modelNameTip.html">  
+<ol>
+  <li>Model name is unique name of entire system.</li>
+  <li>Can not edit model name after created.</li>
+</ol>
+</script>

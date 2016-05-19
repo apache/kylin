@@ -28,9 +28,11 @@
             <td>
               <!--Cube Size-->
               <div class="form-group">
-                <div class="row">
-                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Auto Merge Time
-                    Ranges(days)</b></label>
+                <div class="row middle-popover">
+                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default">
+                    <b>Auto Merge Thresholds</b>
+                    <i class="fa fa-info-circle" kylinpopover title="Auto Merge Thresholds" template="autoMergeThresholdsTip.html" placement="right"></i>
+                  </label>
 
                   <div class="col-xs-12 col-sm-6">
                     <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
@@ -71,7 +73,7 @@
                       </table>
                       <button class="btn btn-xs btn-info" ng-show="state.mode=='edit'"
                               ng-click="addNewMergeTimeRange()">
-                        New Merge Range<i class="fa fa-plus"></i>
+                        New Thresholds <i class="fa fa-plus"></i>
                       </button>
                     </div>
                     <div class="row" ng-if="state.mode=='view'">
@@ -96,18 +98,16 @@
             <td>
               <!--Cube Size-->
               <div class="form-group">
-                <div class="row">
-                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Retention
-                    Range(days)</b></label>
+                <div class="row middle-popover">
+                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default">
+                    <b>Retention Threshold</b> <i class="fa fa-info-circle" title="Retention Threshold" kylinpopover template="retentionTip.html" placement="right"></i>
+                  </label>
 
                   <div class="col-xs-12 col-sm-6">
                     <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
                     <input type="text" retention-format class="form-control ng-scope ng-pristine ng-valid"
                            placeholder="how many days cube retention" ng-model="cubeMetaFrame.retention_range"
                            ng-if="state.mode=='edit'">
-                    <small class="help-block text-red" ng-show="state.mode=='edit'">(by default it's '0',which will keep
-                      all historic cube segments ,or will keep latest [Retention Range] days cube segments )
-                    </small>
                     <span ng-if="state.mode=='view'">{{cubeMetaFrame.retention_range | millisecondsToDay}}</span>
                   </div>
                 </div>
@@ -154,3 +154,11 @@
     </div>
   </ng-form>
 </div>
+
+<script type="text/ng-template" id="autoMergeThresholdsTip.html">  
+    <p>The thresholds will be checked ascendingly to see if any consectuive segments' time range has exceeded it. For example the [7 days, 30 days] will result in daily incremental segments being merged every 7 days, and the 7-days segments will get merged every 30 days.</p>
+</script>
+
+<script type="text/ng-template" id="retentionTip.html">  
+<p>By default it's '0',which will keep all historic cube segments ,or will keep latest [Retention Threshold] days cube segments.</p>
+</script>

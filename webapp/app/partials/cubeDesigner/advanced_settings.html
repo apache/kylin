@@ -21,9 +21,16 @@
     <ng-form name="forms.cube_setting_form">
       <div>
 
-
         <div class="form-group">
-          <h4 style="margin-left:42px">Aggregation Groups</h4>
+          <h3 style="margin-left:42px;">Aggregation Groups </h3>
+          <div style="margin-left:22px;">
+            <div class="box-body">
+              <div class="col-xs-12">
+                Visit <a href="http://kylin.apache.org/blog/2016/02/18/new-aggregation-group" target="_blank">aggregation group</a> for more about aggregation group.
+              </div>
+            </div>
+          </div>
+
           <table style="margin-left:42px; width:92%"
                  ng-if="cubeMetaFrame.aggregation_groups.length > 0"
                  class="table table-hover list">
@@ -200,85 +207,97 @@
         </div>
 
 
-        <div class="form-group">
-          <h4 style="margin-left:42px">Rowkeys</h4>
-          <table style="margin-left:42px; width:92%"
-                 ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
-                 class="table table-hover table-bordered list"
-          >
-            <thead>
-            <tr>
-              <th>ID</th>
-              <th style="width:200px;">Column</th>
-              <th>Encoding</th>
-              <th>Length</th>
-              <th>Shard By</th>
-              <th ng-if="state.mode=='edit'"></th>
-            </tr>
-            </thead>
+        <div class="form-group large-popover">
+          <!--<h4 style="margin-left:42px">-->
+            <!--Rowkeys <i class="fa fa-info-circle" style="white-space:pre-wrap" popover-trigger="mouseenter" popover=" 'dict' encoding will try to build a dictionary for the dimension. 'fixed_length' encoding will encode the dimension vlaues by fixed length bytes with padding. 'int' encoding uses variable integer to encode integers"></i>-->
+          <!--</h4>-->
+          <h3 style="margin-left:42px">Rowkeys  <i kylinpopover placement="right" title="Rowkey" template="rowkeyTip.html" class="fa fa-info-circle"></i></h3>
 
-            <tbody ui-sortable="{update:resortRowkey()}" ng-model="convertedRowkeys">
+          <div style="margin-left:42px">
+              <div class="box-body">
+                <br/>
 
-            <tr ng-repeat="rowkey_column in convertedRowkeys track by $index"
-                ng-class="state.mode=='edit'?'sort-item':''">
 
-              <td>
-                <!-- ID -->
-                <span class="ng-binding" ng-class="state.mode=='edit'?'badge':''">{{($index + 1)}}</span>
-              </td>
-              <td>
-                <!--Column Name -->
-                <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
-                       ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column)"
-                       tooltip="rowkey column name.." tooltip-trigger="focus"
-                       ng-model="rowkey_column.column" class="form-control">
+                <table style="margin-left:width:92%"
+                       ng-if="cubeMetaFrame.rowkey.rowkey_columns.length > 0"
+                       class="table table-hover table-bordered list">
+                  <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th style="width:200px;">Column</th>
+                    <th>Encoding</th>
+                    <th>Length</th>
+                    <th>Shard By</th>
+                    <th ng-if="state.mode=='edit'"></th>
+                  </tr>
+                  </thead>
 
-                <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
-              </td>
-              <td>
-                <select ng-if="state.mode=='edit'" style="width:180px;"
-                        chosen ng-model="rowkey_column.encoding"
-                        ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
-                        ng-options="dt as dt for dt in store.supportedEncoding">
-                  <option value=""></option>
-                </select>
-                <span ng-if="state.mode=='view'">{{rowkey_column.encoding}}</span>
+                  <tbody ui-sortable="{update:resortRowkey()}" ng-model="convertedRowkeys">
 
-              </td>
-              <td>
-                <!--Column Length -->
-                <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
-                       tooltip="rowkey column length.." tooltip-trigger="focus"
-                       ng-disabled="rowkey_column.encoding=='dict'"
-                       ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
-                       ng-model="rowkey_column.valueLength" class="form-control">
+                  <tr ng-repeat="rowkey_column in convertedRowkeys track by $index"
+                      ng-class="state.mode=='edit'?'sort-item':''">
 
-                <small class="help-block red" ng-show="state.mode=='edit' && rowkey_column.encoding=='int' && (rowkey_column.valueLength>8 || rowkey_column.valueLength<1)">int encoding column length should between 1 and 8</small>
-                <span ng-if="state.mode=='view'">{{rowkey_column.valueLength}}</span>
-              </td>
+                    <td>
+                      <!-- ID -->
+                      <span class="ng-binding" ng-class="state.mode=='edit'?'badge':''">{{($index + 1)}}</span>
+                    </td>
+                    <td>
+                      <!--Column Name -->
+                      <input type="text" class="form-control" placeholder="Column Name.." ng-if="state.mode=='edit'"
+                             ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column)"
+                             tooltip="rowkey column name.." tooltip-trigger="focus"
+                             ng-model="rowkey_column.column" class="form-control">
 
-              <td>
-                <select ng-if="state.mode=='edit'" style="width:180px;"
-                        chosen ng-model="rowkey_column.isShardBy"
-                        tooltip="false by default"
-                        data-placeholder="false by default"
-                        ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column,true)"
-                        ng-options="dt as dt for dt in cubeConfig.rowKeyShardOptions">
-                  <option value=""></option>
-                </select>
-                <small class="help-block red" ng-show="state.mode=='edit' && rule.shardColumnAvailable==false && rowkey_column.isShardBy == true">at most one 'shard by' column is allowed.</small>
-                <span ng-if="state.mode=='view'">{{rowkey_column.isShardBy}}</span>
-              </td>
+                      <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
+                    </td>
+                    <td>
+                      <select ng-if="state.mode=='edit'" style="width:180px;"
+                              chosen ng-model="rowkey_column.encoding"
+                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
+                              ng-options="dt as dt for dt in store.supportedEncoding">
+                        <option value=""></option>
+                      </select>
+                      <span ng-if="state.mode=='view'">{{rowkey_column.encoding}}</span>
 
-              <td ng-if="state.mode=='edit'">
-                <button class="btn btn-xs btn-info"
-                        ng-click="removeRowkey(convertedRowkeys, $index,rowkey_column)"><i
-                  class="fa fa-minus"></i>
-                </button>
-              </td>
-            </tr>
-            </tbody>
-          </table>
+                    </td>
+                    <td>
+                      <!--Column Length -->
+                      <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
+                             tooltip="rowkey column length.." tooltip-trigger="focus"
+                             ng-disabled="rowkey_column.encoding=='dict'"
+                             ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
+                             ng-model="rowkey_column.valueLength" class="form-control">
+
+                      <small class="help-block red" ng-show="state.mode=='edit' && rowkey_column.encoding=='int' && (rowkey_column.valueLength>8 || rowkey_column.valueLength<1)">int encoding column length should between 1 and 8</small>
+                      <span ng-if="state.mode=='view'">{{rowkey_column.valueLength}}</span>
+                    </td>
+
+                    <td>
+                      <select ng-if="state.mode=='edit'" style="width:180px;"
+                              chosen ng-model="rowkey_column.isShardBy"
+                              tooltip="false by default"
+                              data-placeholder="false by default"
+                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column,true)"
+                              ng-options="dt as dt for dt in cubeConfig.rowKeyShardOptions">
+                        <option value=""></option>
+                      </select>
+                      <small class="help-block red" ng-show="state.mode=='edit' && rule.shardColumnAvailable==false && rowkey_column.isShardBy == true">at most one 'shard by' column is allowed.</small>
+                      <span ng-if="state.mode=='view'">{{rowkey_column.isShardBy}}</span>
+                    </td>
+
+                    <td ng-if="state.mode=='edit'">
+                      <button class="btn btn-xs btn-info"
+                              ng-click="removeRowkey(convertedRowkeys, $index,rowkey_column)"><i
+                        class="fa fa-minus"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+
+
+              </div>
+          </div>
 
           <button class="btn btn-sm btn-info" style="margin-left:42px"
                   ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i>
@@ -287,13 +306,28 @@
 
       </div>
 
-      <div class="box box-solid" style="margin-left:22px;">
-        <div class="box-body">
-            <div class="col-xs-12">
-                Visit <a href="http://kylin.apache.org/blog/2016/02/18/new-aggregation-group" target="_blank">aggregation group</a> for more about aggregation group.
-            </div>
-        </div>
-      </div>
     </ng-form>
 
 </div>
+
+<script type="text/ng-template" id="rowkeyTip.html">  
+  <div>
+    <h4>Shard By this column?</h4>
+    <p>
+      If specified as "true", cube data will be sharded according to its value.
+    </p>
+
+    <h4>RowKey Encoding</h4>
+    <ol>
+      <li>
+        "dict" encoding will try to build a dictionary for the dimension
+      </li>
+      <li>
+        "fixed_length" encoding will encode the dimension vlaues by fixed length bytes with padding
+      </li>
+      <li>
+        "int" encoding uses variable integer to encode integers
+      </li>
+    </ol>
+  </div>
+</script>
