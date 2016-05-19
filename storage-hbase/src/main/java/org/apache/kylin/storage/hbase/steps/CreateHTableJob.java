@@ -31,7 +31,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
@@ -49,7 +48,6 @@ import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.CuboidShardUtil;
-import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
@@ -282,7 +280,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             return;
         }
 
-        FileSystem fs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
+        FileSystem fs = FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration());
         if (fs.exists(outputFolder) == false) {
             fs.mkdirs(outputFolder);
         }
