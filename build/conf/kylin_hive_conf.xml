@@ -57,12 +57,6 @@
     </property>
 
     <property>
-        <name>hive.support.concurrency</name>
-        <value>false</value>
-        <description>Hive concurrency lock</description>
-    </property>
-
-    <property>
         <name>mapreduce.job.split.metainfo.maxsize</name>
         <value>-1</value>
         <description>The maximum permissible size of the split metainfo file.
