@@ -97,9 +97,9 @@
                           </div>
                       </div>
                       <!--Expression-->
-                      <div class="form-group">
+                      <div class="form-group middle-popover">
                           <div class="row">
-                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Expression</b></label>
+                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Expression</b>  <i class="fa fa-info-circle" kylinpopover placement="right" title="Expression" template="expressionTip.html"></i></label>
                               <div class="col-xs-12 col-sm-6">
                                   <select class="form-control"
                                       ng-init="newMeasure.function.expression = (!!newMeasure.function.expression)?newMeasure.function.expression:cubeConfig.dftSelections.measureExpression" chosen ng-model="newMeasure.function.expression" required
@@ -130,12 +130,12 @@
                           </div>
                       </div>
                       <!--Param Value-->
-                      <div class="form-group">
+                      <div class="form-group middle-popover">
                           <div class="row">
                               <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                                <b>Param Value</b>
+                                <b>Param Value</b>  <i class="fa fa-info-circle" kylinpopover placement="right" title="Param Value" template="paramvalueTip.html"></i>
                                 <!--tip for top_n-->
-                                <small ng-if="newMeasure.function.expression == 'TOP_N'" class="help-block" style="color:#b94a48">(SUM|ORDER BY Column for TOP_N)</small>
+                                <small ng-if="newMeasure.function.expression == 'TOP_N'" class="help-block" style="color:#3a87ad">(SUM|ORDER BY Column for TOP_N)</small>
                               </label>
 
 
@@ -232,25 +232,6 @@
                       </div>
               </div>
 
-              <!--Tips-->
-              <div class="col-xs-4">
-                  <div class="box box-solid">
-                      <div class="box-header">
-                          <h4 class="box-title">Tips</h4>
-                      </div>
-                      <div class="box-body">
-                          <div class="row">
-                              <div class="col-xs-12">
-                                  <ol class="text-info">
-                                      <li>All cubes have to contain one measure for Count(1), suggest use "_Count_" as name (Has been generated automatically)</li>
-                                      <li>Only accept single column in param value with "Column" type</li>
-                                      <li>Distinct Count is approximate, please indicate Error Rate, higher accuracy degree accompanied with larger storage size and longer build time</li>
-                                  </ol>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
           </div>
       </div>
       <div class="box-footer">
@@ -338,4 +319,15 @@
     <button class="btn btn-success" ng-click="ok()">OK</button>
     <button class="btn btn-primary" ng-click="cancel()">Close</button>
   </div>
+</script>
+
+<script type="text/ng-template" id="expressionTip.html">  
+  <p>All cubes have to contain one measure for Count(1), suggest use "_Count_" as name (Has been generated automatically)</p>
+</script>
+
+<script type="text/ng-template" id="paramvalueTip.html">  
+  <ol>
+    <li>Only accept single column in param value with "Column" type</li>
+    <li>Distinct Count is approximate, please indicate Error Rate, higher accuracy degree accompanied with larger storage size and longer build time</li>
+  </ol>
 </script>

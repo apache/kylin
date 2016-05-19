@@ -332,4 +332,27 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
       };
     }
   };
+}).directive('kylinpopover', function ($compile,$templateCache) {
+  return {
+    restrict: "A",
+    link: function (scope, element, attrs) {
+      var popOverContent;
+      var dOptions = {
+        placement : 'right'
+      }
+      popOverContent = $templateCache.get(attrs.template);
+
+      var placement = attrs.placement? attrs.placement : dOptions.placement;
+      var title = attrs.title;
+
+      var options = {
+        content: popOverContent,
+        placement: placement,
+        trigger: "hover",
+        title: title,
+        html: true
+      };
+      $(element).popover(options);
+    }
+  };
 });

@@ -666,6 +666,13 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     }
   });
 
+  $scope.removeNotificationEvents = function(){
+    if($scope.cubeMetaFrame.status_need_notify.indexOf('ERROR') == -1){
+      $scope.cubeMetaFrame.status_need_notify.unshift('ERROR');
+    }
+  }
+
+
 
   $scope.$on('DimensionsEdited', function (event) {
     if ($scope.cubeMetaFrame) {

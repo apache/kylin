@@ -17,12 +17,12 @@
 -->
 
 <div class="row">
-    <div class="col-xs-8">
+    <div class="col-xs-12">
         <ng-form name="forms.cube_info_form" novalidate>
             <!--Project-->
             <div class="form-group" ng-class="{'required':state.mode=='edit'}">
                 <div class="row">
-                  <label class="col-xs-12 col-sm-3 control-label no-padding-right">
+                  <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
                     <b>Model Name</b>
                   </label>
                   <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':forms.cube_info_form.model_name.$invalid && (forms.cube_info_form.model_name.$dirty||forms.cube_info_form.model_name.$submitted)}">
@@ -49,10 +49,10 @@
             </div>
 
             <!--Cube Name-->
-            <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+            <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                        <b>Cube Name</b>
+                        <b>Cube Name</b> <i class="fa fa-info-circle" kylinpopover placement="right" title="Cube Name" template="cubeNameTip.html"></i>
                     </label>
                     <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.cube_info_form.cube_name.$invalid && (forms.cube_info_form.cube_name.$dirty||forms.cube_info_form.cube_name.$submitted)}">
                         <input ng-if="state.mode=='edit'" ng-disabled="{{isEdit}}"  name="cube_name" type="text" class="form-control"
@@ -71,7 +71,7 @@
             <div class="form-group">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                        <b>Notification List</b>
+                        <b>Notification Email List</b>
                     </label>
                     <div class="col-xs-12 col-sm-6">
                         <input type="text" class="form-control" placeholder="Comma Separated"
@@ -82,15 +82,16 @@
             </div>
 
           <div class="form-group">
-            <div class="row">
+            <div class="row middle-popover">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                <b>Notification Status</b>
+                <b>Notification Events</b> <i class="fa fa-info-circle" kylinpopover placement="right" title="Notification Events" template="notificationEventsTip.html"></i>
               </label>
               <div class="col-xs-12 col-sm-6">
 
                 <ui-select
                   autofocus="true"
                   close-on-select="false"
+                  on-remove="removeNotificationEvents()"
                   ng-if="state.mode=='edit'" style="width: 100%" multiple ng-model="cubeMetaFrame.status_need_notify">
                   <ui-select-match placeholder="Select Status...">{{$item}}</ui-select-match>
                   <ui-select-choices
@@ -120,24 +121,21 @@
         </ng-form>
     </div>
 
-    <!--Tips-->
-    <div class="col-xs-4">
-        <div class="box box-solid">
-            <div class="box-header widget-header-flat">
-                <h4 class="box-title">Tips</h4>
-            </div>
-            <div class="box-body">
-                <div class="row">
-                    <div class="col-xs-12">
-                        <ol class="text-info">
-                            <li>Cube name is unique name of entire system</li>
-                            <li>Can not edit cube name after created</li>
-                            <li>Cube must belong to project which you have privilege to create</li>
-                            <li>Error status will notify by default</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
+
+<script id="tip-cube-name.html" type="text/ng-template">
+  <strong>HTML</strong> allowed.<br />
+  Binding allowed: {{ value }}<br />
+  <button ng-click="value = 2">Test</button>
+</script>
+
+<script type="text/ng-template" id="cubeNameTip.html">  
+<ol>
+  <li>Cube name is unique name of entire system.</li>
+  <li>Can not edit cube name after created.</li>
+</ol>
+</script>
+
+<script type="text/ng-template" id="notificationEventsTip.html">  
+  <p>ERROR status will trigger a notification anyway.</p>
+</script>

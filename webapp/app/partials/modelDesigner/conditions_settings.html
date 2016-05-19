@@ -17,121 +17,119 @@
 -->
 
 <div class="row">
-    <div class="col-xs-8">
+    <div class="col-xs-12">
       <ng-form name="forms.model_setting_form" novalidate>
+
+        <h3>Partition</h3>
+        <div class="box-body">
         <!--Cube Partition Type-->
-        <div class="form-group" ng-hide="true">
-            <div class="row">
-                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Type</b></label>
-                <div class="col-xs-12 col-sm-6">
-                    <select class="form-control"
-                        ng-if="state.mode=='edit'"
-                        chosen ng-model="modelsManager.selectedModel.partition_desc.partition_type"
-                        ng-options="ddt as ddt for ddt in cubeConfig.cubePartitionTypes">
-                        <option value=""></option>
-                    </select>
-                    <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.partition_desc.partition_type}}</span>
-                </div>
-            </div>
-        </div>
-
-        <!--Partition Column-->
-        <div class="form-group">
-            <div class="row">
-                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Date Column</b></label>
-                <div class="col-xs-12 col-sm-6">
-
-                    <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
-                            ng-model="modelsManager.selectedModel.partition_desc.partition_date_column"
-                            ng-if="state.mode=='edit'"
-                            data-placement=""
-                            ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonColumns(modelsManager.selectedModel.fact_table)" >
-                        <option value="">--Select Partition Column--</option>
-                    </select>
-                    <small class="help-block text-red" ng-show="state.mode=='edit'">(Column Type should be DATE or TIMESTAMP Type)</small>
-
-                    <span ng-if="state.mode=='view'">
-                        {{!!(modelsManager.selectedModel.partition_desc.partition_date_column)?modelsManager.selectedModel.partition_desc.partition_date_column: ''}}</span>
-                </div>
-            </div>
-        </div>
-
-        <!--Date Format-->
-        <div class="form-group">
-          <div class="row">
-            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Date Format</b></label>
-            <div class="col-xs-12 col-sm-6">
-              <select style="width: 100%" chosen
-                      ng-required="modelsManager.selectedModel.partition_desc.partition_date_format"
-                      ng-model="modelsManager.selectedModel.partition_desc.partition_date_format"
-                      ng-if="state.mode=='edit'"
-                      data-placement=""
-                      ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt">
-                <option value="">--Select Date Format--</option>
-              </select>
-              <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_date_column">{{(modelsManager.selectedModel.partition_desc.partition_date_format)}}</span>
-            </div>
-          </div>
-        </div>
-
-        <!--Partition Time Column-->
-        <div class="form-group">
-          <div class="row">
-            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Time Column</b></label>
-            <div class="col-xs-12 col-sm-6">
-
-              <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
-                      ng-model="modelsManager.selectedModel.partition_desc.partition_time_column"
-                      ng-if="state.mode=='edit'"
-                      data-placement=""
-                      ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonTimeColumns(modelsManager.selectedModel.fact_table)" >
-                <option value="">--Select Partition Column--</option>
-              </select>
-              <small class="help-block text-red" ng-show="state.mode=='edit'">(Column Type should be TIME Type)</small>
-
-                    <span ng-if="state.mode=='view'">
-                        {{!!(modelsManager.selectedModel.partition_desc.partition_time_column)?modelsManager.selectedModel.partition_desc.partition_time_column: ''}}</span>
-            </div>
-          </div>
-        </div>
-
-        <!--Time Format-->
-        <div class="form-group">
-          <div class="row">
-            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Time Format</b></label>
-            <div class="col-xs-12 col-sm-6">
-              <select style="width: 100%" chosen
-                      ng-required="modelsManager.selectedModel.partition_desc.partition_time_format"
-                      ng-model="modelsManager.selectedModel.partition_desc.partition_time_format"
-                      ng-if="state.mode=='edit'"
-                      data-placement=""
-                      ng-options="ddt as ddt for ddt in cubeConfig.partitionTimeFormatOpt">
-                <option value="">--Select Time Format--</option>
-              </select>
-              <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_time_column">{{(modelsManager.selectedModel.partition_desc.partition_time_format)}}</span>
-            </div>
-          </div>
-        </div>
-
-          <div class="form-group" ng-show="userService.hasRole('ROLE_ADMIN')">
+          <div class="form-group" ng-hide="true">
               <div class="row">
-                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Cube Size</b></label>
+                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Type</b></label>
                   <div class="col-xs-12 col-sm-6">
                       <select class="form-control"
-                              ng-if="state.mode=='edit'"
-                              chosen ng-model="modelsManager.selectedModel.capacity"
-                              ng-options="ddt as ddt for ddt in cubeConfig.cubeCapacities">
+                          ng-if="state.mode=='edit'"
+                          chosen ng-model="modelsManager.selectedModel.partition_desc.partition_type"
+                          ng-options="ddt as ddt for ddt in cubeConfig.cubePartitionTypes">
                           <option value=""></option>
                       </select>
-                      <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.capacity}}</span>
+                      <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.partition_desc.partition_type}}</span>
                   </div>
               </div>
           </div>
 
-        <!--Filter Condition-->
-        <div class="form-group">
+          <!--Partition Column-->
+          <div class="form-group">
+              <div class="row middle-popover">
+                  <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Date Column</b> <i kylinpopover placement="right" title="Partition Date Column" template="partitionTip.html" class="fa fa-info-circle"></i></label>
+                  <div class="col-xs-12 col-sm-6">
+
+                      <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
+                              ng-model="modelsManager.selectedModel.partition_desc.partition_date_column"
+                              ng-if="state.mode=='edit'"
+                              data-placement=""
+                              ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonColumns(modelsManager.selectedModel.fact_table)" >
+                          <option value="">--Select Partition Column--</option>
+                      </select>
+                      <!--<small class="text-info" ng-show="state.mode=='edit'">(Column Type should be DATE or TIMESTAMP Type)</small>-->
+
+                      <span ng-if="state.mode=='view'">
+                          {{!!(modelsManager.selectedModel.partition_desc.partition_date_column)?modelsManager.selectedModel.partition_desc.partition_date_column: ''}}</span>
+                  </div>
+              </div>
+          </div>
+
+          <!--Date Format-->
+          <div class="form-group">
             <div class="row">
-                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Filter</b></label>
+              <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Date Format</b></label>
+              <div class="col-xs-12 col-sm-6">
+                <select style="width: 100%" chosen
+                        ng-required="modelsManager.selectedModel.partition_desc.partition_date_format"
+                        ng-model="modelsManager.selectedModel.partition_desc.partition_date_format"
+                        ng-if="state.mode=='edit'"
+                        data-placement=""
+                        ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt">
+                  <option value="">--Select Date Format--</option>
+                </select>
+                <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_date_column">{{(modelsManager.selectedModel.partition_desc.partition_date_format)}}</span>
+              </div>
+            </div>
+          </div>
+
+          <!--Date Format-->
+          <div class="form-group middle-popover">
+            <div class="row">
+              <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Has a separate "time of the day" column ?</b>  <i kylinpopover placement="right" title="Separate Time Column" template="separateTimeColumnTip.html" class="fa fa-info-circle"></i></label>
+              <div class="col-xs-12 col-sm-6">
+                <toggle-switch on-label="Yes" off-label="No" ng-disabled="state.mode!=='edit'" ng-click="toggleHasSeparateColumn()" ng-model="partitionColumn.hasSeparateTimeColumn"></toggle-switch>
+              </div>
+            </div>
+          </div>
+          <!--Partition Time Column-->
+          <div class="form-group" ng-if="partitionColumn.hasSeparateTimeColumn == true">
+            <div class="row middle-popover">
+              <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Time Column</b>  <i kylinpopover placement="right" title="Partition Time Column" template="partitionTimeTip.html" class="fa fa-info-circle"></i></label>
+              <div class="col-xs-12 col-sm-6">
+
+                <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
+                        ng-model="modelsManager.selectedModel.partition_desc.partition_time_column"
+                        ng-if="state.mode=='edit'"
+                        data-placement=""
+                        ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonTimeColumns(modelsManager.selectedModel.fact_table)" >
+                  <option value="">--Select Partition Column--</option>
+                </select>
+                <!--<small class="text-info" ng-show="state.mode=='edit'">(Column Type should be TIME Type)</small>-->
+
+                      <span ng-if="state.mode=='view'">
+                          {{!!(modelsManager.selectedModel.partition_desc.partition_time_column)?modelsManager.selectedModel.partition_desc.partition_time_column: ''}}</span>
+              </div>
+            </div>
+          </div>
+
+          <!--Time Format-->
+          <div class="form-group" ng-if="partitionColumn.hasSeparateTimeColumn == true">
+            <div class="row">
+              <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Time Format</b></label>
+              <div class="col-xs-12 col-sm-6">
+                <select style="width: 100%" chosen
+                        ng-required="modelsManager.selectedModel.partition_desc.partition_time_format"
+                        ng-model="modelsManager.selectedModel.partition_desc.partition_time_format"
+                        ng-if="state.mode=='edit'"
+                        data-placement=""
+                        ng-options="ddt as ddt for ddt in cubeConfig.partitionTimeFormatOpt">
+                  <option value="">--Select Time Format--</option>
+                </select>
+                <span ng-if="state.mode=='view'&&modelsManager.selectedModel.partition_desc.partition_time_column">{{(modelsManager.selectedModel.partition_desc.partition_time_format)}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <h3>Filter</h3>
+        <!--Filter Condition-->
+        <div class="form-group box-body middle-popover">
+            <div class="row">
+                <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Filter</b>  <i kylinpopover placement="right" title="Filter" template="filterTip.html" class="fa fa-info-circle"></i></label>
                 <div class="col-xs-12 col-sm-6">
 
                     <!--edit mode-->
@@ -161,26 +159,27 @@
         </div>
        </ng-form>
     </div>
-
-    <div class="col-xs-4">
-        <div class="box box-solid">
-            <div class="box-header">
-                <h4 class="box-title">Tips</h4>
-            </div>
-            <div class="box-body">
-                <div class="row">
-                    <div class="col-xs-12">
-                        <ol class="text-info">
-                            <li>Partition date column not required,leave as default if cube always need full build</li>
-                            <li>Partition date column will select 'date' type column from fact table</li>
-                            <li>Where clause to filter data from source</li>
-                            <li>Do not include date column which will be used for incremental refresh</li>
-                            <li>Do not include "Where"</li>
-                            <li>Please verify SQL when finish cube design from SQL view of cube</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
+
+<script type="text/ng-template" id="partitionTip.html">
+    <ol>
+      <li>Partition date column not required,leave as default if cube always need full build</Li>
+      <li>Column should contain date value (type can be Date, Timestamp, String, VARCHAR, etc.)</li>
+    </ol>
+</script>
+
+<script type="text/ng-template" id="partitionTimeTip.html">  
+  <p>Column should contain time value (type can be Timestamp, String, VARCHAR, etc.)</p>
+</script>
+
+<script typ type="text/ng-template" id="filterTip.html">  
+    <ol>
+      <li>Where clause to filter data from source</li>
+      <li>Do not include date column which will be used for incremental refresh</li>
+      <li>Do not include "Where"</li>
+    </ol>
+</script>
+
+<script type="text/ng-template" id="separateTimeColumnTip.html">  
+<p>For cases where fact table saves date and hour at two columns (KYLIN-1427)</p>
+</script>
