@@ -29,6 +29,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -77,14 +78,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
             throw new IllegalArgumentException("BitmapMeasureType datatype is not " + DATATYPE_BITMAP + " but " + functionDesc.getReturnDataType().getName());
 
         List<TblColRef> colRefs = functionDesc.getParameter().getColRefs();
-        if (colRefs.size() != 1) {
-            throw new IllegalArgumentException("BitmapMeasureType col parameters count is not 1 but " + colRefs.size());
-        }
-
-        TblColRef colRef = colRefs.get(0);
-        DataType type = colRef.getType();
-        if (!type.isIntegerFamily()) {
-            throw new IllegalArgumentException("BitmapMeasureType col type is not IntegerFamily but " + type.getName() + " of column " + colRef.getCanonicalName());
+        if (colRefs.size() != 1 && colRefs.size() != 2) {
+            throw new IllegalArgumentException("Bitmap measure need 1 or 2 parameters, but has " + colRefs.size());
         }
     }
 
@@ -100,10 +95,23 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
             @Override
             public BitmapCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+                List<TblColRef> literalCols = measureDesc.getFunction().getParameter().getColRefs();
+                TblColRef literalCol = null;
+                if (literalCols.size() == 1) {
+                    literalCol = literalCols.get(0);
+                } else if (literalCols.size() == 2) {
+                    literalCol = literalCols.get(1);
+                } else {
+                    throw new IllegalArgumentException("Bitmap measure need 1 or 2 parameters");
+                }
+                Dictionary<String> dictionary = dictionaryMap.get(literalCol);
                 BitmapCounter bitmap = current;
                 bitmap.clear();
-                for (String v : values)
-                    bitmap.add(v);
+                // bitmap measure may have two values due to two parameters, only the first value should be ingested
+                if (values != null && values.length > 0 && values[0] != null) {
+                    int id = dictionary.getIdFromValue(values[0]);
+                    bitmap.add(id);
+                }
                 return bitmap;
             }
         };
@@ -114,8 +122,31 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
         return new BitmapAggregator();
     }
 
+    /**
+     * generate dict with first col by default, and with second col if specified
+     *
+     * Typical case: we have col uuid, and another col flag_uuid (if flag==1, uuid, null),
+     * the metrics count(distinct uuid) and count(distinct flag_uuid) should both generate dict with uuid, instead of uuid and flag_uuid
+     */
+    @Override
+    public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
+        List<TblColRef> literalCols = functionDesc.getParameter().getColRefs();
+        if (literalCols.size() == 1) {
+            return Collections.singletonList(literalCols.get(0));
+        } else if (literalCols.size() == 2) {
+            return Collections.singletonList(literalCols.get(1));
+        } else {
+            throw new IllegalArgumentException("Bitmap measure need 1 or 2 parameters");
+        }
+    }
+
     @Override
     public boolean needRewrite() {
+        return true;
+    }
+
+    @Override
+    public boolean needCubeLevelDictionary() {
         return true;
     }
 

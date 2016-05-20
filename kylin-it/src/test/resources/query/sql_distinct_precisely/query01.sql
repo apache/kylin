@@ -19,7 +19,7 @@
 select lstg_format_name,
  sum(price) as GMV,
  count(1) as TRANS_CNT,
- count(distinct leaf_categ_id) as LEAF_CATEG_CNT
+ count(distinct seller_id) as seller_count
  from test_kylin_fact
  where lstg_format_name='FP-GTC'
  group by lstg_format_name
