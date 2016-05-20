@@ -30,7 +30,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.io.*;
+import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.ToolRunner;
@@ -44,7 +48,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.mr.common.CuboidShardUtil;
@@ -280,7 +283,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
             return;
         }
 
-        FileSystem fs = FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration());
+        // note read-write separation, respect HBase FS here
+        Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
+        FileSystem fs = FileSystem.get(hbaseConf);
         if (fs.exists(outputFolder) == false) {
             fs.mkdirs(outputFolder);
         }
@@ -294,7 +299,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         if (hfileSizeMB > 0.0 && kylinConfig.isDevEnv()) {
             hfileSizeMB = mbPerRegion / 2;
         }
-        int compactionThreshold = Integer.valueOf(HBaseConnection.getCurrentHBaseConfiguration().get("hbase.hstore.compactionThreshold", "3"));
+        int compactionThreshold = Integer.valueOf(hbaseConf.get("hbase.hstore.compactionThreshold", "3"));
         logger.info("hbase.hstore.compactionThreshold is " + compactionThreshold);
         if (hfileSizeMB > 0.0  && hfileSizeMB * compactionThreshold < mbPerRegion) {
             hfileSizeMB = mbPerRegion / compactionThreshold;
@@ -338,8 +343,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         }
 
-        Configuration conf = HadoopUtil.getCurrentConfiguration();
-        SequenceFile.Writer hfilePartitionWriter = SequenceFile.createWriter(conf, SequenceFile.Writer.file(hfilePartitionFile), SequenceFile.Writer.keyClass(ImmutableBytesWritable.class), SequenceFile.Writer.valueClass(NullWritable.class));
+        SequenceFile.Writer hfilePartitionWriter = SequenceFile.createWriter(hbaseConf, SequenceFile.Writer.file(hfilePartitionFile), SequenceFile.Writer.keyClass(ImmutableBytesWritable.class), SequenceFile.Writer.valueClass(NullWritable.class));
 
         for (int i = 0; i < splits.size(); i++) {
             hfilePartitionWriter.append(new ImmutableBytesWritable(splits.get(i)), NullWritable.get());
