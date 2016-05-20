@@ -60,7 +60,6 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         result.addTask(createFactDistinctColumnsStepWithStats(jobId));
         result.addTask(createBuildDictionaryStep(jobId));
         result.addTask(createSaveStatisticsStep(jobId));
-        addOtherStepBeforeCubing(result);
         outputSide.addStepPhase2_BuildDictionary(result);
 
         // Phase 3: Build Cube
@@ -98,10 +97,6 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         CubingExecutableUtil.setStatisticsPath(getStatisticsPath(jobId), result.getParams());
         CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
         return result;
-    }
-
-    protected void addOtherStepBeforeCubing(CubingJob result) {
-
     }
 
     private MapReduceExecutable createInMemCubingStep(String jobId, String cuboidRootPath) {
