@@ -18,13 +18,9 @@
 
 package org.apache.kylin.storage;
 
-import static org.apache.kylin.metadata.model.IStorageAware.ID_HBASE;
-import static org.apache.kylin.metadata.model.IStorageAware.ID_HYBRID;
-import static org.apache.kylin.metadata.model.IStorageAware.ID_SHARDED_HBASE;
-
-import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -35,10 +31,7 @@ public class StorageFactory {
 
     private static ImplementationSwitch<IStorage> storages;
     static {
-        Map<Integer, String> impls = new HashMap<>();
-        impls.put(ID_HBASE, "org.apache.kylin.storage.hbase.HBaseStorage");
-        impls.put(ID_SHARDED_HBASE, "org.apache.kylin.storage.hbase.HBaseStorage");//ID_SHARDED_HBASE is a special HBaseStorage
-        impls.put(ID_HYBRID, "org.apache.kylin.storage.hybrid.HybridStorage");
+        Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getStorageEngines();
         storages = new ImplementationSwitch<IStorage>(impls, IStorage.class);
     }
 

@@ -18,11 +18,9 @@
 
 package org.apache.kylin.source;
 
-import static org.apache.kylin.metadata.model.ISourceAware.ID_HIVE;
-
-import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -31,8 +29,7 @@ public class SourceFactory {
 
     private static ImplementationSwitch<ISource> sources;
     static {
-        Map<Integer, String> impls = new HashMap<>();
-        impls.put(ID_HIVE, "org.apache.kylin.source.hive.HiveSource");
+        Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getSourceEngines();
         sources = new ImplementationSwitch<ISource>(impls, ISource.class);
     }
 

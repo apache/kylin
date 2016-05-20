@@ -652,20 +652,32 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.init.tasks");
     }
 
-    public String getMRBatchEngineV1Class() {
-        return getOptional("kylin.cube.mr.engine.v1.class", "org.apache.kylin.engine.mr.MRBatchCubingEngine");
-    }
-
-    public String getMRBatchEngineV2Class() {
-        return getOptional("kylin.cube.mr.engine.v2.class", "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
-    }
-
     public int getDimCountDistinctMaxCardinality() {
         return Integer.parseInt(getOptional("kylin.query.dim.distinct.max", "5000000"));
     }
 
     public int getCubeStatsHLLPrecision() {
         return Integer.parseInt(getOptional("kylin.job.cubing.inmem.sampling.hll.precision", "14"));
+    }
+
+    public Map<Integer, String> getJobEngines() {
+        return convertKeyToInteger(getPropertiesByPrefix("kylin.job.engine."));
+    }
+
+    public Map<Integer, String> getSourceEngines() {
+        return convertKeyToInteger(getPropertiesByPrefix("kylin.source.engine."));
+    }
+
+    public Map<Integer, String> getStorageEngines() {
+        return convertKeyToInteger(getPropertiesByPrefix("kylin.storage.engine."));
+    }
+    
+    private Map<Integer, String> convertKeyToInteger(Map<String, String> map) {
+        Map<Integer, String> result = Maps.newLinkedHashMap();
+        for (Entry<String, String> entry : map.entrySet()) {
+            result.put(Integer.valueOf(entry.getKey()), entry.getValue());
+        }
+        return result;
     }
 
 }

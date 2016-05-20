@@ -18,10 +18,6 @@
 
 package org.apache.kylin.engine;
 
-import static org.apache.kylin.metadata.model.IEngineAware.ID_MR_V1;
-import static org.apache.kylin.metadata.model.IEngineAware.ID_MR_V2;
-
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
@@ -35,9 +31,7 @@ public class EngineFactory {
     private static ImplementationSwitch<IBatchCubingEngine> batchEngines;
     private static ImplementationSwitch<IStreamingCubingEngine> streamingEngines;
     static {
-        Map<Integer, String> impls = new HashMap<>();
-        impls.put(ID_MR_V1, KylinConfig.getInstanceFromEnv().getMRBatchEngineV1Class());
-        impls.put(ID_MR_V2, KylinConfig.getInstanceFromEnv().getMRBatchEngineV2Class());
+        Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getJobEngines();
         batchEngines = new ImplementationSwitch<IBatchCubingEngine>(impls, IBatchCubingEngine.class);
 
         impls.clear();
