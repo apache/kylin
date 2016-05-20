@@ -6,7 +6,7 @@ permalink: /development/howto_release.html
 ---
 
 _This guide is for Apache Kylin Committers only._  
-_Shell commands is on Mac OS X as sample._  
+_Shell commands are on Mac OS X as sample._  
 _For people in China, please aware using proxy to avoid potential firewall issue._  
 
 ## Setup Account
