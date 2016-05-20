@@ -70,12 +70,16 @@ then
     echo "HCAT_HOME not found, try to find hcatalog path from hadoop home"
     hadoop_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
     hive_home=`echo $hive_exec_path | awk -F '/lib/' '{print $1}'`
+    is_aws=`uname -r | grep amzn`
     if [ -d "${hadoop_home}/hive-hcatalog" ]; then
       hcatalog_home=${hadoop_home}/hive-hcatalog
     elif [ -d "${hadoop_home}/hive/hcatalog" ]; then
       hcatalog_home=${hadoop_home}/hive/hcatalog
     elif [ -d "${hive_home}/hcatalog" ]; then
       hcatalog_home=${hive_home}/hcatalog
+    elif [ -n is_aws ] && [ -d "/usr/lib/oozie/lib" ]; then
+      # special handling for Amazon EMR, where hcat libs are under oozie!?
+      hcatalog_home=/usr/lib/oozie/lib
     else 
       echo "Couldn't locate hcatalog installation, please make sure it is installed and set HCAT_HOME to the path."
       exit 1

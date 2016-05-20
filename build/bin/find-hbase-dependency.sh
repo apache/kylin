@@ -18,6 +18,13 @@
 #
 
 hbase_classpath=`hbase classpath`
+
+# special handling for Amazon EMR, to prevent re-init of hbase-setenv
+is_aws=`uname -r | grep amzn`
+if [ -n is_aws ] && [ -d "/usr/lib/oozie/lib" ]; then
+    export HBASE_ENV_INIT="true"
+fi
+
 arr=(`echo $hbase_classpath | cut -d ":"  --output-delimiter=" " -f 1-`)
 hbase_common_path=
 for data in ${arr[@]}
