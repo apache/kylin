@@ -34,6 +34,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CardinalityRequest;
+import org.apache.kylin.rest.request.HiveTableRequest;
 import org.apache.kylin.rest.request.StreamingRequest;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.rest.service.*;
@@ -131,10 +132,12 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
     @ResponseBody
-    public Map<String, String[]> loadHiveTable(@PathVariable String tables, @PathVariable String project) throws IOException {
+    public Map<String, String[]> loadHiveTable(@PathVariable String tables, @PathVariable String project, @RequestBody HiveTableRequest request) throws IOException {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] loaded = cubeMgmtService.reloadHiveTable(tables);
-        cubeMgmtService.calculateCardinalityIfNotPresent(loaded, submitter);
+        if (request.isCalculate()) {
+            cubeMgmtService.calculateCardinalityIfNotPresent(loaded, submitter);
+        }
         cubeMgmtService.syncTableToProject(loaded, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
         result.put("result.loaded", loaded);

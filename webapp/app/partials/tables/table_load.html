@@ -25,6 +25,7 @@
       <label for="tables"> Table Names:(Seperate with comma)</label>
             <textarea ng-model="$parent.tableNames" class="form-control" id="tables"
                       placeholder="table1,table2  By default,system will choose 'Default' as database,you can specify database like this 'database.table'"></textarea>
+      <label> <input type="checkbox" ng-model="$parent.isCalculate" >Calculate column cardinality</label>
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary" ng-click="add()">Sync</button>

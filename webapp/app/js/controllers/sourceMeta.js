@@ -26,7 +26,7 @@ KylinApp
     $scope.tableModel.selectedSrcTable = {};
     $scope.window = 0.68 * $window.innerHeight;
     $scope.tableConfig = tableConfig;
-
+    $scope.isCalculate = true;
 
     $scope.state = {
       filterAttr: 'id', filterReverse: false, reverseColumn: 'id',
@@ -97,6 +97,9 @@ KylinApp
           projectName: function () {
             return $scope.projectModel.selectedProject;
           },
+          isCalculate: function () {
+            return $scope.isCalculate;
+          },
           scope: function () {
             return $scope;
           }
@@ -118,6 +121,9 @@ KylinApp
           },
           projectName:function(){
             return  $scope.projectModel.selectedProject;
+          },
+          isCalculate: function () {
+            return $scope.isCalculate;
           },
           scope: function () {
             return $scope;
@@ -142,6 +148,9 @@ KylinApp
           projectName: function () {
             return $scope.projectModel.selectedProject;
           },
+          isCalculate: function () {
+            return $scope.isCalculate;
+          },
           scope: function () {
             return $scope;
           }
@@ -149,9 +158,11 @@ KylinApp
       });
     };
 
-    var ModalInstanceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, scope,kylinConfig) {
+    var ModalInstanceCtrl = function ($scope, $location, $modalInstance, tableNames, MessageService, projectName, isCalculate, scope, kylinConfig) {
       $scope.tableNames = "";
       $scope.projectName = projectName;
+      $scope.isCalculate = isCalculate;
+
       $scope.cancel = function () {
         $modalInstance.dismiss('cancel');
       };
@@ -330,7 +341,7 @@ KylinApp
 
         $scope.cancel();
         loadingRequest.show();
-        TableService.loadHiveTable({tableName: $scope.tableNames, action: projectName}, {}, function (result) {
+        TableService.loadHiveTable({tableName: $scope.tableNames, action: projectName}, {calculate: $scope.isCalculate}, function (result) {
           var loadTableInfo = "";
           angular.forEach(result['result.loaded'], function (table) {
             loadTableInfo += "\n" + table;
