@@ -680,4 +680,8 @@ abstract public class KylinConfigBase implements Serializable {
         return result;
     }
 
+    public boolean getCompressionResult() {
+        return Boolean.parseBoolean(getOptional("kylin.query.endpoint.compression.result", "true"));
+    }
+
 }

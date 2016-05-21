@@ -116,6 +116,24 @@ public final class CubeVisitProtos {
      * </pre>
      */
     long getTimeout();
+
+    // optional bool useCompression = 8;
+    /**
+     * <code>optional bool useCompression = 8;</code>
+     *
+     * <pre>
+     * compress result or not
+     * </pre>
+     */
+    boolean hasUseCompression();
+    /**
+     * <code>optional bool useCompression = 8;</code>
+     *
+     * <pre>
+     * compress result or not
+     * </pre>
+     */
+    boolean getUseCompression();
   }
   /**
    * Protobuf type {@code CubeVisitRequest}
@@ -204,6 +222,11 @@ public final class CubeVisitProtos {
             case 56: {
               bitField0_ |= 0x00000020;
               timeout_ = input.readInt64();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000040;
+              useCompression_ = input.readBool();
               break;
             }
           }
@@ -928,6 +951,30 @@ public final class CubeVisitProtos {
       return timeout_;
     }
 
+    // optional bool useCompression = 8;
+    public static final int USECOMPRESSION_FIELD_NUMBER = 8;
+    private boolean useCompression_;
+    /**
+     * <code>optional bool useCompression = 8;</code>
+     *
+     * <pre>
+     * compress result or not
+     * </pre>
+     */
+    public boolean hasUseCompression() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional bool useCompression = 8;</code>
+     *
+     * <pre>
+     * compress result or not
+     * </pre>
+     */
+    public boolean getUseCompression() {
+      return useCompression_;
+    }
+
     private void initFields() {
       behavior_ = "";
       gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
@@ -936,6 +983,7 @@ public final class CubeVisitProtos {
       hbaseColumnsToGT_ = java.util.Collections.emptyList();
       startTime_ = 0L;
       timeout_ = 0L;
+      useCompression_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -994,6 +1042,9 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeInt64(7, timeout_);
       }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBool(8, useCompression_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1030,6 +1081,10 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(7, timeout_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(8, useCompression_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1086,6 +1141,11 @@ public final class CubeVisitProtos {
         result = result && (getTimeout()
             == other.getTimeout());
       }
+      result = result && (hasUseCompression() == other.hasUseCompression());
+      if (hasUseCompression()) {
+        result = result && (getUseCompression()
+            == other.getUseCompression());
+      }
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
       return result;
@@ -1126,6 +1186,10 @@ public final class CubeVisitProtos {
       if (hasTimeout()) {
         hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
         hash = (53 * hash) + hashLong(getTimeout());
+      }
+      if (hasUseCompression()) {
+        hash = (37 * hash) + USECOMPRESSION_FIELD_NUMBER;
+        hash = (53 * hash) + hashBoolean(getUseCompression());
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1255,6 +1319,8 @@ public final class CubeVisitProtos {
         bitField0_ = (bitField0_ & ~0x00000020);
         timeout_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000040);
+        useCompression_ = false;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -1316,6 +1382,10 @@ public final class CubeVisitProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.timeout_ = timeout_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.useCompression_ = useCompression_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1377,6 +1447,9 @@ public final class CubeVisitProtos {
         }
         if (other.hasTimeout()) {
           setTimeout(other.getTimeout());
+        }
+        if (other.hasUseCompression()) {
+          setUseCompression(other.getUseCompression());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1942,6 +2015,55 @@ public final class CubeVisitProtos {
       public Builder clearTimeout() {
         bitField0_ = (bitField0_ & ~0x00000040);
         timeout_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional bool useCompression = 8;
+      private boolean useCompression_ ;
+      /**
+       * <code>optional bool useCompression = 8;</code>
+       *
+       * <pre>
+       * compress result or not
+       * </pre>
+       */
+      public boolean hasUseCompression() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional bool useCompression = 8;</code>
+       *
+       * <pre>
+       * compress result or not
+       * </pre>
+       */
+      public boolean getUseCompression() {
+        return useCompression_;
+      }
+      /**
+       * <code>optional bool useCompression = 8;</code>
+       *
+       * <pre>
+       * compress result or not
+       * </pre>
+       */
+      public Builder setUseCompression(boolean value) {
+        bitField0_ |= 0x00000080;
+        useCompression_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool useCompression = 8;</code>
+       *
+       * <pre>
+       * compress result or not
+       * </pre>
+       */
+      public Builder clearUseCompression() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        useCompression_ = false;
         onChanged();
         return this;
       }
@@ -4300,26 +4422,26 @@ public final class CubeVisitProtos {
     java.lang.String[] descriptorData = {
       "\npstorage-hbase/src/main/java/org/apache" +
       "/kylin/storage/hbase/cube/v2/coprocessor" +
-      "/endpoint/protobuf/CubeVisit.proto\"\337\001\n\020C" +
+      "/endpoint/protobuf/CubeVisit.proto\"\367\001\n\020C" +
       "ubeVisitRequest\022\020\n\010behavior\030\001 \002(\t\022\025\n\rgtS" +
       "canRequest\030\002 \002(\014\022\024\n\014hbaseRawScan\030\003 \002(\014\022\032" +
       "\n\022rowkeyPreambleSize\030\004 \002(\005\0223\n\020hbaseColum" +
       "nsToGT\030\005 \003(\0132\031.CubeVisitRequest.IntList\022" +
-      "\021\n\tstartTime\030\006 \002(\003\022\017\n\007timeout\030\007 \002(\003\032\027\n\007I" +
-      "ntList\022\014\n\004ints\030\001 \003(\005\"\321\002\n\021CubeVisitRespon" +
-      "se\022\026\n\016compressedRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(",
-      "\0132\030.CubeVisitResponse.Stats\032\372\001\n\005Stats\022\030\n" +
-      "\020serviceStartTime\030\001 \001(\003\022\026\n\016serviceEndTim" +
-      "e\030\002 \001(\003\022\027\n\017scannedRowCount\030\003 \001(\005\022\032\n\022aggr" +
-      "egatedRowCount\030\004 \001(\005\022\025\n\rsystemCpuLoad\030\005 " +
-      "\001(\001\022\036\n\026freePhysicalMemorySize\030\006 \001(\001\022\031\n\021f" +
-      "reeSwapSpaceSize\030\007 \001(\001\022\020\n\010hostname\030\010 \001(\t" +
-      "\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016normalComplete\030\n \001(\005" +
-      "2F\n\020CubeVisitService\0222\n\tvisitCube\022\021.Cube" +
-      "VisitRequest\032\022.CubeVisitResponseB`\nEorg." +
-      "apache.kylin.storage.hbase.cube.v2.copro",
-      "cessor.endpoint.generatedB\017CubeVisitProt" +
-      "osH\001\210\001\001\240\001\001"
+      "\021\n\tstartTime\030\006 \002(\003\022\017\n\007timeout\030\007 \002(\003\022\026\n\016u" +
+      "seCompression\030\010 \001(\010\032\027\n\007IntList\022\014\n\004ints\030\001" +
+      " \003(\005\"\321\002\n\021CubeVisitResponse\022\026\n\016compressed",
+      "Rows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeVisitRes" +
+      "ponse.Stats\032\372\001\n\005Stats\022\030\n\020serviceStartTim" +
+      "e\030\001 \001(\003\022\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scann" +
+      "edRowCount\030\003 \001(\005\022\032\n\022aggregatedRowCount\030\004" +
+      " \001(\005\022\025\n\rsystemCpuLoad\030\005 \001(\001\022\036\n\026freePhysi" +
+      "calMemorySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSize" +
+      "\030\007 \001(\001\022\020\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t" +
+      "\022\026\n\016normalComplete\030\n \001(\0052F\n\020CubeVisitSer" +
+      "vice\0222\n\tvisitCube\022\021.CubeVisitRequest\032\022.C" +
+      "ubeVisitResponseB`\nEorg.apache.kylin.sto",
+      "rage.hbase.cube.v2.coprocessor.endpoint." +
+      "generatedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4331,7 +4453,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitRequest_descriptor,
-              new java.lang.String[] { "Behavior", "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "StartTime", "Timeout", });
+              new java.lang.String[] { "Behavior", "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "StartTime", "Timeout", "UseCompression", });
           internal_static_CubeVisitRequest_IntList_descriptor =
             internal_static_CubeVisitRequest_descriptor.getNestedTypes().get(0);
           internal_static_CubeVisitRequest_IntList_fieldAccessorTable = new

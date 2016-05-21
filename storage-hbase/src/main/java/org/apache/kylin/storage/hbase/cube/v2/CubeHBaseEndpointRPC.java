@@ -320,6 +320,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         final AtomicInteger totalScannedCount = new AtomicInteger(0);
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum);
+        final boolean compressionResult = cubeSeg.getCubeDesc().getConfig().getCompressionResult();
         final CubeVisitProtos.CubeVisitRequest.Builder builder = CubeVisitProtos.CubeVisitRequest.newBuilder();
         builder.setGtScanRequest(scanRequestByteString).setHbaseRawScan(rawScanByteString);
         for (IntList intList : hbaseColumnsToGTIntList) {
@@ -329,6 +330,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setBehavior(toggle);
         builder.setStartTime(System.currentTimeMillis());
         builder.setTimeout(epResultItr.getTimeout());
+        builder.setUseCompression(compressionResult);
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {
@@ -353,7 +355,11 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                             abnormalFinish = true;
                         } else {
                             try {
-                                epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getValue().getCompressedRows())));
+                                if (compressionResult) {
+                                    epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getValue().getCompressedRows())));
+                                } else {
+                                    epResultItr.append(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getValue().getCompressedRows()));
+                                }
                             } catch (IOException | DataFormatException e) {
                                 throw new RuntimeException(logHeader + "Error when decompressing", e);
                             }

@@ -315,7 +315,11 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             } else {
                 allRows = new byte[0];
             }
-            compressedAllRows = CompressionUtils.compress(allRows);
+            if (request.hasUseCompression() && request.getUseCompression() == false) {
+                compressedAllRows = allRows;
+            } else {
+                compressedAllRows = CompressionUtils.compress(allRows);
+            }
 
             appendProfileInfo(sb, "compress done");
 
