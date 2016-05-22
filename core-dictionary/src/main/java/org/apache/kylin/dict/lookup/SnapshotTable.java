@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -73,30 +74,39 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<String>(new StringBytesConverter());
 
         TableReader reader = table.getReader();
-        while (reader.next()) {
-            String[] row = reader.getRow();
-            if (row.length <= maxIndex) {
-                throw new IllegalStateException("Bad hive table row, " + tableDesc + " expect " + (maxIndex + 1) + " columns, but got " + Arrays.toString(row));
-            }
+        try {
+            while (reader.next()) {
+                String[] row = reader.getRow();
+                if (row.length <= maxIndex) {
+                    throw new IllegalStateException("Bad hive table row, " + tableDesc + " expect " + (maxIndex + 1) + " columns, but got " + Arrays.toString(row));
+                }
 
-            for (String cell : row) {
-                if (cell != null)
-                    b.addValue(cell);
+                for (String cell : row) {
+                    if (cell != null)
+                        b.addValue(cell);
+                }
             }
+        } finally {
+            IOUtils.closeQuietly(reader);
         }
 
         this.dict = b.build(0);
 
-        reader = table.getReader();
         ArrayList<int[]> allRowIndices = new ArrayList<int[]>();
-        while (reader.next()) {
-            String[] row = reader.getRow();
-            int[] rowIndex = new int[row.length];
-            for (int i = 0; i < row.length; i++) {
-                rowIndex[i] = dict.getIdFromValue(row[i]);
+        reader = table.getReader();
+        try {
+            while (reader.next()) {
+                String[] row = reader.getRow();
+                int[] rowIndex = new int[row.length];
+                for (int i = 0; i < row.length; i++) {
+                    rowIndex[i] = dict.getIdFromValue(row[i]);
+                }
+                allRowIndices.add(rowIndex);
             }
-            allRowIndices.add(rowIndex);
+        } finally {
+            IOUtils.closeQuietly(reader);
         }
+
         this.rowIndices = allRowIndices;
     }
 
@@ -249,7 +259,7 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
                     this.rowIndices.add(rowIndex);
                 }
             }
-        }else{
+        } else {
             rowIndices = new ArrayList<int[]>();
             dict = new TrieDictionary<String>();
         }
