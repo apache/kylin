@@ -35,6 +35,7 @@ import java.util.PriorityQueue;
 import java.util.SortedMap;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
@@ -451,7 +452,7 @@ public class GTAggregateScanner implements IGTScanner {
                             aggs.collectStates(aggrResult);
                             ByteBuffer metricsBuf = measureCodec.encode(aggrResult);
                             oos.writeObject(entry.getKey());
-                            oos.writeObject(metricsBuf.array());
+                            oos.writeObject(BytesUtil.subarray(metricsBuf.array(), 0, metricsBuf.position()));
                         }
                     } finally {
                         buffMap = null;
