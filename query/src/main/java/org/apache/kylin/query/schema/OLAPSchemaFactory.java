@@ -21,6 +21,7 @@ package org.apache.kylin.query.schema;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class OLAPSchemaFactory implements SchemaFactory {
     public static final Logger logger = LoggerFactory.getLogger(OLAPSchemaFactory.class);
-
 
     static {
         /*
@@ -114,12 +114,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
                 out.write("            \"operand\": {\n");
                 out.write("                \"" + SCHEMA_PROJECT + "\": \"" + project + "\"\n");
                 out.write("            },\n");
-                out.write("            \"functions\": [\n");
-                out.write("               {\n");
-                out.write("                   name: 'MASSIN',\n");
-                out.write("                   className: 'org.apache.kylin.query.udf.MassInUDF'\n");
-                out.write("               }\n");
-                out.write("              ]\n");
+                createOLAPSchemaFunctions(out);
                 out.write("        }\n");
 
                 if (++counter != schemaCounts.size()) {
@@ -141,4 +136,23 @@ public class OLAPSchemaFactory implements SchemaFactory {
         }
     }
 
+    private static void createOLAPSchemaFunctions(Writer out) throws IOException {
+        out.write("            \"functions\": [\n");
+        Map<String, String> udfs = KylinConfig.getInstanceFromEnv().getUDFs();
+        int index = 0;
+        for (Map.Entry<String, String> udf : udfs.entrySet()) {
+            String udfName = udf.getKey().trim().toUpperCase();
+            String udfClassName = udf.getValue().trim();
+            out.write("               {\n");
+            out.write("                   name: '" + udfName + "',\n");
+            out.write("                   className: '" + udfClassName + "'\n");
+            if (index < udfs.size() - 1) {
+                out.write("               },\n");
+            } else {
+                out.write("               }\n");
+            }
+            index++;
+        }
+        out.write("              ]\n");
+    }
 }

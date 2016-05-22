@@ -18,9 +18,11 @@
 
 package org.apache.kylin.measure;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
@@ -83,30 +85,51 @@ abstract public class MeasureTypeFactory<T> {
     private static Map<String, List<MeasureTypeFactory<?>>> factories = Maps.newHashMap();
     private static List<MeasureTypeFactory<?>> defaultFactory = Lists.newArrayListWithCapacity(2);
 
+    public static String[] customFactories = null;
+
     static {
         init();
     }
 
+    public static void forceInit() {
+        factories.clear();
+        defaultFactory.clear();
+
+        init();
+    }
+
     public static synchronized void init() {
-        if (factories.isEmpty() == false)
+        if (!factories.isEmpty()) {
             return;
+        }
+
+        if (customFactories == null) {
+            try {
+                Collection<String> customMeasureTypeFactories = KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().values();
+                customFactories = customMeasureTypeFactories.toArray(new String[customMeasureTypeFactories.size()]);
+            } catch (Exception e) {
+                customFactories = null;
+            }
+        }
 
         List<MeasureTypeFactory<?>> factoryInsts = Lists.newArrayList();
 
-        // two built-in advanced measure types
+        // five built-in advanced measure types
         factoryInsts.add(new HLLCMeasureType.Factory());
         factoryInsts.add(new BitmapMeasureType.Factory());
         factoryInsts.add(new TopNMeasureType.Factory());
         factoryInsts.add(new RawMeasureType.Factory());
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
 
-        /*
-         * Maybe do classpath search for more custom measure types?
-         * More MeasureType cannot be configured via kylin.properties alone,
-         * because used in coprocessor, the new classes must be on classpath
-         * and be packaged into coprocessor jar. This inevitably involves
-         * rebuild Kylin from code.
-         */
+        if (customFactories != null) {
+            for (String customFactory : customFactories) {
+                try {
+                    factoryInsts.add((MeasureTypeFactory<?>) Class.forName(customFactory).newInstance());
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Unrecognized MeasureTypeFactory classname: " + customFactory, e);
+                }
+            }
+        }
 
         // register factories & data type serializers
         for (MeasureTypeFactory<?> factory : factoryInsts) {
@@ -201,6 +224,6 @@ abstract public class MeasureTypeFactory<T> {
         public Class getRewriteCalciteAggrFunctionClass() {
             throw new UnsupportedOperationException();
         }
-        
+
     }
 }

@@ -684,4 +684,11 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.endpoint.compression.result", "true"));
     }
 
+    public Map<String, String> getCubeCustomMeasureTypes() {
+        return getPropertiesByPrefix("kylin.cube.measure.customMeasureType.");
+    }
+
+    public Map<String, String> getUDFs() {
+        return getPropertiesByPrefix("kylin.query.udf.");
+    }
 }

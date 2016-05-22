@@ -50,6 +50,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
@@ -163,6 +164,11 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         sb.append(",");
     }
 
+    private void initCustomArtifacts(CubeVisitProtos.CubeVisitRequest request) {
+        MeasureTypeFactory.customFactories = request.getCustomMeasureTypeFactoriesList().toArray(new String[request.getCustomMeasureTypeFactoriesCount()]);
+        MeasureTypeFactory.forceInit();
+    }
+
     @Override
     public void visitCube(final RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
 
@@ -175,6 +181,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
         try {
             this.serviceStartTime = System.currentTimeMillis();
+
+            initCustomArtifacts(request);
 
             region = env.getRegion();
             region.startRegionOperation();

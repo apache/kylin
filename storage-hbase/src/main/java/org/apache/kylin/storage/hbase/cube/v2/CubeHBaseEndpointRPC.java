@@ -21,6 +21,7 @@ package org.apache.kylin.storage.hbase.cube.v2;
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -331,6 +332,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setStartTime(System.currentTimeMillis());
         builder.setTimeout(epResultItr.getTimeout());
         builder.setUseCompression(compressionResult);
+        builder.addAllCustomMeasureTypeFactories(KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().values());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {

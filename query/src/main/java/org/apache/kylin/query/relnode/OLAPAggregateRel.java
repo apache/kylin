@@ -55,6 +55,7 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -79,6 +80,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         AGGR_FUNC_MAP.put("COUNT_DISTINCT", "COUNT_DISTINCT");
         AGGR_FUNC_MAP.put("MAX", "MAX");
         AGGR_FUNC_MAP.put("MIN", "MIN");
+
+        for (String customAggrFunc : KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().keySet()) {
+            AGGR_FUNC_MAP.put(customAggrFunc.trim().toUpperCase(), customAggrFunc.trim().toUpperCase());
+        }
     }
 
     private static String getFuncName(AggregateCall aggCall) {
@@ -206,6 +211,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (AggregateCall aggCall : this.rewriteAggCalls) {
             ParameterDesc parameter = null;
             if (!aggCall.getArgList().isEmpty()) {
+                // TODO: Currently only get the column of first param
                 int index = aggCall.getArgList().get(0);
                 TblColRef column = inputColumnRowType.getColumnByIndex(index);
                 if (!column.isInnerColumn()) {
@@ -318,7 +324,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         if (inputAggRow.getFieldCount() != outputAggRow.getFieldCount()) {
             for (RelDataTypeField inputField : inputAggRow.getFieldList()) {
                 String inputFieldName = inputField.getName();
-                if (outputAggRow.getField(inputFieldName, true, false) == null) {
+                // constant columns(starts with $) should not be added to context.
+                if (!inputFieldName.startsWith("$") && outputAggRow.getField(inputFieldName, true, false) == null) {
                     TblColRef column = this.columnRowType.getColumnByIndex(inputField.getIndex());
                     this.context.metricsColumns.add(column);
                 }
@@ -328,12 +335,15 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     private AggregateCall rewriteAggregateCall(AggregateCall aggCall, FunctionDesc func) {
         // rebuild parameters
-        List<Integer> newArgList = Lists.newArrayListWithCapacity(1);
+        List<Integer> newArgList = Lists.newArrayList(aggCall.getArgList());
         if (func.needRewriteField()) {
             RelDataTypeField field = getInput().getRowType().getField(func.getRewriteFieldName(), true, false);
-            newArgList.add(field.getIndex());
-        } else {
-            newArgList = aggCall.getArgList();
+            if (newArgList.isEmpty()) {
+                newArgList.add(field.getIndex());
+            } else {
+                // only the first column got overwritten
+                newArgList.set(0, field.getIndex());
+            }
         }
 
         // rebuild function

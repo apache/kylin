@@ -134,6 +134,42 @@ public final class CubeVisitProtos {
      * </pre>
      */
     boolean getUseCompression();
+
+    // repeated string customMeasureTypeFactories = 9;
+    /**
+     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     *
+     * <pre>
+     * customization
+     * </pre>
+     */
+    java.util.List<java.lang.String>
+    getCustomMeasureTypeFactoriesList();
+    /**
+     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     *
+     * <pre>
+     * customization
+     * </pre>
+     */
+    int getCustomMeasureTypeFactoriesCount();
+    /**
+     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     *
+     * <pre>
+     * customization
+     * </pre>
+     */
+    java.lang.String getCustomMeasureTypeFactories(int index);
+    /**
+     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     *
+     * <pre>
+     * customization
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getCustomMeasureTypeFactoriesBytes(int index);
   }
   /**
    * Protobuf type {@code CubeVisitRequest}
@@ -229,6 +265,14 @@ public final class CubeVisitProtos {
               useCompression_ = input.readBool();
               break;
             }
+            case 74: {
+              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+                customMeasureTypeFactories_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000100;
+              }
+              customMeasureTypeFactories_.add(input.readBytes());
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -239,6 +283,9 @@ public final class CubeVisitProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           hbaseColumnsToGT_ = java.util.Collections.unmodifiableList(hbaseColumnsToGT_);
+        }
+        if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+          customMeasureTypeFactories_ = new com.google.protobuf.UnmodifiableLazyStringList(customMeasureTypeFactories_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -975,6 +1022,52 @@ public final class CubeVisitProtos {
       return useCompression_;
     }
 
+    // repeated string customMeasureTypeFactories = 9;
+    public static final int CUSTOMMEASURETYPEFACTORIES_FIELD_NUMBER = 9;
+    private com.google.protobuf.LazyStringList customMeasureTypeFactories_;
+    /**
+     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     *
+     * <pre>
+     * customization
+     * </pre>
+     */
+    public java.util.List<java.lang.String>
+        getCustomMeasureTypeFactoriesList() {
+      return customMeasureTypeFactories_;
+    }
+    /**
+     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     *
+     * <pre>
+     * customization
+     * </pre>
+     */
+    public int getCustomMeasureTypeFactoriesCount() {
+      return customMeasureTypeFactories_.size();
+    }
+    /**
+     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     *
+     * <pre>
+     * customization
+     * </pre>
+     */
+    public java.lang.String getCustomMeasureTypeFactories(int index) {
+      return customMeasureTypeFactories_.get(index);
+    }
+    /**
+     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     *
+     * <pre>
+     * customization
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getCustomMeasureTypeFactoriesBytes(int index) {
+      return customMeasureTypeFactories_.getByteString(index);
+    }
+
     private void initFields() {
       behavior_ = "";
       gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
@@ -984,6 +1077,7 @@ public final class CubeVisitProtos {
       startTime_ = 0L;
       timeout_ = 0L;
       useCompression_ = false;
+      customMeasureTypeFactories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1045,6 +1139,9 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeBool(8, useCompression_);
       }
+      for (int i = 0; i < customMeasureTypeFactories_.size(); i++) {
+        output.writeBytes(9, customMeasureTypeFactories_.getByteString(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1085,6 +1182,15 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(8, useCompression_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < customMeasureTypeFactories_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(customMeasureTypeFactories_.getByteString(i));
+        }
+        size += dataSize;
+        size += 1 * getCustomMeasureTypeFactoriesList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1146,6 +1252,8 @@ public final class CubeVisitProtos {
         result = result && (getUseCompression()
             == other.getUseCompression());
       }
+      result = result && getCustomMeasureTypeFactoriesList()
+          .equals(other.getCustomMeasureTypeFactoriesList());
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
       return result;
@@ -1190,6 +1298,10 @@ public final class CubeVisitProtos {
       if (hasUseCompression()) {
         hash = (37 * hash) + USECOMPRESSION_FIELD_NUMBER;
         hash = (53 * hash) + hashBoolean(getUseCompression());
+      }
+      if (getCustomMeasureTypeFactoriesCount() > 0) {
+        hash = (37 * hash) + CUSTOMMEASURETYPEFACTORIES_FIELD_NUMBER;
+        hash = (53 * hash) + getCustomMeasureTypeFactoriesList().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1321,6 +1433,8 @@ public final class CubeVisitProtos {
         bitField0_ = (bitField0_ & ~0x00000040);
         useCompression_ = false;
         bitField0_ = (bitField0_ & ~0x00000080);
+        customMeasureTypeFactories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -1386,6 +1500,12 @@ public final class CubeVisitProtos {
           to_bitField0_ |= 0x00000040;
         }
         result.useCompression_ = useCompression_;
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          customMeasureTypeFactories_ = new com.google.protobuf.UnmodifiableLazyStringList(
+              customMeasureTypeFactories_);
+          bitField0_ = (bitField0_ & ~0x00000100);
+        }
+        result.customMeasureTypeFactories_ = customMeasureTypeFactories_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1450,6 +1570,16 @@ public final class CubeVisitProtos {
         }
         if (other.hasUseCompression()) {
           setUseCompression(other.getUseCompression());
+        }
+        if (!other.customMeasureTypeFactories_.isEmpty()) {
+          if (customMeasureTypeFactories_.isEmpty()) {
+            customMeasureTypeFactories_ = other.customMeasureTypeFactories_;
+            bitField0_ = (bitField0_ & ~0x00000100);
+          } else {
+            ensureCustomMeasureTypeFactoriesIsMutable();
+            customMeasureTypeFactories_.addAll(other.customMeasureTypeFactories_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2064,6 +2194,135 @@ public final class CubeVisitProtos {
       public Builder clearUseCompression() {
         bitField0_ = (bitField0_ & ~0x00000080);
         useCompression_ = false;
+        onChanged();
+        return this;
+      }
+
+      // repeated string customMeasureTypeFactories = 9;
+      private com.google.protobuf.LazyStringList customMeasureTypeFactories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureCustomMeasureTypeFactoriesIsMutable() {
+        if (!((bitField0_ & 0x00000100) == 0x00000100)) {
+          customMeasureTypeFactories_ = new com.google.protobuf.LazyStringArrayList(customMeasureTypeFactories_);
+          bitField0_ |= 0x00000100;
+         }
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public java.util.List<java.lang.String>
+          getCustomMeasureTypeFactoriesList() {
+        return java.util.Collections.unmodifiableList(customMeasureTypeFactories_);
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public int getCustomMeasureTypeFactoriesCount() {
+        return customMeasureTypeFactories_.size();
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public java.lang.String getCustomMeasureTypeFactories(int index) {
+        return customMeasureTypeFactories_.get(index);
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getCustomMeasureTypeFactoriesBytes(int index) {
+        return customMeasureTypeFactories_.getByteString(index);
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public Builder setCustomMeasureTypeFactories(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCustomMeasureTypeFactoriesIsMutable();
+        customMeasureTypeFactories_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public Builder addCustomMeasureTypeFactories(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCustomMeasureTypeFactoriesIsMutable();
+        customMeasureTypeFactories_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public Builder addAllCustomMeasureTypeFactories(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureCustomMeasureTypeFactoriesIsMutable();
+        super.addAll(values, customMeasureTypeFactories_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public Builder clearCustomMeasureTypeFactories() {
+        customMeasureTypeFactories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       *
+       * <pre>
+       * customization
+       * </pre>
+       */
+      public Builder addCustomMeasureTypeFactoriesBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCustomMeasureTypeFactoriesIsMutable();
+        customMeasureTypeFactories_.add(value);
         onChanged();
         return this;
       }
@@ -4422,26 +4681,27 @@ public final class CubeVisitProtos {
     java.lang.String[] descriptorData = {
       "\npstorage-hbase/src/main/java/org/apache" +
       "/kylin/storage/hbase/cube/v2/coprocessor" +
-      "/endpoint/protobuf/CubeVisit.proto\"\367\001\n\020C" +
+      "/endpoint/protobuf/CubeVisit.proto\"\233\002\n\020C" +
       "ubeVisitRequest\022\020\n\010behavior\030\001 \002(\t\022\025\n\rgtS" +
       "canRequest\030\002 \002(\014\022\024\n\014hbaseRawScan\030\003 \002(\014\022\032" +
       "\n\022rowkeyPreambleSize\030\004 \002(\005\0223\n\020hbaseColum" +
       "nsToGT\030\005 \003(\0132\031.CubeVisitRequest.IntList\022" +
       "\021\n\tstartTime\030\006 \002(\003\022\017\n\007timeout\030\007 \002(\003\022\026\n\016u" +
-      "seCompression\030\010 \001(\010\032\027\n\007IntList\022\014\n\004ints\030\001" +
-      " \003(\005\"\321\002\n\021CubeVisitResponse\022\026\n\016compressed",
-      "Rows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeVisitRes" +
-      "ponse.Stats\032\372\001\n\005Stats\022\030\n\020serviceStartTim" +
-      "e\030\001 \001(\003\022\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scann" +
-      "edRowCount\030\003 \001(\005\022\032\n\022aggregatedRowCount\030\004" +
-      " \001(\005\022\025\n\rsystemCpuLoad\030\005 \001(\001\022\036\n\026freePhysi" +
-      "calMemorySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSize" +
-      "\030\007 \001(\001\022\020\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t" +
-      "\022\026\n\016normalComplete\030\n \001(\0052F\n\020CubeVisitSer" +
-      "vice\0222\n\tvisitCube\022\021.CubeVisitRequest\032\022.C" +
-      "ubeVisitResponseB`\nEorg.apache.kylin.sto",
-      "rage.hbase.cube.v2.coprocessor.endpoint." +
-      "generatedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
+      "seCompression\030\010 \001(\010\022\"\n\032customMeasureType" +
+      "Factories\030\t \003(\t\032\027\n\007IntList\022\014\n\004ints\030\001 \003(\005",
+      "\"\321\002\n\021CubeVisitResponse\022\026\n\016compressedRows" +
+      "\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeVisitRespons" +
+      "e.Stats\032\372\001\n\005Stats\022\030\n\020serviceStartTime\030\001 " +
+      "\001(\003\022\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scannedRo" +
+      "wCount\030\003 \001(\005\022\032\n\022aggregatedRowCount\030\004 \001(\005" +
+      "\022\025\n\rsystemCpuLoad\030\005 \001(\001\022\036\n\026freePhysicalM" +
+      "emorySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSize\030\007 \001" +
+      "(\001\022\020\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016" +
+      "normalComplete\030\n \001(\0052F\n\020CubeVisitService" +
+      "\0222\n\tvisitCube\022\021.CubeVisitRequest\032\022.CubeV",
+      "isitResponseB`\nEorg.apache.kylin.storage" +
+      ".hbase.cube.v2.coprocessor.endpoint.gene" +
+      "ratedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4453,7 +4713,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitRequest_descriptor,
-              new java.lang.String[] { "Behavior", "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "StartTime", "Timeout", "UseCompression", });
+              new java.lang.String[] { "Behavior", "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "StartTime", "Timeout", "UseCompression", "CustomMeasureTypeFactories", });
           internal_static_CubeVisitRequest_IntList_descriptor =
             internal_static_CubeVisitRequest_descriptor.getNestedTypes().get(0);
           internal_static_CubeVisitRequest_IntList_fieldAccessorTable = new
