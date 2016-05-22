@@ -47,7 +47,7 @@ import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -85,9 +85,8 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private Map<TblColRef, Dictionary<String>> oldDicts;
     private Map<TblColRef, Dictionary<String>> newDicts;
     private List<MeasureDesc> measureDescs;
-    private MeasureCodec codec;
+    private BufferedMeasureEncoder codec;
     private Object[] measureObjs;
-    private ByteBuffer valueBuf;
     private Text outputValue;
 
     @Override
@@ -116,9 +115,8 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         rowKeyEncoderProvider = new RowKeyEncoderProvider(mergedCubeSegment);
 
         measureDescs = cubeDesc.getMeasures();
-        codec = new MeasureCodec(measureDescs);
+        codec = new BufferedMeasureEncoder(measureDescs);
         measureObjs = new Object[measureDescs.size()];
-        valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
         outputValue = new Text();
         
         dictMeasures = Lists.newArrayList();
@@ -233,8 +231,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                 MeasureIngester ingester = pair.getSecond();
                 measureObjs[i] = ingester.reEncodeDictionary(measureObjs[i], measureDescs.get(i), oldDicts, newDicts);
             }
-            valueBuf.clear();
-            codec.encode(measureObjs, valueBuf);
+            ByteBuffer valueBuf = codec.encode(measureObjs);
             outputValue.set(valueBuf.array(), 0, valueBuf.position());
             value = outputValue;
         }

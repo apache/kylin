@@ -18,8 +18,7 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -34,11 +33,10 @@ import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureAggregator;
-import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.datatype.LongMutable;
@@ -50,11 +48,10 @@ import org.junit.Test;
 
 /**
  */
+@SuppressWarnings("rawtypes")
 public class CubeReducerTest extends LocalFileMetadataTestCase {
 
     ReduceDriver<Text, Text, Text, Text> reduceDriver;
-
-    ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
     @Before
     public void setUp() throws Exception {
@@ -80,7 +77,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
         reduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, "test_kylin_cube_with_slr_ready");
 
         CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
-        MeasureCodec codec = new MeasureCodec(cubeDesc.getMeasures());
+        BufferedMeasureEncoder codec = new BufferedMeasureEncoder(cubeDesc.getMeasures());
 
         Text key1 = new Text("72010ustech");
         List<Text> values1 = new ArrayList<Text>();
@@ -127,7 +124,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
         MeasureType origMeasureType = functionDesc.getMeasureType();
         field.set(functionDesc, new MockUpMeasureType(origMeasureType));
 
-        MeasureCodec codec = new MeasureCodec(cubeDesc.getMeasures());
+        BufferedMeasureEncoder codec = new BufferedMeasureEncoder(cubeDesc.getMeasures());
 
         Text key1 = new Text("72010ustech");
         List<Text> values1 = new ArrayList<Text>();
@@ -161,11 +158,10 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
         assertTrue(result.contains(p3));
     }
 
-    private Text newValueText(MeasureCodec codec, String sum, String min, String max, int count, int item_count) {
+    private Text newValueText(BufferedMeasureEncoder codec, String sum, String min, String max, int count, int item_count) {
         Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new LongMutable(count), new LongMutable(item_count) };
 
-        buf.clear();
-        codec.encode(values, buf);
+        ByteBuffer buf = codec.encode(values);
 
         Text t = new Text();
         t.set(buf.array(), 0, buf.position());

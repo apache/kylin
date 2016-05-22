@@ -23,10 +23,9 @@ import static org.junit.Assert.*;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
-import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -42,7 +41,7 @@ public class MeasureCodecTest {
     public void basicTest() {
         MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure
             ("decimal"), measure("HLLC16"), measure("bitmap") };
-        MeasureCodec codec = new MeasureCodec(descs);
+        BufferedMeasureEncoder codec = new BufferedMeasureEncoder(descs);
 
         DoubleMutable d = new DoubleMutable(1.0);
         LongMutable l = new LongMutable(2);
@@ -56,9 +55,7 @@ public class MeasureCodecTest {
         bitmap.add(Integer.MAX_VALUE-10);
         Object values[] = new Object[] { d, l, b, hllc, bitmap };
 
-        ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
-
-        codec.encode(values, buf);
+        ByteBuffer buf = codec.encode(values);
         buf.flip();
         System.out.println("size: " + buf.limit());
 

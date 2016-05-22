@@ -29,17 +29,17 @@ import org.apache.kylin.metadata.model.MeasureDesc;
  * @author yangli9
  * 
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
-public class MeasureCodec {
+@SuppressWarnings({ "rawtypes" })
+public class MeasureDecoder {
 
     int nMeasures;
     DataTypeSerializer[] serializers;
 
-    public MeasureCodec(Collection<MeasureDesc> measureDescs) {
+    public MeasureDecoder(Collection<MeasureDesc> measureDescs) {
         this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs.size()]));
     }
 
-    public MeasureCodec(MeasureDesc... measureDescs) {
+    public MeasureDecoder(MeasureDesc... measureDescs) {
         String[] dataTypes = new String[measureDescs.length];
         for (int i = 0; i < dataTypes.length; i++) {
             dataTypes[i] = measureDescs[i].getFunction().getReturnType();
@@ -47,11 +47,11 @@ public class MeasureCodec {
         init(dataTypes);
     }
 
-    public MeasureCodec(DataType... dateTypes) {
-        init(dateTypes);
+    public MeasureDecoder(DataType... dataTypes) {
+        init(dataTypes);
     }
 
-    public MeasureCodec(String... dataTypes) {
+    public MeasureDecoder(String... dataTypes) {
         init(dataTypes);
     }
 
@@ -83,10 +83,4 @@ public class MeasureCodec {
         }
     }
 
-    public void encode(Object[] values, ByteBuffer out) {
-        assert values.length == nMeasures;
-        for (int i = 0; i < nMeasures; i++) {
-            serializers[i].serialize(values[i], out);
-        }
-    }
 }

@@ -24,10 +24,9 @@ import java.util.List;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
@@ -41,9 +40,8 @@ public class KeyValueCreator {
     int[] refIndex;
     MeasureDesc[] refMeasures;
 
-    MeasureCodec codec;
+    BufferedMeasureEncoder codec;
     Object[] colValues;
-    ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
     public boolean isFullCopy;
 
@@ -56,7 +54,7 @@ public class KeyValueCreator {
         refIndex = colDesc.getMeasureIndex();
         refMeasures = colDesc.getMeasures();
 
-        codec = new MeasureCodec(refMeasures);
+        codec = new BufferedMeasureEncoder(refMeasures);
         colValues = new Object[refMeasures.length];
 
         isFullCopy = true;
@@ -76,8 +74,7 @@ public class KeyValueCreator {
             colValues[i] = measureValues[refIndex[i]];
         }
 
-        valueBuf.clear();
-        codec.encode(colValues, valueBuf);
+        ByteBuffer valueBuf = codec.encode(colValues);
 
         return create(keyBytes, keyOffset, keyLength, valueBuf.array(), 0, valueBuf.position());
     }

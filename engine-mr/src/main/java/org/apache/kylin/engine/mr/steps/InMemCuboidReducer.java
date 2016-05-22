@@ -26,17 +26,14 @@ import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureAggregators;
-import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +43,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCuboidReducer.class);
 
-    private MeasureCodec codec;
+    private BufferedMeasureEncoder codec;
     private MeasureAggregators aggs;
 
     private int counter;
@@ -55,7 +52,6 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
     
     private Text outputKey;
     private Text outputValue;
-    private ByteBuffer valueBuf;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -63,22 +59,17 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         String cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
-        String segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME);
-        boolean isMerge = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_IS_MERGE));
-
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeDesc cubeDesc = cube.getDescriptor();
-        CubeSegment cubeSeg = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
 
         List<MeasureDesc> measuresDescs = cubeDesc.getMeasures();
-        codec = new MeasureCodec(measuresDescs);
+        codec = new BufferedMeasureEncoder(measuresDescs);
         aggs = new MeasureAggregators(measuresDescs);
         input = new Object[measuresDescs.size()];
         result = new Object[measuresDescs.size()];
         
         outputKey = new Text();
         outputValue = new Text();
-        valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
     }
 
     @Override
@@ -96,8 +87,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
         outputKey.set(key.array(), key.offset(), key.length());
 
         // output value
-        valueBuf.clear();
-        codec.encode(result, valueBuf);
+        ByteBuffer valueBuf = codec.encode(result);
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
 
         context.write(outputKey, outputValue);

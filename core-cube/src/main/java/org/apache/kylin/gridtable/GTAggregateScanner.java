@@ -39,9 +39,9 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureAggregators;
-import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,7 +153,7 @@ public class GTAggregateScanner implements IGTScanner {
         final List<Dump> dumps;
         final int keyLength;
         final boolean[] compareMask;
-        final MeasureCodec measureCodec;
+        final BufferedMeasureEncoder measureCodec;
 
         final Comparator<byte[]> bytesComparator = new Comparator<byte[]>() {
             @Override
@@ -187,12 +187,15 @@ public class GTAggregateScanner implements IGTScanner {
             measureCodec = createMeasureCodec();
         }
 
-        private MeasureCodec createMeasureCodec() {
+        private BufferedMeasureEncoder createMeasureCodec() {
             DataType[] types = new DataType[metrics.trueBitCount()];
             for (int i = 0; i < types.length; i++) {
                 types[i] = info.getColumnType(metrics.trueBitAt(i));
             }
-            return new MeasureCodec(types);
+            
+            BufferedMeasureEncoder result =  new BufferedMeasureEncoder(types);
+            result.setBufferSize(info.getMaxColumnLength(metrics));
+            return result;
         }
 
         private boolean[] createCompareMask() {
@@ -358,7 +361,7 @@ public class GTAggregateScanner implements IGTScanner {
 
         class ReturningRecord {
             final GTRecord record = new GTRecord(info);
-            final ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
+            final Object[] tmpValues = new Object[metrics.trueBitCount()];
 
             void load(byte[] key, MeasureAggregator[] value) {
                 int offset = 0;
@@ -368,12 +371,18 @@ public class GTAggregateScanner implements IGTScanner {
                     record.cols[c].set(key, offset, columnLength);
                     offset += columnLength;
                 }
-                metricsBuf.clear();
+                
+                for (int i = 0; i < value.length; i++) {
+                    tmpValues[i] = value[i].getState();
+                }
+
+                byte[] bytes = measureCodec.encode(tmpValues).array();
+                int[] sizes = measureCodec.getMeasureSizes();
+                offset = 0;
                 for (int i = 0; i < value.length; i++) {
                     int col = metrics.trueBitAt(i);
-                    int pos = metricsBuf.position();
-                    info.codeSystem.encodeColumnValue(col, value[i].getState(), metricsBuf);
-                    record.cols[col].set(metricsBuf.array(), pos, metricsBuf.position() - pos);
+                    record.cols[col].set(bytes, offset, sizes[i]);
+                    offset += sizes[i];
                 }
             }
         }
@@ -430,7 +439,6 @@ public class GTAggregateScanner implements IGTScanner {
                 if (buffMap != null) {
                     ObjectOutputStream oos = null;
                     Object[] aggrResult = null;
-                    final ByteBuffer metricsBuf = ByteBuffer.allocate(info.getMaxColumnLength(metrics));
                     try {
                         dumpedFile = File.createTempFile("KYLIN_AGGR_", ".tmp");
 
@@ -438,12 +446,10 @@ public class GTAggregateScanner implements IGTScanner {
                         oos = new ObjectOutputStream(new FileOutputStream(dumpedFile));
                         oos.writeInt(buffMap.size());
                         for (Entry<byte[], MeasureAggregator[]> entry : buffMap.entrySet()) {
-                            metricsBuf.clear();
-
                             MeasureAggregators aggs = new MeasureAggregators(entry.getValue());
                             aggrResult = new Object[metrics.trueBitCount()];
                             aggs.collectStates(aggrResult);
-                            measureCodec.encode(aggrResult, metricsBuf);
+                            ByteBuffer metricsBuf = measureCodec.encode(aggrResult);
                             oos.writeObject(entry.getKey());
                             oos.writeObject(metricsBuf.array());
                         }

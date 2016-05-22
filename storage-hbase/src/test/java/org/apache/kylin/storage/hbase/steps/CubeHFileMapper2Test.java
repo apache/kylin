@@ -35,7 +35,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.MeasureDecoder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,8 +49,7 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
 
     String cubeName = "test_kylin_cube_with_slr_ready";
 
-    MeasureCodec codec;
-    ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+    MeasureDecoder codec;
     Object[] outKV = new Object[2];
 
     @Before
@@ -60,7 +59,7 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
         FileUtils.deleteDirectory(new File("../job/meta"));
         FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), new File("../job/meta"));
         CubeDesc desc = CubeManager.getInstance(getTestConfig()).getCube(cubeName).getDescriptor();
-        codec = new MeasureCodec(desc.getMeasures());
+        codec = new MeasureDecoder(desc.getMeasures());
     }
 
     @After

@@ -136,6 +136,15 @@ public class GTRecord implements Comparable<GTRecord> {
         }
         return result;
     }
+    
+    public int sizeOf(ImmutableBitSet selectedCols) {
+        int size = 0;
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            size += cols[c].length();
+        }
+        return size;
+    }
 
     public GTRecord copy() {
         return copy(info.colAll);

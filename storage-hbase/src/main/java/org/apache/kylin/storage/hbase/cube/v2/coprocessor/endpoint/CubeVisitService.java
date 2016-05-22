@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
@@ -48,6 +49,7 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
@@ -279,9 +281,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                     behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal(), //
                     behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal());
 
-            ByteBuffer buffer = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+            ByteBuffer buffer = ByteBuffer.allocate(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE);
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream(RowConstants.ROWVALUE_BUFFER_SIZE);//ByteArrayOutputStream will auto grow
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE);//ByteArrayOutputStream will auto grow
             int finalRowCount = 0;
             for (GTRecord oneRecord : finalScanner) {
 
@@ -298,10 +300,14 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 }
 
                 buffer.clear();
-                oneRecord.exportColumns(scanReq.getColumns(), buffer);
-                buffer.flip();
+                try {
+                    oneRecord.exportColumns(scanReq.getColumns(), buffer);
+                } catch (BufferOverflowException boe) {
+                    buffer = ByteBuffer.allocate((int) (oneRecord.sizeOf(scanReq.getColumns()) * 1.5));
+                    oneRecord.exportColumns(scanReq.getColumns(), buffer);
+                }
 
-                outputStream.write(buffer.array(), buffer.arrayOffset() - buffer.position(), buffer.remaining());
+                outputStream.write(buffer.array(), 0, buffer.position());
                 finalRowCount++;
             }
             finalScanner.close();

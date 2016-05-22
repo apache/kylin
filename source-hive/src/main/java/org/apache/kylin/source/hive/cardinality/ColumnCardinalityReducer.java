@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.engine.mr.KylinReducer;
@@ -79,7 +80,7 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
         while (it.hasNext()) {
             int key = it.next();
             HyperLogLogPlusCounter hllc = hllcMap.get(key);
-            ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
+            ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE);
             buf.clear();
             hllc.writeRegisters(buf);
             buf.flip();

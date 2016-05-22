@@ -18,8 +18,7 @@
 
 package org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -36,7 +35,6 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -55,7 +53,6 @@ import com.google.common.collect.Lists;
  * @author yangli9
  */
 public class AggregateRegionObserverTest {
-    ByteBuffer buf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
     byte[] mask = new byte[] { (byte) 0xff, (byte) 0xff, 0, 0 };
     byte[] k1 = new byte[] { 0x01, 0x01, 0, 0x01 };
@@ -94,8 +91,7 @@ public class AggregateRegionObserverTest {
         Object[] values = number == Integer.MIN_VALUE ? //
         new Object[] { new BigDecimal(decimal) } //
                 : new Object[] { new BigDecimal(decimal), new LongMutable(number) };
-        buf.clear();
-        col.measureCodec.encode(values, buf);
+        ByteBuffer buf = col.measureCodec.encode(values);
 
         Cell keyValue = new KeyValue(key, 0, key.length, //
                 col.family, 0, col.family.length, //

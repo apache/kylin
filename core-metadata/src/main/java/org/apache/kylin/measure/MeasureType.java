@@ -107,6 +107,7 @@ abstract public class MeasureType<T> {
     /** Whether or not Calcite rel-tree needs rewrite to do last around of aggregation */
     abstract public boolean needRewrite();
 
+    /** Does the rewrite involves an extra field for the pre-calculated */
     public boolean needRewriteField() {
         return true;
     }

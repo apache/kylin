@@ -25,13 +25,12 @@ import java.util.List;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureAggregators;
-import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +47,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     private CubeDesc cubeDesc;
     private List<MeasureDesc> measuresDescs;
 
-    private MeasureCodec codec;
+    private BufferedMeasureEncoder codec;
     private MeasureAggregators aggs;
 
     private int counter;
@@ -57,7 +56,6 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     private Object[] input;
     private Object[] result;
 
-    private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
     private Text outputValue = new Text();
 
     @Override
@@ -73,7 +71,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         cubeDesc = CubeManager.getInstance(config).getCube(cubeName).getDescriptor();
         measuresDescs = cubeDesc.getMeasures();
 
-        codec = new MeasureCodec(measuresDescs);
+        codec = new BufferedMeasureEncoder(measuresDescs);
         aggs = new MeasureAggregators(measuresDescs);
 
         input = new Object[measuresDescs.size()];
@@ -101,8 +99,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         }
         aggs.collectStates(result);
 
-        valueBuf.clear();
-        codec.encode(result, valueBuf);
+        ByteBuffer valueBuf = codec.encode(result);
 
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
         context.write(key, outputValue);

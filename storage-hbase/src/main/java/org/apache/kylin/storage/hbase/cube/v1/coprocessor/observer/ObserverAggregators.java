@@ -28,10 +28,9 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureAggregator;
-import org.apache.kylin.measure.MeasureCodec;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -228,9 +227,7 @@ public class ObserverAggregators {
             for (int j = 0; j < col.nMeasures; j++)
                 col.measureValues[j] = aggrs[i++].getState();
 
-            col.measureBuf.clear();
-            col.measureCodec.encode(col.measureValues, col.measureBuf);
-            hColValues[ci] = col.measureBuf;
+            hColValues[ci] = col.measureCodec.encode(col.measureValues);
         }
         return hColValues;
     }
@@ -244,9 +241,8 @@ public class ObserverAggregators {
         final String[] dataTypes;
         final int nMeasures;
 
-        final MeasureCodec measureCodec;
+        final BufferedMeasureEncoder measureCodec;
         final Object[] measureValues;
-        final ByteBuffer measureBuf;
 
         public HCol(byte[] bFamily, byte[] bQualifier, String[] funcNames, String[] dataTypes) {
             this.family = bFamily;
@@ -256,9 +252,8 @@ public class ObserverAggregators {
             this.nMeasures = funcNames.length;
             assert funcNames.length == dataTypes.length;
 
-            this.measureCodec = new MeasureCodec(dataTypes);
+            this.measureCodec = new BufferedMeasureEncoder(dataTypes);
             this.measureValues = new Object[nMeasures];
-            this.measureBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
         }
 
         @Override

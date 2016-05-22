@@ -35,14 +35,13 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.AbstractRowKeyEncoder;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.measure.MeasureCodec;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -77,11 +76,10 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     protected byte[][] keyBytesBuf;
     protected BytesSplitter bytesSplitter;
     protected AbstractRowKeyEncoder rowKeyEncoder;
-    protected MeasureCodec measureCodec;
+    protected BufferedMeasureEncoder measureCodec;
     private int errorRecordCounter;
     protected Text outputKey = new Text();
     protected Text outputValue = new Text();
-    private ByteBuffer valueBuf = ByteBuffer.allocate(RowConstants.ROWVALUE_BUFFER_SIZE);
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -110,7 +108,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         bytesSplitter = new BytesSplitter(200, 16384);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
 
-        measureCodec = new MeasureCodec(cubeDesc.getMeasures());
+        measureCodec = new BufferedMeasureEncoder(cubeDesc.getMeasures());
         measures = new Object[cubeDesc.getMeasures().size()];
 
         int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
@@ -153,14 +151,13 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         return rowKeyEncoder.encode(keyBytesBuf);
     }
 
-    private void buildValue(SplittedBytes[] splitBuffers) {
+    private ByteBuffer buildValue(SplittedBytes[] splitBuffers) {
 
         for (int i = 0; i < measures.length; i++) {
             measures[i] = buildValueOf(i, splitBuffers);
         }
 
-        valueBuf.clear();
-        measureCodec.encode(measures, valueBuf);
+        return measureCodec.encode(measures);
     }
 
     private Object buildValueOf(int idxOfMeasure, SplittedBytes[] splitBuffers) {
@@ -203,7 +200,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
         outputKey.set(rowKey, 0, rowKey.length);
 
-        buildValue(bytesSplitter.getSplitBuffers());
+        ByteBuffer valueBuf = buildValue(bytesSplitter.getSplitBuffers());
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
         context.write(outputKey, outputValue);
     }
