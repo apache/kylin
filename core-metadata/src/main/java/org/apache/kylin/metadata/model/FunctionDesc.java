@@ -294,11 +294,10 @@ public class FunctionDesc {
                 if (other.parameter != null)
                     return false;
             } else {
-                if (isCountDistinct()
-                        && (parameter.getType() == null ? other.parameter.getType() == null : parameter.getType().equals(other.parameter.getType()))
-                        && (parameter.getValue() == null ? other.parameter.getType() == null : parameter.getValue().equals(other.parameter.getValue())))
-                    return true;
-                else if (!parameter.equals(other.parameter))
+                if (parameter == null) {
+                    if (other.parameter != null)
+                        return false;
+                } else if (!parameter.equals(other.parameter))
                     return false;
             }
         }

@@ -145,7 +145,7 @@
           "value": "SELLER_ID",
           "next_parameter": null
         },
-        "returntype": "hllc12"
+        "returntype": "hllc(12)"
       },
       "dependent_measure_ref": null
     }
