@@ -26,6 +26,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 public class TrimmedDimEnc extends DimensionEncoding {
+    private static final long serialVersionUID = 1L;
+
     int fixedLen;
 
     //no-arg constructor is required for Externalizable
