@@ -146,11 +146,6 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
     }
 
     @Override
-    public boolean needCubeLevelDictionary() {
-        return true;
-    }
-
-    @Override
     public Class<?> getRewriteCalciteAggrFunctionClass() {
         return BitmapDistinctCountAggFunc.class;
     }
