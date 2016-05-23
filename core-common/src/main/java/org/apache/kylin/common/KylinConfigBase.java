@@ -661,15 +661,27 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public Map<Integer, String> getJobEngines() {
-        return convertKeyToInteger(getPropertiesByPrefix("kylin.job.engine."));
+        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.job.engine."));
+        // ref constants in IEngineAware
+        r.put(0, "org.apache.kylin.engine.mr.MRBatchCubingEngine");
+        r.put(2, "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
+        return r;
     }
 
     public Map<Integer, String> getSourceEngines() {
-        return convertKeyToInteger(getPropertiesByPrefix("kylin.source.engine."));
+        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.source.engine."));
+        // ref constants in ISourceAware
+        r.put(0, "org.apache.kylin.source.hive.HiveSource");
+        return r;
     }
 
     public Map<Integer, String> getStorageEngines() {
-        return convertKeyToInteger(getPropertiesByPrefix("kylin.storage.engine."));
+        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.storage.engine."));
+        // ref constants in IStorageAware
+        r.put(0, "org.apache.kylin.storage.hbase.HBaseStorage");
+        r.put(1, "kylin.storage.engine.1=org.apache.kylin.storage.hybrid.HybridStorage");
+        r.put(2, "kylin.storage.engine.2=org.apache.kylin.storage.hbase.HBaseStorage");
+        return r;
     }
     
     private Map<Integer, String> convertKeyToInteger(Map<String, String> map) {
