@@ -331,8 +331,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setBehavior(toggle);
         builder.setStartTime(System.currentTimeMillis());
         builder.setTimeout(epResultItr.getTimeout());
-        builder.setUseCompression(compressionResult);
-        builder.addAllCustomMeasureTypeFactories(KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().values());
+        builder.setKylinProperties(KylinConfig.getInstanceFromEnv().getConfigAsString());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {

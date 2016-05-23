@@ -19,14 +19,17 @@
 package org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
@@ -40,6 +43,7 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
@@ -50,7 +54,6 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.measure.BufferedMeasureEncoder;
-import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
@@ -67,6 +70,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import com.google.protobuf.HBaseZeroCopyByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
@@ -164,14 +168,15 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         sb.append(",");
     }
 
-    private void initCustomArtifacts(CubeVisitProtos.CubeVisitRequest request) {
-        MeasureTypeFactory.customFactories = request.getCustomMeasureTypeFactoriesList().toArray(new String[request.getCustomMeasureTypeFactoriesCount()]);
-        MeasureTypeFactory.forceInit();
+    private void setupKylinProperties(String propFileStr) throws IOException {
+        File kylinConfDir = Files.createTempDir();
+        Files.write(propFileStr, new File(kylinConfDir, KylinConfig.KYLIN_CONF_PROPERTIES_FILE), Charset.defaultCharset());
+        System.setProperty(KylinConfig.KYLIN_CONF, kylinConfDir.getAbsolutePath());
+        FileUtils.forceDeleteOnExit(kylinConfDir);
     }
 
     @Override
     public void visitCube(final RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
-
         List<RegionScanner> regionScanners = Lists.newArrayList();
         HRegion region = null;
 
@@ -182,7 +187,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         try {
             this.serviceStartTime = System.currentTimeMillis();
 
-            initCustomArtifacts(request);
+            setupKylinProperties(request.getKylinProperties());
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
             region = env.getRegion();
             region.startRegionOperation();
@@ -329,7 +335,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             } else {
                 allRows = new byte[0];
             }
-            if (request.hasUseCompression() && request.getUseCompression() == false) {
+            if (!kylinConfig.getCompressionResult()) {
                 compressedAllRows = allRows;
             } else {
                 compressedAllRows = CompressionUtils.compress(allRows);

@@ -37,8 +37,7 @@ message CubeVisitRequest {
     repeated IntList hbaseColumnsToGT = 5;
     required int64 startTime = 6;//when client start the request
     required int64 timeout = 7;//how long client will wait
-    optional bool useCompression = 8; // compress result or not
-    repeated string customMeasureTypeFactories = 9; // customization
+    required string kylinProperties = 8; // kylin properties
     message IntList {
         repeated int32 ints = 1;
     }

@@ -18,7 +18,6 @@
 
 package org.apache.kylin.measure;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -85,31 +84,13 @@ abstract public class MeasureTypeFactory<T> {
     private static Map<String, List<MeasureTypeFactory<?>>> factories = Maps.newHashMap();
     private static List<MeasureTypeFactory<?>> defaultFactory = Lists.newArrayListWithCapacity(2);
 
-    public static String[] customFactories = null;
-
     static {
-        init();
-    }
-
-    public static void forceInit() {
-        factories.clear();
-        defaultFactory.clear();
-
         init();
     }
 
     public static synchronized void init() {
         if (!factories.isEmpty()) {
             return;
-        }
-
-        if (customFactories == null) {
-            try {
-                Collection<String> customMeasureTypeFactories = KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().values();
-                customFactories = customMeasureTypeFactories.toArray(new String[customMeasureTypeFactories.size()]);
-            } catch (Exception e) {
-                customFactories = null;
-            }
         }
 
         List<MeasureTypeFactory<?>> factoryInsts = Lists.newArrayList();
@@ -121,13 +102,11 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new RawMeasureType.Factory());
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
 
-        if (customFactories != null) {
-            for (String customFactory : customFactories) {
-                try {
-                    factoryInsts.add((MeasureTypeFactory<?>) Class.forName(customFactory).newInstance());
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("Unrecognized MeasureTypeFactory classname: " + customFactory, e);
-                }
+        for (String customFactory : KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().values()) {
+            try {
+                factoryInsts.add((MeasureTypeFactory<?>) Class.forName(customFactory).newInstance());
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Unrecognized MeasureTypeFactory classname: " + customFactory, e);
             }
         }
 

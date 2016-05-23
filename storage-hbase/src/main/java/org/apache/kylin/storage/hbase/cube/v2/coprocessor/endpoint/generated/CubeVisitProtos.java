@@ -117,59 +117,32 @@ public final class CubeVisitProtos {
      */
     long getTimeout();
 
-    // optional bool useCompression = 8;
+    // required string kylinProperties = 8;
     /**
-     * <code>optional bool useCompression = 8;</code>
+     * <code>required string kylinProperties = 8;</code>
      *
      * <pre>
-     * compress result or not
+     * kylin properties
      * </pre>
      */
-    boolean hasUseCompression();
+    boolean hasKylinProperties();
     /**
-     * <code>optional bool useCompression = 8;</code>
+     * <code>required string kylinProperties = 8;</code>
      *
      * <pre>
-     * compress result or not
+     * kylin properties
      * </pre>
      */
-    boolean getUseCompression();
-
-    // repeated string customMeasureTypeFactories = 9;
+    java.lang.String getKylinProperties();
     /**
-     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     * <code>required string kylinProperties = 8;</code>
      *
      * <pre>
-     * customization
-     * </pre>
-     */
-    java.util.List<java.lang.String>
-    getCustomMeasureTypeFactoriesList();
-    /**
-     * <code>repeated string customMeasureTypeFactories = 9;</code>
-     *
-     * <pre>
-     * customization
-     * </pre>
-     */
-    int getCustomMeasureTypeFactoriesCount();
-    /**
-     * <code>repeated string customMeasureTypeFactories = 9;</code>
-     *
-     * <pre>
-     * customization
-     * </pre>
-     */
-    java.lang.String getCustomMeasureTypeFactories(int index);
-    /**
-     * <code>repeated string customMeasureTypeFactories = 9;</code>
-     *
-     * <pre>
-     * customization
+     * kylin properties
      * </pre>
      */
     com.google.protobuf.ByteString
-        getCustomMeasureTypeFactoriesBytes(int index);
+        getKylinPropertiesBytes();
   }
   /**
    * Protobuf type {@code CubeVisitRequest}
@@ -260,17 +233,9 @@ public final class CubeVisitProtos {
               timeout_ = input.readInt64();
               break;
             }
-            case 64: {
+            case 66: {
               bitField0_ |= 0x00000040;
-              useCompression_ = input.readBool();
-              break;
-            }
-            case 74: {
-              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
-                customMeasureTypeFactories_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000100;
-              }
-              customMeasureTypeFactories_.add(input.readBytes());
+              kylinProperties_ = input.readBytes();
               break;
             }
           }
@@ -283,9 +248,6 @@ public final class CubeVisitProtos {
       } finally {
         if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           hbaseColumnsToGT_ = java.util.Collections.unmodifiableList(hbaseColumnsToGT_);
-        }
-        if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
-          customMeasureTypeFactories_ = new com.google.protobuf.UnmodifiableLazyStringList(customMeasureTypeFactories_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -998,74 +960,59 @@ public final class CubeVisitProtos {
       return timeout_;
     }
 
-    // optional bool useCompression = 8;
-    public static final int USECOMPRESSION_FIELD_NUMBER = 8;
-    private boolean useCompression_;
+    // required string kylinProperties = 8;
+    public static final int KYLINPROPERTIES_FIELD_NUMBER = 8;
+    private java.lang.Object kylinProperties_;
     /**
-     * <code>optional bool useCompression = 8;</code>
+     * <code>required string kylinProperties = 8;</code>
      *
      * <pre>
-     * compress result or not
+     * kylin properties
      * </pre>
      */
-    public boolean hasUseCompression() {
+    public boolean hasKylinProperties() {
       return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
-     * <code>optional bool useCompression = 8;</code>
+     * <code>required string kylinProperties = 8;</code>
      *
      * <pre>
-     * compress result or not
+     * kylin properties
      * </pre>
      */
-    public boolean getUseCompression() {
-      return useCompression_;
-    }
-
-    // repeated string customMeasureTypeFactories = 9;
-    public static final int CUSTOMMEASURETYPEFACTORIES_FIELD_NUMBER = 9;
-    private com.google.protobuf.LazyStringList customMeasureTypeFactories_;
-    /**
-     * <code>repeated string customMeasureTypeFactories = 9;</code>
-     *
-     * <pre>
-     * customization
-     * </pre>
-     */
-    public java.util.List<java.lang.String>
-        getCustomMeasureTypeFactoriesList() {
-      return customMeasureTypeFactories_;
+    public java.lang.String getKylinProperties() {
+      java.lang.Object ref = kylinProperties_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          kylinProperties_ = s;
+        }
+        return s;
+      }
     }
     /**
-     * <code>repeated string customMeasureTypeFactories = 9;</code>
+     * <code>required string kylinProperties = 8;</code>
      *
      * <pre>
-     * customization
-     * </pre>
-     */
-    public int getCustomMeasureTypeFactoriesCount() {
-      return customMeasureTypeFactories_.size();
-    }
-    /**
-     * <code>repeated string customMeasureTypeFactories = 9;</code>
-     *
-     * <pre>
-     * customization
-     * </pre>
-     */
-    public java.lang.String getCustomMeasureTypeFactories(int index) {
-      return customMeasureTypeFactories_.get(index);
-    }
-    /**
-     * <code>repeated string customMeasureTypeFactories = 9;</code>
-     *
-     * <pre>
-     * customization
+     * kylin properties
      * </pre>
      */
     public com.google.protobuf.ByteString
-        getCustomMeasureTypeFactoriesBytes(int index) {
-      return customMeasureTypeFactories_.getByteString(index);
+        getKylinPropertiesBytes() {
+      java.lang.Object ref = kylinProperties_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        kylinProperties_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     private void initFields() {
@@ -1076,8 +1023,7 @@ public final class CubeVisitProtos {
       hbaseColumnsToGT_ = java.util.Collections.emptyList();
       startTime_ = 0L;
       timeout_ = 0L;
-      useCompression_ = false;
-      customMeasureTypeFactories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      kylinProperties_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1105,6 +1051,10 @@ public final class CubeVisitProtos {
         return false;
       }
       if (!hasTimeout()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasKylinProperties()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1137,10 +1087,7 @@ public final class CubeVisitProtos {
         output.writeInt64(7, timeout_);
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        output.writeBool(8, useCompression_);
-      }
-      for (int i = 0; i < customMeasureTypeFactories_.size(); i++) {
-        output.writeBytes(9, customMeasureTypeFactories_.getByteString(i));
+        output.writeBytes(8, getKylinPropertiesBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1181,16 +1128,7 @@ public final class CubeVisitProtos {
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(8, useCompression_);
-      }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < customMeasureTypeFactories_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream
-            .computeBytesSizeNoTag(customMeasureTypeFactories_.getByteString(i));
-        }
-        size += dataSize;
-        size += 1 * getCustomMeasureTypeFactoriesList().size();
+          .computeBytesSize(8, getKylinPropertiesBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1247,13 +1185,11 @@ public final class CubeVisitProtos {
         result = result && (getTimeout()
             == other.getTimeout());
       }
-      result = result && (hasUseCompression() == other.hasUseCompression());
-      if (hasUseCompression()) {
-        result = result && (getUseCompression()
-            == other.getUseCompression());
+      result = result && (hasKylinProperties() == other.hasKylinProperties());
+      if (hasKylinProperties()) {
+        result = result && getKylinProperties()
+            .equals(other.getKylinProperties());
       }
-      result = result && getCustomMeasureTypeFactoriesList()
-          .equals(other.getCustomMeasureTypeFactoriesList());
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
       return result;
@@ -1295,13 +1231,9 @@ public final class CubeVisitProtos {
         hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
         hash = (53 * hash) + hashLong(getTimeout());
       }
-      if (hasUseCompression()) {
-        hash = (37 * hash) + USECOMPRESSION_FIELD_NUMBER;
-        hash = (53 * hash) + hashBoolean(getUseCompression());
-      }
-      if (getCustomMeasureTypeFactoriesCount() > 0) {
-        hash = (37 * hash) + CUSTOMMEASURETYPEFACTORIES_FIELD_NUMBER;
-        hash = (53 * hash) + getCustomMeasureTypeFactoriesList().hashCode();
+      if (hasKylinProperties()) {
+        hash = (37 * hash) + KYLINPROPERTIES_FIELD_NUMBER;
+        hash = (53 * hash) + getKylinProperties().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1431,10 +1363,8 @@ public final class CubeVisitProtos {
         bitField0_ = (bitField0_ & ~0x00000020);
         timeout_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000040);
-        useCompression_ = false;
+        kylinProperties_ = "";
         bitField0_ = (bitField0_ & ~0x00000080);
-        customMeasureTypeFactories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -1499,13 +1429,7 @@ public final class CubeVisitProtos {
         if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
           to_bitField0_ |= 0x00000040;
         }
-        result.useCompression_ = useCompression_;
-        if (((bitField0_ & 0x00000100) == 0x00000100)) {
-          customMeasureTypeFactories_ = new com.google.protobuf.UnmodifiableLazyStringList(
-              customMeasureTypeFactories_);
-          bitField0_ = (bitField0_ & ~0x00000100);
-        }
-        result.customMeasureTypeFactories_ = customMeasureTypeFactories_;
+        result.kylinProperties_ = kylinProperties_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1568,17 +1492,9 @@ public final class CubeVisitProtos {
         if (other.hasTimeout()) {
           setTimeout(other.getTimeout());
         }
-        if (other.hasUseCompression()) {
-          setUseCompression(other.getUseCompression());
-        }
-        if (!other.customMeasureTypeFactories_.isEmpty()) {
-          if (customMeasureTypeFactories_.isEmpty()) {
-            customMeasureTypeFactories_ = other.customMeasureTypeFactories_;
-            bitField0_ = (bitField0_ & ~0x00000100);
-          } else {
-            ensureCustomMeasureTypeFactoriesIsMutable();
-            customMeasureTypeFactories_.addAll(other.customMeasureTypeFactories_);
-          }
+        if (other.hasKylinProperties()) {
+          bitField0_ |= 0x00000080;
+          kylinProperties_ = other.kylinProperties_;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -1607,6 +1523,10 @@ public final class CubeVisitProtos {
           return false;
         }
         if (!hasTimeout()) {
+          
+          return false;
+        }
+        if (!hasKylinProperties()) {
           
           return false;
         }
@@ -2149,180 +2069,100 @@ public final class CubeVisitProtos {
         return this;
       }
 
-      // optional bool useCompression = 8;
-      private boolean useCompression_ ;
+      // required string kylinProperties = 8;
+      private java.lang.Object kylinProperties_ = "";
       /**
-       * <code>optional bool useCompression = 8;</code>
+       * <code>required string kylinProperties = 8;</code>
        *
        * <pre>
-       * compress result or not
+       * kylin properties
        * </pre>
        */
-      public boolean hasUseCompression() {
+      public boolean hasKylinProperties() {
         return ((bitField0_ & 0x00000080) == 0x00000080);
       }
       /**
-       * <code>optional bool useCompression = 8;</code>
+       * <code>required string kylinProperties = 8;</code>
        *
        * <pre>
-       * compress result or not
+       * kylin properties
        * </pre>
        */
-      public boolean getUseCompression() {
-        return useCompression_;
+      public java.lang.String getKylinProperties() {
+        java.lang.Object ref = kylinProperties_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          kylinProperties_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
-       * <code>optional bool useCompression = 8;</code>
+       * <code>required string kylinProperties = 8;</code>
        *
        * <pre>
-       * compress result or not
-       * </pre>
-       */
-      public Builder setUseCompression(boolean value) {
-        bitField0_ |= 0x00000080;
-        useCompression_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional bool useCompression = 8;</code>
-       *
-       * <pre>
-       * compress result or not
-       * </pre>
-       */
-      public Builder clearUseCompression() {
-        bitField0_ = (bitField0_ & ~0x00000080);
-        useCompression_ = false;
-        onChanged();
-        return this;
-      }
-
-      // repeated string customMeasureTypeFactories = 9;
-      private com.google.protobuf.LazyStringList customMeasureTypeFactories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      private void ensureCustomMeasureTypeFactoriesIsMutable() {
-        if (!((bitField0_ & 0x00000100) == 0x00000100)) {
-          customMeasureTypeFactories_ = new com.google.protobuf.LazyStringArrayList(customMeasureTypeFactories_);
-          bitField0_ |= 0x00000100;
-         }
-      }
-      /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
-       *
-       * <pre>
-       * customization
-       * </pre>
-       */
-      public java.util.List<java.lang.String>
-          getCustomMeasureTypeFactoriesList() {
-        return java.util.Collections.unmodifiableList(customMeasureTypeFactories_);
-      }
-      /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
-       *
-       * <pre>
-       * customization
-       * </pre>
-       */
-      public int getCustomMeasureTypeFactoriesCount() {
-        return customMeasureTypeFactories_.size();
-      }
-      /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
-       *
-       * <pre>
-       * customization
-       * </pre>
-       */
-      public java.lang.String getCustomMeasureTypeFactories(int index) {
-        return customMeasureTypeFactories_.get(index);
-      }
-      /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
-       *
-       * <pre>
-       * customization
+       * kylin properties
        * </pre>
        */
       public com.google.protobuf.ByteString
-          getCustomMeasureTypeFactoriesBytes(int index) {
-        return customMeasureTypeFactories_.getByteString(index);
+          getKylinPropertiesBytes() {
+        java.lang.Object ref = kylinProperties_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          kylinProperties_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
       }
       /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       * <code>required string kylinProperties = 8;</code>
        *
        * <pre>
-       * customization
+       * kylin properties
        * </pre>
        */
-      public Builder setCustomMeasureTypeFactories(
-          int index, java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureCustomMeasureTypeFactoriesIsMutable();
-        customMeasureTypeFactories_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
-       *
-       * <pre>
-       * customization
-       * </pre>
-       */
-      public Builder addCustomMeasureTypeFactories(
+      public Builder setKylinProperties(
           java.lang.String value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  ensureCustomMeasureTypeFactoriesIsMutable();
-        customMeasureTypeFactories_.add(value);
+  bitField0_ |= 0x00000080;
+        kylinProperties_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       * <code>required string kylinProperties = 8;</code>
        *
        * <pre>
-       * customization
+       * kylin properties
        * </pre>
        */
-      public Builder addAllCustomMeasureTypeFactories(
-          java.lang.Iterable<java.lang.String> values) {
-        ensureCustomMeasureTypeFactoriesIsMutable();
-        super.addAll(values, customMeasureTypeFactories_);
+      public Builder clearKylinProperties() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        kylinProperties_ = getDefaultInstance().getKylinProperties();
         onChanged();
         return this;
       }
       /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
+       * <code>required string kylinProperties = 8;</code>
        *
        * <pre>
-       * customization
+       * kylin properties
        * </pre>
        */
-      public Builder clearCustomMeasureTypeFactories() {
-        customMeasureTypeFactories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000100);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated string customMeasureTypeFactories = 9;</code>
-       *
-       * <pre>
-       * customization
-       * </pre>
-       */
-      public Builder addCustomMeasureTypeFactoriesBytes(
+      public Builder setKylinPropertiesBytes(
           com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  ensureCustomMeasureTypeFactoriesIsMutable();
-        customMeasureTypeFactories_.add(value);
+  bitField0_ |= 0x00000080;
+        kylinProperties_ = value;
         onChanged();
         return this;
       }
@@ -4681,27 +4521,26 @@ public final class CubeVisitProtos {
     java.lang.String[] descriptorData = {
       "\npstorage-hbase/src/main/java/org/apache" +
       "/kylin/storage/hbase/cube/v2/coprocessor" +
-      "/endpoint/protobuf/CubeVisit.proto\"\233\002\n\020C" +
+      "/endpoint/protobuf/CubeVisit.proto\"\370\001\n\020C" +
       "ubeVisitRequest\022\020\n\010behavior\030\001 \002(\t\022\025\n\rgtS" +
       "canRequest\030\002 \002(\014\022\024\n\014hbaseRawScan\030\003 \002(\014\022\032" +
       "\n\022rowkeyPreambleSize\030\004 \002(\005\0223\n\020hbaseColum" +
       "nsToGT\030\005 \003(\0132\031.CubeVisitRequest.IntList\022" +
-      "\021\n\tstartTime\030\006 \002(\003\022\017\n\007timeout\030\007 \002(\003\022\026\n\016u" +
-      "seCompression\030\010 \001(\010\022\"\n\032customMeasureType" +
-      "Factories\030\t \003(\t\032\027\n\007IntList\022\014\n\004ints\030\001 \003(\005",
-      "\"\321\002\n\021CubeVisitResponse\022\026\n\016compressedRows" +
-      "\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeVisitRespons" +
-      "e.Stats\032\372\001\n\005Stats\022\030\n\020serviceStartTime\030\001 " +
-      "\001(\003\022\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scannedRo" +
-      "wCount\030\003 \001(\005\022\032\n\022aggregatedRowCount\030\004 \001(\005" +
-      "\022\025\n\rsystemCpuLoad\030\005 \001(\001\022\036\n\026freePhysicalM" +
-      "emorySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSize\030\007 \001" +
-      "(\001\022\020\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016" +
-      "normalComplete\030\n \001(\0052F\n\020CubeVisitService" +
-      "\0222\n\tvisitCube\022\021.CubeVisitRequest\032\022.CubeV",
-      "isitResponseB`\nEorg.apache.kylin.storage" +
-      ".hbase.cube.v2.coprocessor.endpoint.gene" +
-      "ratedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
+      "\021\n\tstartTime\030\006 \002(\003\022\017\n\007timeout\030\007 \002(\003\022\027\n\017k" +
+      "ylinProperties\030\010 \002(\t\032\027\n\007IntList\022\014\n\004ints\030" +
+      "\001 \003(\005\"\321\002\n\021CubeVisitResponse\022\026\n\016compresse",
+      "dRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeVisitRe" +
+      "sponse.Stats\032\372\001\n\005Stats\022\030\n\020serviceStartTi" +
+      "me\030\001 \001(\003\022\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scan" +
+      "nedRowCount\030\003 \001(\005\022\032\n\022aggregatedRowCount\030" +
+      "\004 \001(\005\022\025\n\rsystemCpuLoad\030\005 \001(\001\022\036\n\026freePhys" +
+      "icalMemorySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSiz" +
+      "e\030\007 \001(\001\022\020\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(" +
+      "\t\022\026\n\016normalComplete\030\n \001(\0052F\n\020CubeVisitSe" +
+      "rvice\0222\n\tvisitCube\022\021.CubeVisitRequest\032\022." +
+      "CubeVisitResponseB`\nEorg.apache.kylin.st",
+      "orage.hbase.cube.v2.coprocessor.endpoint" +
+      ".generatedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4713,7 +4552,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitRequest_descriptor,
-              new java.lang.String[] { "Behavior", "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "StartTime", "Timeout", "UseCompression", "CustomMeasureTypeFactories", });
+              new java.lang.String[] { "Behavior", "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "StartTime", "Timeout", "KylinProperties", });
           internal_static_CubeVisitRequest_IntList_descriptor =
             internal_static_CubeVisitRequest_descriptor.getNestedTypes().get(0);
           internal_static_CubeVisitRequest_IntList_fieldAccessorTable = new

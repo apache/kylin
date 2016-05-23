@@ -243,8 +243,8 @@ public class KylinConfig extends KylinConfigBase {
     }
     
     public static void setSandboxEnvIfPossible() {
-        File dir1 = new File("../../kylin/examples/test_case_data/sandbox");
-        File dir2 = new File("../examples/test_case_data/sandbox");
+        File dir1 = new File("../examples/test_case_data/sandbox");
+        File dir2 = new File("../../kylin/examples/test_case_data/sandbox");
         
         if (dir1.exists()) {
             logger.info("Setting sandbox env, KYLIN_CONF=" + dir1.getAbsolutePath());
