@@ -412,11 +412,17 @@ The old releases will remain available in the
 
 Release same version in JIRA, check [Change Log](https://issues.apache.org/jira/browse/KYLIN/?selectedTab=com.atlassian.jira.jira-projects-plugin:changelog-panel) for the latest released version.
 
+## Update source code
+After publish the release, you need to manually update some source code:
+
+* Update `KylinVersion` class, change value of `CURRENT_KYLIN_VERSION` to current development version. 
+
 ## Publishing the web site  
 Refer to [How to document](howto_docs.html) for more detail.
 
 ## Send announcement mail to mailing list
 Send one mail with subject like "[Announce] Apache Kylin x.y released" to following list:
+
 * Apache Kylin Dev mailing list: dev@kylin.apache.org
 * Apache Kylin User mailing list: user@kylin.apache.org
 * Apache Announce mailing list: announce@apache.org
