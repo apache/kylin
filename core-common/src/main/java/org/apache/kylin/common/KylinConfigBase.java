@@ -679,8 +679,8 @@ abstract public class KylinConfigBase implements Serializable {
         Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.storage.engine."));
         // ref constants in IStorageAware
         r.put(0, "org.apache.kylin.storage.hbase.HBaseStorage");
-        r.put(1, "kylin.storage.engine.1=org.apache.kylin.storage.hybrid.HybridStorage");
-        r.put(2, "kylin.storage.engine.2=org.apache.kylin.storage.hbase.HBaseStorage");
+        r.put(1, "org.apache.kylin.storage.hybrid.HybridStorage");
+        r.put(2, "org.apache.kylin.storage.hbase.HBaseStorage");
         return r;
     }
     
