@@ -31,16 +31,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     {title: 'Dimensions', src: 'partials/cubeDesigner/dimensions.html', isComplete: false},
     {title: 'Measures', src: 'partials/cubeDesigner/measures.html', isComplete: false},
     {title: 'Filter', src: 'partials/cubeDesigner/filter.html', isComplete: false},
-    {title: 'Refresh Setting', src: 'partials/cubeDesigner/incremental.html', isComplete: false}
+    {title: 'Refresh Setting', src: 'partials/cubeDesigner/incremental.html', isComplete: false},
+    {title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false},
+    {title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false}
   ];
-  if (UserService.hasRole("ROLE_ADMIN")) {
-    $scope.wizardSteps.push({
-      title: 'Advanced Setting',
-      src: 'partials/cubeDesigner/advanced_settings.html',
-      isComplete: false
-    });
-  }
-  $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false});
 
   $scope.curStep = $scope.wizardSteps[0];
 
