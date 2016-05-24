@@ -56,7 +56,7 @@ public class SimpleInvertedIndexTest extends LocalFileMetadataTestCase {
 
     @AfterClass
     public static void after() throws Exception {
-        staticCleanupTestMetadata();
+        cleanAfterClass();
     }
 
     public SimpleInvertedIndexTest() {

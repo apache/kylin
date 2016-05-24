@@ -63,7 +63,7 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
 
     @AfterClass
     public static void after() throws Exception {
-        staticCleanupTestMetadata();
+        cleanAfterClass();
     }
 
     private static TblColRef col(int i, TableDesc t) {

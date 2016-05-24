@@ -36,7 +36,7 @@ public class BigDecimalSerializerTest extends LocalFileMetadataTestCase {
 
     @AfterClass
     public static void after() throws Exception {
-        staticCleanupTestMetadata();
+        cleanAfterClass();
     }
 
     @BeforeClass

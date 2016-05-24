@@ -36,7 +36,6 @@ import org.junit.Test;
 public class RealizationRegistryTest extends LocalFileMetadataTestCase {
     @Before
     public void setup() throws Exception {
-
         createTestMetadata();
     }
 

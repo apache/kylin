@@ -57,7 +57,7 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
 
     @AfterClass
     public static void afterClass() throws Exception {
-        staticCleanupTestMetadata();
+        cleanAfterClass();
     }
 
     @Test
