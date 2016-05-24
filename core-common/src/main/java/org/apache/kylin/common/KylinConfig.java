@@ -147,7 +147,18 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    public static KylinConfig getKylinConfigFromInputStream(InputStream is) {
+    public static void setKylinConfigFromInputStream(InputStream is) {
+        if (ENV_INSTANCE == null) {
+            try {
+                KylinConfig config = createKylinConfigFromInputStream(is);
+                ENV_INSTANCE = config;
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Failed to find KylinConfig ", e);
+            }
+        }
+    }
+
+    public static KylinConfig createKylinConfigFromInputStream(InputStream is) {
         KylinConfig config = new KylinConfig();
         config.reloadKylinConfig(is);
         return config;

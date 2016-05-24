@@ -168,13 +168,6 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         sb.append(",");
     }
 
-    private void setupKylinProperties(String propFileStr) throws IOException {
-        File kylinConfDir = Files.createTempDir();
-        Files.write(propFileStr, new File(kylinConfDir, KylinConfig.KYLIN_CONF_PROPERTIES_FILE), Charset.defaultCharset());
-        System.setProperty(KylinConfig.KYLIN_CONF, kylinConfDir.getAbsolutePath());
-        FileUtils.forceDeleteOnExit(kylinConfDir);
-    }
-
     @Override
     public void visitCube(final RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
         List<RegionScanner> regionScanners = Lists.newArrayList();
@@ -187,11 +180,13 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         try {
             this.serviceStartTime = System.currentTimeMillis();
 
-            setupKylinProperties(request.getKylinProperties());
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-
             region = env.getRegion();
             region.startRegionOperation();
+
+            // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
+            KylinConfig.setKylinConfigFromInputStream(IOUtils.toInputStream(request.getKylinProperties()));
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+
             debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);
 
             final GTScanRequest scanReq = GTScanRequest.serializer.deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
