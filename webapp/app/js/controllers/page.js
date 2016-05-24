@@ -109,7 +109,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
   // common acl methods
   $scope.hasPermission = function (entity) {
     var curUser = UserService.getCurUser();
-    if (!curUser) {
+    if (!curUser.userDetails) {
       return curUser;
     }
 
@@ -124,7 +124,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
     if (entity) {
       angular.forEach(entity.accessEntities, function (acessEntity, index) {
         if (masks.indexOf(acessEntity.permission.mask) != -1) {
-          if ((curUser.userDetails.username == acessEntity.sid.principal) || UserService.hasRole(acessEntity.sid.grantedAuthority)) {
+          if ((curUser && curUser.userDetails.username == acessEntity.sid.principal) || UserService.hasRole(acessEntity.sid.grantedAuthority)) {
             hasPermission = true;
           }
         }
