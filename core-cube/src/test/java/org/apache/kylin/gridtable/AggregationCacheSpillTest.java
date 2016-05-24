@@ -18,8 +18,7 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -27,7 +26,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.LongMutable;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -36,21 +37,27 @@ import com.google.common.collect.Lists;
 /**
  * Created by dongli on 12/16/15.
  */
-public class AggregationCacheSpillTest {
-
+public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
     final static int DATA_CARDINALITY = 40000;
     final static int DATA_REPLICATION = 2;
+    final static List<GTRecord> TEST_DATA = Lists.newArrayListWithCapacity(DATA_CARDINALITY * DATA_REPLICATION);
 
-    final static GTInfo INFO = UnitTestSupport.hllInfo();
-    final static List<GTRecord> TEST_DATA = Lists.newArrayListWithCapacity(DATA_CARDINALITY * DATA_REPLICATION);;
+    static GTInfo INFO;
 
     @BeforeClass
     public static void beforeClass() {
+        staticCreateTestMetadata();
         System.setProperty("log4j.configuration", "kylin-log4j.properties");
 
+        INFO = UnitTestSupport.hllInfo();
         final List<GTRecord> data = UnitTestSupport.mockupHllData(INFO, DATA_CARDINALITY);
         for (int i = 0; i < DATA_REPLICATION; i++)
             TEST_DATA.addAll(data);
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        staticCleanupTestMetadata();
     }
 
     @Test

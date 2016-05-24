@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.gridtable.GTBuilder;
 import org.apache.kylin.gridtable.GTInfo;
@@ -30,13 +31,25 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.UnitTestSupport;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class MemDiskStoreTest {
+public class MemDiskStoreTest extends LocalFileMetadataTestCase {
 
     final MemoryBudgetController budgetCtrl = new MemoryBudgetController(20);
     final GTInfo info = UnitTestSupport.advancedInfo();
     final List<GTRecord> data = UnitTestSupport.mockupData(info, 1000000); // converts to about 34 MB data
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
+    }
 
     @Test
     public void testSingleThreadWriteRead() throws IOException {

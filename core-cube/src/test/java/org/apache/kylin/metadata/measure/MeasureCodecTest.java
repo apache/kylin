@@ -23,20 +23,34 @@ import static org.junit.Assert.*;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.topn.TopNCounterSerializer;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
  * 
  */
-public class MeasureCodecTest {
-    
+public class MeasureCodecTest extends LocalFileMetadataTestCase {
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
+    }
+
     @Test
     public void basicTest() {
         MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure

@@ -24,11 +24,24 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.gridtable.memstore.GTSimpleMemStore;
 import org.apache.kylin.metadata.datatype.LongMutable;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class SimpleGridTableTest {
+public class SimpleGridTableTest extends LocalFileMetadataTestCase {
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
+    }
 
     @Test
     public void testBasics() throws IOException {

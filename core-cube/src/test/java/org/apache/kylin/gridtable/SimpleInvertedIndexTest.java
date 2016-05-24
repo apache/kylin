@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.datatype.StringSerializer;
@@ -35,16 +36,28 @@ import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class SimpleInvertedIndexTest {
+public class SimpleInvertedIndexTest extends LocalFileMetadataTestCase {
 
     GTInfo info;
     GTInvertedIndex index;
     ArrayList<CompareTupleFilter> basicFilters = Lists.newArrayList();
     ArrayList<ConciseSet> basicResults = Lists.newArrayList();
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
+    }
 
     public SimpleInvertedIndexTest() {
 
