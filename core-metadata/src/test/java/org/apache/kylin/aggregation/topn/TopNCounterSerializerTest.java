@@ -20,24 +20,33 @@ package org.apache.kylin.aggregation.topn;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.measure.topn.TopNCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.measure.topn.TopNCounter;
 import org.apache.kylin.measure.topn.TopNCounterSerializer;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * 
- */
-public class TopNCounterSerializerTest {
+public class TopNCounterSerializerTest extends LocalFileMetadataTestCase {
 
-    static {
+    private static TopNCounterSerializer serializer;
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+
         DataType.register("topn");
+        serializer = new TopNCounterSerializer(DataType.getType("topn(10)"));
     }
 
-    private static TopNCounterSerializer serializer = new TopNCounterSerializer(DataType.getType("topn(10)"));
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
+    }
 
     @Test
     public void testSerialization() {
@@ -64,5 +73,4 @@ public class TopNCounterSerializerTest {
     public void testValueOf() {
         // FIXME need a good unit test for valueOf()
     }
-
 }

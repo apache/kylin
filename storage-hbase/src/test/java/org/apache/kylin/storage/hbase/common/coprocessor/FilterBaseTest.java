@@ -27,6 +27,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.measure.topn.TopNCounterSerializer;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -42,14 +45,26 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 import com.google.common.collect.Lists;
 
 /**
  * @author xjiang
- * 
+ *
  */
-public class FilterBaseTest {
+public class FilterBaseTest extends LocalFileMetadataTestCase {
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
+    }
 
     @SuppressWarnings("rawtypes")
     static final IFilterCodeSystem CS = StringCodeSystem.INSTANCE;

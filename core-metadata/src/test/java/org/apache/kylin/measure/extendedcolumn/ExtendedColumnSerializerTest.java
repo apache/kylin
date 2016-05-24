@@ -22,17 +22,29 @@ import java.nio.ByteBuffer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class ExtendedColumnSerializerTest {
+public class ExtendedColumnSerializerTest extends LocalFileMetadataTestCase {
     private static MeasureType<ByteArray> measureType;
-    static {
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+
         measureType = (MeasureType<ByteArray>) MeasureTypeFactory.create("EXTENDED_COLUMN", "extendedcolumn(20)");
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
     }
 
     @Test

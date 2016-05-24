@@ -21,8 +21,6 @@ package org.apache.kylin.dimension;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.dimension.DimensionEncoding;
-import org.apache.kylin.dimension.IntegerDimEnc;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,13 +48,13 @@ public class IntegerDimEncTest {
     public void testNull() {
         for (int i = 1; i < 9; i++) {
             IntegerDimEnc enc = new IntegerDimEnc(i);
-            
+
             byte[] buf = new byte[enc.getLengthOfEncoding()];
             enc.encode(null, 0, buf, 0);
             Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             String decode = enc.decode(buf, 0, buf.length);
             Assert.assertEquals(null, decode);
-            
+
             buf = new byte[enc.getLengthOfEncoding()];
             DataTypeSerializer<Object> ser = enc.asDataTypeSerializer();
             ser.serialize(null, ByteBuffer.wrap(buf));
@@ -95,7 +93,7 @@ public class IntegerDimEncTest {
         String decode = enc.decode(buf, 0, buf.length);
         Assert.assertEquals(valueStr, decode);
     }
-    
+
     @Test
     public void testSerDes() {
         IntegerDimEnc enc = new IntegerDimEnc(2);
@@ -116,7 +114,7 @@ public class IntegerDimEncTest {
             Assert.assertEquals("expected:<[65536]> but was:<[0]>", e.getMessage());
         }
     }
-    
+
     private void testSerDes(IntegerDimEnc enc, long value) {
         DataTypeSerializer<Object> ser = enc.asDataTypeSerializer();
         byte[] buf = new byte[enc.getLengthOfEncoding()];
@@ -125,5 +123,5 @@ public class IntegerDimEncTest {
         String decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
         Assert.assertEquals(valueStr, decode);
     }
-    
+
 }

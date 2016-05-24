@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata;
 
-import static org.apache.kylin.metadata.MetadataManager.getInstance;
+import static org.apache.kylin.metadata.MetadataManager.*;
 
 import java.util.List;
 
@@ -60,7 +60,6 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGetInstance() throws Exception {
-
         Assert.assertNotNull(getInstance(getTestConfig()));
         Assert.assertNotNull(getInstance(getTestConfig()).listAllTables());
         Assert.assertTrue(getInstance(getTestConfig()).listAllTables().size() > 0);

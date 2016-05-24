@@ -18,17 +18,29 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.apache.kylin.metadata.datatype.DataType;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * Created by sunyerui on 15/12/31.
  */
-public class BitmapSerializerTest {
+public class BitmapSerializerTest extends LocalFileMetadataTestCase {
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
+    }
 
     @Test
     public void testSerDeCounter() {
