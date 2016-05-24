@@ -19,6 +19,8 @@
 package org.apache.kylin.gridtable;
 
 import java.io.Closeable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -34,6 +36,7 @@ import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.SortedMap;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -390,7 +393,7 @@ public class GTAggregateScanner implements IGTScanner {
 
         class Dump implements Iterable<Pair<byte[], byte[]>> {
             File dumpedFile;
-            ObjectInputStream ois;
+            DataInputStream dis;
             SortedMap<byte[], MeasureAggregator[]> buffMap;
 
             public Dump(SortedMap<byte[], MeasureAggregator[]> buffMap) throws IOException {
@@ -404,8 +407,8 @@ public class GTAggregateScanner implements IGTScanner {
                         throw new RuntimeException("Dumped file cannot be found at: " + (dumpedFile == null ? "<null>" : dumpedFile.getAbsolutePath()));
                     }
 
-                    ois = new ObjectInputStream(new FileInputStream(dumpedFile));
-                    final int count = ois.readInt();
+                    dis = new DataInputStream(new FileInputStream(dumpedFile));
+                    final int count = dis.readInt();
                     return new Iterator<Pair<byte[], byte[]>>() {
                         int cursorIdx = 0;
 
@@ -418,8 +421,12 @@ public class GTAggregateScanner implements IGTScanner {
                         public Pair<byte[], byte[]> next() {
                             try {
                                 cursorIdx++;
-                                byte[] key = (byte[]) ois.readObject();
-                                byte[] value = (byte[]) ois.readObject();
+                                int keyLen = dis.readInt();
+                                byte[] key = new byte[keyLen];
+                                dis.read(key);
+                                int valueLen = dis.readInt();
+                                byte[] value = new byte[valueLen];
+                                dis.read(value);
                                 return new Pair<>(key, value);
                             } catch (Exception e) {
                                 throw new RuntimeException("Cannot read AggregationCache from dumped file: " + e.getMessage());
@@ -438,34 +445,35 @@ public class GTAggregateScanner implements IGTScanner {
 
             public void flush() throws IOException {
                 if (buffMap != null) {
-                    ObjectOutputStream oos = null;
+                    DataOutputStream dos = null;
                     Object[] aggrResult = null;
                     try {
                         dumpedFile = File.createTempFile("KYLIN_AGGR_", ".tmp");
 
                         logger.info("AggregationCache will dump to file: " + dumpedFile.getAbsolutePath());
-                        oos = new ObjectOutputStream(new FileOutputStream(dumpedFile));
-                        oos.writeInt(buffMap.size());
+                        dos = new DataOutputStream(new FileOutputStream(dumpedFile));
+                        dos.writeInt(buffMap.size());
                         for (Entry<byte[], MeasureAggregator[]> entry : buffMap.entrySet()) {
                             MeasureAggregators aggs = new MeasureAggregators(entry.getValue());
                             aggrResult = new Object[metrics.trueBitCount()];
                             aggs.collectStates(aggrResult);
                             ByteBuffer metricsBuf = measureCodec.encode(aggrResult);
-                            oos.writeObject(entry.getKey());
-                            oos.writeObject(BytesUtil.subarray(metricsBuf.array(), 0, metricsBuf.position()));
+                            dos.writeInt(entry.getKey().length);
+                            dos.write(entry.getKey());
+                            dos.writeInt(metricsBuf.position());
+                            dos.write(metricsBuf.array(), 0, metricsBuf.position());
                         }
                     } finally {
                         buffMap = null;
-                        if (oos != null)
-                            oos.close();
+                        IOUtils.closeQuietly(dos);
                     }
                 }
             }
 
             public void terminate() throws IOException {
                 buffMap = null;
-                if (ois != null)
-                    ois.close();
+                if (dis != null)
+                    dis.close();
                 if (dumpedFile != null && dumpedFile.exists())
                     dumpedFile.delete();
             }
