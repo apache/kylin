@@ -16,14 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.dimension;
+package org.apache.kylin.common.util;
 
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.kylin.common.persistence.Writable;
-import org.apache.kylin.common.util.BytesUtil;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice

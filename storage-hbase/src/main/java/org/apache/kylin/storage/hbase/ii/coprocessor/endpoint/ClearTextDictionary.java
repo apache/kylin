@@ -21,7 +21,7 @@ package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.dimension.IDimensionEncodingMap;

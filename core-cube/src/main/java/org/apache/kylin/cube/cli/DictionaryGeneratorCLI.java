@@ -46,7 +46,7 @@ public class DictionaryGeneratorCLI {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
         // dictionary
-        for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionary()) {
+        for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionaryBuilt()) {
             logger.info("Building dictionary for " + col);
             cubeMgr.buildDictionary(cubeSeg, col, factTableValueProvider);
         }

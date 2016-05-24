@@ -21,7 +21,7 @@ package org.apache.kylin.dict;
 import java.util.Collection;
 import java.util.ListIterator;
 
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.filter.BuildInFunctionTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;

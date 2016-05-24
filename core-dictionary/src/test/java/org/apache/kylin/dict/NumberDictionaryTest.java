@@ -29,7 +29,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.Test;
 
@@ -68,7 +68,7 @@ public class NumberDictionaryTest {
         }
 
         // check "" is treated as NULL, not a code of dictionary
-        Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(DataType.getType("integer"), new IterableDictionaryValueEnumerator(intBytes));
+        Dictionary<?> dict = DictionaryGenerator.buildDictionary(DataType.getType("integer"), new IterableDictionaryValueEnumerator(intBytes));
         assertEquals(4, dict.getSize());
 
         final int id = ((NumberDictionary<String>) dict).getIdFromValue("");

@@ -27,10 +27,8 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.source.ReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +39,7 @@ import com.google.common.base.Preconditions;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
-
+    
     private static final int DICT_MAX_CARDINALITY = getDictionaryMaxCardinality();
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
@@ -52,32 +50,39 @@ public class DictionaryGenerator {
         try {
             return KylinConfig.getInstanceFromEnv().getDictionaryMaxCardinality();
         } catch (Throwable e) {
-            return 5000000; // some test case does not KylinConfig setup properly
+            return 5000000; // some test case does not have KylinConfig setup properly
         }
     }
 
-    public static Dictionary<String> buildDictionaryFromValueEnumerator(DataType dataType, IDictionaryValueEnumerator valueEnumerator) throws IOException {
+    public static Dictionary<String> buildDictionary(DataType dataType, IDictionaryValueEnumerator valueEnumerator) throws IOException {
         Preconditions.checkNotNull(dataType, "dataType cannot be null");
-        Dictionary dict;
-        int baseId = 0; // always 0 for now
-        int nSamples = 5;
-        ArrayList samples = new ArrayList();
 
         // build dict, case by data type
+        IDictionaryBuilder builder;
         if (dataType.isDateTimeFamily()) {
             if (dataType.isDate())
-                dict = buildDateDict(valueEnumerator, baseId, nSamples, samples);
+                builder = new DateDictBuilder();
             else
-                dict = new TimeStrDictionary(); // base ID is always 0
+                builder = new TimeDictBuilder();
         } else if (dataType.isNumberFamily()) {
-            dict = buildNumberDict(valueEnumerator, baseId, nSamples, samples);
+            builder = new NumberDictBuilder();
         } else {
-            dict = buildStringDict(valueEnumerator, baseId, nSamples, samples);
+            builder = new StringDictBuilder();
         }
+        
+        return buildDictionary(builder, valueEnumerator);
+    }
+    
+    public static Dictionary<String> buildDictionary(IDictionaryBuilder builder, IDictionaryValueEnumerator valueEnumerator) throws IOException {
+        int baseId = 0; // always 0 for now
+        int nSamples = 5;
+        ArrayList<String> samples = new ArrayList<String>(nSamples);
+
+        Dictionary<String> dict = builder.build(valueEnumerator, baseId, nSamples, samples);
 
         // log a few samples
         StringBuilder buf = new StringBuilder();
-        for (Object s : samples) {
+        for (String s : samples) {
             if (buf.length() > 0) {
                 buf.append(", ");
             }
@@ -92,92 +97,91 @@ public class DictionaryGenerator {
     }
 
     public static Dictionary mergeDictionaries(DataType dataType, List<DictionaryInfo> sourceDicts) throws IOException {
-        return buildDictionaryFromValueEnumerator(dataType, new MultipleDictionaryValueEnumerator(sourceDicts));
+        return buildDictionary(dataType, new MultipleDictionaryValueEnumerator(sourceDicts));
     }
 
-    public static Dictionary<String> buildDictionary(DictionaryInfo info, ReadableTable inpTable) throws IOException {
+    private static class DateDictBuilder implements IDictionaryBuilder {
+        @Override
+        public Dictionary<String> build(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
+            final int BAD_THRESHOLD = 0;
+            String matchPattern = null;
+            byte[] value;
 
-        // currently all data types are casted to string to build dictionary
-        // String dataType = info.getDataType();
+            for (String ptn : DATE_PATTERNS) {
+                matchPattern = ptn; // be optimistic
+                int badCount = 0;
+                SimpleDateFormat sdf = new SimpleDateFormat(ptn);
+                while (valueEnumerator.moveNext()) {
+                    value = valueEnumerator.current();
+                    if (value == null || value.length == 0)
+                        continue;
 
-        IDictionaryValueEnumerator columnValueEnumerator = null;
-        try {
-            logger.debug("Building dictionary object " + JsonUtil.writeValueAsString(info));
-
-            columnValueEnumerator = new TableColumnValueEnumerator(inpTable.getReader(), info.getSourceColumnIndex());
-            return buildDictionaryFromValueEnumerator(DataType.getType(info.getDataType()), columnValueEnumerator);
-        } finally {
-            if (columnValueEnumerator != null)
-                columnValueEnumerator.close();
-        }
-    }
-
-    private static Dictionary<String> buildDateDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
-        final int BAD_THRESHOLD = 0;
-        String matchPattern = null;
-        byte[] value;
-
-        for (String ptn : DATE_PATTERNS) {
-            matchPattern = ptn; // be optimistic
-            int badCount = 0;
-            SimpleDateFormat sdf = new SimpleDateFormat(ptn);
-            while (valueEnumerator.moveNext()) {
-                value = valueEnumerator.current();
-                if (value == null || value.length == 0)
-                    continue;
-
-                String str = Bytes.toString(value);
-                try {
-                    sdf.parse(str);
-                    if (samples.size() < nSamples && samples.contains(str) == false)
-                        samples.add(str);
-                } catch (ParseException e) {
-                    logger.info("Unrecognized date value: " + str);
-                    badCount++;
-                    if (badCount > BAD_THRESHOLD) {
-                        matchPattern = null;
-                        break;
+                    String str = Bytes.toString(value);
+                    try {
+                        sdf.parse(str);
+                        if (returnSamples.size() < nSamples && returnSamples.contains(str) == false)
+                            returnSamples.add(str);
+                    } catch (ParseException e) {
+                        logger.info("Unrecognized date value: " + str);
+                        badCount++;
+                        if (badCount > BAD_THRESHOLD) {
+                            matchPattern = null;
+                            break;
+                        }
                     }
                 }
+                if (matchPattern != null) {
+                    return new DateStrDictionary(matchPattern, baseId);
+                }
             }
-            if (matchPattern != null) {
-                return new DateStrDictionary(matchPattern, baseId);
-            }
-        }
 
-        throw new IllegalStateException("Unrecognized datetime value");
+            throw new IllegalStateException("Unrecognized datetime value");
+        }
+    }
+    
+    private static class TimeDictBuilder implements IDictionaryBuilder {
+        @Override
+        public Dictionary<String> build(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
+            return new TimeStrDictionary(); // base ID is always 0
+        }
     }
 
-    private static Dictionary buildStringDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
-        TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
-        byte[] value;
-        while (valueEnumerator.moveNext()) {
-            value = valueEnumerator.current();
-            if (value == null)
-                continue;
-            String v = Bytes.toString(value);
-            builder.addValue(v);
-            if (samples.size() < nSamples && samples.contains(v) == false)
-                samples.add(v);
+    private static class StringDictBuilder implements IDictionaryBuilder {
+        @Override
+        public Dictionary<String> build(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
+            TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
+            byte[] value;
+            while (valueEnumerator.moveNext()) {
+                value = valueEnumerator.current();
+                if (value == null)
+                    continue;
+                String v = Bytes.toString(value);
+                builder.addValue(v);
+                if (returnSamples.size() < nSamples && returnSamples.contains(v) == false)
+                    returnSamples.add(v);
+            }
+            return builder.build(baseId);
         }
-        return builder.build(baseId);
     }
 
-    private static Dictionary buildNumberDict(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList samples) throws IOException {
-        NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
-        byte[] value;
-        while (valueEnumerator.moveNext()) {
-            value = valueEnumerator.current();
-            if (value == null)
-                continue;
-            String v = Bytes.toString(value);
-            if (StringUtils.isBlank(v)) // empty string is null for numbers
-                continue;
+    private static class NumberDictBuilder implements IDictionaryBuilder {
+        @Override
+        public Dictionary<String> build(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
+            NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
+            byte[] value;
+            while (valueEnumerator.moveNext()) {
+                value = valueEnumerator.current();
+                if (value == null)
+                    continue;
+                String v = Bytes.toString(value);
+                if (StringUtils.isBlank(v)) // empty string is null for numbers
+                    continue;
 
-            builder.addValue(v);
-            if (samples.size() < nSamples && samples.contains(v) == false)
-                samples.add(v);
+                builder.addValue(v);
+                if (returnSamples.size() < nSamples && returnSamples.contains(v) == false)
+                    returnSamples.add(v);
+            }
+            return builder.build(baseId);
         }
-        return builder.build(baseId);
     }
 }

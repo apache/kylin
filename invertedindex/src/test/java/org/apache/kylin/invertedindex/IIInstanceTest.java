@@ -21,8 +21,8 @@ package org.apache.kylin.invertedindex;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;

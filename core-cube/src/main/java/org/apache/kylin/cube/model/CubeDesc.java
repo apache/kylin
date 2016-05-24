@@ -35,7 +35,6 @@ import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -65,6 +64,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -72,6 +72,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -125,6 +126,9 @@ public class CubeDesc extends RootPersistentEntity {
     private List<DimensionDesc> dimensions;
     @JsonProperty("measures")
     private List<MeasureDesc> measures;
+    @JsonProperty("dictionaries")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<DictionaryDesc> dictionaries;
     @JsonProperty("rowkey")
     private RowKeyDesc rowkey;
     @JsonProperty("hbase_mapping")
@@ -362,6 +366,14 @@ public class CubeDesc extends RootPersistentEntity {
         this.measures = measures;
     }
 
+    public List<DictionaryDesc> getDictionaries() {
+        return dictionaries;
+    }
+
+    void setDictionaries(List<DictionaryDesc> dictionaries) {
+        this.dictionaries = dictionaries;
+    }
+
     public RowKeyDesc getRowkey() {
         return rowkey;
     }
@@ -553,6 +565,8 @@ public class CubeDesc extends RootPersistentEntity {
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
             addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "). ");
         }
+        
+        initDictionaryDesc();
     }
 
     public void validate() {
@@ -899,6 +913,14 @@ public class CubeDesc extends RootPersistentEntity {
             }
         }
     }
+    
+    private void initDictionaryDesc() {
+        if (dictionaries != null) {
+            for (DictionaryDesc dictDesc : dictionaries) {
+                dictDesc.init(this);
+            }
+        }
+    }
 
     public TblColRef getColumnByBitIndex(int bitIndex) {
         RowKeyColDesc[] rowKeyColumns = this.getRowkey().getRowKeyColumns();
@@ -999,9 +1021,11 @@ public class CubeDesc extends RootPersistentEntity {
         this.partitionDateEnd = partitionDateEnd;
     }
 
-    public List<TblColRef> getAllColumnsNeedDictionary() {
-        List<TblColRef> result = Lists.newArrayList();
+    /** Get columns that have dictionary */
+    public Set<TblColRef> getAllColumnsHaveDictionary() {
+        Set<TblColRef> result = Sets.newLinkedHashSet();
 
+        // dictionaries in dimensions
         for (RowKeyColDesc rowKeyColDesc : rowkey.getRowKeyColumns()) {
             TblColRef colRef = rowKeyColDesc.getColRef();
             if (rowkey.isUseDictionary(colRef)) {
@@ -1009,23 +1033,56 @@ public class CubeDesc extends RootPersistentEntity {
             }
         }
 
+        // dictionaries in measures
         for (MeasureDesc measure : measures) {
             MeasureType<?> aggrType = measure.getFunction().getMeasureType();
             result.addAll(aggrType.getColumnsNeedDictionary(measure.getFunction()));
         }
+        
+        // any additional dictionaries
+        if (dictionaries != null) {
+            for (DictionaryDesc dictDesc : dictionaries) {
+                TblColRef col = dictDesc.getColumnRef();
+                result.add(col);
+            }
+        }
+        
         return result;
     }
 
-    /**
-     * Get a column which can be used in distributing the source table
-     * @return
-     */
+    /** Get columns that need dictionary built on it. Note a column could reuse dictionary of another column. */
+    public Set<TblColRef> getAllColumnsNeedDictionaryBuilt() {
+        Set<TblColRef> result = getAllColumnsHaveDictionary();
+        
+        // remove columns that reuse other's dictionary
+        if (dictionaries != null) {
+            for (DictionaryDesc dictDesc : dictionaries) {
+                if (dictDesc.getResuseColumnRef() != null)
+                    result.remove(dictDesc.getColumnRef());
+            }
+        }
+        
+        return result;
+    }
+    
+    /** Get a column which can be used in distributing the source table */
     public TblColRef getDistributedByColumn() {
         Set<TblColRef> shardBy = getShardByColumns();
         if (shardBy != null && shardBy.size() > 0) {
             return shardBy.iterator().next();
         }
 
+        return null;
+    }
+    
+    public String getDictionaryBuilderClass(TblColRef col) {
+        if (dictionaries == null)
+            return null;
+        
+        for (DictionaryDesc desc : dictionaries) {
+            if (col.equals(desc.getColumnRef()) && desc.getBuilderClass() != null)
+                return desc.getBuilderClass();
+        }
         return null;
     }
 
@@ -1037,6 +1094,7 @@ public class CubeDesc extends RootPersistentEntity {
         newCubeDesc.setNullStrings(cubeDesc.getNullStrings());
         newCubeDesc.setDimensions(cubeDesc.getDimensions());
         newCubeDesc.setMeasures(cubeDesc.getMeasures());
+        newCubeDesc.setDictionaries(cubeDesc.getDictionaries());
         newCubeDesc.setRowkey(cubeDesc.getRowkey());
         newCubeDesc.setHbaseMapping(cubeDesc.getHbaseMapping());
         newCubeDesc.setSignature(cubeDesc.getSignature());
@@ -1054,4 +1112,5 @@ public class CubeDesc extends RootPersistentEntity {
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
+
 }

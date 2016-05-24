@@ -35,10 +35,10 @@ import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.CompressedValueContainer;
@@ -167,7 +167,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         }
         Dictionary<?>[] result = new Dictionary<?>[desc.listAllColumns().size()];
         for (TblColRef tblColRef : valueMap.keys()) {
-            result[desc.findColumn(tblColRef)] = DictionaryGenerator.buildDictionaryFromValueEnumerator(tblColRef.getType(),
+            result[desc.findColumn(tblColRef)] = DictionaryGenerator.buildDictionary(tblColRef.getType(),
                     new IterableDictionaryValueEnumerator(Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
                 @Nullable
                 @Override

@@ -21,7 +21,7 @@ package org.apache.kylin.dict;
 import com.google.common.collect.Lists;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 
 import java.io.IOException;
 import java.util.List;

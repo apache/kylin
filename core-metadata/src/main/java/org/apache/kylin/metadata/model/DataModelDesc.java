@@ -181,7 +181,47 @@ public class DataModelDesc extends RootPersistentEntity {
         }
         return candidate;
     }
-
+    
+    // TODO let this replace CubeDesc.buildColumnNameAbbreviation()
+    public ColumnDesc findColumn(String column) {
+        ColumnDesc colDesc = null;
+        
+        int cut = column.lastIndexOf('.');
+        if (cut > 0) {
+            // table specified
+            String table = column.substring(0, cut);
+            TableDesc tableDesc = findTable(table);
+            colDesc = tableDesc.findColumnByName(column.substring(cut + 1));
+        } else {
+            // table not specified, try each table
+            colDesc = factTableDesc.findColumnByName(column);
+            if (colDesc == null) {
+                for (TableDesc tableDesc : lookupTableDescs) {
+                    colDesc = tableDesc.findColumnByName(column);
+                    if (colDesc != null)
+                        break;
+                }
+            }
+        }
+        
+        if (colDesc == null)
+            throw new IllegalArgumentException("Column not found by " + column);
+        
+        return colDesc;
+    }
+    
+    public TableDesc findTable(String table) {
+        if (factTableDesc.getName().equalsIgnoreCase(table) || factTableDesc.getIdentity().equalsIgnoreCase(table))
+            return factTableDesc;
+        
+        for (TableDesc desc : lookupTableDescs) {
+            if (desc.getName().equalsIgnoreCase(table) || desc.getIdentity().equalsIgnoreCase(table))
+                return desc;
+        }
+        
+        throw new IllegalArgumentException("Table not found by " + table);
+    }
+    
     public void init(Map<String, TableDesc> tables) {
         this.factTable = this.factTable.toUpperCase();
         this.factTableDesc = tables.get(this.factTable.toUpperCase());

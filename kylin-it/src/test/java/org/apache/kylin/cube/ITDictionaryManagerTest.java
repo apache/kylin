@@ -18,21 +18,21 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.engine.mr.DFSFileTable;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -65,10 +65,10 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
         
         MockDistinctColumnValuesProvider mockupData = new MockDistinctColumnValuesProvider("A", "B", "C");
 
-        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), true, col, mockupData);
+        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupData);
         System.out.println(JsonUtil.writeValueAsIndentString(info1));
 
-        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc.getModel(), true, col, mockupData);
+        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupData);
         System.out.println(JsonUtil.writeValueAsIndentString(info2));
 
         // test check duplicate
@@ -89,7 +89,7 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
         
         // test empty dictionary
         MockDistinctColumnValuesProvider mockupEmpty = new MockDistinctColumnValuesProvider();
-        DictionaryInfo info3 = dictMgr.buildDictionary(cubeDesc.getModel(), true, col, mockupEmpty);
+        DictionaryInfo info3 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupEmpty);
         System.out.println(JsonUtil.writeValueAsIndentString(info3));
         assertEquals(0, info3.getCardinality());
         assertEquals(0, info3.getDictionaryObject().getSize());

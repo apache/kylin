@@ -40,9 +40,9 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -78,7 +78,7 @@ public final class IIDictionaryBuilder {
                     return input == null ? null : input.getBytes();
                 }
             });
-            final Dictionary<?> dict = DictionaryGenerator.buildDictionaryFromValueEnumerator(tblColRef.getType(), new IterableDictionaryValueEnumerator(bytes));
+            final Dictionary<?> dict = DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(bytes));
             result[desc.findColumn(tblColRef)] = dict;
         }
         return result;

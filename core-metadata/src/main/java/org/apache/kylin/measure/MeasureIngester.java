@@ -21,7 +21,7 @@ package org.apache.kylin.measure;
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 

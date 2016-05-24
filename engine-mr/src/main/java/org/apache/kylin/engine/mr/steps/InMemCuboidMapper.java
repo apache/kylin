@@ -34,13 +34,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.inmemcubing.DoggedCubeBuilder;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.KylinMapper;
@@ -83,7 +83,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
         Map<TblColRef, Dictionary<String>> dictionaryMap = Maps.newHashMap();
 
         // dictionary
-        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionary()) {
+        for (TblColRef col : cubeDesc.getAllColumnsHaveDictionary()) {
             Dictionary<?> dict = cubeSegment.getDictionary(col);
             if (dict == null) {
                 logger.warn("Dictionary for " + col + " was not found.");

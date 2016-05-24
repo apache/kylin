@@ -20,7 +20,15 @@ package org.apache.kylin.cube;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
@@ -33,6 +41,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
@@ -42,7 +51,6 @@ import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -158,14 +166,15 @@ public class CubeManager implements IRealizationProvider {
 
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
-        if (!cubeDesc.getAllColumnsNeedDictionary().contains(col))
+        if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
             return null;
 
         DictionaryManager dictMgr = getDictionaryManager();
-        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), true, col, factTableValueProvider);
+        String builderClass = cubeDesc.getDictionaryBuilderClass(col);
+        DictionaryInfo dictInfo = dictMgr.buildDictionary(cubeDesc.getModel(), col, factTableValueProvider, builderClass);
 
         if (dictInfo != null) {
-            Dictionary dict = dictInfo.getDictionaryObject();
+            Dictionary<?> dict = dictInfo.getDictionaryObject();
             cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
             cubeSeg.getRowkeyStats().add(new Object[]{col.getName(), dict.getSize(), dict.getSizeOfId()});
 
@@ -913,14 +922,11 @@ public class CubeManager implements IRealizationProvider {
      * @throws IOException
      */
     public List<TblColRef> getAllDictColumnsOnFact(CubeDesc cubeDesc) throws IOException {
-        List<TblColRef> dictionaryColumns = cubeDesc.getAllColumnsNeedDictionary();
-
         List<TblColRef> factDictCols = new ArrayList<TblColRef>();
         DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-        for (int i = 0; i < dictionaryColumns.size(); i++) {
-            TblColRef col = dictionaryColumns.get(i);
+        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionaryBuilt()) {
 
-            String scanTable = dictMgr.decideSourceData(cubeDesc.getModel(), true, col).getTable();
+            String scanTable = dictMgr.decideSourceData(cubeDesc.getModel(), col).getTable();
             if (cubeDesc.getModel().isFactTable(scanTable)) {
                 factDictCols.add(col);
             }

@@ -21,7 +21,7 @@ package org.apache.kylin.invertedindex.index;
 import java.util.Iterator;
 
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 
 import com.google.common.base.Objects;
 

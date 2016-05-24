@@ -22,7 +22,9 @@ import com.google.common.cache.*;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -260,11 +262,15 @@ public class DictionaryManager {
         }
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, boolean usingDict, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
+    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
+        return buildDictionary(model, col, factTableValueProvider, null);
+    }
+    
+    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider, String builderClass) throws IOException {
 
         logger.info("building dictionary for " + col);
 
-        TblColRef srcCol = decideSourceData(model, usingDict, col);
+        TblColRef srcCol = decideSourceData(model, col);
         String srcTable = srcCol.getTable();
         String srcColName = srcCol.getName();
         int srcColIdx = srcCol.getColumnDesc().getZeroBasedIndex();
@@ -297,25 +303,36 @@ public class DictionaryManager {
             return getDictionaryInfo(dupDict);
         }
 
-        Dictionary<?> dictionary = DictionaryGenerator.buildDictionary(dictInfo, inpTable);
+        logger.info("Building dictionary object " + JsonUtil.writeValueAsString(dictInfo));
+        
+        Dictionary<String> dictionary;
+        IDictionaryValueEnumerator columnValueEnumerator = null;
+        try {
+            columnValueEnumerator = new TableColumnValueEnumerator(inpTable.getReader(), dictInfo.getSourceColumnIndex());
+            if (builderClass == null)
+                dictionary = DictionaryGenerator.buildDictionary(DataType.getType(dictInfo.getDataType()), columnValueEnumerator);
+            else
+                dictionary = DictionaryGenerator.buildDictionary((IDictionaryBuilder) ClassUtil.newInstance(builderClass), columnValueEnumerator);
+        } finally {
+            if (columnValueEnumerator != null)
+                columnValueEnumerator.close();
+        }
+
         return trySaveNewDict(dictionary, dictInfo);
     }
 
     /**
      * Decide a dictionary's source data, leverage PK-FK relationship.
      */
-    public TblColRef decideSourceData(DataModelDesc model, boolean usingDict, TblColRef col) throws IOException {
+    public TblColRef decideSourceData(DataModelDesc model, TblColRef col) throws IOException {
         // Note FK on fact table is supported by scan the related PK on lookup table
-        if (usingDict) {
-            // FK on fact table and join type is inner, use PK from lookup instead
-            if (model.isFactTable(col.getTable())) {
-                TblColRef pkCol = model.findPKByFK(col, "inner");
-                if (pkCol != null)
-                    col = pkCol; // scan the counterparty PK on lookup table instead
-            }
-            return col;
-        } else
-            throw new IllegalArgumentException("Not using Dictionary ");
+        // FK on fact table and join type is inner, use PK from lookup instead
+        if (model.isFactTable(col.getTable())) {
+            TblColRef pkCol = model.findPKByFK(col, "inner");
+            if (pkCol != null)
+                col = pkCol; // scan the counterparty PK on lookup table instead
+        }
+        return col;
     }
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {

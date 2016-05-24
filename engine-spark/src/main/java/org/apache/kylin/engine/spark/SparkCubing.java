@@ -57,6 +57,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -74,7 +75,6 @@ import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.cube.util.CubingUtils;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
@@ -197,7 +197,7 @@ public class SparkCubing extends AbstractApplication {
             final DataFrame frame = intermediateTable.select(column).distinct();
 
             final Row[] rows = frame.collect();
-            dictionaryMap.put(tblColRef, DictionaryGenerator.buildDictionaryFromValueEnumerator(tblColRef.getType(), new IterableDictionaryValueEnumerator(new Iterable<byte[]>() {
+            dictionaryMap.put(tblColRef, DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(new Iterable<byte[]>() {
                 @Override
                 public Iterator<byte[]> iterator() {
                     return new Iterator<byte[]>() {

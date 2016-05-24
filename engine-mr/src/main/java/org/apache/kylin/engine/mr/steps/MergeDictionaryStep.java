@@ -105,8 +105,8 @@ public class MergeDictionaryStep extends AbstractExecutable {
 
         CubeDesc cubeDesc = cube.getDescriptor();
 
-        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionary()) {
-            String dictTable = dictMgr.decideSourceData(cubeDesc.getModel(), true, col).getTable();
+        for (TblColRef col : cubeDesc.getAllColumnsNeedDictionaryBuilt()) {
+            String dictTable = dictMgr.decideSourceData(cubeDesc.getModel(), col).getTable();
             if (cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
                 colsNeedMeringDict.add(col);
             } else {
@@ -121,7 +121,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
                 logger.info("Including fact table dictionary of segment : " + segment);
                 if (segment.getDictResPath(col) != null) {
                     DictionaryInfo dictInfo = dictMgr.getDictionaryInfo(segment.getDictResPath(col));
-                    if (dictInfo != null) {
+                    if (dictInfo != null && !dictInfos.contains(dictInfo)) {
                         dictInfos.add(dictInfo);
                     } else {
                         logger.warn("Failed to load DictionaryInfo from " + segment.getDictResPath(col));

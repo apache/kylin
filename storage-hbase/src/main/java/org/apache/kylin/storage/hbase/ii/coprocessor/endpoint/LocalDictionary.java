@@ -20,7 +20,7 @@ package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 
 import java.util.Map;
 
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenDimEnc;

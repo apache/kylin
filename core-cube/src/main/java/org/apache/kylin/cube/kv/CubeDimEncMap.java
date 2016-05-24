@@ -20,10 +20,10 @@ package org.apache.kylin.cube.kv;
 
 import java.util.Map;
 
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.RowKeyColDesc;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;

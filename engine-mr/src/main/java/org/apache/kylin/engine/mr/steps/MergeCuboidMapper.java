@@ -31,6 +31,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
@@ -43,7 +44,6 @@ import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -246,7 +246,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         else {
             ret = cubeDesc.getRowkey().isUseDictionary(col);
             if (ret) {
-                String dictTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), cubeDesc.getRowkey().isUseDictionary(col), col).getTable();
+                String dictTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), col).getTable();
                 ret = cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
             }
             dimensionsNeedDict.put(col, ret);

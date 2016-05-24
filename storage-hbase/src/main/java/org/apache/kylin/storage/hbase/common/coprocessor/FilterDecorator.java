@@ -22,10 +22,10 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.DictCodeSystem;
 import org.apache.kylin.dict.BuildInFunctionTransformer;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;

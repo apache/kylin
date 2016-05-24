@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube.kv;
 
-import org.apache.kylin.dimension.Dictionary;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.IDimensionEncodingMap;

@@ -18,6 +18,7 @@
 package org.apache.kylin.cube.inmemcubing;
 
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,6 @@ import com.google.common.collect.Lists;
 
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.dimension.Dictionary;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.measure.MeasureIngester;
