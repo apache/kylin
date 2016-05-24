@@ -30,12 +30,10 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
         {title: 'Dimensions', src: 'partials/cubeDesigner/dimensions.html', isComplete: false,form:'cube_dimension_form'},
         {title: 'Measures', src: 'partials/cubeDesigner/measures.html', isComplete: false,form:'cube_measure_form'},
         {title: 'Refresh Setting', src: 'partials/cubeDesigner/refresh_settings.html', isComplete: false,form:'refresh_setting_form'},
+        {title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false,form:'cube_setting_form'},
+        {title: 'Configuration Overwrites ', src: 'partials/cubeDesigner/cubeOverwriteProp.html', isComplete: false,form:'cube_overwrite_prop_form'},
+        {title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false,form:null}
     ];
-    if (UserService.hasRole("ROLE_ADMIN")) {
-            $scope.wizardSteps.push({title: 'Advanced Setting', src: 'partials/cubeDesigner/advanced_settings.html', isComplete: false,form:'cube_setting_form'});
-    }
-    $scope.wizardSteps.push({title: 'Configuration Overwrites ', src: 'partials/cubeDesigner/cubeOverwriteProp.html', isComplete: false,form:'cube_overwrite_prop_form'});
-    $scope.wizardSteps.push({title: 'Overview', src: 'partials/cubeDesigner/overview.html', isComplete: false,form:null});
 
     $scope.curStep = $scope.wizardSteps[0];
 
