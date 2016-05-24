@@ -25,15 +25,28 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class ColumnValueRangeTest {
+public class ColumnValueRangeTest extends LocalFileMetadataTestCase {
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        staticCreateTestMetadata();
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        staticCleanupTestMetadata();
+    }
 
     @Test
     public void testPreEvaluateWithDict() {
@@ -79,7 +92,7 @@ public class ColumnValueRangeTest {
             assertEquals("CN", r4.getBeginValue());
             assertEquals(null, r4.getEndValue());
         }
-        
+
         // ever false check
         {
             ColumnValueRange r2 = new ColumnValueRange(col, set("UT"), FilterOperatorEnum.GTE);
