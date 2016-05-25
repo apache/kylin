@@ -683,7 +683,31 @@ abstract public class KylinConfigBase implements Serializable {
         r.put(2, "org.apache.kylin.storage.hbase.HBaseStorage");
         return r;
     }
-    
+
+    public Map<Integer, String> getSchedulers() {
+        return convertKeyToInteger(getPropertiesByPrefix("kylin.scheduler."));
+    }
+
+    public Integer getSchedulerType() {
+        return Integer.parseInt(getOptional("kylin.enable.scheduler", "0"));
+    }
+
+
+    public String getZookeeperAddress() {
+        return this.getOptional("kylin.zookeeper.address");
+    }
+
+    public void setZookeeperAddress(String zkAddress) {
+        setProperty("kylin.zookeeper.address", zkAddress);
+    }
+
+    public String getRestAddress() {
+        return this.getOptional("kylin.rest.address", "localhost:7070");
+    }
+    public void setRestAddress(String restAddress) {
+        setProperty("kylin.rest.address", restAddress);
+    }
+
     private Map<Integer, String> convertKeyToInteger(Map<String, String> map) {
         Map<Integer, String> result = Maps.newLinkedHashMap();
         for (Entry<String, String> entry : map.entrySet()) {

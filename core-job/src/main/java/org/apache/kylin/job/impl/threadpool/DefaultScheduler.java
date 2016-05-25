@@ -55,14 +55,17 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     private ExecutorService jobPool;
     private DefaultContext context;
 
-    private Logger logger = LoggerFactory.getLogger(DefaultScheduler.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultScheduler.class);
     private volatile boolean initialized = false;
     private volatile boolean hasStarted = false;
     private JobEngineConfig jobEngineConfig;
 
-    private static final DefaultScheduler INSTANCE = new DefaultScheduler();
+    private static DefaultScheduler INSTANCE = null;
 
-    private DefaultScheduler() {
+    public DefaultScheduler() {
+        if (INSTANCE != null) {
+            throw new IllegalStateException("DefaultScheduler has been initiated.");
+        }
     }
 
     private class FetcherRunner implements Runnable {
@@ -149,8 +152,35 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
     }
 
+    public synchronized static DefaultScheduler createInstance() {
+        destroyInstance();
+        INSTANCE = new DefaultScheduler();
+        return INSTANCE;
+    }
+
+    public synchronized static void destroyInstance() {
+        DefaultScheduler tmp = INSTANCE;
+        INSTANCE = null;
+        if (tmp != null) {
+            try {
+                tmp.shutdown();
+            } catch (SchedulerException e) {
+                logger.error("error stop DefaultScheduler", e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+
     @Override
     public synchronized void init(JobEngineConfig jobEngineConfig, final JobLock jobLock) throws SchedulerException {
+        String serverMode = jobEngineConfig.getConfig().getServerMode();
+        if (! ("job".equals(serverMode.toLowerCase()) || "all".equals(serverMode.toLowerCase()))) {
+            logger.info("server mode: " + serverMode + ", no need to run job scheduler");
+            return;
+        }
+        logger.info("Initializing Job Engine ....");
+
         if (!initialized) {
             initialized = true;
         } else {
@@ -170,25 +200,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS, new SynchronousQueue<Runnable>());
         context = new DefaultContext(Maps.<String, Executable> newConcurrentMap(), jobEngineConfig.getConfig());
 
-        for (AbstractExecutable executable : executableManager.getAllExecutables()) {
-            if (executable.getStatus() == ExecutableState.READY) {
-                executableManager.updateJobOutput(executable.getId(), ExecutableState.ERROR, null, "scheduler initializing work to reset job to ERROR status");
-            }
-        }
-        executableManager.updateAllRunningJobsToError();
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                logger.debug("Closing zk connection");
-                try {
-                    shutdown();
-                } catch (SchedulerException e) {
-                    logger.error("error shutdown scheduler", e);
-                } finally {
-                    jobLock.unlock();
-                }
-            }
-        });
+        executableManager.resumeAllRunningJobs();
 
         fetcher = new FetcherRunner();
         fetcherPool.scheduleAtFixedRate(fetcher, 10, ExecutableConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
@@ -211,6 +223,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
     }
 
+    @Override
     public boolean hasStarted() {
         return this.hasStarted;
     }

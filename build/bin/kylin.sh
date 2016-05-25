@@ -73,6 +73,15 @@ then
     mkdir -p ${KYLIN_HOME}/ext
     export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
 
+    if [ -z "$KYLIN_REST_ADDRESS" ]
+    then
+        kylin_rest_address=`hostname -f`":"`grep "<Connector port=" ${tomcat_root}/conf/server.xml |grep protocol=\"HTTP/1.1\" | cut -d '=' -f 2 | cut -d \" -f 2`
+        echo "KYLIN_REST_ADDRESS not found, will use ${kylin_rest_address}"
+    else
+        echo "KYLIN_REST_ADDRESS is set to: $KYLIN_REST_ADDRESS"
+        kylin_rest_address=$KYLIN_REST_ADDRESS
+    fi
+
     #debug if encounter NoClassDefError
     #hbase classpath
 
@@ -88,6 +97,7 @@ then
     -Djava.io.tmpdir=${tomcat_root}/temp  \
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dkylin.hbase.dependency=${hbase_dependency} \
+    -Dkylin.rest.address=${kylin_rest_address} \
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""

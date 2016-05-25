@@ -100,7 +100,7 @@ public class BuildCubeWithSpark {
         for (String jobId : jobService.getAllJobIds()) {
             jobService.deleteJob(jobId);
         }
-        scheduler = DefaultScheduler.getInstance();
+        scheduler = DefaultScheduler.createInstance();
         scheduler.init(new JobEngineConfig(kylinConfig), new MockJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");

@@ -326,4 +326,37 @@ public class KylinConfig extends KylinConfigBase {
         else
             return this.base() == ((KylinConfig) another).base();
     }
+
+
+    public static void writeOverrideProperties(Properties properties) throws IOException {
+        File propFile = getKylinProperties();
+        File overrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
+        overrideFile.createNewFile();
+        FileInputStream fis2 = null;
+        Properties override = new Properties();
+        try {
+            fis2 = new FileInputStream(overrideFile);
+            override.load(fis2);
+            for (Map.Entry<Object, Object> entries : properties.entrySet()) {
+                override.setProperty(entries.getKey().toString(), entries.getValue().toString());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(fis2);
+        }
+
+        PrintWriter pw = null;
+        try {
+            pw = new PrintWriter(overrideFile);
+            for (Enumeration e = override.propertyNames(); e.hasMoreElements();) {
+                String key = (String) e.nextElement();
+                pw.println(key + "=" + override.getProperty(key));
+            }
+            pw.close();
+        } finally {
+            IOUtils.closeQuietly(pw);
+        }
+
+    }
 }

@@ -33,4 +33,6 @@ public interface Scheduler<T extends Executable> {
 
     boolean stop(T executable) throws SchedulerException;
 
+    boolean hasStarted();
+
 }

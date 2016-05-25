@@ -45,7 +45,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
         createTestMetadata();
         setFinalStatic(ExecutableConstants.class.getField("DEFAULT_SCHEDULER_INTERVAL_SECONDS"), 10);
         jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
-        scheduler = DefaultScheduler.getInstance();
+        scheduler = DefaultScheduler.createInstance();
         scheduler.init(new JobEngineConfig(KylinConfig.getInstanceFromEnv()), new MockJobLock());
         if (!scheduler.hasStarted()) {
             throw new RuntimeException("scheduler has not been started");
