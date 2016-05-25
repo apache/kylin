@@ -685,7 +685,9 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public Map<Integer, String> getSchedulers() {
-        return convertKeyToInteger(getPropertiesByPrefix("kylin.scheduler."));
+        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.scheduler."));
+        r.put(0, "org.apache.kylin.job.impl.threadpool.DefaultScheduler");
+        return r;
     }
 
     public Integer getSchedulerType() {
