@@ -66,7 +66,7 @@ public class KylinVersion {
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
-    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("1.5.2");
+    private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("1.5.3");
 
     private static final Set<KylinVersion> SIGNATURE_INCOMPATIBLE_REVISIONS = new HashSet<KylinVersion>();
 
