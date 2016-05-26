@@ -383,6 +383,15 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptionalStringArray("kylin.rest.servers", new String[0]);
     }
 
+    public String getClusterName() {
+        return this.getOptional("kylin.cluster.name", getMetadataUrlPrefix());
+    }
+
+    public void setClusterName(String clusterName) {
+        setProperty("kylin.cluster.name", clusterName);
+    }
+
+
     public int getWorkersPerServer() {
         //for sequence sql use
         return Integer.parseInt(getOptional("kylin.rest.workers.per.server", "1"));
