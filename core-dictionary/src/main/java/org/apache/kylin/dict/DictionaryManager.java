@@ -312,7 +312,7 @@ public class DictionaryManager {
             if (builderClass == null)
                 dictionary = DictionaryGenerator.buildDictionary(DataType.getType(dictInfo.getDataType()), columnValueEnumerator);
             else
-                dictionary = DictionaryGenerator.buildDictionary((IDictionaryBuilder) ClassUtil.newInstance(builderClass), columnValueEnumerator);
+                dictionary = DictionaryGenerator.buildDictionary((IDictionaryBuilder) ClassUtil.newInstance(builderClass), dictInfo, columnValueEnumerator);
         } finally {
             if (columnValueEnumerator != null)
                 columnValueEnumerator.close();

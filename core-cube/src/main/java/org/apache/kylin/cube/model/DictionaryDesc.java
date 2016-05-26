@@ -65,4 +65,13 @@ public class DictionaryDesc {
     public String getBuilderClass() {
         return builderClass;
     }
+
+    // for test
+    public static DictionaryDesc create(String column, String reuseColumn, String builderClass) {
+        DictionaryDesc desc = new DictionaryDesc();
+        desc.column = column;
+        desc.reuseColumn = reuseColumn;
+        desc.builderClass = builderClass;
+        return desc;
+    }
 }

@@ -770,4 +770,20 @@ abstract public class KylinConfigBase implements Serializable {
     public long getStorageCleanupTimeThreshold() {
         return Long.valueOf(this.getOptional("kylin.storage.cleanup.time.threshold", "172800000")); //default two days
     }
+        
+    public int getAppendDictEntrySize() {
+        return Integer.parseInt(getOptional("kylin.dict.append.entry.size", "10000000"));
+    }
+
+    public void setAppendDictEntrySize(int entrySize) {
+        setProperty("kylin.dict.append.entry.size", String.valueOf(entrySize));
+    }
+
+    public int getAppendDictCacheSize() {
+        return Integer.parseInt(getOptional("kylin.dict.append.cache.size", "20"));
+    }
+
+    public void setAppendDictCacheSize(int cacheSize) {
+        setProperty("kylin.dict.append.cache.size", String.valueOf(cacheSize));
+    }
 }

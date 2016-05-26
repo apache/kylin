@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.Maps;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.common.KylinConfig;
@@ -120,16 +121,23 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         outputValue = new Text();
         
         dictMeasures = Lists.newArrayList();
+        oldDicts = Maps.newHashMap();
+        newDicts = Maps.newHashMap();
         for (int i = 0; i < measureDescs.size(); i++) {
             MeasureDesc measureDesc = measureDescs.get(i);
             MeasureType measureType = measureDesc.getFunction().getMeasureType();
-            if (measureType.getColumnsNeedDictionary(measureDesc.getFunction()).isEmpty() == false) {
+            List<TblColRef> columns = measureType.getColumnsNeedDictionary(measureDesc.getFunction());
+            boolean needReEncode = false;
+            for (TblColRef col : columns) {
+                if (!sourceCubeSegment.getDictionary(col).equals(mergedCubeSegment.getDictionary(col))) {
+                    oldDicts.put(col, sourceCubeSegment.getDictionary(col));
+                    newDicts.put(col, mergedCubeSegment.getDictionary(col));
+                    needReEncode = true;
+                }
+            }
+            if (needReEncode) {
                 dictMeasures.add(Pair.newPair(i, measureType.newIngester()));
             }
-        }
-        if (dictMeasures.size() > 0) {
-            oldDicts = sourceCubeSegment.buildDictionaryMap();
-            newDicts = mergedCubeSegment.buildDictionaryMap();
         }
     }
 

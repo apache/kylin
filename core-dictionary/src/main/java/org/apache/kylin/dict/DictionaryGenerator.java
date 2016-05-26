@@ -70,15 +70,15 @@ public class DictionaryGenerator {
             builder = new StringDictBuilder();
         }
         
-        return buildDictionary(builder, valueEnumerator);
+        return buildDictionary(builder, null, valueEnumerator);
     }
     
-    public static Dictionary<String> buildDictionary(IDictionaryBuilder builder, IDictionaryValueEnumerator valueEnumerator) throws IOException {
+    public static Dictionary<String> buildDictionary(IDictionaryBuilder builder, DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator) throws IOException {
         int baseId = 0; // always 0 for now
         int nSamples = 5;
         ArrayList<String> samples = new ArrayList<String>(nSamples);
 
-        Dictionary<String> dict = builder.build(valueEnumerator, baseId, nSamples, samples);
+        Dictionary<String> dict = builder.build(dictInfo, valueEnumerator, baseId, nSamples, samples);
 
         // log a few samples
         StringBuilder buf = new StringBuilder();
@@ -89,7 +89,9 @@ public class DictionaryGenerator {
             buf.append(s.toString()).append("=>").append(dict.getIdFromValue(s));
         }
         logger.debug("Dictionary value samples: " + buf.toString());
-        logger.debug("Dictionary cardinality " + dict.getSize());
+        logger.debug("Dictionary cardinality: " + dict.getSize());
+        logger.debug("Dictionary builder class: " + builder.getClass().getName());
+        logger.debug("Dictionary class: " + dict.getClass().getName());
         if (dict instanceof TrieDictionary && dict.getSize() > DICT_MAX_CARDINALITY) {
             throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + dict.getSize());
         }
@@ -102,7 +104,7 @@ public class DictionaryGenerator {
 
     private static class DateDictBuilder implements IDictionaryBuilder {
         @Override
-        public Dictionary<String> build(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
+        public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
             final int BAD_THRESHOLD = 0;
             String matchPattern = null;
             byte[] value;
@@ -141,14 +143,14 @@ public class DictionaryGenerator {
     
     private static class TimeDictBuilder implements IDictionaryBuilder {
         @Override
-        public Dictionary<String> build(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
+        public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
             return new TimeStrDictionary(); // base ID is always 0
         }
     }
 
     private static class StringDictBuilder implements IDictionaryBuilder {
         @Override
-        public Dictionary<String> build(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
+        public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
             TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
             byte[] value;
             while (valueEnumerator.moveNext()) {
@@ -166,7 +168,7 @@ public class DictionaryGenerator {
 
     private static class NumberDictBuilder implements IDictionaryBuilder {
         @Override
-        public Dictionary<String> build(IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
+        public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
             NumberDictionaryBuilder builder = new NumberDictionaryBuilder(new StringBytesConverter());
             byte[] value;
             while (valueEnumerator.moveNext()) {
