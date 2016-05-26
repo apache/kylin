@@ -31,7 +31,9 @@ import java.io.*;
 import java.lang.ref.SoftReference;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -75,7 +77,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
     transient private int firstByteOffset;
 
     transient private boolean enableValueCache = true;
-    transient private SoftReference<HashMap> valueToIdCache;
+    transient private SoftReference<Map> valueToIdCache;
     transient private SoftReference<Object[]> idToValueCache;
 
     transient private boolean enableIdToValueBytesCache = false;
@@ -119,7 +121,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
         }
 
         if (enableValueCache) {
-            valueToIdCache = new SoftReference<HashMap>(new HashMap());
+            valueToIdCache = new SoftReference<Map>(new ConcurrentHashMap());
             idToValueCache = new SoftReference<Object[]>(new Object[nValues]);
         }
     }
@@ -147,7 +149,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected int getIdFromValueImpl(T value, int roundingFlag) {
         if (enableValueCache && roundingFlag == 0) {
-            HashMap cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
+            Map cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 Integer id = null;
                 id = (Integer) cache.get(value);
