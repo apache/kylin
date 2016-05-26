@@ -46,6 +46,8 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -57,6 +59,8 @@ public class MapReduceExecutable extends AbstractExecutable {
     private static final String KEY_MR_JOB = "MR_JOB_CLASS";
     private static final String KEY_PARAMS = "MR_JOB_PARAMS";
     private static final String KEY_COUNTER_SAVEAS = "MR_COUNTER_SAVEAS";
+
+    protected static final Logger logger = LoggerFactory.getLogger(MapReduceExecutable.class);
 
     public MapReduceExecutable() {
         super();
@@ -147,17 +151,18 @@ public class MapReduceExecutable extends AbstractExecutable {
 //            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
             while (!isDiscarded()) {
+
                 JobStepStatusEnum newStatus = HadoopJobStatusChecker.checkStatus(job, output);
                 if (status == JobStepStatusEnum.KILLED) {
-                    executableManager.updateJobOutput(getId(), ExecutableState.ERROR, Collections.<String, String> emptyMap(), "killed by admin");
+                    executableManager.updateJobOutput(getId(), ExecutableState.ERROR, hadoopCmdOutput.getInfo(), "killed by admin");
                     return new ExecuteResult(ExecuteResult.State.FAILED, "killed by admin");
                 }
                 if (status == JobStepStatusEnum.WAITING && (newStatus == JobStepStatusEnum.FINISHED || newStatus == JobStepStatusEnum.ERROR || newStatus == JobStepStatusEnum.RUNNING)) {
                     final long waitTime = System.currentTimeMillis() - getStartTime();
                     setMapReduceWaitTime(waitTime);
                 }
-                status = newStatus;
                 executableManager.addJobInfo(getId(), hadoopCmdOutput.getInfo());
+                status = newStatus;
                 if (status.isComplete()) {
                     final Map<String, String> info = hadoopCmdOutput.getInfo();
                     readCounters(hadoopCmdOutput, info);
