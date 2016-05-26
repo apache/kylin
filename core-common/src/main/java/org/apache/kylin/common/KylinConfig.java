@@ -349,7 +349,8 @@ public class KylinConfig extends KylinConfigBase {
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(overrideFile);
-            for (Enumeration e = override.propertyNames(); e.hasMoreElements();) {
+            Enumeration e = override.propertyNames();
+            while (e.hasMoreElements()) {
                 String key = (String) e.nextElement();
                 pw.println(key + "=" + override.getProperty(key));
             }
