@@ -918,6 +918,10 @@ public class CubeDesc extends RootPersistentEntity {
         if (dictionaries != null) {
             for (DictionaryDesc dictDesc : dictionaries) {
                 dictDesc.init(this);
+                allColumns.add(dictDesc.getColumnRef());
+                if (dictDesc.getResuseColumnRef() != null) {
+                    allColumns.add(dictDesc.getResuseColumnRef());
+                }
             }
         }
     }
@@ -1057,12 +1061,27 @@ public class CubeDesc extends RootPersistentEntity {
         // remove columns that reuse other's dictionary
         if (dictionaries != null) {
             for (DictionaryDesc dictDesc : dictionaries) {
-                if (dictDesc.getResuseColumnRef() != null)
+                if (dictDesc.getResuseColumnRef() != null) {
                     result.remove(dictDesc.getColumnRef());
+                    result.add(dictDesc.getResuseColumnRef());
+                }
             }
         }
         
         return result;
+    }
+
+    /** A column may reuse dictionary of another column, find the dict column, return same col if there's no reuse column*/
+    public TblColRef getDictionaryReuseColumn(TblColRef col) {
+        if (dictionaries == null) {
+            return col;
+        }
+        for (DictionaryDesc dictDesc : dictionaries) {
+            if (dictDesc.getColumnRef().equals(col) && dictDesc.getResuseColumnRef() != null) {
+                return dictDesc.getResuseColumnRef();
+            }
+        }
+        return col;
     }
     
     /** Get a column which can be used in distributing the source table */
@@ -1080,8 +1099,13 @@ public class CubeDesc extends RootPersistentEntity {
             return null;
         
         for (DictionaryDesc desc : dictionaries) {
-            if (col.equals(desc.getColumnRef()) && desc.getBuilderClass() != null)
-                return desc.getBuilderClass();
+            if (desc.getBuilderClass() != null) {
+                if (col.equals(desc.getResuseColumnRef())) {
+                    return desc.getBuilderClass();
+                } else if (col.equals(desc.getColumnRef())) {
+                    return desc.getBuilderClass();
+                }
+            }
         }
         return null;
     }

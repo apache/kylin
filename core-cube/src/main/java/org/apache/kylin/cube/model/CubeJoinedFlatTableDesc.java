@@ -118,6 +118,25 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
             }
         }
 
+        if (cubeDesc.getDictionaries() != null) {
+            for (DictionaryDesc dictDesc : cubeDesc.getDictionaries()) {
+                TblColRef c = dictDesc.getColumnRef();
+                if (contains(columnList, c) < 0) {
+                    columnIndexMap.put(colName(c.getCanonicalName()), columnIndex);
+                    columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c));
+                    columnIndex++;
+                }
+                if (dictDesc.getResuseColumnRef() != null) {
+                    c = dictDesc.getResuseColumnRef();
+                    if (contains(columnList, c) < 0) {
+                        columnIndexMap.put(colName(c.getCanonicalName()), columnIndex);
+                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c));
+                        columnIndex++;
+                    }
+                }
+            }
+        }
+
         columnCount = columnIndex;
     }
 
