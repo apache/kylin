@@ -41,8 +41,7 @@ public class HadoopUtil {
     public static Configuration getCurrentConfiguration() {
         if (hadoopConfig.get() == null) {
             Configuration conf = healSickConfig(new Configuration());
-            
-            hadoopConfig.set(conf);
+            return conf;
         }
         return hadoopConfig.get();
     }
