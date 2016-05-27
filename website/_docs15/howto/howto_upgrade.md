@@ -6,6 +6,34 @@ permalink: /docs15/howto/howto_upgrade.html
 since: v1.5.1
 ---
 
+## Upgrade from 1.5.1 to v1.5.2
+Kylin v1.5.2 metadata is compitible with v1.5.1, your cubes don't need upgrade, while there are still some action need to take:
+
+#### 1. Update HBase coprocessor
+The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto/howto_update_coprocessor.html) to update;
+
+#### 2. Update kylin.properties
+In v1.5.2 several old properties are deprecated, and several new properties be introduced:
+
+Deprecated:
+
+* kylin.hbase.region.cut.small=5
+* kylin.hbase.region.cut.medium=10
+* kylin.hbase.region.cut.large=50
+* kylin.sandbox=true
+
+New:
+
+* kylin.hbase.region.cut=5
+* kylin.hbase.hfile.size.gb=2
+
+When copy from old kylin.properties file, suggest to remove the deprecated ones and add the new ones.
+
+#### 3. Add conf/kylin\_job\_conf\_inmem.xml
+A new job conf file named "kylin\_job\_conf\_inmem.xml" is added in "conf" folder; As Kylin 1.5 introduced the "fast cubing" algorithm, which aims to leverage more memory to do the in-mem aggregation; Kylin will use this new conf file for submitting the in-mem cube build job, which requesting different memory with a normal job; Please update it properly according to your cluster capacity.
+
+Besides, if you have used separate config files for different capacity cubes, for example "kylin\_job\_conf\_small.xml", "kylin\_job\_conf\_medium.xml" and "kylin\_job\_conf\_large.xml", please note that they are deprecated now; Only "kylin\_job\_conf.xml" and "kylin\_job\_conf\_inmem.xml" will be used for submitting cube job; If you have cube level job configurations (like using different Yarn job queue), you can customize at cube level, check [KYLIN-1706](https://issues.apache.org/jira/browse/KYLIN-1706)
+
 ## Upgrade from prior 1.5 to v1.5.1
 
 Kylin 1.5.1 is not backward compatible in terms of metadata. (The built cubes are still functional after metadata upgrade) So if you want to deploy v1.5.x code on your prior 1.5 metadata store (in the following text we'll use v1.3.0 as example), you need to upgrade the metadata as following steps:
