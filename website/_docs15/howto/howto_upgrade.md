@@ -1,31 +1,32 @@
 ---
 layout: docs15
-title:  Upgrade from old version
+title:  Upgrade from old versions
 categories: howto
 permalink: /docs15/howto/howto_upgrade.html
 since: v1.5.1
 ---
 
 ## Upgrade from 1.5.1 to v1.5.2
-Kylin v1.5.2 metadata is compitible with v1.5.1, your cubes don't need upgrade, while there are still some action need to take:
+Kylin v1.5.2 metadata is compitible with v1.5.1, your cubes don't need upgrade, while some actions need to be performed:
 
 #### 1. Update HBase coprocessor
-The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto/howto_update_coprocessor.html) to update;
+The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto_update_coprocessor.html) to update;
 
 #### 2. Update kylin.properties
-In v1.5.2 several old properties are deprecated, and several new properties be introduced:
+In v1.5.2 several properties are deprecated, and several new one are added:
 
 Deprecated:
 
 * kylin.hbase.region.cut.small=5
 * kylin.hbase.region.cut.medium=10
 * kylin.hbase.region.cut.large=50
-* kylin.sandbox=true
 
 New:
 
 * kylin.hbase.region.cut=5
 * kylin.hbase.hfile.size.gb=2
+
+These new parameters determines how to split HBase region; To use different size you can overwite these params in Cube level. 
 
 When copy from old kylin.properties file, suggest to remove the deprecated ones and add the new ones.
 
