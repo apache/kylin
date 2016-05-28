@@ -22,6 +22,7 @@ import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
 
 /**
  * Created by sunyerui on 15/12/1.
@@ -73,6 +74,10 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
 
     public int getMemBytes() {
         return this.bitmap.getSizeInBytes();
+    }
+
+    public Iterator<Integer> iterator() {
+        return bitmap.iterator();
     }
 
     public void writeRegisters(ByteBuffer out) throws IOException {

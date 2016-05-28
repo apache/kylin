@@ -364,8 +364,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                     build());
 
         } catch (IOException ioe) {
-            logger.error(ioe.toString());
+            logger.error(ioe.toString(), ioe);
             IOException wrapped = new IOException("Error in coprocessor " + debugGitTag, ioe);
+            ResponseConverter.setControllerException(controller, wrapped);
+        } catch (OutOfMemoryError oom) {
+            logger.error(oom.toString(), oom);
+            IOException wrapped = new IOException("OOM in coprocessor " + debugGitTag, oom);
             ResponseConverter.setControllerException(controller, wrapped);
         } finally {
             for (RegionScanner innerScanner : regionScanners) {

@@ -71,16 +71,16 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBadDesc() throws IOException {
-        testBadDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.SELLER_ID has inconsistent builders " +
+        testBadDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " +
                 "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder",
-            DictionaryDesc.create("SELLER_ID", null, "FakeBuilderClass"));
+            DictionaryDesc.create("SITE_NAME", null, "FakeBuilderClass"));
     }
 
     @Test
     public void testBadDesc2() throws IOException {
-        testBadDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.SELLER_ID has inconsistent builders " +
+        testBadDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " +
                         "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder",
-                DictionaryDesc.create("lstg_site_id", "SELLER_ID", "FakeBuilderClass"));
+                DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
     }
 
     @Test

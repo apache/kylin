@@ -18,6 +18,8 @@
 
 package org.apache.kylin.measure.bitmap;
 
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
@@ -30,6 +32,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -76,11 +79,6 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
         if (DATATYPE_BITMAP.equals(functionDesc.getReturnDataType().getName()) == false)
             throw new IllegalArgumentException("BitmapMeasureType datatype is not " + DATATYPE_BITMAP + " but " + functionDesc.getReturnDataType().getName());
-
-        List<TblColRef> colRefs = functionDesc.getParameter().getColRefs();
-        if (colRefs.size() != 1 && colRefs.size() != 2) {
-            throw new IllegalArgumentException("Bitmap measure need 1 or 2 parameters, but has " + colRefs.size());
-        }
     }
 
     @Override
@@ -95,24 +93,47 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
             @Override
             public BitmapCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
-                List<TblColRef> literalCols = measureDesc.getFunction().getParameter().getColRefs();
-                TblColRef literalCol = null;
-                if (literalCols.size() == 1) {
-                    literalCol = literalCols.get(0);
-                } else if (literalCols.size() == 2) {
-                    literalCol = literalCols.get(1);
-                } else {
-                    throw new IllegalArgumentException("Bitmap measure need 1 or 2 parameters");
-                }
-                Dictionary<String> dictionary = dictionaryMap.get(literalCol);
                 BitmapCounter bitmap = current;
                 bitmap.clear();
-                // bitmap measure may have two values due to two parameters, only the first value should be ingested
-                if (values != null && values.length > 0 && values[0] != null) {
-                    int id = dictionary.getIdFromValue(values[0]);
-                    bitmap.add(id);
+                if (needDictionaryColumn(measureDesc.getFunction())) {
+                    TblColRef literalCol = measureDesc.getFunction().getParameter().getColRefs().get(0);
+                    Dictionary<String> dictionary = dictionaryMap.get(literalCol);
+                    if (values != null && values.length > 0 && values[0] != null) {
+                        int id = dictionary.getIdFromValue(values[0]);
+                        bitmap.add(id);
+                    }
+                } else {
+                    for (String value : values) {
+                        bitmap.add(value);
+                    }
                 }
                 return bitmap;
+            }
+
+            @Override
+            public BitmapCounter reEncodeDictionary(BitmapCounter value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
+                if (!needDictionaryColumn(measureDesc.getFunction())) {
+                    return value;
+                }
+                TblColRef colRef = measureDesc.getFunction().getParameter().getColRefs().get(0);
+                Dictionary<String> sourceDict = oldDicts.get(colRef);
+                Dictionary<String> mergedDict = newDicts.get(colRef);
+
+                BitmapCounter retValue = new BitmapCounter();
+                byte[] literal = new byte[sourceDict.getSizeOfValue()];
+                Iterator<Integer> iterator = value.iterator();
+                while (iterator.hasNext()) {
+                    int id = iterator.next();
+                    int newId;
+                    int size = sourceDict.getValueBytesFromId(id, literal, 0);
+                    if (size < 0) {
+                        newId = mergedDict.nullId();
+                    } else {
+                        newId = mergedDict.getIdFromValueBytes(literal, 0, size);
+                    }
+                    retValue.add(newId);
+                }
+                return retValue;
             }
         };
     }
@@ -122,21 +143,12 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
         return new BitmapAggregator();
     }
 
-    /**
-     * generate dict with first col by default, and with second col if specified
-     *
-     * Typical case: we have col uuid, and another col flag_uuid (if flag==1, uuid, null),
-     * the metrics count(distinct uuid) and count(distinct flag_uuid) should both generate dict with uuid, instead of uuid and flag_uuid
-     */
     @Override
     public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
-        List<TblColRef> literalCols = functionDesc.getParameter().getColRefs();
-        if (literalCols.size() == 1) {
-            return Collections.singletonList(literalCols.get(0));
-        } else if (literalCols.size() == 2) {
-            return Collections.singletonList(literalCols.get(1));
+        if (needDictionaryColumn(functionDesc)) {
+            return Collections.singletonList(functionDesc.getParameter().getColRefs().get(0));
         } else {
-            throw new IllegalArgumentException("Bitmap measure need 1 or 2 parameters");
+            return Collections.emptyList();
         }
     }
 
@@ -150,4 +162,12 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
         return BitmapDistinctCountAggFunc.class;
     }
 
+    // In order to keep compatibility with old version, tinyint/smallint/int column use value directly, without dictionary
+    private boolean needDictionaryColumn(FunctionDesc functionDesc) {
+        DataType dataType = functionDesc.getParameter().getColRefs().get(0).getType();
+        if (dataType.isIntegerFamily() && !dataType.isBigInt()) {
+            return false;
+        }
+        return true;
+    }
 }
