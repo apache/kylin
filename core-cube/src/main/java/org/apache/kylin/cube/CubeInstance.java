@@ -109,12 +109,12 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public List<CubeSegment> getMergingSegments(CubeSegment mergedSegment) {
         List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
-        if (null != this.segments) {
-            for (CubeSegment segment : this.segments) {
-                if (!mergedSegment.equals(segment) //
-                        && mergedSegment.getDateRangeStart() <= segment.getDateRangeStart() && mergedSegment.getDateRangeEnd() >= segment.getDateRangeEnd()) {
-                    mergingSegments.add(segment);
-                }
+        if (mergedSegment == null)
+            return mergingSegments;
+
+        for (CubeSegment segment : this.segments) {
+            if (!mergedSegment.equals(segment) && mergedSegment.sourceOffsetContains(segment)) {
+                mergingSegments.add(segment);
             }
         }
         return mergingSegments;
@@ -373,8 +373,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         long startTime = Long.MAX_VALUE;
         for (CubeSegment seg : readySegs) {
-            if (seg.getDateRangeStart() < startTime)
-                startTime = seg.getDateRangeStart();
+            startTime = Math.min(startTime, seg.getDateRangeStart());
         }
 
         return startTime;
@@ -385,10 +384,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         List<CubeSegment> readySegs = getSegments(SegmentStatusEnum.READY);
 
-        long endTime = 0;
+        long endTime = Long.MIN_VALUE;
         for (CubeSegment seg : readySegs) {
-            if (seg.getDateRangeEnd() > endTime)
-                endTime = seg.getDateRangeEnd();
+            endTime = Math.max(endTime, seg.getDateRangeEnd());
         }
 
         return endTime;

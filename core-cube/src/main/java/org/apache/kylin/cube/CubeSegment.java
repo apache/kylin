@@ -62,6 +62,10 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
     private long dateRangeStart;
     @JsonProperty("date_range_end")
     private long dateRangeEnd;
+    @JsonProperty("source_offset_start")
+    private long sourceOffsetStart;
+    @JsonProperty("source_offset_end")
+    private long sourceOffsetEnd;
     @JsonProperty("status")
     private SegmentStatusEnum status;
     @JsonProperty("size_kb")
@@ -109,15 +113,20 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
      * @return if(startDate == 0 && endDate == 0), returns "FULL_BUILD", else
      * returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
      */
-    public static String getSegmentName(long startDate, long endDate) {
-        if (startDate == 0 && endDate == 0) {
+    public static String makeSegmentName(long startDate, long endDate, long startOffset, long endOffset) {
+        if (startOffset == 0 && endOffset == 0) {
+            startOffset = startDate;
+            endOffset = endDate;
+        }
+        
+        if (startOffset == 0 && (endOffset == 0 || endOffset == Long.MAX_VALUE)) {
             return "FULL_BUILD";
         }
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-        return dateFormat.format(startDate) + "_" + dateFormat.format(endDate);
+        return dateFormat.format(startOffset) + "_" + dateFormat.format(endOffset);
     }
 
     // ============================================================================
@@ -126,7 +135,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
     public KylinConfig getConfig() {
         return cubeInstance.getConfig();
     }
-    
+
     public String getUuid() {
         return uuid;
     }
@@ -301,18 +310,68 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
         return new CubeDimEncMap(this);
     }
 
+    public boolean isSourceOffsetsOn() {
+        return sourceOffsetStart != 0 || sourceOffsetEnd != 0;
+    }
+
+    // date range is used in place of source offsets when offsets are missing
+    public long getSourceOffsetStart() {
+        return isSourceOffsetsOn() ? sourceOffsetStart : dateRangeStart;
+    }
+
+    public void setSourceOffsetStart(long sourceOffsetStart) {
+        this.sourceOffsetStart = sourceOffsetStart;
+    }
+
+    // date range is used in place of source offsets when offsets are missing
+    public long getSourceOffsetEnd() {
+        return isSourceOffsetsOn() ? sourceOffsetEnd : dateRangeEnd;
+    }
+
+    public void setSourceOffsetEnd(long sourceOffsetEnd) {
+        this.sourceOffsetEnd = sourceOffsetEnd;
+    }
+
+    public boolean dateRangeOverlaps(CubeSegment seg) {
+        return dateRangeStart < seg.dateRangeEnd && seg.dateRangeStart < dateRangeEnd;
+    }
+
+    public boolean dateRangeContains(CubeSegment seg) {
+        return dateRangeStart <= seg.dateRangeStart && seg.dateRangeEnd <= dateRangeEnd;
+    }
+
+    // date range is used in place of source offsets when offsets are missing
+    public boolean sourceOffsetOverlaps(CubeSegment seg) {
+        if (isSourceOffsetsOn())
+            return sourceOffsetStart < seg.sourceOffsetEnd && seg.sourceOffsetStart < sourceOffsetEnd;
+        else
+            return dateRangeOverlaps(seg);
+    }
+
+    // date range is used in place of source offsets when offsets are missing
+    public boolean sourceOffsetContains(CubeSegment seg) {
+        if (isSourceOffsetsOn())
+            return sourceOffsetStart <= seg.sourceOffsetStart && seg.sourceOffsetEnd <= sourceOffsetEnd;
+        else
+            return dateRangeContains(seg);
+    }
+
     public void validate() {
-        if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned() && dateRangeStart >= dateRangeEnd)
-            throw new IllegalStateException("dateRangeStart(" + dateRangeStart + ") must be smaller than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
+        if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
+            if (!isSourceOffsetsOn() && dateRangeStart >= dateRangeEnd)
+                throw new IllegalStateException("Invalid segment, dateRangeStart(" + dateRangeStart + ") must be smaller than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
+            if (isSourceOffsetsOn() && sourceOffsetStart >= sourceOffsetEnd)
+                throw new IllegalStateException("Invalid segment, sourceOffsetStart(" + sourceOffsetStart + ") must be smaller than sourceOffsetEnd(" + sourceOffsetEnd + ") in segment " + this);
+        }
     }
 
     @Override
     public int compareTo(CubeSegment other) {
-        long comp = this.dateRangeStart - other.dateRangeStart;
+        long comp = this.getSourceOffsetStart() - other.getSourceOffsetStart();
         if (comp != 0)
             return comp < 0 ? -1 : 1;
 
-        comp = this.dateRangeEnd - other.dateRangeEnd;
+        comp = this.getSourceOffsetEnd() - other.getSourceOffsetEnd();
         if (comp != 0)
             return comp < 0 ? -1 : 1;
         else

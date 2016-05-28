@@ -377,7 +377,7 @@ public class BuildCubeWithEngine {
     }
 
     private String mergeSegment(String cubeName, long startDate, long endDate) throws Exception {
-        CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), startDate, endDate, true);
+        CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), startDate, endDate, 0, 0, true);
         DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
@@ -385,7 +385,7 @@ public class BuildCubeWithEngine {
     }
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {
-        CubeSegment segment = cubeManager.appendSegments(cubeManager.getCube(cubeName), endDate);
+        CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), 0, endDate, 0, 0);
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
@@ -396,6 +396,7 @@ public class BuildCubeWithEngine {
         return job.getId();
     }
 
+    @SuppressWarnings("unused")
     private int cleanupOldStorage() throws Exception {
         String[] args = { "--delete", "true" };
 

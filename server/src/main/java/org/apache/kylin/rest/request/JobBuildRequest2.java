@@ -18,33 +18,30 @@
 
 package org.apache.kylin.rest.request;
 
-public class JobBuildRequest {
+public class JobBuildRequest2 {
 
-    private long startTime;
+    private long startSourceOffset;
 
-    private long endTime;
+    private long endSourceOffset;
 
     private String buildType;
 
     private boolean force;
     
-    @Deprecated
-    private boolean forceMergeEmptySegment = false;
-
-    public long getStartTime() {
-        return startTime;
+    public long getStartSourceOffset() {
+        return startSourceOffset;
     }
 
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
+    public void setStartSourceOffset(long startSourceOffset) {
+        this.startSourceOffset = startSourceOffset;
     }
 
-    public long getEndTime() {
-        return endTime;
+    public long getEndSourceOffset() {
+        return endSourceOffset;
     }
 
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
+    public void setEndSourceOffset(long endSourceOffset) {
+        this.endSourceOffset = endSourceOffset;
     }
 
     public String getBuildType() {
@@ -63,13 +60,4 @@ public class JobBuildRequest {
         this.force = force;
     }
 
-    @Deprecated
-    public boolean isForceMergeEmptySegment() {
-        return forceMergeEmptySegment;
-    }
-
-    @Deprecated
-    public void setForceMergeEmptySegment(boolean forceMergeEmptySegment) {
-        this.forceMergeEmptySegment = forceMergeEmptySegment;
-    }
 }

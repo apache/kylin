@@ -19,12 +19,19 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.mapred.Merger;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -247,7 +254,7 @@ public class CubeService extends BasicService {
 
         try {
             //double check again
-            if (!forceUpdate && !cube.getDescriptor().consistentWith(desc) ) {
+            if (!forceUpdate && !cube.getDescriptor().consistentWith(desc)) {
                 throw new IllegalStateException("cube's desc is not consistent with the new desc");
             }
 
@@ -539,7 +546,7 @@ public class CubeService extends BasicService {
         }
 
         CubeUpdate update = new CubeUpdate(cube);
-        update.setToRemoveSegs(new CubeSegment[]{toDelete});
+        update.setToRemoveSegs(new CubeSegment[] { toDelete });
         return CubeManager.getInstance(getConfig()).updateCube(update);
     }
 
@@ -614,35 +621,30 @@ public class CubeService extends BasicService {
         logger.info("checking keepCubeRetention");
         CubeInstance cube = getCubeManager().getCube(cubeName);
         CubeDesc desc = cube.getDescriptor();
-        if (desc.getRetentionRange() > 0) {
-            synchronized (CubeService.class) {
-                cube = getCubeManager().getCube(cubeName);
-                List<CubeSegment> readySegs = cube.getSegments(SegmentStatusEnum.READY);
-                long currentRange = 0;
-                int position = readySegs.size() - 1;
-                while (position >= 0) {
-                    currentRange += (readySegs.get(position).getDateRangeEnd() - readySegs.get(position).getDateRangeStart());
-                    if (currentRange >= desc.getRetentionRange()) {
-                        break;
-                    }
+        if (desc.getRetentionRange() <= 0)
+            return;
 
-                    position--;
-                }
+        synchronized (CubeService.class) {
+            cube = getCubeManager().getCube(cubeName);
+            List<CubeSegment> readySegs = cube.getSegments(SegmentStatusEnum.READY);
+            if (readySegs.isEmpty())
+                return;
 
-                List<CubeSegment> toRemoveSegs = Lists.newArrayList();
-                for (int i = 0; i < position; i++) {
-                    toRemoveSegs.add(readySegs.get(i));
-                }
+            List<CubeSegment> toRemoveSegs = Lists.newArrayList();
+            long tail = readySegs.get(readySegs.size() - 1).getDateRangeEnd();
+            long head = tail - desc.getRetentionRange();
+            for (CubeSegment seg : readySegs) {
+                if (seg.getDateRangeEnd() <= head)
+                    toRemoveSegs.add(seg);
+            }
 
-                if (toRemoveSegs.size() > 0) {
-                    CubeUpdate cubeBuilder = new CubeUpdate(cube);
-                    cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]));
-                    try {
-                        this.getCubeManager().updateCube(cubeBuilder);
-                    } catch (IOException e) {
-                        logger.error("Failed to remove old segment from cube " + cubeName, e);
-                    }
-
+            if (toRemoveSegs.size() > 0) {
+                CubeUpdate cubeBuilder = new CubeUpdate(cube);
+                cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]));
+                try {
+                    this.getCubeManager().updateCube(cubeBuilder);
+                } catch (IOException e) {
+                    logger.error("Failed to remove old segment from cube " + cubeName, e);
                 }
             }
         }
@@ -650,26 +652,25 @@ public class CubeService extends BasicService {
 
     private void mergeCubeSegment(String cubeName) {
         CubeInstance cube = getCubeManager().getCube(cubeName);
-        if (cube.needAutoMerge()) {
-            synchronized (CubeService.class) {
-                try {
-                    cube = getCubeManager().getCube(cubeName);
-                    CubeSegment newSeg = getCubeManager().autoMergeCubeSegments(cube);
-                    if (newSeg != null) {
-                        newSeg = getCubeManager().mergeSegments(cube, newSeg.getDateRangeStart(), newSeg.getDateRangeEnd(), true);
-                        logger.debug("Will submit merge job on " + newSeg);
-                        DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
-                        getExecutableManager().addJob(job);
-                    } else {
-                        logger.debug("Not ready for merge on cube " + cubeName);
-                    }
+        if (!cube.needAutoMerge())
+            return;
 
-                } catch (IOException e) {
-                    logger.error("Failed to auto merge cube " + cubeName, e);
+        synchronized (CubeService.class) {
+            try {
+                cube = getCubeManager().getCube(cubeName);
+                Pair<Long, Long> offsets = getCubeManager().autoMergeCubeSegments(cube);
+                if (offsets != null) {
+                    CubeSegment newSeg = getCubeManager().mergeSegments(cube, 0, 0, offsets.getFirst(), offsets.getSecond(), true);
+                    logger.debug("Will submit merge job on " + newSeg);
+                    DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
+                    getExecutableManager().addJob(job);
+                } else {
+                    logger.debug("Not ready for merge on cube " + cubeName);
                 }
+            } catch (IOException e) {
+                logger.error("Failed to auto merge cube " + cubeName, e);
             }
         }
-
     }
 
 }

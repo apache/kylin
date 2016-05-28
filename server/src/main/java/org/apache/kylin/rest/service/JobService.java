@@ -197,7 +197,8 @@ public class JobService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, CubeBuildTypeEnum buildType, boolean forceMergeEmptySeg, String submitter) throws IOException, JobException {
+    public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, //
+            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException, JobException {
 
         checkCubeDescSignature(cube);
         checkNoRunningJob(cube);
@@ -205,26 +206,13 @@ public class JobService extends BasicService {
         DefaultChainedExecutable job;
 
         if (buildType == CubeBuildTypeEnum.BUILD) {
-            CubeSegment newSeg = getCubeManager().appendSegments(cube, endDate);
+            CubeSegment newSeg = getCubeManager().appendSegment(cube, startDate, endDate, startOffset, endOffset);
             job = EngineFactory.createBatchCubingJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
-            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, forceMergeEmptySeg);
+            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
             job = EngineFactory.createBatchMergeJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.REFRESH) {
-            List<CubeSegment> readySegs = cube.getSegments(SegmentStatusEnum.READY);
-            boolean segExists = false;
-            for (CubeSegment aSeg : readySegs) {
-                if (aSeg.getDateRangeStart() == startDate && aSeg.getDateRangeEnd() == endDate) {
-                    segExists = true;
-                    break;
-                }
-            }
-
-            if (segExists == false) {
-                throw new IllegalArgumentException("You can only refresh an existing segment, but there is no ready segment for start time:" + startDate + ", end time: " + endDate);
-            }
-
-            CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate);
+            CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
             job = EngineFactory.createBatchCubingJob(refreshSeg, submitter);
         } else {
             throw new JobException("invalid build type:" + buildType);

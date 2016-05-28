@@ -72,7 +72,7 @@ public class StreamingMonitor {
             stringBuilder.append("statusCode:").append(statusCode).append("\n");
             if (statusCode == 200) {
                 title += "succeed";
-                final HashMap hashMap = JsonUtil.readValue(msg, HashMap.class);
+                final HashMap<?, ?> hashMap = JsonUtil.readValue(msg, HashMap.class);
                 stringBuilder.append("results:").append(hashMap.get("results").toString()).append("\n");
                 stringBuilder.append("duration:").append(hashMap.get("duration").toString()).append("\n");
             } else {

@@ -150,7 +150,7 @@ public class BuildCubeWithSpark {
 
         // this cube's start date is 0, end date is 20501112000000
         List<String> result = Lists.newArrayList();
-        return cubeManager.appendSegments(cubeManager.getCube(cubeName), dateEnd);
+        return cubeManager.appendSegment(cubeManager.getCube(cubeName), 0, dateEnd, 0, 0);
 
     }
 
