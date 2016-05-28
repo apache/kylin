@@ -247,11 +247,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         CubeInstance cube = cubeManager.getCube(cubeName);
         assertEquals(0, cube.getSegments().size());
         assertEquals(0, cubeManagerB.getCube(cubeName).getSegments().size());
-        CubeSegment segment = new CubeSegment();
-        segment.setName("test_segment");
-        CubeUpdate cubeBuilder = new CubeUpdate(cube);
-        cubeBuilder.setToAddSegs(segment);
-        cube = cubeManager.updateCube(cubeBuilder);
+        CubeSegment segment = cubeManager.appendSegment(cube, 0, 1000, 0, 0);
         //one for cube update
         assertEquals(1, broadcaster.getCounterAndClear());
         waitForCounterAndClear(1);

@@ -4,8 +4,7 @@
   "owner" : "ADMIN",
   "cost" : 50,
   "status" : "DISABLED",
-  "segments" : [ {
-  } ],
+  "segments" : [ ],
   "last_modified" : 1457534216410,
   "descriptor" : "ssb",
   "create_time_utc" : 1457444500888,

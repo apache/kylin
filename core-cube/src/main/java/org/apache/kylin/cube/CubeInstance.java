@@ -19,6 +19,7 @@
 package org.apache.kylin.cube;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.kylin.common.KylinConfig;
@@ -108,16 +109,26 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public List<CubeSegment> getMergingSegments(CubeSegment mergedSegment) {
-        List<CubeSegment> mergingSegments = new ArrayList<CubeSegment>();
+        LinkedList<CubeSegment> result = new LinkedList<CubeSegment>();
         if (mergedSegment == null)
-            return mergingSegments;
+            return result;
 
-        for (CubeSegment segment : this.segments) {
-            if (!mergedSegment.equals(segment) && mergedSegment.sourceOffsetContains(segment)) {
-                mergingSegments.add(segment);
+        for (CubeSegment seg : this.segments) {
+            if (seg.getStatus() != SegmentStatusEnum.READY && seg.getStatus() != SegmentStatusEnum.READY_PENDING)
+                continue;
+            
+            if (seg == mergedSegment)
+                continue;
+
+            if (mergedSegment.sourceOffsetContains(seg)) {
+                // make sure no holes
+                if (result.size() > 0 && result.getLast().getSourceOffsetEnd() != seg.getSourceOffsetStart())
+                    throw new IllegalStateException("Merging segments must not have holes between " + result.getLast() + " and " + seg);
+
+                result.add(seg);
             }
         }
-        return mergingSegments;
+        return result;
     }
 
     public CubeDesc getDescriptor() {
