@@ -331,6 +331,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setBehavior(toggle);
         builder.setStartTime(System.currentTimeMillis());
         builder.setTimeout(epResultItr.getTimeout());
+        // KylinConfig: use env instance instead of CubeSegment, because KylinConfig will share among queries
+        // for different cubes until redeployment of coprocessor jar.
         builder.setKylinProperties(KylinConfig.getInstanceFromEnv().getConfigAsString());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {

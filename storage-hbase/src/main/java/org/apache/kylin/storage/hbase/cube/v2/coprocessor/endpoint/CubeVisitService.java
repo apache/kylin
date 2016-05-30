@@ -393,6 +393,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
     @Override
     public void stop(CoprocessorEnvironment env) throws IOException {
+        // destroy KylinConfig when coprocessor stop
+        KylinConfig.destroyInstance();
     }
 
     @Override
