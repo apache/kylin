@@ -283,3 +283,4 @@ public class HBaseConnection {
     }
 
 }
+
