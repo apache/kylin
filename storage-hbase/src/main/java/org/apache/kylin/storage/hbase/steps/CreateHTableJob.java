@@ -41,7 +41,6 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.Primes;
 import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -186,7 +185,9 @@ public class CreateHTableJob extends AbstractHadoopJob {
         if (cubeSegment.isEnableSharding()) {//&& (nRegion > 1)) {
             //use prime nRegions to help random sharding
             int original = nRegion;
-            nRegion = Primes.nextPrime(nRegion);//return 2 for input 1
+            if (nRegion == 0) {
+                nRegion = 1;
+            }
 
             if (nRegion > Short.MAX_VALUE) {
                 logger.info("Too many regions! reduce to " + Short.MAX_VALUE);
@@ -301,7 +302,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         }
         int compactionThreshold = Integer.valueOf(hbaseConf.get("hbase.hstore.compactionThreshold", "3"));
         logger.info("hbase.hstore.compactionThreshold is " + compactionThreshold);
-        if (hfileSizeMB > 0.0  && hfileSizeMB * compactionThreshold < mbPerRegion) {
+        if (hfileSizeMB > 0.0 && hfileSizeMB * compactionThreshold < mbPerRegion) {
             hfileSizeMB = mbPerRegion / compactionThreshold;
         }
 

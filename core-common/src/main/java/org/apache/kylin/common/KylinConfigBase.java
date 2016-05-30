@@ -750,4 +750,8 @@ abstract public class KylinConfigBase implements Serializable {
     public Map<String, String> getUDFs() {
         return getPropertiesByPrefix("kylin.query.udf.");
     }
+
+    public String getHBaseMaxConnectionThreads() {
+        return getOptional("kylin.query.hbase.hconnection.threads.max", "3072");
+    }
 }

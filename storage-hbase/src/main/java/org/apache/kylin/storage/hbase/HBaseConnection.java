@@ -110,6 +110,9 @@ public class HBaseConnection {
         conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
         // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
 
+        // set hbase.hconnection.threads.max to large to unblock region server requests from client threadpool.
+        conf.set("hbase.hconnection.threads.max", KylinConfig.getInstanceFromEnv().getHBaseMaxConnectionThreads());
+
         return conf;
     }
     
