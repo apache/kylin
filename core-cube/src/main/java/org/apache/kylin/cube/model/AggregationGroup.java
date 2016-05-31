@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class AggregationGroup {
     public static class HierarchyMask {
@@ -55,9 +54,11 @@ public class AggregationGroup {
     private long hierarchyDimsMask;
     private List<Long> normalDims;//each long is a single dim
     private CubeDesc cubeDesc;
+    private boolean isMandatoryOnlyValid;
 
     public void init(CubeDesc cubeDesc, RowKeyDesc rowKeyDesc) {
         this.cubeDesc = cubeDesc;
+        this.isMandatoryOnlyValid = cubeDesc.getConfig().getCubeAggrGroupIsMandatoryOnlyValid();
         Map<String, TblColRef> colNameAbbr = cubeDesc.buildColumnNameAbbreviation();
 
         if (this.includes == null || this.includes.length == 0 || this.selectRule == null) {
@@ -275,5 +276,9 @@ public class AggregationGroup {
 
     public SelectRule getSelectRule() {
         return selectRule;
+    }
+    
+    public boolean isMandatoryOnlyValid() {
+        return isMandatoryOnlyValid;
     }
 }

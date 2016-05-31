@@ -116,10 +116,6 @@ public class CuboidScheduler {
         return Collections.min(candidates, Cuboid.cuboidSelectComparator);
     }
 
-    private boolean containsNonMandatoryColumn(AggregationGroup agg, long cuboid) {
-        return (cuboid & ~agg.getMandatoryColumnMask()) != 0;
-    }
-
     public Set<Long> getPotentialChildren(long parent) {
 
         if (parent != Cuboid.getBaseCuboid(cubeDesc).getId() && !Cuboid.isValid(cubeDesc, parent)) {
@@ -136,7 +132,7 @@ public class CuboidScheduler {
             //base cuboid is responsible for spawning each agg group's root
             for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
                 long partialCubeFullMask = agg.getPartialCubeFullMask();
-                if (partialCubeFullMask != parent && containsNonMandatoryColumn(agg, partialCubeFullMask)) {
+                if (partialCubeFullMask != parent && Cuboid.isValid(agg, partialCubeFullMask)) {
                     set.add(partialCubeFullMask);
                 }
             }
@@ -148,7 +144,7 @@ public class CuboidScheduler {
             for (long normalDimMask : agg.getNormalDims()) {
                 long common = parent & normalDimMask;
                 long temp = parent ^ normalDimMask;
-                if (common != 0 && containsNonMandatoryColumn(agg, temp)) {
+                if (common != 0 && Cuboid.isValid(agg, temp)) {
                     set.add(temp);
                 }
             }
@@ -157,7 +153,7 @@ public class CuboidScheduler {
                 for (int i = hierarchyMask.allMasks.length - 1; i >= 0; i--) {
                     if ((parent & hierarchyMask.allMasks[i]) == hierarchyMask.allMasks[i]) {
                         if ((agg.getJointDimsMask() & hierarchyMask.dims[i]) == 0) {
-                            if (containsNonMandatoryColumn(agg, parent ^ hierarchyMask.dims[i])) {
+                            if (Cuboid.isValid(agg, parent ^ hierarchyMask.dims[i])) {
                                 //only when the hierarchy dim is not among joints
                                 set.add(parent ^ hierarchyMask.dims[i]);
                             }
@@ -170,7 +166,7 @@ public class CuboidScheduler {
             //joint dim section
             for (long joint : agg.getJoints()) {
                 if ((parent & joint) == joint) {
-                    if (containsNonMandatoryColumn(agg, parent ^ joint)) {
+                    if (Cuboid.isValid(agg, parent ^ joint)) {
                         set.add(parent ^ joint);
                     }
                 }

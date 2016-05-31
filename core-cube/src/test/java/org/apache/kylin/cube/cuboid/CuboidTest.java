@@ -53,6 +53,11 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         return getCubeDescManager().getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
 
     }
+    
+    private CubeDesc getSSBCubeDesc() {
+        return getCubeDescManager().getCubeDesc("ssb");
+    }
+
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
@@ -140,6 +145,17 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         assertEquals(false, Cuboid.isValid(cube, toLong("10011000")));
     }
 
+    @Test
+    public void testIsValid3() {
+        CubeDesc cube = getSSBCubeDesc();
+
+        assertEquals(false, Cuboid.isValid(cube, toLong("10000000000")));
+        
+        // the 4th is mandatory and isMandatoryOnlyValid is true
+        assertEquals(true, Cuboid.isValid(cube, toLong("10000001000")));
+        assertEquals(true, Cuboid.isValid(cube, toLong("00000001000")));
+    }
+    
     @Test
     public void testFindCuboidByIdWithSingleAggrGroup2() {
         CubeDesc cube = getTestKylinCubeWithSeller();

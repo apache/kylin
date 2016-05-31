@@ -102,9 +102,9 @@ public class Cuboid implements Comparable<Cuboid> {
         return false;
     }
 
-    private static boolean isValid(AggregationGroup agg, long cuboidID) {
-        if (cuboidID < 0) {
-            throw new IllegalArgumentException("Cuboid " + cuboidID + " should be greater than 0");
+    static boolean isValid(AggregationGroup agg, long cuboidID) {
+        if (cuboidID <= 0) {
+            return false; //cuboid must be greater than 0
         }
         if ((cuboidID & ~agg.getPartialCubeFullMask()) != 0) {
             return false; //a cuboid's parent within agg is at most partialCubeFullMask
@@ -187,7 +187,7 @@ public class Cuboid implements Comparable<Cuboid> {
             }
         }
 
-        if ((cuboidID & ~agg.getMandatoryColumnMask()) != 0) {
+        if (isValid(agg, cuboidID)) {
             return cuboidID;
         } else {
             // no column, add one column
@@ -231,7 +231,8 @@ public class Cuboid implements Comparable<Cuboid> {
         if ((cuboidID & mandatoryColumnMask) != mandatoryColumnMask) {
             return false;
         } else {
-            return ((cuboidID & ~mandatoryColumnMask) != 0);//cuboid with only mandatory columns is not valid
+            //cuboid with only mandatory columns maybe valid
+            return agg.isMandatoryOnlyValid() || (cuboidID & ~mandatoryColumnMask) != 0;
         }
     }
 

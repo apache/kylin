@@ -434,8 +434,16 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max.combination", "4096"));
     }
 
+    public boolean getCubeAggrGroupIsMandatoryOnlyValid() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.aggrgroup.isMandatoryOnlyValid", "false"));
+    }
+
     public String[] getCubeDimensionCustomEncodingFactories() {
         return getOptionalStringArray("kylin.cube.dimension.customEncodingFactories", new String[0]);
+    }
+
+    public Map<String, String> getCubeCustomMeasureTypes() {
+        return getPropertiesByPrefix("kylin.cube.measure.customMeasureType.");
     }
 
     public int getDictionaryMaxCardinality() {
@@ -741,10 +749,6 @@ abstract public class KylinConfigBase implements Serializable {
 
     public boolean getCompressionResult() {
         return Boolean.parseBoolean(getOptional("kylin.query.endpoint.compression.result", "true"));
-    }
-
-    public Map<String, String> getCubeCustomMeasureTypes() {
-        return getPropertiesByPrefix("kylin.cube.measure.customMeasureType.");
     }
 
     public Map<String, String> getUDFs() {
