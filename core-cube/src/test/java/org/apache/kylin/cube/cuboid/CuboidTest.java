@@ -150,7 +150,6 @@ public class CuboidTest extends LocalFileMetadataTestCase {
         CubeDesc cube = getSSBCubeDesc();
 
         assertEquals(false, Cuboid.isValid(cube, toLong("10000000000")));
-
         // the 4th is mandatory and isMandatoryOnlyValid is true
         assertEquals(true, Cuboid.isValid(cube, toLong("10000001000")));
         assertEquals(true, Cuboid.isValid(cube, toLong("00000001000")));
