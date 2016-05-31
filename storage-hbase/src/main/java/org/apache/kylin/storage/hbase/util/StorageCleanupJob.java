@@ -62,8 +62,6 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanupJob.class);
 
-    public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000l; // 2 days
-
     boolean delete = false;
 
     protected static ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -102,7 +100,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         IIManager iiManager = IIManager.getInstance(KylinConfig.getInstanceFromEnv());
-
+        long TIME_THREADSHOLD = KylinConfig.getInstanceFromEnv().getStorageCleanupTimeThreshold();
         // get all kylin hbase tables
         HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
         String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;

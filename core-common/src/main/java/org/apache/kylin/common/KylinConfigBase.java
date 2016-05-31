@@ -758,4 +758,8 @@ abstract public class KylinConfigBase implements Serializable {
     public String getHBaseMaxConnectionThreads() {
         return getOptional("kylin.query.hbase.hconnection.threads.max", "3072");
     }
+
+    public long getStorageCleanupTimeThreshold() {
+        return Long.valueOf(this.getOptional("kylin.storage.cleanup.time.threshold", "172800000"));//default two days
+    }
 }
