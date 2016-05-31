@@ -76,6 +76,14 @@ public class MeasureDecoder {
         return serializers[idx];
     }
 
+    public int[] getPeekLength(ByteBuffer buf) {
+        int[] length = new int[nMeasures];
+        for (int i = 0; i < nMeasures; i++) {
+            length[i] = serializers[i].peekLength(buf);
+        }
+        return length;
+    }
+
     public void decode(ByteBuffer buf, Object[] result) {
         assert result.length == nMeasures;
         for (int i = 0; i < nMeasures; i++) {
