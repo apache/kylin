@@ -18,12 +18,8 @@
 
 package org.apache.kylin.tool;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
@@ -37,8 +33,11 @@ import org.apache.kylin.tool.util.ResourceStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(JobDiagnosisInfoCLI.class);
@@ -106,7 +105,6 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
                 File metaDir = new File(exportDir, "cube");
                 FileUtils.forceMkdir(metaDir);
                 String[] cubeMetaArgs = { "-cube", cubeName, "-destDir", new File(metaDir, cubeName).getAbsolutePath(), "-includeJobs", "false", "-compress", "false", "-submodule", "true" };
-
                 logger.info("Start to extract related cube: " + StringUtils.join(cubeMetaArgs));
                 CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
                 logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
@@ -119,8 +117,9 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
             logger.info("Start to dump yarn job logs: " + jobId);
             File yarnLogDir = new File(exportDir, "yarn");
             FileUtils.forceMkdir(yarnLogDir);
-            for (String taskId : yarnLogsResources) {
-                extractYarnLog(taskId, new File(yarnLogDir, jobId), true);
+            for (String stepId : yarnLogsResources) {
+                extractTaskCounter(stepId,new File(new File(yarnLogDir, stepId),"Counters"));
+                extractYarnLog(stepId, new File(yarnLogDir, stepId), true);
             }
         }
 
@@ -147,7 +146,6 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         try {
             KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
             KylinConfig dstConfig = KylinConfig.createInstanceFromUri(destDir.getAbsolutePath());
-
             ResourceStoreUtil.copy(srcConfig, dstConfig, requiredResources);
         } catch (Exception e) {
             throw new RuntimeException("Failed to extract job resources. ", e);
@@ -169,6 +167,15 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
                     logger.warn("Failed to get yarn logs. ", ex);
                 }
             }
+        }
+    }
+
+    private void extractTaskCounter(String taskId, File destDir) throws Exception {
+        final Map<String, String> jobInfo = executableDao.getJobOutput(taskId).getInfo();
+        if (jobInfo.containsKey(ExecutableConstants.MR_JOB_ID)) {
+            String jobId = jobInfo.get(ExecutableConstants.MR_JOB_ID);
+            FileUtils.forceMkdir(destDir);
+            new JobTaskCounterExtractor(jobId).executeExtract(destDir);
         }
     }
 
