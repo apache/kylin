@@ -34,13 +34,19 @@ public class RowKeySplitter {
     private RowKeyColumnIO colIO;
 
     private SplittedBytes[] splitBuffers;
+    private int[] splitOffsets;
     private int bufferSize;
 
     private long lastSplittedCuboidId;
     private boolean enableSharding;
+    private short shardId;
 
     public SplittedBytes[] getSplitBuffers() {
         return splitBuffers;
+    }
+
+    public int[] getSplitOffsets() {
+        return splitOffsets;
     }
 
     public int getBodySplitOffset() {
@@ -62,10 +68,18 @@ public class RowKeySplitter {
         this.colIO = new RowKeyColumnIO(new CubeDimEncMap(cubeSeg));
 
         this.splitBuffers = new SplittedBytes[splitLen];
+        this.splitOffsets = new int[splitLen];
         for (int i = 0; i < splitLen; i++) {
             this.splitBuffers[i] = new SplittedBytes(bytesLen);
         }
         this.bufferSize = 0;
+    }
+
+    public Short getShardId() {
+        if (enableSharding) {
+            return shardId;
+        }
+        return null;
     }
 
     /**
@@ -83,6 +97,7 @@ public class RowKeySplitter {
             System.arraycopy(bytes, offset, shardSplit.value, 0, RowConstants.ROWKEY_SHARDID_LEN);
             offset += RowConstants.ROWKEY_SHARDID_LEN;
             //lastSplittedShard = Bytes.toShort(shardSplit.value, 0, shardSplit.length);
+            shardId = Bytes.toShort(shardSplit.value);
         }
 
         // extract cuboid id
@@ -96,6 +111,7 @@ public class RowKeySplitter {
 
         // rowkey columns
         for (int i = 0; i < cuboid.getColumns().size(); i++) {
+            splitOffsets[i] = offset;
             TblColRef col = cuboid.getColumns().get(i);
             int colLength = colIO.getColumnLength(col);
             SplittedBytes split = this.splitBuffers[this.bufferSize++];
