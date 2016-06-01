@@ -52,6 +52,10 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     public static final String FUNC_TOP_N = "TOP_N";
     public static final String DATATYPE_TOPN = "topn";
 
+    public static final String CONFIG_ENCODING_PREFIX = "topn.encoding.";
+    public static final String CONFIG_AGG = "topn.aggregation";
+    public static final String CONFIG_ORDER = "topn.order";
+
     public static class Factory extends MeasureTypeFactory<TopNCounter<ByteArray>> {
 
         @Override
@@ -95,7 +99,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         if (DATATYPE_TOPN.equals(dataType.getName()) == false)
             throw new IllegalArgumentException();
 
-        if (dataType.getPrecision() < 1 || dataType.getPrecision() > 5000)
+        if (dataType.getPrecision() < 1 || dataType.getPrecision() > 10000)
             throw new IllegalArgumentException();
     }
 
