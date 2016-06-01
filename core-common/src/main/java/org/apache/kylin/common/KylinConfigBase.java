@@ -755,8 +755,8 @@ abstract public class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.query.udf.");
     }
 
-    public String getHBaseMaxConnectionThreads() {
-        return getOptional("kylin.query.hbase.hconnection.threads.max", "3072");
+    public int getHBaseMaxConnectionThreads() {
+        return Integer.parseInt(getOptional("kylin.query.hbase.hconnection.threads.max", "3072"));
     }
 
     public long getStorageCleanupTimeThreshold() {

@@ -22,6 +22,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -35,6 +39,7 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.util.Threads;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.engine.mr.HadoopUtil;
@@ -51,14 +56,19 @@ public class HBaseConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
 
-    private static final Map<String, Configuration> ConfigCache = new ConcurrentHashMap<String, Configuration>();
-    private static final Map<String, HConnection> ConnPool = new ConcurrentHashMap<String, HConnection>();
+    private static final Map<String, Configuration> configCache = new ConcurrentHashMap<String, Configuration>();
+    private static final Map<String, HConnection> connPool = new ConcurrentHashMap<String, HConnection>();
+    private static final ThreadLocal<Configuration> configThreadLocal = new ThreadLocal<>();
+
+    private static ExecutorService coprocessorPool = null;
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                for (HConnection conn : ConnPool.values()) {
+                closeCoprocessorPool();
+
+                for (HConnection conn : connPool.values()) {
                     try {
                         conn.close();
                     } catch (IOException e) {
@@ -68,24 +78,64 @@ public class HBaseConnection {
             }
         });
     }
-    
-    public static void clearConnCache() {
-        ConnPool.clear();
+
+    public static ExecutorService getCoprocessorPool() {
+        if (coprocessorPool != null) {
+            return coprocessorPool;
+        }
+
+        synchronized (HBaseConnection.class) {
+            if (coprocessorPool != null) {
+                return coprocessorPool;
+            }
+
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+
+            // copy from HConnectionImplementation.getBatchPool()
+            int maxThreads = config.getHBaseMaxConnectionThreads();
+            int coreThreads = 256;
+            long keepAliveTime = 60;
+            LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>(maxThreads * 100);
+            ThreadPoolExecutor tpe = new ThreadPoolExecutor(coreThreads, maxThreads, keepAliveTime, TimeUnit.SECONDS, workQueue, //
+                    Threads.newDaemonThreadFactory("kylin-coproc-"));
+            tpe.allowCoreThreadTimeOut(true);
+
+            logger.info("Creating coprocessor thread pool with max of " + maxThreads);
+            
+            coprocessorPool = tpe;
+            return coprocessorPool;
+        }
     }
 
-    private static final ThreadLocal<Configuration> hbaseConfig = new ThreadLocal<>();
+    private static void closeCoprocessorPool() {
+        if (coprocessorPool == null)
+            return;
+
+        coprocessorPool.shutdown();
+        try {
+            if (!coprocessorPool.awaitTermination(10, TimeUnit.SECONDS)) {
+                coprocessorPool.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            coprocessorPool.shutdownNow();
+        }
+    }
+
+    public static void clearConnCache() {
+        connPool.clear();
+    }
 
     public static Configuration getCurrentHBaseConfiguration() {
-        if (hbaseConfig.get() == null) {
+        if (configThreadLocal.get() == null) {
             String storageUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
-            hbaseConfig.set(newHBaseConfiguration(storageUrl));
+            configThreadLocal.set(newHBaseConfiguration(storageUrl));
         }
-        return hbaseConfig.get();
+        return configThreadLocal.get();
     }
 
     private static Configuration newHBaseConfiguration(String url) {
         Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
-        
+
         // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
         if (!(StringUtils.isEmpty(url) || "hbase".equals(url)))
             throw new IllegalArgumentException("to use hbase storage, pls set 'kylin.storage.url=hbase' in kylin.properties");
@@ -95,7 +145,7 @@ public class HBaseConnection {
         if (StringUtils.isNotEmpty(hbaseClusterFs)) {
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
         }
-        
+
         // https://issues.apache.org/jira/browse/KYLIN-953
         if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
             conf.set("hadoop.tmp.dir", "/tmp");
@@ -110,12 +160,9 @@ public class HBaseConnection {
         conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
         // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
 
-        // set hbase.hconnection.threads.max to large to unblock region server requests from client threadpool.
-        conf.set("hbase.hconnection.threads.max", KylinConfig.getInstanceFromEnv().getHBaseMaxConnectionThreads());
-
         return conf;
     }
-    
+
     public static String makeQualifiedPathInHBaseCluster(String path) {
         try {
             FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
@@ -126,25 +173,25 @@ public class HBaseConnection {
     }
 
     // ============================================================================
-    
+
     // returned HConnection can be shared by multiple threads and does not require close()
     @SuppressWarnings("resource")
     public static HConnection get(String url) {
         // find configuration
-        Configuration conf = ConfigCache.get(url);
+        Configuration conf = configCache.get(url);
         if (conf == null) {
             conf = newHBaseConfiguration(url);
-            ConfigCache.put(url, conf);
+            configCache.put(url, conf);
         }
 
-        HConnection connection = ConnPool.get(url);
+        HConnection connection = connPool.get(url);
         try {
             while (true) {
                 // I don't use DCL since recreate a connection is not a big issue.
                 if (connection == null || connection.isClosed()) {
                     logger.info("connection is null or closed, creating a new one");
                     connection = HConnectionManager.createConnection(conf);
-                    ConnPool.put(url, connection);
+                    connPool.put(url, connection);
                 }
 
                 if (connection == null || connection.isClosed()) {

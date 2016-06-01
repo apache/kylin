@@ -21,7 +21,6 @@ package org.apache.kylin.storage.hbase.cube.v2;
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,6 @@ import org.apache.kylin.common.util.LoggableCachedThreadPool;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
@@ -344,7 +342,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
                     Map<byte[], CubeVisitProtos.CubeVisitResponse> results;
                     try {
-                        results = getResults(builder.build(), conn.getTable(cubeSeg.getStorageLocationIdentifier()), epRange.getFirst(), epRange.getSecond());
+                        HTableInterface htable = conn.getTable(cubeSeg.getStorageLocationIdentifier(), HBaseConnection.getCoprocessorPool());
+                        results = getResults(builder.build(), htable, epRange.getFirst(), epRange.getSecond());
                     } catch (Throwable throwable) {
                         throw new RuntimeException(logHeader + "Error when visiting cubes by endpoint", throwable);
                     }
