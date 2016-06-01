@@ -67,7 +67,7 @@ Authorization:Basic {data}
 }
 ```
 
-Example with `curl`: 
+#### Curl Example
 
 ```
 curl -c /path/to/cookiefile.txt -X POST -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/json' http://<host>:<port>/kylin/api/user/authentication
@@ -195,6 +195,13 @@ curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{
    "partial":false
 }
 ```
+
+#### Curl Example
+
+```
+curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/json" -d '{ "sql":"select count(*) from TEST_KYLIN_FACT", "project":"learn_kylin" }' http://YOUR_HOST:7070/kylin/api/query
+```
+
 
 ## List queryable tables
 `GET /tables_and_columns`
