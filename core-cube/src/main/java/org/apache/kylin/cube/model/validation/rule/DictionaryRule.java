@@ -1,0 +1,1 @@
+package org.apache.kylin.cube.model.validation.rule;/** * Created by sunyerui on 16/6/1. */public class DictionaryRule {}
