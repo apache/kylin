@@ -30,6 +30,7 @@ import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.tool.util.ResourceStoreUtil;
+import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +54,10 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_CLIENT = OptionBuilder.withArgName("includeClient").hasArg().isRequired(false).withDescription("Specify whether to include client info to extract. Default true.").create("includeClient");
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_CONF = OptionBuilder.withArgName("includeConf").hasArg().isRequired(false).withDescription("Specify whether to include conf files to extract. Default true.").create("includeConf");
+
     List<String> requiredResources = Lists.newArrayList();
     List<String> yarnLogsResources = Lists.newArrayList();
     private KylinConfig kylinConfig;
@@ -67,6 +72,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_CUBE);
         options.addOption(OPTION_INCLUDE_CLIENT);
         options.addOption(OPTION_INCLUDE_YARN_LOGS);
+        options.addOption(OPTION_INCLUDE_CONF);
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         executableDao = ExecutableDao.getInstance(kylinConfig);
@@ -83,6 +89,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         boolean includeCube = optionsHelper.hasOption(OPTION_INCLUDE_CUBE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CUBE)) : true;
         boolean includeYarnLogs = optionsHelper.hasOption(OPTION_INCLUDE_YARN_LOGS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_YARN_LOGS)) : true;
         boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
+        boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF)) : true;
 
         // dump job output
         logger.info("Start to dump job output");
@@ -128,6 +135,16 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
             ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
             logger.info("ClientEnvExtractor args: " + Arrays.toString(clientArgs));
             clientEnvExtractor.execute(clientArgs);
+        }
+
+        // export conf
+        if (includeConf) {
+            logger.info("Start to extract kylin conf files.");
+            try {
+                FileUtils.copyDirectoryToDirectory(new File(ToolUtil.getConfFolder()), exportDir);
+            } catch (Exception e) {
+                logger.warn("Error in export conf.", e);
+            }
         }
 
         // export kylin logs
