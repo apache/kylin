@@ -21,6 +21,7 @@ package org.apache.kylin.cube;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -140,6 +141,15 @@ public class CubeManager implements IRealizationProvider {
         return cubeMap.get(cubeName);
     }
 
+    public CubeInstance getCubeByUuid(String uuid) {
+        Collection<CubeInstance> copy = new ArrayList<CubeInstance>(cubeMap.values());
+        for (CubeInstance cube : copy) {
+            if (uuid.equals(cube.getUuid()))
+                return cube;
+        }
+        return null;
+    }
+    
     /**
      * Get related Cubes by cubedesc name. By default, the desc name will be
      * translated into upper case.
