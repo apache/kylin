@@ -19,7 +19,6 @@
     "gmv",
     "item_count"
   ],
-  "capacity": "MEDIUM",
   "last_modified": 0,
   "fact_table": "default.streaming_table",
   "filter_condition": null,

@@ -49,7 +49,6 @@
     "columns" : [ "D_YEAR", "D_YEARMONTHNUM", "D_YEARMONTH", "D_WEEKNUMINYEAR" ]
   } ],
   "metrics" : [ "LO_REVENUE", "LO_SUPPLYCOST", "V_REVENUE" ],
-  "capacity" : "MEDIUM",
   "last_modified" : 1457444314662,
   "fact_table" : "SSB.V_LINEORDER",
   "filter_condition" : "",

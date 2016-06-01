@@ -91,7 +91,6 @@
   "PRICE",
   "ITEM_COUNT"
   ],
-  "capacity" : "MEDIUM",
   "last_modified" : 1422435345352,
   "fact_table" : "DEFAULT.TEST_KYLIN_FACT",
   "filter_condition" : null,

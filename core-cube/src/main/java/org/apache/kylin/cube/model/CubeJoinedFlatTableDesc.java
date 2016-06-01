@@ -167,11 +167,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         return cubeDesc.getModel();
     }
 
-    @Override
-    public DataModelDesc.RealizationCapacity getCapacity() {
-        return cubeDesc.getModel().getCapacity();
-    }
-
     private static String colName(String canonicalColName) {
         return canonicalColName.replace(".", "_");
     }

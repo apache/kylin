@@ -65,9 +65,4 @@ public class IIJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         return iiDesc.getModel();
     }
 
-    @Override
-    public DataModelDesc.RealizationCapacity getCapacity() {
-        return DataModelDesc.RealizationCapacity.SMALL;
-    }
-
 }

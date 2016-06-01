@@ -28,7 +28,6 @@ KylinApp.service('MetaModel',function(){
         fact_table: null,
         lookups: [],
         filter_condition:null,
-        capacity:null,
         dimensions:[],
         metrics:[],
         "partition_desc" : {
@@ -49,7 +48,6 @@ KylinApp.service('MetaModel',function(){
         _model.fact_table = model.fact_table;
         _model.lookups =model.lookups;
         _model.filter_condition = model.filter_condition;
-        _model.capacity = model.capacity;
         _model.dimensions = model.dimensions;
         _model.metrics = model.metrics;
         _model.partition_desc = model.partition_desc;
@@ -76,7 +74,6 @@ KylinApp.service('MetaModel',function(){
             fact_table: '',
             lookups: [],
             filter_condition:'',
-            capacity:'MEDIUM',
             dimensions:[],
             metrics:[],
             "partition_desc" : {

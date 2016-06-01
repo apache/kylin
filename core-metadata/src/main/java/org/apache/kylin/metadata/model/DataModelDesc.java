@@ -382,7 +382,6 @@ public class DataModelDesc extends RootPersistentEntity {
     public static DataModelDesc getCopyOf(DataModelDesc dataModelDesc) {
         DataModelDesc newDataModelDesc = new DataModelDesc();
         newDataModelDesc.setName(dataModelDesc.getName());
-        newDataModelDesc.setCapacity(dataModelDesc.getCapacity());
         newDataModelDesc.setDescription(dataModelDesc.getDescription());
         newDataModelDesc.setDimensions(dataModelDesc.getDimensions());
         newDataModelDesc.setFilterCondition(dataModelDesc.getFilterCondition());

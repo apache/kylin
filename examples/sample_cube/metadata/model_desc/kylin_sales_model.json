@@ -34,7 +34,6 @@
     "PRICE",
     "ITEM_COUNT"
   ],
-  "capacity" : "SMALL",
   "last_modified" : 1422435345362,
   "fact_table" : "DEFAULT.KYLIN_SALES",
   "filter_condition" : null,

@@ -24,12 +24,10 @@ import java.util.List;
  */
 public interface IJoinedFlatTableDesc {
 
-    public String getTableName();
+    String getTableName();
 
-    public List<IntermediateColumnDesc> getColumnList();
+    List<IntermediateColumnDesc> getColumnList();
 
-    public DataModelDesc getDataModel();
-
-    public DataModelDesc.RealizationCapacity getCapacity();
+    DataModelDesc getDataModel();
 
 }

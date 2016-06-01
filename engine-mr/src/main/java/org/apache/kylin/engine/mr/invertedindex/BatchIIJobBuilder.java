@@ -68,7 +68,7 @@ public class BatchIIJobBuilder extends JobBuilderSupport {
         MapReduceExecutable buildIIStep = new MapReduceExecutable();
 
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, seg.getRealization().getDataModelDesc());
+        appendMapReduceParameters(cmd);
 
         buildIIStep.setName(ExecutableConstants.STEP_NAME_BUILD_II);
 

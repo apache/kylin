@@ -22,7 +22,6 @@ KylinApp.constant('cubeConfig', {
   measureParamType: ['column', 'constant'],
   measureExpressions: ['SUM', 'MIN', 'MAX', 'COUNT', 'COUNT_DISTINCT',"TOP_N", 'RAW'],
   dimensionDataTypes: ["string", "tinyint", "int", "bigint", "date"],
-  cubeCapacities: ["SMALL", "MEDIUM", "LARGE"],
   cubePartitionTypes: ['APPEND'],
   joinTypes: [
     {name: 'Left', value: 'left'},
@@ -52,14 +51,16 @@ KylinApp.constant('cubeConfig', {
   topNTypes: [
     {name: 'Top 10', value: "topn(10)"},
     {name: 'Top 100', value: "topn(100)"},
-    {name: 'Top 1000', value: "topn(1000)"}
+    {name: 'Top 500', value: "topn(500)"},
+    {name: 'Top 1000', value: "topn(1000)"},
+    {name: 'Top 5000', value: "topn(5000)"},
+    {name: 'Top 10000', value: "topn(10000)"}
   ],
   dftSelections: {
     measureExpression: 'SUM',
     measureParamType: 'column',
     measureDataType: {name: 'BIGINT', value: 'bigint'},
     distinctDataType: {name: 'Error Rate < 4.88%', value: 'hllc12'},
-    cubeCapacity: 'MEDIUM',
     queryPriority: {name: 'NORMAL', value: 50},
     cubePartitionType: 'APPEND',
     topN:{name: 'Top 100', value: "topn(100)"}

@@ -68,7 +68,7 @@ public class JobBuilderSupport {
         result.setName(ExecutableConstants.STEP_NAME_FACT_DISTINCT_COLUMNS);
         result.setMapReduceJobClass(FactDistinctColumnsJob.class);
         StringBuilder cmd = new StringBuilder();
-        appendMapReduceParameters(cmd, ((CubeSegment) seg).getCubeDesc().getModel());
+        appendMapReduceParameters(cmd);
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, getFactDistinctColumnsPath(jobId));
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_NAME, seg.getName());
@@ -161,15 +161,11 @@ public class JobBuilderSupport {
         return getRealizationRootPath(jobId) + "/secondary_index/";
     }
 
-    public void appendMapReduceParameters(StringBuilder buf, DataModelDesc dataModelDesc) {
-        appendMapReduceParameters(buf, JobEngineConfig.DEFAUL_JOB_CONF_SUFFIX, dataModelDesc.getCapacity().toString());
+    public void appendMapReduceParameters(StringBuilder buf) {
+        appendMapReduceParameters(buf, JobEngineConfig.DEFAUL_JOB_CONF_SUFFIX);
     }
 
-    public void appendMapReduceParameters(StringBuilder buf, String jobType, DataModelDesc dataModelDesc) {
-        appendMapReduceParameters(buf, jobType, dataModelDesc.getCapacity().toString());
-    }
-
-    public void appendMapReduceParameters(StringBuilder buf, String jobType, String capacity) {
+    public void appendMapReduceParameters(StringBuilder buf, String jobType) {
         try {
             String jobConf = config.getHadoopJobConfFilePath(jobType);
             if (jobConf != null && jobConf.length() > 0) {
