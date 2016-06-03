@@ -23,9 +23,11 @@ import java.io.InputStream;
 public class CreateFlatHiveTableStep extends AbstractExecutable {
     private final BufferedLogger stepLogger = new BufferedLogger(logger);
 
-    private long readRowCountFromFile(Path file) throws IOException {
-        FileSystem fs = FileSystem.get(file.toUri(), HadoopUtil.getCurrentConfiguration());
-        InputStream in = fs.open(file);
+    private long readRowCountFromFile() throws IOException {
+        Path rowCountFile = new Path(getRowCountOutputDir(), "000000_0");
+
+        FileSystem fs = FileSystem.get(rowCountFile.toUri(), HadoopUtil.getCurrentConfiguration());
+        InputStream in = fs.open(rowCountFile);
         try {
             String content = IOUtils.toString(in);
             return Long.valueOf(content.trim()); // strip the '\n' character
@@ -35,9 +37,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         }
     }
 
-    private int determineNumReducer(KylinConfig config) throws IOException {
-        Path rowCountFile = new Path(getRowCountOutputDir(), "000000_0");
-        long rowCount = readRowCountFromFile(rowCountFile);
+    private int determineNumReducer(KylinConfig config, long rowCount) throws IOException {
         int mapperInputRows = config.getHadoopJobMapperInputRows();
 
         int numReducers = Math.round(rowCount / ((float) mapperInputRows));
@@ -78,8 +78,14 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         KylinConfig config = getCubeSpecificConfig();
         try {
+            long rowCount = readRowCountFromFile();
+            if (!config.isEmptySegmentAllowed() && rowCount == 0) {
+                stepLogger.log("Detect upstream hive table is empty, " +
+                        "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
+                return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
+            }
 
-            int numReducers = determineNumReducer(config);
+            int numReducers = determineNumReducer(config, rowCount);
             createFlatHiveTable(config, numReducers);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, stepLogger.getBufferedLog());
 

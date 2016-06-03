@@ -363,6 +363,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.job.cmd.extra.args");
     }
 
+    public boolean isEmptySegmentAllowed() {
+        return Boolean.parseBoolean(getOptional("kylin.job.allow.empty.segment", "true"));
+    }
+
     public String getOverrideHiveTableLocation(String table) {
         return getOptional("hive.table.location." + table.toUpperCase());
     }
