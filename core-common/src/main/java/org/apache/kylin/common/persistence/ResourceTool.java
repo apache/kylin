@@ -67,6 +67,9 @@ public class ResourceTool {
         case "download":
             copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]));
             break;
+        case "fetch":
+            copy(KylinConfig.getInstanceFromEnv(), KylinConfig.createInstanceFromUri(args[1]), args[2]);
+            break;
         case "upload":
             copy(KylinConfig.createInstanceFromUri(args[1]), KylinConfig.getInstanceFromEnv());
             break;
@@ -101,6 +104,13 @@ public class ResourceTool {
         ResourceStore store = ResourceStore.getStore(config);
         NavigableSet<String> result = store.listResources(path);
         System.out.println("" + result);
+    }
+
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String path) throws IOException {
+        ResourceStore src = ResourceStore.getStore(srcConfig);
+        ResourceStore dst = ResourceStore.getStore(dstConfig);
+
+        copyR(src, dst, path);
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {

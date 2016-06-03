@@ -56,6 +56,8 @@ public class SandboxMetastoreCLI {
             ResourceTool.main(new String[] { "reset" });
         }else if ("download".equalsIgnoreCase(args[0])) {
             ResourceTool.main(new String[] { "download", args[1] });
+        } else if ("fetch".equalsIgnoreCase(args[0])) {
+            ResourceTool.main(new String[] { "fetch", args[1], args[2]});
         } else if ("upload".equalsIgnoreCase(args[0])) {
             ResourceTool.main(new String[] { "upload", args[1] });
         } else {
@@ -65,6 +67,7 @@ public class SandboxMetastoreCLI {
 
     private static void printUsage() {
         logger.info("Usage: SandboxMetastoreCLI download toFolder");
+        logger.info("Usage: SandboxMetastoreCLI fecth toFolder data");
         logger.info("Usage: SandboxMetastoreCLI upload   fromFolder");
     }
 }

@@ -40,6 +40,19 @@ then
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool download ${_file}
     echo "metadata store backed up to ${_file}"
 
+elif [ "$1" == "fetch" ]
+then
+
+    _file=$2
+
+    _now=$(date +"%Y_%m_%d_%H_%M_%S")
+    _fileDst="${KYLIN_HOME}/meta_backups/meta_${_now}"
+    echo "Starting restoring $_fileDst"
+    mkdir -p $_fileDst
+
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool fetch $_fileDst $_file
+    echo "metadata store backed up to $_fileDst"
+
 elif [ "$1" == "restore" ]
 then
 
@@ -80,6 +93,7 @@ then
 
 else
     echo "usage: metastore.sh backup"
+    echo "       metastore.sh fetch DATA"
     echo "       metastore.sh reset"
     echo "       metastore.sh restore PATH_TO_LOCAL_META"
     echo "       metastore.sh list RESOURCE_PATH"
