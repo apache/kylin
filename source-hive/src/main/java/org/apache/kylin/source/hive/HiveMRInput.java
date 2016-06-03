@@ -158,7 +158,8 @@ public class HiveMRInput implements IMRInput {
             final Set<TableDesc> lookupViewsTables = Sets.newHashSet();
             for(DimensionDesc dimensionDesc : cubeDesc.getDimensions()) {
                 TableDesc tableDesc = dimensionDesc.getTableDesc();
-                if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
+                if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())
+                        && !cubeDesc.getModel().getFactTableDesc().equals(tableDesc)) {
                     lookupViewsTables.add(tableDesc);
                 }
             }
