@@ -117,6 +117,12 @@ public class HiveMRInput implements IMRInput {
         }
 
         public static AbstractExecutable createFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId) {
+            String setHql = "";
+            try {
+                setHql = JoinedFlatTable.generateHiveSetStatements(conf);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to generate hive set statements for createFlatHiveTableStep", e);
+            }
 
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatTableDesc);
@@ -134,6 +140,7 @@ public class HiveMRInput implements IMRInput {
             hiveCmdBuilder.addStatement(useDatabaseHql);
             hiveCmdBuilder.addStatement(dropTableHql);
             hiveCmdBuilder.addStatement(createTableHql);
+            hiveCmdBuilder.addStatement(setHql);
             hiveCmdBuilder.addStatement(insertDataHqls);
 
             step.setCmd(hiveCmdBuilder.build());
@@ -164,8 +171,15 @@ public class HiveMRInput implements IMRInput {
             if(lookupViewsTables.size() == 0) {
                 return null;
             }
+            String setHql = "";
+            try {
+                setHql = JoinedFlatTable.generateHiveSetStatements(conf);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to generate hive set statements for createFlatHiveTableStep", e);
+            }
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             hiveCmdBuilder.addStatement(useDatabaseHql);
+            hiveCmdBuilder.addStatement(setHql);
             for(TableDesc lookUpTableDesc : lookupViewsTables) {
                 if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(lookUpTableDesc.getTableType())) {
                     StringBuilder createIntermediateTableHql = new StringBuilder();
