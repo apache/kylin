@@ -121,12 +121,17 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         implementor.visitChild(this.left, this);
         if (this.context != implementor.getContext() || ((OLAPRel) this.left).hasSubQuery()) {
             this.hasSubQuery = true;
-            implementor.freeContext();
+            // child join node didn't allocated a new context, and free context should be skipped
+            if (!(this.left instanceof OLAPJoinRel)) {
+                implementor.freeContext();
+            }
         }
         implementor.visitChild(this.right, this);
         if (this.context != implementor.getContext() || ((OLAPRel) this.right).hasSubQuery()) {
             this.hasSubQuery = true;
-            implementor.freeContext();
+            if (!(this.right instanceof OLAPJoinRel)) {
+                implementor.freeContext();
+            }
         }
 
         this.columnRowType = buildColumnRowType();
