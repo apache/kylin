@@ -55,15 +55,16 @@ public class JoinedFlatTable {
         return storageDfsDir + "/" + intermediateTableDesc.getTableName();
     }
 
-    public static String generateHiveSetStatements(JobEngineConfig engineConfig) throws IOException {
+    public static String generateHiveSetStatements(JobEngineConfig engineConfig) {
         StringBuilder buffer = new StringBuilder();
-        File hadoopPropertiesFile = new File(engineConfig.getHiveConfFilePath());
 
-        if (hadoopPropertiesFile.exists()) {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder;
-            Document doc;
-            try {
+        try {
+            File hadoopPropertiesFile = new File(engineConfig.getHiveConfFilePath());
+
+            if (hadoopPropertiesFile.exists()) {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder;
+                Document doc;
                 builder = factory.newDocumentBuilder();
                 doc = builder.parse(hadoopPropertiesFile);
                 NodeList nl = doc.getElementsByTagName("property");
@@ -74,14 +75,10 @@ public class JoinedFlatTable {
                         buffer.append("SET " + name + "=" + value + ";\n");
                     }
                 }
-
-            } catch (ParserConfigurationException e) {
-                throw new IOException(e);
-            } catch (SAXException e) {
-                throw new IOException(e);
             }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse hive conf file ", e);
         }
-
         return buffer.toString();
     }
 
@@ -114,7 +111,7 @@ public class JoinedFlatTable {
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, JobEngineConfig engineConfig) throws IOException {
+    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, JobEngineConfig engineConfig) {
         StringBuilder sql = new StringBuilder();
         sql.append(generateHiveSetStatements(engineConfig));
         sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName() + " " + generateSelectDataStatement(intermediateTableDesc) + ";").append("\n");

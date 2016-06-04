@@ -148,12 +148,7 @@ public class BuildIIWithStream {
         final String dropTableHql = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc);
         final String createTableHql = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, JobBuilderSupport.getJobWorkingDir(jobEngineConfig, uuid));
         String insertDataHqls;
-        try {
-            insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobEngineConfig);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-            throw new RuntimeException("Failed to generate insert data SQL for intermediate table.");
-        }
+        insertDataHqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, jobEngineConfig);
 
         ShellExecutable step = new ShellExecutable();
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();

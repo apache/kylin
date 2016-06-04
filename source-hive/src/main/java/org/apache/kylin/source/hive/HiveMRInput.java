@@ -120,7 +120,6 @@ public class HiveMRInput implements IMRInput {
             }
             jobFlow.addTask(createCountHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), rowCountOutputDir));
             jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), cubeName, rowCountOutputDir));
-//            jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId()));
             AbstractExecutable task = createLookupHiveViewMaterializationStep(jobFlow.getId());
             if(task != null) {
                 jobFlow.addTask(task);
@@ -131,11 +130,7 @@ public class HiveMRInput implements IMRInput {
             final ShellExecutable step = new ShellExecutable();
 
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-            try {
-                hiveCmdBuilder.addStatement(JoinedFlatTable.generateHiveSetStatements(conf));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to generate hive set statements for createCountHiveTableStep", e);
-            }
+            hiveCmdBuilder.addStatement(JoinedFlatTable.generateHiveSetStatements(conf));
             hiveCmdBuilder.addStatement("set hive.exec.compress.output=false;\n");
             hiveCmdBuilder.addStatement(JoinedFlatTable.generateCountDataStatement(flatTableDesc, rowCountOutputDir));
 
@@ -168,6 +163,7 @@ public class HiveMRInput implements IMRInput {
             }
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             hiveCmdBuilder.addStatement(useDatabaseHql);
+            hiveCmdBuilder.addStatement(JoinedFlatTable.generateHiveSetStatements(conf));
             for(TableDesc lookUpTableDesc : lookupViewsTables) {
                 if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(lookUpTableDesc.getTableType())) {
                     StringBuilder createIntermediateTableHql = new StringBuilder();
@@ -190,21 +186,13 @@ public class HiveMRInput implements IMRInput {
 
         public static AbstractExecutable createFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId, String cubeName, String rowCountOutputDir) {
             StringBuilder hiveInitBuf = new StringBuilder();
-            try {
-                hiveInitBuf.append(JoinedFlatTable.generateHiveSetStatements(conf));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to generate hive set statements for RedistributeFlatHiveTableStep", e);
-            }
+            hiveInitBuf.append(JoinedFlatTable.generateHiveSetStatements(conf));
 
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatTableDesc);
             final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
             String insertDataHqls;
-            try {
-                insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc, conf);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to generate insert data SQL for intermediate table.", e);
-            }
+            insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc, conf);
 
             CreateFlatHiveTableStep step = new CreateFlatHiveTableStep();
             step.setInitStatement(hiveInitBuf.toString());
