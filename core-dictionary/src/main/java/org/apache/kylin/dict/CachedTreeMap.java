@@ -18,28 +18,37 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.cache.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.AbstractCollection;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.persistence.ComparableWritable;
-import org.apache.kylin.common.persistence.Writable;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 
 /**
  * Created by sunyerui on 16/5/2.
  * TODO Depends on HDFS for now, ideally just depends on storage interface
  */
-public class CachedTreeMap<K extends ComparableWritable, V extends Writable> extends TreeMap<K, V> implements Writable {
+public class CachedTreeMap<K extends WritableComparable, V extends Writable> extends TreeMap<K, V> implements Writable {
     private static final Logger logger = LoggerFactory.getLogger(CachedTreeMap.class);
 
     private final Class<K> keyClazz;

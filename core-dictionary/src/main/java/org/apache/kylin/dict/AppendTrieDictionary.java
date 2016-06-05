@@ -18,21 +18,6 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ComparableWritable;
-import org.apache.kylin.common.persistence.Writable;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.Dictionary;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -50,7 +35,21 @@ import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Dictionary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -69,7 +68,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 
  * @author sunyerui
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
 public class AppendTrieDictionary<T> extends Dictionary<T> {
 
     public static final byte[] HEAD_MAGIC = new byte[] { 0x41, 0x70, 0x70, 0x65, 0x63, 0x64, 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "AppendTrieDict"
@@ -134,7 +133,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         return dictMapBytes;
     }
 
-    public static class DictSliceKey implements ComparableWritable {
+    public static class DictSliceKey implements WritableComparable {
         byte[] key;
 
         public static DictSliceKey wrap(byte[] key) {
@@ -186,7 +185,6 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
 
         // non-persistent part
         transient private int headSize;
-        @SuppressWarnings("unused")
         transient private int bodyLen;
         transient private int sizeChildOffset;
 

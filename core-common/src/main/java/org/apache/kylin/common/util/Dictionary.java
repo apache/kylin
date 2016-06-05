@@ -18,11 +18,12 @@
 
 package org.apache.kylin.common.util;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-
-import org.apache.kylin.common.persistence.Writable;
 
 /**
  * A bi-way dictionary that maps from dimension/column values to IDs and vice
@@ -40,7 +41,7 @@ import org.apache.kylin.common.persistence.Writable;
  * @author yangli9
  */
 @SuppressWarnings("serial")
-abstract public class Dictionary<T> implements Writable, Serializable {
+abstract public class Dictionary<T> implements Serializable {
 
     // ID with all bit-1 (0xff e.g.) reserved for NULL value
     public static final int NULL_ID[] = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };
@@ -226,5 +227,24 @@ abstract public class Dictionary<T> implements Writable, Serializable {
             return 0;
         }
     }
+
+    /** 
+     * Serialize the fields of this object to <code>out</code>.
+     * 
+     * @param out <code>DataOuput</code> to serialize this object into.
+     * @throws IOException
+     */
+    public abstract void write(DataOutput out) throws IOException;
+
+    /** 
+     * Deserialize the fields of this object from <code>in</code>.  
+     * 
+     * <p>For efficiency, implementations should attempt to re-use storage in the 
+     * existing object where possible.</p>
+     * 
+     * @param in <code>DataInput</code> to deseriablize this object from.
+     * @throws IOException
+     */
+    public abstract void readFields(DataInput in) throws IOException;
 
 }

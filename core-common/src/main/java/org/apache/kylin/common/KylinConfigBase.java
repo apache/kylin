@@ -775,6 +775,7 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dict.append.entry.size", "10000000"));
     }
 
+    // for test
     public void setAppendDictEntrySize(int entrySize) {
         setProperty("kylin.dict.append.entry.size", String.valueOf(entrySize));
     }
@@ -783,6 +784,7 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dict.append.cache.size", "20"));
     }
 
+    // for test
     public void setAppendDictCacheSize(int cacheSize) {
         setProperty("kylin.dict.append.cache.size", String.valueOf(cacheSize));
     }
