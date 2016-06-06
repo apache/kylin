@@ -33,6 +33,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
  * cannot work on DimensionEncoding.
  */
 public abstract class DimensionEncoding implements Externalizable {
+    private static final long serialVersionUID = 1L;
 
     // it's convention that all 0xff means NULL
     public static final byte NULL = (byte) 0xff;
