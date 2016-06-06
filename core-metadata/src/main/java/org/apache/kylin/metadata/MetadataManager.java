@@ -303,7 +303,7 @@ public class MetadataManager {
             reloadExternalFilterAt(path);
         }
 
-        logger.debug("Loaded " + extFilterMap.size() + " SourceTable(s)");
+        logger.debug("Loaded " + extFilterMap.size() + " ExternalFilter(s)");
     }
 
     private void reloadAllSourceTable() throws IOException {
