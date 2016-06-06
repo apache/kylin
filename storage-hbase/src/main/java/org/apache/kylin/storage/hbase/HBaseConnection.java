@@ -100,7 +100,7 @@ public class HBaseConnection {
                     Threads.newDaemonThreadFactory("kylin-coproc-"));
             tpe.allowCoreThreadTimeOut(true);
 
-            logger.info("Creating coprocessor thread pool with max of " + maxThreads);
+            logger.info("Creating coprocessor thread pool with max of {}, core of {}", maxThreads, coreThreads);
             
             coprocessorPool = tpe;
             return coprocessorPool;

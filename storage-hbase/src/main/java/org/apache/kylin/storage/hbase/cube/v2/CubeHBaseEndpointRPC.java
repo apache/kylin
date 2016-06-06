@@ -321,7 +321,11 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         final AtomicInteger totalScannedCount = new AtomicInteger(0);
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum);
-        final boolean compressionResult = cubeSeg.getCubeDesc().getConfig().getCompressionResult();
+
+        // KylinConfig: use env instance instead of CubeSegment, because KylinConfig will share among queries
+        // for different cubes until redeployment of coprocessor jar.
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        final boolean compressionResult = kylinConfig.getCompressionResult();
         final CubeVisitProtos.CubeVisitRequest.Builder builder = CubeVisitProtos.CubeVisitRequest.newBuilder();
         builder.setGtScanRequest(scanRequestByteString).setHbaseRawScan(rawScanByteString);
         for (IntList intList : hbaseColumnsToGTIntList) {
@@ -331,9 +335,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setBehavior(toggle);
         builder.setStartTime(System.currentTimeMillis());
         builder.setTimeout(epResultItr.getTimeout());
-        // KylinConfig: use env instance instead of CubeSegment, because KylinConfig will share among queries
-        // for different cubes until redeployment of coprocessor jar.
-        builder.setKylinProperties(KylinConfig.getInstanceFromEnv().getConfigAsString());
+        builder.setKylinProperties(kylinConfig.getConfigAsString());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {
