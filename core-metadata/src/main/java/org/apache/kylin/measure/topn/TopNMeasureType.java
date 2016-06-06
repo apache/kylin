@@ -254,17 +254,20 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         if (sum == null)
             return false;
 
-        if (!isTopN(topN) || !sum.isSum())
+        if (!isTopN(topN))
             return false;
 
         TblColRef topnNumCol = getTopNNumericColumn(topN);
 
-        if (sum.getParameter().getColRefs().isEmpty()) {
-            if (topnNumCol == null && sum.getParameter().getValue().equals(topN.getParameter().getValue()))
+        if (topnNumCol == null) {
+            if (sum.isCount())
                 return true;
-            else
-                return false;
+
+            return false;
         }
+
+        if (sum.isSum() == false)
+            return false;
 
         TblColRef sumCol = sum.getParameter().getColRefs().get(0);
         return sumCol.equals(topnNumCol);
@@ -294,7 +297,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
         if (sqlDigest.aggregations.size() > 0) {
             FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
-            if (origFunc.isSum() == false) {
+            if (origFunc.isSum() == false && origFunc.isCount() == false) {
                 throw new IllegalStateException("When query with topN, only SUM function is allowed.");
             }
             logger.info("Rewrite function " + origFunc + " to " + topnFunc);
@@ -327,7 +330,12 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         }
 
         // for TopN, the aggr must be SUM, so the number fill into the column position (without rewrite)
-        final int numericTupleIdx = (numericCol != null && tupleInfo.hasColumn(numericCol)) ? tupleInfo.getColumnIndex(numericCol) : -1;
+        final int numericTupleIdx;
+        if (numericCol != null ) {
+            numericTupleIdx = tupleInfo.hasColumn(numericCol) ? tupleInfo.getColumnIndex(numericCol) : -1;
+        } else {
+            numericTupleIdx = tupleInfo.getFieldIndex("COUNT__");
+        }
         return new IAdvMeasureFiller() {
             private TopNCounter<ByteArray> topNCounter;
             private Iterator<Counter<ByteArray>> topNCounterIterator;
