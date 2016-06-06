@@ -21,6 +21,7 @@ package org.apache.kylin.cube.model;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.dimension.DictionaryDimEnc;
+import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -57,13 +58,9 @@ public class RowKeyColDesc {
     public void init() {
         Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
 
-        String[] parts = this.encoding.split("\\s*[(),:]\\s*");
-        if (parts == null || parts.length == 0 || parts[0].isEmpty())
-            throw new IllegalArgumentException("Not supported row key col encoding: '" + this.encoding + "'");
-
-        this.encodingName = parts[0];
-        this.encodingArgs = parts[parts.length - 1].isEmpty() //
-                ? StringUtil.subArray(parts, 1, parts.length - 1) : StringUtil.subArray(parts, 1, parts.length);
+        Object[] encodingConf = DimensionEncoding.parseEncodingConf(this.encoding);
+        this.encodingName = (String) encodingConf[0];
+        this.encodingArgs = (String[])encodingConf[1];
 
         if (!DimensionEncodingFactory.isVaildEncoding(this.encodingName))
             throw new IllegalArgumentException("Not supported row key col encoding: '" + this.encoding + "'");

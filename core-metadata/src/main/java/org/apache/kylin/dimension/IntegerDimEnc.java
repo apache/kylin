@@ -173,4 +173,20 @@ public class IntegerDimEnc extends DimensionEncoding {
         fixedLen = in.readShort();
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        IntegerDimEnc that = (IntegerDimEnc) o;
+
+        return fixedLen == that.fixedLen;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return fixedLen;
+    }
 }

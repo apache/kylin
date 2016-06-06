@@ -38,7 +38,10 @@
         "lstg_format_name",
         "LSTG_SITE_ID",
         "SLR_SEGMENT_CD",
-        "seller_id"
+        "TRANS_ID",
+        "CAL_DT",
+        "LEAF_CATEG_ID",
+        "SELLER_ID"
       ]
     },
     {
@@ -76,20 +79,12 @@
         "cal_dt",
         "week_beg_dt"
       ]
-    },
-    {
-      "table": "default.test_kylin_fact",
-      "columns": [
-        "TRANS_ID",
-        "CAL_DT",
-        "LEAF_CATEG_ID",
-        "SELLER_ID"
-      ]
     }
   ],
   "metrics": [
   "PRICE",
-  "ITEM_COUNT"
+  "ITEM_COUNT",
+  "SELLER_ID"
   ],
   "last_modified" : 1422435345352,
   "fact_table" : "DEFAULT.TEST_KYLIN_FACT",

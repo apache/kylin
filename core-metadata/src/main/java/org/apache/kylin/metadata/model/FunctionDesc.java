@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.basic.BasicMeasureType;
@@ -61,8 +62,9 @@ public class FunctionDesc {
     @JsonProperty("returntype")
     private String returnType;
 
-    @JsonProperty("configurations")
-    private HashMap<String, String> configurations = new LinkedHashMap<String, String>();
+    @JsonProperty("configuration")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private HashMap<String, String> configuration = new LinkedHashMap<String, String>();
 
     private DataType returnDataType;
     private MeasureType<?> measureType;
@@ -265,12 +267,12 @@ public class FunctionDesc {
         return null;
     }
 
-    public HashMap<String, String> getConfigurations() {
-        return configurations;
+    public HashMap<String, String> getConfiguration() {
+        return configuration;
     }
 
-    public void setConfigurations(HashMap<String, String> configurations) {
-        this.configurations = configurations;
+    public void setConfiguration(HashMap<String, String> configurations) {
+        this.configuration = configurations;
     }
 
 

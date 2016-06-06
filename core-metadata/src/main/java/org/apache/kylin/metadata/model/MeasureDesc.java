@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -34,6 +35,7 @@ public class MeasureDesc {
     @JsonProperty("function")
     private FunctionDesc function;
     @JsonProperty("dependent_measure_ref")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String dependentMeasureRef;
 
     public String getName() {
