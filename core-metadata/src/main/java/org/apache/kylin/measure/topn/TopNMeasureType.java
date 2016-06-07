@@ -135,8 +135,8 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
                 final ByteArray key = new ByteArray(keyLength);
                 int offset = 0;
-                for (int i=0; i<dimensionEncodings.length; i++) {
-                    byte[] valueBytes = Bytes.toBytes(values[i+1]);
+                for (int i = 0; i < dimensionEncodings.length; i++) {
+                    byte[] valueBytes = Bytes.toBytes(values[i + 1]);
                     dimensionEncodings[i].encode(valueBytes, valueBytes.length, key.array(), offset);
                     offset += dimensionEncodings[i].getLengthOfEncoding();
                 }
