@@ -692,7 +692,11 @@ abstract public class KylinConfigBase implements Serializable {
     public int getCubeStatsHLLPrecision() {
         return Integer.parseInt(getOptional("kylin.job.cubing.inmem.sampling.hll.precision", "14"));
     }
-
+    
+    public String getJobControllerLock() {
+        return getOptional("kylin.job.controller.lock", "org.apache.kylin.storage.hbase.util.ZookeeperJobLock");
+    }
+    
     public Map<Integer, String> getJobEngines() {
         Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.job.engine."));
         // ref constants in IEngineAware

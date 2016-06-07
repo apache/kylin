@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.SchedulerFactory;
@@ -60,7 +61,6 @@ public class JobController extends BasicController implements InitializingBean {
     @Autowired
     private JobService jobService;
 
-    @Autowired
     private JobLock jobLock;
 
     /*
@@ -69,6 +69,7 @@ public class JobController extends BasicController implements InitializingBean {
      * @see
      * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @SuppressWarnings("unchecked")
     @Override
     public void afterPropertiesSet() throws Exception {
 
@@ -77,7 +78,9 @@ public class JobController extends BasicController implements InitializingBean {
         TimeZone.setDefault(tzone);
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>)SchedulerFactory.scheduler(kylinConfig.getSchedulerType());
+        final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory.scheduler(kylinConfig.getSchedulerType());
+        
+        jobLock = (JobLock) ClassUtil.newInstance(kylinConfig.getJobControllerLock());
 
         new Thread(new Runnable() {
             @Override

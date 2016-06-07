@@ -115,10 +115,8 @@
     <!-- hbase storage/global lock Config -->
     <beans profile="ldap,saml">
         <bean id="aclHBaseStorage" class="org.apache.kylin.rest.security.RealAclHBaseStorage"/>
-        <bean id="jobLock" class="org.apache.kylin.storage.hbase.util.ZookeeperJobLock"/>
     </beans>
     <beans profile="testing">
         <bean id="aclHBaseStorage" class="org.apache.kylin.rest.security.MockAclHBaseStorage"/>
-        <bean id="jobLock" class="org.apache.kylin.job.lock.MockJobLock"/>
     </beans>
 </beans>
