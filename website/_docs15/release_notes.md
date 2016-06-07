@@ -15,6 +15,17 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v1.5.2.1 - 2016-06-07
+_Tag:_ [kylin-1.5.2.1](https://github.com/apache/kylin/tree/kylin-1.5.2.1)
+
+This is a hot-fix version on v1.5.2, no new feature introduced, please upgrade to this version;
+
+__Bug__
+
+* [KYLIN-1758] - createLookupHiveViewMaterializationStep will create intermediate table for fact table
+* [KYLIN-1739] - kylin_job_conf_inmem.xml can impact non-inmem MR job
+
+
 ## v1.5.2 - 2016-05-26
 _Tag:_ [kylin-1.5.2](https://github.com/apache/kylin/tree/kylin-1.5.2)
 
