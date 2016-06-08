@@ -438,7 +438,35 @@ Send one mail with subject like "[Announce] Apache Kylin x.y released" to follow
 * Apache Kylin Dev mailing list: dev@kylin.apache.org
 * Apache Kylin User mailing list: user@kylin.apache.org
 * Apache Announce mailing list: announce@apache.org
-Please notice to always use your Apache mail address to send this
+Please notice to always use your Apache mail address to send this;
+
+Here is a sample of announcement email (by studying Kafka's):
+
+{% highlight text %} 
+The Apache Kylin team is pleased to announce the immediate availability of the 1.5.2.1 release. 
+
+This is a bug fix release based on 1.5.2; All of the changes in this release can be found:
+https://kylin.apache.org/docs15/release_notes.html
+
+You can download the source release and binary packages from 
+https://www.apache.org/dyn/closer.cgi?path=/kylin/apache-kylin-1.5.2.1/
+
+More information about the binary packages is on Kylin's download page https://kylin.apache.org/download/
+
+Apache Kylin is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop, supporting extremely large datasets.
+
+Apache Kylin lets you query big Hive tables at sub-second latency in 3 simple steps:
+1. Identify a set of Hive tables in star schema.
+2. Build a cube from the Hive tables in an offline batch process.
+3. Query the Hive tables using SQL and get results in sub-seconds, via Rest API, ODBC, or JDBC.
+
+Thanks everyone who have contributed to the 1.5.2.1 release.
+
+We welcome your help and feedback. For more information on how to
+report problems, and to get involved, visit the project website at
+https://kylin.apache.org/
+
+{% endhighlight %}
 
 # Thanks  
 This guide drafted with reference from [Apache Calcite](http://calcite.apache.org) Howto doc, Thank you very much.
