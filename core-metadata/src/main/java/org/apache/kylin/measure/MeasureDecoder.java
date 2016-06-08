@@ -78,8 +78,11 @@ public class MeasureDecoder {
 
     public int[] getPeekLength(ByteBuffer buf) {
         int[] length = new int[nMeasures];
+        int offset = 0;
         for (int i = 0; i < nMeasures; i++) {
             length[i] = serializers[i].peekLength(buf);
+            offset += length[i];
+            buf.position(offset);
         }
         return length;
     }
