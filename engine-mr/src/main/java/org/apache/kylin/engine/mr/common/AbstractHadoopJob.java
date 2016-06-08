@@ -154,9 +154,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return retVal;
     }
 
-    protected void setJobClasspath(Job job) {
-        KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
-        
+    protected void setJobClasspath(Job job, KylinConfig kylinConf) {
         String jarPath = kylinConf.getKylinJobJarPath();
         File jarFile = new File(jarPath);
         if (jarFile.exists()) {
@@ -239,7 +237,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
 
         setJobTmpJarsAndFiles(job, kylinDependency.toString());
-        
+
         overrideJobConfig(job.getConfiguration(), kylinConf.getMRConfigOverride());
     }
 

@@ -69,7 +69,12 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
             String jobName = getOptionValue(OPTION_JOB_NAME);
             job = Job.getInstance(getConf(), jobName);
 
-            setJobClasspath(job);
+            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+            CubeInstance cube = cubeMgr.getCube(cubeName);
+            KylinConfig kylinConfig = cube.getConfig();
+
+            setJobClasspath(job, kylinConfig);
 
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
@@ -92,20 +97,17 @@ public class RangeKeyDistributionJob extends AbstractHadoopJob {
 
             this.deletePath(job.getConfiguration(), output);
 
-            String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
-            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
-            CubeInstance cube = cubeMgr.getCube(cubeName);
-            KylinConfig config = cube.getConfig();
-            float hfileSizeGB = config.getHBaseHFileSizeGB();
-            float regionSplitSize = config.getKylinHBaseRegionCut();
+
+            float hfileSizeGB = kylinConfig.getHBaseHFileSizeGB();
+            float regionSplitSize = kylinConfig.getKylinHBaseRegionCut();
 
             int compactionThreshold = Integer.valueOf(HBaseConnection.getCurrentHBaseConfiguration().get("hbase.hstore.compactionThreshold", "3"));
             if (hfileSizeGB > 0 && hfileSizeGB * compactionThreshold < regionSplitSize) {
                 hfileSizeGB = regionSplitSize / compactionThreshold;
                 logger.info("Adjust hfile size' to " + hfileSizeGB);
             }
-            int maxRegionCount = config.getHBaseRegionCountMax();
-            int minRegionCount = config.getHBaseRegionCountMin();
+            int maxRegionCount = kylinConfig.getHBaseRegionCountMax();
+            int minRegionCount = kylinConfig.getHBaseRegionCountMin();
             job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
             job.getConfiguration().set(BatchConstants.CFG_HFILE_SIZE_GB, String.valueOf(hfileSizeGB));
             job.getConfiguration().set(BatchConstants.CFG_REGION_SPLIT_SIZE, String.valueOf(regionSplitSize));

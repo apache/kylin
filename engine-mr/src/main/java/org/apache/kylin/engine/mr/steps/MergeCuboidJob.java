@@ -46,17 +46,16 @@ public class MergeCuboidJob extends CuboidJob {
 
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME).toUpperCase();
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            CubeManager cubeMgr = CubeManager.getInstance(config);
+
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            config = cube.getConfig();
 
             // start job
             String jobName = getOptionValue(OPTION_JOB_NAME);
             logger.info("Starting: " + jobName);
             job = Job.getInstance(getConf(), jobName);
 
-            setJobClasspath(job);
+            setJobClasspath(job, cube.getConfig());
 
             // set inputs
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
@@ -83,7 +82,7 @@ public class MergeCuboidJob extends CuboidJob {
             // add metadata to distributed cache
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
-            setReduceTaskNum(job, config, cubeName, 0);
+            setReduceTaskNum(job, cube.getDescriptor(), 0);
 
             this.deletePath(job.getConfiguration(), output);
 

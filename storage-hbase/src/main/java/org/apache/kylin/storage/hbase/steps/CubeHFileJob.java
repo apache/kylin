@@ -74,7 +74,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
 
-            setJobClasspath(job);
+            setJobClasspath(job, cube.getConfig());
 
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
             FileOutputFormat.setOutputPath(job, output);

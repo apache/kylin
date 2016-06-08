@@ -66,7 +66,7 @@ public class InvertedIndexJob extends AbstractHadoopJob {
             IIInstance ii = getII(iiname);
             short sharding = ii.getDescriptor().getSharding();
 
-            setJobClasspath(job);
+            setJobClasspath(job, ii.getConfig());
 
             setupMapper(ii.getFirstSegment());
             setupReducer(output, sharding);

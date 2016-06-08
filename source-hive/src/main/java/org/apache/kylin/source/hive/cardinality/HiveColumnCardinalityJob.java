@@ -70,12 +70,13 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
             logger.info("Starting: " + jobName);
             Configuration conf = getConf();
 
-            JobEngineConfig jobEngineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            JobEngineConfig jobEngineConfig = new JobEngineConfig(kylinConfig);
             conf.addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
 
             job = Job.getInstance(conf, jobName);
 
-            setJobClasspath(job);
+            setJobClasspath(job, kylinConfig);
 
             String table = getOptionValue(OPTION_TABLE);
             job.getConfiguration().set(BatchConstants.CFG_TABLE_NAME, table);
@@ -103,7 +104,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
             logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
 
-            TableDesc tableDesc = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(table);
+            TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(table);
             attachKylinPropsAndMetadata(tableDesc, job.getConfiguration());
             int result = waitForCompletion(job);
 

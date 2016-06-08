@@ -100,10 +100,9 @@ public class CuboidJob extends AbstractHadoopJob {
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
             String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
 
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            CubeManager cubeMgr = CubeManager.getInstance(config);
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            
+
             if (checkSkip(cubingJobId)) {
                 logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + cubeName + "[" + segmentName + "]");
                 return 0;
@@ -112,7 +111,7 @@ public class CuboidJob extends AbstractHadoopJob {
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());
 
-            setJobClasspath(job);
+            setJobClasspath(job, cube.getConfig());
 
             // Mapper
             configureMapperInputFormat(cube.getSegment(segmentName, SegmentStatusEnum.NEW));
@@ -136,7 +135,7 @@ public class CuboidJob extends AbstractHadoopJob {
             // add metadata to distributed cache
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 
-            setReduceTaskNum(job, config, cubeName, nCuboidLevel);
+            setReduceTaskNum(job, cube.getDescriptor(), nCuboidLevel);
 
             this.deletePath(job.getConfiguration(), output);
 
@@ -169,12 +168,9 @@ public class CuboidJob extends AbstractHadoopJob {
         }
     }
 
-    protected void setReduceTaskNum(Job job, KylinConfig config, String cubeName, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    protected void setReduceTaskNum(Job job, CubeDesc cubeDesc, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
         Configuration jobConf = job.getConfiguration();
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-
-        CubeDesc cubeDesc = CubeManager.getInstance(config).getCube(cubeName).getDescriptor();
-        kylinConfig = cubeDesc.getConfig();
+        KylinConfig kylinConfig = cubeDesc.getConfig();
 
         double perReduceInputMB = kylinConfig.getDefaultHadoopJobReducerInputMB();
         double reduceCountRatio = kylinConfig.getDefaultHadoopJobReducerCountRatio();

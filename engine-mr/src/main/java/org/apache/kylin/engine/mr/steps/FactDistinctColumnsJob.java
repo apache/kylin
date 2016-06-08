@@ -73,11 +73,9 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
             // ----------------------------------------------------------------------------
             // add metadata to distributed cache
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            CubeDesc cubeDesc = cube.getDescriptor();
-            List<TblColRef> columnsNeedDict = cubeMgr.getAllDictColumnsOnFact(cubeDesc);
+            List<TblColRef> columnsNeedDict = cubeMgr.getAllDictColumnsOnFact(cube.getDescriptor());
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
@@ -86,7 +84,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, statistics_sampling_percent);
             logger.info("Starting: " + job.getJobName());
 
-            setJobClasspath(job);
+            setJobClasspath(job, cube.getConfig());
 
             setupMapper(cube.getSegment(segmentName, SegmentStatusEnum.NEW));
             setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 1 : columnsNeedDict.size());

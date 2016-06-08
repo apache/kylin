@@ -86,10 +86,8 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
             String output = getOptionValue(OPTION_OUTPUT_PATH);
 
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-            CubeManager cubeMgr = CubeManager.getInstance(config);
+            CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            config = cube.getConfig();
             CubeSegment cubeSeg = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
             String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
 
@@ -101,7 +99,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());
             
-            setJobClasspath(job);
+            setJobClasspath(job, cube.getConfig());
 
             // add metadata to distributed cache
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
