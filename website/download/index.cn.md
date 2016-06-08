@@ -16,17 +16,17 @@ __1.5.2.1 二进制包 for HBase 0.98/0.99__
 
 为方便使用，我们提供预打包的二进制安装包：
 
-* [apache-kylin-1.5.2.1-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.1/apache-kylin-1.5.2.1-bin.tar.gz)
+* [apache-kylin-1.5.2.1-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.2.1/apache-kylin-1.5.2.1-bin.tar.gz)
 * [安装帮助](http://kylin.apache.org/docs15/install)
 
 __1.5.2.1 二进制包 for HBase 1.x__
 
-* [apache-kylin-1.5.2.1-HBase1.x-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.1/apache-kylin-1.5.2.1-HBase1.x-bin.tar.gz)
+* [apache-kylin-1.5.2.1-HBase1.x-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.2.1/apache-kylin-1.5.2.1-HBase1.x-bin.tar.gz)
 * Git commit [cf4d2940b67d622eacd2ac9a913b221091a35c2e](https://github.com/apache/kylin/commit/cf4d2940b67d622eacd2ac9a913b221091a35c2e)
 
 __1.5.2.1 二进制包 for CDH 5.7__
 
-* [apache-kylin-1.5.2.1-cdh5.7-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.1/apache-kylin-1.5.2.1-cdh5.7-bin.tar.gz)
+* [apache-kylin-1.5.2.1-cdh5.7-bin.tar.gz](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.2.1/apache-kylin-1.5.2.1-cdh5.7-bin.tar.gz)
 * Git commit [e760242daad739b66813dc2c2d8a52bf74c0ec22](https://github.com/apache/kylin/commit/e760242daad739b66813dc2c2d8a52bf74c0ec22)
 
 __构建二进制包__
