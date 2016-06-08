@@ -35,7 +35,6 @@ public class MeasureDesc {
     @JsonProperty("function")
     private FunctionDesc function;
     @JsonProperty("dependent_measure_ref")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String dependentMeasureRef;
 
     public String getName() {

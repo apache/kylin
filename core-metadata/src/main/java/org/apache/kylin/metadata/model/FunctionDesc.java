@@ -63,7 +63,7 @@ public class FunctionDesc {
     private String returnType;
 
     @JsonProperty("configuration")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private HashMap<String, String> configuration = new LinkedHashMap<String, String>();
 
     private DataType returnDataType;
