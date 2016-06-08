@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
@@ -39,15 +40,13 @@ import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 
 /**
- * Validate function parameter. Ticket:
- * https://github.scm.corp.ebay.com/Kylin/Kylin/issues/268
+ * Validate function parameter.
  * <p/>
  * if type is column, check values are valid fact table columns if type is
  * constant, the value only can be numberic
  * <p/>
  * the return type only can be int/bigint/long/double/decimal
  *
- * @author jianliu
  */
 public class FunctionRule implements IValidatorRule<CubeDesc> {
 
@@ -106,17 +105,28 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
 
             if (TopNMeasureType.FUNC_TOP_N.equalsIgnoreCase(func.getExpression())) {
                 if (parameter.getNextParameter() == null) {
-                    context.addResult(ResultLevel.ERROR, "Must define 2 parameters for function " + func.getExpression() + " in " + measure.getName());
+                    context.addResult(ResultLevel.ERROR, "Must define at least 2 parameters for function " + func.getExpression() + " in " + measure.getName());
                     return;
                 }
 
-                String embeded_groupby = parameter.getNextParameter().getValue();
-                for (DimensionDesc dimensionDesc : cube.getDimensions()) {
-                    if (dimensionDesc.getColumn() != null && dimensionDesc.getColumn().equalsIgnoreCase(embeded_groupby)) {
-                        context.addResult(ResultLevel.ERROR, "Couldn't use column " + embeded_groupby + " in Top-N as it is already defined as a dimension.");
-                        return;
+                ParameterDesc groupByCol = parameter.getNextParameter();
+                List<String> duplicatedCol = Lists.newArrayList();
+                while (groupByCol != null) {
+                    String embeded_groupby = groupByCol.getValue();
+                    for (DimensionDesc dimensionDesc : cube.getDimensions()) {
+                        if (dimensionDesc.getColumn() != null && dimensionDesc.getColumn().equalsIgnoreCase(embeded_groupby)) {
+                            duplicatedCol.add(embeded_groupby);
+                        }
                     }
+                    groupByCol = groupByCol.getNextParameter();
                 }
+
+                if (duplicatedCol.size() > 0) {
+                    context.addResult(ResultLevel.ERROR, "Couldn't use " + duplicatedCol.toString() + " in Top-N as it is already defined as dimension.");
+                    return;
+
+                }
+
             }
         }
 
