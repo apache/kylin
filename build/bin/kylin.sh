@@ -21,6 +21,7 @@
 # In addition, we should set a KYLIN_HOME for the global use as normal.
 KYLIN_HOME=`dirname $0`/..
 export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
+dir="$KYLIN_HOME/bin"
 
 source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
