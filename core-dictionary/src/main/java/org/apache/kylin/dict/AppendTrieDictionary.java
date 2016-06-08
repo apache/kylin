@@ -18,15 +18,7 @@
 
 package org.apache.kylin.dict;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,10 +29,7 @@ import java.util.List;
 import java.util.TreeMap;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.kylin.common.KylinConfig;
@@ -1063,6 +1052,25 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             indexOut.writeUTF(bytesConverter.getClass().getName());
             ((Writable)dictSliceMap).write(indexOut);
         }
+    }
+
+    @Override
+    public AppendTrieDictionary copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
+        Configuration conf = new Configuration();
+        AppendTrieDictionary newDict = new AppendTrieDictionary();
+        newDict.update(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()),
+                baseId, maxId, maxValueLength, nValues, bytesConverter, writeDictMap());
+        logger.info("Copy AppendDict from {} to {}", this.baseDir, newDict.baseDir);
+        Path srcPath = new Path(this.baseDir);
+        Path dstPath = new Path(newDict.baseDir);
+        FileSystem dstFs = FileSystem.get(dstPath.toUri(), conf);
+        if (dstFs.exists(dstPath)) {
+            logger.info("Delete existing AppendDict {}", dstPath);
+            dstFs.delete(dstPath, true);
+        }
+        FileUtil.copy(FileSystem.get(srcPath.toUri(), conf), srcPath, FileSystem.get(dstPath.toUri(), conf), dstPath, false, true, conf);
+
+        return newDict;
     }
 
     @Override

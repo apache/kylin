@@ -30,6 +30,7 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -336,7 +337,8 @@ public class CubeMigrationCLI {
 
                     long ts = dictSrc.getLastModified();
                     dictSrc.setLastModified(0);//to avoid resource store write conflict
-                    DictionaryInfo dictSaved = dstDictMgr.trySaveNewDict(dictSrc.getDictionaryObject(), dictSrc);
+                    Dictionary dictObj = dictSrc.getDictionaryObject().copyToAnotherMeta(srcConfig, dstConfig);
+                    DictionaryInfo dictSaved = dstDictMgr.trySaveNewDict(dictObj, dictSrc);
                     dictSrc.setLastModified(ts);
 
                     if (dictSaved == dictSrc) {

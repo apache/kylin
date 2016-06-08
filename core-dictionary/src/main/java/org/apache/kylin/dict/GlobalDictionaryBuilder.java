@@ -42,7 +42,7 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
         if (dictInfo == null) {
             throw new IllegalArgumentException("GlobalDictinaryBuilder must used with an existing DictionaryInfo");
         }
-        String dictDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict/" + dictInfo.getResourceDir() + "/";
+        String dictDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/GlobalDict" + dictInfo.getResourceDir() + "/";
 
         // Try to load the existing dict from cache, making sure there's only the same one object in memory
         NavigableSet<String> dicts = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getStore().listResources(dictInfo.getResourceDir());

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.common.util;
 
+import org.apache.kylin.common.KylinConfig;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -205,6 +207,11 @@ abstract public class Dictionary<T> implements Serializable {
     public boolean isNullId(int id) {
         int nullId = NULL_ID[getSizeOfId()];
         return (nullId & id) == nullId;
+    }
+
+    // Some dict need updated when copy from one metadata environment to another
+    public Dictionary copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
+        return this;
     }
 
     /** utility that converts a dictionary ID to string, preserving order */
