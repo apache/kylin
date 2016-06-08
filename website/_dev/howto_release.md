@@ -18,7 +18,7 @@ Make sure you have avaliable account and privilege for following applications:
 * Apache Nexus (maven repo): [https://repository.apache.org](https://repository.apache.org)  
 * Apache Kylin dist repo: [https://dist.apache.org/repos/dist/dev/kylin](https://dist.apache.org/repos/dist/dev/kylin)  
 
-## Setup PGP signing keys  
+## Setup GPG signing keys  
 Follow instructions at [http://www.apache.org/dev/release-signing](http://www.apache.org/dev/release-signing) to create a key pair  
 Install gpg (On Mac OS X as sample):  
 `brew install gpg`
@@ -63,6 +63,7 @@ __Before you start:__
 
 * Set up signing keys as described above.
 * Make sure you are using JDK 1.7 (not 1.8).
+* Make sure you are using GIT 2.7.2 or above.
 * Make sure you are working on right release version number.
 * Make sure that every “resolved” JIRA case (including duplicates) has a fix version assigned.
 
@@ -411,6 +412,17 @@ The old releases will remain available in the
 [release archive](http://archive.apache.org/dist/kylin/).
 
 Release same version in JIRA, check [Change Log](https://issues.apache.org/jira/browse/KYLIN/?selectedTab=com.atlassian.jira.jira-projects-plugin:changelog-panel) for the latest released version.
+
+## Build and upload binary package
+After publish the release, you need generate the binary packages and then put them to the svn release repository;
+
+* Git checkout the tag for current release; 
+* Make a binary package by refering to [this doc](howto_package.html);
+* Sign the generated binary package with gpg, e.g,: "gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz"
+* Move both the binary package and the signature file to the svn release folder for this version;
+* For different Hadoop/HBase version, you may need repeat the above steps;
+* Add the files and then commit the svn changes. 
+
 
 ## Update source code
 After publish the release, you need to manually update some source code:

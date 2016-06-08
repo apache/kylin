@@ -9,7 +9,7 @@ permalink: /development/howto_package.html
 {% highlight bash %}
 git clone https://github.com/apache/kylin kylin
 cd kylin
-./script/package.sh
+./build/script/package.sh
 {% endhighlight %}
 
 In order to generate binary package, **maven** and **npm** are pre-requisites.
