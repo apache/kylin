@@ -46,7 +46,7 @@ public class ToolUtil {
         if (StringUtils.isNotEmpty(path)) {
             return path + File.separator + CONF;
         }
-        return null;
+        throw new RuntimeException("Cannot find conf folder.");
     }
 
     public static String getHBaseMetaStoreId() throws IOException {

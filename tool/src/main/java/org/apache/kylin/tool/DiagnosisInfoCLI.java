@@ -21,14 +21,20 @@ package org.apache.kylin.tool;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisInfoCLI.class);
@@ -61,25 +67,40 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         diagnosisInfoCLI.execute(args);
     }
 
+    private List<String> getProjects(String projectSeed) {
+        List<String> result = Lists.newLinkedList();
+        if (projectSeed.equalsIgnoreCase("-all")) {
+            ProjectManager projectManager = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+            for (ProjectInstance projectInstance : projectManager.listAllProjects()) {
+                result.add(projectInstance.getName());
+            }
+        } else {
+            result.add(projectSeed);
+        }
+        return result;
+    }
+
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws IOException {
-        final String project = optionsHelper.getOptionValue(options.getOption("project"));
+        final String projectInput = optionsHelper.getOptionValue(options.getOption("project"));
         boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF)) : true;
         boolean includeHBase = optionsHelper.hasOption(OPTION_INCLUDE_HBASE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_HBASE)) : true;
         boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
 
-        // export cube metadata
-        String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
-        CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
-        logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
-        cubeMetaExtractor.execute(cubeMetaArgs);
+        for (String project : getProjects(projectInput)) {
+            // export cube metadata
+            String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
+            CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
+            logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
+            cubeMetaExtractor.execute(cubeMetaArgs);
 
-        // export HBase
-        if (includeHBase) {
-            String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
-            HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
-            logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
-            hBaseUsageExtractor.execute(hbaseArgs);
+            // export HBase
+            if (includeHBase) {
+                String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
+                HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
+                logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
+                hBaseUsageExtractor.execute(hbaseArgs);
+            }
         }
 
         // export conf
