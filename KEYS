@@ -128,6 +128,12 @@ tcKztIGMvp9Lc37QOUebIPocI8SbF5qM3q6S6vLJySB7VfrHpwMBkNDFLW2X+kA6
 hGwMd4I7h3m6EI6ntRCdOrbA3RyED9mCWP60eplEJ6vnA/EQvEI8oQCd
 =/uVI
 -----END PGP PUBLIC KEY BLOCK-----
+pub   4096R/23141CE6 2016-04-01
+uid                  Dong Li (CODE SIGNING KEY) <lidong@apache.org>
+sig 3        23141CE6 2016-04-01  Dong Li (CODE SIGNING KEY) <lidong@apache.org>
+sub   4096R/0D18D457 2016-04-01
+sig          23141CE6 2016-04-01  Dong Li (CODE SIGNING KEY) <lidong@apache.org>
+
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1
 
