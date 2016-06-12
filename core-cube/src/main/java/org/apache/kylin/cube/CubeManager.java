@@ -397,7 +397,13 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset) throws IOException {
-        checkNoBuildingSegment(cube);
+        return appendSegment(cube, startDate, endDate, startOffset, endOffset, true, true);
+    }
+
+    public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, boolean strictChecking, boolean saveChange) throws IOException {
+
+        if(strictChecking)
+            checkNoBuildingSegment(cube);
 
         if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
             // try figure out a reasonable start if missing
@@ -418,10 +424,11 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment newSegment = newSegment(cube, startDate, endDate, startOffset, endOffset);
         validateNewSegments(cube, newSegment);
 
-        CubeUpdate cubeBuilder = new CubeUpdate(cube);
-        cubeBuilder.setToAddSegs(newSegment);
-        updateCube(cubeBuilder);
-        
+        if (saveChange) {
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
+            cubeBuilder.setToAddSegs(newSegment);
+            updateCube(cubeBuilder);
+        }
         return newSegment;
     }
 
