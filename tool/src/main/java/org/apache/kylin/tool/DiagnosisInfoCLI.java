@@ -51,6 +51,9 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_CLIENT = OptionBuilder.withArgName("includeClient").hasArg().isRequired(false).withDescription("Specify whether to include client info to extract. Default true.").create("includeClient");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("Specify whether to include job output to extract. Default true.").create("includeJobs");
+
     public DiagnosisInfoCLI() {
         super();
 
@@ -60,6 +63,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_CONF);
         options.addOption(OPTION_INCLUDE_HBASE);
         options.addOption(OPTION_INCLUDE_CLIENT);
+        options.addOption(OPTION_INCLUDE_JOB);
     }
 
     public static void main(String args[]) {
@@ -86,10 +90,11 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         boolean includeConf = optionsHelper.hasOption(OPTION_INCLUDE_CONF) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CONF)) : true;
         boolean includeHBase = optionsHelper.hasOption(OPTION_INCLUDE_HBASE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_HBASE)) : true;
         boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
+        boolean includeJob = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : true;
 
         for (String project : getProjects(projectInput)) {
             // export cube metadata
-            String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
+            String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", project, "-compress", "false", "-includeJobs", Boolean.toString(includeJob), "-submodule", "true" };
             CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
             logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
             cubeMetaExtractor.execute(cubeMetaArgs);

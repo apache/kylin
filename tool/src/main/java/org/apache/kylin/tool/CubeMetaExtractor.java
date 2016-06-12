@@ -73,8 +73,13 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info. Default true").create("includeSegments");
+
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("set this to true if want to extract job info/outputs too. Default false").create("includeJobs");
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_ONLY_JOB_OUTPUT = OptionBuilder.withArgName("onlyOutput").hasArg().isRequired(false).withDescription("when include jobs, onlt extract output of job. Default true").create("onlyOutput");
+
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_SEGMENT_DETAILS = OptionBuilder.withArgName("includeSegmentDetails").hasArg().isRequired(false).withDescription("set this to true if want to extract segment details too, such as dict, tablesnapshot. Default false").create("includeSegmentDetails");
 
@@ -92,6 +97,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     boolean includeSegments;
     boolean includeJobs;
     boolean includeSegmentDetails;
+    boolean onlyJobOutput;
 
     List<String> requiredResources = Lists.newArrayList();
     List<String> optionalResources = Lists.newArrayList();
@@ -112,6 +118,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_SEGMENTS);
         options.addOption(OPTION_INCLUDE_JOB);
         options.addOption(OPTION_INCLUDE_SEGMENT_DETAILS);
+        options.addOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT);
     }
 
     @Override
@@ -119,6 +126,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         includeSegments = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENTS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENTS)) : true;
         includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : false;
         includeSegmentDetails = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENT_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENT_DETAILS)) : false;
+        onlyJobOutput = optionsHelper.hasOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_ONLY_JOB_OUTPUT)) : true;
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         metadataManager = MetadataManager.getInstance(kylinConfig);
@@ -272,12 +280,17 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
                             throw new RuntimeException("No job exist for segment :" + segment);
                         } else {
                             try {
-                                ExecutablePO executablePO = executableDao.getJob(lastJobId);
-                                addRequired(ResourceStoreUtil.concatJobPath(lastJobId));
-                                addRequired(ResourceStoreUtil.concatJobOutputPath(lastJobId));
-                                for (ExecutablePO task : executablePO.getTasks()) {
-                                    addRequired(ResourceStoreUtil.concatJobPath(task.getUuid()));
-                                    addRequired(ResourceStoreUtil.concatJobOutputPath(task.getUuid()));
+                                if (onlyJobOutput) {
+                                    ExecutablePO executablePO = executableDao.getJob(lastJobId);
+                                    addRequired(ResourceStoreUtil.concatJobOutputPath(lastJobId));
+                                } else {
+                                    ExecutablePO executablePO = executableDao.getJob(lastJobId);
+                                    addRequired(ResourceStoreUtil.concatJobPath(lastJobId));
+                                    addRequired(ResourceStoreUtil.concatJobOutputPath(lastJobId));
+                                    for (ExecutablePO task : executablePO.getTasks()) {
+                                        addRequired(ResourceStoreUtil.concatJobPath(task.getUuid()));
+                                        addRequired(ResourceStoreUtil.concatJobOutputPath(task.getUuid()));
+                                    }
                                 }
                             } catch (PersistentException e) {
                                 throw new RuntimeException("PersistentException", e);

@@ -49,7 +49,7 @@ public class DiagnosisService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String dumpProjectDiagnosisInfo(String project) throws IOException {
-        String[] args = { "-project", project, "-destDir", getDumpDir().getAbsolutePath() };
+        String[] args = { "-project", "-all", "-destDir", getDumpDir().getAbsolutePath() };
         logger.info("DiagnosisInfoCLI args: " + Arrays.toString(args));
         DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
         diagnosisInfoCli.execute(args);
@@ -66,7 +66,7 @@ public class DiagnosisService extends BasicService {
     }
 
     public static void main(String args1[]) {
-        String[] args = { "-project", "learn_kylin", "-destDir", Files.createTempDir().getAbsolutePath() };
+        String[] args = { "-project", "-all", "-destDir", Files.createTempDir().getAbsolutePath() };
         logger.info("DiagnosisInfoCLI args: " + Arrays.toString(args));
         DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
         diagnosisInfoCli.execute(args);
