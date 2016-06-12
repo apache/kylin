@@ -1,10 +1,10 @@
---
+---
 layout: post-blog
 title:  Deploy Apache Kylin with Standalone HBase Cluster
 date:   2016-06-10 17:30:00
 author: Yerui Sun
 categories: blog
---
+---
 
 ## Introduction
 
