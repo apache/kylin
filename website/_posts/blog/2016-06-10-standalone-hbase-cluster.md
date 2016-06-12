@@ -12,6 +12,7 @@ Apache Kylin mainly use HBase to storage cube data. The performance of HBase clu
 
 ## Enviroment Requirements
 To enable standalone HBase cluster supporting, check the basic enviroments at first:
+
  - Deploy the main cluster and hbase cluster, make sure both works normally
  - Make sure Kylin Server can access both clusters using hdfs shell with fully qualifiered path
  - Make sure Kylin Server can submit MR job to main cluster, and can use hive shell to access data warehouse, make sure the configurations of hadoop and hive points to main cluster
@@ -25,6 +26,7 @@ Notice that the value should keep consistent with the Namenode address of `root.
 
 ## Using NN HA
 HDFS Namenode HA improved the availablity of cluster significantly, and maybe the HBase cluster enabled it. Apache Kylin doesn't support the HA perfectly for now, and here's the workaroud:
+
  - Add all `dfs.nameservices` related configs of HBase Cluster into `hadoop/etc/hadoop/hdfs-site.xml` in Kylin Server, to make sure that can access HBase Cluster using hdfs shell with nameservice path
  - Add all `dfs.nameservices` related configs of both two clusters into `kylin_job_conf.xml`, to make sure that the MR job can access hbase cluster with nameservice path
 
