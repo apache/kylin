@@ -64,6 +64,30 @@ public class CubeDescController {
         }
     }
 
+    /**
+     * Get detail information of the "Cube ID"
+     * return CubeDesc instead of CubeDesc[]
+     *
+     * @param cubeDescName
+     *            Cube ID
+     * @return
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/desc", method = { RequestMethod.GET })
+    @ResponseBody
+    public CubeDesc getDesc(@PathVariable String cubeName) {
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
+        if (cubeInstance == null) {
+            return null;
+        }
+        CubeDesc cSchema = cubeInstance.getDescriptor();
+        if (cSchema != null) {
+            return cSchema;
+        } else {
+            return null;
+        }
+    }
+
     public void setCubeService(CubeService cubeService) {
         this.cubeService = cubeService;
     }
