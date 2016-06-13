@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -26,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Enumeration;
@@ -197,9 +199,9 @@ public class KylinConfig extends KylinConfigBase {
                 fis = new FileInputStream(propFile);
                 fis2 = new FileInputStream(overrideFile);
                 Properties conf = new Properties();
-                conf.load(fis);
+                conf.load(new BufferedReader(new InputStreamReader(fis, "UTF-8")));
                 Properties override = new Properties();
-                override.load(fis2);
+                override.load(new BufferedReader(new InputStreamReader(fis2, "UTF-8")));
                 for (Map.Entry<Object, Object> entries : override.entrySet()) {
                     conf.setProperty(entries.getKey().toString(), entries.getValue().toString());
                 }
