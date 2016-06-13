@@ -86,12 +86,6 @@ public class ExternalFilterController extends BasicController {
         return result;
     }
 
-    /**
-     * Get available table list of the input database
-     *
-     * @return Table metadata array
-     * @throws IOException
-     */
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<ExternalFilterDesc> getExternalFilters(@RequestParam(value = "project", required = true) String project) throws IOException {
