@@ -163,6 +163,9 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
             return false;
         SnapshotTable that = (SnapshotTable) o;
 
+        if (this.dict.equals(that.dict) == false)
+            return false;
+
         //compare row by row
         if (this.rowIndices.size() != that.rowIndices.size())
             return false;
