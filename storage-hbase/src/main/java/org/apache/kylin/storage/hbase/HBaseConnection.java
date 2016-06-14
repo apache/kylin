@@ -19,7 +19,10 @@
 package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +48,8 @@ import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
@@ -101,7 +106,7 @@ public class HBaseConnection {
             tpe.allowCoreThreadTimeOut(true);
 
             logger.info("Creating coprocessor thread pool with max of {}, core of {}", maxThreads, coreThreads);
-            
+
             coprocessorPool = tpe;
             return coprocessorPool;
         }
@@ -230,23 +235,39 @@ public class HBaseConnection {
         deleteTable(HBaseConnection.get(hbaseUrl), tableName);
     }
 
-    public static void createHTableIfNeeded(HConnection conn, String tableName, String... families) throws IOException {
+    public static void createHTableIfNeeded(HConnection conn, String table, String... families) throws IOException {
         HBaseAdmin hbase = new HBaseAdmin(conn);
 
         try {
-            if (tableExists(conn, tableName)) {
-                logger.debug("HTable '" + tableName + "' already exists");
+            if (tableExists(conn, table)) {
+                logger.debug("HTable '" + table + "' already exists");
+                Set<String> existingFamilies = getFamilyNames(hbase.getTableDescriptor(TableName.valueOf(table)));
+                boolean wait = false;
+                for (String family : families) {
+                    if (existingFamilies.contains(family) == false) {
+                        logger.debug("Adding family '" + family + "' to HTable '" + table + "'");
+                        hbase.addColumn(table, newFamilyDescriptor(family));
+                        // addColumn() is async, is there a way to wait it finish?
+                        wait = true;
+                    }
+                }
+                if (wait) {
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        logger.warn("", e);
+                    }
+                }
                 return;
             }
 
-            logger.debug("Creating HTable '" + tableName + "'");
+            logger.debug("Creating HTable '" + table + "'");
 
-            HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));
+            HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(table));
 
             if (null != families && families.length > 0) {
                 for (String family : families) {
-                    HColumnDescriptor fd = new HColumnDescriptor(family);
-                    fd.setInMemory(true); // metadata tables are best in memory
+                    HColumnDescriptor fd = newFamilyDescriptor(family);
                     desc.addFamily(fd);
                 }
             }
@@ -254,10 +275,28 @@ public class HBaseConnection {
             desc.setValue(HTABLE_UUID_TAG, UUID.randomUUID().toString());
             hbase.createTable(desc);
 
-            logger.debug("HTable '" + tableName + "' created");
+            logger.debug("HTable '" + table + "' created");
         } finally {
             hbase.close();
         }
+    }
+
+    private static Set<String> getFamilyNames(HTableDescriptor desc) {
+        HashSet<String> result = Sets.newHashSet();
+        for (byte[] bytes : desc.getFamiliesKeys()) {
+            try {
+                result.add(new String(bytes, "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.toString());
+            }
+        }
+        return result;
+    }
+
+    private static HColumnDescriptor newFamilyDescriptor(String family) {
+        HColumnDescriptor fd = new HColumnDescriptor(family);
+        fd.setInMemory(true); // metadata tables are best in memory
+        return fd;
     }
 
     public static void deleteTable(HConnection conn, String tableName) throws IOException {

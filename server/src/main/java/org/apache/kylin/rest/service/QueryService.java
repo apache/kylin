@@ -45,6 +45,7 @@ import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
@@ -180,11 +181,14 @@ public class QueryService extends BasicService {
         if (null == creator) {
             return null;
         }
-
+        
         List<Query> queries = new ArrayList<Query>();
         HTableInterface htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            HConnection conn = HBaseConnection.get(hbaseUrl);
+            HBaseConnection.createHTableIfNeeded(conn, userTableName, USER_QUERY_FAMILY);
+            
+            htable = conn.getTable(userTableName);
             Get get = new Get(Bytes.toBytes(creator));
             get.addFamily(Bytes.toBytes(USER_QUERY_FAMILY));
             Result result = htable.get(get);
