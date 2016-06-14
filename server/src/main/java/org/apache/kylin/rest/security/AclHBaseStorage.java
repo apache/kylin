@@ -35,7 +35,7 @@ public interface AclHBaseStorage {
     String USER_TABLE_NAME = "_user";
     String USER_AUTHORITY_COLUMN = "c";
 
-    String prepareHBaseTable(Class clazz) throws IOException;
+    String prepareHBaseTable(Class<?> clazz) throws IOException;
 
     HTableInterface getTable(String tableName) throws IOException;
 
