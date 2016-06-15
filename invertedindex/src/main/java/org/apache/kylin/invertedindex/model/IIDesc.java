@@ -138,7 +138,7 @@ public class IIDesc extends RootPersistentEntity {
             TableDesc tableDesc = this.getTableDesc(modelDimensionDesc.getTable());
             for (String column : modelDimensionDesc.getColumns()) {
                 ColumnDesc columnDesc = tableDesc.findColumnByName(column);
-                TblColRef tcr = new TblColRef(columnDesc);
+                TblColRef tcr = columnDesc.getRef();
                 allColumns.add(tcr);
                 allDimensions.add(tcr);
                 measureDescs.add(makeHLLMeasure(columnDesc, "hllc10"));
@@ -152,7 +152,7 @@ public class IIDesc extends RootPersistentEntity {
         for (String column : metricNames) {
             TableDesc tableDesc = this.getTableDesc(this.getFactTableName());
             ColumnDesc columnDesc = tableDesc.findColumnByName(column);
-            allColumns.add(new TblColRef(columnDesc));
+            allColumns.add(columnDesc.getRef());
             measureDescs.add(makeNormalMeasure("SUM", columnDesc));
             measureDescs.add(makeNormalMeasure("MIN", columnDesc));
             measureDescs.add(makeNormalMeasure("MAX", columnDesc));
@@ -227,7 +227,7 @@ public class IIDesc extends RootPersistentEntity {
         ParameterDesc p1 = new ParameterDesc();
         p1.setType("column");
         p1.setValue(columnName);
-        p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+        p1.setColRefs(ImmutableList.of(columnDesc.getRef()));
         f1.setParameter(p1);
         f1.setReturnType(returnType);
         if (f1.isSum() && f1.getReturnDataType().isIntegerFamily()) {
@@ -251,7 +251,7 @@ public class IIDesc extends RootPersistentEntity {
         ParameterDesc p1 = new ParameterDesc();
         p1.setType("column");
         p1.setValue(columnName);
-        p1.setColRefs(ImmutableList.of(new TblColRef(columnDesc)));
+        p1.setColRefs(ImmutableList.of(columnDesc.getRef()));
         f1.setParameter(p1);
         f1.setReturnType(hllType);
         measureDesc.setFunction(f1);
@@ -292,7 +292,7 @@ public class IIDesc extends RootPersistentEntity {
 
     public TblColRef findColumnRef(String table, String column) {
         ColumnDesc columnDesc = this.getTableDesc(table).findColumnByName(column);
-        return new TblColRef(columnDesc);
+        return columnDesc.getRef();
     }
 
     public int findColumn(TblColRef col) {

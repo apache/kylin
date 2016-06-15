@@ -39,7 +39,7 @@ public class TimeConditionLiteralsReplacerTest extends FilterBaseTest {
     public void basicTest() {
         TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
         ColumnDesc c1 = ColumnDesc.mockup(t1, 2, "CAL_DT", "date");
-        TblColRef column = new TblColRef(c1);
+        TblColRef column = c1.getRef();
 
         CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         ColumnTupleFilter columnFilter = new ColumnTupleFilter(column);

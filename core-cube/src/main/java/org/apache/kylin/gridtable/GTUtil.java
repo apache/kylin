@@ -43,7 +43,7 @@ public class GTUtil {
 
     static TblColRef tblColRef(int col, String datatype) {
         ColumnDesc desc = ColumnDesc.mockup(MOCKUP_TABLE, col + 1, "" + col, datatype);
-        return new TblColRef(desc);
+        return desc.getRef();
     }
 
     public static byte[] serializeGTFilter(TupleFilter gtFilter, GTInfo info) {

@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.measure.topn.TopNCounterSerializer;
-import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -74,12 +72,12 @@ public class FilterBaseTest extends LocalFileMetadataTestCase {
 
         TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
         ColumnDesc c1 = ColumnDesc.mockup(t1, 2, "CAL_DT", "string");
-        TblColRef cf1 = new TblColRef(c1);
+        TblColRef cf1 = c1.getRef();
         groups.add(cf1);
 
         TableDesc t2 = TableDesc.mockup("DEFAULT.TEST_CATEGORY_GROUPINGS");
         ColumnDesc c2 = ColumnDesc.mockup(t2, 14, "META_CATEG_NAME", "string");
-        TblColRef cf2 = new TblColRef(c2);
+        TblColRef cf2 = c2.getRef();
         groups.add(cf2);
 
         return groups;

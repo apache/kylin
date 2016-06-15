@@ -163,7 +163,7 @@ public class DeployUtil {
         //csv data for H2 use
         List<TblColRef> tableColumns = Lists.newArrayList();
         for (ColumnDesc columnDesc : tableDesc.getColumns()) {
-            tableColumns.add(new TblColRef(columnDesc));
+            tableColumns.add(columnDesc.getRef());
         }
         TimedJsonStreamParser timedJsonStreamParser = new TimedJsonStreamParser(tableColumns, "formatTs=true");
         StringBuilder sb = new StringBuilder();

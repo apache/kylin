@@ -122,7 +122,7 @@ public class ColumnValueRangeTest extends LocalFileMetadataTestCase {
     public static TblColRef mockupTblColRef() {
         TableDesc t = mockupTableDesc("table_a");
         ColumnDesc c = mockupColumnDesc(t, 1, "col_1", "string");
-        return new TblColRef(c);
+        return c.getRef();
     }
 
     private static TableDesc mockupTableDesc(String tableName) {

@@ -86,7 +86,7 @@ public class FilterSerializeTest extends FilterBaseTest {
     public void testSerialize05() {
         ColumnDesc column = new ColumnDesc();
 
-        TblColRef colRef = new TblColRef(column);
+        TblColRef colRef = column.getRef();
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
         TupleFilter filter = buildEQCompareFilter(groups, 0);
@@ -101,7 +101,7 @@ public class FilterSerializeTest extends FilterBaseTest {
     public void testSerialize06() {
         ColumnDesc column = new ColumnDesc();
         column.setName("META_CATEG_NAME");
-        TblColRef colRef = new TblColRef(column);
+        TblColRef colRef = column.getRef();
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
         TupleFilter filter = buildEQCompareFilter(groups, 0);
@@ -120,7 +120,7 @@ public class FilterSerializeTest extends FilterBaseTest {
 
         ColumnDesc column = new ColumnDesc();
         column.setTable(table);
-        TblColRef colRef = new TblColRef(column);
+        TblColRef colRef = column.getRef();
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
         TupleFilter filter = buildEQCompareFilter(groups, 0);
@@ -138,7 +138,7 @@ public class FilterSerializeTest extends FilterBaseTest {
 
         ColumnDesc column = new ColumnDesc();
         column.setTable(table);
-        TblColRef colRef = new TblColRef(column);
+        TblColRef colRef = column.getRef();
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
         TupleFilter filter = buildEQCompareFilter(groups, 0);

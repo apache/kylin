@@ -202,7 +202,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     private ColumnRowType buildColumnRowType() {
         List<TblColRef> columns = new ArrayList<TblColRef>();
         for (ColumnDesc sourceColumn : olapTable.getExposedColumns()) {
-            TblColRef colRef = new TblColRef(sourceColumn);
+            TblColRef colRef = sourceColumn.getRef();
             columns.add(colRef);
         }
         return new ColumnRowType(columns);

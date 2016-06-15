@@ -68,7 +68,7 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
 
     private static TblColRef col(int i, TableDesc t) {
         ColumnDesc col = ColumnDesc.mockup(t, i, "Col" + i, "string");
-        return new TblColRef(col);
+        return col.getRef();
     }
 
     @Test

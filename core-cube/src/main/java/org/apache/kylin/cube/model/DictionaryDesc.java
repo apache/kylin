@@ -46,11 +46,11 @@ public class DictionaryDesc {
         DataModelDesc model = cubeDesc.getModel();
         
         column = column.toUpperCase();
-        colRef = new TblColRef(model.findColumn(column));
+        colRef = model.findColumn(column).getRef();
         
         if (reuseColumn != null) {
             reuseColumn = reuseColumn.toUpperCase();
-            reuseColRef = new TblColRef(model.findColumn(reuseColumn));
+            reuseColRef = model.findColumn(reuseColumn).getRef();
         }
     }
     

@@ -206,7 +206,7 @@ public class AggregateRegionObserverTest {
     }
 
     private TblColRef newCol(int i, String name, TableDesc t) {
-        return new TblColRef(ColumnDesc.mockup(t, i, name, null));
+        return ColumnDesc.mockup(t, i, name, null).getRef();
     }
 
     public static class MockupRegionScanner implements RegionScanner {

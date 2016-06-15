@@ -46,12 +46,8 @@ public class BitMapFilterEvaluatorTest {
 
     static {
         TableDesc table = TableDesc.mockup("DEFAULT.TABLE");
-
-        ColumnDesc col = ColumnDesc.mockup(table, 1, "colA", "string");
-        colA = new TblColRef(col);
-
-        col = ColumnDesc.mockup(table, 1, "colB", "string");
-        colB = new TblColRef(col);
+        colA = ColumnDesc.mockup(table, 1, "colA", "string").getRef();
+        colB = ColumnDesc.mockup(table, 1, "colB", "string").getRef();
     }
 
     static class MockBitMapProivder implements BitMapProvider {

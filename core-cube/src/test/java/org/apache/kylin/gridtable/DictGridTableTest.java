@@ -352,8 +352,8 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
-        TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
-        TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
+        TblColRef extColA = ColumnDesc.mockup(extTable, 1, "A", "timestamp").getRef();
+        TblColRef extColB = ColumnDesc.mockup(extTable, 2, "B", "integer").getRef();
 
         CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.EQ, "10");
@@ -372,8 +372,8 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
-        TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
-        TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
+        TblColRef extColA = ColumnDesc.mockup(extTable, 1, "A", "timestamp").getRef();
+        TblColRef extColB = ColumnDesc.mockup(extTable, 2, "B", "integer").getRef();
 
         CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LT, "9");
@@ -393,8 +393,8 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
-        TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
-        TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
+        TblColRef extColA = ColumnDesc.mockup(extTable, 1, "A", "timestamp").getRef();
+        TblColRef extColB = ColumnDesc.mockup(extTable, 2, "B", "integer").getRef();
 
         CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.LTE, "9");
@@ -414,8 +414,8 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         GTInfo info = table.getInfo();
 
         TableDesc extTable = TableDesc.mockup("ext");
-        TblColRef extColA = new TblColRef(ColumnDesc.mockup(extTable, 1, "A", "timestamp"));
-        TblColRef extColB = new TblColRef(ColumnDesc.mockup(extTable, 2, "B", "integer"));
+        TblColRef extColA = ColumnDesc.mockup(extTable, 1, "A", "timestamp").getRef();
+        TblColRef extColB = ColumnDesc.mockup(extTable, 2, "B", "integer").getRef();
 
         CompareTupleFilter fComp1 = compare(extColA, FilterOperatorEnum.GT, "2015-01-14");
         CompareTupleFilter fComp2 = compare(extColB, FilterOperatorEnum.IN, "9", "10", "15");

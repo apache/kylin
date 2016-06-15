@@ -115,6 +115,6 @@ public class ColumnTupleFilter extends TupleFilter {
         column.setDatatype(BytesUtil.readUTFString(buffer));
         column.init(table);
 
-        this.columnRef = new TblColRef(column);
+        this.columnRef = column.getRef();
     }
 }
