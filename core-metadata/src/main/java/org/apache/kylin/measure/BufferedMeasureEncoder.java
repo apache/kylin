@@ -33,7 +33,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 @SuppressWarnings({ "unchecked" })
 public class BufferedMeasureEncoder {
     public static final int DEFAULT_BUFFER_SIZE = 1024 * 1024; // 1 MB
-    public static final int MAX_BUFFER_SIZE = 64 * DEFAULT_BUFFER_SIZE; // 64 MB
+    public static final int MAX_BUFFER_SIZE = 1 * 1024 * DEFAULT_BUFFER_SIZE; // 1 GB
 
     final private MeasureDecoder codec;
 
