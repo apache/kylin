@@ -19,13 +19,10 @@
 package org.apache.kylin.cube;
 
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Dictionary;
@@ -100,6 +97,10 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
 
     @JsonProperty("rowkey_stats")
     private List<Object[]> rowkeyStats = Lists.newArrayList();
+
+    @JsonProperty("additionalInfo")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private HashMap<String, String> additionalInfo = new LinkedHashMap<String, String>();
 
     private volatile Map<Long, Short> cuboidBaseShards = Maps.newHashMap();//cuboid id ==> base(starting) shard for this cuboid
 
@@ -523,4 +524,11 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
         this.indexPath = indexPath;
     }
 
+    public HashMap<String, String> getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public void setAdditionalInfo(HashMap<String, String> additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
 }

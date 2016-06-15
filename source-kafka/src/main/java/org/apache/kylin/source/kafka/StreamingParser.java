@@ -36,54 +36,87 @@ package org.apache.kylin.source.kafka;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
+import java.util.Set;
 
-import javax.annotation.Nullable;
-
-import kafka.message.MessageAndOffset;
-
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.engine.streaming.StreamingManager;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StreamingMessage;
-import org.apache.kylin.metadata.model.IntermediateColumnDesc;
+import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.source.kafka.config.KafkaConfig;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 
 /**
  * By convention stream parsers should have a constructor with (List<TblColRef> allColumns, String propertiesStr) as params
  */
 public abstract class StreamingParser {
 
+    public static final Set derivedTimeColumns = Sets.newHashSet();
+    static {
+        derivedTimeColumns.add("minute_start");
+        derivedTimeColumns.add("hour_start");
+        derivedTimeColumns.add("day_start");
+        derivedTimeColumns.add("week_start");
+        derivedTimeColumns.add("month_start");
+        derivedTimeColumns.add("quarter_start");
+        derivedTimeColumns.add("year_start");
+    }
+
+
     /**
-     * @param kafkaMessage
+     * @param message
      * @return StreamingMessage must not be NULL
      */
-    abstract public StreamingMessage parse(MessageAndOffset kafkaMessage);
+    abstract public StreamingMessage parse(Object message);
 
     abstract public boolean filter(StreamingMessage streamingMessage);
 
-    public static StreamingParser getStreamingParser(KafkaConfig kafkaConfig, RealizationType realizationType, String realizationName) throws ReflectiveOperationException {
-        final CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(realizationName);
-        List<TblColRef> columns = Lists.transform(new CubeJoinedFlatTableDesc(cubeInstance.getDescriptor(), null).getColumnList(), new Function<IntermediateColumnDesc, TblColRef>() {
-            @Nullable
-            @Override
-            public TblColRef apply(IntermediateColumnDesc input) {
-                return input.getColRef();
-            }
-        });
-        if (!StringUtils.isEmpty(kafkaConfig.getParserName())) {
-            Class clazz = Class.forName(kafkaConfig.getParserName());
+    public static StreamingParser getStreamingParser(String parserName, String parserProperties, List<TblColRef> columns) throws ReflectiveOperationException {
+        if (!StringUtils.isEmpty(parserName)) {
+            Class clazz = Class.forName(parserName);
             Constructor constructor = clazz.getConstructor(List.class, String.class);
-            return (StreamingParser) constructor.newInstance(columns, kafkaConfig.getParserProperties());
+            return (StreamingParser) constructor.newInstance(columns, parserProperties);
         } else {
-            throw new IllegalStateException("invalid StreamingConfig:" + kafkaConfig.getName() + " missing property StreamingParser");
+            throw new IllegalStateException("invalid StreamingConfig, parserName " + parserName + ", parserProperties " + parserProperties + ".");
         }
     }
+
+    /**
+     * Calculate the derived time column value and put to the result list.
+     * @param columnName the column name, should be in lower case
+     * @param result the string list which representing a row
+     * @param t the timestamp that to calculate the derived time
+     * @return true if the columnName is a derived time column; otherwise false;
+     */
+    public static final boolean populateDerivedTimeColumns(String columnName, List<String> result, long t) {
+        if (derivedTimeColumns.contains(columnName) == false)
+            return false;
+
+        long normalized = 0;
+        if (columnName.equals("minute_start")) {
+            normalized = TimeUtil.getMinuteStart(t);
+            result.add(DateFormat.formatToTimeStr(normalized));
+        } else if (columnName.equals("hour_start")) {
+            normalized = TimeUtil.getHourStart(t);
+            result.add(DateFormat.formatToTimeStr(normalized));
+        } else if (columnName.equals("day_start")) {
+            //from day_start on, formatTs will output date format
+            normalized = TimeUtil.getDayStart(t);
+            result.add(DateFormat.formatToDateStr(normalized));
+        } else if (columnName.equals("week_start")) {
+            normalized = TimeUtil.getWeekStart(t);
+            result.add(DateFormat.formatToDateStr(normalized));
+        } else if (columnName.equals("month_start")) {
+            normalized = TimeUtil.getMonthStart(t);
+            result.add(DateFormat.formatToDateStr(normalized));
+        } else if (columnName.equals("quarter_start")) {
+            normalized = TimeUtil.getQuarterStart(t);
+            result.add(DateFormat.formatToDateStr(normalized));
+        } else if (columnName.equals("year_start")) {
+            normalized = TimeUtil.getYearStart(t);
+            result.add(DateFormat.formatToDateStr(normalized));
+        }
+
+        return true;
+    }
+
 }

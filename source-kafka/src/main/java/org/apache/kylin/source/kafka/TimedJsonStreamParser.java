@@ -40,9 +40,7 @@ import java.util.*;
 import kafka.message.MessageAndOffset;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StreamingMessage;
-import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +58,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
 
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
 
+
     private List<TblColRef> allColumns;
     private boolean formatTs = false;//not used
     private final ObjectMapper mapper = new ObjectMapper();
@@ -75,14 +74,14 @@ public final class TimedJsonStreamParser extends StreamingParser {
                     String[] parts = prop.split("=");
                     if (parts.length == 2) {
                         switch (parts[0]) {
-                        case "formatTs":
-                            this.formatTs = Boolean.valueOf(parts[1]);
-                            break;
-                        case "tsColName":
-                            this.tsColName = parts[1];
-                            break;
-                        default:
-                            break;
+                            case "formatTs":
+                                this.formatTs = Boolean.valueOf(parts[1]);
+                                break;
+                            case "tsColName":
+                                this.tsColName = parts[1];
+                                break;
+                            default:
+                                break;
                         }
                     }
                 } catch (Exception e) {
@@ -96,14 +95,13 @@ public final class TimedJsonStreamParser extends StreamingParser {
     }
 
     @Override
-    public StreamingMessage parse(MessageAndOffset messageAndOffset) {
+    public StreamingMessage parse(Object msg) {
+        MessageAndOffset messageAndOffset = (MessageAndOffset) msg;
         try {
             Map<String, String> message = mapper.readValue(new ByteBufferBackedInputStream(messageAndOffset.message().payload()), mapType);
             Map<String, String> root = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
             root.putAll(message);
             String tsStr = root.get(tsColName);
-            //Preconditions.checkArgument(!StringUtils.isEmpty(tsStr), "Timestamp field " + tsColName + //
-            //" cannot be null, the message offset is " + messageAndOffset.getOffset() + " content is " + new String(messageAndOffset.getRawData()));
             long t;
             if (StringUtils.isEmpty(tsStr)) {
                 t = 0;
@@ -112,44 +110,23 @@ public final class TimedJsonStreamParser extends StreamingParser {
             }
             ArrayList<String> result = Lists.newArrayList();
 
-            long normalized = 0;
             for (TblColRef column : allColumns) {
-                String columnName = column.getName();
-                if (columnName.equalsIgnoreCase("minute_start")) {
-                    normalized = TimeUtil.getMinuteStart(t);
-                    result.add(DateFormat.formatToTimeStr(normalized));
-                } else if (columnName.equalsIgnoreCase("hour_start")) {
-                    normalized = TimeUtil.getHourStart(t);
-                    result.add(DateFormat.formatToTimeStr(normalized));
-                } else if (columnName.equalsIgnoreCase("day_start")) {
-                    //from day_start on, formatTs will output date format
-                    normalized = TimeUtil.getDayStart(t);
-                    result.add(DateFormat.formatToDateStr(normalized));
-                } else if (columnName.equalsIgnoreCase("week_start")) {
-                    normalized = TimeUtil.getWeekStart(t);
-                    result.add(DateFormat.formatToDateStr(normalized));
-                } else if (columnName.equalsIgnoreCase("month_start")) {
-                    normalized = TimeUtil.getMonthStart(t);
-                    result.add(DateFormat.formatToDateStr(normalized));
-                } else if (columnName.equalsIgnoreCase("quarter_start")) {
-                    normalized = TimeUtil.getQuarterStart(t);
-                    result.add(DateFormat.formatToDateStr(normalized));
-                } else if (columnName.equalsIgnoreCase("year_start")) {
-                    normalized = TimeUtil.getYearStart(t);
-                    result.add(DateFormat.formatToDateStr(normalized));
-                } else {
-                    String x = root.get(columnName.toLowerCase());
+                String columnName = column.getName().toLowerCase();
+
+                if (populateDerivedTimeColumns(columnName, result, t) == false) {
+                    String x = root.get(columnName);
                     result.add(x);
                 }
             }
 
-            return new StreamingMessage(result, messageAndOffset.offset(), t, Collections.<String, Object> emptyMap());
+            return new StreamingMessage(result, messageAndOffset.offset(), t, Collections.<String, Object>emptyMap());
 
         } catch (IOException e) {
             logger.error("error", e);
             throw new RuntimeException(e);
         }
     }
+
 
     @Override
     public boolean filter(StreamingMessage streamingMessage) {
