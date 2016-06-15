@@ -112,12 +112,7 @@ public class HiveMRInput implements IMRInput {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
 
             final String rowCountOutputDir = JobBuilderSupport.getJobWorkingDir(conf, jobFlow.getId()) + "/row_count";
-            try {
-                FileSystem fs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
-                fs.mkdirs(new Path(rowCountOutputDir));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to create HDFS dir " + rowCountOutputDir, e);
-            }
+
             jobFlow.addTask(createCountHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), rowCountOutputDir));
             jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), cubeName, rowCountOutputDir));
             AbstractExecutable task = createLookupHiveViewMaterializationStep(jobFlow.getId());
