@@ -26,11 +26,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DateFormat {
 
+    public static final String COMPACT_DATE_PATTERN = "yyyyMMdd";
     public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
     public static final String DEFAULT_TIME_PATTERN = "HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS = "yyyy-MM-dd HH:mm:ss";
     public static final String DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS = "yyyy-MM-dd HH:mm:ss.SSS";
-    public static final String[] SUPPORTED_DATETIME_PATTERN = { DEFAULT_DATE_PATTERN, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS, DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, "yyyyMMdd" };
+    public static final String[] SUPPORTED_DATETIME_PATTERN = { //
+            DEFAULT_DATE_PATTERN, //
+            DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS, //
+            DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, //
+            COMPACT_DATE_PATTERN };
 
     static final private Map<String, ThreadLocal<SimpleDateFormat>> threadLocalMap = new ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>();
 
@@ -87,15 +92,25 @@ public class DateFormat {
     }
 
     public static long stringToMillis(String str) {
-        return stringToMillis(str, DEFAULT_DATE_PATTERN);
+        return stringToMillis(str, null);
     }
 
-    public static long stringToMillis(String str, String partitionDateFormat) {
+    public static long stringToMillis(String str, String dateFormat) {
+        try {
+            if (dateFormat != null) {
+                return getDateFormat(dateFormat).parse(str).getTime();
+            }
+        } catch (ParseException e) {
+            // given format does not work, proceed to below
+        }
+
+        // try to be smart and guess the date format
         if (isAllDigits(str)) {
-            return Long.parseLong(str);
-        } else if (str.length() == 8 && partitionDateFormat.length() == 8) {
-            return stringToDate(str, partitionDateFormat).getTime();
-        } else if (str.length() == 10 && partitionDateFormat.length() == 10) {
+            if (str.length() == 8)
+                return stringToDate(str, COMPACT_DATE_PATTERN).getTime();
+            else
+                return Long.parseLong(str);
+        } else if (str.length() == 10) {
             return stringToDate(str, DEFAULT_DATE_PATTERN).getTime();
         } else if (str.length() == 19) {
             return stringToDate(str, DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS).getTime();

@@ -45,7 +45,7 @@ public class DefaultPartitionConditionBuilderTest {
         PartitionDesc partitionDesc = new PartitionDesc();
         partitionDesc.setPartitionTimeColumn("DEFAULT.TABLE_NAME.HOUR_COLUMN");
         partitionDesc.setPartitionTimeFormat("HH");
-        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22 00:00:00", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS), DateFormat.stringToMillis("2016-02-23 01:00:00", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS), new HashMap<String, String>());
+        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22 00:00:00"), DateFormat.stringToMillis("2016-02-23 01:00:00"), new HashMap<String, String>());
         Assert.assertEquals("DEFAULT.TABLE_NAME.HOUR_COLUMN >= '00' AND DEFAULT.TABLE_NAME.HOUR_COLUMN < '01'", condition);
     }
 
@@ -56,7 +56,7 @@ public class DefaultPartitionConditionBuilderTest {
         partitionDesc.setPartitionDateFormat("yyyy-MM-dd");
         partitionDesc.setPartitionTimeColumn("DEFAULT.TABLE_NAME.HOUR_COLUMN");
         partitionDesc.setPartitionTimeFormat("H");
-        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22 00:00:00", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS), DateFormat.stringToMillis("2016-02-23 01:00:00", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS), new HashMap<String, String>());
+        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22 00:00:00"), DateFormat.stringToMillis("2016-02-23 01:00:00"), new HashMap<String, String>());
         Assert.assertEquals("((DEFAULT.TABLE_NAME.DATE_COLUMN = '2016-02-22' AND DEFAULT.TABLE_NAME.HOUR_COLUMN >= '0') OR (DEFAULT.TABLE_NAME.DATE_COLUMN > '2016-02-22')) AND ((DEFAULT.TABLE_NAME.DATE_COLUMN = '2016-02-23' AND DEFAULT.TABLE_NAME.HOUR_COLUMN < '1') OR (DEFAULT.TABLE_NAME.DATE_COLUMN < '2016-02-23'))", condition);
     }
 
@@ -67,7 +67,7 @@ public class DefaultPartitionConditionBuilderTest {
         partitionDesc.setPartitionDateFormat("yyyy-MM-dd");
         partitionDesc.setPartitionTimeColumn("TABLE_ALIAS.HOUR_COLUMN");
         partitionDesc.setPartitionTimeFormat("H");
-        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22 00:00:00", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS), DateFormat.stringToMillis("2016-02-23 01:00:00", DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS), new HashMap<String, String>() {
+        String condition = partitionConditionBuilder.buildDateRangeCondition(partitionDesc, DateFormat.stringToMillis("2016-02-22 00:00:00"), DateFormat.stringToMillis("2016-02-23 01:00:00"), new HashMap<String, String>() {
             {
                 put("TABLE_ALIAS", "DEFAULT.TABLE_NAME");
             }
