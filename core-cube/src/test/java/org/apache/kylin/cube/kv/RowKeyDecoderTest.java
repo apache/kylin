@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -57,7 +58,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
         rowKeyDecoder.decode(key);
         List<String> values = rowKeyDecoder.getValues();
-        assertEquals("[2012-12-15, 11848, Health & Beauty, Fragrances, Women, FP-GTC, 0, 15]", values.toString());
+        assertEquals("[" + millis("2012-12-15") + ", 11848, Health & Beauty, Fragrances, Women, FP-GTC, 0, 15]", values.toString());
     }
 
     @Test
@@ -70,7 +71,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
 
         rowKeyDecoder.decode(key);
         List<String> values = rowKeyDecoder.getValues();
-        assertEquals("[10000000, 2012-01-02, 20213, Collectibles, Postcards, US StateCities & Towns, ABIN, 0, -99]", values.toString());
+        assertEquals("[10000000, " + millis("2012-01-02") + ", 20213, Collectibles, Postcards, US StateCities & Towns, ABIN, 0, -99]", values.toString());
     }
 
     @Test
@@ -98,6 +99,11 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
         RowKeyDecoder rowKeyDecoder = new RowKeyDecoder(cube.getFirstSegment());
         rowKeyDecoder.decode(encodedKey);
         List<String> values = rowKeyDecoder.getValues();
-        assertEquals("[2012-12-15, 11848, Health & Beauty, Fragrances, Women, 刊登格式, 0, 15]", values.toString());
+        assertEquals("[" + millis("2012-12-15") + ", 11848, Health & Beauty, Fragrances, Women, 刊登格式, 0, 15]", values.toString());
     }
+
+    private String millis(String dateStr) {
+        return String.valueOf(DateFormat.stringToMillis(dateStr));
+    }
+
 }
