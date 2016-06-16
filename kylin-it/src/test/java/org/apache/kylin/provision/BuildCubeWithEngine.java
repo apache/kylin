@@ -190,7 +190,7 @@ public class BuildCubeWithEngine {
     }
 
     private void testViewAsLookup() throws Exception {
-        String[] testCase = new String[] { "testLeftJoinCubeWithView" };
+        String[] testCase = new String[] { "testInnerJoinCubeWithView", "testLeftJoinCubeWithView" };
         runTestAndAssertSucceed(testCase);
     }
 
@@ -331,6 +331,24 @@ public class BuildCubeWithEngine {
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         List<String> result = Lists.newArrayList();
         final String cubeName = "test_kylin_cube_with_view_empty";
+        clearSegment(cubeName);
+
+        long date1 = cubeManager.getCube(cubeName).getDescriptor().getPartitionDateStart();
+        long date4 = f.parse("2023-01-01").getTime();
+
+        result.add(buildSegment(cubeName, date1, date4));
+
+        return result;
+
+    }
+
+    @SuppressWarnings("unused")
+    // called by reflection
+    private List<String> testInnerJoinCubeWithView() throws Exception {
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+        f.setTimeZone(TimeZone.getTimeZone("GMT"));
+        List<String> result = Lists.newArrayList();
+        final String cubeName = "test_kylin_cube_with_view_inner_join_empty";
         clearSegment(cubeName);
 
         long date1 = cubeManager.getCube(cubeName).getDescriptor().getPartitionDateStart();

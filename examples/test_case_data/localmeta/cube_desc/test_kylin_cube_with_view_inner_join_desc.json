@@ -1,6 +1,6 @@
 {
-  "uuid" : "6789b7a8-3929-4dff-b59d-2100aadc8dbf",
-  "name" : "test_kylin_cube_with_view_desc",
+  "uuid" : "9876b7a8-3929-4dff-b59d-2100aadc8dbf",
+  "name" : "test_kylin_cube_with_view_inner_join_desc",
   "description" : null,
   "dimensions" : [ {
     "name" : "CAL_DT",
@@ -133,7 +133,7 @@
   },
   "signature" : null,
   "last_modified" : 1448959801311,
-  "model_name" : "test_kylin_left_join_view_model_desc",
+  "model_name" : "test_kylin_inner_join_view_model_desc",
   "null_string" : null,
   "hbase_mapping" : {
     "column_family" : [ {

@@ -47,6 +47,11 @@
       "name": "test_kylin_cube_with_view_empty",
       "type": "CUBE",
       "realization": "test_kylin_cube_with_view_empty"
+    },
+    {
+      "name": "test_kylin_cube_with_view_inner_join_empty",
+      "type": "CUBE",
+      "realization": "test_kylin_cube_with_view_inner_join_empty"
     }
   ], 
   "tables" : [

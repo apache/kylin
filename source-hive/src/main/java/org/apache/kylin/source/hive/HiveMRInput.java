@@ -45,7 +45,9 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.realization.IRealizationSegment;
 
@@ -144,15 +146,16 @@ public class HiveMRInput implements IMRInput {
             CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
             String cubeName = seg.getRealization().getName();
             CubeDesc cubeDesc = cubeMgr.getCube(cubeName).getDescriptor();
-
+            MetadataManager metadataManager = MetadataManager.getInstance(kylinConfig);
             final Set<TableDesc> lookupViewsTables = Sets.newHashSet();
-            for(DimensionDesc dimensionDesc : cubeDesc.getDimensions()) {
-                TableDesc tableDesc = dimensionDesc.getTableDesc();
-                if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())
-                        && !cubeDesc.getModel().getFactTableDesc().equals(tableDesc)) {
+
+            for (LookupDesc lookupDesc : cubeDesc.getModel().getLookups()) {
+                TableDesc tableDesc = metadataManager.getTableDesc(lookupDesc.getTable());
+                if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
                     lookupViewsTables.add(tableDesc);
                 }
             }
+
             if(lookupViewsTables.size() == 0) {
                 return null;
             }
