@@ -20,6 +20,8 @@ package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
 
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ReadableTable;
 
@@ -29,12 +31,27 @@ import org.apache.kylin.source.ReadableTable;
  */
 public class LookupStringTable extends LookupTable<String> {
 
+    int[] keyIndexOfDates;
+    
     public LookupStringTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
         super(tableDesc, keyColumns, table);
     }
 
     @Override
     protected String[] convertRow(String[] cols) {
+        if (keyIndexOfDates == null) {
+            keyIndexOfDates = new int[keyColumns.length];
+            for (int i = 0; i < keyColumns.length; i++) {
+                ColumnDesc col = tableDesc.findColumnByName(keyColumns[i]);
+                keyIndexOfDates[i] = col.getType().isDateTimeFamily() ? col.getZeroBasedIndex() : -1;
+            }
+        }
+        
+        for (int i = 0; i < keyIndexOfDates.length; i++) {
+            int c = keyIndexOfDates[i];
+            if (c >= 0)
+                cols[c] = String.valueOf(DateFormat.stringToMillis(cols[c]));
+        }
         return cols;
     }
 

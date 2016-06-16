@@ -18,11 +18,12 @@
 package org.apache.kylin.common.util;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang3.time.FastDateFormat;
 
 public class DateFormat {
 
@@ -37,20 +38,15 @@ public class DateFormat {
             DEFAULT_DATETIME_PATTERN_WITH_MILLISECONDS, //
             COMPACT_DATE_PATTERN };
 
-    static final private Map<String, ThreadLocal<SimpleDateFormat>> threadLocalMap = new ConcurrentHashMap<String, ThreadLocal<SimpleDateFormat>>();
+    static final private Map<String, FastDateFormat> formatMap = new ConcurrentHashMap<String, FastDateFormat>();
 
-    public static SimpleDateFormat getDateFormat(String datePattern) {
-        ThreadLocal<SimpleDateFormat> formatThreadLocal = threadLocalMap.get(datePattern);
-        if (formatThreadLocal == null) {
-            threadLocalMap.put(datePattern, formatThreadLocal = new ThreadLocal<SimpleDateFormat>());
+    public static FastDateFormat getDateFormat(String datePattern) {
+        FastDateFormat r = formatMap.get(datePattern);
+        if (r == null) {
+            r = FastDateFormat.getInstance(datePattern, TimeZone.getTimeZone("GMT")); // NOTE: this must be GMT to calculate epoch date correctly
+            formatMap.put(datePattern, r);
         }
-        SimpleDateFormat format = formatThreadLocal.get();
-        if (format == null) {
-            format = new SimpleDateFormat(datePattern);
-            format.setTimeZone(TimeZone.getTimeZone("GMT")); // NOTE: this must be GMT to calculate epoch date correctly
-            formatThreadLocal.set(format);
-        }
-        return format;
+        return r;
     }
 
     public static String formatToDateStr(long millis) {

@@ -75,6 +75,8 @@ public abstract class DimensionEncodingFactory {
             // built-in encodings, note dictionary is a special case
             map.put(FixedLenDimEnc.ENCODING_NAME, new FixedLenDimEnc.Factory());
             map.put(IntegerDimEnc.ENCODING_NAME, new IntegerDimEnc.Factory());
+            map.put(DateDimEnc.ENCODING_NAME, new DateDimEnc.Factory());
+            map.put(TimeDimEnc.ENCODING_NAME, new TimeDimEnc.Factory());
 
             // custom encodings
             String[] clsNames = KylinConfig.getInstanceFromEnv().getCubeDimensionCustomEncodingFactories();

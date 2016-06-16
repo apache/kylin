@@ -18,7 +18,11 @@
 
 package org.apache.kylin.cube.model;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.dimension.DictionaryDimEnc;
@@ -106,15 +110,7 @@ public class RowKeyDesc {
 
         for (int i = 0; i < rowkeyColumns.length; i++) {
             RowKeyColDesc rowKeyColDesc = rowkeyColumns[i];
-            rowKeyColDesc.init();
-            String column = rowKeyColDesc.getColumn();
-            rowKeyColDesc.setColumn(column.toUpperCase());
-            rowKeyColDesc.setBitIndex(rowkeyColumns.length - i - 1);
-            rowKeyColDesc.setColRef(colNameAbbr.get(column));
-            if (rowKeyColDesc.getColRef() == null) {
-                throw new IllegalArgumentException("Cannot find rowkey column " + column + " in cube " + cubeDesc);
-            }
-
+            rowKeyColDesc.init(rowkeyColumns.length - i - 1, colNameAbbr, cubeDesc);
             columnMap.put(rowKeyColDesc.getColRef(), rowKeyColDesc);
 
             if (rowKeyColDesc.isShardBy()) {

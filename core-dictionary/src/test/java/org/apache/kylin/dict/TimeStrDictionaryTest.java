@@ -25,7 +25,7 @@ import org.junit.Test;
 
 /**
  */
-public class TimeStrDictionaryTests {
+public class TimeStrDictionaryTest {
     TimeStrDictionary dict;
 
     @Before

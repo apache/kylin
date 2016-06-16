@@ -16,46 +16,49 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.dict;
+package org.apache.kylin.dimension;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import org.apache.kylin.dimension.DateDimEnc;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.DateFormat;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DateStrDictionaryTest {
+/**
+ * Note the test must be consistent with DateStrDictionaryTest,
+ * to ensure DateDimEnc is backward compatible with DateStrDictionary.
+ */
+public class DateDimEncTest {
 
-    DateStrDictionary dict;
+    DateDimEnc enc;
+    byte[] buf;
 
     @Before
     public void setup() {
-        dict = new DateStrDictionary();
+        enc = new DateDimEnc();
+        buf = new byte[enc.getLengthOfEncoding()];
+    }
+
+    private long encode(String value) {
+        enc.encode(value, buf, 0);
+        return BytesUtil.readLong(buf, 0, buf.length);
+    }
+    
+    private String decode(long code) {
+        BytesUtil.writeLong(code, buf, 0, buf.length);
+        return enc.decode(buf, 0, buf.length);
     }
 
     @Test
     public void testMinMaxId() {
-        assertEquals(0, dict.getIdFromValue("0000-01-01"));
-        assertEquals(DateDimEnc.ID_9999_12_31, dict.getIdFromValue("9999-12-31"));
+        assertEquals(0, encode("0000-01-01"));
+        assertEquals(DateDimEnc.ID_9999_12_31, encode("9999-12-31"));
 
         try {
-            dict.getValueFromId(-2); // -1 is id for NULL
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            // good
-        }
-
-        try {
-            dict.getValueFromId(DateDimEnc.ID_9999_12_31 + 1);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            // good
-        }
-
-        try {
-            dict.getIdFromValue("10000-1-1");
+            encode("10000-1-1");
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             // good
@@ -64,11 +67,9 @@ public class DateStrDictionaryTest {
 
     @Test
     public void testNull() {
-        int nullId = dict.getIdFromValue(null);
-        assertNull(dict.getValueFromId(nullId));
-        int nullId2 = dict.getIdFromValueBytes(null, 0, 0);
-        assertEquals(dict.getValueBytesFromId(nullId2, null, 0), -1);
-        assertEquals(nullId, nullId2);
+        long nullId = encode(null);
+        assertNull(decode(nullId));
+        assertEquals(0xffffff, nullId & 0xffffff);
     }
 
     @Test
@@ -81,22 +82,16 @@ public class DateStrDictionaryTest {
     }
 
     private void checkPair(String dateStr) {
-        int id = dict.getIdFromValue(dateStr);
-        String dateStrBack = dict.getValueFromId(id);
+        long id = encode(dateStr);
+        String millisStr = decode(id);
+        String dateStrBack = DateFormat.formatToDateStr(Long.parseLong(millisStr));
         assertEquals(dateStr, dateStrBack);
     }
 
     @Test
     public void testIllegalArgument() {
         try {
-            dict.getIdFromValue("abcd");
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            // good
-        }
-
-        try {
-            dict.getValueFromId(-2);
+            encode("abcd");
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             // good

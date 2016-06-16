@@ -18,11 +18,15 @@
 
 package org.apache.kylin.cube.model;
 
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.dimension.DateDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
+import org.apache.kylin.dimension.TimeDimEnc;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -55,15 +59,32 @@ public class RowKeyColDesc {
     private int bitIndex;
     private TblColRef colRef;
 
-    public void init() {
-        Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
+    public void init(int index, Map<String, TblColRef> colNameAbbr, CubeDesc cubeDesc) {
+        column = column.toUpperCase();
+        bitIndex = index;
+        colRef = colNameAbbr.get(column);
+        if (colRef == null) {
+            throw new IllegalArgumentException("Cannot find rowkey column " + column + " in cube " + cubeDesc);
+        }
 
+        Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
         Object[] encodingConf = DimensionEncoding.parseEncodingConf(this.encoding);
-        this.encodingName = (String) encodingConf[0];
-        this.encodingArgs = (String[])encodingConf[1];
+        encodingName = (String) encodingConf[0];
+        encodingArgs = (String[]) encodingConf[1];
 
         if (!DimensionEncodingFactory.isVaildEncoding(this.encodingName))
             throw new IllegalArgumentException("Not supported row key col encoding: '" + this.encoding + "'");
+        
+        // convert date/time dictionary to DimensionEncoding implicitly, date/time dictionary is deprecated
+        if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName)) {
+            DataType type = colRef.getType();
+            if (type.isDate()) {
+                encodingName = DateDimEnc.ENCODING_NAME;
+            }
+            if (type.isTime() || type.isTimestamp() || type.isDatetime()) {
+                encodingName = TimeDimEnc.ENCODING_NAME;
+            }
+        }
     }
 
     public String getEncoding() {
@@ -106,16 +127,8 @@ public class RowKeyColDesc {
         return bitIndex;
     }
 
-    void setBitIndex(int index) {
-        this.bitIndex = index;
-    }
-
     public TblColRef getColRef() {
         return colRef;
-    }
-
-    void setColRef(TblColRef colRef) {
-        this.colRef = colRef;
     }
 
     public String getIndex() {
@@ -125,6 +138,7 @@ public class RowKeyColDesc {
     public void setIndex(String index) {
         this.index = index;
     }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();

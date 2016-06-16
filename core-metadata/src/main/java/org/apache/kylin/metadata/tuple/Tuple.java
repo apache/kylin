@@ -19,15 +19,14 @@
 package org.apache.kylin.metadata.tuple;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
-
-import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
 /**
  * @author xjiang
@@ -153,23 +152,17 @@ public class Tuple implements ITuple {
         return sb.toString();
     }
 
-    public static long epicDaysToMillis(int days) {
-        return 1L * days * (1000 * 3600 * 24);
-    }
-
-    public static int dateToEpicDays(String strValue) {
-        Date dateValue = DateFormat.stringToDate(strValue); // NOTE: forces GMT timezone
-        long millis = dateValue.getTime();
-        return (int) (millis / (1000 * 3600 * 24));
-    }
-
     public static long getTs(ITuple row, TblColRef partitionCol) {
         //ts column type differentiate
         if (partitionCol.getDatatype().equals("date")) {
-            return Tuple.epicDaysToMillis(Integer.valueOf(row.getValue(partitionCol).toString()));
+            return epicDaysToMillis(Integer.valueOf(row.getValue(partitionCol).toString()));
         } else {
             return Long.valueOf(row.getValue(partitionCol).toString());
         }
+    }
+
+    private static long epicDaysToMillis(int days) {
+        return 1L * days * (1000 * 3600 * 24);
     }
 
     public static Object convertOptiqCellValue(String strValue, String dataTypeName) {
@@ -182,7 +175,7 @@ public class Tuple implements ITuple {
         // TODO use data type enum instead of string comparison
         if ("date".equals(dataTypeName)) {
             // convert epoch time
-            return dateToEpicDays(strValue);// Optiq expects Integer instead of Long. by honma
+            return Integer.valueOf(dateToEpicDays(strValue));// Optiq expects Integer instead of Long. by honma
         } else if ("timestamp".equals(dataTypeName) || "datetime".equals(dataTypeName)) {
             return Long.valueOf(DateFormat.stringToMillis(strValue));
         } else if ("tinyint".equals(dataTypeName)) {
@@ -204,6 +197,11 @@ public class Tuple implements ITuple {
         } else {
             return strValue;
         }
+    }
+
+    private static int dateToEpicDays(String strValue) {
+        long millis = DateFormat.stringToMillis(strValue);
+        return (int) (millis / (1000 * 3600 * 24));
     }
 
 }
