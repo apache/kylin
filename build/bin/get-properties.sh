@@ -23,8 +23,9 @@ then
     exit -1
 fi
 
+IFS=$'\n'
 result=
-for i in `cat ${KYLIN_HOME}/conf/kylin.properties | grep -w "$1" | grep -v '^#' |awk -F '=' '{print $2}' | cut -c 1-`
+for i in `cat ${KYLIN_HOME}/conf/kylin.properties|grep -w "$1"| grep -v '^#' |awk -F= '{ n = index($0,"="); print substr($0,n+1)}' | cut -c 1-`
 do
    :
    result=$i
