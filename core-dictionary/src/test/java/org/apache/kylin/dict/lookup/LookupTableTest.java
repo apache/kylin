@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.MetadataManager;
@@ -56,8 +57,8 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
     @Test
     public void testScan() throws Exception {
         List<String> values = new ArrayList<String>();
-        values.add("2012-01-24");
-        values.add("2012-12-30");
+        values.add(millis("2012-01-24"));
+        values.add(millis("2012-12-30"));
         List<String> results = lookupTable.scan("CAL_DT", values, "YEAR_BEG_DT");
 
         Assert.assertTrue(results.size() > 0);
@@ -70,10 +71,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testMapRange() throws Exception {
-        List<String> values = new ArrayList<String>();
-        values.add("2012-01-24");
-        values.add("2012-12-30");
-        Pair<String, String> results = lookupTable.mapRange("CAL_DT", "2012-01-24", "2012-12-30", "QTR_BEG_DT");
+        Pair<String, String> results = lookupTable.mapRange("CAL_DT", millis("2012-01-24"), millis("2012-12-30"), "QTR_BEG_DT");
 
         Assert.assertTrue(results != null);
         System.out.println("The first qtr_beg_dt is " + results.getFirst());
@@ -86,8 +84,8 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
     @Test
     public void testMapValues() throws Exception {
         Set<String> values = new HashSet<String>();
-        values.add("2012-01-24");
-        values.add("2012-12-30");
+        values.add(millis("2012-01-24"));
+        values.add(millis("2012-12-30"));
         Set<String> results = lookupTable.mapValues("CAL_DT", values, "YEAR_BEG_DT");
 
         Assert.assertTrue(results.size() == 1);
@@ -96,6 +94,10 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
             Assert.assertEquals("2012-01-01", i);
         }
+    }
+    
+    private String millis(String dateStr) {
+        return String.valueOf(DateFormat.stringToMillis(dateStr));
     }
 
     public LookupTable<String> initLookupTable() throws Exception {
