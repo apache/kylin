@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.commons.io.Charsets;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
@@ -148,8 +149,8 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
             @Override
             public void reload(Object measureValue) {
                 ByteArray byteArray = (ByteArray) measureValue;
-                //the array in ByteArray is garanteed to be completed owned by the ByteArray 
-                value = new String(byteArray.array(), Charsets.toCharset("UTF-8"));
+                //the array in ByteArray is guaranteed to be completed owned by the ByteArray
+                value = Bytes.toString(byteArray.array());
             }
 
             @Override
@@ -210,7 +211,7 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
                     return new ByteArray();
                 }
 
-                byte[] bytes = literal.getBytes();
+                byte[] bytes = Bytes.toBytes(literal);
                 if (bytes.length <= dataType.getPrecision()) {
                     return new ByteArray(bytes);
                 } else {
