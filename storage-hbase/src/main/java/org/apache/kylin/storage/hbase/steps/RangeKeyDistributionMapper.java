@@ -38,14 +38,10 @@ public class RangeKeyDistributionMapper extends KylinMapper<Text, Text, Text, Lo
 
     private Text lastKey;
 
-    private Long scaleFactorForSandbox = 1L;
 
     @Override
     protected void setup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
-        if (context.getConfiguration().getBoolean("isDevEnv", false)) {
-            scaleFactorForSandbox = 1024L;
-        }
     }
 
     @Override
@@ -55,8 +51,8 @@ public class RangeKeyDistributionMapper extends KylinMapper<Text, Text, Text, Lo
         int bytesLength = key.getLength() + value.getLength();
         bytesRead += bytesLength;
 
-        if ((bytesRead * scaleFactorForSandbox) >= ONE_MEGA_BYTES) {
-            outputValue.set(bytesRead * scaleFactorForSandbox);
+        if (bytesRead >= ONE_MEGA_BYTES) {
+            outputValue.set(bytesRead);
             context.write(key, outputValue);
 
             // reset bytesRead

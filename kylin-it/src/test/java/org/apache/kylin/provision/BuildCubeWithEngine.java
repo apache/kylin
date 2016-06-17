@@ -407,10 +407,10 @@ public class BuildCubeWithEngine {
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
-        if (segment.getCubeDesc().getEngineType() == IEngineAware.ID_MR_V1
-                || segment.getCubeDesc().getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
-            checkHFilesInHBase(segment);
-        }
+//        if (segment.getCubeDesc().getEngineType() == IEngineAware.ID_MR_V1
+//                || segment.getCubeDesc().getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
+//            checkHFilesInHBase(segment);
+//        }
         return job.getId();
     }
 
