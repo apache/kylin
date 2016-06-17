@@ -408,10 +408,10 @@ public class CubeManager implements IRealizationProvider {
     }
 
     public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset) throws IOException {
-        return appendSegment(cube, startDate, endDate, startOffset, endOffset, true, true);
+        return appendSegment(cube, startDate, endDate, startOffset, endOffset, true);
     }
 
-    public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, boolean strictChecking, boolean saveChange) throws IOException {
+    public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, boolean strictChecking) throws IOException {
 
         if(strictChecking)
             checkNoBuildingSegment(cube);
@@ -435,11 +435,9 @@ public class CubeManager implements IRealizationProvider {
         CubeSegment newSegment = newSegment(cube, startDate, endDate, startOffset, endOffset);
         validateNewSegments(cube, newSegment);
 
-        if (saveChange) {
-            CubeUpdate cubeBuilder = new CubeUpdate(cube);
-            cubeBuilder.setToAddSegs(newSegment);
-            updateCube(cubeBuilder);
-        }
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
+        cubeBuilder.setToAddSegs(newSegment);
+        updateCube(cubeBuilder);
         return newSegment;
     }
 
