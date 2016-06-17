@@ -172,7 +172,7 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
         cubeSegment.setStatus(SegmentStatusEnum.READY);
         cubeSegment.setInputRecords(processedRowCount);
         CubeUpdate cubeBuilder = new CubeUpdate(cubeSegment.getCubeInstance());
-        cubeBuilder.setToUpdateSegs(cubeSegment);
+        cubeBuilder.setToAddSegs(cubeSegment);
         try {
             CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).updateCube(cubeBuilder);
         } catch (IOException e) {
