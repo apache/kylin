@@ -194,7 +194,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
             if (!state.isFinalState()) {
                 String path = JobInstance.getJobWorkingDir(jobId, engineConfig.getHdfsWorkingDirectory());
                 allHdfsPathsNeedToBeDeleted.remove(path);
-                logger.info("Remove " + path + " from deletion list, as the path belongs to job " + jobId + " with status " + state);
+                logger.info("Skip " + path + " from deletion list, as the path belongs to job " + jobId + " with status " + state);
             }
         }
 
@@ -205,7 +205,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
                 if (jobUuid != null && jobUuid.equals("") == false) {
                     String path = JobInstance.getJobWorkingDir(jobUuid, engineConfig.getHdfsWorkingDirectory());
                     allHdfsPathsNeedToBeDeleted.remove(path);
-                    logger.info("Remove " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
+                    logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
                 }
             }
         }
@@ -257,7 +257,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
             if (!state.isFinalState()) {
                 workingJobList.add(jobId);
-                logger.info("Remove intermediate hive table with job id " + jobId + " with job status " + state);
+                logger.info("Skip intermediate hive table with job id " + jobId + " with job status " + state);
             }
         }
 
