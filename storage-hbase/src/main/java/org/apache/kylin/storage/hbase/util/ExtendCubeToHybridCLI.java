@@ -132,8 +132,7 @@ public class ExtendCubeToHybridCLI {
         }
 
         String owner = cubeInstance.getOwner();
-        String dateFormat = dataModelDesc.getPartitionDesc().getPartitionDateFormat();
-        long partitionDate = partitionDateStr != null ? DateFormat.stringToMillis(partitionDateStr, dateFormat) : 0;
+        long partitionDate = partitionDateStr != null ? DateFormat.stringToMillis(partitionDateStr) : 0;
 
         // get new name for old cube and cube_desc
         String newCubeDescName = renameCube(cubeDesc.getName());
