@@ -81,6 +81,6 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
     @Override
     public int getStorageBytesEstimate() {
         // It's difficult to decide the size before data was ingested, comparing with HLLCounter(16) as 64KB, here is assumption
-        return 128 * 1024;
+        return 8 * 1024;
     }
 }
