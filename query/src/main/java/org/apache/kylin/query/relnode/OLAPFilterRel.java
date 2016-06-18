@@ -50,7 +50,9 @@ import org.apache.calcite.rex.RexProgramBuilder;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.util.NlsString;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -64,6 +66,7 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -144,7 +147,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             for (RexNode operand : call.operands) {
                 TupleFilter childFilter = operand.accept(this);
                 if (filter == null) {
-                    filter = childFilter;
+                    filter = cast(childFilter, call.type);
                 } else {
                     filter.addChild(childFilter);
                 }
@@ -157,6 +160,26 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
                 }
             }
             return filter;
+        }
+
+        private TupleFilter cast(TupleFilter filter, RelDataType type) {
+            if ((filter instanceof ConstantTupleFilter) == false) {
+                return filter;
+            }
+
+            ConstantTupleFilter constFilter = (ConstantTupleFilter) filter;
+            
+            if (type.getFamily() == SqlTypeFamily.DATE || type.getFamily() == SqlTypeFamily.DATETIME || type.getFamily() == SqlTypeFamily.TIMESTAMP) {
+                List<String> newValues = Lists.newArrayList();
+                for (Object v : constFilter.getValues()) {
+                    if (v == null)
+                        newValues.add(null);
+                    else
+                        newValues.add(String.valueOf(DateFormat.stringToMillis(v.toString())));
+                }
+                constFilter = new ConstantTupleFilter(newValues);
+            }
+            return constFilter;
         }
 
         private CompareTupleFilter mergeToInClause(TupleFilter filter) {

@@ -19,8 +19,10 @@
 package org.apache.kylin.dict.lookup;
 
 import java.io.IOException;
+import java.util.Comparator;
 
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ReadableTable;
@@ -30,31 +32,73 @@ import org.apache.kylin.source.ReadableTable;
  * 
  */
 public class LookupStringTable extends LookupTable<String> {
+    
+    private static final Comparator<String> dateStrComparator = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            long l1 = Long.parseLong(o1);
+            long l2 = Long.parseLong(o2);
+            return Long.compare(l1, l2);
+        }
+    };
 
-    int[] keyIndexOfDates;
+    private static final Comparator<String> numStrComparator = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            double d1 = Double.parseDouble(o1);
+            double d2 = Double.parseDouble(o2);
+            return Double.compare(d1, d2);
+        }
+    };
+    
+    private static final Comparator<String> defaultStrComparator = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            return o1.compareTo(o2);
+        }
+    };
+    
+    boolean[] colIsDateTime;
+    boolean[] colIsNumber;
     
     public LookupStringTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
         super(tableDesc, keyColumns, table);
     }
+    
+    @Override
+    protected void init() throws IOException {
+        ColumnDesc[] cols = tableDesc.getColumns();
+        colIsDateTime = new boolean[cols.length];
+        colIsNumber = new boolean[cols.length];
+        for (int i = 0; i < cols.length; i++) {
+            DataType t = cols[i].getType();
+            colIsDateTime[i] = t.isDateTimeFamily();
+            colIsNumber[i] = t.isNumberFamily();
+        }
+        
+        super.init();
+    }
 
     @Override
     protected String[] convertRow(String[] cols) {
-        if (keyIndexOfDates == null) {
-            keyIndexOfDates = new int[keyColumns.length];
-            for (int i = 0; i < keyColumns.length; i++) {
-                ColumnDesc col = tableDesc.findColumnByName(keyColumns[i]);
-                keyIndexOfDates[i] = col.getType().isDateTimeFamily() ? col.getZeroBasedIndex() : -1;
+        for (int i = 0; i < cols.length; i++) {
+            if (colIsDateTime[i]) {
+                cols[i] = String.valueOf(DateFormat.stringToMillis(cols[i]));
             }
-        }
-        
-        for (int i = 0; i < keyIndexOfDates.length; i++) {
-            int c = keyIndexOfDates[i];
-            if (c >= 0)
-                cols[c] = String.valueOf(DateFormat.stringToMillis(cols[c]));
         }
         return cols;
     }
 
+    @Override
+    protected Comparator<String> getComparator(int idx) {
+        if (colIsDateTime[idx])
+            return dateStrComparator;
+        else if (colIsNumber[idx])
+            return numStrComparator;
+        else
+            return defaultStrComparator;
+    }
+    
     @Override
     protected String toString(String cell) {
         return cell;
@@ -63,4 +107,5 @@ public class LookupStringTable extends LookupTable<String> {
     public Class<?> getType() {
         return String.class;
     }
+
 }

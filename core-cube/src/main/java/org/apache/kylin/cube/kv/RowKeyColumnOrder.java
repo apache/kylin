@@ -32,7 +32,7 @@ abstract public class RowKeyColumnOrder implements Comparator<String> {
     public static final StringOrder STRING_ORDER = new StringOrder();
 
     public static RowKeyColumnOrder getInstance(DataType type) {
-        if (type.isNumberFamily())
+        if (type.isNumberFamily() || type.isDateTimeFamily())
             return NUMBER_ORDER;
         else
             return STRING_ORDER;

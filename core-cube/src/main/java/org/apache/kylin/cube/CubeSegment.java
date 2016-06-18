@@ -305,7 +305,8 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
 
     public Dictionary<String> getDictionary(TblColRef col) {
         TblColRef reuseCol = getCubeDesc().getDictionaryReuseColumn(col);
-        return CubeManager.getInstance(this.getCubeInstance().getConfig()).getDictionary(this, reuseCol);
+        CubeManager cubeMgr = CubeManager.getInstance(this.getCubeInstance().getConfig());
+        return cubeMgr.getDictionary(this, reuseCol);
     }
 
     public CubeDimEncMap getDimensionEncodingMap() {

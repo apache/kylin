@@ -48,6 +48,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
+import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
@@ -543,10 +544,13 @@ public class CubeStorageQuery implements IStorageQuery {
         }
 
         // a little pre-evaluation to remove invalid EQ/IN values and round start/end according to dictionary
+        RowKeyDesc rowkey = cubeSegment.getCubeDesc().getRowkey();
         Iterator<ColumnValueRange> it = rangeMap.values().iterator();
         while (it.hasNext()) {
             ColumnValueRange range = it.next();
-            range.preEvaluateWithDict((Dictionary<String>) cubeSegment.getDictionary(range.getColumn()));
+            if (rowkey.isUseDictionary(range.getColumn())) {
+                range.preEvaluateWithDict((Dictionary<String>) cubeSegment.getDictionary(range.getColumn()));
+            }
             if (range.satisfyAll())
                 it.remove();
             else if (range.satisfyNone())

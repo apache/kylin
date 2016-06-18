@@ -24,11 +24,9 @@ import java.util.Properties;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.linq4j.Enumerator;
-import org.apache.kylin.dict.DictCodeSystem;
+import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
-import org.apache.kylin.metadata.filter.TimeConditionLiteralsReplacer;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
@@ -112,11 +110,8 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         // bind dynamic variables
         bindVariable(olapContext.filter);
 
-        // modify date condition
-        olapContext.filter = modifyTimeLiterals(olapContext.filter);
-        olapContext.resetSQLDigest();
-
         // cube don't have correct result for simple query without group by, but let's try to return something makes sense
+        olapContext.resetSQLDigest();
         SQLDigest sqlDigest = olapContext.getSQLDigest();
         hackNoGroupByAggregation(sqlDigest);
 
@@ -128,16 +123,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         }
 
         return iterator;
-    }
-
-    /**
-     * Calcite passed down all time family constants as GregorianCalendar,
-     * we'll have to reformat it to date/time according to column definition
-     */
-    private TupleFilter modifyTimeLiterals(TupleFilter filter) {
-        TimeConditionLiteralsReplacer filterDecorator = new TimeConditionLiteralsReplacer(filter);
-        byte[] bytes = TupleFilterSerializer.serialize(filter, filterDecorator, DictCodeSystem.INSTANCE);
-        return TupleFilterSerializer.deserialize(bytes, DictCodeSystem.INSTANCE);
     }
 
     private void bindVariable(TupleFilter filter) {
@@ -155,7 +140,11 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
                 String variable = entry.getKey();
                 Object value = optiqContext.get(variable);
                 if (value != null) {
-                    compFilter.bindVariable(variable, value.toString());
+                    String str = value.toString();
+                    if (compFilter.getColumn().getType().isDateTimeFamily())
+                        str = String.valueOf(DateFormat.stringToMillis(str));
+                    
+                    compFilter.bindVariable(variable, str);
                 }
 
             }

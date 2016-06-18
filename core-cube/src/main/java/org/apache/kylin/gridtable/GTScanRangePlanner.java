@@ -156,7 +156,6 @@ public class GTScanRangePlanner {
         //start key GTRecord compare to stop key GTRecord
         this.rangeStartEndComparator = getRangeStartEndComparator(comp);
 
-
         this.gtFilter = gtFilter;
         this.gtStartAndEnd = gtStartAndEnd;
         this.gtPartitionCol = gtPartitionCol;

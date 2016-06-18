@@ -201,8 +201,6 @@ public class CubeManager implements IRealizationProvider {
         DictionaryInfo info = null;
         try {
             DictionaryManager dictMgr = getDictionaryManager();
-            // logger.info("Using metadata url " + metadataUrl +
-            // " for DictionaryManager");
             String dictResPath = cubeSeg.getDictResPath(col);
             if (dictResPath == null)
                 return null;

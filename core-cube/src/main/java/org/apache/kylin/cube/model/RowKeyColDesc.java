@@ -79,10 +79,10 @@ public class RowKeyColDesc {
         if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName)) {
             DataType type = colRef.getType();
             if (type.isDate()) {
-                encodingName = DateDimEnc.ENCODING_NAME;
+                encoding = encodingName = DateDimEnc.ENCODING_NAME;
             }
             if (type.isTime() || type.isTimestamp() || type.isDatetime()) {
-                encodingName = TimeDimEnc.ENCODING_NAME;
+                encoding = encodingName = TimeDimEnc.ENCODING_NAME;
             }
         }
     }

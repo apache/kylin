@@ -21,6 +21,7 @@ package org.apache.kylin.dict.lookup;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,7 +40,7 @@ import com.google.common.collect.Sets;
  *
  * @author yangli9
  */
-abstract public class LookupTable<T extends Comparable<T>> {
+abstract public class LookupTable<T> {
 
     protected TableDesc tableDesc;
     protected String[] keyColumns;
@@ -109,15 +110,18 @@ abstract public class LookupTable<T extends Comparable<T>> {
     public Pair<T, T> mapRange(String col, T beginValue, T endValue, String returnCol) {
         int colIdx = tableDesc.findColumnByName(col).getZeroBasedIndex();
         int returnIdx = tableDesc.findColumnByName(returnCol).getZeroBasedIndex();
+        Comparator<T> colComp = getComparator(colIdx);
+        Comparator<T> returnComp = getComparator(returnIdx);
+        
         T returnBegin = null;
         T returnEnd = null;
         for (T[] row : data.values()) {
-            if (between(beginValue, row[colIdx], endValue)) {
+            if (between(beginValue, row[colIdx], endValue, colComp)) {
                 T returnValue = row[returnIdx];
-                if (returnBegin == null || returnValue.compareTo(returnBegin) < 0) {
+                if (returnBegin == null || returnComp.compare(returnValue, returnBegin) < 0) {
                     returnBegin = returnValue;
                 }
-                if (returnEnd == null || returnValue.compareTo(returnEnd) > 0) {
+                if (returnEnd == null || returnComp.compare(returnValue, returnEnd) > 0) {
                     returnEnd = returnValue;
                 }
             }
@@ -140,10 +144,12 @@ abstract public class LookupTable<T extends Comparable<T>> {
         return result;
     }
 
-    private boolean between(T beginValue, T v, T endValue) {
-        return (beginValue == null || beginValue.compareTo(v) <= 0) && (endValue == null || v.compareTo(endValue) <= 0);
+    private boolean between(T beginValue, T v, T endValue, Comparator<T> comp) {
+        return (beginValue == null || comp.compare(beginValue, v) <= 0) && (endValue == null || comp.compare(v, endValue) <= 0);
     }
 
+    abstract protected Comparator<T> getComparator(int colIdx);
+    
     public String toString() {
         return "LookupTable [path=" + table + "]";
     }

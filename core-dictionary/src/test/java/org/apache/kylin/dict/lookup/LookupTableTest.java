@@ -65,7 +65,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
         for (String i : results) {
             System.out.println(i);
 
-            Assert.assertEquals("2012-01-01", i);
+            Assert.assertEquals(millis("2012-01-01"), i);
         }
     }
 
@@ -77,10 +77,21 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
         System.out.println("The first qtr_beg_dt is " + results.getFirst());
         System.out.println("The last qtr_beg_dt is " + results.getSecond());
 
-        Assert.assertEquals("2012-01-01", results.getFirst());
-        Assert.assertEquals("2012-10-01", results.getSecond());
+        Assert.assertEquals(millis("2012-01-01"), results.getFirst());
+        Assert.assertEquals(millis("2012-10-01"), results.getSecond());
     }
 
+    @Test
+    public void testMapRange2() throws Exception {
+        Pair<String, String> results = lookupTable.mapRange("WEEK_BEG_DT", millis("2013-05-01"), millis("2013-08-01"), "CAL_DT");
+
+        System.out.println(DateFormat.formatToDateStr(Long.parseLong(results.getFirst())));
+        System.out.println(DateFormat.formatToDateStr(Long.parseLong(results.getSecond())));
+        
+        Assert.assertEquals(millis("2013-05-05"), results.getFirst());
+        Assert.assertEquals(millis("2013-08-03"), results.getSecond());
+    }
+    
     @Test
     public void testMapValues() throws Exception {
         Set<String> values = new HashSet<String>();
@@ -92,7 +103,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
         for (String i : results) {
             System.out.println(i);
 
-            Assert.assertEquals("2012-01-01", i);
+            Assert.assertEquals(millis("2012-01-01"), i);
         }
     }
     
