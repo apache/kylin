@@ -35,7 +35,8 @@ import com.google.common.collect.Maps;
 
 /**
  */
-@RunWith(Parameterized.class)
+@Ignore("II query is no longer maintained")
+//@RunWith(Parameterized.class)
 public class ITIIQueryTest extends ITKylinQueryTest {
     @BeforeClass
     public static void setUp() throws Exception {
