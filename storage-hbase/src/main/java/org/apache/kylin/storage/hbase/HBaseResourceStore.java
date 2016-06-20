@@ -277,9 +277,28 @@ public class HBaseResourceStore extends ResourceStore {
     protected void deleteResourceImpl(String resPath) throws IOException {
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
+            boolean hdfsResourceExist = false;
+            Result result = internalGetFromHTable(table,resPath,true,false);
+            if (result != null) {
+                byte[] value = result.getValue(B_FAMILY, B_COLUMN);
+                if (value != null && value.length == 0) {
+                    hdfsResourceExist = true;
+                }
+            }
+
             Delete del = new Delete(Bytes.toBytes(resPath));
             table.delete(del);
             table.flushCommits();
+
+            if (hdfsResourceExist) { // remove hdfs cell value
+                Path redirectPath = bigCellHDFSPath(resPath);
+                Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
+                FileSystem fileSystem = FileSystem.get(hconf);
+
+                if (fileSystem.exists(redirectPath)) {
+                    fileSystem.delete(redirectPath, true);
+                }
+            }
         } finally {
             IOUtils.closeQuietly(table);
         }
@@ -291,6 +310,15 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     private Result getFromHTable(String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
+        HTableInterface table = getConnection().getTable(getAllInOneTableName());
+        try {
+            return internalGetFromHTable(table,path,fetchContent,fetchTimestamp);
+        } finally {
+            IOUtils.closeQuietly(table);
+        }
+    }
+
+    private Result internalGetFromHTable(HTableInterface table, String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
         byte[] rowkey = Bytes.toBytes(path);
 
         Get get = new Get(rowkey);
@@ -304,14 +332,9 @@ public class HBaseResourceStore extends ResourceStore {
                 get.addColumn(B_FAMILY, B_COLUMN_TS);
         }
 
-        HTableInterface table = getConnection().getTable(getAllInOneTableName());
-        try {
-            Result result = table.get(get);
-            boolean exists = result != null && (!result.isEmpty() || (result.getExists() != null && result.getExists()));
-            return exists ? result : null;
-        } finally {
-            IOUtils.closeQuietly(table);
-        }
+        Result result = table.get(get);
+        boolean exists = result != null && (!result.isEmpty() || (result.getExists() != null && result.getExists()));
+        return exists ? result : null;
     }
 
     private Path writeLargeCellToHdfs(String resPath, byte[] largeColumn, HTableInterface table) throws IOException {
