@@ -24,6 +24,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.*;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -61,6 +62,8 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
 
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanupJob.class);
+
+    public static final int TIME_THRESHOLD_DELETE_HTABLE = 10; // Unit minute
 
     boolean delete = false;
 
@@ -144,19 +147,21 @@ public class StorageCleanupJob extends AbstractHadoopJob {
 
         if (delete == true) {
             // drop tables
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
             for (String htableName : allTablesNeedToBeDropped) {
-                logger.info("Deleting HBase table " + htableName);
-                if (hbaseAdmin.tableExists(htableName)) {
-                    if (hbaseAdmin.isTableEnabled(htableName)) {
-                        hbaseAdmin.disableTable(htableName);
-                    }
-
-                    hbaseAdmin.deleteTable(htableName);
-                    logger.info("Deleted HBase table " + htableName);
-                } else {
-                    logger.info("HBase table" + htableName + " does not exist");
+                FutureTask futureTask = new FutureTask(new DeleteHTableRunnable(hbaseAdmin, htableName));
+                executorService.execute(futureTask);
+                try {
+                    futureTask.get(TIME_THRESHOLD_DELETE_HTABLE, TimeUnit.MINUTES);
+                } catch (TimeoutException e) {
+                    logger.warn("It fails to delete htable " + htableName + ", for it cost more than " + TIME_THRESHOLD_DELETE_HTABLE + " minutes!");
+                    futureTask.cancel(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    futureTask.cancel(true);
                 }
             }
+            executorService.shutdown();
         } else {
             System.out.println("--------------- Tables To Be Dropped ---------------");
             for (String htableName : allTablesNeedToBeDropped) {
@@ -166,6 +171,31 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         }
 
         hbaseAdmin.close();
+    }
+
+    class DeleteHTableRunnable implements Callable {
+        HBaseAdmin hbaseAdmin;
+        String htableName;
+
+        DeleteHTableRunnable(HBaseAdmin hbaseAdmin, String htableName) {
+            this.hbaseAdmin = hbaseAdmin;
+            this.htableName = htableName;
+        }
+
+        public Object call() throws Exception {
+            logger.info("Deleting HBase table " + htableName);
+            if (hbaseAdmin.tableExists(htableName)) {
+                if (hbaseAdmin.isTableEnabled(htableName)) {
+                    hbaseAdmin.disableTable(htableName);
+                }
+
+                hbaseAdmin.deleteTable(htableName);
+                logger.info("Deleted HBase table " + htableName);
+            } else {
+                logger.info("HBase table" + htableName + " does not exist");
+            }
+            return null;
+        }
     }
 
     private void cleanUnusedHdfsFiles(Configuration conf) throws IOException {
@@ -236,7 +266,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         final KylinConfig config = KylinConfig.getInstanceFromEnv();
         final CliCommandExecutor cmdExec = config.getCliCommandExecutor();
         final int uuidLength = 36;
-        
+
         final String useDatabaseHql = "USE " + config.getHiveDatabaseForIntermediateTable() + ";";
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement(useDatabaseHql);
