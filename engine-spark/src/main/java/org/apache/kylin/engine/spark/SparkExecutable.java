@@ -64,7 +64,7 @@ public class SparkExecutable extends AbstractExecutable {
         Preconditions.checkNotNull(config.getSparkHome());
         Preconditions.checkNotNull(config.getSparkMaster());
         try {
-            String cmd = String.format("%s/bin/spark-submit --class \"org.apache.kylin.engine.spark.SparkEntry\" --master %s %s %s",
+            String cmd = String.format("%s/bin/spark-submit --class \"org.apache.kylin.common.util.SparkEntry\" --master %s %s %s",
                     config.getSparkHome(),
                     config.getSparkMaster(),
                     config.getKylinSparkJobJarPath(),

@@ -610,6 +610,7 @@ public class SparkCubing extends AbstractApplication {
 
             }
         });
+        
         final Map<Long, HyperLogLogPlusCounter> samplingResult = sampling(rowJavaRDD, cubeName);
         final byte[][] splitKeys = createHTable(cubeName, segmentId, samplingResult);
 
