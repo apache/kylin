@@ -27,28 +27,28 @@ public class GTScanRange {
 
     final public GTRecord pkStart; // inclusive, record must not be null, col[pk].array() can be null to mean unbounded
     final public GTRecord pkEnd; // inclusive, record must not be null, col[pk].array() can be null to mean unbounded
-    final public List<GTRecord> fuzzyKeys; // partial matching primary keys
+    final public List<FuzzyKeyGTRecord> fuzzyKeys; // partial matching primary keys
 
     public GTScanRange(GTRecord pkStart, GTRecord pkEnd) {
         this(pkStart, pkEnd, null);
     }
 
-    public GTScanRange(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys) {
+    public GTScanRange(GTRecord pkStart, GTRecord pkEnd, List<FuzzyKeyGTRecord> fuzzyKeys) {
         GTInfo info = pkStart.info;
         assert info == pkEnd.info;
 
         this.pkStart = pkStart;
         this.pkEnd = pkEnd;
-        this.fuzzyKeys = fuzzyKeys == null ? Collections.<GTRecord> emptyList() : fuzzyKeys;
+        this.fuzzyKeys = fuzzyKeys == null ? Collections.<FuzzyKeyGTRecord> emptyList() : fuzzyKeys;
     }
 
     public GTScanRange replaceGTInfo(final GTInfo gtInfo) {
-        List<GTRecord> newFuzzyKeys = Lists.newArrayList();
-        for (GTRecord input : fuzzyKeys) {
-            newFuzzyKeys.add(new GTRecord(gtInfo, input.maskForEqualHashComp(), input.cols));
+        List<FuzzyKeyGTRecord> newFuzzyKeys = Lists.newArrayList();
+        for (FuzzyKeyGTRecord input : fuzzyKeys) {
+            newFuzzyKeys.add(new FuzzyKeyGTRecord(gtInfo, input.cols, input.maskForEqualHashComp));
         }
-        return new GTScanRange(new GTRecord(gtInfo, pkStart.maskForEqualHashComp(), pkStart.cols), //
-                new GTRecord(gtInfo, pkEnd.maskForEqualHashComp(), pkEnd.cols), //
+        return new GTScanRange(new GTRecord(gtInfo, pkStart.cols), //
+                new GTRecord(gtInfo,  pkEnd.cols), //
                 newFuzzyKeys);
     }
 

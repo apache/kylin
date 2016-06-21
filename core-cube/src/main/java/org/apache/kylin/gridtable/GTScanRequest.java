@@ -261,8 +261,8 @@ public class GTScanRequest {
                 serializeGTRecord(range.pkStart, out);
                 serializeGTRecord(range.pkEnd, out);
                 BytesUtil.writeVInt(range.fuzzyKeys.size(), out);
-                for (GTRecord f : range.fuzzyKeys) {
-                    serializeGTRecord(f, out);
+                for (FuzzyKeyGTRecord f : range.fuzzyKeys) {
+                    serializeFuzzyKeyGTRecord(f, out);
                 }
             }
 
@@ -285,10 +285,10 @@ public class GTScanRequest {
             for (int rangeIdx = 0; rangeIdx < sRangesCount; rangeIdx++) {
                 GTRecord sPkStart = deserializeGTRecord(in, sInfo);
                 GTRecord sPkEnd = deserializeGTRecord(in, sInfo);
-                List<GTRecord> sFuzzyKeys = Lists.newArrayList();
+                List<FuzzyKeyGTRecord> sFuzzyKeys = Lists.newArrayList();
                 int sFuzzyKeySize = BytesUtil.readVInt(in);
                 for (int i = 0; i < sFuzzyKeySize; i++) {
-                    sFuzzyKeys.add(deserializeGTRecord(in, sInfo));
+                    sFuzzyKeys.add(deserializeFuzzyKeyGTRecord(in, sInfo));
                 }
                 GTScanRange sRange = new GTScanRange(sPkStart, sPkEnd, sFuzzyKeys);
                 sRanges.add(sRange);
@@ -311,7 +311,6 @@ public class GTScanRequest {
             for (ByteArray col : gtRecord.cols) {
                 col.exportData(out);
             }
-            ImmutableBitSet.serializer.serialize(gtRecord.maskForEqualHashComp, out);
         }
 
         private GTRecord deserializeGTRecord(ByteBuffer in, GTInfo sInfo) {
@@ -320,8 +319,18 @@ public class GTScanRequest {
             for (int i = 0; i < colLength; i++) {
                 sCols[i] = ByteArray.importData(in);
             }
+            return new GTRecord(sInfo, sCols);
+        }
+        
+        private void serializeFuzzyKeyGTRecord(FuzzyKeyGTRecord gtRecord, ByteBuffer out) {
+            serializeGTRecord(gtRecord,out);
+            ImmutableBitSet.serializer.serialize(gtRecord.maskForEqualHashComp, out);
+        }
+
+        private FuzzyKeyGTRecord deserializeFuzzyKeyGTRecord(ByteBuffer in, GTInfo sInfo) {
+            GTRecord temp = deserializeGTRecord(in,sInfo);
             ImmutableBitSet sMaskForEqualHashComp = ImmutableBitSet.serializer.deserialize(in);
-            return new GTRecord(sInfo, sMaskForEqualHashComp, sCols);
+            return new FuzzyKeyGTRecord(temp.info,temp.cols, sMaskForEqualHashComp);
         }
 
     };

@@ -31,39 +31,27 @@ public class GTRecord implements Comparable<GTRecord> {
 
     final transient GTInfo info;
     final ByteArray[] cols;
-    final ImmutableBitSet maskForEqualHashComp;
 
-    public GTRecord(GTInfo info, ImmutableBitSet maskForEqualHashComp, ByteArray[] cols) {
+    public GTRecord(GTInfo info, ByteArray[] cols) {
         this.info = info;
         this.cols = cols;
-        this.maskForEqualHashComp = maskForEqualHashComp;
     }
 
-    public GTRecord(GTInfo info, ImmutableBitSet maskForEqualHashComp) {
+    public GTRecord(GTInfo info) {
         this.cols = new ByteArray[info.getColumnCount()];
         for (int i = 0; i < this.cols.length; i++) {
             // consider column projection by pass in another bit set
             this.cols[i] = new ByteArray();
         }
         this.info = info;
-        this.maskForEqualHashComp = maskForEqualHashComp;
-    }
-
-    public GTRecord(GTInfo info) {
-        this(info, info.colAll);
-    }
-
-    public GTRecord(GTInfo info, ByteArray[] cols) {
-        this(info, info.colAll, cols);
     }
 
     public GTRecord(GTRecord other) {
         this.info = other.info;
-        this.maskForEqualHashComp = other.maskForEqualHashComp;
         this.cols = new ByteArray[info.getColumnCount()];
         for (int i = 0; i < other.cols.length; i++) {
             this.cols[i] = other.cols[i].copy();
-        } 
+        }
     }
 
     public GTInfo getInfo() {
@@ -124,6 +112,7 @@ public class GTRecord implements Comparable<GTRecord> {
         return result;
     }
 
+    /** decode and return the values of this record */
     public Object[] getValues(int[] selectedColumns, Object[] result) {
         assert selectedColumns.length <= result.length;
         for (int i = 0; i < selectedColumns.length; i++) {
@@ -136,7 +125,7 @@ public class GTRecord implements Comparable<GTRecord> {
         }
         return result;
     }
-    
+
     public int sizeOf(ImmutableBitSet selectedCols) {
         int size = 0;
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
@@ -151,15 +140,10 @@ public class GTRecord implements Comparable<GTRecord> {
     }
 
     public GTRecord copy(ImmutableBitSet selectedCols) {
-        int len = 0;
-        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
-            int c = selectedCols.trueBitAt(i);
-            len += cols[c].length();
-        }
-
+        int len = sizeOf(selectedCols);
         byte[] space = new byte[len];
 
-        GTRecord copy = new GTRecord(info, this.maskForEqualHashComp);
+        GTRecord copy = new GTRecord(info);
         int pos = 0;
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
             int c = selectedCols.trueBitAt(i);
@@ -169,10 +153,6 @@ public class GTRecord implements Comparable<GTRecord> {
         }
 
         return copy;
-    }
-
-    public ImmutableBitSet maskForEqualHashComp() {
-        return maskForEqualHashComp;
     }
 
     @Override
@@ -187,10 +167,9 @@ public class GTRecord implements Comparable<GTRecord> {
         GTRecord o = (GTRecord) obj;
         if (this.info != o.info)
             return false;
-        if (this.maskForEqualHashComp != o.maskForEqualHashComp)
-            return false;
-        for (int i = 0; i < maskForEqualHashComp.trueBitCount(); i++) {
-            int c = maskForEqualHashComp.trueBitAt(i);
+
+        for (int i = 0; i < info.colAll.trueBitCount(); i++) {
+            int c = info.colAll.trueBitAt(i);
             if (!this.cols[c].equals(o.cols[c])) {
                 return false;
             }
@@ -201,8 +180,8 @@ public class GTRecord implements Comparable<GTRecord> {
     @Override
     public int hashCode() {
         int hash = 1;
-        for (int i = 0; i < maskForEqualHashComp.trueBitCount(); i++) {
-            int c = maskForEqualHashComp.trueBitAt(i);
+        for (int i = 0; i < info.colAll.trueBitCount(); i++) {
+            int c = info.colAll.trueBitAt(i);
             hash = (31 * hash) + cols[c].hashCode();
         }
         return hash;
@@ -210,13 +189,12 @@ public class GTRecord implements Comparable<GTRecord> {
 
     @Override
     public int compareTo(GTRecord o) {
-        assert this.info == o.info;
-        assert this.maskForEqualHashComp == o.maskForEqualHashComp; // reference equal for performance
+        assert this.info == o.info; // reference equal for performance
         IGTComparator comparator = info.codeSystem.getComparator();
 
         int comp = 0;
-        for (int i = 0; i < maskForEqualHashComp.trueBitCount(); i++) {
-            int c = maskForEqualHashComp.trueBitAt(i);
+        for (int i = 0; i < info.colAll.trueBitCount(); i++) {
+            int c = info.colAll.trueBitAt(i);
             comp = comparator.compare(cols[c], o.cols[c]);
             if (comp != 0)
                 return comp;
@@ -226,7 +204,7 @@ public class GTRecord implements Comparable<GTRecord> {
 
     @Override
     public String toString() {
-        return toString(maskForEqualHashComp);
+        return toString(info.colAll);
     }
 
     public String toString(ImmutableBitSet selectedColumns) {
@@ -238,11 +216,7 @@ public class GTRecord implements Comparable<GTRecord> {
     // ============================================================================
 
     public ByteArray exportColumns(ImmutableBitSet selectedCols) {
-        int len = 0;
-        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
-            int c = selectedCols.trueBitAt(i);
-            len += cols[c].length();
-        }
+        int len = sizeOf(selectedCols);
 
         ByteArray buf = ByteArray.allocate(len);
         exportColumns(selectedCols, buf);

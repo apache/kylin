@@ -305,7 +305,7 @@ public class GTScanRangePlanner {
         GTRecord pkEnd = new GTRecord(gtInfo);
         Map<Integer, Set<ByteArray>> fuzzyValues = Maps.newHashMap();
 
-        List<GTRecord> fuzzyKeys;
+        List<FuzzyKeyGTRecord> fuzzyKeys;
 
         for (ColumnRange range : andDimRanges) {
             if (gtPartitionCol != null && range.column.equals(gtPartitionCol)) {
@@ -337,8 +337,8 @@ public class GTScanRangePlanner {
         return new GTScanRange(pkStart, pkEnd, fuzzyKeys);
     }
 
-    private List<GTRecord> buildFuzzyKeys(Map<Integer, Set<ByteArray>> fuzzyValueSet) {
-        ArrayList<GTRecord> result = Lists.newArrayList();
+    private List<FuzzyKeyGTRecord> buildFuzzyKeys(Map<Integer, Set<ByteArray>> fuzzyValueSet) {
+        ArrayList<FuzzyKeyGTRecord> result = Lists.newArrayList();
 
         if (fuzzyValueSet.isEmpty())
             return result;
@@ -357,7 +357,7 @@ public class GTScanRangePlanner {
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 bitSet.set(entry.getKey());
             }
-            GTRecord fuzzy = new GTRecord(gtInfo, new ImmutableBitSet(bitSet));
+            FuzzyKeyGTRecord fuzzy = new FuzzyKeyGTRecord(gtInfo, new ImmutableBitSet(bitSet));
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 fuzzy.set(entry.getKey(), entry.getValue());
             }
@@ -514,7 +514,7 @@ public class GTScanRangePlanner {
 
         GTRecord start = first.pkStart;
         GTRecord end = first.pkEnd;
-        List<GTRecord> newFuzzyKeys = new ArrayList<GTRecord>();
+        List<FuzzyKeyGTRecord> newFuzzyKeys = new ArrayList<FuzzyKeyGTRecord>();
 
         boolean hasNonFuzzyRange = false;
         for (GTScanRange range : ranges) {
@@ -774,12 +774,10 @@ public class GTScanRangePlanner {
         @Override
         public int compare(GTRecord a, GTRecord b) {
             assert a.info == b.info;
-            assert a.maskForEqualHashComp() == b.maskForEqualHashComp();
-            ImmutableBitSet mask = a.maskForEqualHashComp();
 
             int comp;
-            for (int i = 0; i < mask.trueBitCount(); i++) {
-                int c = mask.trueBitAt(i);
+            for (int i = 0; i < a.info.colAll.trueBitCount(); i++) {
+                int c = a.info.colAll.trueBitAt(i);
                 comp = comparator.compare(a.cols[c], b.cols[c]);
                 if (comp != 0)
                     return comp;

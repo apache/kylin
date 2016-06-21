@@ -40,6 +40,7 @@ import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.cube.model.HBaseMappingDesc;
+import org.apache.kylin.gridtable.FuzzyKeyGTRecord;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
@@ -92,7 +93,7 @@ public abstract class CubeHBaseRPC implements IGTStorage {
         return scan;
     }
 
-    private RawScan preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<GTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
+    private RawScan preparedHBaseScan(GTRecord pkStart, GTRecord pkEnd, List<FuzzyKeyGTRecord> fuzzyKeys, ImmutableBitSet selectedColBlocks) {
         final List<Pair<byte[], byte[]>> selectedColumns = makeHBaseColumns(selectedColBlocks);
 
         LazyRowKeyEncoder encoder = new LazyRowKeyEncoder(cubeSeg, cuboid);
@@ -136,13 +137,13 @@ public abstract class CubeHBaseRPC implements IGTStorage {
      * translate GTRecord format fuzzy keys to hbase expected format
      * @return
      */
-    private List<Pair<byte[], byte[]>> translateFuzzyKeys(List<GTRecord> fuzzyKeys) {
+    private List<Pair<byte[], byte[]>> translateFuzzyKeys(List<FuzzyKeyGTRecord> fuzzyKeys) {
         if (fuzzyKeys == null || fuzzyKeys.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<Pair<byte[], byte[]>> ret = Lists.newArrayList();
-        for (GTRecord gtRecordFuzzyKey : fuzzyKeys) {
+        for (FuzzyKeyGTRecord gtRecordFuzzyKey : fuzzyKeys) {
             byte[] hbaseFuzzyKey = fuzzyKeyEncoder.createBuf();
             byte[] hbaseFuzzyMask = fuzzyMaskEncoder.createBuf();
 

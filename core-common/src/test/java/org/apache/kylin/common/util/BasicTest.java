@@ -79,6 +79,9 @@ public class BasicTest {
 
     @Test
     public void testxx() throws InterruptedException {
+        byte[] space = new byte[100];
+        ByteBuffer buffer = ByteBuffer.wrap(space, 10, 20);
+        buffer.put((byte) 1);
     }
 
     @Test
