@@ -305,7 +305,7 @@ public class GTScanRangePlanner {
         GTRecord pkEnd = new GTRecord(gtInfo);
         Map<Integer, Set<ByteArray>> fuzzyValues = Maps.newHashMap();
 
-        List<FuzzyKeyGTRecord> fuzzyKeys;
+        List<GTRecord> fuzzyKeys;
 
         for (ColumnRange range : andDimRanges) {
             if (gtPartitionCol != null && range.column.equals(gtPartitionCol)) {
@@ -337,8 +337,8 @@ public class GTScanRangePlanner {
         return new GTScanRange(pkStart, pkEnd, fuzzyKeys);
     }
 
-    private List<FuzzyKeyGTRecord> buildFuzzyKeys(Map<Integer, Set<ByteArray>> fuzzyValueSet) {
-        ArrayList<FuzzyKeyGTRecord> result = Lists.newArrayList();
+    private List<GTRecord> buildFuzzyKeys(Map<Integer, Set<ByteArray>> fuzzyValueSet) {
+        ArrayList<GTRecord> result = Lists.newArrayList();
 
         if (fuzzyValueSet.isEmpty())
             return result;
@@ -353,11 +353,11 @@ public class GTScanRangePlanner {
 
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
 
-            BitSet bitSet = new BitSet(gtInfo.getColumnCount());
-            for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
-                bitSet.set(entry.getKey());
-            }
-            FuzzyKeyGTRecord fuzzy = new FuzzyKeyGTRecord(gtInfo, new ImmutableBitSet(bitSet));
+//            BitSet bitSet = new BitSet(gtInfo.getColumnCount());
+//            for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
+//                bitSet.set(entry.getKey());
+//            }
+            GTRecord fuzzy = new GTRecord(gtInfo);
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 fuzzy.set(entry.getKey(), entry.getValue());
             }
@@ -514,7 +514,7 @@ public class GTScanRangePlanner {
 
         GTRecord start = first.pkStart;
         GTRecord end = first.pkEnd;
-        List<FuzzyKeyGTRecord> newFuzzyKeys = new ArrayList<FuzzyKeyGTRecord>();
+        List<GTRecord> newFuzzyKeys = new ArrayList<GTRecord>();
 
         boolean hasNonFuzzyRange = false;
         for (GTScanRange range : ranges) {
