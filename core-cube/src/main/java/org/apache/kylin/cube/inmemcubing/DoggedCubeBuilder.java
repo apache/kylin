@@ -252,8 +252,8 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 return true;
             }
 
-            if (systemAvailMB <= reserveMemoryMB) {
-                logger.info("Split cut due to hitting memory threshold, system avail " + systemAvailMB + " MB <= reserve " + reserveMemoryMB + " MB");
+            if (systemAvailMB <= reserveMemoryMB * 1.5) {
+                logger.info("Split cut due to hitting memory threshold, system avail " + systemAvailMB + " MB <= reserve " + reserveMemoryMB + "*1.5 MB");
                 return true;
             }
 
