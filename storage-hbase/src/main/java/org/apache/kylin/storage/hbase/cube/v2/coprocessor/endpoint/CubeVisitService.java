@@ -243,6 +243,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             final MutableBoolean scanNormalComplete = new MutableBoolean(true);
             final long startTime = this.serviceStartTime;
             final long timeout = request.getTimeout();
+            final int rowLimit = scanReq.getRowLimit();
 
             final CellListIterator cellListIterator = new CellListIterator() {
 
@@ -257,6 +258,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
                 @Override
                 public boolean hasNext() {
+                    if (rowLimit > 0 && rowLimit <= counter)
+                        return false;
+                    
                     if (counter % 1000 == 1) {
                         if (System.currentTimeMillis() - startTime > timeout) {
                             scanNormalComplete.setValue(false);

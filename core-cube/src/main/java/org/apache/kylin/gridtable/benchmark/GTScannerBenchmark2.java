@@ -132,7 +132,7 @@ public class GTScannerBenchmark2 {
     @SuppressWarnings("unused")
     private void testAggregate(ImmutableBitSet groupBy) throws IOException {
         long t = System.currentTimeMillis();
-        GTScanRequest req = new GTScanRequest(info, null, dimensions, groupBy, metrics, aggrFuncs, null, true, 10);
+        GTScanRequest req = new GTScanRequest(info, null, dimensions, groupBy, metrics, aggrFuncs, null);
         IGTScanner scanner = req.decorateScanner(gen.generate(N));
 
         long count = 0;

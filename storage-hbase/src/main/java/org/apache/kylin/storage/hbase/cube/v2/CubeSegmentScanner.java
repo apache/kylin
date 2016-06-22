@@ -37,6 +37,7 @@ import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,7 @@ public class CubeSegmentScanner implements IGTScanner {
     final GTScanRequest scanRequest;
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Collection<FunctionDesc> metrics, TupleFilter filter, boolean allowPreAggregate) {
+            Collection<FunctionDesc> metrics, TupleFilter filter, StorageContext context) {
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
 
@@ -66,7 +67,13 @@ public class CubeSegmentScanner implements IGTScanner {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        scanRequest = scanRangePlanner.planScanRequest(allowPreAggregate);
+        scanRequest = scanRangePlanner.planScanRequest();
+        if (scanRequest != null) {
+            scanRequest.setAllowPreAggregation(!context.isExactAggregation());
+            scanRequest.setAggrCacheGB(cubeSeg.getCubeInstance().getConfig().getQueryCoprocessorMemGB());
+            if (context.isLimitEnabled())
+                scanRequest.setRowLimit(context.getLimit());
+        }
         scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest);
     }
 

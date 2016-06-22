@@ -40,6 +40,7 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -93,7 +94,7 @@ public class CubeStorageQuery implements IStorageQuery {
         Set<TblColRef> dimensionsD = new LinkedHashSet<TblColRef>();
         dimensionsD.addAll(groupsD);
         dimensionsD.addAll(otherDimsD);
-        Cuboid cuboid = Cuboid.identifyCuboid(cubeDesc,dimensionsD, metrics);
+        Cuboid cuboid = Cuboid.identifyCuboid(cubeDesc, dimensionsD, metrics);
         context.setCuboid(cuboid);
 
         // isExactAggregation? meaning: tuples returned from storage requires no further aggregation in query engine
@@ -104,20 +105,16 @@ public class CubeStorageQuery implements IStorageQuery {
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
         TupleFilter filterD = translateDerived(filter, groupsD);
 
-        //actually even if the threshold is set, it will not be used in this query engine
         setThreshold(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
-
         setLimit(filter, context);
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
             CubeSegmentScanner scanner;
             if (cubeSeg.getInputRecords() == 0) {
-                logger.warn("cube segment {} input record is 0, " +
-                        "it may caused by kylin failed to the job counter " +
-                        "as the hadoop history server wasn't running", cubeSeg);
+                logger.warn("cube segment {} input record is 0, " + "it may caused by kylin failed to the job counter " + "as the hadoop history server wasn't running", cubeSeg);
             }
-            scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, !isExactAggregation);
+            scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context);
             scanners.add(scanner);
         }
 
@@ -169,8 +166,6 @@ public class CubeStorageQuery implements IStorageQuery {
         }
         return expanded;
     }
-
-   
 
     @SuppressWarnings("unchecked")
     private Set<TblColRef> findSingleValueColumns(TupleFilter filter) {
@@ -234,6 +229,16 @@ public class CubeStorageQuery implements IStorageQuery {
             exact = false;
             logger.info("exactAggregation is false because some column not on group by: " + othersD //
                     + " (single value column: " + singleValuesD + ")");
+        }
+
+        // for partitioned cube, the partition column must belong to group by or has single value
+        PartitionDesc partDesc = cuboid.getCubeDesc().getModel().getPartitionDesc();
+        if (partDesc.isPartitioned()) {
+            TblColRef col = partDesc.getPartitionDateColumnRef();
+            if (!groups.contains(col) && !singleValuesD.contains(col)) {
+                exact = false;
+                logger.info("exactAggregation is false because cube is partitioned and " + col + " is not on group by");
+            }
         }
 
         if (exact) {
@@ -343,7 +348,7 @@ public class CubeStorageQuery implements IStorageQuery {
 
         long rowEst = this.cubeInstance.getConfig().getQueryMemBudget() / rowSizeEst;
         if (rowEst > 0) {
-            logger.info("Memory budget is set to: " + rowEst);
+            logger.info("Memory budget is set to " + rowEst + " rows");
             context.setThreshold((int) rowEst);
         } else {
             logger.info("Memory budget is not set.");

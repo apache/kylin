@@ -52,21 +52,18 @@ public class GTScanRequest {
 
     // hint to storage behavior
     private boolean allowPreAggregation = true;
-    private double aggrCacheGB = 0; // no limit
+    private double aggrCacheGB = 0; // 0 means no row/memory limit; positive means memory limit in GB; negative means row limit
 
     public GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet columns, TupleFilter filterPushDown) {
-        this.info = info;
-        if (ranges == null) {
-            this.ranges = Lists.newArrayList(new GTScanRange(new GTRecord(info), new GTRecord(info)));
-        } else {
-            this.ranges = ranges;
-        }
-        this.columns = columns;
-        this.filterPushDown = filterPushDown;
-        validate(info);
+        this(info, ranges, columns, null, null, null, filterPushDown, true, 0);
     }
 
     public GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
+            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
+        this(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, true, 0);
+    }
+
+    private GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
             ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, boolean allowPreAggregation, double aggrCacheGB) {
         this.info = info;
         if (ranges == null) {
@@ -238,12 +235,34 @@ public class GTScanRequest {
         return aggrMetricsFuncs;
     }
 
+    public boolean isAllowPreAggregation() {
+        return allowPreAggregation;
+    }
+
+    public void setAllowPreAggregation(boolean allowPreAggregation) {
+        this.allowPreAggregation = allowPreAggregation;
+    }
+
     public double getAggrCacheGB() {
-        return aggrCacheGB;
+        if (aggrCacheGB < 0)
+            return 0;
+        else
+            return aggrCacheGB;
     }
 
     public void setAggrCacheGB(double gb) {
         this.aggrCacheGB = gb;
+    }
+
+    public int getRowLimit() {
+        if (aggrCacheGB < 0)
+            return (int) -aggrCacheGB;
+        else
+            return 0;
+    }
+
+    public void setRowLimit(int limit) {
+        aggrCacheGB = -limit;
     }
 
     @Override

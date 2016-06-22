@@ -162,11 +162,11 @@ public class GTScanRangePlanner {
     }
 
 
-    public GTScanRequest planScanRequest(boolean allowPreAggregate) {
+    public GTScanRequest planScanRequest() {
         GTScanRequest scanRequest;
         List<GTScanRange> scanRanges = this.planScanRanges();
         if (scanRanges != null && scanRanges.size() != 0) {
-            scanRequest = new GTScanRequest(gtInfo, scanRanges, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter, allowPreAggregate, cubeSegment.getCubeInstance().getConfig().getQueryCoprocessorMemGB());
+            scanRequest = new GTScanRequest(gtInfo, scanRanges, gtDimensions, gtAggrGroups, gtAggrMetrics, gtAggrFuncs, gtFilter);
         } else {
             scanRequest = null;
         }
@@ -177,7 +177,7 @@ public class GTScanRangePlanner {
      * Overwrite this method to provide smarter storage visit plans
      * @return
      */
-    public List<GTScanRange> planScanRanges() {
+    List<GTScanRange> planScanRanges() {
         TupleFilter flatFilter = flattenToOrAndFilter(gtFilter);
 
         List<Collection<ColumnRange>> orAndDimRanges = translateToOrAndDimRanges(flatFilter);
