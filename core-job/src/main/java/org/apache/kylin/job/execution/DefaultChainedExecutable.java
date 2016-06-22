@@ -46,12 +46,20 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         final int size = executables.size();
         for (int i = 0; i < size; ++i) {
             Executable subTask = executables.get(i);
+            ExecutableState state = subTask.getStatus();
+            if (state == ExecutableState.RUNNING){
+                // there is already running subtask, no need to start a new subtask
+                break;
+            } else if (state == ExecutableState.ERROR){
+                throw new IllegalStateException("invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
+            }
             if (subTask.isRunnable()) {
                 return subTask.execute(context);
             }
         }
         return new ExecuteResult(ExecuteResult.State.SUCCEED, null);
     }
+
 
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
@@ -74,6 +82,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             List<? extends Executable> jobs = getTasks();
             boolean allSucceed = true;
             boolean hasError = false;
+            boolean hasRunning = false;
             for (Executable task : jobs) {
                 final ExecutableState status = task.getStatus();
                 if (status == ExecutableState.ERROR) {
@@ -81,6 +90,9 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 }
                 if (status != ExecutableState.SUCCEED) {
                     allSucceed = false;
+                }
+                if (status == ExecutableState.RUNNING) {
+                    hasRunning = true;
                 }
             }
             if (allSucceed) {
@@ -91,6 +103,8 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 setEndTime(System.currentTimeMillis());
                 jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
                 notifyUserStatusChange(executableContext, ExecutableState.ERROR);
+            } else if (hasRunning){
+                jobService.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
             } else {
                 jobService.updateJobOutput(getId(), ExecutableState.READY, null, null);
             }

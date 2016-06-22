@@ -246,7 +246,6 @@ public class ExecutableManager {
         if (job == null) {
             return;
         }
-        updateJobOutput(jobId, ExecutableState.READY, null, null);
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
@@ -256,6 +255,7 @@ public class ExecutableManager {
                 }
             }
         }
+        updateJobOutput(jobId, ExecutableState.READY, null, null);
     }
 
     public void discardJob(String jobId) {
