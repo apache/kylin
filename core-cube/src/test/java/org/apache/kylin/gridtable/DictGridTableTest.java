@@ -119,7 +119,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
             assertEquals(1, r.size());//scan range are [close,close]
             assertEquals("[null, 10]-[1421193600000, 10]", r.get(0).toString());
             assertEquals(1, r.get(0).fuzzyKeys.size());
-            assertEquals("[[10]]", r.get(0).fuzzyKeys.toString());
+            assertEquals("[[null, 10, null, null, null]]", r.get(0).fuzzyKeys.toString());
         }
         {
             LogicalTupleFilter filter = and(timeComp2, ageComp1);
@@ -145,7 +145,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[1421193600000, 10]-[null, 10]", r.get(0).toString());
-            assertEquals("[[10], [1421193600000, 10]]", r.get(0).fuzzyKeys.toString());
+            assertEquals("[[null, 10, null, null, null], [1421193600000, 10, null, null, null]]", r.get(0).fuzzyKeys.toString());
         }
         {
             LogicalTupleFilter filter = or(timeComp2, timeComp1, timeComp6);
@@ -191,7 +191,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
             assertEquals(1, r.size());//scan range are [close,close]
             assertEquals("[null, 10]-[1421193600000, 10]", r.get(0).toString());
             assertEquals(1, r.get(0).fuzzyKeys.size());
-            assertEquals("[[10]]", r.get(0).fuzzyKeys.toString());
+            assertEquals("[[null, 10, null, null, null]]", r.get(0).fuzzyKeys.toString());
         }
 
         {
@@ -212,7 +212,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[1421193600000, 10]-[null, 20]", r.get(0).toString());
-            assertEquals("[[10], [20]]", r.get(0).fuzzyKeys.toString());
+            assertEquals("[[null, 10, null, null, null], [null, 20, null, null, null]]", r.get(0).fuzzyKeys.toString());
         }
 
         // pre-evaluate ever false
