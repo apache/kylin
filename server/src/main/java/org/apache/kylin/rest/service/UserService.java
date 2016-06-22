@@ -58,6 +58,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 @Component("userService")
 public class UserService implements UserManager {
 
+    private static final String PWD_PREFIX = "PWD:";
+
     private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
     private String userTableName = null;
@@ -97,36 +99,46 @@ public class UserService implements UserManager {
             return null;
 
         String username = Bytes.toString(result.getRow());
-        
+
         byte[] valueBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
         UserGrantedAuthority[] deserialized = ugaSerializer.deserialize(valueBytes);
-        
-        // password is stored as the [0] authority
-        String password = deserialized[0].getAuthority();
-        List<UserGrantedAuthority> authorities = Arrays.asList(deserialized).subList(1, deserialized.length);
-        
+
+        String password = "";
+        List<UserGrantedAuthority> authorities = Collections.emptyList();
+
+        // password is stored at [0] of authorities for backward compatibility
+        if (deserialized != null) {
+            if (deserialized.length > 0 && deserialized[0].getAuthority().startsWith(PWD_PREFIX)) {
+                password = deserialized[0].getAuthority().substring(PWD_PREFIX.length());
+                authorities = Arrays.asList(deserialized).subList(1, deserialized.length);
+            } else {
+                authorities = Arrays.asList(deserialized);
+            }
+        }
+
         return new User(username, password, authorities);
     }
 
     private Pair<byte[], byte[]> userToHBaseRow(UserDetails user) throws JsonProcessingException {
         byte[] key = Bytes.toBytes(user.getUsername());
-        
+
         Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
         if (authorities == null)
             authorities = Collections.emptyList();
-        
+
         UserGrantedAuthority[] serializing = new UserGrantedAuthority[authorities.size() + 1];
+        
         // password is stored as the [0] authority
-        serializing[0] = new UserGrantedAuthority(user.getPassword());
+        serializing[0] = new UserGrantedAuthority(PWD_PREFIX + user.getPassword());
         int i = 1;
         for (GrantedAuthority a : authorities) {
             serializing[i++] = new UserGrantedAuthority(a.getAuthority());
         }
-        
+
         byte[] value = ugaSerializer.serialize(serializing);
         return Pair.newPair(key, value);
     }
-    
+
     @Override
     public void createUser(UserDetails user) {
         updateUser(user);
@@ -230,7 +242,7 @@ public class UserService implements UserManager {
         public UserGrantedAuthority(String authority) {
             setAuthority(authority);
         }
-        
+
         @Override
         public String getAuthority() {
             return authority;
