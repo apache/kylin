@@ -397,13 +397,14 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                 });
 
                     } catch (Throwable ex) {
-                        logger.error(logHeader + "Error when visiting cubes by endpoint", ex);
+                        logger.error(logHeader + "Error when visiting cubes by endpoint", ex); // double log coz the query thread may already timeout
                         epResultItr.notifyCoprocException(ex);
                         return;
                     }
 
                     if (abnormalFinish[0]) {
                         Throwable ex = new RuntimeException(logHeader + "The coprocessor thread stopped itself due to scan timeout, failing current query...");
+                        logger.error(logHeader + "Error when visiting cubes by endpoint", ex); // double log coz the query thread may already timeout
                         epResultItr.notifyCoprocException(ex);
                         return;
                     }
