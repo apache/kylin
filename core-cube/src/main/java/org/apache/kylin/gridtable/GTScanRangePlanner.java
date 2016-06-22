@@ -177,7 +177,7 @@ public class GTScanRangePlanner {
      * Overwrite this method to provide smarter storage visit plans
      * @return
      */
-    List<GTScanRange> planScanRanges() {
+    protected List<GTScanRange> planScanRanges() {
         TupleFilter flatFilter = flattenToOrAndFilter(gtFilter);
 
         List<Collection<ColumnRange>> orAndDimRanges = translateToOrAndDimRanges(flatFilter);
