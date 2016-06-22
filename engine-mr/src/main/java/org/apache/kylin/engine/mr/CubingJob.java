@@ -42,10 +42,14 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class CubingJob extends DefaultChainedExecutable {
+
+    private static final Logger logger = LoggerFactory.getLogger(CubingJob.class);
 
     public enum AlgorithmEnum {
         LAYER, INMEM

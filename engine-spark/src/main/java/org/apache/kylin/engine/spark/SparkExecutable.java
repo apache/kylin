@@ -29,10 +29,14 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
 import com.google.common.base.Preconditions;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class SparkExecutable extends AbstractExecutable {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SparkExecutable.class);
+
 
     private static final String CLASS_NAME = "className";
 

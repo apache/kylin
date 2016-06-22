@@ -40,8 +40,13 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MergeDictionaryStep extends AbstractExecutable {
+
+    private static final Logger logger = LoggerFactory.getLogger(MergeDictionaryStep.class);
+
 
     public MergeDictionaryStep() {
         super();

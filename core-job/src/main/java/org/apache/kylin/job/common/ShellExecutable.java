@@ -32,10 +32,14 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
 import com.google.common.collect.Maps;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class ShellExecutable extends AbstractExecutable {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ShellExecutable.class);
+
 
     private static final String CMD = "cmd";
 

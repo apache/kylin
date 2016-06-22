@@ -50,8 +50,12 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MergeStatisticsStep extends AbstractExecutable {
+    private static final Logger logger = LoggerFactory.getLogger(MergeStatisticsStep.class);
+
 
     protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = Maps.newHashMap();
 

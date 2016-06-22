@@ -32,10 +32,14 @@ import org.datanucleus.store.types.backed.HashMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class HqlExecutable extends AbstractExecutable {
+
+    private static final Logger logger = LoggerFactory.getLogger(HqlExecutable.class);
 
     private static final String HQL = "hql";
     private static final String HIVE_CONFIG = "hive-config";

@@ -40,12 +40,16 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Save the cube segment statistic to Kylin metadata store
  *
  */
 public class SaveStatisticsStep extends AbstractExecutable {
+
+    private static final Logger logger = LoggerFactory.getLogger(SaveStatisticsStep.class);
 
     public SaveStatisticsStep() {
         super();

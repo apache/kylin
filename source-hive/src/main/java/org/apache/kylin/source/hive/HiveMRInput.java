@@ -21,7 +21,6 @@ package org.apache.kylin.source.hive;
 import java.io.IOException;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,7 +30,6 @@ import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -50,6 +48,10 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.realization.IRealizationSegment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 public class HiveMRInput implements IMRInput {
 
@@ -118,7 +120,7 @@ public class HiveMRInput implements IMRInput {
             jobFlow.addTask(createCountHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), rowCountOutputDir));
             jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), cubeName, rowCountOutputDir));
             AbstractExecutable task = createLookupHiveViewMaterializationStep(jobFlow.getId());
-            if(task != null) {
+            if (task != null) {
                 jobFlow.addTask(task);
             }
         }
@@ -138,7 +140,8 @@ public class HiveMRInput implements IMRInput {
         }
 
         public ShellExecutable createLookupHiveViewMaterializationStep(String jobId) {
-            ShellExecutable step = new ShellExecutable();;
+            ShellExecutable step = new ShellExecutable();
+            ;
             step.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP);
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
 
@@ -156,20 +159,18 @@ public class HiveMRInput implements IMRInput {
                 }
             }
 
-            if(lookupViewsTables.size() == 0) {
+            if (lookupViewsTables.size() == 0) {
                 return null;
             }
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             hiveCmdBuilder.addStatement(useDatabaseHql);
             hiveCmdBuilder.addStatement(JoinedFlatTable.generateHiveSetStatements(conf));
-            for(TableDesc lookUpTableDesc : lookupViewsTables) {
+            for (TableDesc lookUpTableDesc : lookupViewsTables) {
                 if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(lookUpTableDesc.getTableType())) {
                     StringBuilder createIntermediateTableHql = new StringBuilder();
                     createIntermediateTableHql.append("DROP TABLE IF EXISTS " + lookUpTableDesc.getMaterializedName() + ";\n");
-                    createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS " +
-                            lookUpTableDesc.getMaterializedName() + "\n");
-                    createIntermediateTableHql.append("LOCATION '" + JobBuilderSupport.getJobWorkingDir(conf, jobId) + "/" +
-                            lookUpTableDesc.getMaterializedName() + "'\n");
+                    createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS " + lookUpTableDesc.getMaterializedName() + "\n");
+                    createIntermediateTableHql.append("LOCATION '" + JobBuilderSupport.getJobWorkingDir(conf, jobId) + "/" + lookUpTableDesc.getMaterializedName() + "'\n");
                     createIntermediateTableHql.append("AS SELECT * FROM " + lookUpTableDesc.getIdentity() + ";\n");
                     hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
                     hiveViewIntermediateTables = hiveViewIntermediateTables + lookUpTableDesc.getMaterializedName() + ";";
@@ -222,6 +223,8 @@ public class HiveMRInput implements IMRInput {
     }
 
     public static class GarbageCollectionStep extends AbstractExecutable {
+        private static final Logger logger = LoggerFactory.getLogger(GarbageCollectionStep.class);
+
         @Override
         protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
             KylinConfig config = context.getConfig();
@@ -276,7 +279,7 @@ public class HiveMRInput implements IMRInput {
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
             hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
             if (getHiveViewIntermediateTableIdentities() != null && !getHiveViewIntermediateTableIdentities().isEmpty()) {
-                for(String hiveTableName : getHiveViewIntermediateTableIdentities().split(";")) {
+                for (String hiveTableName : getHiveViewIntermediateTableIdentities().split(";")) {
                     hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTableName + ";");
                 }
             }

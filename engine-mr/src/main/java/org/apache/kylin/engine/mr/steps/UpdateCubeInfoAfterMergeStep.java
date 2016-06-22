@@ -35,11 +35,15 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class UpdateCubeInfoAfterMergeStep extends AbstractExecutable {
 
+
+    private static final Logger logger = LoggerFactory.getLogger(UpdateCubeInfoAfterMergeStep.class);
 
     private final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 

@@ -49,7 +49,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected static final String START_TIME = "startTime";
     protected static final String END_TIME = "endTime";
 
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractExecutable.class);
     protected int retry = 0;
 
     private String name;

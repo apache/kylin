@@ -35,11 +35,16 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by sunyerui on 15/9/17.
  */
 public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
+
+    private static final Logger logger = LoggerFactory.getLogger(HDFSPathGarbageCollectionStep.class);
+
 
     public static final String TO_DELETE_PATHS = "toDeletePaths";
     private StringBuffer output;

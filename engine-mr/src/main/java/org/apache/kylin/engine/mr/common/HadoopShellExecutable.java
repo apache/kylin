@@ -30,10 +30,14 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class HadoopShellExecutable extends AbstractExecutable {
+    private static final Logger logger = LoggerFactory.getLogger(HadoopShellExecutable.class);
+
 
     private static final String KEY_MR_JOB = "HADOOP_SHELL_JOB_CLASS";
     private static final String KEY_PARAMS = "HADOOP_SHELL_JOB_PARAMS";

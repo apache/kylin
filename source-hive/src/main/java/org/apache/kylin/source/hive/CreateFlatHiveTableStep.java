@@ -14,6 +14,8 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +23,8 @@ import java.io.InputStream;
 /**
  */
 public class CreateFlatHiveTableStep extends AbstractExecutable {
+    
+    private static final Logger logger = LoggerFactory.getLogger(CreateFlatHiveTableStep.class);
     private final BufferedLogger stepLogger = new BufferedLogger(logger);
 
     private long readRowCountFromFile() throws IOException {

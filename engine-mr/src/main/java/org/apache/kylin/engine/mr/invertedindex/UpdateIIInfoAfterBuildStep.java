@@ -31,12 +31,16 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 /**
  */
 public class UpdateIIInfoAfterBuildStep extends AbstractExecutable {
+    private static final Logger logger = LoggerFactory.getLogger(UpdateIIInfoAfterBuildStep.class);
+
 
     private static final String II_NAME = "iiName";
     private static final String JOB_ID = "jobId";
