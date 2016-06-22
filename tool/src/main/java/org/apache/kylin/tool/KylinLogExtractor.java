@@ -28,6 +28,10 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,15 +46,35 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
     @SuppressWarnings("static-access")
     private static final Option OPTION_LOG_PERIOD = OptionBuilder.withArgName("logPeriod").hasArg().isRequired(false).withDescription("specify how many days of kylin logs to extract. Default " + DEFAULT_LOG_PERIOD + ".").create("logPeriod");
 
+    KylinConfig config;
+
     public KylinLogExtractor() {
         super();
 
         packageType = "logs";
         options.addOption(OPTION_LOG_PERIOD);
+
+        config = KylinConfig.getInstanceFromEnv();
+    }
+
+    private void beforeExtract() {
+        // reload metadata before extract diagnosis info
+        logger.info("Start to reload metadata from diagnosis.");
+
+        CubeManager.clearCache();
+        CubeManager.getInstance(config);
+        CubeDescManager.clearCache();
+        CubeDescManager.getInstance(config);
+        MetadataManager.clearCache();
+        MetadataManager.getInstance(config);
+        ProjectManager.clearCache();
+        ProjectManager.getInstance(config);
     }
 
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
+        beforeExtract();
+
         int logPeriod = optionsHelper.hasOption(OPTION_LOG_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_LOG_PERIOD)) : DEFAULT_LOG_PERIOD;
 
         if (logPeriod < 1) {
