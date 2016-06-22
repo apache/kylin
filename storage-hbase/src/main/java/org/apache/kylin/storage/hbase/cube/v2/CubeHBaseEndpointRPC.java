@@ -33,6 +33,7 @@ import java.util.zip.DataFormatException;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -92,14 +93,16 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             this.expectedSize = expectedSize;
             this.queue = new ArrayBlockingQueue<byte[]>(expectedSize);
 
-            this.timeout = HBaseConnection.getCurrentHBaseConfiguration().getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
+            Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
+            this.timeout = hconf.getInt(HConstants.HBASE_CLIENT_RETRIES_NUMBER, 5) * hconf.getInt(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, 60000);
+            this.timeout = Math.max(this.timeout, 5 * 60000);
             this.timeout *= KylinConfig.getInstanceFromEnv().getCubeVisitTimeoutTimes();
 
             if (BackdoorToggles.getQueryTimeout() != -1) {
                 this.timeout = BackdoorToggles.getQueryTimeout();
             }
 
-            this.timeout *= 1.1;//allow for some delay 
+            this.timeout *= 1.1; // allow for some delay
 
             logger.info("Timeout for ExpectedSizeIterator is: " + this.timeout);
 
