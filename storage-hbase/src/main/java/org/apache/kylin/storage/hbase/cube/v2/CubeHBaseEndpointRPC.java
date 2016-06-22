@@ -86,6 +86,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         int current = 0;
         long timeout;
         long timeoutTS;
+        volatile Throwable coprocException;
 
         public ExpectedSizeIterator(int expectedSize) {
             this.expectedSize = expectedSize;
@@ -117,19 +118,21 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             }
             try {
                 current++;
-                long tsRemaining = this.timeoutTS - System.currentTimeMillis();
-                if (tsRemaining < 0) {
-                    throw new RuntimeException("Timeout visiting cube!");
+                byte[] ret = null;
+                
+                while (ret == null && coprocException == null && timeoutTS - System.currentTimeMillis() > 0) {
+                    ret = queue.poll(5000, TimeUnit.MILLISECONDS);
                 }
 
-                byte[] ret = queue.poll(tsRemaining, TimeUnit.MILLISECONDS);
-                if (ret == null) {
+                if (coprocException != null) {
+                    throw new RuntimeException("Error in coprocessor", coprocException);
+                } else if (ret == null) {
                     throw new RuntimeException("Timeout visiting cube!");
                 } else {
                     return ret;
                 }
             } catch (InterruptedException e) {
-                throw new RuntimeException("error when waiting queue", e);
+                throw new RuntimeException("Error when waiting queue", e);
             }
         }
 
@@ -148,6 +151,10 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         public long getTimeout() {
             return timeout;
+        }
+
+        public void notifyCoprocException(Throwable ex) {
+            coprocException = ex;
         }
     }
 
@@ -389,12 +396,16 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                     }
                                 });
 
-                    } catch (Throwable throwable) {
-                        throw new RuntimeException(logHeader + "Error when visiting cubes by endpoint", throwable);
+                    } catch (Throwable ex) {
+                        logger.error(logHeader + "Error when visiting cubes by endpoint", ex);
+                        epResultItr.notifyCoprocException(ex);
+                        return;
                     }
 
                     if (abnormalFinish[0]) {
-                        throw new RuntimeException(logHeader + "The coprocessor thread stopped itself due to scan timeout, failing current query...");
+                        Throwable ex = new RuntimeException(logHeader + "The coprocessor thread stopped itself due to scan timeout, failing current query...");
+                        epResultItr.notifyCoprocException(ex);
+                        return;
                     }
                 }
             });
