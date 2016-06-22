@@ -21,6 +21,9 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 import java.util.Random;
 
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -43,9 +46,11 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+
 /**
  * Save the cube segment statistic to Kylin metadata store
- *
  */
 public class SaveStatisticsStep extends AbstractExecutable {
 
@@ -55,12 +60,45 @@ public class SaveStatisticsStep extends AbstractExecutable {
         super();
     }
 
+    private CubeSegment findSegment(ExecutableContext context, String cubeName, String segmentId) {
+        final CubeManager mgr = CubeManager.getInstance(context.getConfig());
+        final CubeInstance cube = mgr.getCube(cubeName);
+
+        if (cube == null) {
+            String cubeList = StringUtils.join(Iterables.transform(mgr.listAllCubes(), new Function<CubeInstance, String>() {
+                @Nullable
+                @Override
+                public String apply(@Nullable CubeInstance input) {
+                    return input.getName();
+                }
+            }).iterator(), ",");
+
+            logger.info("target cube name: {}, cube list: {}", cubeName, cubeList);
+            throw new IllegalStateException();
+        }
+
+
+        final CubeSegment newSegment = cube.getSegmentById(segmentId);
+
+        if (newSegment == null) {
+            String segmentList = StringUtils.join(Iterables.transform(cube.getSegments(), new Function<CubeSegment, String>() {
+                @Nullable
+                @Override
+                public String apply(@Nullable CubeSegment input) {
+                    return input.getUuid();
+                }
+            }).iterator(), ",");
+
+            logger.info("target segment id: {}, segment list: {}", segmentId, segmentList);
+            throw new IllegalStateException();
+        }
+        return newSegment;
+    }
+
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-        final CubeManager mgr = CubeManager.getInstance(context.getConfig());
-        final CubeInstance cube = mgr.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
-        final CubeSegment newSegment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
-        KylinConfig kylinConf = cube.getConfig();
+        CubeSegment newSegment = findSegment(context, CubingExecutableUtil.getCubeName(this.getParams()), CubingExecutableUtil.getSegmentId(this.getParams()));
+        KylinConfig kylinConf = newSegment.getConfig();
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
