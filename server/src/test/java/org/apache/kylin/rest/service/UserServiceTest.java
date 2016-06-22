@@ -44,14 +44,17 @@ public class UserServiceTest extends ServiceTestBase {
 
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
         authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        User user = new User("ADMIN", "ADMIN", authorities);
+        User user = new User("ADMIN", "PWD", authorities);
         userService.createUser(user);
 
         Assert.assertTrue(userService.userExists("ADMIN"));
 
         UserDetails ud = userService.loadUserByUsername("ADMIN");
-        Assert.assertTrue(ud.getUsername().equals("ADMIN"));
+        Assert.assertEquals("ADMIN", ud.getUsername());
+        Assert.assertEquals("PWD", ud.getPassword());
+        Assert.assertEquals("ROLE_ADMIN", ud.getAuthorities().iterator().next().getAuthority());
+        Assert.assertEquals(1, ud.getAuthorities().size());
 
-        Assert.assertTrue(userService.getUserAuthorities().size() > 0);
+        Assert.assertTrue(userService.getUserAuthorities().contains("ROLE_ADMIN"));
     }
 }

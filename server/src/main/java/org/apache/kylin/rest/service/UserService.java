@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -35,7 +36,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.security.AclHBaseStorage;
 import org.apache.kylin.rest.security.UserManager;
 import org.apache.kylin.rest.util.Serializer;
@@ -46,7 +47,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * @author xduo
@@ -77,15 +80,11 @@ public class UserService implements UserManager {
             get.addFamily(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY));
             Result result = htable.get(get);
 
-            Collection<? extends GrantedAuthority> authorities = null;
-            if (null != result && !result.isEmpty()) {
-                byte[] gaBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
-                authorities = Arrays.asList(ugaSerializer.deserialize(gaBytes));
-            } else {
+            User user = hbaseRowToUser(result);
+            if (user == null)
                 throw new UsernameNotFoundException("User " + username + " not found.");
-            }
 
-            return new User(username, "N/A", authorities);
+            return user;
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         } finally {
@@ -93,6 +92,41 @@ public class UserService implements UserManager {
         }
     }
 
+    private User hbaseRowToUser(Result result) throws JsonParseException, JsonMappingException, IOException {
+        if (null == result || result.isEmpty())
+            return null;
+
+        String username = Bytes.toString(result.getRow());
+        
+        byte[] valueBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
+        UserGrantedAuthority[] deserialized = ugaSerializer.deserialize(valueBytes);
+        
+        // password is stored as the [0] authority
+        String password = deserialized[0].getAuthority();
+        List<UserGrantedAuthority> authorities = Arrays.asList(deserialized).subList(1, deserialized.length);
+        
+        return new User(username, password, authorities);
+    }
+
+    private Pair<byte[], byte[]> userToHBaseRow(UserDetails user) throws JsonProcessingException {
+        byte[] key = Bytes.toBytes(user.getUsername());
+        
+        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
+        if (authorities == null)
+            authorities = Collections.emptyList();
+        
+        UserGrantedAuthority[] serializing = new UserGrantedAuthority[authorities.size() + 1];
+        // password is stored as the [0] authority
+        serializing[0] = new UserGrantedAuthority(user.getPassword());
+        int i = 1;
+        for (GrantedAuthority a : authorities) {
+            serializing[i++] = new UserGrantedAuthority(a.getAuthority());
+        }
+        
+        byte[] value = ugaSerializer.serialize(serializing);
+        return Pair.newPair(key, value);
+    }
+    
     @Override
     public void createUser(UserDetails user) {
         updateUser(user);
@@ -102,11 +136,11 @@ public class UserService implements UserManager {
     public void updateUser(UserDetails user) {
         HTableInterface htable = null;
         try {
-            byte[] userAuthorities = serialize(user.getAuthorities());
             htable = aclHBaseStorage.getTable(userTableName);
 
-            Put put = new Put(Bytes.toBytes(user.getUsername()));
-            put.add(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), userAuthorities);
+            Pair<byte[], byte[]> pair = userToHBaseRow(user);
+            Put put = new Put(pair.getKey());
+            put.add(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
 
             htable.put(put);
             htable.flushCommits();
@@ -160,7 +194,7 @@ public class UserService implements UserManager {
         Scan s = new Scan();
         s.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
 
-        List<String> authorities = new ArrayList<String>();
+        List<String> all = new ArrayList<String>();
         HTableInterface htable = null;
         ResultScanner scanner = null;
         try {
@@ -168,12 +202,11 @@ public class UserService implements UserManager {
             scanner = htable.getScanner(s);
 
             for (Result result = scanner.next(); result != null; result = scanner.next()) {
-                byte[] uaBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
-                Collection<? extends GrantedAuthority> authCollection = Arrays.asList(ugaSerializer.deserialize(uaBytes));
+                User user = hbaseRowToUser(result);
 
-                for (GrantedAuthority auth : authCollection) {
-                    if (!authorities.contains(auth.getAuthority())) {
-                        authorities.add(auth.getAuthority());
+                for (GrantedAuthority auth : user.getAuthorities()) {
+                    if (!all.contains(auth.getAuthority())) {
+                        all.add(auth.getAuthority());
                     }
                 }
             }
@@ -184,7 +217,7 @@ public class UserService implements UserManager {
             IOUtils.closeQuietly(htable);
         }
 
-        return authorities;
+        return all;
     }
 
     public static class UserGrantedAuthority implements GrantedAuthority {
@@ -194,6 +227,10 @@ public class UserService implements UserManager {
         public UserGrantedAuthority() {
         }
 
+        public UserGrantedAuthority(String authority) {
+            setAuthority(authority);
+        }
+        
         @Override
         public String getAuthority() {
             return authority;
@@ -229,11 +266,4 @@ public class UserService implements UserManager {
         }
     }
 
-    private byte[] serialize(Collection<? extends GrantedAuthority> auths) throws JsonProcessingException {
-        if (null == auths) {
-            return null;
-        }
-
-        return JsonUtil.writeValueAsBytes(auths);
-    }
 }
