@@ -17,7 +17,7 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -60,7 +60,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class DictGridTableTest  extends LocalFileMetadataTestCase {
+public class DictGridTableTest extends LocalFileMetadataTestCase {
 
     private GridTable table;
     private GTInfo info;
@@ -78,15 +78,15 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
 
     @After
     public void after() throws Exception {
-        
+
         this.cleanupTestMetadata();
     }
 
     @Before
     public void setup() throws IOException {
-        
+
         this.createTestMetadata();
-        
+
         table = newTestTable();
         info = table.getInfo();
 
@@ -112,10 +112,9 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         ByteArray segmentEnd = enc(info, 0, "2015-01-15");
         assertEquals(segmentStart, segmentStartX);
 
-
         {
             LogicalTupleFilter filter = and(timeComp0, ageComp1);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());//scan range are [close,close]
             assertEquals("[null, 10]-[1421193600000, 10]", r.get(0).toString());
@@ -124,25 +123,25 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         }
         {
             LogicalTupleFilter filter = and(timeComp2, ageComp1);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());
         }
         {
             LogicalTupleFilter filter = and(timeComp4, ageComp1);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
         }
         {
             LogicalTupleFilter filter = and(timeComp5, ageComp1);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());
         }
         {
             LogicalTupleFilter filter = or(and(timeComp2, ageComp1), and(timeComp1, ageComp1), and(timeComp6, ageComp1));
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[1421193600000, 10]-[null, 10]", r.get(0).toString());
@@ -150,7 +149,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         }
         {
             LogicalTupleFilter filter = or(timeComp2, timeComp1, timeComp6);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[1421193600000, null]-[null, null]", r.get(0).toString());
@@ -159,14 +158,14 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         {
             //skip FALSE filter
             LogicalTupleFilter filter = and(ageComp1, ConstantTupleFilter.FALSE);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());
         }
         {
             //TRUE or FALSE filter
             LogicalTupleFilter filter = or(ConstantTupleFilter.TRUE, ConstantTupleFilter.FALSE);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[null, null]-[null, null]", r.get(0).toString());
@@ -174,7 +173,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         {
             //TRUE or other filter
             LogicalTupleFilter filter = or(ageComp1, ConstantTupleFilter.TRUE);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[null, null]-[null, null]", r.get(0).toString());
@@ -187,7 +186,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
 
         {
             LogicalTupleFilter filter = and(timeComp0, ageComp1);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());//scan range are [close,close]
             assertEquals("[null, 10]-[1421193600000, 10]", r.get(0).toString());
@@ -197,7 +196,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
 
         {
             LogicalTupleFilter filter = and(timeComp5, ageComp1);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd), info.colRef(0),filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());//scan range are [close,close]
         }
@@ -206,11 +205,10 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
     @Test
     public void verifyScanRangePlanner() {
 
-
         // flatten or-and & hbase fuzzy value
         {
             LogicalTupleFilter filter = and(timeComp1, or(ageComp1, ageComp2));
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null,filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null, filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[1421193600000, 10]-[null, 20]", r.get(0).toString());
@@ -220,7 +218,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         // pre-evaluate ever false
         {
             LogicalTupleFilter filter = and(timeComp1, timeComp2);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null,filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null, filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());
         }
@@ -228,7 +226,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         // pre-evaluate ever true
         {
             LogicalTupleFilter filter = or(timeComp1, ageComp4);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null,filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null, filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals("[[null, null]-[null, null]]", r.toString());
         }
@@ -236,7 +234,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         // merge overlap range
         {
             LogicalTupleFilter filter = or(timeComp1, timeComp3);
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null,filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null, filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals("[[null, null]-[null, null]]", r.toString());
         }
@@ -244,7 +242,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         // merge too many ranges
         {
             LogicalTupleFilter filter = or(and(timeComp4, ageComp1), and(timeComp4, ageComp2), and(timeComp4, ageComp3));
-            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null,filter);
+            GTScanRangePlanner planner = new GTScanRangePlanner(info, null, null, filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(3, r.size());
             assertEquals("[1421280000000, 10]-[1421280000000, 10]", r.get(0).toString());
@@ -271,7 +269,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
     }
 
     //for testing GTScanRequest serialization and deserialization
-    private GTScanRequest useDeserializedGTScanRequest(GTScanRequest origin) {
+    public static GTScanRequest useDeserializedGTScanRequest(GTScanRequest origin) {
         ByteBuffer buffer = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);
         GTScanRequest.serializer.serialize(origin, buffer);
         buffer.flip();
@@ -445,38 +443,38 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         scanner.close();
     }
 
-    private ByteArray enc(GTInfo info, int col, String value) {
+    public static ByteArray enc(GTInfo info, int col, String value) {
         ByteBuffer buf = ByteBuffer.allocate(info.getMaxColumnLength());
         info.codeSystem.encodeColumnValue(col, value, buf);
         return ByteArray.copyOf(buf.array(), buf.arrayOffset(), buf.position());
     }
 
-    private ExtractTupleFilter unevaluatable(TblColRef col) {
+    public static ExtractTupleFilter unevaluatable(TblColRef col) {
         ExtractTupleFilter r = new ExtractTupleFilter(FilterOperatorEnum.EXTRACT);
         r.addChild(new ColumnTupleFilter(col));
         return r;
     }
 
-    private CompareTupleFilter compare(TblColRef col, FilterOperatorEnum op, Object... value) {
+    public static CompareTupleFilter compare(TblColRef col, FilterOperatorEnum op, Object... value) {
         CompareTupleFilter result = new CompareTupleFilter(op);
         result.addChild(new ColumnTupleFilter(col));
         result.addChild(new ConstantTupleFilter(Arrays.asList(value)));
         return result;
     }
 
-    private LogicalTupleFilter and(TupleFilter... children) {
+    public static LogicalTupleFilter and(TupleFilter... children) {
         return logic(FilterOperatorEnum.AND, children);
     }
 
-    private LogicalTupleFilter or(TupleFilter... children) {
+    public static LogicalTupleFilter or(TupleFilter... children) {
         return logic(FilterOperatorEnum.OR, children);
     }
 
-    private LogicalTupleFilter not(TupleFilter child) {
+    public static LogicalTupleFilter not(TupleFilter child) {
         return logic(FilterOperatorEnum.NOT, child);
     }
 
-    private LogicalTupleFilter logic(FilterOperatorEnum op, TupleFilter... children) {
+    public static LogicalTupleFilter logic(FilterOperatorEnum op, TupleFilter... children) {
         LogicalTupleFilter result = new LogicalTupleFilter(op);
         for (TupleFilter c : children) {
             result.addChild(c);
@@ -484,7 +482,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         return result;
     }
 
-    static GridTable newTestTable() throws IOException {
+    public static GridTable newTestTable() throws IOException {
         GTInfo info = newInfo();
         GTSimpleMemStore store = new GTSimpleMemStore(info);
         GridTable table = new GridTable(info, store);
@@ -609,7 +607,7 @@ public class DictGridTableTest  extends LocalFileMetadataTestCase {
         return builder.build(0);
     }
 
-    private static ImmutableBitSet setOf(int... values) {
+    public static ImmutableBitSet setOf(int... values) {
         BitSet set = new BitSet();
         for (int i : values)
             set.set(i);

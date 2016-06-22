@@ -312,7 +312,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 try {
                     oneRecord.exportColumns(scanReq.getColumns(), buffer);
                 } catch (BufferOverflowException boe) {
-                    buffer = ByteBuffer.allocate((int) (oneRecord.sizeOf(scanReq.getColumns()) * 1.5));
+                    buffer = ByteBuffer.allocate(oneRecord.sizeOf(scanReq.getColumns()) * 2);
                     oneRecord.exportColumns(scanReq.getColumns(), buffer);
                 }
 

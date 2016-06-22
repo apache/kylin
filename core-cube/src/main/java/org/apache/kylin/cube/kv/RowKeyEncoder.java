@@ -94,10 +94,29 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     @Override
     public void encode(GTRecord record, ImmutableBitSet keyColumns, byte[] buf) {
         ByteArray byteArray = new ByteArray(buf, getHeaderLength(), 0);
-        record.exportColumns(keyColumns, byteArray, defaultValue());
+
+        encodeDims(record, keyColumns, byteArray, defaultValue());
 
         //fill shard and cuboid
         fillHeader(buf);
+    }
+
+    //ByteArray representing dimension does not have extra header
+    public void encodeDims(GTRecord record, ImmutableBitSet selectedCols, ByteArray buf, byte defaultValue) {
+        int pos = 0;
+        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
+            int c = selectedCols.trueBitAt(i);
+            ByteArray columnC = record.get(c);
+            if (columnC.array() != null) {
+                System.arraycopy(record.get(c).array(), columnC.offset(), buf.array(), buf.offset() + pos, columnC.length());
+                pos += columnC.length();
+            } else {
+                int maxLength = record.getInfo().getCodeSystem().maxCodeLength(c);
+                Arrays.fill(buf.array(), buf.offset() + pos, buf.offset() + pos + maxLength, defaultValue);
+                pos += maxLength;
+            }
+        }
+        buf.setLength(pos);
     }
 
     @Override
