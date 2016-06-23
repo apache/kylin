@@ -109,7 +109,8 @@ public class KafkaInputAnalyzer extends AbstractApplication {
                         offset++;
                         consumeMsgCount++;
 
-                        final StreamingMessage streamingMessage = streamingParser.parse(messageAndOffset);
+                        final StreamingMessage streamingMessage = streamingParser.parse(messageAndOffset.message().payload());
+                        streamingMessage.setOffset(messageAndOffset.offset());
                         if (streamingParser.filter(streamingMessage)) {
                             streamQueue.add(streamingMessage);
                         }

@@ -51,6 +51,10 @@ public class StreamingMessage {
         return offset;
     }
 
+    public void setOffset(long offset) {
+        this.offset = offset;
+    }
+
     public final long getTimestamp() {
         return timestamp;
     }

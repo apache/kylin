@@ -162,7 +162,8 @@ public final class KafkaUtils {
         final ByteBuffer payload = messageAndOffset.message().payload();
         byte[] bytes = new byte[payload.limit()];
         payload.get(bytes);
-        final StreamingMessage streamingMessage = streamingParser.parse(messageAndOffset);
+        final StreamingMessage streamingMessage = streamingParser.parse(messageAndOffset.message().payload());
+        streamingMessage.setOffset(messageAndOffset.offset());
         logger.debug(String.format("The timestamp of topic: %s, partitionId: %d, offset: %d is: %d", topic, partitionId, offset, streamingMessage.getTimestamp()));
         return streamingMessage.getTimestamp();
 

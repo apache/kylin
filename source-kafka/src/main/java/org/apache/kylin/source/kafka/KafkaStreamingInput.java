@@ -205,7 +205,8 @@ public class KafkaStreamingInput implements IStreamingInput {
                     for (MessageAndOffset messageAndOffset : fetchResponse.messageSet(topic, partitionId)) {
                         offset++;
                         consumeMsgCount++;
-                        final StreamingMessage streamingMessage = streamingParser.parse(messageAndOffset);
+                        final StreamingMessage streamingMessage = streamingParser.parse(messageAndOffset.message().payload());
+                        streamingMessage.setOffset(messageAndOffset.offset());
                         if (streamingParser.filter(streamingMessage)) {
                             final long timestamp = streamingMessage.getTimestamp();
                             if (timestamp >= timeRange.getFirst() && timestamp < timeRange.getSecond()) {

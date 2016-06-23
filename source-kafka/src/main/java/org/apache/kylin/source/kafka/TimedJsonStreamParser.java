@@ -41,8 +41,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
 import org.apache.commons.lang3.StringUtils;
+import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -53,8 +53,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
 import com.google.common.collect.Lists;
-
-import kafka.message.MessageAndOffset;
 
 /**
  * each json message with a "timestamp" field
@@ -99,10 +97,9 @@ public final class TimedJsonStreamParser extends StreamingParser {
     }
 
     @Override
-    public StreamingMessage parse(Object msg) {
-        MessageAndOffset messageAndOffset = (MessageAndOffset) msg;
+    public StreamingMessage parse(ByteBuffer buffer) {
         try {
-            Map<String, String> message = mapper.readValue(new ByteBufferBackedInputStream(messageAndOffset.message().payload()), mapType);
+            Map<String, String> message = mapper.readValue(new ByteBufferBackedInputStream(buffer), mapType);
             Map<String, String> root = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
             root.putAll(message);
             String tsStr = root.get(tsColName);
@@ -123,8 +120,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 }
             }
 
-            return new StreamingMessage(result, messageAndOffset.offset(), t, Collections.<String, Object> emptyMap());
-
+            return new StreamingMessage(result, 0, t, Collections.<String, Object>emptyMap());
         } catch (IOException e) {
             logger.error("error", e);
             throw new RuntimeException(e);

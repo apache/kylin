@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.common.util.TimeUtil;
@@ -66,7 +67,7 @@ public abstract class StreamingParser {
      * @param message
      * @return StreamingMessage must not be NULL
      */
-    abstract public StreamingMessage parse(Object message);
+    abstract public StreamingMessage parse(ByteBuffer message);
 
     abstract public boolean filter(StreamingMessage streamingMessage);
 
