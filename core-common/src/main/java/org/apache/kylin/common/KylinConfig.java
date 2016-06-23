@@ -61,22 +61,28 @@ public class KylinConfig extends KylinConfigBase {
     private static KylinConfig ENV_INSTANCE = null;
 
     public static KylinConfig getInstanceFromEnv() {
-        if (ENV_INSTANCE == null) {
-            try {
-                KylinConfig config = loadKylinConfig();
-                ENV_INSTANCE = config;
-            } catch (IllegalArgumentException e) {
-                throw new IllegalStateException("Failed to find KylinConfig ", e);
+        synchronized (KylinConfig.class) {
+            if (ENV_INSTANCE == null) {
+                try {
+                    KylinConfig config = loadKylinConfig();
+                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : " + System.identityHashCode(config));
+                    ENV_INSTANCE = config;
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalStateException("Failed to find KylinConfig ", e);
+                }
             }
+            return ENV_INSTANCE;
         }
-        return ENV_INSTANCE;
     }
 
+    //Only used in test cases!!! 
     public static void destroyInstance() {
+        logger.info("Destory KylinConfig");
+        dumpStackTrace();
         ENV_INSTANCE = null;
     }
 
-    public static enum UriType {
+    public enum UriType {
         PROPERTIES_FILE, REST_ADDR, LOCAL_FOLDER
     }
 
@@ -150,12 +156,15 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public static void setKylinConfigFromInputStream(InputStream is) {
-        if (ENV_INSTANCE == null) {
-            try {
-                KylinConfig config = createKylinConfigFromInputStream(is);
-                ENV_INSTANCE = config;
-            } catch (IllegalArgumentException e) {
-                throw new IllegalStateException("Failed to find KylinConfig ", e);
+        synchronized (KylinConfig.class) {
+            if (ENV_INSTANCE == null) {
+                try {
+                    KylinConfig config = createKylinConfigFromInputStream(is);
+                    logger.info("Resetting ENV_INSTANCE by a input stream: " + System.identityHashCode(config));
+                    ENV_INSTANCE = config;
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalStateException("Failed to find KylinConfig ", e);
+                }
             }
         }
     }
@@ -254,11 +263,11 @@ public class KylinConfig extends KylinConfigBase {
 
         return config;
     }
-    
+
     public static void setSandboxEnvIfPossible() {
         File dir1 = new File("../examples/test_case_data/sandbox");
         File dir2 = new File("../../kylin/examples/test_case_data/sandbox");
-        
+
         if (dir1.exists()) {
             logger.info("Setting sandbox env, KYLIN_CONF=" + dir1.getAbsolutePath());
             ClassUtil.addClasspath(dir1.getAbsolutePath());
@@ -272,11 +281,13 @@ public class KylinConfig extends KylinConfigBase {
 
     // ============================================================================
 
-    public KylinConfig() {
+    private KylinConfig() {
         super();
+        logger.info("New KylinConfig " + System.identityHashCode(this));
+        KylinConfig.dumpStackTrace();
     }
 
-    public KylinConfig(Properties props) {
+    protected KylinConfig(Properties props) {
         super(props);
     }
 
@@ -305,22 +316,19 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    private KylinConfig base() {
-        if (this instanceof KylinConfigExt)
-            return ((KylinConfigExt) this).base;
-        else
-            return this;
+    public KylinConfig base() {
+        return this;
     }
-    
+
     private int superHashCode() {
         return super.hashCode();
     }
-    
+
     @Override
     public int hashCode() {
         return base().superHashCode();
     }
-    
+
     @Override
     public boolean equals(Object another) {
         if (!(another instanceof KylinConfig))
@@ -328,7 +336,6 @@ public class KylinConfig extends KylinConfigBase {
         else
             return this.base() == ((KylinConfig) another).base();
     }
-
 
     public static void writeOverrideProperties(Properties properties) throws IOException {
         File propFile = getKylinProperties();
@@ -361,5 +368,22 @@ public class KylinConfig extends KylinConfigBase {
             IOUtils.closeQuietly(pw);
         }
 
+    }
+
+    private static void dumpStackTrace() {
+        Thread t = Thread.currentThread();
+        int maxStackTraceDepth = 20;
+        int current = 0;
+
+        StackTraceElement[] stackTrace = t.getStackTrace();
+        StringBuilder buf = new StringBuilder("");
+        buf.append("\n");
+        for (StackTraceElement e : stackTrace) {
+            if (++current > maxStackTraceDepth) {
+                break;
+            }
+            buf.append("\t").append("at ").append(e.toString()).append("\n");
+        }
+        logger.info(buf.toString());
     }
 }

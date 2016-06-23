@@ -63,6 +63,9 @@ public class ExecutableManager {
                 if (r == null) {
                     r = new ExecutableManager(config);
                     CACHE.put(config, r);
+                    if (CACHE.size() > 1) {
+                        logger.warn("More than one singleton exist");
+                    }
                 }
             }
         }

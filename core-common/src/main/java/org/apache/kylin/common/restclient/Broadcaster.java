@@ -62,7 +62,7 @@ public class Broadcaster {
             r = new Broadcaster(config);
             CACHE.put(config, r);
             if (CACHE.size() > 1) {
-                logger.warn("More than one cubemanager singleton exist");
+                logger.warn("More than one singleton exist");
             }
             return r;
         }

@@ -95,7 +95,7 @@ public class StreamingManager {
                 r = new StreamingManager(config);
                 CACHE.put(config, r);
                 if (CACHE.size() > 1) {
-                    logger.warn("More than one streamingManager singleton exist");
+                    logger.warn("More than one singleton exist");
                 }
                 return r;
             } catch (IOException e) {

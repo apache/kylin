@@ -59,7 +59,7 @@ public class HybridManager implements IRealizationProvider {
                 r = new HybridManager(config);
                 CACHE.put(config, r);
                 if (CACHE.size() > 1) {
-                    logger.warn("More than one Hybrid Manager singleton exist");
+                    logger.warn("More than one singleton exist");
                 }
                 return r;
             } catch (IOException e) {

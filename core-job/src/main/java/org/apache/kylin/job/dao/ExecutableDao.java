@@ -55,6 +55,9 @@ public class ExecutableDao {
                 if (r == null) {
                     r = new ExecutableDao(config);
                     CACHE.put(config, r);
+                    if (CACHE.size() > 1) {
+                        logger.warn("More than one singleton exist");
+                    }
                 }
             }
         }

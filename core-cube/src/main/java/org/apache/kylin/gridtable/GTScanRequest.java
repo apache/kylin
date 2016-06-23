@@ -19,6 +19,7 @@
 package org.apache.kylin.gridtable;
 
 import java.io.IOException;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +30,7 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
+import org.apache.kylin.common.util.SerializeToByteBuffer;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -270,6 +272,16 @@ public class GTScanRequest {
         return "GTScanRequest [range=" + ranges + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
     }
 
+    public byte[] toByteArray() {
+        ByteBuffer byteBuffer = SerializeToByteBuffer.retrySerialize(new SerializeToByteBuffer.IWriter() {
+            @Override
+            public void write(ByteBuffer byteBuffer) throws BufferOverflowException {
+                GTScanRequest.serializer.serialize(GTScanRequest.this, byteBuffer);
+            }
+        });
+        return Arrays.copyOf(byteBuffer.array(), byteBuffer.position());
+    }
+
     public static final BytesSerializer<GTScanRequest> serializer = new BytesSerializer<GTScanRequest>() {
         @Override
         public void serialize(GTScanRequest value, ByteBuffer out) {
@@ -340,7 +352,6 @@ public class GTScanRequest {
             }
             return new GTRecord(sInfo, sCols);
         }
-        
 
     };
 

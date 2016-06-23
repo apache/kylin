@@ -68,4 +68,9 @@ public class KylinConfigExt extends KylinConfig {
         return result;
     }
 
+    @Override
+    public KylinConfig base() {
+        return this.base;
+    }
+
 }

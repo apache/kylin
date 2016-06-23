@@ -54,6 +54,9 @@ public class RealizationRegistry {
             try {
                 r = new RealizationRegistry(config);
                 CACHE.put(config, r);
+                if (CACHE.size() > 1) {
+                    logger.warn("More than one singleton exist");
+                }
                 return r;
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to init CubeManager from " + config, e);

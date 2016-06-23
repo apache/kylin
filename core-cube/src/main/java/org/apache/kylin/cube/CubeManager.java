@@ -101,7 +101,10 @@ public class CubeManager implements IRealizationProvider {
                 r = new CubeManager(config);
                 CACHE.put(config, r);
                 if (CACHE.size() > 1) {
-                    logger.warn("More than one cubemanager singleton exist");
+                    logger.warn("More than one singleton exist");
+                    for (KylinConfig kylinConfig : CACHE.keySet()) {
+                        logger.warn("type: " + kylinConfig.getClass() + " reference: " + System.identityHashCode(kylinConfig.base()));
+                    }
                 }
                 return r;
             } catch (IOException e) {
@@ -149,7 +152,7 @@ public class CubeManager implements IRealizationProvider {
         }
         return null;
     }
-    
+
     /**
      * Get related Cubes by cubedesc name. By default, the desc name will be
      * translated into upper case.
@@ -411,7 +414,7 @@ public class CubeManager implements IRealizationProvider {
 
     public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, boolean strictChecking) throws IOException {
 
-        if(strictChecking)
+        if (strictChecking)
             checkNoBuildingSegment(cube);
 
         if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
