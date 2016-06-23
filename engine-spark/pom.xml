@@ -67,6 +67,11 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+        </dependency>
+
         <!-- Hadoop dependency -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>

@@ -88,7 +88,7 @@ abstract public class KylinConfigBase implements Serializable {
     public Properties getAllProperties() {
         return properties;
     }
-    
+
     final protected Map<String, String> getPropertiesByPrefix(String prefix) {
         Map<String, String> result = Maps.newLinkedHashMap();
         for (Entry<Object, Object> entry : getAllProperties().entrySet()) {
@@ -200,6 +200,11 @@ abstract public class KylinConfigBase implements Serializable {
             root += "/";
         }
         return new StringBuffer(root).append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).append("/").toString();
+    }
+
+    public String[] getRealizationProviders() {
+        return getOptionalStringArray("kylin.realization.providers", //
+                new String[] { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager", "org.apache.kylin.invertedindex.IIManager" });
     }
 
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
@@ -399,7 +404,6 @@ abstract public class KylinConfigBase implements Serializable {
         setProperty("kylin.cluster.name", clusterName);
     }
 
-
     public int getWorkersPerServer() {
         //for sequence sql use
         return Integer.parseInt(getOptional("kylin.rest.workers.per.server", "1"));
@@ -413,11 +417,11 @@ abstract public class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.job.step.timeout", String.valueOf(2 * 60 * 60)));
     }
 
-    public double getJobCuboidSizeRatio(){
+    public double getJobCuboidSizeRatio() {
         return Double.parseDouble(getOptional("kylin.job.cuboid.size.ratio", "0.25"));
     }
 
-    public double getJobCuboidSizeMemHungryRatio(){
+    public double getJobCuboidSizeMemHungryRatio() {
         return Double.parseDouble(getOptional("kylin.job.cuboid.size.memhungry.ratio", "0.05"));
     }
 
@@ -692,11 +696,11 @@ abstract public class KylinConfigBase implements Serializable {
     public int getCubeStatsHLLPrecision() {
         return Integer.parseInt(getOptional("kylin.job.cubing.inmem.sampling.hll.precision", "14"));
     }
-    
+
     public String getJobControllerLock() {
         return getOptional("kylin.job.controller.lock", "org.apache.kylin.storage.hbase.util.ZookeeperJobLock");
     }
-    
+
     public Map<Integer, String> getJobEngines() {
         Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.job.engine."));
         // ref constants in IEngineAware
@@ -731,7 +735,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.enable.scheduler", "0"));
     }
 
-
     public String getZookeeperAddress() {
         return this.getOptional("kylin.zookeeper.address");
     }
@@ -743,6 +746,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getRestAddress() {
         return this.getOptional("kylin.rest.address", "localhost:7070");
     }
+
     public void setRestAddress(String restAddress) {
         setProperty("kylin.rest.address", restAddress);
     }
@@ -778,7 +782,7 @@ abstract public class KylinConfigBase implements Serializable {
     public long getStorageCleanupTimeThreshold() {
         return Long.valueOf(this.getOptional("kylin.storage.cleanup.time.threshold", "172800000")); //default two days
     }
-        
+
     public int getAppendDictEntrySize() {
         return Integer.parseInt(getOptional("kylin.dict.append.entry.size", "10000000"));
     }

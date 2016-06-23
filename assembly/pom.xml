@@ -52,11 +52,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-engine-spark</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-streaming</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -181,6 +176,7 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.10</artifactId>
             <version>${kafka.version}</version>
+            <scope>provided</scope>
             <!-- FIXME: Should be provided just like hive and hbase, inflates job jar from 9 MB to 21 MB -->
         </dependency>
 

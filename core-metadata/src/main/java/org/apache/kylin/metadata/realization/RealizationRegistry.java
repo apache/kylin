@@ -26,8 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
+import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,10 +80,11 @@ public class RealizationRegistry {
         providers = Maps.newConcurrentMap();
 
         // use reflection to load providers
-        final Set<Class<? extends IRealizationProvider>> realizationProviders = new Reflections("org.apache.kylin", new SubTypesScanner()).getSubTypesOf(IRealizationProvider.class);
+        String[] providerNames = config.getRealizationProviders();
         List<Throwable> es = Lists.newArrayList();
-        for (Class<? extends IRealizationProvider> cls : realizationProviders) {
+        for (String clsName : providerNames) {
             try {
+                Class<? extends IRealizationProvider> cls = ClassUtil.forName(clsName, IRealizationProvider.class);
                 IRealizationProvider p = (IRealizationProvider) cls.getMethod("getInstance", KylinConfig.class).invoke(null, config);
                 providers.put(p.getRealizationType(), p);
 
