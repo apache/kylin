@@ -376,7 +376,7 @@ public class KylinConfig extends KylinConfigBase {
         int current = 0;
 
         StackTraceElement[] stackTrace = t.getStackTrace();
-        StringBuilder buf = new StringBuilder("");
+        StringBuilder buf = new StringBuilder("This is not a exception, just for diagnose purpose:");
         buf.append("\n");
         for (StackTraceElement e : stackTrace) {
             if (++current > maxStackTraceDepth) {
