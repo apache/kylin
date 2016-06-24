@@ -76,7 +76,7 @@ public class UserController {
 
     @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = "application/json")
     public List<String> getAuthorities() {
-        return userService.getUserAuthorities();
+        return userService.listUserAuthorities();
     }
 
 }

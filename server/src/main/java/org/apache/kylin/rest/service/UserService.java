@@ -38,13 +38,13 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.security.AclHBaseStorage;
-import org.apache.kylin.rest.security.UserManager;
 import org.apache.kylin.rest.util.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -52,11 +52,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
- * @author xduo
- * 
  */
 @Component("userService")
-public class UserService implements UserManager {
+public class UserService implements UserDetailsManager {
 
     private static final String PWD_PREFIX = "PWD:";
 
@@ -201,12 +199,23 @@ public class UserService implements UserManager {
         }
     }
 
-    @Override
-    public List<String> getUserAuthorities() {
+    public List<String> listUserAuthorities() {
+        List<String> all = new ArrayList<String>();
+        for (UserDetails user : listUsers()) {
+            for (GrantedAuthority auth : user.getAuthorities()) {
+                if (!all.contains(auth.getAuthority())) {
+                    all.add(auth.getAuthority());
+                }
+            }
+        }
+        return all;
+    }
+    
+    public List<UserDetails> listUsers() {
         Scan s = new Scan();
         s.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
 
-        List<String> all = new ArrayList<String>();
+        List<UserDetails> all = new ArrayList<UserDetails>();
         HTableInterface htable = null;
         ResultScanner scanner = null;
         try {
@@ -215,20 +224,14 @@ public class UserService implements UserManager {
 
             for (Result result = scanner.next(); result != null; result = scanner.next()) {
                 User user = hbaseRowToUser(result);
-
-                for (GrantedAuthority auth : user.getAuthorities()) {
-                    if (!all.contains(auth.getAuthority())) {
-                        all.add(auth.getAuthority());
-                    }
-                }
+                all.add(user);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new RuntimeException("Failed to scan users", e);
         } finally {
             IOUtils.closeQuietly(scanner);
             IOUtils.closeQuietly(htable);
         }
-
         return all;
     }
 

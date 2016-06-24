@@ -55,6 +55,6 @@ public class UserServiceTest extends ServiceTestBase {
         Assert.assertEquals("ROLE_ADMIN", ud.getAuthorities().iterator().next().getAuthority());
         Assert.assertEquals(1, ud.getAuthorities().size());
 
-        Assert.assertTrue(userService.getUserAuthorities().contains("ROLE_ADMIN"));
+        Assert.assertTrue(userService.listUserAuthorities().contains("ROLE_ADMIN"));
     }
 }
