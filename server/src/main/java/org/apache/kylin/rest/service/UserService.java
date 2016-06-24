@@ -279,6 +279,11 @@ public class UserService implements UserDetailsManager {
                 return false;
             return true;
         }
+        
+        @Override
+        public String toString() {
+            return authority;
+        }
     }
 
 }
