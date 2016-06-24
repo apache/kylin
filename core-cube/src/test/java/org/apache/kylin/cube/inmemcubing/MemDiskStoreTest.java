@@ -100,7 +100,7 @@ public class MemDiskStoreTest extends LocalFileMetadataTestCase {
         }
         builder.close();
 
-        IGTScanner scanner = table.scan(new GTScanRequest(info,null,null,null));
+        IGTScanner scanner = table.scan(new GTScanRequest(info, null, null, null));
         int i = 0;
         for (GTRecord r : scanner) {
             assertEquals(data.get(i++), r);

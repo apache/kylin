@@ -59,18 +59,17 @@ public class UserController {
             logger.debug("authentication is null.");
             return null;
         }
-        
+
         if (authentication.getPrincipal() instanceof UserDetails) {
             logger.debug("authentication.getPrincipal() is " + authentication.getPrincipal());
             return (UserDetails) authentication.getPrincipal();
         }
 
-
         if (authentication.getDetails() instanceof UserDetails) {
             logger.debug("authentication.getDetails() is " + authentication.getDetails());
             return (UserDetails) authentication.getDetails();
         }
-        
+
         return null;
     }
 

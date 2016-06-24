@@ -88,7 +88,7 @@ public class CubeSignatureRefresher {
     private void updateCubeDesc(CubeDesc cubeDesc) {
         try {
             String calculatedSign = cubeDesc.calculateSignature();
-            if (cubeDesc.getSignature() == null || (!cubeDesc.getSignature().equals(calculatedSign)) ){
+            if (cubeDesc.getSignature() == null || (!cubeDesc.getSignature().equals(calculatedSign))) {
                 cubeDesc.setSignature(calculatedSign);
                 store.putResource(cubeDesc.getResourcePath(), cubeDesc, CubeDescManager.CUBE_DESC_SERIALIZER);
                 updatedResources.add(cubeDesc.getResourcePath());
@@ -99,7 +99,7 @@ public class CubeSignatureRefresher {
         }
     }
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         if (args != null && args.length > 1) {
             System.out.println("Usage: java CubeSignatureRefresher [Cubes]; e.g, cube1,cube2 ");
             return;

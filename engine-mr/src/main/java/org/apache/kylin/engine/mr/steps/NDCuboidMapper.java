@@ -98,9 +98,9 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         int index = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & parentCuboidId) > 0) {// if the this bit position equals
-                                              // 1
+                                                  // 1
                 if ((mask & childCuboidId) > 0) {// if the child cuboid has this
-                                                 // column
+                                                     // column
                     System.arraycopy(splitBuffers[index].value, 0, newKeyBodyBuf, offset, splitBuffers[index].length);
                     offset += splitBuffers[index].length;
                 }

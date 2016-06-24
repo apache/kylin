@@ -239,8 +239,7 @@ public class Cuboid implements Comparable<Cuboid> {
     private static boolean checkJoint(AggregationGroup agg, long cuboidID) {
         for (long joint : agg.getJoints()) {
             long common = cuboidID & joint;
-            if (common == 0 || common == joint) {
-            } else {
+            if (!(common == 0 || common == joint)) {
                 return false;
             }
         }
@@ -413,8 +412,6 @@ public class Cuboid implements Comparable<Cuboid> {
         }
         return cuboidToGridTableMapping;
     }
-
-   
 
     public static String getDisplayName(long cuboidID, int dimensionCount) {
         StringBuilder sb = new StringBuilder();

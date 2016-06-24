@@ -18,14 +18,14 @@
 
 package org.apache.kylin.measure.raw;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("unused")
 public class RawSerializer extends DataTypeSerializer<List<ByteArray>> {
@@ -98,7 +98,7 @@ public class RawSerializer extends DataTypeSerializer<List<ByteArray>> {
         if (size >= 0) {
             for (int i = 0; i < size; i++) {
                 ByteArray ba = new ByteArray(BytesUtil.readByteArray(in));
-                if (ba.length() != 0){
+                if (ba.length() != 0) {
                     values.add(ba);
                 }
             }

@@ -49,6 +49,7 @@ public class AclPermissionFactory extends DefaultPermissionFactory {
                     permissions.add((Permission) fieldValue);
                 }
             } catch (Exception ignore) {
+                //ignore on purpose
             }
         }
 
@@ -69,6 +70,7 @@ public class AclPermissionFactory extends DefaultPermissionFactory {
                     }
                 }
             } catch (Exception ignore) {
+                //ignore on purpose
             }
         }
 

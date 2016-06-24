@@ -16,8 +16,16 @@
 
 package org.apache.kylin.measure.topn;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.math3.distribution.ZipfDistribution;
@@ -25,11 +33,8 @@ import org.apache.kylin.common.util.Pair;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.*;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 @Ignore("For collecting accuracy statistics, not for functional test")
 public class TopNCounterTest {
@@ -43,7 +48,7 @@ public class TopNCounterTest {
     protected static int SPACE_SAVING_ROOM;
 
     protected static int PARALLEL = 10;
-    
+
     protected static boolean verbose = true;
 
     public TopNCounterTest() {
@@ -72,7 +77,7 @@ public class TopNCounterTest {
         FileWriter fw = new FileWriter(tempFile);
         try {
             for (int i = 0; i < TOTAL_RECORDS; i++) {
-                keyIndex = zipf.sample() -1;
+                keyIndex = zipf.sample() - 1;
                 fw.write(allKeys[keyIndex]);
                 fw.write('\n');
             }
@@ -124,12 +129,12 @@ public class TopNCounterTest {
 
         org.junit.Assert.assertEquals(0, error);
     }
-    
+
     private boolean isClose(double value1, double value2) {
-        
-        if(Math.abs(value1 - value2) < 5.0)
+
+        if (Math.abs(value1 - value2) < 5.0)
             return true;
-        
+
         return false;
     }
 
@@ -166,14 +171,14 @@ public class TopNCounterTest {
             return consumers;
 
         TopNCounterTest.SpaceSavingConsumer merged = new TopNCounterTest.SpaceSavingConsumer(TOP_K * SPACE_SAVING_ROOM);
-        
-        for (int i=0, n=consumers.length; i<n; i++) {
+
+        for (int i = 0, n = consumers.length; i < n; i++) {
             merged.vs.merge(consumers[i].vs);
         }
 
         merged.vs.retain(TOP_K * SPACE_SAVING_ROOM); // remove extra elements;
-        return new TopNCounterTest.SpaceSavingConsumer[] {merged};
-        
+        return new TopNCounterTest.SpaceSavingConsumer[] { merged };
+
     }
 
     private TopNCounterTest.SpaceSavingConsumer[] binaryMerge(TopNCounterTest.SpaceSavingConsumer[] consumers) throws IOException, ClassNotFoundException {
@@ -181,7 +186,6 @@ public class TopNCounterTest {
         if (consumers.length == 1)
             return consumers;
 
-        
         for (int i = 0, n = consumers.length; i < n; i = i + 2) {
             if (i + 1 < n) {
                 consumers[i].vs.merge(consumers[i + 1].vs);
@@ -192,7 +196,6 @@ public class TopNCounterTest {
 
         return binaryMerge(list.toArray(new TopNCounterTest.SpaceSavingConsumer[list.size()]));
     }
-    
 
     private void feedDataToConsumer(String dataFile, TopNCounterTest.TestDataConsumer consumer, int startLine, int endLine) throws IOException {
         long startTime = System.currentTimeMillis();

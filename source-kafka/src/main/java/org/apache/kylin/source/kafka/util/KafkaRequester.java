@@ -42,6 +42,15 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
+import org.apache.kylin.source.kafka.TopicMeta;
+import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import kafka.api.FetchRequestBuilder;
 import kafka.api.PartitionOffsetRequestInfo;
 import kafka.cluster.Broker;
@@ -54,15 +63,6 @@ import kafka.javaapi.TopicMetadata;
 import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.TopicMetadataResponse;
 import kafka.javaapi.consumer.SimpleConsumer;
-
-import org.apache.kylin.source.kafka.TopicMeta;
-import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  */
@@ -102,9 +102,9 @@ public final class KafkaRequester {
             List<String> topics = Collections.singletonList(kafkaClusterConfig.getTopic());
             TopicMetadataRequest req = new TopicMetadataRequest(topics);
             TopicMetadataResponse resp;
-            try{
+            try {
                 resp = consumer.send(req);
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.warn("cannot send TopicMetadataRequest successfully: " + e);
                 continue;
             }
@@ -137,9 +137,9 @@ public final class KafkaRequester {
             List<String> topics = Collections.singletonList(topic);
             TopicMetadataRequest req = new TopicMetadataRequest(topics);
             TopicMetadataResponse resp;
-            try{
+            try {
                 resp = consumer.send(req);
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.warn("cannot send TopicMetadataRequest successfully: " + e);
                 continue;
             }

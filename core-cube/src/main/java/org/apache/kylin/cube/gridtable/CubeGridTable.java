@@ -61,7 +61,7 @@ public class CubeGridTable {
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
         return newGTInfo(cuboid, new CubeDimEncMap(cubeDesc, dictionaryMap));
     }
-    
+
     public static GTInfo newGTInfo(Cuboid cuboid, IDimensionEncodingMap dimEncMap) {
         CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(cuboid);
 

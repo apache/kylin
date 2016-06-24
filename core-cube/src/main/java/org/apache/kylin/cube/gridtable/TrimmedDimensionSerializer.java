@@ -18,9 +18,9 @@
 
 package org.apache.kylin.cube.gridtable;
 
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-
 import java.nio.ByteBuffer;
+
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 public class TrimmedDimensionSerializer extends DataTypeSerializer<Object> {
 

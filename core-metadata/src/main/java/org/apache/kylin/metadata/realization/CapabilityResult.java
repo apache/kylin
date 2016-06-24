@@ -25,13 +25,13 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import com.google.common.collect.Lists;
 
 public class CapabilityResult {
-    
+
     /** Is capable or not */
     public boolean capable;
 
     /** The smaller the cost, the more capable the realization */
     public int cost;
-    
+
     /**
      * Marker objects to indicate all special features
      * (dimension-as-measure, topN etc.) that have influenced the capability check.
@@ -42,11 +42,11 @@ public class CapabilityResult {
         /** Suggest a multiplier to influence query cost */
         double suggestCostMultiplier();
     }
-    
+
     public static class DimensionAsMeasure implements CapabilityInfluence {
-        
+
         final FunctionDesc function;
-        
+
         public DimensionAsMeasure(FunctionDesc function) {
             this.function = function;
         }
@@ -55,7 +55,7 @@ public class CapabilityResult {
         public double suggestCostMultiplier() {
             return 1;
         }
-        
+
         public FunctionDesc getMeasureFunction() {
             return function;
         }

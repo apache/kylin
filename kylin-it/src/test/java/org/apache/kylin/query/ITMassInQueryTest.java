@@ -34,7 +34,6 @@ import org.dbunit.Assertion;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
-import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITable;
 import org.dbunit.ext.h2.H2Connection;
 import org.junit.After;
@@ -121,7 +120,6 @@ public class ITMassInQueryTest extends KylinTestBase {
 
         }
     }
-
 
     protected void compare(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
         printInfo("---------- test folder: " + queryFolder);

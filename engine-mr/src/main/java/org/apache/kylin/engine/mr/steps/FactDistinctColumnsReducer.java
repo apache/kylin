@@ -20,7 +20,10 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -30,7 +33,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
@@ -40,12 +42,13 @@ import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CuboidStatsUtil;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -76,12 +79,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         cubeConfig = cube.getConfig();
         cubeDesc = cube.getDescriptor();
-        columnList =  CubeManager.getInstance(config).getAllDictColumnsOnFact(cubeDesc);
+        columnList = CubeManager.getInstance(config).getAllDictColumnsOnFact(cubeDesc);
 
         boolean collectStatistics = Boolean.parseBoolean(conf.get(BatchConstants.CFG_STATISTICS_ENABLED));
         int numberOfTasks = context.getNumReduceTasks();
         int taskId = context.getTaskAttemptID().getTaskID().getId();
-        
+
         if (collectStatistics && (taskId == numberOfTasks - 1)) {
             // hll
             isStatistics = true;
@@ -96,7 +99,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             colValues = Lists.newArrayList();
         }
     }
-    
+
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
@@ -130,7 +133,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         }
 
     }
-    
+
     private void outputDistinctValues(TblColRef col, Collection<ByteArray> values, Context context) throws IOException {
         final Configuration conf = context.getConfiguration();
         final FileSystem fs = FileSystem.get(conf);
@@ -147,7 +150,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
                 logger.info("create file " + outputFile);
             }
 
-            for (ByteArray value: values) {
+            for (ByteArray value : values) {
                 out.write(value.array(), value.offset(), value.length());
                 out.write('\n');
             }
@@ -172,7 +175,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
                 grandTotal += hll.getCountEstimate();
             }
             double mapperOverlapRatio = grandTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grandTotal;
-            
+
             writeMapperAndCuboidStatistics(context); // for human check
             CuboidStatsUtil.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), //
                     cuboidHLLMap, samplingPercentage, mapperOverlapRatio); // for CreateHTableJob

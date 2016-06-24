@@ -143,7 +143,7 @@ public class Broadcaster {
     }
 
     public enum EVENT {
-        
+
         CREATE("create"), UPDATE("update"), DROP("drop");
         private String text;
 

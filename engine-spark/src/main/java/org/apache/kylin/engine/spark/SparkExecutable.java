@@ -27,16 +27,15 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import org.slf4j.LoggerFactory;
 
 /**
  */
 public class SparkExecutable extends AbstractExecutable {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SparkExecutable.class);
-
 
     private static final String CLASS_NAME = "className";
 
@@ -68,11 +67,7 @@ public class SparkExecutable extends AbstractExecutable {
         Preconditions.checkNotNull(config.getSparkHome());
         Preconditions.checkNotNull(config.getSparkMaster());
         try {
-            String cmd = String.format("%s/bin/spark-submit --class \"org.apache.kylin.common.util.SparkEntry\" --master %s %s %s",
-                    config.getSparkHome(),
-                    config.getSparkMaster(),
-                    config.getKylinSparkJobJarPath(),
-                    formatArgs());
+            String cmd = String.format("%s/bin/spark-submit --class \"org.apache.kylin.common.util.SparkEntry\" --master %s %s %s", config.getSparkHome(), config.getSparkMaster(), config.getKylinSparkJobJarPath(), formatArgs());
             logger.info("cmd:" + cmd);
             final StringBuilder output = new StringBuilder();
             config.getCliCommandExecutor().execute(cmd, new Logger() {

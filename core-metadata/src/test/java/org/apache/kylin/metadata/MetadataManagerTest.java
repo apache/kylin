@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata;
 
-import static org.apache.kylin.metadata.MetadataManager.*;
+import static org.apache.kylin.metadata.MetadataManager.getInstance;
 
 import java.util.List;
 

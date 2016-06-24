@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.GTInfo.Builder;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.LongMutable;
 
@@ -41,14 +41,13 @@ public class UnitTestSupport {
         Builder builder = infoBuilder();
         builder.enableColumnBlock(new ImmutableBitSet[] { setOf(0), setOf(1, 2), setOf(3, 4) });
         builder.enableRowBlock(4);
-        GTInfo info = builder.build();
-        return info;
+        return builder.build();
     }
 
     public static GTInfo hllInfo() {
         Builder builder = GTInfo.builder();
         builder.setCodeSystem(new GTSampleCodeSystem());
-        builder.setColumns( //
+        builder.setColumns(//
                 DataType.getType("varchar(10)"), //
                 DataType.getType("varchar(10)"), //
                 DataType.getType("varchar(10)"), //
@@ -58,14 +57,13 @@ public class UnitTestSupport {
         );
         builder.setPrimaryKey(setOf(0));
         builder.setColumnPreferIndex(setOf(0));
-        GTInfo info = builder.build();
-        return info;
+        return builder.build();
     }
 
     private static Builder infoBuilder() {
         Builder builder = GTInfo.builder();
         builder.setCodeSystem(new GTSampleCodeSystem());
-        builder.setColumns( //
+        builder.setColumns(//
                 DataType.getType("varchar(10)"), //
                 DataType.getType("varchar(10)"), //
                 DataType.getType("varchar(10)"), //

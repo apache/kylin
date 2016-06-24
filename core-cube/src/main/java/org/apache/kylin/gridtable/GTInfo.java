@@ -58,7 +58,6 @@ public class GTInfo {
     private GTInfo() {
     }
 
-    
     public String getTableName() {
         return tableName;
     }
@@ -74,7 +73,7 @@ public class GTInfo {
     public int getColumnBlockCount() {
         return colBlocks.length;
     }
-    
+
     public ImmutableBitSet getColumnBlock(int i) {
         return colBlocks[i];
     }
@@ -82,7 +81,7 @@ public class GTInfo {
     public ImmutableBitSet getPrimaryKey() {
         return primaryKey;
     }
-    
+
     public ImmutableBitSet getAllColumns() {
         return colAll;
     }
@@ -333,12 +332,12 @@ public class GTInfo {
             int newRowBlockSize = BytesUtil.readVInt(in);
 
             return GTInfo.builder().setCodeSystem(codeSystem).//
-                    setTableName(newTableName).//
-                    setColumns(newColTypes).//
-                    setColumnPreferIndex(newColPreferIndex).//
-                    setPrimaryKey(newPrimaryKey).//
-                    enableColumnBlock(newColBlocks).//
-                    enableRowBlock(newRowBlockSize).build();
+            setTableName(newTableName).//
+            setColumns(newColTypes).//
+            setColumnPreferIndex(newColPreferIndex).//
+            setPrimaryKey(newPrimaryKey).//
+            enableColumnBlock(newColBlocks).//
+            enableRowBlock(newRowBlockSize).build();
         }
     };
 }

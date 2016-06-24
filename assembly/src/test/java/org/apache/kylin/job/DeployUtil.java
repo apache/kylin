@@ -26,9 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import kafka.message.Message;
-import kafka.message.MessageAndOffset;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -55,6 +52,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+
+import kafka.message.Message;
+import kafka.message.MessageAndOffset;
 
 public class DeployUtil {
     private static final Logger logger = LoggerFactory.getLogger(DeployUtil.class);

@@ -24,13 +24,12 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.hadoop.io.Text;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;

@@ -98,12 +98,12 @@ public class GTFilterScanner implements IGTScanner {
             private boolean evaluate() {
                 if (filter == null)
                     return true;
-                
+
                 // 'next' and 'oneTuple' are referring to the same record
                 boolean[] cachedResult = resultCache.checkCache(next);
                 if (cachedResult != null)
                     return cachedResult[0];
-                
+
                 boolean result = filter.evaluate(oneTuple, filterCodeSystem);
                 resultCache.setLastResult(result);
                 return result;
@@ -153,16 +153,16 @@ public class GTFilterScanner implements IGTScanner {
         public boolean[] checkCache(GTRecord record) {
             if (!enabled)
                 return null;
-            
+
             count++;
-            
+
             // disable the cache if the hit rate is bad
             if (count == CHECKPOINT) {
                 if ((double) hit / (double) count < HIT_RATE_THRESHOLD) {
                     enabled = false;
                 }
             }
-            
+
             boolean match = count > 1;
             int p = 0;
             for (int i = 0; i < colsInFilter.trueBitCount(); i++) {
@@ -176,7 +176,7 @@ public class GTFilterScanner implements IGTScanner {
                 }
                 p += col.length();
             }
-            
+
             if (match) {
                 hit++;
                 return lastResult;

@@ -20,6 +20,9 @@ package org.apache.kylin.storage.cache;
 
 import java.util.Random;
 
+import org.junit.Ignore;
+import org.junit.Test;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -27,9 +30,6 @@ import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
-import org.junit.Ignore;
-import org.junit.Test;
 
 @Ignore("trial for dev")
 public class EhcacheTest {
@@ -50,7 +50,7 @@ public class EhcacheTest {
                         timeToIdleSeconds(86400).//
                         diskExpiryThreadIntervalSeconds(0).//
                         //maxBytesLocalHeap(1000, MemoryUnit.MEGABYTES).//
-                                persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.NONE)));
+                        persistence(new PersistenceConfiguration().strategy(PersistenceConfiguration.Strategy.NONE)));
 
         cacheManager.addCache(testCache);
 
@@ -61,12 +61,11 @@ public class EhcacheTest {
             blob[i] = (byte) random.nextInt();
         }
 
-
-//        List<String> manyObjects = Lists.newArrayList();
-//        for (int i = 0; i < 10000; i++) {
-//            manyObjects.add(new String("" + i));
-//        }
-//        testCache.put(new Element("0", manyObjects));
+        //        List<String> manyObjects = Lists.newArrayList();
+        //        for (int i = 0; i < 10000; i++) {
+        //            manyObjects.add(new String("" + i));
+        //        }
+        //        testCache.put(new Element("0", manyObjects));
 
         testCache.put(new Element("1", blob));
         System.out.println(testCache.get("1") == null);
@@ -78,7 +77,7 @@ public class EhcacheTest {
         for (int i = 0; i < blob.length; i++) {
             blob[i] = (byte) random.nextInt();
         }
-        
+
         testCache.put(new Element("2", blob));
         System.out.println(testCache.get("1") == null);
         System.out.println(testCache.get("2") == null);

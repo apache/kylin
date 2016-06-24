@@ -76,7 +76,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
             } else {
                 executableManager.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
             }
-        } else {
         }
     }
 
@@ -90,7 +89,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
                 output = out.toString();
             }
             executableManager.updateJobOutput(getId(), ExecutableState.ERROR, null, output);
-        } else {
         }
     }
 

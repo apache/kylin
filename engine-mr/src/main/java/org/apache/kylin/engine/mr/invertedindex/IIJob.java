@@ -18,14 +18,13 @@
 
 package org.apache.kylin.engine.mr.invertedindex;
 
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.invertedindex.IISegment;
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+
+import org.apache.kylin.invertedindex.IISegment;
+import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 /**
  */
@@ -53,7 +52,6 @@ public class IIJob extends DefaultChainedExecutable {
     public String getSegmentId() {
         return getParam(SEGMENT_ID);
     }
-
 
     public static IIJob createBuildJob(IISegment seg, String submitter, JobEngineConfig config) {
         return initialJob(seg, "BUILD", submitter, config);

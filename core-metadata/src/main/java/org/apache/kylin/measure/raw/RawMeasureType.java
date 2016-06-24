@@ -18,6 +18,13 @@
 
 package org.apache.kylin.measure.raw;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Dictionary;
@@ -37,8 +44,6 @@ import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
@@ -172,7 +177,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
         unmatchedAggregations.remove(measureDesc.getFunction());
 
         //contain one raw measure : cost * 0.9
-        return new CapabilityResult.CapabilityInfluence(){
+        return new CapabilityResult.CapabilityInfluence() {
             @Override
             public double suggestCostMultiplier() {
                 return 0.9;

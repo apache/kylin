@@ -18,7 +18,6 @@
 
 package org.apache.kylin.measure.topn;
 
-
 /**
  * Modified from DoublyLinkedList.java in https://github.com/addthis/stream-lib
  * 
@@ -45,7 +44,7 @@ public class DoublyLinkedList<T> {
      */
     public ListNode2<T> enqueue(T value) {
         ListNode2<T> node = new ListNode2<T>(value);
-       
+
         return enqueue(node);
     }
 
@@ -93,7 +92,6 @@ public class DoublyLinkedList<T> {
         size++;
     }
 
-
     public void addBefore(ListNode2<T> node, ListNode2<T> newNode) {
         newNode.prev = node.prev;
         newNode.next = node;
@@ -124,7 +122,6 @@ public class DoublyLinkedList<T> {
     public int size() {
         return size;
     }
-    
 
     public ListNode2<T> head() {
         return head;

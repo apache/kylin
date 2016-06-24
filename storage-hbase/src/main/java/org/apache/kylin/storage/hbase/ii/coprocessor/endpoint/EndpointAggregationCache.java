@@ -22,8 +22,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.measure.MeasureAggregator;
-import org.apache.kylin.storage.hbase.common.coprocessor.AggregationCache;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
+import org.apache.kylin.storage.hbase.common.coprocessor.AggregationCache;
 
 /**
  */

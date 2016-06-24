@@ -18,17 +18,6 @@
 
 package org.apache.kylin.engine.mr.common;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.cube.kv.RowConstants;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -36,12 +25,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+
 public class CuboidStatsUtil {
 
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
             Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage) throws IOException {
         writeCuboidStatistics(conf, outputPath, cuboidHLLMap, samplingPercentage, 0);
     }
+
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
             Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage, double mapperOverlapRatio) throws IOException {
         Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
@@ -55,10 +55,10 @@ public class CuboidStatsUtil {
         try {
             // mapper overlap ratio at key -1
             writer.append(new LongWritable(-1), new BytesWritable(Bytes.toBytes(mapperOverlapRatio)));
-            
+
             // sampling percentage at key 0
-            writer.append(new LongWritable(0l), new BytesWritable(Bytes.toBytes(samplingPercentage)));
-            
+            writer.append(new LongWritable(0L), new BytesWritable(Bytes.toBytes(samplingPercentage)));
+
             for (long i : allCuboids) {
                 valueBuf.clear();
                 cuboidHLLMap.get(i).writeRegisters(valueBuf);

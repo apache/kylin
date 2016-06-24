@@ -138,19 +138,19 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
         /** //Disable the test on getTableTypes() as it is not ready
          resultSet = dbMetadata.getTableTypes();
-
+        
          List<String> tableTypes = Lists.newArrayList();
          while (resultSet.next()) {
          String type = resultSet.getString("TABLE_TYPE");
-
+        
          System.out.println("Get table type: type=" + type);
          tableTypes.add(type);
-
+        
          }
-
+        
          Assert.assertTrue(tableTypes.size() > 0 && tableTypes.contains("TABLE"));
          resultSet.close();
-
+        
          **/
         conn.close();
     }

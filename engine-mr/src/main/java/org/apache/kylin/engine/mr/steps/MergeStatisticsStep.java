@@ -48,14 +48,13 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
-
-import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
+
 public class MergeStatisticsStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(MergeStatisticsStep.class);
-
 
     protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = Maps.newHashMap();
 
@@ -97,7 +96,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
                     LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                     BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
                     while (reader.next(key, value)) {
-                        if (key.get() == 0l) {
+                        if (key.get() == 0L) {
                             // sampling percentage;
                             averageSamplingPercentage += Bytes.toInt(value.getBytes());
                         } else if (key.get() > 0) {

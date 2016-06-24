@@ -18,7 +18,7 @@
 
 package org.apache.kylin.dimension;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.DateFormat;
@@ -44,7 +44,7 @@ public class TimeDimEncTest {
         enc.encode(value, buf, 0);
         return BytesUtil.readLong(buf, 0, buf.length);
     }
-    
+
     private String decode(long code) {
         BytesUtil.writeLong(code, buf, 0, buf.length);
         return enc.decode(buf, 0, buf.length);

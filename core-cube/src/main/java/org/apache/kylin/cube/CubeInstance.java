@@ -46,6 +46,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
@@ -116,7 +117,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         for (CubeSegment seg : this.segments) {
             if (seg.getStatus() != SegmentStatusEnum.READY && seg.getStatus() != SegmentStatusEnum.READY_PENDING)
                 continue;
-            
+
             if (seg == mergedSegment)
                 continue;
 

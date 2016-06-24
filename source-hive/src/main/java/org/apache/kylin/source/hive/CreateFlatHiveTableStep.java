@@ -1,5 +1,8 @@
 package org.apache.kylin.source.hive;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -17,13 +20,10 @@ import org.apache.kylin.job.execution.ExecuteResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 /**
  */
 public class CreateFlatHiveTableStep extends AbstractExecutable {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(CreateFlatHiveTableStep.class);
     private final BufferedLogger stepLogger = new BufferedLogger(logger);
 
@@ -84,8 +84,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         try {
             long rowCount = readRowCountFromFile();
             if (!config.isEmptySegmentAllowed() && rowCount == 0) {
-                stepLogger.log("Detect upstream hive table is empty, " +
-                        "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
+                stepLogger.log("Detect upstream hive table is empty, " + "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
                 return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
             }
 

@@ -71,6 +71,7 @@ public class MyLogFormatter extends Formatter {
                 pw.close();
                 sb.append(sw.toString());
             } catch (Exception ex) {
+                //do nothing?
             }
         }
         return sb.toString();

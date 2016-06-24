@@ -77,8 +77,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
             maxRegionCount = Integer.valueOf(context.getConfiguration().get(BatchConstants.CFG_REGION_NUMBER_MAX));
         }
 
-        logger.info("Chosen cut for htable is " + cut + ", max region count=" + maxRegionCount
-            + ", min region count=" + minRegionCount + ", hfile size=" + hfileSizeGB);
+        logger.info("Chosen cut for htable is " + cut + ", max region count=" + maxRegionCount + ", min region count=" + minRegionCount + ", hfile size=" + hfileSizeGB);
 
         // add empty key at position 0
         gbPoints.add(new Text());
@@ -116,9 +115,7 @@ public class RangeKeyDistributionReducer extends KylinReducer<Text, LongWritable
         System.out.println(hfilePerRegion + " hfile per region");
 
         Path hfilePartitionFile = new Path(output + "/part-r-00000_hfile");
-        SequenceFile.Writer hfilePartitionWriter = new SequenceFile.Writer(
-                hfilePartitionFile.getFileSystem(context.getConfiguration()),
-                context.getConfiguration(), hfilePartitionFile, ImmutableBytesWritable.class, NullWritable.class);
+        SequenceFile.Writer hfilePartitionWriter = new SequenceFile.Writer(hfilePartitionFile.getFileSystem(context.getConfiguration()), context.getConfiguration(), hfilePartitionFile, ImmutableBytesWritable.class, NullWritable.class);
         int hfileCountInOneRegion = 0;
         for (int i = hfileSizeGB; i < gbPoints.size(); i += hfileSizeGB) {
             hfilePartitionWriter.append(new ImmutableBytesWritable(gbPoints.get(i).getBytes()), NullWritable.get());

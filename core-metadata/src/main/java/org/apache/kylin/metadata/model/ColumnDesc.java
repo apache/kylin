@@ -58,12 +58,12 @@ public class ColumnDesc implements Serializable {
     private TableDesc table;
     private int zeroBasedIndex = -1;
     private boolean isNullable = true;
-    
+
     private TblColRef ref;
 
     public ColumnDesc() { // default constructor for Jackson
     }
-    
+
     public TblColRef getRef() {
         if (ref == null) {
             ref = new TblColRef(this);
@@ -154,7 +154,7 @@ public class ColumnDesc implements Serializable {
         return StringUtils.equalsIgnoreCase(table.getIdentity(), tableName) && //
                 StringUtils.equalsIgnoreCase(name, columnName);
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;

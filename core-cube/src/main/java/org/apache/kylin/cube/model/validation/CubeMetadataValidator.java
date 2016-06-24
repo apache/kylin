@@ -32,7 +32,7 @@ import org.apache.kylin.cube.model.validation.rule.RowKeyAttrRule;
  */
 public class CubeMetadataValidator {
     @SuppressWarnings("unchecked")
-    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] { new FunctionRule(), new AggregationGroupRule(), new RowKeyAttrRule(), new DictionaryRule()};
+    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] { new FunctionRule(), new AggregationGroupRule(), new RowKeyAttrRule(), new DictionaryRule() };
 
     public ValidateContext validate(CubeDesc cube) {
         return validate(cube, false);

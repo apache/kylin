@@ -64,7 +64,7 @@ public class SimpleHBaseStore implements IGTStore {
     public GTInfo getInfo() {
         return info;
     }
-    
+
     public void cleanup() throws IOException {
         CubeHTableUtil.deleteHTable(htableName);
     }
@@ -139,7 +139,7 @@ public class SimpleHBaseStore implements IGTStore {
             scan.setCacheBlocks(true);
             scanner = table.getScanner(scan);
         }
-        
+
         public ResultScanner getHBaseScanner() {
             return scanner;
         }
@@ -173,7 +173,7 @@ public class SimpleHBaseStore implements IGTStore {
                     if (Bytes.compareTo(CF_B, 0, CF_B.length, cell.getFamilyArray(), cell.getFamilyOffset(), cell.getFamilyLength()) != 0 //
                             || Bytes.compareTo(COL_B, 0, COL_B.length, cell.getQualifierArray(), cell.getQualifierOffset(), cell.getQualifierLength()) != 0)
                         throw new IllegalStateException();
-                    
+
                     rec.loadCellBlock(0, ByteBuffer.wrap(cell.getRowArray(), cell.getRowOffset() + ID_LEN, cell.getRowLength() - ID_LEN));
                     rec.loadCellBlock(1, ByteBuffer.wrap(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength()));
                 }

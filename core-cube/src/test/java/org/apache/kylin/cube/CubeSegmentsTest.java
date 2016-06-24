@@ -18,7 +18,8 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
@@ -144,7 +145,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         } catch (IllegalArgumentException ex) {
             // good
         }
-        
+
         CubeSegment merge2 = mgr.mergeSegments(cube, 0, 2500, 0, 0, true);
         assertEquals(3, cube.getSegments().size());
         assertEquals(0, merge2.getDateRangeStart());
@@ -179,7 +180,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         } catch (IllegalStateException ex) {
             // good
         }
-        
+
         // append the second
         CubeSegment seg2 = mgr.appendSegment(cube, 1000, 2000, 0, 0);
         seg2.setStatus(SegmentStatusEnum.READY);

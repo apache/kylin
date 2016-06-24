@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
+import java.util.List;
 
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.rest.constant.Constant;
@@ -28,21 +30,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.List;
-
 @Component("extFilterService")
 public class ExtFilterService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(ExtFilterService.class);
 
-
     @Autowired
     private AccessService accessService;
 
-
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void saveExternalFilter(ExternalFilterDesc desc) throws IOException {
-        if(getMetadataManager().getExtFilterDesc(desc.getName()) != null){
+        if (getMetadataManager().getExtFilterDesc(desc.getName()) != null) {
             throw new InternalErrorException("The filter named " + desc.getName() + " already exists");
         }
         getMetadataManager().saveExternalFilter(desc);
@@ -50,12 +47,11 @@ public class ExtFilterService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void updateExternalFilter(ExternalFilterDesc desc) throws IOException {
-        if(getMetadataManager().getExtFilterDesc(desc.getName()) == null){
+        if (getMetadataManager().getExtFilterDesc(desc.getName()) == null) {
             throw new InternalErrorException("The filter named " + desc.getName() + " does not exists");
         }
         getMetadataManager().saveExternalFilter(desc);
     }
-
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void removeExternalFilter(String name) throws IOException {
@@ -73,7 +69,7 @@ public class ExtFilterService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public List<ExternalFilterDesc> listAllExternalFilters(){
+    public List<ExternalFilterDesc> listAllExternalFilters() {
         return getMetadataManager().listAllExternalFilters();
     }
 

@@ -43,7 +43,7 @@ public class CreateHTableTest extends LocalFileMetadataTestCase {
         conf.set("fs.default.name", "file:///");
         conf.set("mapreduce.framework.name", "local");
         conf.set("mapreduce.application.framework.path", "");
-        
+
         this.createTestMetadata();
 
     }

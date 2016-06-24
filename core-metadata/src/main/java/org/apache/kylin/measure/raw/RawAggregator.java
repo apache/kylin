@@ -18,11 +18,11 @@
 
 package org.apache.kylin.measure.raw;
 
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.measure.MeasureAggregator;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.measure.MeasureAggregator;
 
 /**
  * RAW data Aggregator
@@ -38,7 +38,7 @@ public class RawAggregator extends MeasureAggregator<List<ByteArray>> {
 
     @Override
     public void aggregate(List<ByteArray> value) {
-        if(value != null) {
+        if (value != null) {
             if (list == null) {
                 list = new ArrayList<>(value.size());
             }
@@ -54,7 +54,7 @@ public class RawAggregator extends MeasureAggregator<List<ByteArray>> {
     @Override
     public int getMemBytesEstimate() {
         int bytes = 0;
-        if(list != null) {
+        if (list != null) {
             for (ByteArray array : list) {
                 bytes += array.length() + 1;
             }

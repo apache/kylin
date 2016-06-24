@@ -36,6 +36,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.google.common.collect.Lists;
 
 /**
@@ -121,7 +122,7 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.deleteCube(newCubeName);
     }
 
-    @Test (expected=InternalErrorException.class)
+    @Test(expected = InternalErrorException.class)
     public void testDeleteSegmentNew() throws IOException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
         CubeDesc[] cubes = cubeDescController.getCube(cubeName);
@@ -130,7 +131,7 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.deleteSegment(cubeName, "20131212000000_20140112000000");
     }
 
-    @Test (expected=InternalErrorException.class)
+    @Test(expected = InternalErrorException.class)
     public void testDeleteSegmentNotExist() throws IOException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
         CubeDesc[] cubes = cubeDescController.getCube(cubeName);
@@ -139,8 +140,7 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController.deleteSegment(cubeName, "not_exist_segment");
     }
 
-
-    @Test (expected=InternalErrorException.class)
+    @Test(expected = InternalErrorException.class)
     public void testDeleteSegmentInMiddle() throws IOException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
         CubeDesc[] cubes = cubeDescController.getCube(cubeName);
@@ -163,6 +163,5 @@ public class CubeControllerTest extends ServiceTestBase {
 
         Assert.assertTrue(segNumber == newSegNumber + 1);
     }
-
 
 }

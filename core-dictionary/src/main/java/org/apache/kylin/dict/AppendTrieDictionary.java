@@ -18,7 +18,15 @@
 
 package org.apache.kylin.dict;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +37,11 @@ import java.util.List;
 import java.util.TreeMap;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.kylin.common.KylinConfig;
@@ -103,18 +115,16 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
 
         int cacheSize = KylinConfig.getInstanceFromEnv().getAppendDictCacheSize();
         if (dictSliceMap == null) {
-            dictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize)
-                    .baseDir(baseDir).persistent(true).immutable(true).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
+            dictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize).baseDir(baseDir).persistent(true).immutable(true).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
         }
         dictSliceMap.clear();
-        ((Writable)dictSliceMap).readFields(input);
+        ((Writable) dictSliceMap).readFields(input);
     }
-
 
     public byte[] writeDictMap() throws IOException {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(buf);
-        ((Writable)dictSliceMap).write(out);
+        ((Writable) dictSliceMap).write(out);
         byte[] dictMapBytes = buf.toByteArray();
         buf.close();
         out.close();
@@ -146,7 +156,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             if (!(o instanceof DictSliceKey)) {
                 return -1;
             }
-            DictSliceKey other = (DictSliceKey)o;
+            DictSliceKey other = (DictSliceKey) o;
             return Bytes.compareTo(key, other.key);
         }
 
@@ -164,7 +174,8 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     }
 
     public static class DictSlice<T> implements Writable {
-        public DictSlice() {}
+        public DictSlice() {
+        }
 
         public DictSlice(byte[] trieBytes) {
             init(trieBytes);
@@ -288,7 +299,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         }
 
         private DictNode rebuildTrieTree() {
-           return rebuildTrieTreeR(headSize, null);
+            return rebuildTrieTreeR(headSize, null);
         }
 
         private DictNode rebuildTrieTreeR(int n, DictNode parent) {
@@ -332,13 +343,13 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         }
 
         public void readFields(DataInput in) throws IOException {
-            byte[] headPartial = new byte[HEAD_MAGIC.length + Short.SIZE/Byte.SIZE + Integer.SIZE/Byte.SIZE];
+            byte[] headPartial = new byte[HEAD_MAGIC.length + Short.SIZE / Byte.SIZE + Integer.SIZE / Byte.SIZE];
             in.readFully(headPartial);
 
             if (BytesUtil.compareBytes(HEAD_MAGIC, 0, headPartial, 0, HEAD_MAGIC.length) != 0)
                 throw new IllegalArgumentException("Wrong file type (magic does not match)");
 
-            DataInputStream headIn = new DataInputStream( //
+            DataInputStream headIn = new DataInputStream(//
                     new ByteArrayInputStream(headPartial, HEAD_SIZE_I, headPartial.length - HEAD_SIZE_I));
             int headSize = headIn.readShort();
             int bodyLen = headIn.readInt();
@@ -388,7 +399,8 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         public DictNode parent;
         public int childrenCount = 1;
 
-        public DictNode() {}
+        public DictNode() {
+        }
 
         public void clone(DictNode o) {
             this.part = o.part;
@@ -488,7 +500,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                 int index = p.children.indexOf(current);
                 assert index != -1;
                 DictNode newParent = p.duplicateNode();
-                for (int i = p.children.size()-1; i >= index; i--) {
+                for (int i = p.children.size() - 1; i >= index; i--) {
                     DictNode child = p.removeChild(i);
                     newParent.addChild(0, child);
                 }
@@ -502,12 +514,12 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             DictNode current = root;
             DictNode child;
             while (!current.children.isEmpty()) {
-                child = leftOrRight == 0 ? current.children.get(0) : current.children.get(current.children.size()-1);
+                child = leftOrRight == 0 ? current.children.get(0) : current.children.get(current.children.size() - 1);
                 if (current.children.size() > 1 || current.isEndOfValue) {
                     current = child;
                     continue;
                 }
-                byte[] newValue = new byte[current.part.length+child.part.length];
+                byte[] newValue = new byte[current.part.length + child.part.length];
                 System.arraycopy(current.part, 0, newValue, 0, current.part.length);
                 System.arraycopy(child.part, 0, newValue, current.part.length, child.part.length);
                 current.reset(newValue, child.isEndOfValue, child.children);
@@ -639,7 +651,6 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             visitor.visit(node, level);
         }
 
-
         public int nValues; // number of values in total
         public int nValueBytesPlain; // number of bytes for all values
         // uncompressed
@@ -659,7 +670,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         public int mbpn_sizeNoValueBytes; // size of field noValueBytes
         public int mbpn_sizeChildOffset; // size of field childOffset, points to
         // first child in flattened array
-        public int mbpn_sizeId;          // size of id value, always be 4
+        public int mbpn_sizeId; // size of id value, always be 4
         public int mbpn_footprint; // MBPN footprint in bytes
 
         /**
@@ -792,11 +803,9 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             MAX_ENTRY_IN_SLICE = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
             int cacheSize = KylinConfig.getInstanceFromEnv().getAppendDictCacheSize();
             // create a new cached map with baseDir
-            dictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize)
-                    .baseDir(baseDir).keyClazz(DictSliceKey.class).valueClazz(DictNode.class)
-                    .persistent(true).immutable(false).build();
+            dictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize).baseDir(baseDir).keyClazz(DictSliceKey.class).valueClazz(DictNode.class).persistent(true).immutable(false).build();
             if (dictMapBytes != null) {
-                ((Writable)dictSliceMap).readFields(new DataInputStream(new ByteArrayInputStream(dictMapBytes)));
+                ((Writable) dictSliceMap).readFields(new DataInputStream(new ByteArrayInputStream(dictMapBytes)));
             }
         }
 
@@ -833,22 +842,22 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         private DictNode splitNodeTree(DictNode root) {
             DictNode parent = root;
             DictNode splitNode;
-            int childCountToSplit = (int)(MAX_ENTRY_IN_SLICE * MAX_ENTRY_OVERHEAD_FACTOR / 2);
+            int childCountToSplit = (int) (MAX_ENTRY_IN_SLICE * MAX_ENTRY_OVERHEAD_FACTOR / 2);
             while (true) {
                 List<DictNode> children = parent.children;
-                if (children.size() == 0){
+                if (children.size() == 0) {
                     splitNode = parent;
                     break;
                 } else if (children.size() == 1) {
                     parent = children.get(0);
                     continue;
                 } else {
-                    for (int i = children.size()-1; i >= 0; i--) {
+                    for (int i = children.size() - 1; i >= 0; i--) {
                         parent = children.get(i);
                         if (childCountToSplit > children.get(i).childrenCount) {
                             childCountToSplit -= children.get(i).childrenCount;
                         } else {
-                            childCountToSplit --;
+                            childCountToSplit--;
                             break;
                         }
                     }
@@ -862,7 +871,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             if (maxId < 0) {
                 throw new IllegalArgumentException("AppendTrieDictionary Id overflow Integer.MAX_VALUE");
             }
-            nValues ++;
+            nValues++;
             return id;
         }
 
@@ -951,7 +960,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         public AppendTrieDictionary<T> build(int baseId) throws IOException {
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(buf);
-            ((Writable)dictSliceMap).write(out);
+            ((Writable) dictSliceMap).write(out);
             byte[] dictMapBytes = buf.toByteArray();
             buf.close();
             out.close();
@@ -965,7 +974,6 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             return dict;
         }
     }
-
 
     @Override
     protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
@@ -1042,15 +1050,15 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     }
 
     public void flushIndex() throws IOException {
-        Path filePath = new Path(baseDir+"/.index");
+        Path filePath = new Path(baseDir + "/.index");
         Configuration conf = new Configuration();
-        try (FSDataOutputStream indexOut = (FileSystem.get(filePath.toUri(), conf)).create(filePath, true, 8*1024*1024, (short)2, 8*1024*1024*8)) {
+        try (FSDataOutputStream indexOut = (FileSystem.get(filePath.toUri(), conf)).create(filePath, true, 8 * 1024 * 1024, (short) 2, 8 * 1024 * 1024 * 8)) {
             indexOut.writeInt(baseId);
             indexOut.writeInt(maxId);
             indexOut.writeInt(maxValueLength);
             indexOut.writeInt(nValues);
             indexOut.writeUTF(bytesConverter.getClass().getName());
-            ((Writable)dictSliceMap).write(indexOut);
+            ((Writable) dictSliceMap).write(indexOut);
         }
     }
 
@@ -1058,8 +1066,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     public AppendTrieDictionary copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
         Configuration conf = new Configuration();
         AppendTrieDictionary newDict = new AppendTrieDictionary();
-        newDict.update(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()),
-                baseId, maxId, maxValueLength, nValues, bytesConverter, writeDictMap());
+        newDict.update(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConverter, writeDictMap());
         logger.info("Copy AppendDict from {} to {}", this.baseDir, newDict.baseDir);
         Path srcPath = new Path(this.baseDir);
         Path dstPath = new Path(newDict.baseDir);
@@ -1082,9 +1089,9 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     @Override
     public void readFields(DataInput in) throws IOException {
         String baseDir = in.readUTF();
-        Path filePath = new Path(baseDir+"/.index");
+        Path filePath = new Path(baseDir + "/.index");
         Configuration conf = new Configuration();
-        try (FSDataInputStream input = (FileSystem.get(filePath.toUri(), conf)).open(filePath, 8*1024*1024)) {
+        try (FSDataInputStream input = (FileSystem.get(filePath.toUri(), conf)).open(filePath, 8 * 1024 * 1024)) {
             int baseId = input.readInt();
             int maxId = input.readInt();
             int maxValueLength = input.readInt();

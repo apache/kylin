@@ -217,7 +217,7 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
                 GTRecord record = new GTRecord(info);
                 GTRecord next;
                 ByteBuffer buf = ByteBuffer.allocate(info.getMaxRecordLength());
-                
+
                 @Override
                 public boolean hasNext() {
                     if (next != null)
@@ -309,7 +309,7 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
         public void write(GTRecord rec) throws IOException {
             buf.clear();
             rec.exportColumns(info.getAllColumns(), buf);
-            
+
             int len = buf.position();
             dout.writeInt(len);
             dout.write(buf.array(), buf.arrayOffset(), len);

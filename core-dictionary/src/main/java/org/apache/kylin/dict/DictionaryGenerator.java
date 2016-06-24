@@ -39,7 +39,7 @@ import com.google.common.base.Preconditions;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
-    
+
     private static final int DICT_MAX_CARDINALITY = getDictionaryMaxCardinality();
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
@@ -69,10 +69,10 @@ public class DictionaryGenerator {
         } else {
             builder = new StringDictBuilder();
         }
-        
+
         return buildDictionary(builder, null, valueEnumerator);
     }
-    
+
     public static Dictionary<String> buildDictionary(IDictionaryBuilder builder, DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator) throws IOException {
         int baseId = 0; // always 0 for now
         int nSamples = 5;
@@ -140,7 +140,7 @@ public class DictionaryGenerator {
             throw new IllegalStateException("Unrecognized datetime value");
         }
     }
-    
+
     private static class TimeDictBuilder implements IDictionaryBuilder {
         @Override
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {

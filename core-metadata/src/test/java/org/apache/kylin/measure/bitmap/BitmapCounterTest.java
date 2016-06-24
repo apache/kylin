@@ -18,12 +18,12 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * Created by sunyerui on 15/12/31.

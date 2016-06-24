@@ -34,7 +34,7 @@ public class RowAggregatorsTest {
     @Test
     public void testSerialize() {
         ObserverAggregators.HCol[] hcols = new ObserverAggregators.HCol[] { //
-        newHCol("f", "c1", new String[] { "SUM", "COUNT" }, new String[] { "decimal", "long" }), //
+                newHCol("f", "c1", new String[] { "SUM", "COUNT" }, new String[] { "decimal", "long" }), //
                 newHCol("f", "c2", new String[] { "SUM", "SUM" }, new String[] { "long", "long" }) };
         ObserverAggregators sample = new ObserverAggregators(hcols);
 

@@ -27,7 +27,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class StringUtil {
 
-    public static String[] filterSystemArgs(String args[]) {
+    public static String[] filterSystemArgs(String[] args) {
         ArrayList<String> whatsLeft = new ArrayList<String>();
         for (String a : args) {
             if (a.startsWith("-D")) {
@@ -72,7 +72,7 @@ public class StringUtil {
     public static String noBlank(String str, String dft) {
         return StringUtils.isBlank(str) ? dft : str;
     }
-    
+
     public static String dropSuffix(String str, String suffix) {
         if (str.endsWith(suffix))
             return str.substring(0, str.length() - suffix.length());

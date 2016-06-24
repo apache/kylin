@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.mr.invertedindex;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
@@ -33,8 +35,6 @@ import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-
-import java.io.IOException;
 
 /**
  * @author yangli9

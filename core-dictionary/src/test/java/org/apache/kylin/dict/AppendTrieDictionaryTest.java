@@ -18,6 +18,23 @@
 
 package org.apache.kylin.dict;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+import java.util.TreeMap;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -26,12 +43,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.*;
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 /**
  * Created by sunyerui on 16/4/28.
@@ -53,16 +64,13 @@ public class AppendTrieDictionaryTest {
         String workingDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
         try {
             FileSystem.get(new Path(workingDir).toUri(), new Configuration()).delete(new Path(workingDir), true);
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
     }
 
-    public static final String[] words = new String[]{
-        "paint", "par", "part", "parts", "partition", "partitions",
-        "party", "partie", "parties", "patient",
-        "taste", "tar", "trie", "try", "tries",
-        "字典", "字典树", "字母", // non-ascii characters
-        "",  // empty
-        "paint", "tar", "try", // some dup
+    public static final String[] words = new String[] { "paint", "par", "part", "parts", "partition", "partitions", "party", "partie", "parties", "patient", "taste", "tar", "trie", "try", "tries", "字典", "字典树", "字母", // non-ascii characters
+            "", // empty
+            "paint", "tar", "try", // some dup
     };
 
     @Test
@@ -123,8 +131,9 @@ public class AppendTrieDictionaryTest {
             String word;
             while ((word = reader.readLine()) != null) {
                 word = word.trim();
-                if (!word.isEmpty());
-                    b.addValue(word);
+                if (!word.isEmpty())
+                    ;
+                b.addValue(word);
             }
         } finally {
             reader.close();
@@ -146,8 +155,8 @@ public class AppendTrieDictionaryTest {
         AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create("/tmp");
         AppendTrieDictionary<String> dict = null;
         TreeMap<Integer, String> checkMap = new TreeMap<>();
-        int firstAppend = rnd.nextInt(strList.size()/2);
-        int secondAppend = firstAppend + rnd.nextInt((strList.size()-firstAppend)/2);
+        int firstAppend = rnd.nextInt(strList.size() / 2);
+        int secondAppend = firstAppend + rnd.nextInt((strList.size() - firstAppend) / 2);
         int appendIndex = 0;
         int checkIndex = 0;
 
@@ -156,12 +165,11 @@ public class AppendTrieDictionaryTest {
         }
         dict = b.build(0);
         dict.dump(System.out);
-        for (;checkIndex < firstAppend; checkIndex++) {
+        for (; checkIndex < firstAppend; checkIndex++) {
             String str = strList.get(checkIndex);
             byte[] bytes = converter.convertToBytes(str);
             int id = dict.getIdFromValueBytesImpl(bytes, 0, bytes.length, 0);
-            assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)),
-                    checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
+            assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
             checkMap.put(id, str);
         }
 
@@ -175,7 +183,7 @@ public class AppendTrieDictionaryTest {
         dict = newDict;
         dict.dump(System.out);
         checkIndex = 0;
-        for (;checkIndex < secondAppend; checkIndex++) {
+        for (; checkIndex < secondAppend; checkIndex++) {
             String str = strList.get(checkIndex);
             byte[] bytes = converter.convertToBytes(str);
             int id = dict.getIdFromValueBytesImpl(bytes, 0, bytes.length, 0);
@@ -183,8 +191,7 @@ public class AppendTrieDictionaryTest {
                 assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
             } else {
                 // check second append str, should be new id
-                assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)),
-                    checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
+                assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
                 checkMap.put(id, str);
             }
         }
@@ -207,8 +214,7 @@ public class AppendTrieDictionaryTest {
                 assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
             } else {
                 // check third append str, should be new id
-                assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)),
-                    checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
+                assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
                 checkMap.put(id, str);
             }
         }

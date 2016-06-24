@@ -66,12 +66,12 @@ public interface BatchConstants {
     String ARG_II_NAME = "iiname";
     String ARG_SEGMENT_NAME = "segmentname";
     String ARG_PARTITION = "partitions";
-    String ARG_STATS_ENABLED= "statisticsenabled";
-    String ARG_STATS_OUTPUT= "statisticsoutput";
-    String ARG_STATS_SAMPLING_PERCENT= "statisticssamplingpercent";
-    String ARG_HTABLE_NAME= "htablename";
-    String ARG_INPUT_FORMAT= "inputformat";
-    String ARG_LEVEL= "level";
+    String ARG_STATS_ENABLED = "statisticsenabled";
+    String ARG_STATS_OUTPUT = "statisticsoutput";
+    String ARG_STATS_SAMPLING_PERCENT = "statisticssamplingpercent";
+    String ARG_HTABLE_NAME = "htablename";
+    String ARG_INPUT_FORMAT = "inputformat";
+    String ARG_LEVEL = "level";
 
     /**
      * logger and counter

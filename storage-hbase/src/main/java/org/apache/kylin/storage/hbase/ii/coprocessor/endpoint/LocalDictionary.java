@@ -63,7 +63,7 @@ public class LocalDictionary implements IDimensionEncodingMap {
         }
         return result;
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public Dictionary<String> getDictionary(TblColRef col) {

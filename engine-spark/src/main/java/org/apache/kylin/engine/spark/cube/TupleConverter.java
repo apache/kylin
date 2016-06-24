@@ -18,11 +18,12 @@
 package org.apache.kylin.engine.spark.cube;
 
 import org.apache.kylin.gridtable.GTRecord;
+
 import scala.Tuple2;
 
 /**
  */
 public interface TupleConverter {
-    
+
     Tuple2<byte[], byte[]> convert(long cuboidId, GTRecord record);
 }

@@ -18,7 +18,10 @@
 
 package org.apache.kylin.common.persistence;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -32,7 +35,7 @@ import org.apache.commons.lang.StringUtils;
  * Be called by LocalFileResourceStoreTest and ITHBaseResourceStoreTest.
  */
 public class ResourceStoreTest {
-    
+
     public static void testAStore(ResourceStore store) throws IOException {
         testBasics(store);
         testGetAllResources(store);
@@ -41,25 +44,25 @@ public class ResourceStoreTest {
     private static void testGetAllResources(ResourceStore store) throws IOException {
         final String folder = "/testFolder";
         List<StringEntity> result;
-        
+
         // reset any leftover garbage
         ResourceTool.resetR(store, folder);
-        
+
         store.putResource(folder + "/res1", new StringEntity("data1"), 1000, StringEntity.serializer);
         store.putResource(folder + "/res2", new StringEntity("data2"), 2000, StringEntity.serializer);
         store.putResource(folder + "/sub/res3", new StringEntity("data3"), 3000, StringEntity.serializer);
         store.putResource(folder + "/res4", new StringEntity("data4"), 4000, StringEntity.serializer);
-        
+
         result = store.getAllResources(folder, StringEntity.class, StringEntity.serializer);
         assertEntity(result.get(0), "data1", 1000);
         assertEntity(result.get(1), "data2", 2000);
         assertEntity(result.get(2), "data4", 4000);
         assertEquals(3, result.size());
-        
+
         result = store.getAllResources(folder, 2000, 4000, StringEntity.class, StringEntity.serializer);
         assertEntity(result.get(0), "data2", 2000);
         assertEquals(1, result.size());
-        
+
         ResourceTool.resetR(store, folder);
     }
 
@@ -184,6 +187,5 @@ public class ResourceStoreTest {
             return str;
         }
     }
-
 
 }

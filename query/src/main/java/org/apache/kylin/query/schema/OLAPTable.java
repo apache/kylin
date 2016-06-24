@@ -143,7 +143,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
 
         int precision = dataType.getPrecision();
         int scale = dataType.getScale();
-        
+
         RelDataType result;
         if (precision >= 0 && scale >= 0)
             result = typeFactory.createSqlType(sqlTypeName, precision, scale);

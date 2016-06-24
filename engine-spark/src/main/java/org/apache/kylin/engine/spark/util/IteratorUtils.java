@@ -17,14 +17,16 @@
 */
 package org.apache.kylin.engine.spark.util;
 
-import com.google.common.collect.Lists;
-import org.apache.spark.api.java.function.Function;
-import scala.Tuple2;
-
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+
+import org.apache.spark.api.java.function.Function;
+
+import com.google.common.collect.Lists;
+
+import scala.Tuple2;
 
 /**
  */
@@ -33,7 +35,8 @@ public class IteratorUtils {
     public static <K, V> Iterator<Tuple2<K, V>> merge(final Iterator<Tuple2<K, V>> input, final Comparator<K> comparator, final Function<Iterable<V>, V> converter) {
         return new Iterator<Tuple2<K, V>>() {
 
-            Tuple2<K, V> current = input.hasNext()?input.next():null;
+            Tuple2<K, V> current = input.hasNext() ? input.next() : null;
+
             @Override
             public boolean hasNext() {
                 return current != null;
@@ -47,7 +50,7 @@ public class IteratorUtils {
                 final LinkedList<V> values = Lists.newLinkedList();
                 K currentKey = current._1();
                 values.add(current._2());
-                while(input.hasNext()) {
+                while (input.hasNext()) {
                     Tuple2<K, V> next = input.next();
                     if (comparator.compare(currentKey, next._1()) == 0) {
                         values.add(next._2());

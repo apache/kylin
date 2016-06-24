@@ -21,7 +21,7 @@ package org.apache.kylin.storage.hbase.common.coprocessor;
 /**
  */
 public enum CoprocessorBehavior {
-    RAW_SCAN,//on use RegionScanner to scan raw data, for testing hbase scan speed
+    RAW_SCAN, //on use RegionScanner to scan raw data, for testing hbase scan speed
     SCAN, //only scan data, used for profiling tuple scan speed. Will not return any result
     SCAN_FILTER, //only scan+filter used,used for profiling filter speed.  Will not return any result
     SCAN_FILTER_AGGR, //aggregate the result.  Will return results

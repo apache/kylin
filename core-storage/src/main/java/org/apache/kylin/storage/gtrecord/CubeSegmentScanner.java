@@ -52,7 +52,7 @@ public class CubeSegmentScanner implements IGTScanner {
     final GTScanRequest scanRequest;
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Collection<FunctionDesc> metrics, TupleFilter filter, StorageContext context,String gtStorage) {
+            Collection<FunctionDesc> metrics, TupleFilter filter, StorageContext context, String gtStorage) {
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
 
@@ -74,7 +74,7 @@ public class CubeSegmentScanner implements IGTScanner {
             if (context.isLimitEnabled())
                 scanRequest.setRowLimit(context.getLimit());
         }
-        scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest,gtStorage);
+        scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest, gtStorage);
     }
 
     @Override

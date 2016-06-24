@@ -18,6 +18,13 @@
 
 package org.apache.kylin.cube.model.validation.rule;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -29,12 +36,6 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by sunyerui on 16/6/1.
@@ -71,22 +72,17 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBadDesc() throws IOException {
-        testBadDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " +
-                "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder",
-            DictionaryDesc.create("SITE_NAME", null, "FakeBuilderClass"));
+        testBadDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " + "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder", DictionaryDesc.create("SITE_NAME", null, "FakeBuilderClass"));
     }
 
     @Test
     public void testBadDesc2() throws IOException {
-        testBadDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " +
-                        "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder",
-                DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
+        testBadDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " + "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder", DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
     }
 
     @Test
     public void testBadDesc3() throws IOException {
-        testBadDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID used as dimension and conflict with GlobalDictBuilder",
-                DictionaryDesc.create("lstg_site_id", null, GlobalDictionaryBuilder.class.getName()));
+        testBadDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID used as dimension and conflict with GlobalDictBuilder", DictionaryDesc.create("lstg_site_id", null, GlobalDictionaryBuilder.class.getName()));
     }
 
     private void testBadDictionaryDesc(String expectMessage, DictionaryDesc... descs) throws IOException {
@@ -94,7 +90,7 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
         File f = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_without_slr_left_join_desc.json");
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
 
-        for (DictionaryDesc dictDesc: descs) {
+        for (DictionaryDesc dictDesc : descs) {
             desc.getDictionaries().add(dictDesc);
         }
 

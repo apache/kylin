@@ -18,10 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.engine.mr.KylinReducer;
-
-import java.io.IOException;
 
 /**
  * @author yangli9

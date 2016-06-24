@@ -106,7 +106,7 @@ public class AggregationScanner implements RegionScanner {
         if (behavior == CoprocessorBehavior.SCAN) {
             System.out.println("meaningless byte is now " + meaninglessByte);
         }
-        
+
         return aggCache;
     }
 

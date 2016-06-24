@@ -26,7 +26,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 public interface IRealization extends IStorageAware {
-    
+
     /**
      * Given the features of a query, check how capable the realization is to answer the query.
      */

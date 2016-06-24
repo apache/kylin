@@ -18,11 +18,12 @@
 package org.apache.kylin.engine.spark;
 
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
+
 import scala.Tuple2;
 
 /**
  */
 public interface SparkCuboidWriter extends ICuboidWriter {
-    
+
     Iterable<Tuple2<byte[], byte[]>> getResult();
 }

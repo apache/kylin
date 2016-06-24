@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -35,6 +34,8 @@ import org.apache.kylin.metadata.MetadataConstants;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 @SuppressWarnings("serial")
@@ -65,7 +66,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
     @JsonProperty("filter_condition")
     private String filterCondition;
-    
+
     @JsonProperty("partition_desc")
     PartitionDesc partitionDesc;
 
@@ -73,7 +74,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
     private TableDesc factTableDesc;
-    
+
     private List<TableDesc> lookupTableDescs = Lists.newArrayList();
 
     /**
@@ -181,11 +182,11 @@ public class DataModelDesc extends RootPersistentEntity {
         }
         return candidate;
     }
-    
+
     // TODO let this replace CubeDesc.buildColumnNameAbbreviation()
     public ColumnDesc findColumn(String column) {
         ColumnDesc colDesc = null;
-        
+
         int cut = column.lastIndexOf('.');
         if (cut > 0) {
             // table specified
@@ -203,25 +204,25 @@ public class DataModelDesc extends RootPersistentEntity {
                 }
             }
         }
-        
+
         if (colDesc == null)
             throw new IllegalArgumentException("Column not found by " + column);
-        
+
         return colDesc;
     }
-    
+
     public TableDesc findTable(String table) {
         if (factTableDesc.getName().equalsIgnoreCase(table) || factTableDesc.getIdentity().equalsIgnoreCase(table))
             return factTableDesc;
-        
+
         for (TableDesc desc : lookupTableDescs) {
             if (desc.getName().equalsIgnoreCase(table) || desc.getIdentity().equalsIgnoreCase(table))
                 return desc;
         }
-        
+
         throw new IllegalArgumentException("Table not found by " + table);
     }
-    
+
     public void init(Map<String, TableDesc> tables) {
         this.factTable = this.factTable.toUpperCase();
         this.factTableDesc = tables.get(this.factTable.toUpperCase());

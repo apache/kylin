@@ -18,11 +18,17 @@
 
 package org.apache.kylin.measure.topn;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.common.util.Pair;
 
-import java.util.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * Modified from the StreamSummary.java in https://github.com/addthis/stream-lib
@@ -115,8 +121,8 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
         Counter<T> counter = counterNode.getValue();
         counter.count += incrementCount;
 
-        ListNode2<Counter<T>> nodeNext; 
-                
+        ListNode2<Counter<T>> nodeNext;
+
         if (incrementCount > 0) {
             nodeNext = counterNode.getNext();
         } else {
@@ -135,7 +141,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
             } else {
                 counterList.add(counterNode);
             }
-            
+
         } else {
             while (nodeNext != null && counter.count < nodeNext.getValue().count) {
                 nodeNext = nodeNext.getPrev();
@@ -146,8 +152,6 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
                 counterList.enqueue(counterNode);
             }
         }
-
-       
 
     }
 
@@ -227,10 +231,10 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
         if (another.size() >= another.capacity) {
             m2 = another.counterList.tail().getValue().count;
         }
-        
-        Set<T> duplicateItems = Sets.newHashSet(); 
+
+        Set<T> duplicateItems = Sets.newHashSet();
         List<T> notDuplicateItems = Lists.newArrayList();
-        
+
         for (Map.Entry<T, ListNode2<Counter<T>>> entry : this.counterMap.entrySet()) {
             T item = entry.getKey();
             ListNode2<Counter<T>> existing = another.counterMap.get(item);
@@ -241,11 +245,11 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
             }
         }
 
-        for(T item : duplicateItems) {
+        for (T item : duplicateItems) {
             this.offer(item, another.counterMap.get(item).getValue().count);
         }
-        
-        for(T item : notDuplicateItems) {
+
+        for (T item : notDuplicateItems) {
             this.offer(item, m2);
         }
 
@@ -301,7 +305,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
     public Iterator<Counter<T>> iterator() {
         return new TopNCounterIterator();
     }
-    
+
     /**
      * Iterator from the tail (smallest) to head (biggest);
      */
@@ -331,5 +335,5 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
             throw new UnsupportedOperationException();
         }
     }
-    
+
 }

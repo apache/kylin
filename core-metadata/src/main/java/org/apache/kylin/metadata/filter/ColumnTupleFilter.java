@@ -84,7 +84,7 @@ public class ColumnTupleFilter extends TupleFilter {
     }
 
     @Override
-    public void serialize(IFilterCodeSystem<?> cs,ByteBuffer buffer) {
+    public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
         String table = columnRef.getTable();
         BytesUtil.writeUTFString(table, buffer);
 

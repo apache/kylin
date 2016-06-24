@@ -31,9 +31,9 @@ public class IRealizationConstants {
      * which kylin server(represented by its kylin_metadata prefix) owns this htable
      */
     public final static String HTableTag = "KYLIN_HOST";
-    
+
     public final static String HTableOwner = "OWNER";
-    
+
     public final static String HTableUser = "USER";
 
     public final static String HTableCreationTime = "CREATION_TIME";

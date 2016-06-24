@@ -53,7 +53,7 @@ public class Functions {
                 throw new RuntimeException("Failed to on constructing FunctionTupleFilter for " + name);
             }
         }
-        
+
         return new BuildInFunctionTupleFilter(name);
 
     }

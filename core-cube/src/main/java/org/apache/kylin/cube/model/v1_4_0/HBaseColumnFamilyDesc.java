@@ -20,7 +20,6 @@ package org.apache.kylin.cube.model.v1_4_0;
 
 import java.util.Arrays;
 
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;

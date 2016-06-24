@@ -122,7 +122,7 @@ public class CubeHTableUtil {
             admin.close();
         }
     }
-    
+
     /** create a HTable that has the same performance settings as normal cube table, for benchmark purpose */
     public static void createBenchmarkHTable(TableName tableName, String cfName) throws IOException {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
@@ -137,7 +137,7 @@ public class CubeHTableUtil {
 
             HTableDescriptor tableDesc = new HTableDescriptor(tableName);
             tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
-            
+
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
             tableDesc.addFamily(createColumnFamily(kylinConfig, cfName, false));
 

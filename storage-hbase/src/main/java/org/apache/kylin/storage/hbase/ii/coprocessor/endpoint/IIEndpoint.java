@@ -18,8 +18,6 @@
 
 package org.apache.kylin.storage.hbase.ii.coprocessor.endpoint;
 
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -68,6 +66,8 @@ import com.google.protobuf.HBaseZeroCopyByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
+
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 /**
  */

@@ -52,7 +52,7 @@ public class IICapabilityChecker {
             logger.info("Exclude II " + ii.getName() + " because fact table unmatch");
             return result;
         }
-        
+
         // match joins
         boolean matchJoin = isMatchedWithJoins(digest.joinDescs, ii);
         if (!matchJoin) {
@@ -65,17 +65,17 @@ public class IICapabilityChecker {
         Collection<FunctionDesc> aggrFunctions = digest.aggregations;
         Collection<TblColRef> unmatchedDimensions = unmatchedDimensions(dimensionColumns, ii);
         Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, ii);
-        
+
         // try dimension-as-measure
         if (!unmatchedAggregations.isEmpty()) {
             tryDimensionAsMeasures(unmatchedAggregations, digest, ii, result);
         }
-        
+
         if (!unmatchedDimensions.isEmpty()) {
             logger.info("Exclude ii " + ii.getName() + " because unmatched dimensions");
             return result;
         }
-        
+
         if (!unmatchedAggregations.isEmpty()) {
             logger.info("Exclude ii " + ii.getName() + " because unmatched aggregations");
             return result;
@@ -157,7 +157,7 @@ public class IICapabilityChecker {
         Iterator<FunctionDesc> it = unmatchedAggregations.iterator();
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();
-            
+
             if (iiFuncs.contains(functionDesc)) {
                 it.remove();
                 continue;

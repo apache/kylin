@@ -147,6 +147,7 @@ public class AccessService {
                 acl.updateAce(indexOfAce, newPermission);
                 acl = aclService.updateAcl(acl);
             } catch (NotFoundException e) {
+                //do nothing?
             }
         }
 
@@ -178,6 +179,7 @@ public class AccessService {
                 acl.deleteAce(indexOfAce);
                 acl = aclService.updateAcl(acl);
             } catch (NotFoundException e) {
+                //do nothing?
             }
         }
 
@@ -228,6 +230,7 @@ public class AccessService {
         try {
             aclService.deleteAcl(objectIdentity, deleteChildren);
         } catch (NotFoundException e) {
+            //do nothing?
         }
     }
 
@@ -251,6 +254,7 @@ public class AccessService {
         try {
             acl = (MutableAcl) aclService.readAclById(objectIdentity);
         } catch (NotFoundException e) {
+            //do nothing?
         }
 
         return acl;

@@ -87,11 +87,11 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
         System.out.println(DateFormat.formatToDateStr(Long.parseLong(results.getFirst())));
         System.out.println(DateFormat.formatToDateStr(Long.parseLong(results.getSecond())));
-        
+
         Assert.assertEquals(millis("2013-05-05"), results.getFirst());
         Assert.assertEquals(millis("2013-08-03"), results.getSecond());
     }
-    
+
     @Test
     public void testMapValues() throws Exception {
         Set<String> values = new HashSet<String>();
@@ -106,7 +106,7 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
             Assert.assertEquals(millis("2012-01-01"), i);
         }
     }
-    
+
     private String millis(String dateStr) {
         return String.valueOf(DateFormat.stringToMillis(dateStr));
     }

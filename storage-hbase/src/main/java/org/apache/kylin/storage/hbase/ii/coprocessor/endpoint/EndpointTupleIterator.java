@@ -169,11 +169,11 @@ public class EndpointTupleIterator implements ITupleIterator {
             public Long apply(IIProtos.IIResponseInternal input) {
 
                 IIProtos.IIResponseInternal.Stats status = input.getStats();
-                logger.info("Endpoints all returned, stats from shard {}: start moment:{}, finish moment: {}, elapsed ms: {}, scanned slices: {}, latest slice time is {}",//
-                        new Object[] { String.valueOf(status.getMyShard()),//
-                                DateFormat.formatToTimeStr(status.getServiceStartTime()),//
-                                DateFormat.formatToTimeStr(status.getServiceEndTime()),//
-                                String.valueOf(status.getServiceEndTime() - status.getServiceStartTime()),//
+                logger.info("Endpoints all returned, stats from shard {}: start moment:{}, finish moment: {}, elapsed ms: {}, scanned slices: {}, latest slice time is {}", //
+                        new Object[] { String.valueOf(status.getMyShard()), //
+                                DateFormat.formatToTimeStr(status.getServiceStartTime()), //
+                                DateFormat.formatToTimeStr(status.getServiceEndTime()), //
+                                String.valueOf(status.getServiceEndTime() - status.getServiceStartTime()), //
                                 String.valueOf(status.getScannedSlices()), DateFormat.formatToTimeStr(status.getLatestDataTime()) });
 
                 return status.getLatestDataTime();

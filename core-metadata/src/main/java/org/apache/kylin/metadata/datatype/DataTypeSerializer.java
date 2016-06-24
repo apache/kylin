@@ -50,7 +50,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
         implementations.put("datetime", DateTimeSerializer.class);
         implementations.put("timestamp", DateTimeSerializer.class);
     }
-    
+
     public static void register(String dataTypeName, Class<? extends DataTypeSerializer<?>> impl) {
         implementations.put(dataTypeName, impl);
     }
@@ -70,7 +70,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
             throw new RuntimeException(e); // never happen
         }
     }
-    
+
     /** Peek into buffer and return the length of serialization which is previously written by this.serialize().
      *  The current position of input buffer is guaranteed to be at the beginning of the serialization.
      *  The implementation must not alter the buffer position by its return. */
@@ -81,7 +81,7 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
 
     /** Get an estimate of the average size in bytes of this kind of serialized data */
     abstract public int getStorageBytesEstimate();
-    
+
     /** An optional convenient method that converts a string to this data type (for dimensions) */
     public T valueOf(String str) {
         throw new UnsupportedOperationException();

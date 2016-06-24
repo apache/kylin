@@ -18,11 +18,11 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.source.ReadableTable;
-
 import java.io.IOException;
 import java.util.Arrays;
+
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.source.ReadableTable;
 
 /**
  * Created by dongli on 10/29/15.

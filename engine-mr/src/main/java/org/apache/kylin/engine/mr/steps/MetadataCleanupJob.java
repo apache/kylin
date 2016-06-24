@@ -18,7 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.NavigableSet;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -28,7 +31,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
-import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -52,8 +54,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
 
     private KylinConfig config = null;
 
-    public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000l; // 2 days
-    public static final long TIME_THREADSHOLD_FOR_JOB = 30 * 24 * 3600 * 1000l; // 30 days
+    public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000L; // 2 days
+    public static final long TIME_THREADSHOLD_FOR_JOB = 30 * 24 * 3600 * 1000L; // 30 days
 
     /*
      * (non-Javadoc)
@@ -144,7 +146,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
                             }
                 }
         }
-        
+
         // delete old and completed jobs
         ExecutableDao executableDao = ExecutableDao.getInstance(KylinConfig.getInstanceFromEnv());
         List<ExecutablePO> allExecutable = executableDao.getJobs();

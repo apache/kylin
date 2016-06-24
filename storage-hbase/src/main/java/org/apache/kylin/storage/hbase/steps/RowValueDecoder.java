@@ -121,7 +121,7 @@ public class RowValueDecoder implements Cloneable {
     }
 
     // result is in order of <code>CubeDesc.getMeasures()</code>
-    public void loadCubeMeasureArray(Object result[]) {
+    public void loadCubeMeasureArray(Object[] result) {
         int[] measureIndex = hbaseColumn.getMeasureIndex();
         for (int i = 0; i < measureIndex.length; i++) {
             result[measureIndex[i]] = values[i];

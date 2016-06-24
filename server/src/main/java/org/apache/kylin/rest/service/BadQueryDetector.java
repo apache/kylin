@@ -24,7 +24,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
@@ -37,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class BadQueryDetector extends Thread {
 
@@ -111,15 +109,16 @@ public class BadQueryDetector extends Thread {
         NavigableSet<Pair<Long, String>> cacheQueue = new TreeSet<>(new Comparator<Pair<Long, String>>() {
             @Override
             public int compare(Pair<Long, String> o1, Pair<Long, String> o2) {
-                if (o1.equals(o2)){
+                if (o1.equals(o2)) {
                     return 0;
                 } else if (o1.getFirst().equals(o2.getFirst())) {
                     return o2.getSecond().compareTo(o2.getSecond());
                 } else {
-                    return (int)(o1.getFirst() - o2.getFirst());
+                    return (int) (o1.getFirst() - o2.getFirst());
                 }
             }
         });
+
         public PersistenceNotifier() {
             try {
                 serverHostname = InetAddress.getLocalHost().getHostName();

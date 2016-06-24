@@ -28,7 +28,6 @@ import org.apache.kylin.common.KylinConfig;
  */
 public abstract class AbstractKylinTestCase {
 
-
     public static final String[] SERVICES_WITH_CACHE = { //
             "org.apache.kylin.cube.CubeManager", //
             "org.apache.kylin.cube.CubeDescManager", //

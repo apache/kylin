@@ -17,21 +17,22 @@
 */
 package org.apache.kylin.engine.spark.cube;
 
-import org.apache.kylin.gridtable.GTRecord;
-import org.junit.Test;
-import scala.Tuple2;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.kylin.gridtable.GTRecord;
+import org.junit.Test;
+
+import scala.Tuple2;
 
 /**
  */
 public class BufferedCuboidWriterTest {
-    
+
     @Test
     public void test() throws ExecutionException, InterruptedException {
         final BufferedCuboidWriter bufferedCuboidWriter = new BufferedCuboidWriter(new TupleConverter() {
@@ -45,7 +46,7 @@ public class BufferedCuboidWriterTest {
             @Override
             public void run() {
                 int i = 0;
-                
+
                 while (i++ < testCount) {
                     try {
                         bufferedCuboidWriter.write(i, null);

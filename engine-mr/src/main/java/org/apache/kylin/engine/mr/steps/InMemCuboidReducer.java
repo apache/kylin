@@ -49,7 +49,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
     private int counter;
     private Object[] input;
     private Object[] result;
-    
+
     private Text outputKey;
     private Text outputValue;
 
@@ -67,7 +67,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
         aggs = new MeasureAggregators(measuresDescs);
         input = new Object[measuresDescs.size()];
         result = new Object[measuresDescs.size()];
-        
+
         outputKey = new Text();
         outputValue = new Text();
     }
@@ -91,7 +91,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
 
         context.write(outputKey, outputValue);
-        
+
         counter++;
         if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
             logger.info("Handled " + counter + " records!");

@@ -33,6 +33,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -210,8 +211,8 @@ public class ProjectInstance extends RootPersistentEntity {
     public void removeTable(String tableName) {
         tables.remove(tableName.toUpperCase());
     }
-    
-    public void addExtFilter(String extFilterName){
+
+    public void addExtFilter(String extFilterName) {
         this.getExtFilters().add(extFilterName);
     }
 
@@ -231,8 +232,7 @@ public class ProjectInstance extends RootPersistentEntity {
         return tables;
     }
 
-
-    public Set<String> getExtFilters(){
+    public Set<String> getExtFilters() {
         return extFilters;
     }
 

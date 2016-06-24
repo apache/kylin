@@ -60,15 +60,17 @@ public class FixedLenDimEnc extends DimensionEncoding {
     //no-arg constructor is required for Externalizable
     public FixedLenDimEnc() {
     }
-    
+
     public FixedLenDimEnc(int len) {
         this.fixedLen = len;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         FixedLenDimEnc that = (FixedLenDimEnc) o;
 

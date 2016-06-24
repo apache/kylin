@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.Maps;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.kylin.common.KylinConfig;
@@ -56,11 +55,12 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * @author ysong1, honma
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private KylinConfig config;
@@ -119,7 +119,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         codec = new BufferedMeasureEncoder(measureDescs);
         measureObjs = new Object[measureDescs.size()];
         outputValue = new Text();
-        
+
         dictMeasures = Lists.newArrayList();
         oldDicts = Maps.newHashMap();
         newDicts = Maps.newHashMap();

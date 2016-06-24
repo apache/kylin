@@ -18,10 +18,14 @@
 
 package org.apache.kylin.measure.topn;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.*;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
@@ -32,7 +36,9 @@ import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-import org.apache.kylin.metadata.model.*;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.Tuple;
@@ -206,13 +212,13 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     @Override
     public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
-        List <TblColRef> columnsNeedDict = Lists.newArrayList();
-        List <TblColRef> allCols = functionDesc.getParameter().getColRefs();
+        List<TblColRef> columnsNeedDict = Lists.newArrayList();
+        List<TblColRef> allCols = functionDesc.getParameter().getColRefs();
         int start = (functionDesc.getParameter().isColumnType() == true) ? 1 : 0;
         for (int i = start; i < allCols.size(); i++) {
             TblColRef tblColRef = allCols.get(i);
             String encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getName());
-            if(StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
+            if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
                 columnsNeedDict.add(tblColRef);
             }
         }
@@ -324,14 +330,14 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         final TblColRef numericCol = getTopNNumericColumn(function);
         final int[] literalTupleIdx = new int[literalCols.size()];
         final DimensionEncoding[] dimensionEncodings = getDimensionEncodings(function, literalCols, dictionaryMap);
-        for (int i=0; i< literalCols.size(); i++) {
+        for (int i = 0; i < literalCols.size(); i++) {
             TblColRef colRef = literalCols.get(i);
             literalTupleIdx[i] = tupleInfo.hasColumn(colRef) ? tupleInfo.getColumnIndex(colRef) : -1;
         }
 
         // for TopN, the aggr must be SUM, so the number fill into the column position (without rewrite)
         final int numericTupleIdx;
-        if (numericCol != null ) {
+        if (numericCol != null) {
             numericTupleIdx = tupleInfo.hasColumn(numericCol) ? tupleInfo.getColumnIndex(numericCol) : -1;
         } else {
             numericTupleIdx = tupleInfo.getFieldIndex("COUNT__");
@@ -361,7 +367,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
                 Counter<ByteArray> counter = topNCounterIterator.next();
                 int offset = counter.getItem().offset();
-                for (int i = 0; i< dimensionEncodings.length; i++) {
+                for (int i = 0; i < dimensionEncodings.length; i++) {
                     String colValue = dimensionEncodings[i].decode(counter.getItem().array(), offset, dimensionEncodings[i].getLengthOfEncoding());
                     tuple.setDimensionValue(literalTupleIdx[i], colValue);
                     offset += dimensionEncodings[i].getLengthOfEncoding();
@@ -373,10 +379,10 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     private static DimensionEncoding[] getDimensionEncodings(FunctionDesc function, List<TblColRef> literalCols, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         final DimensionEncoding[] dimensionEncodings = new DimensionEncoding[literalCols.size()];
-        for (int i=0; i< literalCols.size(); i++) {
+        for (int i = 0; i < literalCols.size(); i++) {
             TblColRef colRef = literalCols.get(i);
             String encoding = function.getConfiguration().get(TopNMeasureType.CONFIG_ENCODING_PREFIX + colRef.getName());
-            if(StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
+            if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
                 dimensionEncodings[i] = new DictionaryDimEnc(dictionaryMap.get(colRef));
             } else {
                 Object[] encodingConf = DimensionEncoding.parseEncodingConf(encoding);

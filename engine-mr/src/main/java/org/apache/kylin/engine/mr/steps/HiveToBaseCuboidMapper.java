@@ -19,7 +19,6 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;

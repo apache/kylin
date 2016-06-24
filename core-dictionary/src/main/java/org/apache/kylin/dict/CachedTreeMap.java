@@ -77,7 +77,8 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             return new CachedTreeMapBuilder();
         }
 
-        private CachedTreeMapBuilder() {}
+        private CachedTreeMapBuilder() {
+        }
 
         public CachedTreeMapBuilder keyClazz(Class<K> clazz) {
             this.keyClazz = clazz;
@@ -133,19 +134,17 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         CacheBuilder builder = CacheBuilder.newBuilder().removalListener(new RemovalListener<K, V>() {
             @Override
             public void onRemoval(RemovalNotification<K, V> notification) {
-                logger.info(String.format("Evict cache key %s(%d) with value %s caused by %s, size %d/%d ",
-                        notification.getKey(), notification.getKey().hashCode(), notification.getValue(), notification.getCause(),
-                        size(), valueCache.size()));
+                logger.info(String.format("Evict cache key %s(%d) with value %s caused by %s, size %d/%d ", notification.getKey(), notification.getKey().hashCode(), notification.getValue(), notification.getCause(), size(), valueCache.size()));
                 switch (notification.getCause()) {
-                    case SIZE:
-                        writeValue(notification.getKey(), notification.getValue());
-                        break;
-                    case EXPLICIT:
-                        // skip delete files to recover from error during dict appending
-                        // deleteValue(notification.getKey());
-                        break;
-                    default:
-                        throw new RuntimeException("unexpected evict reason " + notification.getCause());
+                case SIZE:
+                    writeValue(notification.getKey(), notification.getValue());
+                    break;
+                case EXPLICIT:
+                    // skip delete files to recover from error during dict appending
+                    // deleteValue(notification.getKey());
+                    break;
+                default:
+                    throw new RuntimeException("unexpected evict reason " + notification.getCause());
                 }
             }
         }).maximumSize(maxCount);
@@ -175,7 +174,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         long t0 = System.currentTimeMillis();
         String fileName = generateFileName(key);
         Path filePath = new Path(fileName);
-        try (FSDataOutputStream out = (FileSystem.get(filePath.toUri(), conf)).create(filePath, true, BUFFER_SIZE, (short)2, BUFFER_SIZE*8)) {
+        try (FSDataOutputStream out = (FileSystem.get(filePath.toUri(), conf)).create(filePath, true, BUFFER_SIZE, (short) 2, BUFFER_SIZE * 8)) {
             value.write(out);
             if (!persistent) {
                 FileSystem.get(filePath.toUri(), conf).deleteOnExit(filePath);
@@ -234,7 +233,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
     public V get(Object key) {
         if (super.containsKey(key)) {
             try {
-                return valueCache.get((K)key);
+                return valueCache.get((K) key);
             } catch (ExecutionException e) {
                 logger.error(String.format("get value with key %s exception: ", key, e), e);
                 return null;
@@ -292,7 +291,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         public V next() {
             currentKey = keyIterator.next();
             try {
-                return (V)valueCache.get(currentKey);
+                return (V) valueCache.get(currentKey);
             } catch (ExecutionException e) {
                 logger.error(String.format("get value with key %s exception: ", currentKey, e), e);
                 return null;
@@ -335,6 +334,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
     }
 
     // clean up all tmp files
+    @SuppressWarnings("checkstyle:nofinalizer")
     @Override
     public void finalize() throws Throwable {
         if (persistent) {
@@ -347,11 +347,14 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
                     Path filePath = new Path(file);
                     FileSystem fs = FileSystem.get(filePath.toUri(), conf);
                     fs.delete(filePath, true);
-                } catch (Throwable t) {}
+                } catch (Throwable t) {
+                    //do nothing?
+                }
             }
         } catch (Throwable t) {
+            //do nothing
         } finally {
-          super.finalize();
+            super.finalize();
         }
     }
 }

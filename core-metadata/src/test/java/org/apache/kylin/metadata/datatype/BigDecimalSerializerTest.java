@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;

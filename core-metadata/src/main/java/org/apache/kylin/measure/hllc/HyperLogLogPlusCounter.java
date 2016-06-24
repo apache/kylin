@@ -71,7 +71,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
     public void clear() {
         byte zero = (byte) 0;
         if (singleBucket == -1) {
-            ;
+            //nothing
         } else if (singleBucket >= 0) {
             registers[singleBucket] = 0;
         } else {
@@ -223,7 +223,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
         if (scheme == 0) { // map scheme
             BytesUtil.writeVInt(size, out);
             if (singleBucket == -1) {
-                ; // no non-zero register
+                // no non-zero register
             } else if (singleBucket >= 0) {
                 writeUnsigned(singleBucket, indexLen, out);
                 out.put(registers[singleBucket]);

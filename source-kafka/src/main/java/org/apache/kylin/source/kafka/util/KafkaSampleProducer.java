@@ -18,10 +18,15 @@
 
 package org.apache.kylin.source.kafka.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
-import kafka.producer.ProducerConfig;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -29,7 +34,11 @@ import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kafka.javaapi.producer.Producer;
+import kafka.producer.KeyedMessage;
+import kafka.producer.ProducerConfig;
 
 /**
  * A sample producer which will create sample data to kafka topic
@@ -98,7 +107,7 @@ public class KafkaSampleProducer {
         Random rnd = new Random();
         Map<String, Object> record = new HashMap();
         while (alive == true) {
-            record.put("order_time", (new Date().getTime() - delay)); 
+            record.put("order_time", (new Date().getTime() - delay));
             record.put("country", countries.get(rnd.nextInt(countries.size())));
             record.put("category", category.get(rnd.nextInt(category.size())));
             record.put("device", devices.get(rnd.nextInt(devices.size())));
@@ -112,6 +121,5 @@ public class KafkaSampleProducer {
         }
         producer.close();
     }
-
 
 }

@@ -68,7 +68,7 @@ public class MeasureAggregators implements Serializable {
             aggs[i].reset();
         }
     }
-    
+
     public void aggregate(Object[] values) {
         assert values.length == descLength;
 

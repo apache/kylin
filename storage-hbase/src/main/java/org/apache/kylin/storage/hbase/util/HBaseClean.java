@@ -22,12 +22,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.util.ToolRunner;
@@ -36,6 +34,8 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 /**
  * clean hbase tables by tag
@@ -63,7 +63,7 @@ public class HBaseClean extends AbstractHadoopJob {
             parseOptions(options, args);
 
             logger.info("options: '" + getOptionsAsString() + "'");
-            
+
             tag = getOptionValue(OPTION_TAG);
             delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
 

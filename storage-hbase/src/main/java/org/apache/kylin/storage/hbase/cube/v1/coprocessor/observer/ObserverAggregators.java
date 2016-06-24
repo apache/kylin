@@ -122,7 +122,7 @@ public class ObserverAggregators {
     final ByteBuffer[] hColValues;
     final int nTotalMeasures;
 
-    MeasureType measureTypes[];
+    MeasureType[] measureTypes;
 
     public ObserverAggregators(HCol[] _hcols) {
         this.hcols = sort(_hcols);

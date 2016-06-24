@@ -18,16 +18,17 @@
 
 package org.apache.kylin.cube.model.validation.rule;
 
-import org.apache.kylin.cube.model.*;
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DictionaryDesc;
+import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
-import org.apache.kylin.dict.AppendTrieDictionary;
 import org.apache.kylin.dict.GlobalDictionaryBuilder;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by sunyerui on 16/6/1.

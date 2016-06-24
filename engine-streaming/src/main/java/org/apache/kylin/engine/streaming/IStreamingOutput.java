@@ -35,8 +35,8 @@ package org.apache.kylin.engine.streaming;
 
 import java.util.Map;
 
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.model.IBuildable;
 
 /**

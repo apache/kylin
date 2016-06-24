@@ -102,7 +102,7 @@ public class IIKeyValueCodec implements KeyValueCodec {
     @Override
     public Iterable<Slice> decodeKeyValue(Iterable<IIRow> kvs) {
         return new IIRowDecoder(digest, kvs.iterator());
-        //		return new Decoder(kvs, incompleteDigest);
+        //return new Decoder(kvs, incompleteDigest);
     }
 
     private static TableRecordInfoDigest createDigest(int nColumns, boolean[] isMetric, String[] dataTypes, Dictionary<?>[] dictionaries) {

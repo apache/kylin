@@ -32,7 +32,7 @@ import org.apache.kylin.source.ReadableTable;
  * 
  */
 public class LookupStringTable extends LookupTable<String> {
-    
+
     private static final Comparator<String> dateStrComparator = new Comparator<String>() {
         @Override
         public int compare(String o1, String o2) {
@@ -50,21 +50,21 @@ public class LookupStringTable extends LookupTable<String> {
             return Double.compare(d1, d2);
         }
     };
-    
+
     private static final Comparator<String> defaultStrComparator = new Comparator<String>() {
         @Override
         public int compare(String o1, String o2) {
             return o1.compareTo(o2);
         }
     };
-    
+
     boolean[] colIsDateTime;
     boolean[] colIsNumber;
-    
+
     public LookupStringTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
         super(tableDesc, keyColumns, table);
     }
-    
+
     @Override
     protected void init() throws IOException {
         ColumnDesc[] cols = tableDesc.getColumns();
@@ -75,7 +75,7 @@ public class LookupStringTable extends LookupTable<String> {
             colIsDateTime[i] = t.isDateTimeFamily();
             colIsNumber[i] = t.isNumberFamily();
         }
-        
+
         super.init();
     }
 
@@ -98,7 +98,7 @@ public class LookupStringTable extends LookupTable<String> {
         else
             return defaultStrComparator;
     }
-    
+
     @Override
     protected String toString(String cell) {
         return cell;

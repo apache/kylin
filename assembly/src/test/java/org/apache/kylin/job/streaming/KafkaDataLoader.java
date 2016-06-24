@@ -23,10 +23,6 @@ import java.util.Properties;
 
 import javax.annotation.Nullable;
 
-import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
-import kafka.producer.ProducerConfig;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
@@ -34,6 +30,10 @@ import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
+
+import kafka.javaapi.producer.Producer;
+import kafka.producer.KeyedMessage;
+import kafka.producer.ProducerConfig;
 
 /**
  * Load prepared data into kafka(for test use)

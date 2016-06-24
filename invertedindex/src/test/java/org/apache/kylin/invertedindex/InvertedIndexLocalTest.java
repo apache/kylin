@@ -39,8 +39,6 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
-import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.index.CompressedValueContainer;
 import org.apache.kylin.invertedindex.index.RawTableRecord;
 import org.apache.kylin.invertedindex.index.ShardingSliceBuilder;
@@ -151,7 +149,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         dump(recordsCopy);
     }
 
-    private Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) throws IOException{
+    private Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) throws IOException {
         SetMultimap<TblColRef, String> valueMap = HashMultimap.create();
         Set<TblColRef> dimensionColumns = Sets.newHashSet();
         for (int i = 0; i < desc.listAllColumns().size(); i++) {
@@ -167,8 +165,7 @@ public class InvertedIndexLocalTest extends LocalFileMetadataTestCase {
         }
         Dictionary<?>[] result = new Dictionary<?>[desc.listAllColumns().size()];
         for (TblColRef tblColRef : valueMap.keys()) {
-            result[desc.findColumn(tblColRef)] = DictionaryGenerator.buildDictionary(tblColRef.getType(),
-                    new IterableDictionaryValueEnumerator(Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
+            result[desc.findColumn(tblColRef)] = DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
                 @Nullable
                 @Override
                 public byte[] apply(String input) {

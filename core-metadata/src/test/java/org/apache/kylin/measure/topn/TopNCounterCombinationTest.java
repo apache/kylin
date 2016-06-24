@@ -16,12 +16,12 @@
 
 package org.apache.kylin.measure.topn;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 @RunWith(Parameterized.class)
 @Ignore("For collecting accuracy statistics, not for functional test")

@@ -18,16 +18,16 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component("kafkaMgmtService")
 public class KafkaConfigService extends BasicService {
@@ -38,13 +38,13 @@ public class KafkaConfigService extends BasicService {
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<KafkaConfig> listAllKafkaConfigs(final String kafkaConfigName) throws IOException {
         List<KafkaConfig> kafkaConfigs = new ArrayList<KafkaConfig>();
-//        CubeInstance cubeInstance = (null != cubeName) ? getCubeManager().getCube(cubeName) : null;
+        //        CubeInstance cubeInstance = (null != cubeName) ? getCubeManager().getCube(cubeName) : null;
         if (null == kafkaConfigName) {
             kafkaConfigs = getKafkaManager().listAllKafkaConfigs();
         } else {
             List<KafkaConfig> configs = getKafkaManager().listAllKafkaConfigs();
-            for(KafkaConfig config : configs){
-                if(kafkaConfigName.equals(config.getName())){
+            for (KafkaConfig config : configs) {
+                if (kafkaConfigName.equals(config.getName())) {
                     kafkaConfigs.add(config);
                 }
             }
@@ -69,17 +69,15 @@ public class KafkaConfigService extends BasicService {
         return kafkaConfigs.subList(offset, offset + limit);
     }
 
-
-
     public KafkaConfig createKafkaConfig(KafkaConfig config) throws IOException {
         if (getKafkaManager().getKafkaConfig(config.getName()) != null) {
             throw new InternalErrorException("The kafkaConfig named " + config.getName() + " already exists");
         }
-        getKafkaManager().createKafkaConfig(config.getName(),config);
+        getKafkaManager().createKafkaConfig(config.getName(), config);
         return config;
     }
 
-//    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public KafkaConfig updateKafkaConfig(KafkaConfig config) throws IOException {
         return getKafkaManager().updateKafkaConfig(config);
     }
@@ -87,7 +85,8 @@ public class KafkaConfigService extends BasicService {
     public KafkaConfig getKafkaConfig(String configName) throws IOException {
         return getKafkaManager().getKafkaConfig(configName);
     }
-//    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+
+    //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public void dropKafkaConfig(KafkaConfig config) throws IOException {
         getKafkaManager().removeKafkaConfig(config);
     }

@@ -41,7 +41,7 @@ public class KafkaVerify {
     public static void main(String[] args) throws IOException {
 
         System.out.println("start");
-        
+
         ObjectMapper mapper = new ObjectMapper();
         JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
 
@@ -49,10 +49,10 @@ public class KafkaVerify {
         long end = Long.valueOf(args[1]);
         long interval = Long.valueOf(args[2]);
         int bucket = (int) ((end - start + interval - 1) / interval);
-        
-        long qtySum[] = new long[bucket];
+
+        long[] qtySum = new long[bucket];
         long qtyTotal = 0;
-        long counts[] = new long[bucket];
+        long[] counts = new long[bucket];
         long countTotal = 0;
         long processed = 0;
         long minOffset = -1;

@@ -20,10 +20,8 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.cli.Options;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -98,7 +96,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
             logger.info("Starting: " + job.getJobName());
-            
+
             setJobClasspath(job, cube.getConfig());
 
             // add metadata to distributed cache

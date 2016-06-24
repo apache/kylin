@@ -141,7 +141,6 @@ public class HiveMRInput implements IMRInput {
 
         public ShellExecutable createLookupHiveViewMaterializationStep(String jobId) {
             ShellExecutable step = new ShellExecutable();
-            ;
             step.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP);
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
 

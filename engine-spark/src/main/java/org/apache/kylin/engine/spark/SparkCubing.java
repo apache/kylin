@@ -495,7 +495,7 @@ public class SparkCubing extends AbstractApplication {
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
         final Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
-        
+
         FsShell shell = new FsShell(hbaseConf);
         try {
             shell.run(new String[] { "-chmod", "-R", "777", hfileLocation });
@@ -610,7 +610,7 @@ public class SparkCubing extends AbstractApplication {
 
             }
         });
-        
+
         final Map<Long, HyperLogLogPlusCounter> samplingResult = sampling(rowJavaRDD, cubeName);
         final byte[][] splitKeys = createHTable(cubeName, segmentId, samplingResult);
 

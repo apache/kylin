@@ -18,6 +18,8 @@
 
 package org.apache.kylin.storage.hbase.steps;
 
+import java.io.IOException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -32,8 +34,6 @@ import org.apache.kylin.engine.mr.steps.KVGTRecordWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
  */
 public class SequenceFileCuboidWriter extends KVGTRecordWriter {
@@ -46,7 +46,7 @@ public class SequenceFileCuboidWriter extends KVGTRecordWriter {
         try {
             initiate();
         } catch (IOException e) {
-           throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -75,7 +75,7 @@ public class SequenceFileCuboidWriter extends KVGTRecordWriter {
 
     @Override
     protected void writeAsKeyValue(ByteArrayWritable key, ByteArrayWritable value) throws IOException {
-       
+
         Text outputValue = new Text();
         Text outputKey = new Text();
         outputKey.set(key.array(), key.offset(), key.length());

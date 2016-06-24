@@ -45,7 +45,6 @@ public class BuildInFunctionTupleFilter extends FunctionTupleFilter {
     private Method method;
     private List<Serializable> methodParams;
     private boolean isValid = false;
-   
 
     public BuildInFunctionTupleFilter(String name) {
         super(Lists.<TupleFilter> newArrayList(), FilterOperatorEnum.FUNCTION);

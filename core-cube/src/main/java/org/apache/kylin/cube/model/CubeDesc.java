@@ -64,10 +64,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
@@ -145,7 +146,7 @@ public class CubeDesc extends RootPersistentEntity {
     @JsonProperty("partition_date_start")
     private long partitionDateStart = 0L;
     @JsonProperty("partition_date_end")
-    private long partitionDateEnd = 3153600000000l;
+    private long partitionDateEnd = 3153600000000L;
     @JsonProperty("auto_merge_time_ranges")
     private long[] autoMergeTimeRanges;
     @JsonProperty("retention_range")
@@ -565,7 +566,7 @@ public class CubeDesc extends RootPersistentEntity {
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
             addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "). ");
         }
-        
+
         initDictionaryDesc();
     }
 
@@ -913,7 +914,7 @@ public class CubeDesc extends RootPersistentEntity {
             }
         }
     }
-    
+
     private void initDictionaryDesc() {
         if (dictionaries != null) {
             for (DictionaryDesc dictDesc : dictionaries) {
@@ -1042,7 +1043,7 @@ public class CubeDesc extends RootPersistentEntity {
             MeasureType<?> aggrType = measure.getFunction().getMeasureType();
             result.addAll(aggrType.getColumnsNeedDictionary(measure.getFunction()));
         }
-        
+
         // any additional dictionaries
         if (dictionaries != null) {
             for (DictionaryDesc dictDesc : dictionaries) {
@@ -1050,14 +1051,14 @@ public class CubeDesc extends RootPersistentEntity {
                 result.add(col);
             }
         }
-        
+
         return result;
     }
 
     /** Get columns that need dictionary built on it. Note a column could reuse dictionary of another column. */
     public Set<TblColRef> getAllColumnsNeedDictionaryBuilt() {
         Set<TblColRef> result = getAllColumnsHaveDictionary();
-        
+
         // remove columns that reuse other's dictionary
         if (dictionaries != null) {
             for (DictionaryDesc dictDesc : dictionaries) {
@@ -1067,7 +1068,7 @@ public class CubeDesc extends RootPersistentEntity {
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -1083,7 +1084,7 @@ public class CubeDesc extends RootPersistentEntity {
         }
         return col;
     }
-    
+
     /** Get a column which can be used in distributing the source table */
     public TblColRef getDistributedByColumn() {
         Set<TblColRef> shardBy = getShardByColumns();
@@ -1093,11 +1094,11 @@ public class CubeDesc extends RootPersistentEntity {
 
         return null;
     }
-    
+
     public String getDictionaryBuilderClass(TblColRef col) {
         if (dictionaries == null)
             return null;
-        
+
         for (DictionaryDesc desc : dictionaries) {
             if (desc.getBuilderClass() != null) {
                 if (col.equals(desc.getResuseColumnRef())) {

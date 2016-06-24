@@ -125,7 +125,7 @@ public class UserService implements UserDetailsManager {
             authorities = Collections.emptyList();
 
         UserGrantedAuthority[] serializing = new UserGrantedAuthority[authorities.size() + 1];
-        
+
         // password is stored as the [0] authority
         serializing[0] = new UserGrantedAuthority(PWD_PREFIX + user.getPassword());
         int i = 1;
@@ -210,7 +210,7 @@ public class UserService implements UserDetailsManager {
         }
         return all;
     }
-    
+
     public List<UserDetails> listUsers() {
         Scan s = new Scan();
         s.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));

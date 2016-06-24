@@ -28,11 +28,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import kafka.api.OffsetRequest;
-import kafka.cluster.Broker;
-import kafka.javaapi.FetchResponse;
-import kafka.message.MessageAndOffset;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -53,6 +48,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+
+import kafka.api.OffsetRequest;
+import kafka.cluster.Broker;
+import kafka.javaapi.FetchResponse;
+import kafka.message.MessageAndOffset;
 
 /**
  * Continuously run this as a daemon to discover how "disordered" the kafka queue is.
@@ -258,12 +258,12 @@ public class KafkaInputAnalyzer extends AbstractApplication {
                             processedMessages.set(index, processedMessages.get(index) + 1);
 
                             if (processedMessages.get(index) % 10000 == 1) {
-                                System.out.println(String.format("Thread %d processed %d messages. Max disorder time is %d , max disorder offset is %d",//
+                                System.out.println(String.format("Thread %d processed %d messages. Max disorder time is %d , max disorder offset is %d", //
                                         index, processedMessages.get(index), maxDisorderTime.get(index), maxDisorderOffset.get(index)));
                             }
                         }
 
-                        System.out.println(String.format("Thread %d finishes after %d messages. Max disorder time is %d , max disorder offset is %d",//
+                        System.out.println(String.format("Thread %d finishes after %d messages. Max disorder time is %d , max disorder offset is %d", //
                                 index, processedMessages.get(index), maxDisorderTime.get(index), maxDisorderOffset.get(index)));
                         countDownLatch.countDown();
                     } catch (InterruptedException e) {

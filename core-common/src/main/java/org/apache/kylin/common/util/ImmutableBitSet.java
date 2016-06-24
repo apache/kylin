@@ -23,7 +23,7 @@ import java.util.BitSet;
 public class ImmutableBitSet {
 
     public static final ImmutableBitSet EMPTY = new ImmutableBitSet(new BitSet());
-    
+
     public static ImmutableBitSet valueOf(int... values) {
         BitSet set = new BitSet();
         for (int i : values)

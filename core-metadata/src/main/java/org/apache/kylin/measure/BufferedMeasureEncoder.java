@@ -44,7 +44,7 @@ public class BufferedMeasureEncoder {
         this.codec = new MeasureDecoder(measureDescs);
         this.measureSizes = new int[codec.nMeasures];
     }
-    
+
     public BufferedMeasureEncoder(MeasureDesc... measureDescs) {
         this.codec = new MeasureDecoder(measureDescs);
         this.measureSizes = new int[codec.nMeasures];
@@ -54,7 +54,7 @@ public class BufferedMeasureEncoder {
         this.codec = new MeasureDecoder(dataTypes);
         this.measureSizes = new int[codec.nMeasures];
     }
-    
+
     public BufferedMeasureEncoder(String... dataTypes) {
         this.codec = new MeasureDecoder(dataTypes);
         this.measureSizes = new int[codec.nMeasures];
@@ -95,7 +95,7 @@ public class BufferedMeasureEncoder {
                     pos = buf.position();
                 }
                 return buf;
-                
+
             } catch (BufferOverflowException boe) {
                 if (buf.capacity() >= MAX_BUFFER_SIZE)
                     throw boe;

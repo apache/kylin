@@ -17,16 +17,15 @@
 */
 package org.apache.kylin.engine.spark.cube;
 
-import org.apache.kylin.engine.spark.SparkCuboidWriter;
-import org.apache.kylin.gridtable.GTRecord;
-import scala.Tuple2;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import org.apache.kylin.engine.spark.SparkCuboidWriter;
+import org.apache.kylin.gridtable.GTRecord;
+
+import scala.Tuple2;
 
 /**
  */
@@ -59,7 +58,6 @@ public class BufferedCuboidWriter implements SparkCuboidWriter {
             blockingQueue.put(new Tuple2(new byte[0], new byte[0]));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
         }
     }
 
@@ -70,6 +68,7 @@ public class BufferedCuboidWriter implements SparkCuboidWriter {
             public Iterator<Tuple2<byte[], byte[]>> iterator() {
                 return new Iterator<Tuple2<byte[], byte[]>>() {
                     Tuple2<byte[], byte[]> current = null;
+
                     @Override
                     public boolean hasNext() {
                         if (current == null) {

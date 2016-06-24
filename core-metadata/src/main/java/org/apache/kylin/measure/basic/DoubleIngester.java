@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 public class DoubleIngester extends MeasureIngester<DoubleMutable> {
-    
+
     // avoid repeated object creation
     private DoubleMutable current = new DoubleMutable();
 
@@ -35,7 +35,7 @@ public class DoubleIngester extends MeasureIngester<DoubleMutable> {
     public DoubleMutable valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (values.length > 1)
             throw new IllegalArgumentException();
-        
+
         DoubleMutable l = current;
         if (values[0] == null)
             l.set(0L);

@@ -197,7 +197,7 @@ public class StreamingManager {
         if (streamingMap.containsKey(streamingConfig.getName()))
             throw new IllegalArgumentException("StreamingConfig '" + streamingConfig.getName() + "' already exists");
 
-        String path  = StreamingConfig.concatResourcePath(streamingConfig.getName());
+        String path = StreamingConfig.concatResourcePath(streamingConfig.getName());
         getStore().putResource(path, streamingConfig, StreamingConfig.SERIALIZER);
         streamingMap.put(streamingConfig.getName(), streamingConfig);
         return streamingConfig;

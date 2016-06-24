@@ -18,13 +18,10 @@
 
 package org.apache.kylin.cube.model.validation;
 
-import org.apache.kylin.cube.model.validation.rule.IKylinValidationConstants;
-
 /**
  * @author jianliu
  * 
  */
-public interface IValidatorRule<T> extends IKylinValidationConstants {
-
+public interface IValidatorRule<T> {
     public void validate(T element, ValidateContext context);
 }

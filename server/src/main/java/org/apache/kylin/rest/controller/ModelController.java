@@ -18,7 +18,7 @@
 
 package org.apache.kylin.rest.controller;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -88,7 +88,7 @@ public class ModelController extends BasicController {
         if (modelDesc == null || StringUtils.isEmpty(modelDesc.getName())) {
             return modelRequest;
         }
-        
+
         if (StringUtils.isEmpty(modelDesc.getName())) {
             logger.info("Model name should not be empty.");
             throw new BadRequestException("Model name should not be empty.");
@@ -152,9 +152,9 @@ public class ModelController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{modelName}/clone", method = {RequestMethod.PUT})
+    @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT })
     @ResponseBody
-    public ModelRequest  cloneModel(@PathVariable String modelName, @RequestBody ModelRequest modelRequest) {
+    public ModelRequest cloneModel(@PathVariable String modelName, @RequestBody ModelRequest modelRequest) {
         String project = modelRequest.getProject();
         MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc modelDesc = metaManager.getDataModelDesc(modelName);
@@ -175,7 +175,6 @@ public class ModelController extends BasicController {
             throw new BadRequestException("New model name is empty.");
         }
 
-
         DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);
         newModelDesc.setName(newModelName);
         try {
@@ -191,7 +190,6 @@ public class ModelController extends BasicController {
         modelRequest.setSuccessful(true);
         return modelRequest;
     }
-
 
     private DataModelDesc deserializeDataModelDesc(ModelRequest modelRequest) {
         DataModelDesc desc = null;

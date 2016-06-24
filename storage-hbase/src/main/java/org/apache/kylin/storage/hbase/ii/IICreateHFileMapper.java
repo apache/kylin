@@ -63,10 +63,9 @@ public class IICreateHFileMapper extends KylinMapper<ImmutableBytesWritable, Imm
                 timestamp, Type.Put, //
                 buffer.array(), buffer.position() + valueLength, dictionaryLength);
 
-
         // write dictionary
         context.write(key, kv);
-        
+
     }
 
 }

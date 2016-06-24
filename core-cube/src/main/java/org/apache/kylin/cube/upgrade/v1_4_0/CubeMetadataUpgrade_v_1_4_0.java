@@ -66,8 +66,6 @@ public class CubeMetadataUpgrade_v_1_4_0 extends CubeMetadataUpgrade {
         //do nothing
     }
 
-  
-
     private CubeDesc loadOldCubeDesc(String path) {
         CubeDesc ndesc = null;
         try {

@@ -17,17 +17,19 @@
 */
 package org.apache.kylin.engine.spark.util;
 
-import com.google.common.collect.Lists;
-import org.apache.spark.api.java.function.Function;
-import org.junit.Test;
-import scala.Tuple2;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.spark.api.java.function.Function;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+
+import scala.Tuple2;
 
 /**
  */
@@ -51,7 +53,7 @@ public class IteratorUtilsTest {
             }
         }));
     }
-    
+
     @Test
     public void test() {
         List<Tuple2<Integer, Integer>> list = Lists.newArrayList();

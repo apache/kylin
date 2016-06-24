@@ -27,22 +27,7 @@ package org.apache.kylin.metadata.filter.function;
 public class Like {
     private static final String JAVA_REGEX_SPECIALS = "[]()|^-+*?{}$\\";
     private static final String SQL_SIMILAR_SPECIALS = "[]()|^-+*_%?{}";
-    private static final String [] REG_CHAR_CLASSES = {
-            "[:ALPHA:]", "\\p{Alpha}",
-            "[:alpha:]", "\\p{Alpha}",
-            "[:UPPER:]", "\\p{Upper}",
-            "[:upper:]", "\\p{Upper}",
-            "[:LOWER:]", "\\p{Lower}",
-            "[:lower:]", "\\p{Lower}",
-            "[:DIGIT:]", "\\d",
-            "[:digit:]", "\\d",
-            "[:SPACE:]", " ",
-            "[:space:]", " ",
-            "[:WHITESPACE:]", "\\s",
-            "[:whitespace:]", "\\s",
-            "[:ALNUM:]", "\\p{Alnum}",
-            "[:alnum:]", "\\p{Alnum}"
-    };
+    private static final String[] REG_CHAR_CLASSES = { "[:ALPHA:]", "\\p{Alpha}", "[:alpha:]", "\\p{Alpha}", "[:UPPER:]", "\\p{Upper}", "[:upper:]", "\\p{Upper}", "[:LOWER:]", "\\p{Lower}", "[:lower:]", "\\p{Lower}", "[:DIGIT:]", "\\d", "[:digit:]", "\\d", "[:SPACE:]", " ", "[:space:]", " ", "[:WHITESPACE:]", "\\s", "[:whitespace:]", "\\s", "[:ALNUM:]", "\\p{Alnum}", "[:alnum:]", "\\p{Alnum}" };
 
     private Like() {
     }
@@ -51,9 +36,7 @@ public class Like {
      * Translates a SQL LIKE pattern to Java regex pattern, with optional
      * escape string.
      */
-    static String sqlToRegexLike(
-            String sqlPattern,
-            CharSequence escapeStr) {
+    static String sqlToRegexLike(String sqlPattern, CharSequence escapeStr) {
         final char escapeChar;
         if (escapeStr != null) {
             if (escapeStr.length() != 1) {
@@ -69,9 +52,7 @@ public class Like {
     /**
      * Translates a SQL LIKE pattern to Java regex pattern.
      */
-    static String sqlToRegexLike(
-            String sqlPattern,
-            char escapeChar) {
+    static String sqlToRegexLike(String sqlPattern, char escapeChar) {
         int i;
         final int len = sqlPattern.length();
         final StringBuilder javaPattern = new StringBuilder(len + len);
@@ -85,9 +66,7 @@ public class Like {
                     throw invalidEscapeSequence(sqlPattern, i);
                 }
                 char nextChar = sqlPattern.charAt(i + 1);
-                if ((nextChar == '_')
-                        || (nextChar == '%')
-                        || (nextChar == escapeChar)) {
+                if ((nextChar == '_') || (nextChar == '%') || (nextChar == escapeChar)) {
                     javaPattern.append(nextChar);
                     i++;
                 } else {
@@ -106,18 +85,14 @@ public class Like {
     }
 
     private static RuntimeException invalidEscapeCharacter(String s) {
-        return new RuntimeException(
-                "Invalid escape character '" + s + "'");
+        return new RuntimeException("Invalid escape character '" + s + "'");
     }
 
     private static RuntimeException invalidEscapeSequence(String s, int i) {
-        return new RuntimeException(
-                "Invalid escape sequence '" + s + "', " + i);
+        return new RuntimeException("Invalid escape sequence '" + s + "', " + i);
     }
 
-    private static void similarEscapeRuleChecking(
-            String sqlPattern,
-            char escapeChar) {
+    private static void similarEscapeRuleChecking(String sqlPattern, char escapeChar) {
         if (escapeChar == 0) {
             return;
         }
@@ -130,8 +105,7 @@ public class Like {
                         throw invalidEscapeSequence(sqlPattern, i);
                     }
                     char c = sqlPattern.charAt(i + 1);
-                    if ((SQL_SIMILAR_SPECIALS.indexOf(c) < 0)
-                            && (c != escapeChar)) {
+                    if ((SQL_SIMILAR_SPECIALS.indexOf(c) < 0) && (c != escapeChar)) {
                         throw invalidEscapeSequence(sqlPattern, i);
                     }
                 }
@@ -151,17 +125,11 @@ public class Like {
         }
     }
 
-    private static RuntimeException invalidRegularExpression(
-            String pattern, int i) {
-        return new RuntimeException(
-                "Invalid regular expression '" + pattern + "'");
+    private static RuntimeException invalidRegularExpression(String pattern, int i) {
+        return new RuntimeException("Invalid regular expression '" + pattern + "'");
     }
 
-    private static int sqlSimilarRewriteCharEnumeration(
-            String sqlPattern,
-            StringBuilder javaPattern,
-            int pos,
-            char escapeChar) {
+    private static int sqlSimilarRewriteCharEnumeration(String sqlPattern, StringBuilder javaPattern, int pos, char escapeChar) {
         int i;
         for (i = pos + 1; i < sqlPattern.length(); i++) {
             char c = sqlPattern.charAt(i);
@@ -212,9 +180,7 @@ public class Like {
      * Translates a SQL SIMILAR pattern to Java regex pattern, with optional
      * escape string.
      */
-    static String sqlToRegexSimilar(
-            String sqlPattern,
-            CharSequence escapeStr) {
+    static String sqlToRegexSimilar(String sqlPattern, CharSequence escapeStr) {
         final char escapeChar;
         if (escapeStr != null) {
             if (escapeStr.length() != 1) {
@@ -230,14 +196,11 @@ public class Like {
     /**
      * Translates SQL SIMILAR pattern to Java regex pattern.
      */
-    static String sqlToRegexSimilar(
-            String sqlPattern,
-            char escapeChar) {
+    static String sqlToRegexSimilar(String sqlPattern, char escapeChar) {
         similarEscapeRuleChecking(sqlPattern, escapeChar);
 
         boolean insideCharacterEnumeration = false;
-        final StringBuilder javaPattern =
-                new StringBuilder(sqlPattern.length() * 2);
+        final StringBuilder javaPattern = new StringBuilder(sqlPattern.length() * 2);
         final int len = sqlPattern.length();
         for (int i = 0; i < len; i++) {
             char c = sqlPattern.charAt(i);
@@ -264,40 +227,36 @@ public class Like {
                 i++; // we already process the next char.
             } else {
                 switch (c) {
-                    case '_':
-                        javaPattern.append('.');
-                        break;
-                    case '%':
-                        javaPattern.append('.');
-                        javaPattern.append('*');
-                        break;
-                    case '[':
-                        javaPattern.append('[');
-                        insideCharacterEnumeration = true;
-                        i = sqlSimilarRewriteCharEnumeration(
-                                sqlPattern,
-                                javaPattern,
-                                i,
-                                escapeChar);
-                        break;
-                    case ']':
-                        if (!insideCharacterEnumeration) {
-                            throw invalidRegularExpression(sqlPattern, i);
-                        }
-                        insideCharacterEnumeration = false;
-                        javaPattern.append(']');
-                        break;
-                    case '\\':
-                        javaPattern.append("\\\\");
-                        break;
-                    case '$':
+                case '_':
+                    javaPattern.append('.');
+                    break;
+                case '%':
+                    javaPattern.append('.');
+                    javaPattern.append('*');
+                    break;
+                case '[':
+                    javaPattern.append('[');
+                    insideCharacterEnumeration = true;
+                    i = sqlSimilarRewriteCharEnumeration(sqlPattern, javaPattern, i, escapeChar);
+                    break;
+                case ']':
+                    if (!insideCharacterEnumeration) {
+                        throw invalidRegularExpression(sqlPattern, i);
+                    }
+                    insideCharacterEnumeration = false;
+                    javaPattern.append(']');
+                    break;
+                case '\\':
+                    javaPattern.append("\\\\");
+                    break;
+                case '$':
 
-                        // $ is special character in java regex, but regular in
-                        // SQL regex.
-                        javaPattern.append("\\$");
-                        break;
-                    default:
-                        javaPattern.append(c);
+                    // $ is special character in java regex, but regular in
+                    // SQL regex.
+                    javaPattern.append("\\$");
+                    break;
+                default:
+                    javaPattern.append(c);
                 }
             }
         }

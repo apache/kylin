@@ -32,12 +32,12 @@ import org.apache.hadoop.hbase.security.User;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
-import org.apache.kylin.storage.hbase.util.IIDeployCoprocessorCLI;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.invertedindex.model.IIKeyValueCodec;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
+import org.apache.kylin.storage.hbase.util.IIDeployCoprocessorCLI;
 
 /**
  * @author George Song (ysong1)
@@ -61,7 +61,6 @@ public class IICreateHTableJob extends AbstractHadoopJob {
             IIInstance ii = iiManager.getII(iiName);
             int sharding = ii.getDescriptor().getSharding();
 
-
             Configuration conf = HBaseConfiguration.create(getConf());
             // check if the table already exists
             admin = new HBaseAdmin(conf);
@@ -74,7 +73,7 @@ public class IICreateHTableJob extends AbstractHadoopJob {
                     return 1;
                 }
             }
-        
+
             // table doesn't exist, need to create
 
             HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(tableName));
@@ -123,7 +122,6 @@ public class IICreateHTableJob extends AbstractHadoopJob {
 
             IIDeployCoprocessorCLI.deployCoprocessor(tableDesc);
 
-          
             // create table
             byte[][] splitKeys = getSplits(sharding);
             if (splitKeys.length == 0)

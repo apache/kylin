@@ -18,7 +18,19 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.base.Preconditions;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintStream;
+import java.lang.ref.SoftReference;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
@@ -27,13 +39,7 @@ import org.apache.kylin.common.util.Dictionary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.lang.ref.SoftReference;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.base.Preconditions;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -96,7 +102,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             throw new IllegalArgumentException("Wrong file type (magic does not match)");
 
         try {
-            DataInputStream headIn = new DataInputStream( //
+            DataInputStream headIn = new DataInputStream(//
                     new ByteArrayInputStream(trieBytes, HEAD_SIZE_I, trieBytes.length - HEAD_SIZE_I));
             this.headSize = headIn.readShort();
             this.bodyLen = headIn.readInt();
@@ -445,7 +451,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
         if (BytesUtil.compareBytes(HEAD_MAGIC, 0, headPartial, 0, HEAD_MAGIC.length) != 0)
             throw new IllegalArgumentException("Wrong file type (magic does not match)");
 
-        DataInputStream headIn = new DataInputStream( //
+        DataInputStream headIn = new DataInputStream(//
                 new ByteArrayInputStream(headPartial, HEAD_SIZE_I, headPartial.length - HEAD_SIZE_I));
         int headSize = headIn.readShort();
         int bodyLen = headIn.readInt();
@@ -458,14 +464,12 @@ public class TrieDictionary<T> extends Dictionary<T> {
         init(all);
     }
 
-    private void writeObject(java.io.ObjectOutputStream stream)
-            throws IOException {
+    private void writeObject(java.io.ObjectOutputStream stream) throws IOException {
         stream.writeInt(trieBytes.length);
         stream.write(trieBytes);
     }
 
-    private void readObject(java.io.ObjectInputStream stream)
-            throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
         int length = stream.readInt();
         byte[] trieBytes = new byte[length];
         int currentCount;
@@ -536,12 +540,12 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new ObjectOutputStream(baos).writeObject(dict);
-        
+
         TrieDictionary<String> dict2 = (TrieDictionary<String>) new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())).readObject();
         Preconditions.checkArgument(dict.contains(dict2));
         Preconditions.checkArgument(dict2.contains(dict));
         Preconditions.checkArgument(dict.equals(dict2));
-        
+
         dict2.enableIdToValueBytesCache();
         for (int i = 0; i <= dict.getMaxId(); i++) {
             System.out.println(Bytes.toString(dict.getValueBytesFromId(i)));

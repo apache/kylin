@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -74,7 +75,7 @@ public class RowKeyColDesc {
 
         if (!DimensionEncodingFactory.isVaildEncoding(this.encodingName))
             throw new IllegalArgumentException("Not supported row key col encoding: '" + this.encoding + "'");
-        
+
         // convert date/time dictionary to DimensionEncoding implicitly, date/time dictionary is deprecated
         if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName)) {
             DataType type = colRef.getType();

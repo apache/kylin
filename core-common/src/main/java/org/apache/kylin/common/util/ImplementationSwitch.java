@@ -19,9 +19,10 @@ package org.apache.kylin.common.util;
 
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Maps;
 
 /**
  * Provide switch between different implementations of a same interface.
@@ -65,7 +66,7 @@ public class ImplementationSwitch<I> {
 
         if (result == null) {
             try {
-                result = (I)ClassUtil.newInstance(clzName);
+                result = (I) ClassUtil.newInstance(clzName);
                 instances[id] = result;
             } catch (Exception ex) {
                 logger.warn("Implementation missing " + clzName + " - " + ex);

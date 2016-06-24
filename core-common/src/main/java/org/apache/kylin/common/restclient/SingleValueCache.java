@@ -45,7 +45,7 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     public void put(K key, V value) {
         boolean exists = innerCache.containsKey(key);
-        
+
         innerCache.put(key, value);
 
         if (!exists) {
@@ -61,9 +61,9 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
 
     public void remove(K key) {
         boolean exists = innerCache.containsKey(key);
-        
+
         innerCache.remove(key);
-        
+
         if (exists) {
             getBroadcaster().queue(syncType.getType(), Broadcaster.EVENT.DROP.getType(), key.toString());
         }

@@ -19,9 +19,15 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
@@ -32,12 +38,15 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.request.HiveTableRequest;
 import org.apache.kylin.rest.request.StreamingRequest;
 import org.apache.kylin.rest.response.TableDescResponse;
-import org.apache.kylin.rest.service.*;
+import org.apache.kylin.rest.service.CubeService;
+import org.apache.kylin.rest.service.KafkaConfigService;
+import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.service.StreamingService;
 import org.apache.kylin.source.hive.HiveClient;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
@@ -51,6 +60,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.common.collect.Sets;
 
 /**
  * @author xduo
@@ -141,7 +152,7 @@ public class TableController extends BasicController {
         cubeMgmtService.syncTableToProject(loaded, project);
         Map<String, String[]> result = new HashMap<String, String[]>();
         result.put("result.loaded", loaded);
-        result.put("result.unloaded", new String[]{});
+        result.put("result.unloaded", new String[] {});
         return result;
     }
 
@@ -171,7 +182,7 @@ public class TableController extends BasicController {
      * @return
      */
     private boolean unLoadHiveTable(String tableName, String project) {
-        boolean rtn= false;
+        boolean rtn = false;
         int tableType = 0;
 
         //remove streaming info
@@ -181,14 +192,14 @@ public class TableController extends BasicController {
         tableType = desc.getSourceType();
 
         try {
-			if (!modelService.isTableInModel(tableName, project)) {
-				cubeMgmtService.removeTableFromProject(tableName, project);
-				rtn = true;
-			}
-		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-		}
-        if(!projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
+            if (!modelService.isTableInModel(tableName, project)) {
+                cubeMgmtService.removeTableFromProject(tableName, project);
+                rtn = true;
+            }
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        if (!projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
             try {
                 cubeMgmtService.unLoadHiveTable(tableName);
                 rtn = true;
@@ -198,7 +209,7 @@ public class TableController extends BasicController {
             }
         }
 
-        if(tableType ==1 && !projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)){
+        if (tableType == 1 && !projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
             StreamingConfig config = null;
             KafkaConfig kafkaConfig = null;
             try {
@@ -224,11 +235,10 @@ public class TableController extends BasicController {
         desc.setUuid(UUID.randomUUID().toString());
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         metaMgr.saveSourceTable(desc);
-        cubeMgmtService.syncTableToProject(new String[]{desc.getName()}, project);
-        result.put("success","true");
+        cubeMgmtService.syncTableToProject(new String[] { desc.getName() }, project);
+        result.put("success", "true");
         return result;
     }
-
 
     /**
      * Regenerate table cardinality
@@ -290,7 +300,6 @@ public class TableController extends BasicController {
         }
         return descs;
     }
-
 
     /**
      * Show all databases in Hive

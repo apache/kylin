@@ -116,10 +116,10 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
 
         aggrIngesters = MeasureIngester.create(cubeDesc.getMeasures());
         dictionaryMap = cubeSegment.buildDictionaryMap();
-        
+
         initNullBytes();
     }
-    
+
     private void initNullBytes() {
         nullBytes = Lists.newArrayList();
         nullBytes.add(HIVE_NULL);
@@ -164,7 +164,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         MeasureDesc measure = cubeDesc.getMeasures().get(idxOfMeasure);
         FunctionDesc function = measure.getFunction();
         int[] colIdxOnFlatTable = intermediateTableDesc.getMeasureColumnIndexes()[idxOfMeasure];
-        
+
         int paramCount = function.getParameterCount();
         String[] inputToMeasure = new String[paramCount];
 
@@ -182,7 +182,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
             }
             inputToMeasure[i] = value;
         }
-        
+
         return aggrIngesters[idxOfMeasure].valueOf(inputToMeasure, measure, dictionaryMap);
     }
 

@@ -18,11 +18,11 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 /**
  * Created by sunyerui on 15/12/1.

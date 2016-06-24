@@ -21,7 +21,11 @@ package org.apache.kylin.engine.mr;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -98,7 +102,6 @@ public class CubingJob extends DefaultChainedExecutable {
         super();
     }
 
-
     void setDeployEnvName(String name) {
         setParam(DEPLOY_ENV_NAME, name);
     }
@@ -126,17 +129,17 @@ public class CubingJob extends DefaultChainedExecutable {
             return null;
         }
         switch (state) {
-            case ERROR:
-                logMsg = output.getVerboseMsg();
-                break;
-            case DISCARDED:
-                logMsg = "job has been discarded";
-                break;
-            case SUCCEED:
-                logMsg = "job has succeeded";
-                break;
-            default:
-                return null;
+        case ERROR:
+            logMsg = output.getVerboseMsg();
+            break;
+        case DISCARDED:
+            logMsg = "job has been discarded";
+            break;
+        case SUCCEED:
+            logMsg = "job has succeeded";
+            break;
+        default:
+            return null;
         }
         String content = ExecutableConstants.NOTIFY_EMAIL_TEMPLATE;
         content = content.replaceAll("\\$\\{job_name\\}", getName());

@@ -54,7 +54,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     protected Iterator<GTRecord> curRecordIterator;
     protected CubeTupleConverter curTupleConverter;
     protected Tuple next;
-    
+
     private List<IAdvMeasureFiller> advMeasureFillers;
     private int advMeasureRowsRemaining;
     private int advMeasureRowIndex;
@@ -77,10 +77,10 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     public boolean hasNext() {
         if (next != null)
             return true;
-        
+
         if (hitLimitAndThreshold())
             return false;
-        
+
         // consume any left rows from advanced measure filler
         if (advMeasureRowsRemaining > 0) {
             for (IAdvMeasureFiller filler : advMeasureFillers) {
@@ -115,7 +115,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
         // now we have a GTRecord
         GTRecord curRecord = curRecordIterator.next();
-        
+
         // translate into tuple
         advMeasureFillers = curTupleConverter.translateResult(curRecord, tuple);
 
@@ -124,7 +124,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             next = tuple;
             return true;
         }
-        
+
         // advanced measure filling, like TopN, will produce multiple tuples out of one record
         advMeasureRowsRemaining = -1;
         for (IAdvMeasureFiller filler : advMeasureFillers) {
@@ -135,11 +135,10 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         }
         if (advMeasureRowsRemaining < 0)
             throw new IllegalStateException();
-        
+
         advMeasureRowIndex = 0;
         return hasNext();
     }
-    
 
     private boolean hitLimitAndThreshold() {
         // check limit

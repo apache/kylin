@@ -36,7 +36,7 @@ public class JobServiceTest extends ServiceTestBase {
 
     @Autowired
     private CacheService cacheService;
-    
+
     @Test
     public void testBasics() throws JobException, IOException {
         Assert.assertNotNull(jobService.getConfig());

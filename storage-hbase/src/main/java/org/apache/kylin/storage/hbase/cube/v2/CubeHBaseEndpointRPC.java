@@ -122,7 +122,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             try {
                 current++;
                 byte[] ret = null;
-                
+
                 while (ret == null && coprocException == null && timeoutTS - System.currentTimeMillis() > 0) {
                     ret = queue.poll(5000, TimeUnit.MILLISECONDS);
                 }
@@ -259,6 +259,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         return Pair.newPair(cubeSeg.getCuboidShardNum(cuboid.getId()), cubeSeg.getCuboidBaseShard(cuboid.getId()));
     }
 
+    @SuppressWarnings("checkstyle:methodlength")
     @Override
     public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
 

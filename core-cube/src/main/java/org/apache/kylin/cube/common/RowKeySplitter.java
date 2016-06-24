@@ -61,7 +61,6 @@ public class RowKeySplitter {
         return bufferSize;
     }
 
-
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
         this.enableSharding = cubeSeg.isEnableSharding();
         this.cubeDesc = cubeSeg.getCubeDesc();

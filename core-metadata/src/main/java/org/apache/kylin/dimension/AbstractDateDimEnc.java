@@ -88,7 +88,7 @@ public class AbstractDateDimEnc extends DimensionEncoding {
         long code = BytesUtil.readLong(bytes, offset, fixedLen);
         if (code < 0)
             throw new IllegalArgumentException();
-        
+
         long millis = codec.codeToMillis(code);
         return String.valueOf(millis);
     }

@@ -27,7 +27,7 @@ public class JobBuildRequest2 {
     private String buildType;
 
     private boolean force;
-    
+
     public long getStartSourceOffset() {
         return startSourceOffset;
     }
@@ -51,7 +51,7 @@ public class JobBuildRequest2 {
     public void setBuildType(String buildType) {
         this.buildType = buildType;
     }
-    
+
     public boolean isForce() {
         return force;
     }

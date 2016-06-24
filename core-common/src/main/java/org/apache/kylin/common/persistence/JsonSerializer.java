@@ -25,7 +25,7 @@ import java.io.IOException;
 import org.apache.kylin.common.util.JsonUtil;
 
 /**
- * @author yangli9
+ * @author yangli9  
  */
 public class JsonSerializer<T extends RootPersistentEntity> implements Serializer<T> {
 

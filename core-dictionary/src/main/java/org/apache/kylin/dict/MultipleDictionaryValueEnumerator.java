@@ -18,13 +18,13 @@
 
 package org.apache.kylin.dict;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 
-import java.io.IOException;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Created by dongli on 10/28/15.

@@ -31,6 +31,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.base.Objects;
 
 /**
@@ -85,8 +86,7 @@ public class RowKeyDesc {
         int[] tmp = new int[100];
         int x = 0;
         for (int i = 0, n = rowkeyColumns.length; i < n; i++) {
-            if ("true".equalsIgnoreCase(rowkeyColumns[i].getIndex())
-                    && DictionaryDimEnc.ENCODING_NAME.equalsIgnoreCase(rowkeyColumns[i].getEncoding())) {
+            if ("true".equalsIgnoreCase(rowkeyColumns[i].getIndex()) && DictionaryDimEnc.ENCODING_NAME.equalsIgnoreCase(rowkeyColumns[i].getEncoding())) {
                 tmp[x] = i;
                 x++;
             }
@@ -124,7 +124,6 @@ public class RowKeyDesc {
             this.fullMask |= 1L << index;
         }
     }
-
 
     public long getFullMask() {
         return this.fullMask;

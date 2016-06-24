@@ -235,8 +235,6 @@ public class GTRecord implements Comparable<GTRecord> {
         buf.setLength(pos);
     }
 
-   
-
     /** write data to given buffer, like serialize */
     public void exportColumns(ImmutableBitSet selectedCols, ByteBuffer buf) {
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {

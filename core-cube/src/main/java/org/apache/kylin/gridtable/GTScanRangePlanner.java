@@ -145,7 +145,7 @@ public class GTScanRangePlanner {
 
         this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
         this.maxFuzzyKeys = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
-        
+
         this.gtInfo = info;
 
         IGTComparator comp = gtInfo.codeSystem.getComparator();
@@ -160,7 +160,6 @@ public class GTScanRangePlanner {
         this.gtStartAndEnd = gtStartAndEnd;
         this.gtPartitionCol = gtPartitionCol;
     }
-
 
     public GTScanRequest planScanRequest() {
         GTScanRequest scanRequest;
@@ -311,8 +310,8 @@ public class GTScanRangePlanner {
             if (gtPartitionCol != null && range.column.equals(gtPartitionCol)) {
                 if (rangeStartEndComparator.comparator.compare(gtStartAndEnd.getFirst(), range.end) <= 0 //
                         && (rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond()) < 0 //
-                        || rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond()) == 0 //
-                        && (range.op == FilterOperatorEnum.EQ || range.op == FilterOperatorEnum.LTE || range.op == FilterOperatorEnum.GTE || range.op == FilterOperatorEnum.IN))) {
+                                || rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond()) == 0 //
+                                        && (range.op == FilterOperatorEnum.EQ || range.op == FilterOperatorEnum.LTE || range.op == FilterOperatorEnum.GTE || range.op == FilterOperatorEnum.IN))) {
                     //segment range is [Closed,Open), but segmentStartAndEnd.getSecond() might be rounded, so use <= when has equals in condition. 
                 } else {
                     logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}", //
@@ -353,10 +352,10 @@ public class GTScanRangePlanner {
 
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
 
-//            BitSet bitSet = new BitSet(gtInfo.getColumnCount());
-//            for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
-//                bitSet.set(entry.getKey());
-//            }
+            //            BitSet bitSet = new BitSet(gtInfo.getColumnCount());
+            //            for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
+            //                bitSet.set(entry.getKey());
+            //            }
             GTRecord fuzzy = new GTRecord(gtInfo);
             for (Map.Entry<Integer, ByteArray> entry : fuzzyValue.entrySet()) {
                 fuzzy.set(entry.getKey(), entry.getValue());

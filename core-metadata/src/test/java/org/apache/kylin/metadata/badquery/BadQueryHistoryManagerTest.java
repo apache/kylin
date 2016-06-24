@@ -18,7 +18,8 @@
 
 package org.apache.kylin.metadata.badquery;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.NavigableSet;
@@ -96,7 +97,7 @@ public class BadQueryHistoryManagerTest extends LocalFileMetadataTestCase {
         assertEquals("adj2", newEntry.getAdj());
         assertEquals("server2", newEntry.getServer());
         assertEquals("t-1", newEntry.getThread());
-        assertEquals(120, (int)newEntry.getRunningSec());
+        assertEquals(120, (int) newEntry.getRunningSec());
     }
 
 }

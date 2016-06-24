@@ -85,7 +85,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
         // Occurs in sub-query like "select ... from (...) inner join (...) order by ..."
         if (this.context.realization == null)
             return;
-        
+
         for (RelFieldCollation fieldCollation : this.collation.getFieldCollations()) {
             int index = fieldCollation.getFieldIndex();
             SQLDigest.OrderEnum order = getOrderEnum(fieldCollation.getDirection());

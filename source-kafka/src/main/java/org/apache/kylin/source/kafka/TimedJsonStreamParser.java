@@ -35,9 +35,12 @@
 package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
-import java.util.*;
-
-import kafka.message.MessageAndOffset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.StreamingMessage;
@@ -49,7 +52,10 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
+
 import com.google.common.collect.Lists;
+
+import kafka.message.MessageAndOffset;
 
 /**
  * each json message with a "timestamp" field
@@ -57,7 +63,6 @@ import com.google.common.collect.Lists;
 public final class TimedJsonStreamParser extends StreamingParser {
 
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
-
 
     private List<TblColRef> allColumns;
     private boolean formatTs = false;//not used
@@ -74,14 +79,14 @@ public final class TimedJsonStreamParser extends StreamingParser {
                     String[] parts = prop.split("=");
                     if (parts.length == 2) {
                         switch (parts[0]) {
-                            case "formatTs":
-                                this.formatTs = Boolean.valueOf(parts[1]);
-                                break;
-                            case "tsColName":
-                                this.tsColName = parts[1];
-                                break;
-                            default:
-                                break;
+                        case "formatTs":
+                            this.formatTs = Boolean.valueOf(parts[1]);
+                            break;
+                        case "tsColName":
+                            this.tsColName = parts[1];
+                            break;
+                        default:
+                            break;
                         }
                     }
                 } catch (Exception e) {
@@ -119,14 +124,13 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 }
             }
 
-            return new StreamingMessage(result, messageAndOffset.offset(), t, Collections.<String, Object>emptyMap());
+            return new StreamingMessage(result, messageAndOffset.offset(), t, Collections.<String, Object> emptyMap());
 
         } catch (IOException e) {
             logger.error("error", e);
             throw new RuntimeException(e);
         }
     }
-
 
     @Override
     public boolean filter(StreamingMessage streamingMessage) {

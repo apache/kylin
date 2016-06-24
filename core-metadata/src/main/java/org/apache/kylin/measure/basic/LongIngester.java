@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 public class LongIngester extends MeasureIngester<LongMutable> {
-    
+
     // avoid repeated object creation
     private LongMutable current = new LongMutable();
 
@@ -35,7 +35,7 @@ public class LongIngester extends MeasureIngester<LongMutable> {
     public LongMutable valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (values.length > 1)
             throw new IllegalArgumentException();
-        
+
         LongMutable l = current;
         if (values[0] == null)
             l.set(0L);

@@ -33,17 +33,14 @@
  */
 package org.apache.kylin.engine.streaming.util;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.engine.streaming.IStreamingInput;
 import org.apache.kylin.engine.streaming.IStreamingOutput;
 import org.apache.kylin.engine.streaming.StreamingBatchBuilder;
-import org.apache.kylin.engine.streaming.StreamingConfig;
-import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.engine.streaming.cube.StreamingCubeBuilder;
+import org.apache.kylin.metadata.realization.RealizationType;
 
 import com.google.common.base.Preconditions;
-import org.apache.kylin.metadata.realization.RealizationType;
 
 /**
  * TODO: like MRUtil, use Factory pattern to allow config

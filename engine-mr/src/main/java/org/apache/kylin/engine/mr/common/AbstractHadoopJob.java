@@ -104,7 +104,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             System.exit(5);
         }
     }
-    
+
     // ============================================================================
 
     protected String name;

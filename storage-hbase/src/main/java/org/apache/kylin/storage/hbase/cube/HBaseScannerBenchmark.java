@@ -164,7 +164,7 @@ public class HBaseScannerBenchmark {
                 deleteTable = true;
             }
         }
-        
+
         KylinConfig.setSandboxEnvIfPossible();
 
         HBaseScannerBenchmark benchmark = new HBaseScannerBenchmark();

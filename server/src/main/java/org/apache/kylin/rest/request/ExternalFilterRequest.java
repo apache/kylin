@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.kylin.rest.request;
 
 public class ExternalFilterRequest {
@@ -36,7 +35,6 @@ public class ExternalFilterRequest {
     public void setProject(String project) {
         this.project = project;
     }
-
 
     public boolean isSuccessful() {
         return successful;

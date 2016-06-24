@@ -18,7 +18,7 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
 

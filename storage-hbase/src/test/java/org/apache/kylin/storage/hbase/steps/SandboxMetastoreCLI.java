@@ -54,10 +54,10 @@ public class SandboxMetastoreCLI {
 
         if ("reset".equalsIgnoreCase(args[0])) {
             ResourceTool.main(new String[] { "reset" });
-        }else if ("download".equalsIgnoreCase(args[0])) {
+        } else if ("download".equalsIgnoreCase(args[0])) {
             ResourceTool.main(new String[] { "download", args[1] });
         } else if ("fetch".equalsIgnoreCase(args[0])) {
-            ResourceTool.main(new String[] { "fetch", args[1], args[2]});
+            ResourceTool.main(new String[] { "fetch", args[1], args[2] });
         } else if ("upload".equalsIgnoreCase(args[0])) {
             ResourceTool.main(new String[] { "upload", args[1] });
         } else {

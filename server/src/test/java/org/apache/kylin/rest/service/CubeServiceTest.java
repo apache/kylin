@@ -40,7 +40,7 @@ public class CubeServiceTest extends ServiceTestBase {
 
     @Autowired
     private CacheService cacheService;
-    
+
     @Test
     public void testBasics() throws JsonProcessingException, JobException, UnknownHostException {
         Assert.assertNotNull(cubeService.getConfig());

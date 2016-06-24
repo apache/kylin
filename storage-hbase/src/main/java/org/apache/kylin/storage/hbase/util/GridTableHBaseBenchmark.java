@@ -267,6 +267,7 @@ public class GridTableHBaseBenchmark {
                 hbase.getTableDescriptor(TableName.valueOf(tableName));
                 tableExist = true;
             } catch (TableNotFoundException e) {
+                //do nothing?
             }
 
             if (tableExist) {

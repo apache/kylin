@@ -119,7 +119,7 @@ public class DFSFileTableReader implements TableReader {
 
     private String[] split(String line, String delim) {
         // FIXME CVS line should be parsed considering escapes
-        String str[] = StringSplitter.split(line, delim);
+        String[] str = StringSplitter.split(line, delim);
 
         // un-escape CSV
         if (DFSFileTable.DELIM_COMMA.equals(delim)) {

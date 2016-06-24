@@ -33,7 +33,7 @@ public abstract class AbstractRestCache<K, V> {
         this.config = config;
         this.syncType = syncType;
     }
-    
+
     public Broadcaster getBroadcaster() {
         return Broadcaster.getInstance(config);
     }

@@ -18,8 +18,12 @@
 
 package org.apache.kylin.tool;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
@@ -34,11 +38,8 @@ import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(JobDiagnosisInfoCLI.class);
@@ -78,7 +79,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         executableDao = ExecutableDao.getInstance(kylinConfig);
     }
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         JobDiagnosisInfoCLI extractor = new JobDiagnosisInfoCLI();
         extractor.execute(args);
     }
@@ -125,7 +126,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
             File yarnLogDir = new File(exportDir, "yarn");
             FileUtils.forceMkdir(yarnLogDir);
             for (String stepId : yarnLogsResources) {
-                extractTaskCounter(stepId,new File(new File(yarnLogDir, stepId),"Counters"));
+                extractTaskCounter(stepId, new File(new File(yarnLogDir, stepId), "Counters"));
                 extractYarnLog(stepId, new File(yarnLogDir, stepId), true);
             }
         }

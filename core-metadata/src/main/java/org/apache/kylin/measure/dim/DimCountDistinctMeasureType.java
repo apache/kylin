@@ -23,7 +23,6 @@ import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.realization.SQLDigest;
 
@@ -54,6 +53,7 @@ public class DimCountDistinctMeasureType extends MeasureType<Object> {
         }
 
     }
+
     @Override
     public MeasureIngester newIngester() {
         throw new UnsupportedOperationException("No ingester for this measure type.");

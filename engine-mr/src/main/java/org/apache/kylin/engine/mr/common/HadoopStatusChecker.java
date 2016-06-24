@@ -86,8 +86,13 @@ public class HadoopStatusChecker {
                 case FAILED:
                 case KILLING:
                 case KILLED:
+                    break;
+                default:
+                    throw new IllegalStateException();
                 }
                 break;
+            default:
+                throw new IllegalStateException();
             }
         } catch (Exception e) {
             logger.error("error check status", e);

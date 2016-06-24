@@ -27,7 +27,6 @@ public interface IMROutput {
     /** Return a helper to participate in batch cubing job flow. */
     public IMRBatchCubingOutputSide getBatchCubingOutputSide(CubeSegment seg);
 
-
     /** Return a helper to participate in batch cubing job flow. */
     public IMRBatchInvertedIndexingOutputSide getBatchInvertedIndexingOutputSide(IISegment seg);
 
@@ -80,7 +79,6 @@ public interface IMROutput {
         /** Add step that does any necessary clean up. */
         public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow);
     }
-
 
     /**
      * Participate the batch inverted indexing flow as the output side. Responsible for saving

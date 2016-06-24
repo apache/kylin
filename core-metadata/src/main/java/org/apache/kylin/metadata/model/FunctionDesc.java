@@ -18,9 +18,13 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.basic.BasicMeasureType;
@@ -28,7 +32,9 @@ import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -274,7 +280,6 @@ public class FunctionDesc {
     public void setConfiguration(HashMap<String, String> configurations) {
         this.configuration = configurations;
     }
-
 
     @Override
     public int hashCode() {

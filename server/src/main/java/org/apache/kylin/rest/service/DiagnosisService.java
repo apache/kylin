@@ -65,7 +65,7 @@ public class DiagnosisService extends BasicService {
         return jobInfoExtractor.getExportDest();
     }
 
-    public static void main(String args1[]) {
+    public static void main(String[] args1) {
         String[] args = { "-project", "-all", "-destDir", Files.createTempDir().getAbsolutePath() };
         logger.info("DiagnosisInfoCLI args: " + Arrays.toString(args));
         DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();

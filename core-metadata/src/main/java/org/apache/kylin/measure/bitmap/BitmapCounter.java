@@ -18,11 +18,15 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.roaringbitmap.buffer.MutableRoaringBitmap;
-
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+
+import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 /**
  * Created by sunyerui on 15/12/1.
@@ -46,14 +50,15 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         bitmap.add(value);
     }
 
-    public void add(byte[] value) {add(value, 0, value.length);
+    public void add(byte[] value) {
+        add(value, 0, value.length);
     }
 
     public void add(byte[] value, int offset, int length) {
         if (value == null || length == 0) {
             return;
         }
-        
+
         add(new String(value, offset, length));
     }
 
@@ -92,7 +97,7 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
 
     public void readRegisters(ByteBuffer in) throws IOException {
         DataInputByteBuffer input = new DataInputByteBuffer();
-        input.reset(new ByteBuffer[]{in});
+        input.reset(new ByteBuffer[] { in });
         bitmap.deserialize(input);
     }
 
@@ -137,11 +142,12 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         int len;
 
         DataInputByteBuffer input = new DataInputByteBuffer();
-        input.reset(new ByteBuffer[]{in});
+        input.reset(new ByteBuffer[] { in });
         MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
         try {
             bitmap.deserialize(input);
         } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
 
         len = in.position() - mark;
@@ -190,11 +196,11 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
             }
 
             public int read() {
-                return -1 == this.read(this.scratch, 0, 1)?-1:this.scratch[0] & 255;
+                return -1 == this.read(this.scratch, 0, 1) ? -1 : this.scratch[0] & 255;
             }
 
             public int read(byte[] b, int off, int len) {
-                if(this.bidx >= this.buffers.length) {
+                if (this.bidx >= this.buffers.length) {
                     return -1;
                 } else {
                     int cur = 0;
@@ -205,7 +211,7 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
                         cur += rem;
                         off += rem;
                         len -= rem;
-                    } while(len > 0 && ++this.bidx < this.buffers.length);
+                    } while (len > 0 && ++this.bidx < this.buffers.length);
 
                     this.pos += cur;
                     return cur;
@@ -218,7 +224,7 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
                 ByteBuffer[] arr$ = buffers;
                 int len$ = buffers.length;
 
-                for(int i$ = 0; i$ < len$; ++i$) {
+                for (int i$ = 0; i$ < len$; ++i$) {
                     ByteBuffer b = arr$[i$];
                     this.length += b.remaining();
                 }

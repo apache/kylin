@@ -18,8 +18,11 @@
 
 package org.apache.kylin.tool;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -35,12 +38,10 @@ import org.apache.kylin.engine.mr.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JobTaskCounterExtractor extends AbstractInfoExtractor{
+public class JobTaskCounterExtractor extends AbstractInfoExtractor {
     private String mrJobId;
     private String yarnUrl;
     private static final Logger logger = LoggerFactory.getLogger(JobTaskCounterExtractor.class);
@@ -82,7 +83,6 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor{
         return m.group(1) + m.group(2) + ":19888";
     }
 
-
     private String getHttpResponse(String url) {
         HttpClient client = new HttpClient();
         String response = null;
@@ -92,9 +92,9 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor{
                 get.addRequestHeader("accept", "application/json");
                 client.executeMethod(get);
                 response = get.getResponseBodyAsString();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 logger.warn("Failed to fetch http response" + e);
-            }finally {
+            } finally {
                 get.releaseConnection();
             }
         }
@@ -113,21 +113,21 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor{
             long maxReduceElapsedTime = 0L;
 
             for (JsonNode node : tasks) {
-                if(node.get("type").textValue().equals("MAP")) {
+                if (node.get("type").textValue().equals("MAP")) {
                     if (node.get("elapsedTime").longValue() >= maxMapElapsedTime) {
                         maxMapElapsedTime = node.get("elapsedTime").longValue();
                         maxMapId = node.get("id").textValue();
                     }
                 }
-                if(node.get("type").textValue().equals("REDUCE")) {
+                if (node.get("type").textValue().equals("REDUCE")) {
                     if (node.get("elapsedTime").longValue() >= maxReduceElapsedTime) {
                         maxReduceElapsedTime = node.get("elapsedTime").longValue();
                         maxReduceId = node.get("id").textValue();
                     }
                 }
             }
-            extractTaskCounterFile(maxMapId, exportDir,taskUrl);
-            extractTaskCounterFile(maxReduceId, exportDir,taskUrl);
+            extractTaskCounterFile(maxMapId, exportDir, taskUrl);
+            extractTaskCounterFile(maxReduceId, exportDir, taskUrl);
         } catch (Exception e) {
             logger.warn("Failed to get mr tasks rest response" + e);
         }
@@ -136,7 +136,7 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor{
     private void extractTaskCounterFile(String taskId, File exportDir, String taskUrl) throws IOException {
         try {
             String response = getHttpResponse(taskUrl + taskId + "/counters");
-            FileUtils.writeStringToFile(new File(exportDir,taskId+".json"), response);
+            FileUtils.writeStringToFile(new File(exportDir, taskId + ".json"), response);
         } catch (Exception e) {
             logger.warn("Failed to get task counters rest response" + e);
         }

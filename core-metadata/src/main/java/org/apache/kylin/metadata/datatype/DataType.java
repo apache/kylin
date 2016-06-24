@@ -52,9 +52,10 @@ public class DataType implements Serializable {
             VALID_TYPES.add(typeName);
         }
 
-        TYPE_PATTERN = Pattern.compile( //
+        TYPE_PATTERN = Pattern.compile(//
                 "(" + StringUtils.join(VALID_TYPES, "|") + ")" //
-                        + TYPE_PATTEN_TAIL, Pattern.CASE_INSENSITIVE);
+                        + TYPE_PATTEN_TAIL,
+                Pattern.CASE_INSENSITIVE);
     }
 
     // standard sql types, ref: http://www.w3schools.com/sql/sql_datatypes_general.asp

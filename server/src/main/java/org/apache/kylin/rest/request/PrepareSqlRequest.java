@@ -80,7 +80,7 @@ public class PrepareSqlRequest extends SQLRequest {
                 return false;
             if (getClass() != obj.getClass())
                 return false;
-            StateParam other = (StateParam)obj;
+            StateParam other = (StateParam) obj;
             if (className == null) {
                 if (other.className != null)
                     return false;
@@ -113,7 +113,7 @@ public class PrepareSqlRequest extends SQLRequest {
             return false;
         if (!super.equals(obj))
             return false;
-        PrepareSqlRequest other = (PrepareSqlRequest)obj;
+        PrepareSqlRequest other = (PrepareSqlRequest) obj;
         if (!Arrays.equals(params, other.params))
             return false;
         return true;

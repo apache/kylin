@@ -70,7 +70,7 @@ public class DriverTest {
         state.close();
         conn.close();
     }
-    
+
     @Test
     public void testStatementWithQuestionMask() throws SQLException {
         Driver driver = new DummyDriver();

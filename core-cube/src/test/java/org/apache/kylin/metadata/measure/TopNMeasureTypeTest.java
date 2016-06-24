@@ -1,6 +1,8 @@
 package org.apache.kylin.metadata.measure;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
@@ -13,13 +15,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
-
 /**
  * Created by shishaofeng on 6/6/16.
  */
 public class TopNMeasureTypeTest extends LocalFileMetadataTestCase {
-
 
     @Before
     public void setup() {
@@ -46,7 +45,6 @@ public class TopNMeasureTypeTest extends LocalFileMetadataTestCase {
             }
         }
         TopNMeasureType measureType = (TopNMeasureType) MeasureTypeFactory.create(topSellerMeasure.getFunction().getExpression(), topSellerMeasure.getFunction().getReturnDataType());
-
 
         topSellerMeasure.getFunction().getConfiguration().clear();
         List<TblColRef> colsNeedDict = measureType.getColumnsNeedDictionary(topSellerMeasure.getFunction());

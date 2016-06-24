@@ -171,11 +171,10 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
         }
     }
 
-
     @Override
     public synchronized void init(JobEngineConfig jobEngineConfig, final JobLock jobLock) throws SchedulerException {
         String serverMode = jobEngineConfig.getConfig().getServerMode();
-        if (! ("job".equals(serverMode.toLowerCase()) || "all".equals(serverMode.toLowerCase()))) {
+        if (!("job".equals(serverMode.toLowerCase()) || "all".equals(serverMode.toLowerCase()))) {
             logger.info("server mode: " + serverMode + ", no need to run job scheduler");
             return;
         }

@@ -17,8 +17,7 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.*;
-import it.uniroma3.mat.extendedset.intset.ConciseSet;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -41,6 +40,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+
+import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 public class SimpleInvertedIndexTest extends LocalFileMetadataTestCase {
 

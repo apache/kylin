@@ -21,7 +21,6 @@ package org.apache.kylin.storage.hbase.steps;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -32,7 +31,6 @@ import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.measure.MeasureDecoder;

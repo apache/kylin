@@ -19,10 +19,15 @@
 package org.apache.kylin.cube;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Dictionary;
@@ -40,7 +45,9 @@ import org.apache.kylin.metadata.realization.IRealizationSegment;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -119,7 +126,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IRealizationSegment
             startOffset = startDate;
             endOffset = endDate;
         }
-        
+
         if (startOffset == 0 && (endOffset == 0 || endOffset == Long.MAX_VALUE)) {
             return "FULL_BUILD";
         }

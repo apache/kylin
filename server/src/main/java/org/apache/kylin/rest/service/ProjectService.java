@@ -106,8 +106,8 @@ public class ProjectService extends BasicService {
     }
 
     public boolean isTableInAnyProject(String tableName) {
-        for(ProjectInstance projectInstance : ProjectManager.getInstance(getConfig()).listAllProjects()) {
-            if(projectInstance.containsTable(tableName.toUpperCase())) {
+        for (ProjectInstance projectInstance : ProjectManager.getInstance(getConfig()).listAllProjects()) {
+            if (projectInstance.containsTable(tableName.toUpperCase())) {
                 return true;
             }
         }
@@ -116,8 +116,8 @@ public class ProjectService extends BasicService {
 
     public boolean isTableInProject(String tableName, String projectName) {
         ProjectInstance projectInstance = ProjectManager.getInstance(getConfig()).getProject(projectName);
-        if(projectInstance != null) {
-            if(projectInstance.containsTable(tableName.toUpperCase())) {
+        if (projectInstance != null) {
+            if (projectInstance.containsTable(tableName.toUpperCase())) {
                 return true;
             }
         }

@@ -178,7 +178,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             }
         }
     }
-    
+
     @Override
     public int hashCode() {
         return getIdentity().hashCode();

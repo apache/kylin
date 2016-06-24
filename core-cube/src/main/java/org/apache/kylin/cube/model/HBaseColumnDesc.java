@@ -57,11 +57,11 @@ public class HBaseColumnDesc {
     public void setMeasureRefs(String[] measureRefs) {
         this.measureRefs = measureRefs;
     }
-    
+
     public int[] getMeasureIndex() {
         return measureIndex;
     }
-    
+
     public void setMeasureIndex(int[] index) {
         this.measureIndex = index;
     }

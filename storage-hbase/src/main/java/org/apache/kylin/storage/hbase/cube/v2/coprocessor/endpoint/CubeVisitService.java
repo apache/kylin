@@ -19,17 +19,14 @@
 package org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
@@ -70,11 +67,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import com.google.protobuf.HBaseZeroCopyByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
+
 import com.sun.management.OperatingSystemMXBean;
 
 @SuppressWarnings("unused")
@@ -168,6 +165,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         sb.append(",");
     }
 
+    @SuppressWarnings("checkstyle:methodlength")
     @Override
     public void visitCube(final RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
         List<RegionScanner> regionScanners = Lists.newArrayList();
@@ -260,7 +258,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 public boolean hasNext() {
                     if (rowLimit > 0 && rowLimit <= counter)
                         return false;
-                    
+
                     if (counter % 1000 == 1) {
                         if (System.currentTimeMillis() - startTime > timeout) {
                             scanNormalComplete.setValue(false);

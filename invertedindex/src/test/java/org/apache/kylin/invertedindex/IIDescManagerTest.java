@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.invertedindex.IIDescManager;
 import org.apache.kylin.invertedindex.model.IIDesc;
 import org.junit.After;
 import org.junit.Assert;

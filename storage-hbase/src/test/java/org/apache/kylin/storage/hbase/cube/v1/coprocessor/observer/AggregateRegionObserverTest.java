@@ -18,7 +18,8 @@
 
 package org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -89,7 +90,7 @@ public class AggregateRegionObserverTest {
 
     private Cell newCell(byte[] key, HCol col, String decimal, int number) {
         Object[] values = number == Integer.MIN_VALUE ? //
-        new Object[] { new BigDecimal(decimal) } //
+                new Object[] { new BigDecimal(decimal) } //
                 : new Object[] { new BigDecimal(decimal), new LongMutable(number) };
         ByteBuffer buf = col.measureCodec.encode(values);
 
@@ -202,7 +203,7 @@ public class AggregateRegionObserverTest {
         t.setDatabase("DEFAULT");
         TblColRef[] cols = new TblColRef[] { newCol(1, "A", t), newCol(2, "B", t), newCol(3, "C", t), newCol(4, "D", t) };
         int[] sizes = new int[] { 1, 1, 1, 1 };
-        return new CoprocessorRowType(cols, sizes,0);
+        return new CoprocessorRowType(cols, sizes, 0);
     }
 
     private TblColRef newCol(int i, String name, TableDesc t) {

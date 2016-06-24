@@ -84,16 +84,16 @@ public class CuboidToGridTableMapping {
                 metricsColBlocks.add(new BitSet());
             }
         }
-        
+
         // metrics
         metrics2gt = Maps.newHashMap();
-        for (MeasureDesc measure :cuboid.getCubeDesc().getMeasures()) {
+        for (MeasureDesc measure : cuboid.getCubeDesc().getMeasures()) {
             // Count distinct & holistic count distinct are equals() but different.
             // Ensure the holistic version if exists is always the first.
             FunctionDesc func = measure.getFunction();
             metrics2gt.put(func, gtColIdx);
             gtDataTypes.add(func.getReturnDataType());
-            
+
             // map to column block
             int cbIdx = 0;
             for (HBaseColumnFamilyDesc familyDesc : cuboid.getCubeDesc().getHbaseMapping().getColumnFamily()) {
@@ -104,14 +104,14 @@ public class CuboidToGridTableMapping {
                     cbIdx++;
                 }
             }
-            
+
             gtColIdx++;
         }
-        
+
         for (BitSet set : metricsColBlocks) {
             gtColBlocks.add(new ImmutableBitSet(set));
         }
-        
+
         nMetrics = gtColIdx - nDimensions;
         assert nMetrics == cuboid.getCubeDesc().getMeasures().size();
     }

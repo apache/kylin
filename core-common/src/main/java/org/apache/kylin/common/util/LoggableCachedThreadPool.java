@@ -18,13 +18,13 @@
 
 package org.apache.kylin.common.util;
 
-import org.slf4j.*;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.LoggerFactory;
 
 public class LoggableCachedThreadPool extends ThreadPoolExecutor {
 

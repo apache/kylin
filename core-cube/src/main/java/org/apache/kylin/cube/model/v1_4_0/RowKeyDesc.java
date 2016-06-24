@@ -50,7 +50,7 @@ public class RowKeyDesc {
         }
 
         public long groupMask;
-        public long groupOneBitMasks[];
+        public long[] groupOneBitMasks;
         public long uniqueMask;
         public long leftoverMask;
     }
@@ -283,7 +283,7 @@ public class RowKeyDesc {
 
                 if ((tailMask & bit) > 0)
                     continue; // ignore levels in tail, they don't participate
-                              // aggregation group combination anyway
+                // aggregation group combination anyway
 
                 mask.fullMask |= bit;
                 this.hierarchyFullMask |= bit;

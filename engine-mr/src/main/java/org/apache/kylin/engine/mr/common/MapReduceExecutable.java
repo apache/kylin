@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -141,14 +140,14 @@ public class MapReduceExecutable extends AbstractExecutable {
             final StringBuilder output = new StringBuilder();
             final HadoopCmdOutput hadoopCmdOutput = new HadoopCmdOutput(job, output);
 
-//            final String restStatusCheckUrl = getRestStatusCheckUrl(job, context.getConfig());
-//            if (restStatusCheckUrl == null) {
-//                logger.error("restStatusCheckUrl is null");
-//                return new ExecuteResult(ExecuteResult.State.ERROR, "restStatusCheckUrl is null");
-//            }
-//            String mrJobId = hadoopCmdOutput.getMrJobId();
-//            boolean useKerberosAuth = context.getConfig().isGetJobStatusWithKerberos();
-//            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
+            //            final String restStatusCheckUrl = getRestStatusCheckUrl(job, context.getConfig());
+            //            if (restStatusCheckUrl == null) {
+            //                logger.error("restStatusCheckUrl is null");
+            //                return new ExecuteResult(ExecuteResult.State.ERROR, "restStatusCheckUrl is null");
+            //            }
+            //            String mrJobId = hadoopCmdOutput.getMrJobId();
+            //            boolean useKerberosAuth = context.getConfig().isGetJobStatusWithKerberos();
+            //            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
             while (!isDiscarded()) {
 

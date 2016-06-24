@@ -27,7 +27,7 @@ public class JobBuildRequest {
     private String buildType;
 
     private boolean force;
-    
+
     @Deprecated
     private boolean forceMergeEmptySegment = false;
 
@@ -54,7 +54,7 @@ public class JobBuildRequest {
     public void setBuildType(String buildType) {
         this.buildType = buildType;
     }
-    
+
     public boolean isForce() {
         return force;
     }

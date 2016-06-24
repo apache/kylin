@@ -54,41 +54,41 @@ public class HiveCmdBuilder {
         StringBuffer buf = new StringBuffer();
 
         switch (clientMode) {
-            case CLI:
-                buf.append("hive -e \"");
+        case CLI:
+            buf.append("hive -e \"");
+            for (String statement : statements) {
+                buf.append(statement).append("\n");
+            }
+            buf.append("\"");
+            break;
+        case BEELINE:
+            BufferedWriter bw = null;
+            try {
+                File tmpHql = File.createTempFile("beeline_", ".hql");
+                StringBuffer hqlBuf = new StringBuffer();
+                bw = new BufferedWriter(new FileWriter(tmpHql));
                 for (String statement : statements) {
-                    buf.append(statement).append("\n");
-                }
-                buf.append("\"");
-                break;
-            case BEELINE:
-                BufferedWriter bw = null;
-                try {
-                    File tmpHql = File.createTempFile("beeline_", ".hql");
-                    StringBuffer hqlBuf = new StringBuffer();
-                    bw = new BufferedWriter(new FileWriter(tmpHql));
-                    for (String statement : statements) {
-                        bw.write(statement);
-                        bw.newLine();
+                    bw.write(statement);
+                    bw.newLine();
 
-                        hqlBuf.append(statement).append("\n");
-                    }
-                    buf.append("beeline ");
-                    buf.append(kylinConfig.getHiveBeelineParams());
-                    buf.append(" -f ");
-                    buf.append(tmpHql.getAbsolutePath());
-                    buf.append(";rm -f ");
-                    buf.append(tmpHql.getAbsolutePath());
-
-                    logger.info("The statements to execute in beeline: \n" + hqlBuf);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    IOUtils.closeQuietly(bw);
+                    hqlBuf.append(statement).append("\n");
                 }
-                break;
-            default:
-                throw new RuntimeException("Hive client cannot be recognized: " + clientMode);
+                buf.append("beeline ");
+                buf.append(kylinConfig.getHiveBeelineParams());
+                buf.append(" -f ");
+                buf.append(tmpHql.getAbsolutePath());
+                buf.append(";rm -f ");
+                buf.append(tmpHql.getAbsolutePath());
+
+                logger.info("The statements to execute in beeline: \n" + hqlBuf);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } finally {
+                IOUtils.closeQuietly(bw);
+            }
+            break;
+        default:
+            throw new RuntimeException("Hive client cannot be recognized: " + clientMode);
         }
 
         return buf.toString();

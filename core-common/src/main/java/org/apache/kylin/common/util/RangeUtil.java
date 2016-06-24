@@ -19,12 +19,10 @@
 package org.apache.kylin.common.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NavigableMap;
-import java.util.Set;
 import java.util.SortedSet;
 
 import com.google.common.collect.BoundType;
@@ -52,7 +50,7 @@ public class RangeUtil {
         } else if (filterRange.hasLowerBound() && !filterRange.hasUpperBound()) {
             return values.tailMap(filterRange.lowerEndpoint(), lowerBoundInclusive(filterRange));
         } else {
-            return values.subMap(filterRange.lowerEndpoint(), lowerBoundInclusive(filterRange),//
+            return values.subMap(filterRange.lowerEndpoint(), lowerBoundInclusive(filterRange), //
                     filterRange.upperEndpoint(), upperBoundInclusive(filterRange));
         }
     }
@@ -96,7 +94,7 @@ public class RangeUtil {
         if (other == null || !self.isConnected(other)) {
             return Collections.singletonList(self);
         }
-        
+
         Range<C> share = self.intersection(other);
         if (share.isEmpty()) {
             return Collections.singletonList(self);

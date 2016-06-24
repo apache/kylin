@@ -193,8 +193,8 @@ public class GTAggregateScanner implements IGTScanner {
             for (int i = 0; i < types.length; i++) {
                 types[i] = info.getColumnType(metrics.trueBitAt(i));
             }
-            
-            BufferedMeasureEncoder result =  new BufferedMeasureEncoder(types);
+
+            BufferedMeasureEncoder result = new BufferedMeasureEncoder(types);
             result.setBufferSize(info.getMaxColumnLength(metrics));
             return result;
         }
@@ -372,7 +372,7 @@ public class GTAggregateScanner implements IGTScanner {
                     record.cols[c].set(key, offset, columnLength);
                     offset += columnLength;
                 }
-                
+
                 for (int i = 0; i < value.length; i++) {
                     tmpValues[i] = value[i].getState();
                 }

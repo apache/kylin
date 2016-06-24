@@ -109,7 +109,7 @@ public class BuildInFunctionTransformer implements ITupleFilterTransformer {
             return null;
 
         BuildInFunctionTupleFilter buildInFunctionTupleFilter = (BuildInFunctionTupleFilter) compTupleFilter.getFunction();
-        
+
         if (!buildInFunctionTupleFilter.isValid())
             return null;
 

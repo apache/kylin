@@ -73,13 +73,13 @@ public class ProjectController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = {RequestMethod.GET})
+    @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listAllProjects(limit, offset);
     }
 
-    @RequestMapping(value = "/readable", method = {RequestMethod.GET})
+    @RequestMapping(value = "/readable", method = { RequestMethod.GET })
     @ResponseBody
     public List<ProjectInstance> getReadableProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         List<ProjectInstance> readableProjects = new ArrayList<ProjectInstance>();
@@ -189,12 +189,11 @@ public class ProjectController extends BasicController {
                 }
             }
 
-
         }
         return readableProjects;
     }
 
-    @RequestMapping(value = "", method = {RequestMethod.POST})
+    @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
     public ProjectInstance saveProject(@RequestBody CreateProjectRequest projectRequest) {
         if (StringUtils.isEmpty(projectRequest.getName())) {
@@ -212,7 +211,7 @@ public class ProjectController extends BasicController {
         return createdProj;
     }
 
-    @RequestMapping(value = "", method = {RequestMethod.PUT})
+    @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
     public ProjectInstance updateProject(@RequestBody UpdateProjectRequest projectRequest) {
         if (StringUtils.isEmpty(projectRequest.getFormerProjectName())) {
@@ -231,7 +230,7 @@ public class ProjectController extends BasicController {
         return updatedProj;
     }
 
-    @RequestMapping(value = "/{projectName}", method = {RequestMethod.DELETE})
+    @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE })
     @ResponseBody
     public void deleteProject(@PathVariable String projectName) {
         try {

@@ -29,7 +29,6 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 

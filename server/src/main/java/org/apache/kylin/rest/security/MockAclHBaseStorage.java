@@ -32,11 +32,11 @@ public class MockAclHBaseStorage implements AclHBaseStorage {
 
     private static final String aclTableName = "MOCK-ACL-TABLE";
     private static final String userTableName = "MOCK-USER-TABLE";
-    
+
     private HTableInterface mockedAclTable;
     private HTableInterface mockedUserTable;
     private RealAclHBaseStorage realAcl;
-    
+
     public MockAclHBaseStorage() {
         String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
         if (metadataUrl != null && metadataUrl.endsWith("hbase")) {
@@ -68,7 +68,7 @@ public class MockAclHBaseStorage implements AclHBaseStorage {
         if (realAcl != null) {
             return realAcl.getTable(tableName);
         }
-        
+
         if (StringUtils.equals(tableName, aclTableName)) {
             return mockedAclTable;
         } else if (StringUtils.equals(tableName, userTableName)) {

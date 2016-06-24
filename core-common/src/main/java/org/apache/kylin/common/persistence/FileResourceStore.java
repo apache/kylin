@@ -74,7 +74,7 @@ public class FileResourceStore extends ResourceStore {
         NavigableSet<String> resources = listResources(folderPath);
         if (resources == null)
             return Collections.emptyList();
-        
+
         List<RawResource> result = Lists.newArrayListWithCapacity(resources.size());
         try {
             for (String res : resources) {

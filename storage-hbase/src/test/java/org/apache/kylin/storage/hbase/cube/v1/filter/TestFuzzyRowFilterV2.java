@@ -33,9 +33,10 @@ public class TestFuzzyRowFilterV2 {
 
         Assert.assertEquals(FuzzyRowFilterV2.SatisfiesCode.YES, FuzzyRowFilterV2.satisfiesNoUnsafe(false, new byte[] { 1, 2, 1, 3, 3 }, 0, 5, new byte[] { 1, 2, 0, 3 }, new byte[] { 0, 0, 1, 0 }));
 
-        Assert.assertEquals(FuzzyRowFilterV2.SatisfiesCode.NEXT_EXISTS, FuzzyRowFilterV2.satisfiesNoUnsafe(false, new byte[] { 1, 1, 1, 3, 0 }, // row to check
-                0, 5, new byte[] { 1, 2, 0, 3 }, // fuzzy row
-                new byte[] { 0, 0, 1, 0 })); // mask
+        Assert.assertEquals(FuzzyRowFilterV2.SatisfiesCode.NEXT_EXISTS,
+                FuzzyRowFilterV2.satisfiesNoUnsafe(false, new byte[] { 1, 1, 1, 3, 0 }, // row to check
+                        0, 5, new byte[] { 1, 2, 0, 3 }, // fuzzy row
+                        new byte[] { 0, 0, 1, 0 })); // mask
 
         Assert.assertEquals(FuzzyRowFilterV2.SatisfiesCode.NEXT_EXISTS, FuzzyRowFilterV2.satisfiesNoUnsafe(false, new byte[] { 1, 1, 1, 3, 0 }, 0, 5, new byte[] { 1, (byte) 245, 0, 3 }, new byte[] { 0, 0, 1, 0 }));
 
@@ -51,9 +52,10 @@ public class TestFuzzyRowFilterV2 {
 
         Assert.assertEquals(FuzzyRowFilterV2.SatisfiesCode.YES, FuzzyRowFilterV2.satisfies(false, new byte[] { 1, 2, 1, 3, 3 }, new byte[] { 1, 2, 0, 3 }, new byte[] { -1, -1, 0, -1 }));
 
-        Assert.assertEquals(FuzzyRowFilterV2.SatisfiesCode.NEXT_EXISTS, FuzzyRowFilterV2.satisfies(false, new byte[] { 1, 1, 1, 3, 0 }, // row to check
-                new byte[] { 1, 2, 0, 3 }, // fuzzy row
-                new byte[] { -1, -1, 0, -1 })); // mask
+        Assert.assertEquals(FuzzyRowFilterV2.SatisfiesCode.NEXT_EXISTS,
+                FuzzyRowFilterV2.satisfies(false, new byte[] { 1, 1, 1, 3, 0 }, // row to check
+                        new byte[] { 1, 2, 0, 3 }, // fuzzy row
+                        new byte[] { -1, -1, 0, -1 })); // mask
 
         Assert.assertEquals(FuzzyRowFilterV2.SatisfiesCode.NEXT_EXISTS, FuzzyRowFilterV2.satisfies(false, new byte[] { 1, 1, 1, 3, 0 }, new byte[] { 1, (byte) 245, 0, 3 }, new byte[] { -1, -1, 0, -1 }));
 
@@ -172,11 +174,11 @@ public class TestFuzzyRowFilterV2 {
                 new byte[] { 1, 1, 0, 2, 0 }); // expected next
 
         assertNext(true, new byte[] { 1, 0, 1 }, new byte[] { -1, 0, -1 }, new byte[] { 1, (byte) 128, 2, 0, 1 },
-        // TODO: should be {1, (byte) 128, 2} ?
+                // TODO: should be {1, (byte) 128, 2} ?
                 new byte[] { 1, (byte) 128, 1, (byte) 0xFF, (byte) 0xFF });
 
         assertNext(true, new byte[] { 0, 1, 0, 1 }, new byte[] { 0, -1, 0, -1 }, new byte[] { 5, 1, 0, 2, 1 },
-        // TODO: should be {5, 1, 0, 2} ?
+                // TODO: should be {5, 1, 0, 2} ?
                 new byte[] { 5, 1, 0, 1, (byte) 0xFF });
 
         assertNext(true, new byte[] { 0, 1, 0, 0 }, // fuzzy row
@@ -195,7 +197,7 @@ public class TestFuzzyRowFilterV2 {
                 new byte[] { 5, 1, (byte) 254, 1 }); // expected next
 
         assertNext(true, new byte[] { 1, 1, 0, 0 }, new byte[] { -1, -1, 0, 0 }, new byte[] { 2, 1, 3, 2 },
-        // TODO: should be {1, 0} ?
+                // TODO: should be {1, 0} ?
                 new byte[] { 1, 1, 0, 0 });
 
         assertNext(true, new byte[] { 1, 0, 1 }, // fuzzy row
@@ -205,35 +207,35 @@ public class TestFuzzyRowFilterV2 {
                 new byte[] { 1, 0, 1, (byte) 0xFF, (byte) 0xFF });
 
         assertNext(true, new byte[] { 1, 1, 0, 3 }, new byte[] { -1, -1, 0, -1 }, new byte[] { 1, (byte) 245, 1, 3, 0 },
-        // TODO: should be {1, 1, (byte) 255, 4} ?
+                // TODO: should be {1, 1, (byte) 255, 4} ?
                 new byte[] { 1, 1, 0, 3, (byte) 0xFF });
 
         assertNext(true, new byte[] { 1, 2, 0, 3 }, new byte[] { -1, -1, 0, -1 }, new byte[] { 1, 3, 1, 3, 0 },
-        // TODO: should be 1, 2, (byte) 255, 4 ?
+                // TODO: should be 1, 2, (byte) 255, 4 ?
                 new byte[] { 1, 2, 0, 3, (byte) 0xFF });
 
         assertNext(true, new byte[] { 1, 2, 0, 3 }, new byte[] { -1, -1, 0, -1 }, new byte[] { 2, 1, 1, 1, 0 },
-        // TODO: should be {1, 2, (byte) 255, 4} ?
+                // TODO: should be {1, 2, (byte) 255, 4} ?
                 new byte[] { 1, 2, 0, 3, (byte) 0xFF });
 
         assertNext(true,
-        // TODO: should be null?
+                // TODO: should be null?
                 new byte[] { 1, 0, 1 }, new byte[] { -1, 0, -1 }, new byte[] { 1, (byte) 128, 2 }, new byte[] { 1, (byte) 128, 1 });
 
         assertNext(true,
-        // TODO: should be null?
+                // TODO: should be null?
                 new byte[] { 0, 1, 0, 1 }, new byte[] { 0, -1, 0, -1 }, new byte[] { 5, 1, 0, 2 }, new byte[] { 5, 1, 0, 1 });
 
         assertNext(true,
-        // TODO: should be null?
+                // TODO: should be null?
                 new byte[] { 5, 1, 1, 0 }, new byte[] { -1, -1, 0, 0 }, new byte[] { 5, 1, (byte) 0xFF, 1 }, new byte[] { 5, 1, (byte) 0xFF, 0 });
 
         assertNext(true,
-        // TODO: should be null?
+                // TODO: should be null?
                 new byte[] { 1, 1, 1, 1 }, new byte[] { -1, -1, 0, 0 }, new byte[] { 1, 1, 2, 2 }, new byte[] { 1, 1, 2, 1 });
 
         assertNext(true,
-        // TODO: should be null?
+                // TODO: should be null?
                 new byte[] { 1, 1, 1, 1 }, new byte[] { 0, 0, 0, 0 }, new byte[] { 1, 1, 2, 3 }, new byte[] { 1, 1, 2, 2 });
 
         Assert.assertNull(FuzzyRowFilterV2.getNextForFuzzyRule(true, new byte[] { 1, 1, 1, 3, 0 }, new byte[] { 1, 2, 0, 3 }, new byte[] { -1, -1, 0, -1 }));

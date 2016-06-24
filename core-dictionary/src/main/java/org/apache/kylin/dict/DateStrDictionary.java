@@ -119,7 +119,7 @@ public class DateStrDictionary extends Dictionary<String> {
     @Override
     final protected byte[] getValueBytesFromIdImpl(int id) {
         String date = getValueFromId(id);
-        byte bytes[];
+        byte[] bytes;
         try {
             bytes = date.getBytes("ISO-8859-1");
         } catch (UnsupportedEncodingException e) {
@@ -130,7 +130,7 @@ public class DateStrDictionary extends Dictionary<String> {
 
     @Override
     final protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-        byte bytes[] = getValueBytesFromIdImpl(id);
+        byte[] bytes = getValueBytesFromIdImpl(id);
         System.arraycopy(bytes, 0, returnValue, offset, bytes.length);
         return bytes.length;
     }

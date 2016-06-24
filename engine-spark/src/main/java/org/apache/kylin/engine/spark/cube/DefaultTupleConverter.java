@@ -58,7 +58,7 @@ public final class DefaultTupleConverter implements TupleConverter {
         }
         return valueBuf.get();
     }
-    
+
     private void setValueBuf(ByteBuffer buf) {
         valueBuf.set(buf);
     }

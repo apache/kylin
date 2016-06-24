@@ -18,7 +18,7 @@
 
 package org.apache.kylin.storage.hbase.common;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashSet;

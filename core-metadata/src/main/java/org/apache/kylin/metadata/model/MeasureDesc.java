@@ -18,9 +18,10 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -29,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class MeasureDesc {
 
-   
     @JsonProperty("name")
     private String name;
     @JsonProperty("function")
@@ -59,6 +59,11 @@ public class MeasureDesc {
 
     public void setDependentMeasureRef(String dependentMeasureRef) {
         this.dependentMeasureRef = dependentMeasureRef;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(function, dependentMeasureRef.toLowerCase());
     }
 
     @Override

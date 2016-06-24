@@ -18,7 +18,9 @@
 
 package org.apache.kylin.cube;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.NavigableSet;
@@ -53,8 +55,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBasics() throws Exception {
-        
-        
+
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_without_slr_ready");
         CubeDesc desc = cube.getDescriptor();
         System.out.println(JsonUtil.writeValueAsIndentString(desc));
@@ -95,7 +96,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
-        cube.getDescriptor().setAutoMergeTimeRanges(new long[]{2000, 6000});
+        cube.getDescriptor().setAutoMergeTimeRanges(new long[] { 2000, 6000 });
         mgr.updateCube(new CubeUpdate(cube));
 
         assertTrue(cube.needAutoMerge());
@@ -127,7 +128,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         final ResourceStore store = ResourceStore.getStore(getTestConfig());
         final NavigableSet<String> cubePath = store.listResources(ResourceStore.CUBE_RESOURCE_ROOT);
         assertTrue(cubePath.size() > 1);
-        
+
         final List<CubeInstance> cubes = store.getAllResources(ResourceStore.CUBE_RESOURCE_ROOT, CubeInstance.class, CubeManager.CUBE_SERIALIZER);
         assertEquals(cubePath.size(), cubes.size());
     }

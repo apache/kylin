@@ -59,7 +59,7 @@ public class KylinMeta extends MetaImpl {
         result.signature = connection().mockPreparedSignature(sql);
         return result;
     }
-    
+
     // real execution happens in KylinResultSet.execute()
     @Override
     public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, long maxRowCount) throws NoSuchStatementException {

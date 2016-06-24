@@ -51,6 +51,8 @@ public class HadoopJobStatusChecker {
             case PREP:
                 status = JobStepStatusEnum.WAITING;
                 break;
+            default:
+                throw new IllegalStateException();
             }
         } catch (Exception e) {
             logger.error("error check status", e);

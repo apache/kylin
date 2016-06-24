@@ -38,12 +38,12 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 
-import kafka.message.MessageAndOffset;
-
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
+
+import kafka.message.MessageAndOffset;
 
 /**
  */

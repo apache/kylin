@@ -38,12 +38,13 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.Sets;
 
 /**
  * By convention stream parsers should have a constructor with (List<TblColRef> allColumns, String propertiesStr) as params
@@ -60,7 +61,6 @@ public abstract class StreamingParser {
         derivedTimeColumns.add("quarter_start");
         derivedTimeColumns.add("year_start");
     }
-
 
     /**
      * @param message

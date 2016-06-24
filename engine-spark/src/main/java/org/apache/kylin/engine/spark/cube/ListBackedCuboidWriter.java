@@ -17,25 +17,28 @@
 */
 package org.apache.kylin.engine.spark.cube;
 
-import com.google.common.collect.Lists;
-import org.apache.kylin.engine.spark.SparkCuboidWriter;
-import org.apache.kylin.gridtable.GTRecord;
-import scala.Tuple2;
-
 import java.io.IOException;
 import java.util.ArrayList;
+
+import org.apache.kylin.engine.spark.SparkCuboidWriter;
+import org.apache.kylin.gridtable.GTRecord;
+
+import com.google.common.collect.Lists;
+
+import scala.Tuple2;
 
 /**
  */
 public class ListBackedCuboidWriter implements SparkCuboidWriter {
-    
+
     private final ArrayList<Tuple2<byte[], byte[]>> result;
     private final TupleConverter tupleConverter;
 
     public ListBackedCuboidWriter(TupleConverter tupleConverter) {
-        this.result= Lists.newArrayList();
+        this.result = Lists.newArrayList();
         this.tupleConverter = tupleConverter;
     }
+
     @Override
     public void write(long cuboidId, GTRecord record) throws IOException {
         result.add(tupleConverter.convert(cuboidId, record));
@@ -50,7 +53,7 @@ public class ListBackedCuboidWriter implements SparkCuboidWriter {
     public void close() {
 
     }
-    
+
     @Override
     public Iterable<Tuple2<byte[], byte[]>> getResult() {
         return result;

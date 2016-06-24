@@ -112,7 +112,7 @@ abstract public class LookupTable<T> {
         int returnIdx = tableDesc.findColumnByName(returnCol).getZeroBasedIndex();
         Comparator<T> colComp = getComparator(colIdx);
         Comparator<T> returnComp = getComparator(returnIdx);
-        
+
         T returnBegin = null;
         T returnEnd = null;
         for (T[] row : data.values()) {
@@ -149,7 +149,7 @@ abstract public class LookupTable<T> {
     }
 
     abstract protected Comparator<T> getComparator(int colIdx);
-    
+
     public String toString() {
         return "LookupTable [path=" + table + "]";
     }

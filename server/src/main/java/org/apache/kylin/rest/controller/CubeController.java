@@ -71,6 +71,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+
 import com.google.common.collect.Sets;
 
 /**
@@ -105,12 +106,11 @@ public class CubeController extends BasicController {
         Set<String> encodings;
         try {
             encodings = DimensionEncodingFactory.getValidEncodings();
-        }catch (Exception e){
+        } catch (Exception e) {
             return Sets.newTreeSet();
         }
         return encodings;
     }
-
 
     @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
     @ResponseBody
@@ -244,7 +244,7 @@ public class CubeController extends BasicController {
     public JobInstance build(@PathVariable String cubeName, @RequestBody JobBuildRequest req) {
         return rebuild(cubeName, req);
     }
-    
+
     /** Build/Rebuild a cube segment */
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
     @ResponseBody
@@ -258,14 +258,14 @@ public class CubeController extends BasicController {
     public JobInstance build(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
         return rebuild(cubeName, req);
     }
-    
+
     /** Build/Rebuild a cube segment by source offset */
     @RequestMapping(value = "/{cubeName}/rebuild2", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
         return buildInternal(cubeName, 0, 0, req.getStartSourceOffset(), req.getEndSourceOffset(), req.getBuildType(), req.isForce());
     }
-    
+
     private JobInstance buildInternal(String cubeName, long startTime, long endTime, //
             long startOffset, long endOffset, String buildType, boolean force) {
         try {

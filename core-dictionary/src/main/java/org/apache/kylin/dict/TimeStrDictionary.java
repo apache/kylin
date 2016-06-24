@@ -96,7 +96,7 @@ public class TimeStrDictionary extends Dictionary<String> {
     @Override
     final protected byte[] getValueBytesFromIdImpl(int id) {
         String date = getValueFromId(id);
-        byte bytes[];
+        byte[] bytes;
         try {
             bytes = date.getBytes("ISO-8859-1");
         } catch (UnsupportedEncodingException e) {
@@ -107,7 +107,7 @@ public class TimeStrDictionary extends Dictionary<String> {
 
     @Override
     final protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-        byte bytes[] = getValueBytesFromIdImpl(id);
+        byte[] bytes = getValueBytesFromIdImpl(id);
         System.arraycopy(bytes, 0, returnValue, offset, bytes.length);
         return bytes.length;
     }
@@ -120,6 +120,11 @@ public class TimeStrDictionary extends Dictionary<String> {
     @Override
     public String toString() {
         return "TimeStrDictionary supporting from 1970-01-01 00:00:00 to 2038/01/19 03:14:07 (does not support millisecond)";
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
     }
 
     @Override

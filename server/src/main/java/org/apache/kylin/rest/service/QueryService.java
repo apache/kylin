@@ -181,13 +181,13 @@ public class QueryService extends BasicService {
         if (null == creator) {
             return null;
         }
-        
+
         List<Query> queries = new ArrayList<Query>();
         HTableInterface htable = null;
         try {
             HConnection conn = HBaseConnection.get(hbaseUrl);
             HBaseConnection.createHTableIfNeeded(conn, userTableName, USER_QUERY_FAMILY);
-            
+
             htable = conn.getTable(userTableName);
             Get get = new Get(Bytes.toBytes(creator));
             get.addFamily(Bytes.toBytes(USER_QUERY_FAMILY));

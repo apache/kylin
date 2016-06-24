@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class QueryUtil {
 
     protected static final Logger logger = LoggerFactory.getLogger(QueryUtil.class);
-    
+
     private static final String S0 = "\\s*";
     private static final String S1 = "\\s";
     private static final String SM = "\\s+";
@@ -49,11 +49,11 @@ public class QueryUtil {
     // Pattern.CASE_INSENSITIVE);
     private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}", Pattern.CASE_INSENSITIVE);
 
-    private static String[] tableauTestQueries = new String[] { "SELECT 1",//
-            "CREATE LOCAL TEMPORARY TABLE \"XTableau_B_Connect\" ( \"COL\" INTEGER ) ON COMMIT PRESERVE ROWS",//
-            "DROP TABLE \"XTableau_B_Connect\"",//
-            "SELECT \"COL\" FROM (SELECT 1 AS \"COL\") AS \"SUBQUERY\"",//
-            "SELECT TOP 1 \"COL\" FROM (SELECT 1 AS \"COL\") AS \"CHECKTOP\"", "SELECT \"COL\" FROM (SELECT 1 AS \"COL\") AS \"CHECKTOP\" LIMIT 1",//
+    private static String[] tableauTestQueries = new String[] { "SELECT 1", //
+            "CREATE LOCAL TEMPORARY TABLE \"XTableau_B_Connect\" ( \"COL\" INTEGER ) ON COMMIT PRESERVE ROWS", //
+            "DROP TABLE \"XTableau_B_Connect\"", //
+            "SELECT \"COL\" FROM (SELECT 1 AS \"COL\") AS \"SUBQUERY\"", //
+            "SELECT TOP 1 \"COL\" FROM (SELECT 1 AS \"COL\") AS \"CHECKTOP\"", "SELECT \"COL\" FROM (SELECT 1 AS \"COL\") AS \"CHECKTOP\" LIMIT 1", //
             "SELECT \"SUBCOL\" AS \"COL\"  FROM (   SELECT 1 AS \"SUBCOL\" ) \"SUBQUERY\" GROUP BY 1", "SELECT \"SUBCOL\" AS \"COL\" FROM (   SELECT 1 AS \"SUBCOL\" ) \"SUBQUERY\" GROUP BY 2", "INSERT INTO \"XTableau_C_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1", "DROP TABLE \"XTableau_C_Connect\"", "INSERT INTO \"XTableau_B_Connect\" SELECT * FROM (SELECT 1 AS COL) AS CHECKTEMP LIMIT 1" };
 
     private static SQLResponse temp = new SQLResponse(new LinkedList<SelectedColumnMeta>() {
@@ -102,7 +102,7 @@ public class QueryUtil {
     public static String massageSql(SQLRequest sqlRequest) {
         String sql = sqlRequest.getSql();
         sql = sql.trim();
-        
+
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
 
@@ -115,7 +115,7 @@ public class QueryUtil {
         if (offset > 0 && !sql.toLowerCase().contains("offset")) {
             sql += ("\nOFFSET " + offset);
         }
-        
+
         return healSickSql(sql);
     }
 

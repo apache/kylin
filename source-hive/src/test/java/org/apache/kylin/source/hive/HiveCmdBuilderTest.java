@@ -18,7 +18,8 @@
 
 package org.apache.kylin.source.hive;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,8 +57,7 @@ public class HiveCmdBuilderTest {
 
     @Test
     public void testBeeline() throws IOException {
-        String lineSeparator = java.security.AccessController.doPrivileged(
-                new sun.security.action.GetPropertyAction("line.separator"));
+        String lineSeparator = java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
         System.setProperty("kylin.hive.client", "beeline");
         System.setProperty("kylin.hive.beeline.params", "-u jdbc_url");
 
@@ -71,9 +71,7 @@ public class HiveCmdBuilderTest {
 
         String hqlFile = cmd.substring(cmd.lastIndexOf("-f ") + 3).trim();
         String hqlStatement = FileUtils.readFileToString(new File(hqlFile));
-        assertEquals("USE default;" +
-                lineSeparator + "DROP TABLE test;" +
-                lineSeparator + "SHOW\n TABLES;" + lineSeparator, hqlStatement);
+        assertEquals("USE default;" + lineSeparator + "DROP TABLE test;" + lineSeparator + "SHOW\n TABLES;" + lineSeparator, hqlStatement);
 
         FileUtils.forceDelete(new File(hqlFile));
     }

@@ -18,13 +18,13 @@
 
 package org.apache.kylin.rest.security;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+
 import org.apache.kylin.rest.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -33,12 +33,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.saml.SAMLAuthenticationProvider;
 import org.springframework.util.Assert;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 
 /**
  * A wrapper class for the authentication provider; Will do something more for Kylin.
@@ -57,7 +56,7 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
     private AuthenticationProvider authenticationProvider;
 
     MessageDigest md = null;
-    
+
     public KylinAuthenticationProvider(AuthenticationProvider authenticationProvider) {
         super();
         Assert.notNull(authenticationProvider, "The embedded authenticationProvider should not be null.");
@@ -68,6 +67,7 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
             throw new RuntimeException("Failed to init Message Digest ", e);
         }
     }
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         Authentication authed = null;
@@ -90,15 +90,15 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
             }
 
             logger.debug("Authenticated user " + authed.toString());
-            
+
             UserDetails user;
-            
+
             if (authed.getDetails() == null) {
                 //authed.setAuthenticated(false);
                 throw new UsernameNotFoundException("User not found in LDAP, check whether he/she has been added to the groups.");
-            } 
-            
-            if (authed.getDetails() instanceof  UserDetails) {
+            }
+
+            if (authed.getDetails() instanceof UserDetails) {
                 user = (UserDetails) authed.getDetails();
             } else {
                 user = new User(authentication.getName(), "skippped-ldap", authed.getAuthorities());

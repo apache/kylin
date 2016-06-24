@@ -71,7 +71,6 @@ public class QueryRouter {
 
         logger.info("The realizations remaining: " + RoutingRule.getPrintableText(candidates) + " And the final chosen one is the first one");
 
-
         return chosen.realization;
     }
 

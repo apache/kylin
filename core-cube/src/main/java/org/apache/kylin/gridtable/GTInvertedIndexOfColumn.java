@@ -24,6 +24,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.kylin.common.util.ByteArray;
 
 import com.google.common.collect.Maps;
+
 import it.uniroma3.mat.extendedset.intset.ConciseSet;
 
 public class GTInvertedIndexOfColumn {

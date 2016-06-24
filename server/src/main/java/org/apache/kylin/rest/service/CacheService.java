@@ -28,8 +28,6 @@ import java.util.concurrent.ConcurrentMap;
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
-import net.sf.ehcache.CacheManager;
-
 import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +56,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
+
+import net.sf.ehcache.CacheManager;
 
 /**
  */

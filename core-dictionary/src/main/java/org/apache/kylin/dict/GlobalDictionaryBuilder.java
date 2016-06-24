@@ -18,16 +18,16 @@
 
 package org.apache.kylin.dict;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.NavigableSet;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.NavigableSet;
 
 /**
  * GlobalDictinary based on whole cube, to ensure one value has same dict id in different segments.
@@ -62,7 +62,7 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             builder = AppendTrieDictionary.Builder.create(dictDir);
         } else if (appendDicts.size() == 1) {
             logger.info("GlobalDict {} exist, append value", appendDicts.get(0));
-            AppendTrieDictionary dict = (AppendTrieDictionary)DictionaryManager.getInstance(KylinConfig.getInstanceFromEnv()).getDictionary(appendDicts.get(0));
+            AppendTrieDictionary dict = (AppendTrieDictionary) DictionaryManager.getInstance(KylinConfig.getInstanceFromEnv()).getDictionary(appendDicts.get(0));
             builder = AppendTrieDictionary.Builder.create(dict);
         } else {
             throw new IllegalStateException(String.format("GlobalDict %s should have 0 or 1 append dict but %d", dictInfo.getResourceDir(), appendDicts.size()));
@@ -82,4 +82,3 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
         return builder.build(baseId);
     }
 }
-

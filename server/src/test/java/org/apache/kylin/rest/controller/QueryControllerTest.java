@@ -18,8 +18,6 @@
 
 package org.apache.kylin.rest.controller;
 
-import net.sf.ehcache.CacheManager;
-
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.SQLRequest;
@@ -31,6 +29,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import net.sf.ehcache.CacheManager;
 
 /**
  * @author xduo

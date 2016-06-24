@@ -55,7 +55,7 @@ public class Log4jConfigurer {
         }
         return false;
     }
-    
+
     public static void closeQuietly(Closeable closeable) {
         try {
             if (closeable != null) {

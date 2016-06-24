@@ -21,8 +21,6 @@ package org.apache.kylin.metadata;
 /**
  * Constances to describe metadata and it's change.
  * 
- * @author jianliu
- * 
  */
 public interface MetadataConstants {
 

@@ -22,12 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
 
-import kafka.api.OffsetRequest;
-import kafka.cluster.Broker;
-import kafka.javaapi.FetchResponse;
-import kafka.javaapi.PartitionMetadata;
-import kafka.message.MessageAndOffset;
-
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.source.kafka.StreamingParser;
@@ -37,6 +31,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+
+import kafka.api.OffsetRequest;
+import kafka.cluster.Broker;
+import kafka.javaapi.FetchResponse;
+import kafka.javaapi.PartitionMetadata;
+import kafka.message.MessageAndOffset;
 
 /**
  */
@@ -52,8 +52,8 @@ public final class KafkaUtils {
     public static Broker getLeadBroker(KafkaClusterConfig kafkaClusterConfig, int partitionId) {
         final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(kafkaClusterConfig.getTopic(), partitionId, kafkaClusterConfig.getBrokers(), kafkaClusterConfig);
         if (partitionMetadata != null) {
-            if (partitionMetadata.errorCode() != 0){
-                logger.warn("PartitionMetadata errorCode: "+partitionMetadata.errorCode());
+            if (partitionMetadata.errorCode() != 0) {
+                logger.warn("PartitionMetadata errorCode: " + partitionMetadata.errorCode());
             }
             return partitionMetadata.leader();
         } else {

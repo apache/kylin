@@ -35,7 +35,7 @@ public interface IGTCodeSystem {
 
     /** Return the max possible length of a column */
     int maxCodeLength(int col);
-    
+
     /** Return a DimensionEncoding if the underlying column is backed by a cube dimension, return null otherwise */
     DimensionEncoding getDimEnc(int col);
 

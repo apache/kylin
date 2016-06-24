@@ -18,6 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
@@ -34,10 +38,6 @@ import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  */
@@ -82,7 +82,7 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
         }
 
     }
-    
+
     protected void handleErrorRecord(String[] record, Exception ex) throws IOException {
 
         System.err.println("Insane record: " + Arrays.toString(record));

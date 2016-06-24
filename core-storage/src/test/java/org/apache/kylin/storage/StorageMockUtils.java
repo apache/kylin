@@ -89,7 +89,6 @@ public class StorageMockUtils {
         f1.setReturnType("decimal(19,4)");
         functions.add(f1);
 
-
         return functions;
     }
 
@@ -167,7 +166,6 @@ public class StorageMockUtils {
         compareFilter.addChild(constantFilter1);
         return compareFilter;
     }
-
 
     public static TupleFilter buildAndFilter(List<TblColRef> columns) {
         CompareTupleFilter compareFilter1 = buildFilter1(columns.get(0));

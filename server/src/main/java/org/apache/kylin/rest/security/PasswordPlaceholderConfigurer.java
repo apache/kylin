@@ -18,16 +18,17 @@
 
 package org.apache.kylin.rest.security;
 
+import java.util.Properties;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.kylin.common.KylinConfig;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Properties;
 
 /**
  * @author xduo
@@ -74,7 +75,7 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
             return props.getProperty(placeholder);
         }
     }
-    
+
     private static void printUsage() {
         System.out.println("Usage: java org.apache.kylin.rest.security.PasswordPlaceholderConfigurer <EncryptMethod> <your_password>");
         System.out.println("EncryptMethod: AES or BCrypt");

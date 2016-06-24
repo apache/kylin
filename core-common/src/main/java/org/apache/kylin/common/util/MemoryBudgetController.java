@@ -99,7 +99,7 @@ public class MemoryBudgetController {
     public void reserveInsist(MemoryConsumer consumer, int requestMB) {
         if (requestMB > totalBudgetMB)
             throw new NotEnoughBudgetException();
-        
+
         long waitStart = 0;
         while (true) {
             try {
@@ -273,7 +273,6 @@ public class MemoryBudgetController {
     public static int getSystemAvailMB() {
         return (int) (getSystemAvailBytes() / ONE_MB);
     }
-
 
     // protective estimate of memory usage, prefer overestimate rather than underestimate
     public static class MemoryWaterLevel {

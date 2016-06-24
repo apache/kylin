@@ -59,10 +59,10 @@ import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.DynamicTupleFilter;
 import org.apache.kylin.metadata.filter.ExtractTupleFilter;
-import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
@@ -168,7 +168,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             }
 
             ConstantTupleFilter constFilter = (ConstantTupleFilter) filter;
-            
+
             if (type.getFamily() == SqlTypeFamily.DATE || type.getFamily() == SqlTypeFamily.DATETIME || type.getFamily() == SqlTypeFamily.TIMESTAMP) {
                 List<String> newValues = Lists.newArrayList();
                 for (Object v : constFilter.getValues()) {

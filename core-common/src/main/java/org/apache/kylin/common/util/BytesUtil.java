@@ -132,7 +132,6 @@ public class BytesUtil {
     // from WritableUtils
     // ============================================================================
 
-
     public static void writeVInt(int i, ByteBuffer out) {
 
         writeVLong(i, out);
@@ -261,7 +260,6 @@ public class BytesUtil {
         int len = str.length();
         BytesUtil.writeVInt(len, out);
 
-
         for (int i = 0; i < len; i++) {
             out.put((byte) str.charAt(i));
         }
@@ -353,7 +351,7 @@ public class BytesUtil {
         in.get(array);
         return array;
     }
-    
+
     public static int peekByteArrayLength(ByteBuffer in) {
         int start = in.position();
         int arrayLen = readVInt(in);

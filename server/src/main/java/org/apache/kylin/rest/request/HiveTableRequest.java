@@ -5,7 +5,7 @@ package org.apache.kylin.rest.request;
  */
 public class HiveTableRequest {
 
-    public HiveTableRequest(){
+    public HiveTableRequest() {
 
     }
 
@@ -14,9 +14,9 @@ public class HiveTableRequest {
     public boolean isCalculate() {
         return calculate;
     }
+
     public void setCalculate(boolean calculate) {
         this.calculate = calculate;
     }
-
 
 }

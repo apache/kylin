@@ -33,10 +33,10 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.storage.hbase.HBaseConnection;
-
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 /**
  * Created by sunyerui on 15/9/17.
@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(HDFSPathGarbageCollectionStep.class);
-
 
     public static final String TO_DELETE_PATHS = "toDeletePaths";
     private StringBuffer output;
@@ -61,7 +60,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
             config = new JobEngineConfig(context.getConfig());
             List<String> toDeletePaths = getDeletePaths();
             dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HadoopUtil.getCurrentConfiguration()));
-            
+
             if (StringUtils.isNotEmpty(context.getConfig().getHBaseClusterFs())) {
                 dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration()));
             }

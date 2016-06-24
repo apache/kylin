@@ -131,7 +131,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
                 }
                 TotalOrderPartitioner.setPartitionFile(job.getConfiguration(), path);
                 // The reduce tasks should be one more than partition keys
-                job.setNumReduceTasks(partitionCount+1);
+                job.setNumReduceTasks(partitionCount + 1);
             }
         } else {
             logger.info("File '" + path.toString() + " doesn't exist, will not reconfigure hfile Partitions");

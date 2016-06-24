@@ -61,7 +61,7 @@ abstract public class AbstractInMemCubeBuilder {
     public void setReserveMemoryMB(int mb) {
         this.reserveMemoryMB = mb;
     }
-    
+
     public int getReserveMemoryMB() {
         return this.reserveMemoryMB;
     }

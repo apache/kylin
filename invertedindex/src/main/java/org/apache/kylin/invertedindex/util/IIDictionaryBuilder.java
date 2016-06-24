@@ -57,7 +57,7 @@ public final class IIDictionaryBuilder {
     private IIDictionaryBuilder() {
     }
 
-    public static Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) throws IOException{
+    public static Dictionary<?>[] buildDictionary(List<List<String>> table, IIDesc desc) throws IOException {
         HashMultimap<TblColRef, String> valueMap = HashMultimap.create();
         final List<TblColRef> allColumns = desc.listAllColumns();
         for (List<String> row : table) {

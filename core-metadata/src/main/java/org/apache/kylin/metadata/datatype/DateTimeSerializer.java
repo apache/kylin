@@ -70,5 +70,5 @@ public class DateTimeSerializer extends DataTypeSerializer<LongMutable> {
     public LongMutable valueOf(String str) {
         return new LongMutable(DateFormat.stringToMillis(str));
     }
-    
+
 }

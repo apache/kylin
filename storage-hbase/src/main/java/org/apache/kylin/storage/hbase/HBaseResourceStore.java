@@ -278,7 +278,7 @@ public class HBaseResourceStore extends ResourceStore {
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
             boolean hdfsResourceExist = false;
-            Result result = internalGetFromHTable(table,resPath,true,false);
+            Result result = internalGetFromHTable(table, resPath, true, false);
             if (result != null) {
                 byte[] value = result.getValue(B_FAMILY, B_COLUMN);
                 if (value != null && value.length == 0) {
@@ -312,7 +312,7 @@ public class HBaseResourceStore extends ResourceStore {
     private Result getFromHTable(String path, boolean fetchContent, boolean fetchTimestamp) throws IOException {
         HTableInterface table = getConnection().getTable(getAllInOneTableName());
         try {
-            return internalGetFromHTable(table,path,fetchContent,fetchTimestamp);
+            return internalGetFromHTable(table, path, fetchContent, fetchTimestamp);
         } finally {
             IOUtils.closeQuietly(table);
         }

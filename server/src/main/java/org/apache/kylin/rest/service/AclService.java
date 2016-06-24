@@ -217,6 +217,7 @@ public class AclService implements MutableAclService {
         try {
             acl = readAclById(objectIdentity);
         } catch (NotFoundException e) {
+            //do nothing?
         }
         if (null != acl) {
             throw new AlreadyExistsException("ACL of " + objectIdentity + " exists!");

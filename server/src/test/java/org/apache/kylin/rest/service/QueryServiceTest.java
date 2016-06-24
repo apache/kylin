@@ -39,7 +39,7 @@ public class QueryServiceTest extends ServiceTestBase {
 
     @Autowired
     private CacheService cacheService;
-    
+
     @Test
     public void testBasics() throws JobException, IOException, SQLException {
         Assert.assertNotNull(queryService.getConfig());

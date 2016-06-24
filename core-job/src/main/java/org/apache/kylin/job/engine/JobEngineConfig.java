@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
-import org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +78,7 @@ public class JobEngineConfig {
      */
     public String getHadoopJobConfFilePath(String jobType) throws IOException {
         String suffix = null;
-        if(!StringUtils.isEmpty(jobType)) {
+        if (!StringUtils.isEmpty(jobType)) {
             suffix = jobType;
         }
 

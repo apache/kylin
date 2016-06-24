@@ -77,7 +77,6 @@ public class SaveStatisticsStep extends AbstractExecutable {
             throw new IllegalStateException();
         }
 
-
         final CubeSegment newSegment = cube.getSegmentById(segmentId);
 
         if (newSegment == null) {

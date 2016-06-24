@@ -39,16 +39,16 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
  * @param <T> the Java type of aggregation data object, e.g. HyperLogLogPlusCounter
  */
 abstract public class MeasureType<T> {
-    
+
     /* ============================================================================
      * Define
      * ---------------------------------------------------------------------------- */
-    
+
     /** Validates a user defined FunctionDesc has expected parameter etc. Throw IllegalArgumentException if anything wrong. */
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
         return;
     }
-    
+
     /** Although most aggregated object takes only 8 bytes like long or double, 
      * some advanced aggregation like HyperLogLog or TopN can consume more than 10 KB for 
      * each object, which requires special care on memory allocation. */
@@ -60,17 +60,17 @@ abstract public class MeasureType<T> {
     public boolean onlyAggrInBaseCuboid() {
         return false;
     }
-    
+
     /* ============================================================================
      * Build
      * ---------------------------------------------------------------------------- */
 
     /** Return a MeasureIngester which knows how to init aggregation object from raw records. */
     abstract public MeasureIngester<T> newIngester();
-    
+
     /** Return a MeasureAggregator which does aggregation. */
     abstract public MeasureAggregator<T> newAggregator();
- 
+
     /** Some special measures need dictionary to encode column values for optimal storage. TopN is an example. */
     public List<TblColRef> getColumnsNeedDictionary(FunctionDesc functionDesc) {
         return Collections.emptyList();
@@ -79,7 +79,7 @@ abstract public class MeasureType<T> {
     /* ============================================================================
      * Cube Selection
      * ---------------------------------------------------------------------------- */
-    
+
     /**
      * Some special measures hold columns which are usually treated as dimensions (or vice-versa). 
      * This is where they override to influence cube capability check.
@@ -97,13 +97,13 @@ abstract public class MeasureType<T> {
     public CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc measureDesc) {
         return null;
     }
-    
+
     /* ============================================================================
      * Query Rewrite
      * ---------------------------------------------------------------------------- */
-    
+
     // TODO support user defined Calcite aggr function
-    
+
     /** Whether or not Calcite rel-tree needs rewrite to do last around of aggregation */
     abstract public boolean needRewrite();
 
@@ -114,11 +114,11 @@ abstract public class MeasureType<T> {
 
     /** Returns a Calcite aggregation function implementation class */
     abstract public Class<?> getRewriteCalciteAggrFunctionClass();
-    
+
     /* ============================================================================
      * Storage
      * ---------------------------------------------------------------------------- */
-    
+
     /**
      * Some special measures hold columns which are usually treated as dimensions (or vice-versa). 
      * They need to adjust dimensions and measures in <code>sqlDigest</code> before scanning,
@@ -126,7 +126,7 @@ abstract public class MeasureType<T> {
      */
     public void adjustSqlDigest(MeasureDesc measureDesc, SQLDigest sqlDigest) {
     }
-    
+
     /** Return true if one storage record maps to multiple tuples, or false otherwise. */
     public boolean needAdvancedTupleFilling() {
         return false;
@@ -136,20 +136,20 @@ abstract public class MeasureType<T> {
     public void fillTupleSimply(Tuple tuple, int indexInTuple, Object measureValue) {
         tuple.setMeasureValue(indexInTuple, measureValue);
     }
-    
+
     /** The advanced filling mode, multiple tuples per storage record. */
     public IAdvMeasureFiller getAdvancedTupleFiller(FunctionDesc function, TupleInfo returnTupleInfo, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         throw new UnsupportedOperationException();
     }
-    
+
     public static interface IAdvMeasureFiller {
-        
+
         /** Reload a value from storage and get ready to fill multiple tuples with it. */
         void reload(Object measureValue);
-        
+
         /** Returns how many rows contained in last loaded value. */
         int getNumOfRows();
-        
+
         /** Fill in specified row into tuple. */
         void fillTuple(Tuple tuple, int row);
     }

@@ -100,7 +100,7 @@ public class HiveCmdBuilder {
     }
 
     public void addStatements(String[] stats) {
-        for(String s : stats) {
+        for (String s : stats) {
             statements.add(s);
         }
     }

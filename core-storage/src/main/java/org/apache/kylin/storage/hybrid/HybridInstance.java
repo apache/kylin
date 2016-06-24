@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.collect.Lists;
 
 /**
@@ -169,7 +170,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     public CapabilityResult isCapable(SQLDigest digest) {
         CapabilityResult result = new CapabilityResult();
         result.cost = Integer.MAX_VALUE;
-        
+
         for (IRealization realization : getRealizations()) {
             CapabilityResult child = realization.isCapable(digest);
             if (child.capable) {
@@ -178,10 +179,10 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
                 result.influences.addAll(child.influences);
             }
         }
-        
+
         if (result.cost > 0)
             result.cost--; // let hybrid win its children
-        
+
         return result;
     }
 

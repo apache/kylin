@@ -32,7 +32,7 @@ public class BigDecimalIngester extends MeasureIngester<BigDecimal> {
     public BigDecimal valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (values.length > 1)
             throw new IllegalArgumentException();
-        
+
         if (values[0] == null)
             return new BigDecimal(0);
         else

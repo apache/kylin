@@ -58,9 +58,9 @@ public class CuboidJob extends AbstractHadoopJob {
 
     @SuppressWarnings("rawtypes")
     private Class<? extends Mapper> mapperClass;
-    
+
     private boolean skipped = false;
-    
+
     @Override
     public boolean isSkipped() {
         return skipped;
@@ -69,7 +69,7 @@ public class CuboidJob extends AbstractHadoopJob {
     private boolean checkSkip(String cubingJobId) {
         if (cubingJobId == null)
             return false;
-        
+
         ExecutableManager execMgr = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
         CubingJob cubingJob = (CubingJob) execMgr.getJob(cubingJobId);
         skipped = cubingJob.isLayerCubing() == false;

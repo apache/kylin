@@ -48,7 +48,7 @@ public class GTScanRange {
             newFuzzyKeys.add(new GTRecord(gtInfo, input.cols));
         }
         return new GTScanRange(new GTRecord(gtInfo, pkStart.cols), //
-                new GTRecord(gtInfo,  pkEnd.cols), //
+                new GTRecord(gtInfo, pkEnd.cols), //
                 newFuzzyKeys);
     }
 

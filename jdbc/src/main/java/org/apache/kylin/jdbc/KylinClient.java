@@ -130,6 +130,9 @@ public class KylinClient implements IRemoteClient {
         case Types.TIMESTAMP:
             result = Timestamp.class;
             break;
+        default:
+            //do nothing
+            break;
         }
 
         return result;
@@ -173,6 +176,10 @@ public class KylinClient implements IRemoteClient {
             return Time.valueOf(value);
         case Types.TIMESTAMP:
             return Timestamp.valueOf(value);
+        default:
+            //do nothing
+            break;
+
         }
 
         return value;

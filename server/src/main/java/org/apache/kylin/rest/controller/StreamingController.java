@@ -18,9 +18,10 @@
 
 package org.apache.kylin.rest.controller;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
@@ -42,13 +43,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * StreamingController is defined as Restful API entrance for UI.
@@ -66,7 +70,6 @@ public class StreamingController extends BasicController {
     private KafkaConfigService kafkaConfigService;
     @Autowired
     private CubeService cubeMgmtService;
-
 
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET })
     @ResponseBody
@@ -90,7 +93,6 @@ public class StreamingController extends BasicController {
         }
     }
 
-
     /**
      *
      * create Streaming Schema
@@ -104,13 +106,13 @@ public class StreamingController extends BasicController {
         TableDesc tableDesc = deserializeTableDesc(streamingRequest);
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
-        boolean  saveStreamingSuccess = false, saveKafkaSuccess = false;
+        boolean saveStreamingSuccess = false, saveKafkaSuccess = false;
 
         try {
             tableDesc.setUuid(UUID.randomUUID().toString());
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
             metaMgr.saveSourceTable(tableDesc);
-            cubeMgmtService.syncTableToProject(new String[]{tableDesc.getIdentity()}, project);
+            cubeMgmtService.syncTableToProject(new String[] { tableDesc.getIdentity() }, project);
         } catch (IOException e) {
             throw new BadRequestException("Failed to add streaming table.");
         }
@@ -143,18 +145,18 @@ public class StreamingController extends BasicController {
                 logger.error("Failed to save KafkaConfig:" + e.getLocalizedMessage(), e);
                 throw new InternalErrorException("Failed to save KafkaConfig: " + e.getLocalizedMessage());
             }
-        }finally {
-            if(saveKafkaSuccess == false || saveStreamingSuccess == false){
+        } finally {
+            if (saveKafkaSuccess == false || saveStreamingSuccess == false) {
 
-                if(saveStreamingSuccess == true){
+                if (saveStreamingSuccess == true) {
                     StreamingConfig sConfig = streamingService.getStreamingManager().getStreamingConfig(streamingConfig.getName());
-                        try {
-                            streamingService.dropStreamingConfig(sConfig);
-                        } catch (IOException e) {
-                            throw new InternalErrorException("Action failed and failed to rollback the created streaming config: " + e.getLocalizedMessage());
-                        }
+                    try {
+                        streamingService.dropStreamingConfig(sConfig);
+                    } catch (IOException e) {
+                        throw new InternalErrorException("Action failed and failed to rollback the created streaming config: " + e.getLocalizedMessage());
+                    }
                 }
-                if(saveKafkaSuccess == true){
+                if (saveKafkaSuccess == true) {
                     try {
                         KafkaConfig kConfig = kafkaConfigService.getKafkaConfig(kafkaConfig.getName());
                         kafkaConfigService.dropKafkaConfig(kConfig);
@@ -171,7 +173,7 @@ public class StreamingController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
-        public StreamingRequest updateStreamingConfig(@RequestBody StreamingRequest streamingRequest) throws JsonProcessingException {
+    public StreamingRequest updateStreamingConfig(@RequestBody StreamingRequest streamingRequest) throws JsonProcessingException {
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
 
@@ -188,7 +190,7 @@ public class StreamingController extends BasicController {
         }
         try {
             kafkaConfig = kafkaConfigService.updateKafkaConfig(kafkaConfig);
-        }catch (AccessDeniedException accessDeniedException) {
+        } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this KafkaConfig.");
         } catch (Exception e) {
             logger.error("Failed to deal with the request:" + e.getLocalizedMessage(), e);
@@ -233,7 +235,7 @@ public class StreamingController extends BasicController {
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
 
-        String [] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
+        String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
         desc.setName(dbTable[1]);
         desc.setDatabase(dbTable[0]);
         desc.getIdentity();
@@ -257,7 +259,6 @@ public class StreamingController extends BasicController {
         }
         return desc;
     }
-
 
     private KafkaConfig deserializeKafkaSchemalDesc(StreamingRequest streamingRequest) {
         KafkaConfig desc = null;
@@ -283,7 +284,7 @@ public class StreamingController extends BasicController {
     }
 
     public void setStreamingService(StreamingService streamingService) {
-        this.streamingService= streamingService;
+        this.streamingService = streamingService;
     }
 
     public void setKafkaConfigService(KafkaConfigService kafkaConfigService) {

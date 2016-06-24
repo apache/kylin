@@ -17,8 +17,10 @@
 
 package org.apache.kylin.invertedindex.index;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.StreamingBatch;
@@ -28,10 +30,8 @@ import org.apache.kylin.invertedindex.util.IIDictionaryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-
-import java.io.IOException;
-import java.util.List;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -47,7 +47,7 @@ public final class SliceBuilder {
         this.sliceMaker = new BatchSliceMaker(desc, shard);
     }
 
-    public Slice buildSlice(StreamingBatch microStreamBatch) throws IOException{
+    public Slice buildSlice(StreamingBatch microStreamBatch) throws IOException {
         final List<List<String>> messages = Lists.transform(microStreamBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
             @Nullable
             @Override

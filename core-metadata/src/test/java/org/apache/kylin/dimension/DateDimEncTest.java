@@ -46,7 +46,7 @@ public class DateDimEncTest {
         enc.encode(value, buf, 0);
         return BytesUtil.readLong(buf, 0, buf.length);
     }
-    
+
     private String decode(long code) {
         BytesUtil.writeLong(code, buf, 0, buf.length);
         return enc.decode(buf, 0, buf.length);

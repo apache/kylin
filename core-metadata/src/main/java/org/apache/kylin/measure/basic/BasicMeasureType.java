@@ -28,7 +28,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 
 @SuppressWarnings("rawtypes")
 public class BasicMeasureType extends MeasureType {
-    
+
     public static class Factory extends MeasureTypeFactory {
 
         @Override
@@ -64,7 +64,7 @@ public class BasicMeasureType extends MeasureType {
     @Override
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
         DataType rtype = dataType;
-        
+
         if (funcName.equals(FunctionDesc.FUNC_SUM)) {
             if (rtype.isNumberFamily() == false) {
                 throw new IllegalArgumentException("Return type for function " + funcName + " must be one of " + DataType.NUMBER_FAMILY);
@@ -83,7 +83,7 @@ public class BasicMeasureType extends MeasureType {
                 throw new IllegalArgumentException("Unrecognized function: [" + funcName + "]");
         }
     }
-    
+
     @Override
     public MeasureIngester<?> newIngester() {
         if (dataType.isIntegerFamily())

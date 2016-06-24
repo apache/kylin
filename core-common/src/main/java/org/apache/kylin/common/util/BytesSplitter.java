@@ -18,7 +18,6 @@
 
 package org.apache.kylin.common.util;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +61,7 @@ public class BytesSplitter {
         for (int i = 0; i < byteLen; i++) {
             if (bytes[i] == delimiter) {
                 SplittedBytes split = this.splitBuffers[this.bufferSize++];
-                if(length > split.value.length) {
+                if (length > split.value.length) {
                     length = split.value.length;
                 }
                 System.arraycopy(bytes, offset, split.value, 0, length);
@@ -74,7 +73,7 @@ public class BytesSplitter {
             }
         }
         SplittedBytes split = this.splitBuffers[this.bufferSize++];
-        if(length > split.value.length) {
+        if (length > split.value.length) {
             length = split.value.length;
         }
         System.arraycopy(bytes, offset, split.value, 0, length);

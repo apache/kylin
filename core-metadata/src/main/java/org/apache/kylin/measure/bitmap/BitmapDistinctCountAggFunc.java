@@ -26,27 +26,27 @@ import org.slf4j.LoggerFactory;
  */
 public class BitmapDistinctCountAggFunc {
 
-  private static final Logger logger = LoggerFactory.getLogger(BitmapDistinctCountAggFunc.class);
+    private static final Logger logger = LoggerFactory.getLogger(BitmapDistinctCountAggFunc.class);
 
-  public static BitmapCounter init() {
-    return null;
-  }
+    public static BitmapCounter init() {
+        return null;
+    }
 
-  public static BitmapCounter add(BitmapCounter counter, Object v) {
-      BitmapCounter c = (BitmapCounter) v;
-      if (counter == null) {
-        return new BitmapCounter(c);
-      } else {
-        counter.merge(c);
-        return counter;
-      }
-  }
+    public static BitmapCounter add(BitmapCounter counter, Object v) {
+        BitmapCounter c = (BitmapCounter) v;
+        if (counter == null) {
+            return new BitmapCounter(c);
+        } else {
+            counter.merge(c);
+            return counter;
+        }
+    }
 
-  public static BitmapCounter merge(BitmapCounter counter0, Object counter1) {
-      return add(counter0, counter1);
-  }
+    public static BitmapCounter merge(BitmapCounter counter0, Object counter1) {
+        return add(counter0, counter1);
+    }
 
-  public static long result(BitmapCounter counter) {
-      return counter == null ? 0L : counter.getCount();
-  }
+    public static long result(BitmapCounter counter) {
+        return counter == null ? 0L : counter.getCount();
+    }
 }

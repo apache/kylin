@@ -36,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.base.Objects;
 
 /**
@@ -107,7 +108,7 @@ public class IISegment implements Comparable<IISegment>, IRealizationSegment {
     public KylinConfig getConfig() {
         return iiInstance.getConfig();
     }
-    
+
     @Override
     public String getUuid() {
         return uuid;

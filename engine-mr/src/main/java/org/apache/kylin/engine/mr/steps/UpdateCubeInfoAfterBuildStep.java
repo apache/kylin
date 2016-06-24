@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(UpdateCubeInfoAfterBuildStep.class);
 
-
     public UpdateCubeInfoAfterBuildStep() {
         super();
     }

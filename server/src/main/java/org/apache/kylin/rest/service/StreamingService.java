@@ -18,19 +18,17 @@
 
 package org.apache.kylin.rest.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component("streamingMgmtService")
 public class StreamingService extends BasicService {
@@ -45,7 +43,7 @@ public class StreamingService extends BasicService {
             streamingConfigs = getStreamingManager().listAllStreaming();
         } else {
             StreamingConfig config = getStreamingManager().getConfig(table);
-            if(config!=null){
+            if (config != null) {
                 streamingConfigs.add(config);
             }
         }
@@ -73,16 +71,16 @@ public class StreamingService extends BasicService {
         if (getStreamingManager().getStreamingConfig(config.getName()) != null) {
             throw new InternalErrorException("The streamingConfig named " + config.getName() + " already exists");
         }
-        StreamingConfig streamingConfig =  getStreamingManager().saveStreamingConfig(config);
+        StreamingConfig streamingConfig = getStreamingManager().saveStreamingConfig(config);
         return streamingConfig;
     }
 
-//    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public StreamingConfig updateStreamingConfig(StreamingConfig config) throws IOException {
         return getStreamingManager().updateStreamingConfig(config);
     }
 
-//    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    //    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
     public void dropStreamingConfig(StreamingConfig config) throws IOException {
         getStreamingManager().removeStreamingConfig(config);
     }

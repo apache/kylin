@@ -17,9 +17,9 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import org.apache.kylin.gridtable.GTRecord;
-
 import java.io.IOException;
+
+import org.apache.kylin.gridtable.GTRecord;
 
 /**
  */

@@ -58,6 +58,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -120,7 +121,7 @@ public class CubeDesc extends RootPersistentEntity {
     @JsonProperty("partition_date_start")
     private long partitionDateStart = 0L;
     @JsonProperty("partition_date_end")
-    private long partitionDateEnd = 3153600000000l;
+    private long partitionDateEnd = 3153600000000L;
     @JsonProperty("auto_merge_time_ranges")
     private long[] autoMergeTimeRanges;
     @JsonProperty("retention_range")
@@ -661,13 +662,12 @@ public class CubeDesc extends RootPersistentEntity {
             func.init(factTable, lookups);
             allColumns.addAll(func.getParameter().getColRefs());
 
-//            // verify holistic count distinct as a dependent measure
-//            if (isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
-//                throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
-//            }
+            //            // verify holistic count distinct as a dependent measure
+            //            if (isHolisticCountDistinct() && StringUtils.isBlank(m.getDependentMeasureRef())) {
+            //                throw new IllegalStateException(m + " is a holistic count distinct but it has no DependentMeasureRef defined!");
+            //            }
         }
     }
-
 
     private void initMeasureReferenceToColumnFamily() {
         if (measures == null || measures.size() == 0)

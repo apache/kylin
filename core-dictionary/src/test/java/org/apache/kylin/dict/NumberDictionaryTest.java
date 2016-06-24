@@ -18,7 +18,8 @@
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -51,7 +52,7 @@ public class NumberDictionaryTest {
         builder.addValue("" + Long.MAX_VALUE);
         builder.addValue("" + Long.MIN_VALUE);
         NumberDictionary<String> dict = builder.build(0);
-        
+
         int minId = dict.getIdFromValue("" + Long.MIN_VALUE);
         int maxId = dict.getIdFromValue("" + Long.MAX_VALUE);
         assertEquals(0, minId);
@@ -60,7 +61,7 @@ public class NumberDictionaryTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testEmptyInput() throws IOException{
+    public void testEmptyInput() throws IOException {
         String[] ints = new String[] { "", "0", "5", "100", "13" };
         Collection<byte[]> intBytes = Lists.newArrayListWithCapacity(ints.length);
         for (String s : ints) {
@@ -187,7 +188,7 @@ public class NumberDictionaryTest {
             buf.append(".");
             for (int i = 0; i < digits2; i++)
                 buf.append("" + rand.nextInt(9) + 1); // BigDecimal thinks 4.5
-                                                      // != 4.50, my god!
+            // != 4.50, my god!
         }
         return buf.toString();
     }

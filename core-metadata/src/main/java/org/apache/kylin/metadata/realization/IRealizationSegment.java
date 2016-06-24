@@ -27,14 +27,14 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 public interface IRealizationSegment extends IBuildable {
 
     public KylinConfig getConfig();
-    
+
     public String getUuid();
-    
+
     public String getName();
 
     public String getStorageLocationIdentifier();
-    
+
     public IRealization getRealization();
-    
+
     public IJoinedFlatTableDesc getJoinedFlatTableDesc();
 }

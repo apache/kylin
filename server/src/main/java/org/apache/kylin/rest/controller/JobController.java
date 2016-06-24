@@ -79,7 +79,7 @@ public class JobController extends BasicController implements InitializingBean {
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory.scheduler(kylinConfig.getSchedulerType());
-        
+
         jobLock = (JobLock) ClassUtil.newInstance(kylinConfig.getJobControllerLock());
 
         new Thread(new Runnable() {

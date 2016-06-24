@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.badquery;
 
+import java.util.Objects;
+
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.DateFormat;
 
@@ -110,6 +112,11 @@ public class BadQueryEntry extends RootPersistentEntity implements Comparable<Ba
         } else {
             return -1;
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sql, startTime);
     }
 
     @Override

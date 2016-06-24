@@ -143,7 +143,7 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
                     String str = value.toString();
                     if (compFilter.getColumn().getType().isDateTimeFamily())
                         str = String.valueOf(DateFormat.stringToMillis(str));
-                    
+
                     compFilter.bindVariable(variable, str);
                 }
 

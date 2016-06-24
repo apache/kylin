@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
@@ -63,9 +62,9 @@ public class MergeGCStep extends AbstractExecutable {
         } catch (InterruptedException e) {
             logger.warn("Thread interrupted");
         }
-        
+
         logger.info("Start doing merge gc work");
-        
+
         StringBuffer output = new StringBuffer();
         List<String> oldTables = getOldHTables();
         if (oldTables != null && oldTables.size() > 0) {

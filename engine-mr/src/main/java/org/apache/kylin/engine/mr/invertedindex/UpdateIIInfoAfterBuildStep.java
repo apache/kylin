@@ -18,11 +18,9 @@
 
 package org.apache.kylin.engine.mr.invertedindex;
 
+import java.io.IOException;
+
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeInstance;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.invertedindex.IIInstance;
 import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.invertedindex.IISegment;
@@ -34,13 +32,10 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
  */
 public class UpdateIIInfoAfterBuildStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(UpdateIIInfoAfterBuildStep.class);
-
 
     private static final String II_NAME = "iiName";
     private static final String JOB_ID = "jobId";
@@ -72,7 +67,7 @@ public class UpdateIIInfoAfterBuildStep extends AbstractExecutable {
         IIInstance ii = mgr.getII(getInvertedIndexName());
         IISegment segment = ii.getFirstSegment();
         segment.setStatus(SegmentStatusEnum.READY);
-        
+
         segment.setLastBuildJobID(getJobId());
         segment.setLastBuildTime(System.currentTimeMillis());
 
@@ -84,5 +79,5 @@ public class UpdateIIInfoAfterBuildStep extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
-    
+
 }

@@ -35,7 +35,7 @@ public class IntegerDimEnc extends DimensionEncoding {
 
     private static Logger logger = LoggerFactory.getLogger(IntegerDimEnc.class);
 
-    private static final long CAP[] = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, Long.MAX_VALUE };
+    private static final long[] CAP = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, Long.MAX_VALUE };
 
     public static final String ENCODING_NAME = "int";
 
@@ -173,11 +173,12 @@ public class IntegerDimEnc extends DimensionEncoding {
         fixedLen = in.readShort();
     }
 
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         IntegerDimEnc that = (IntegerDimEnc) o;
 

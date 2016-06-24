@@ -85,7 +85,7 @@ public class CubeValidator {
                     throw new IllegalStateException("Segments overlap: " + pre + " and " + seg);
             }
             pre = seg;
-            
+
             for (CubeSegment aReady : ready) {
                 if (seg.sourceOffsetOverlaps(aReady) && !seg.sourceOffsetContains(aReady))
                     throw new IllegalStateException("Segments overlap: " + aReady + " and " + seg);

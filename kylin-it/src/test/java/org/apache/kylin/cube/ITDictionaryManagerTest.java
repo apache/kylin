@@ -62,7 +62,7 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
         dictMgr = DictionaryManager.getInstance(getTestConfig());
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_desc");
         TblColRef col = cubeDesc.findColumnRef("DEFAULT.TEST_KYLIN_FACT", "LSTG_FORMAT_NAME");
-        
+
         MockDistinctColumnValuesProvider mockupData = new MockDistinctColumnValuesProvider("A", "B", "C");
 
         DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupData);
@@ -86,7 +86,7 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
             assertEquals(v, dict.getValueFromId(id));
             id++;
         }
-        
+
         // test empty dictionary
         MockDistinctColumnValuesProvider mockupEmpty = new MockDistinctColumnValuesProvider();
         DictionaryInfo info3 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupEmpty);
@@ -106,14 +106,14 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
         public MockDistinctColumnValuesProvider(String... values) throws IOException {
             File tmpFile = File.createTempFile("MockDistinctColumnValuesProvider", ".txt");
             PrintWriter out = new PrintWriter(tmpFile);
-            
+
             set = Sets.newTreeSet();
             for (String value : values) {
                 out.println(value);
                 set.add(value);
             }
             out.close();
-            
+
             tmpFilePath = HadoopUtil.fixWindowsPath("file://" + tmpFile.getAbsolutePath());
             tmpFile.deleteOnExit();
         }
@@ -122,6 +122,6 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
         public ReadableTable getDistinctValuesFor(TblColRef col) {
             return new DFSFileTable(tmpFilePath, -1);
         }
-        
+
     }
 }

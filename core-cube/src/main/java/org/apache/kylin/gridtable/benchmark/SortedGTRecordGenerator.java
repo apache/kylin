@@ -62,7 +62,7 @@ public class SortedGTRecordGenerator {
         spec.measureRandomizer = randomizer;
         colSpecs.add(spec);
     }
-    
+
     public IGTScanner generate(long nRows) {
         validate();
         return new Generator(nRows);
@@ -85,18 +85,18 @@ public class SortedGTRecordGenerator {
         long weightSum;
         Randomizer measureRandomizer;
     }
-    
+
     public interface Randomizer {
         int fillRandom(Random rand, byte[] array, int offset);
     }
-    
+
     public static class BytesRandomizer implements Randomizer {
-        final private byte bytes[];
+        final private byte[] bytes;
 
         public BytesRandomizer(int len) {
             this.bytes = new byte[len];
         }
-        
+
         @Override
         public int fillRandom(Random rand, byte[] array, int offset) {
             rand.nextBytes(bytes);

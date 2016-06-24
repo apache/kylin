@@ -66,7 +66,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_JOB);
     }
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         DiagnosisInfoCLI diagnosisInfoCLI = new DiagnosisInfoCLI();
         diagnosisInfoCLI.execute(args);
     }

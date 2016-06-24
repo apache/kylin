@@ -20,9 +20,7 @@ package org.apache.kylin.common.persistence;
 
 import java.io.Serializable;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.UUID;
 
 import org.apache.commons.lang.time.FastDateFormat;
@@ -51,17 +49,6 @@ abstract public class RootPersistentEntity implements AclEntity, Serializable {
 
     public static String formatTime(long millis) {
         return format.format(millis);
-    }
-
-    public static long parseTime(String timeString) {
-        if (timeString == null)
-            return 0;
-        try {
-            Date dt = df.parse(timeString);
-            return dt.getTime();
-        } catch (ParseException e) {
-        }
-        return 0l;
     }
 
     // ============================================================================

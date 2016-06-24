@@ -25,6 +25,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.collect.Maps;
 
 /**

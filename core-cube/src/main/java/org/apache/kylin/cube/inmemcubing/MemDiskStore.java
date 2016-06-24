@@ -17,7 +17,7 @@
 
 package org.apache.kylin.cube.inmemcubing;
 
-import static org.apache.kylin.common.util.MemoryBudgetController.*;
+import static org.apache.kylin.common.util.MemoryBudgetController.ONE_MB;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -344,7 +344,7 @@ public class MemDiskStore implements IGTStore, Closeable {
         public void write(GTRecord rec) throws IOException {
             buf.clear();
             rec.exportColumns(info.getAllColumns(), buf);
-            
+
             int len = buf.position();
             dout.writeInt(len);
             dout.write(buf.array(), buf.arrayOffset(), len);

@@ -53,13 +53,13 @@ public abstract class DimensionEncodingFactory {
     public static Set<String> getValidEncodings() {
         if (factoryMap == null)
             initFactoryMap();
-        
+
         TreeSet<String> result = Sets.newTreeSet();
         result.addAll(factoryMap.keySet());
         result.add(DictionaryDimEnc.ENCODING_NAME);
         return result;
     }
-    
+
     public static boolean isVaildEncoding(String encodingName) {
         if (factoryMap == null)
             initFactoryMap();

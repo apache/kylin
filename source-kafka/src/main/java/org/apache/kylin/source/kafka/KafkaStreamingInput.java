@@ -40,20 +40,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import com.google.common.base.Function;
-import kafka.cluster.Broker;
-import kafka.javaapi.FetchResponse;
-import kafka.javaapi.PartitionMetadata;
-import kafka.message.MessageAndOffset;
+import javax.annotation.Nullable;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StreamingBatch;
+import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.streaming.IStreamingInput;
-import org.apache.kylin.common.util.StreamingBatch;
-import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.metadata.model.IntermediateColumnDesc;
@@ -66,9 +62,13 @@ import org.apache.kylin.source.kafka.util.KafkaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
-import javax.annotation.Nullable;
+import kafka.cluster.Broker;
+import kafka.javaapi.FetchResponse;
+import kafka.javaapi.PartitionMetadata;
+import kafka.message.MessageAndOffset;
 
 @SuppressWarnings("unused")
 public class KafkaStreamingInput implements IStreamingInput {
@@ -106,7 +106,6 @@ public class KafkaStreamingInput implements IStreamingInput {
                 final ExecutorService executorService = Executors.newCachedThreadPool();
                 final List<Future<List<StreamingMessage>>> futures = Lists.newArrayList();
                 for (final KafkaClusterConfig kafkaClusterConfig : kafkaConfig.getKafkaClusterConfigs()) {
-
 
                     final int partitionCount = KafkaRequester.getKafkaTopicMeta(kafkaClusterConfig).getPartitionIds().size();
                     for (int i = 0; i < partitionCount; ++i) {
@@ -159,8 +158,8 @@ public class KafkaStreamingInput implements IStreamingInput {
         private Broker getLeadBroker() {
             final PartitionMetadata partitionMetadata = KafkaRequester.getPartitionMetadata(kafkaClusterConfig.getTopic(), partitionId, replicaBrokers, kafkaClusterConfig);
             if (partitionMetadata != null) {
-                if (partitionMetadata.errorCode() != 0){
-                    logger.warn("PartitionMetadata errorCode: "+partitionMetadata.errorCode());
+                if (partitionMetadata.errorCode() != 0) {
+                    logger.warn("PartitionMetadata errorCode: " + partitionMetadata.errorCode());
                 }
                 replicaBrokers = partitionMetadata.replicas();
                 return partitionMetadata.leader();

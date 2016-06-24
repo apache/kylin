@@ -56,10 +56,10 @@ public class CubeTupleConverter {
     final int[] tupleIdx;
     final Object[] gtValues;
     final MeasureType<?>[] measureTypes;
-    
+
     final List<IAdvMeasureFiller> advMeasureFillers;
     final List<Integer> advMeasureIndexInGTValues;
-    
+
     final int nSelectedDims;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
@@ -79,10 +79,10 @@ public class CubeTupleConverter {
 
         // measure types don't have this many, but aligned length make programming easier
         measureTypes = new MeasureType[selectedDimensions.size() + selectedMetrics.size()];
-        
+
         advMeasureFillers = Lists.newArrayListWithCapacity(1);
         advMeasureIndexInGTValues = Lists.newArrayListWithCapacity(1);
-        
+
         int iii = 0;
 
         // pre-calculate dimension index mapping to tuple
@@ -96,7 +96,7 @@ public class CubeTupleConverter {
         for (FunctionDesc metric : selectedMetrics) {
             int i = mapping.getIndexOf(metric);
             gtColIdx[iii] = i;
-            
+
             if (metric.needRewrite()) {
                 String rewriteFieldName = metric.getRewriteFieldName();
                 tupleIdx[iii] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
@@ -106,7 +106,7 @@ public class CubeTupleConverter {
                 TblColRef col = metric.getParameter().getColRefs().get(0);
                 tupleIdx[iii] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
             }
-            
+
             MeasureType<?> measureType = metric.getMeasureType();
             if (measureType.needAdvancedTupleFilling()) {
                 Map<TblColRef, Dictionary<String>> dictionaryMap = buildDictionaryMap(measureType.getColumnsNeedDictionary(metric));
@@ -115,7 +115,7 @@ public class CubeTupleConverter {
             } else {
                 measureTypes[iii] = measureType;
             }
-                
+
             iii++;
         }
 
@@ -165,7 +165,7 @@ public class CubeTupleConverter {
         for (IDerivedColumnFiller filler : derivedColFillers) {
             filler.fillDerivedColumns(gtValues, tuple);
         }
-        
+
         // advanced measure filling, due to possible row split, will complete at caller side
         if (advMeasureFillers.isEmpty()) {
             return null;

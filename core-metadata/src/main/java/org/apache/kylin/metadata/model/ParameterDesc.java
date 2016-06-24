@@ -34,7 +34,7 @@ public class ParameterDesc {
     private String type;
     @JsonProperty("value")
     private String value;
-    
+
     @JsonProperty("next_parameter")
     private ParameterDesc nextParameter;
 
@@ -67,7 +67,7 @@ public class ParameterDesc {
     public void setColRefs(List<TblColRef> colRefs) {
         this.colRefs = colRefs;
     }
-    
+
     public ParameterDesc getNextParameter() {
         return nextParameter;
     }
@@ -82,14 +82,19 @@ public class ParameterDesc {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         ParameterDesc that = (ParameterDesc) o;
 
-        if (nextParameter != null ? !nextParameter.equals(that.nextParameter) : that.nextParameter != null) return false;
-        if (type != null ? !type.equals(that.type) : that.type != null) return false;
-        if (value != null ? !value.equals(that.value) : that.value != null) return false;
+        if (nextParameter != null ? !nextParameter.equals(that.nextParameter) : that.nextParameter != null)
+            return false;
+        if (type != null ? !type.equals(that.type) : that.type != null)
+            return false;
+        if (value != null ? !value.equals(that.value) : that.value != null)
+            return false;
 
         return true;
     }

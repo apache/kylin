@@ -26,9 +26,9 @@ import java.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.CuboidStatsUtil;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;

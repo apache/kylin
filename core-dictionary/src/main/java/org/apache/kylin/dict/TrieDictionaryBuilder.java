@@ -299,7 +299,7 @@ public class TrieDictionaryBuilder<T> {
         while (true) { // minimize the offset size to match the footprint
             int t = s.obpn_nNodes * (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount + s.obpn_sizeChildOffset - 1);
             if (BytesUtil.sizeForValue(t * 2) <= s.obpn_sizeChildOffset - 1) { // *2
-                                                                               // because
+                                                                                   // because
                                                                                // MSB
                                                                                // of
                                                                                // offset
@@ -323,7 +323,7 @@ public class TrieDictionaryBuilder<T> {
         while (true) { // minimize the offset size to match the footprint
             int t = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset - 1);
             if (BytesUtil.sizeForValue(t * 4) <= s.mbpn_sizeChildOffset - 1) { // *4
-                                                                               // because
+                                                                                   // because
                                                                                // 2
                                                                                // MSB
                                                                                // of

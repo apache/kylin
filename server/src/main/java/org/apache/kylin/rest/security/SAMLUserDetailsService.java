@@ -43,7 +43,6 @@ public class SAMLUserDetailsService implements org.springframework.security.saml
         logger.debug("samlCredential.email:" + userEmail);
         final String userName = userEmail.substring(0, userEmail.indexOf("@"));
 
-        
         UserDetails userDetails = null;
         try {
             userDetails = ldapUserDetailsService.loadUserByUsername(userName);

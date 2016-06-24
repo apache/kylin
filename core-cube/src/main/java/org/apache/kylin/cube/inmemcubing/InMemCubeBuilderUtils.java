@@ -25,7 +25,7 @@ import org.apache.kylin.common.util.Pair;
 /**
  */
 public final class InMemCubeBuilderUtils {
-    
+
     public static final Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(final long cuboidId, final int measureCount) {
         int cardinality = Long.bitCount(cuboidId);
         BitSet dimension = new BitSet();
@@ -34,7 +34,7 @@ public final class InMemCubeBuilderUtils {
         metrics.set(cardinality, cardinality + measureCount);
         return Pair.newPair(new ImmutableBitSet(dimension), new ImmutableBitSet(metrics));
     }
-    
+
     public static final Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(final long baseCuboidId, final long childCuboidId, final int measureCount) {
         final Pair<ImmutableBitSet, ImmutableBitSet> parentDimensionAndMetricColumnBitSet = getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         ImmutableBitSet parentDimensions = parentDimensionAndMetricColumnBitSet.getFirst();
