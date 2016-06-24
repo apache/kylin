@@ -141,6 +141,7 @@ then
         #retrive $hive_dependency and $hbase_dependency
         source ${dir}/find-hive-dependency.sh
         source ${dir}/find-hbase-dependency.sh
+        source ${dir}/find-kafka-dependency.sh
         #retrive $KYLIN_EXTRA_START_OPTS
         if [ -f "${dir}/setenv.sh" ]
             then source ${dir}/setenv.sh
@@ -153,6 +154,7 @@ then
         hbase ${KYLIN_EXTRA_START_OPTS} \
         -Dlog4j.configuration=kylin-log4j.properties\
         -Dkylin.hive.dependency=${hive_dependency} \
+        -Dkylin.kafka.dependency=${kafka_dependency} \
         -Dkylin.hbase.dependency=${hbase_dependency} \
         org.apache.kylin.engine.streaming.cli.StreamingCLI $@ > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/logs/$3_$4 &
         echo "streaming started name: $3 id: $4"
@@ -187,6 +189,7 @@ then
     #retrive $hive_dependency and $hbase_dependency
     source ${dir}/find-hive-dependency.sh
     source ${dir}/find-hbase-dependency.sh
+    source ${dir}/find-kafka-dependency.sh
     #retrive $KYLIN_EXTRA_START_OPTS
     if [ -f "${dir}/setenv.sh" ]
         then source ${dir}/setenv.sh
@@ -199,6 +202,7 @@ then
     hbase ${KYLIN_EXTRA_START_OPTS} \
     -Dlog4j.configuration=kylin-log4j.properties\
     -Dkylin.hive.dependency=${hive_dependency} \
+    -Dkyiln.kafka.dependency=${kafka_dependency} \
     -Dkylin.hbase.dependency=${hbase_dependency} \
     org.apache.kylin.engine.streaming.cli.MonitorCLI $@ > ${KYLIN_HOME}/logs/monitor.log 2>&1
     exit 0

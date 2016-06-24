@@ -177,7 +177,6 @@
             <artifactId>kafka_2.10</artifactId>
             <version>${kafka.version}</version>
             <scope>provided</scope>
-            <!-- FIXME: Should be provided just like hive and hbase, inflates job jar from 9 MB to 21 MB -->
         </dependency>
 
     </dependencies>
