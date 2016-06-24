@@ -20,7 +20,6 @@ package org.apache.kylin.metadata.realization;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +29,6 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -84,7 +82,6 @@ public class RealizationRegistry {
 
         // use reflection to load providers
         String[] providerNames = config.getRealizationProviders();
-        List<Throwable> es = Lists.newArrayList();
         for (String clsName : providerNames) {
             try {
                 Class<? extends IRealizationProvider> cls = ClassUtil.forName(clsName, IRealizationProvider.class);
@@ -92,16 +89,15 @@ public class RealizationRegistry {
                 providers.put(p.getRealizationType(), p);
 
             } catch (Exception | NoClassDefFoundError e) {
-                es.add(e);
-            }
-
-            if (es.size() > 0) {
-                for (Throwable exceptionOrError : es) {
-                    logger.error("Create new store instance failed ", exceptionOrError);
-                }
-                throw new IllegalArgumentException("Failed to find metadata store by url: " + config.getMetadataUrl());
+                if (e instanceof ClassNotFoundException || e instanceof NoClassDefFoundError)
+                    logger.warn("Failed to create realization provider " + e);
+                else
+                    logger.error("Failed to create realization provider", e);
             }
         }
+
+        if (providers.isEmpty())
+            throw new IllegalArgumentException("Failed to find realization provider by url: " + config.getMetadataUrl());
 
         logger.info("RealizationRegistry is " + providers);
     }
