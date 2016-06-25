@@ -30,10 +30,6 @@ import org.apache.hadoop.mapreduce.Cluster;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
-import org.apache.hadoop.yarn.conf.HAUtil;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.util.RMHAUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.MRUtil;
@@ -215,31 +211,6 @@ public class MapReduceExecutable extends AbstractExecutable {
         if (saveAsNames.length > i && StringUtils.isBlank(saveAsNames[i]) == false) {
             info.put(saveAsNames[i].trim(), counter);
         }
-    }
-
-    private String getRestStatusCheckUrl(Job job, KylinConfig config) {
-        final String yarnStatusCheckUrl = config.getYarnStatusCheckUrl();
-        if (yarnStatusCheckUrl != null) {
-            return yarnStatusCheckUrl;
-        } else {
-            logger.info("kylin.job.yarn.app.rest.check.status.url" + " is not set, read from job configuration");
-        }
-        String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, job.getConfiguration());
-        if (HAUtil.isHAEnabled(job.getConfiguration())) {
-            YarnConfiguration conf = new YarnConfiguration(job.getConfiguration());
-            String active = RMHAUtils.findActiveRMHAId(conf);
-            rmWebHost = HAUtil.getConfValueForRMInstance(HAUtil.addSuffix(YarnConfiguration.RM_WEBAPP_ADDRESS, active), YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);
-        }
-        if (StringUtils.isEmpty(rmWebHost)) {
-            return null;
-        }
-        if (rmWebHost.startsWith("http://") || rmWebHost.startsWith("https://")) {
-            //do nothing
-        } else {
-            rmWebHost = "http://" + rmWebHost;
-        }
-        logger.info("yarn.resourcemanager.webapp.address:" + rmWebHost);
-        return rmWebHost + "/ws/v1/cluster/apps/${job_id}?anonymous=true";
     }
 
     public long getMapReduceWaitTime() {

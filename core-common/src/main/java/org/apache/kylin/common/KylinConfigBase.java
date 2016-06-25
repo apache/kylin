@@ -38,14 +38,13 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-@SuppressWarnings("serial")
 /**
  * An abstract class to encapsulate access to a set of 'properties'.
  * Subclass can override methods in this class to extend the content of the 'properties',
  * with some override values for example.
  */
 abstract public class KylinConfigBase implements Serializable {
-
+    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfigBase.class);
 
     /*
@@ -364,10 +363,6 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.job.remote.cli.working.dir");
     }
 
-    public String getMapReduceCmdExtraArgs() {
-        return getOptional("kylin.job.cmd.extra.args");
-    }
-
     public boolean isEmptySegmentAllowed() {
         return Boolean.parseBoolean(getOptional("kylin.job.allow.empty.segment", "true"));
     }
@@ -398,10 +393,6 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getClusterName() {
         return this.getOptional("kylin.cluster.name", getMetadataUrlPrefix());
-    }
-
-    public void setClusterName(String clusterName) {
-        setProperty("kylin.cluster.name", clusterName);
     }
 
     public int getWorkersPerServer() {
@@ -470,6 +461,7 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.hbase.region.count.max", "500"));
     }
 
+    // for test only
     public void setHBaseHFileSizeGB(float size) {
         setProperty("kylin.hbase.hfile.size.gb", String.valueOf(size));
     }
@@ -514,11 +506,11 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.query.run.local.coprocessor", "false"));
     }
 
-    public Long getQueryDurationCacheThreshold() {
+    public long getQueryDurationCacheThreshold() {
         return Long.parseLong(this.getOptional("kylin.query.cache.threshold.duration", String.valueOf(2000)));
     }
 
-    public Long getQueryScanCountCacheThreshold() {
+    public long getQueryScanCountCacheThreshold() {
         return Long.parseLong(this.getOptional("kylin.query.cache.threshold.scancount", String.valueOf(10 * 1024)));
     }
 
@@ -546,6 +538,7 @@ abstract public class KylinConfigBase implements Serializable {
         return this.getOptional("kylin.query.storage.visit.planner", "org.apache.kylin.gridtable.GTScanRangePlanner");
     }
 
+    // for test only
     public void setQueryStorageVisitPlanner(String v) {
         setProperty("kylin.query.storage.visit.planner", v);
     }
@@ -619,10 +612,6 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getHiveDatabaseForIntermediateTable() {
         return this.getOptional("kylin.job.hive.database.for.intermediatetable", "default");
-    }
-
-    public boolean isGetJobStatusWithKerberos() {
-        return Boolean.valueOf(this.getOptional("kylin.job.status.with.kerberos", "false"));
     }
 
     public String getKylinOwner() {
@@ -739,16 +728,8 @@ abstract public class KylinConfigBase implements Serializable {
         return this.getOptional("kylin.zookeeper.address");
     }
 
-    public void setZookeeperAddress(String zkAddress) {
-        setProperty("kylin.zookeeper.address", zkAddress);
-    }
-
     public String getRestAddress() {
         return this.getOptional("kylin.rest.address", "localhost:7070");
-    }
-
-    public void setRestAddress(String restAddress) {
-        setProperty("kylin.rest.address", restAddress);
     }
 
     private Map<Integer, String> convertKeyToInteger(Map<String, String> map) {

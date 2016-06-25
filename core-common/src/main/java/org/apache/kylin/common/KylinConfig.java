@@ -44,9 +44,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-@SuppressWarnings("serial")
 public class KylinConfig extends KylinConfigBase {
-
+    private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
 
     static {
@@ -358,7 +357,7 @@ public class KylinConfig extends KylinConfigBase {
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(overrideFile);
-            Enumeration e = override.propertyNames();
+            Enumeration<?> e = override.propertyNames();
             while (e.hasMoreElements()) {
                 String key = (String) e.nextElement();
                 pw.println(key + "=" + override.getProperty(key));

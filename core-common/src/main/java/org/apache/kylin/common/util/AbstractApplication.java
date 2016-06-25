@@ -17,15 +17,13 @@
 */
 package org.apache.kylin.common.util;
 
-import java.io.Serializable;
-
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 
 /**
  */
-public abstract class AbstractApplication implements Serializable {
+public abstract class AbstractApplication {
 
     protected abstract Options getOptions();
 
