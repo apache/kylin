@@ -101,6 +101,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         byte[] encodedKey = rowKeyEncoder.encode(data);
         assertEquals(43 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
         byte[] shard = Arrays.copyOfRange(encodedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
+        @SuppressWarnings("unused")
         byte[] sellerId = Arrays.copyOfRange(encodedKey, rowKeyEncoder.getHeaderLength(), 4 + rowKeyEncoder.getHeaderLength());
         byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, rowKeyEncoder.getHeaderLength());
         byte[] rest = Arrays.copyOfRange(encodedKey, 4 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
@@ -136,6 +137,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         assertEquals(43 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
         byte[] shard = Arrays.copyOfRange(encodedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
         byte[] cuboidId = Arrays.copyOfRange(encodedKey, RowConstants.ROWKEY_SHARDID_LEN, rowKeyEncoder.getHeaderLength());
+        @SuppressWarnings("unused")
         byte[] sellerId = Arrays.copyOfRange(encodedKey, rowKeyEncoder.getHeaderLength(), 18 + rowKeyEncoder.getHeaderLength());
         byte[] rest = Arrays.copyOfRange(encodedKey, 4 + rowKeyEncoder.getHeaderLength(), encodedKey.length);
         assertEquals(0, Bytes.toShort(shard));

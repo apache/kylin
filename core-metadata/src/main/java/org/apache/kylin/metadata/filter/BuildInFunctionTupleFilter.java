@@ -85,7 +85,6 @@ public class BuildInFunctionTupleFilter extends FunctionTupleFilter {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void addChild(TupleFilter child) {
         if (child instanceof ColumnTupleFilter || child instanceof BuildInFunctionTupleFilter) {
             columnContainerFilter = child;

@@ -154,6 +154,7 @@ public class CubeMetadataUpgrade_v_1_4_0 extends CubeMetadataUpgrade {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void upgradeCubeDesc(CubeDesc cubeDesc) {
         try {
 

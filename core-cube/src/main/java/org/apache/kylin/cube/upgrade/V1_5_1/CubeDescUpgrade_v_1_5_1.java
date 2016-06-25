@@ -217,7 +217,7 @@ public class CubeDescUpgrade_v_1_5_1 {
 
     private void upgradeRowKey(CubeDesc oldModel, org.apache.kylin.cube.model.CubeDesc newModel) {
         RowKeyDesc oldRowKey = oldModel.getRowkey();
-        if (oldModel == null) {
+        if (oldRowKey == null) {
             throw new IllegalArgumentException("RowKeyDesc is null");
         }
 

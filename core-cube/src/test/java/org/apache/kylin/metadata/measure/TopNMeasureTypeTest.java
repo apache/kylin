@@ -34,7 +34,7 @@ public class TopNMeasureTypeTest extends LocalFileMetadataTestCase {
     @Test
     public void test() {
 
-        CubeDesc desc = CubeDescManager.getInstance(this.getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
+        CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
 
         MeasureDesc topSellerMeasure = null;
 

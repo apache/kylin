@@ -172,6 +172,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
         }
     }
 
+    @SuppressWarnings("deprecation")
     protected int getMaxAgrGroupSize() {
         return KylinConfig.getInstanceFromEnv().getCubeAggrGroupMaxSize();
     }
