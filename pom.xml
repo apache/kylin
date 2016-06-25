@@ -681,6 +681,7 @@
         <module>source-kafka</module>
         <module>storage-hbase</module>
         <module>query</module>
+        <module>server-base</module>
         <module>server</module>
         <module>jdbc</module>
         <module>invertedindex</module>
