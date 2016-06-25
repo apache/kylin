@@ -710,13 +710,13 @@ public class CubeDesc extends RootPersistentEntity {
 
             if ((colStrs == null && dim.isDerived()) || ("{FK}".equalsIgnoreCase(colStrs))) {
                 // when column is omitted, special case
-                
+
                 for (TblColRef col : join.getForeignKeyColumns()) {
                     dimCols.add(initDimensionColRef(col));
                 }
             } else {
                 // normal case
-                
+
                 if (StringUtils.isEmpty(colStrs))
                     throw new IllegalStateException("Dimension column must not be blank " + dim);
 

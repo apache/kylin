@@ -541,8 +541,7 @@ public class CubeMigrationCLI {
             logger.info("Undo for PURGE_AND_DISABLE is not supported");
             break;
         }
-        default:
-        {
+        default: {
             //do nothing
             break;
         }
