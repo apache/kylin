@@ -140,8 +140,9 @@ public class SortedGTRecordGenerator {
                 public GTRecord next() {
                     for (int i = 0; i < colSpecs.size(); i++) {
                         ColSpec spec = colSpecs.get(i);
-                        // dimension case
                         if (spec.cardinality > 0) {
+                            // dimension case
+
                             long v = dist[i].next();
                             if (v < 0) {
                                 dist[i] = new Distribution(spec, parentLevelCount(i));
@@ -150,9 +151,9 @@ public class SortedGTRecordGenerator {
                             ByteArray bytes = rec.get(i);
                             assert bytes.length() == spec.length;
                             BytesUtil.writeLong(v, bytes.array(), bytes.offset(), bytes.length());
-                        }
-                        // measure case
-                        else {
+                        } else {
+                            // measure case
+
                             int len = spec.measureRandomizer.fillRandom(rand, rec.get(i).array(), 0);
                             rec.get(i).setLength(len);
                         }

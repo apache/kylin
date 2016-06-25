@@ -75,12 +75,13 @@ public class MetadataVersionRefresher {
     public static void collectFiles(ResourceStore src, String path, List<String> ret) throws IOException {
         NavigableSet<String> children = src.listResources(path);
 
-        // case of resource (not a folder)
         if (children == null) {
+            // case of resource (not a folder)
+
             ret.add(path);
-        }
-        // case of folder
-        else {
+        } else {
+            // case of folder
+
             for (String child : children) {
                 collectFiles(src, child, ret);
             }

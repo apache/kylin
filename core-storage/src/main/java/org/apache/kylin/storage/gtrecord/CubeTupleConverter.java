@@ -100,9 +100,8 @@ public class CubeTupleConverter {
             if (metric.needRewrite()) {
                 String rewriteFieldName = metric.getRewriteFieldName();
                 tupleIdx[iii] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
-            }
-            // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
-            else {
+            } else {
+                // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
                 TblColRef col = metric.getParameter().getColRefs().get(0);
                 tupleIdx[iii] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
             }

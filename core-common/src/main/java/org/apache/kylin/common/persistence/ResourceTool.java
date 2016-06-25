@@ -131,8 +131,8 @@ public class ResourceTool {
     public static void copyR(ResourceStore src, ResourceStore dst, String path) throws IOException {
         NavigableSet<String> children = src.listResources(path);
 
-        // case of resource (not a folder)
         if (children == null) {
+            // case of resource (not a folder)
             if (matchFilter(path)) {
                 try {
                     RawResource res = src.getResource(path);
@@ -147,9 +147,8 @@ public class ResourceTool {
                     ex.printStackTrace();
                 }
             }
-        }
-        // case of folder
-        else {
+        } else {
+            // case of folder
             for (String child : children)
                 copyR(src, dst, child);
         }

@@ -71,12 +71,11 @@ public class CubeCodeSystem implements IGTCodeSystem {
         for (int i = 0; i < serializers.length; i++) {
             DimensionEncoding dimEnc = i < dimEncs.length ? dimEncs[i] : null;
 
-            // for dimensions
             if (dimEnc != null) {
+                // for dimensions
                 serializers[i] = dimEnc.asDataTypeSerializer();
-            }
-            // for measures
-            else {
+            } else {
+                // for measures
                 serializers[i] = DataTypeSerializer.create(info.getColumnType(i));
             }
         }

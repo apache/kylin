@@ -334,7 +334,6 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
     }
 
     // clean up all tmp files
-    @SuppressWarnings("checkstyle:nofinalizer")
     @Override
     public void finalize() throws Throwable {
         if (persistent) {

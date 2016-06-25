@@ -43,8 +43,8 @@ public class ResourceStoreUtil {
         Method listResourceMethod = ResourceStore.class.getMethod("listResources", String.class);
         Iterable<String> children = (Iterable<String>) listResourceMethod.invoke(src, path);
 
-        // case of resource (not a folder)
         if (children == null) {
+            // case of resource (not a folder)
             try {
                 RawResource res = src.getResource(path);
                 if (res != null) {
@@ -57,9 +57,8 @@ public class ResourceStoreUtil {
                 System.err.println("Failed to open " + path);
                 ex.printStackTrace();
             }
-        }
-        // case of folder
-        else {
+        } else {
+            // case of folder
             for (String child : children)
                 rCopy(src, dst, child);
         }

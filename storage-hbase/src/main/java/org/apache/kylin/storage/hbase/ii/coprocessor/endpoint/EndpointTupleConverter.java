@@ -48,17 +48,15 @@ public class EndpointTupleConverter {
         for (int i = 0; i < aggrMeasures.size(); i++) {
             FunctionDesc measure = aggrMeasures.get(i);
             int tupleIdx;
-            // for dimension playing as metrics, the measure is just a placeholder, the real value comes from columns
             if (measure.isDimensionAsMetric()) {
+                // for dimension playing as metrics, the measure is just a placeholder, the real value comes from columns
                 tupleIdx = -1;
-            }
-            // a rewrite metrics is identified by its rewrite field name
-            else if (measure.needRewrite()) {
+            } else if (measure.needRewrite()) {
+                // a rewrite metrics is identified by its rewrite field name
                 String rewriteFieldName = measure.getRewriteFieldName();
                 tupleIdx = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
-            }
-            // a non-rewrite metrics (i.e. sum) is like a dimension column
-            else {
+            } else {
+                // a non-rewrite metrics (i.e. sum) is like a dimension column
                 TblColRef col = measure.getParameter().getColRefs().get(0);
                 tupleIdx = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
             }

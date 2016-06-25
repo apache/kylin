@@ -887,18 +887,17 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                     break;
             }
 
-            // if value fully matched within the current node
             if (j == nn) {
-                // if equals to current node, just mark end of value
+                // if value fully matched within the current node
                 if (i == n) {
-                    // if the first match, assign an Id to nodt
+                    // if equals to current node, just mark end of value
                     if (!node.isEndOfValue) {
+                        // if the first match, assign an Id to nodt
                         node.id = createNextId();
                     }
                     node.isEndOfValue = true;
-                }
-                // otherwise, split the current node into two
-                else {
+                } else {
+                    // otherwise, split the current node into two
                     DictNode c = new DictNode(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
                     c.id = node.id;
                     node.reset(BytesUtil.subarray(node.part, 0, i), true);
@@ -945,12 +944,11 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                 else
                     found = true;
             }
-            // found a child node matching the first byte, continue in that child
             if (found) {
+                // found a child node matching the first byte, continue in that child
                 addValueR(node.children.get(mid), value, j);
-            }
-            // otherwise, make the value a new child
-            else {
+            } else {
+                // otherwise, make the value a new child
                 DictNode c = new DictNode(BytesUtil.subarray(value, j, nn), true);
                 c.id = createNextId();
                 node.addChild(comp <= 0 ? mid : mid + 1, c);

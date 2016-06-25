@@ -49,6 +49,8 @@
         <!--<module name="InterfaceIsType"/>-->
         <!--<module name="VisibilityModifier"/>-->
         <module name="ArrayTypeStyle"/>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
         <module name="UpperEll"/>
         <!--<module name="NoFinalizer"/>-->
         <!--<module name="MissingDeprecated"/>-->

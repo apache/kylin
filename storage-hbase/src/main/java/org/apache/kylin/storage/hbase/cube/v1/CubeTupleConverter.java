@@ -96,13 +96,12 @@ public class CubeTupleConverter {
                 FunctionDesc aggrFunc = measures[mi].getFunction();
 
                 int tupleIdx;
-                // a rewrite metrics is identified by its rewrite field name
                 if (aggrFunc.needRewrite()) {
+                    // a rewrite metrics is identified by its rewrite field name
                     String rewriteFieldName = aggrFunc.getRewriteFieldName();
                     tupleIdx = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
-                }
-                // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
-                else {
+                } else {
+                    // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
                     TblColRef col = aggrFunc.getParameter().getColRefs().get(0);
                     tupleIdx = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
                 }

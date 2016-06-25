@@ -766,18 +766,17 @@ public class CubeManager implements IRealizationProvider {
                 continue;
             }
 
-            // if i, j competes
             if (is.getSourceOffsetStart() == js.getSourceOffsetStart()) {
-                // if both new or ready, favor the bigger segment
+                // if i, j competes
                 if (isReady(is) && isReady(js) || isNew(is) && isNew(js)) {
+                    // if both new or ready, favor the bigger segment
                     if (is.getSourceOffsetEnd() <= js.getSourceOffsetEnd()) {
                         tobe.remove(i);
                     } else {
                         tobe.remove(j);
                     }
-                }
-                // otherwise, favor the new segment
-                else if (isNew(is)) {
+                } else if (isNew(is)) {
+                    // otherwise, favor the new segment
                     tobe.remove(j);
                 } else {
                     tobe.remove(i);

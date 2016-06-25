@@ -98,14 +98,13 @@ public class TrieDictionaryBuilder<T> {
                 break;
         }
 
-        // if value fully matched within the current node
         if (j == nn) {
-            // if equals to current node, just mark end of value
+            // if value fully matched within the current node
             if (i == n) {
+                // if equals to current node, just mark end of value
                 node.isEndOfValue = true;
-            }
-            // otherwise, split the current node into two
-            else {
+            } else {
+                // otherwise, split the current node into two
                 Node c = new Node(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
                 node.reset(BytesUtil.subarray(node.part, 0, i), true);
                 node.children.add(c);
@@ -147,12 +146,11 @@ public class TrieDictionaryBuilder<T> {
             else
                 found = true;
         }
-        // found a child node matching the first byte, continue in that child
         if (found) {
+            // found a child node matching the first byte, continue in that child
             addValueR(node.children.get(mid), value, j);
-        }
-        // otherwise, make the value a new child
-        else {
+        } else {
+            // otherwise, make the value a new child
             Node c = new Node(BytesUtil.subarray(value, j, nn), true);
             node.children.add(comp <= 0 ? mid : mid + 1, c);
         }

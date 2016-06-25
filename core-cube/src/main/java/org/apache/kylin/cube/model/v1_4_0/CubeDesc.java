@@ -492,14 +492,13 @@ public class CubeDesc extends RootPersistentEntity {
             ArrayList<TblColRef> dimCols = Lists.newArrayList();
             String[] colStrs = dim.getColumn();
 
-            // when column is omitted, special case
             if (colStrs == null && dim.isDerived() || ArrayUtils.contains(colStrs, "{FK}")) {
+                // when column is omitted, special case
                 for (TblColRef col : join.getForeignKeyColumns()) {
                     dimCols.add(initDimensionColRef(col));
                 }
-            }
-            // normal case
-            else {
+            } else {
+                // normal case
                 if (colStrs == null || colStrs.length == 0)
                     throw new IllegalStateException("Dimension column must not be blank " + dim);
 

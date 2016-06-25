@@ -121,9 +121,8 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
             int b = another.singleBucket;
             if (registers[b] < another.registers[b])
                 registers[b] = another.registers[b];
-        }
-        // normal path
-        else {
+        } else {
+            // normal path
             for (int i = 0; i < m; i++) {
                 if (registers[i] < another.registers[i])
                     registers[i] = another.registers[i];

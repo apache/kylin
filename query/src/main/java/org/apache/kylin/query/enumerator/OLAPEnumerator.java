@@ -180,12 +180,11 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
         }
 
         for (TblColRef col : sqlDigest.allColumns) {
-            // For dimension columns, take them as group by columns.
             if (cube.getAllDimensions().contains(col)) {
+                // For dimension columns, take them as group by columns.
                 sqlDigest.groupbyColumns.add(col);
-            }
-            // For measure columns, take them as metric columns with aggregation function SUM().
-            else {
+            } else {
+                // For measure columns, take them as metric columns with aggregation function SUM().
                 ParameterDesc colParameter = new ParameterDesc();
                 colParameter.setType("column");
                 colParameter.setValue(col.getName());

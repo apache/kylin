@@ -305,8 +305,9 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         public Iterator<GTRecord> iterator() {
-            // the all-in-mem case
             if (dumps.isEmpty()) {
+                // the all-in-mem case
+
                 return new Iterator<GTRecord>() {
 
                     final Iterator<Entry<byte[], MeasureAggregator[]>> it = aggBufMap.entrySet().iterator();
@@ -329,9 +330,9 @@ public class GTAggregateScanner implements IGTScanner {
                         throw new UnsupportedOperationException();
                     }
                 };
-            }
-            // the spill case
-            else {
+            } else {
+                // the spill case
+
                 logger.info("Last spill, current AggregationCache memory estimated size is: " + getEstimateSizeOfAggrCache());
                 this.spillBuffMap();
 
