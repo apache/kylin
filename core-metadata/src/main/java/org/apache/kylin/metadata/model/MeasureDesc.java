@@ -63,7 +63,7 @@ public class MeasureDesc {
 
     @Override
     public int hashCode() {
-        return Objects.hash(function, dependentMeasureRef.toLowerCase());
+        return Objects.hash(function, dependentMeasureRef);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class MeasureDesc {
         if (dependentMeasureRef == null && that.getDependentMeasureRef() == null)
             return true;
 
-        return dependentMeasureRef.equalsIgnoreCase(that.getDependentMeasureRef());
+        return dependentMeasureRef.equals(that.getDependentMeasureRef());
     }
 
     @Override
