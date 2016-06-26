@@ -56,6 +56,7 @@ import com.google.common.base.Preconditions;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class TrieDictionary<T> extends Dictionary<T> {
+    private static final long serialVersionUID = 1L;
 
     public static final byte[] HEAD_MAGIC = new byte[] { 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "TrieDict"
     public static final int HEAD_SIZE_I = HEAD_MAGIC.length;
