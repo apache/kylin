@@ -84,7 +84,7 @@ abstract public class KylinConfigBase implements Serializable {
         return property != null ? property : properties.getProperty(prop, dft);
     }
 
-    public Properties getAllProperties() {
+    protected Properties getAllProperties() {
         return properties;
     }
 
