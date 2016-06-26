@@ -191,14 +191,14 @@ public class FactTableGenerator {
                 curRowNum++;
             }
 
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        } finally {
             if (tableStream != null)
                 tableStream.close();
             if (tableReader != null)
                 tableReader.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
         }
     }
 

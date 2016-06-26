@@ -203,6 +203,7 @@ import com.google.common.collect.Sets;
  * <p>The public entry points are: {@link #convertQuery},
  * {@link #convertExpression(SqlNode)}.
  */
+@SuppressWarnings("incomplete-switch")
 public class SqlToRelConverter {
     //~ Static fields/initializers ---------------------------------------------
 
