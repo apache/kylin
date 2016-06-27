@@ -34,7 +34,6 @@ import org.apache.kylin.metadata.MetadataConstants;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 

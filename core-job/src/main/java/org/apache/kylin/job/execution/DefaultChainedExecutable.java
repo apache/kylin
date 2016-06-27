@@ -47,10 +47,10 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         for (int i = 0; i < size; ++i) {
             Executable subTask = executables.get(i);
             ExecutableState state = subTask.getStatus();
-            if (state == ExecutableState.RUNNING){
+            if (state == ExecutableState.RUNNING) {
                 // there is already running subtask, no need to start a new subtask
                 break;
-            } else if (state == ExecutableState.ERROR){
+            } else if (state == ExecutableState.ERROR) {
                 throw new IllegalStateException("invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
             }
             if (subTask.isRunnable()) {
@@ -59,7 +59,6 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         }
         return new ExecuteResult(ExecuteResult.State.SUCCEED, null);
     }
-
 
     @Override
     protected void onExecuteStart(ExecutableContext executableContext) {
@@ -103,7 +102,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 setEndTime(System.currentTimeMillis());
                 jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
                 notifyUserStatusChange(executableContext, ExecutableState.ERROR);
-            } else if (hasRunning){
+            } else if (hasRunning) {
                 jobService.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
             } else {
                 jobService.updateJobOutput(getId(), ExecutableState.READY, null, null);

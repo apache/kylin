@@ -52,7 +52,6 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.databind.type.SimpleType;
-
 import com.google.common.collect.Lists;
 
 import kafka.message.MessageAndOffset;

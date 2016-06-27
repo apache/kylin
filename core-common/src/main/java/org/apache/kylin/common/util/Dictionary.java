@@ -44,7 +44,7 @@ import org.apache.kylin.common.KylinConfig;
  */
 abstract public class Dictionary<T> implements Serializable {
     private static final long serialVersionUID = 1L;
-    
+
     // ID with all bit-1 (0xff e.g.) reserved for NULL value
     public static final int[] NULL_ID = new int[] { 0, 0xff, 0xffff, 0xffffff, 0xffffffff };
 

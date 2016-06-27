@@ -31,7 +31,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.google.common.base.Objects;
 
 /**

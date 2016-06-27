@@ -29,7 +29,6 @@ import org.apache.kylin.common.persistence.Serializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 

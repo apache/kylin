@@ -71,7 +71,6 @@ import com.google.protobuf.HBaseZeroCopyByteString;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import com.google.protobuf.Service;
-
 import com.sun.management.OperatingSystemMXBean;
 
 @SuppressWarnings("unused")

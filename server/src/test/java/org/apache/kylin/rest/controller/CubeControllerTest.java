@@ -36,7 +36,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.common.collect.Lists;
 
 /**
