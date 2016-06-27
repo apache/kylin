@@ -15,8 +15,6 @@ release.properties
 #IDEA
 *.iml
 #.settings
-.idea/libraries
-.idea/artifacts
 
 # External tool builders
 .externalToolBuilders/
@@ -55,6 +53,7 @@ hs_err_pid*
 # /
 .classpath
 .project
+.idea
 .DS_Store
 target
 logs
