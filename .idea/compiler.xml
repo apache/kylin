@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <resourceExtensions />
+    <wildcardResourcePatterns>
+      <entry name="!?*.java" />
+      <entry name="!?*.form" />
+      <entry name="!?*.class" />
+      <entry name="!?*.groovy" />
+      <entry name="!?*.scala" />
+      <entry name="!?*.flex" />
+      <entry name="!?*.kt" />
+      <entry name="!?*.clj" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+      <profile default="false" name="Annotation profile for atopcalcite" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="atopcalcite" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-invertedindex" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-invertedindex" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-core-common" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-core-common" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-assembly" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-assembly" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-core-metadata" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-core-metadata" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-tool" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-tool" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-core-dictionary" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-core-dictionary" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-it" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-it" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-storage-hbase" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-storage-hbase" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-query" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-query" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-server" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-server" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-jdbc" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-jdbc" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-engine-streaming" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-engine-streaming" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-engine-spark" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-engine-spark" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-source-hive" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-source-hive" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-source-kafka" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-source-kafka" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-core-cube" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-core-cube" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-core-job" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-core-job" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-server-base" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-server-base" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-core-storage" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-core-storage" />
+      </profile>
+      <profile default="false" name="Annotation profile for kylin-engine-mr" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="kylin-engine-mr" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="atopcalcite" target="1.7" />
+      <module name="kylin" target="1.7" />
+      <module name="kylin-assembly" target="1.7" />
+      <module name="kylin-core-common" target="1.7" />
+      <module name="kylin-core-cube" target="1.7" />
+      <module name="kylin-core-dictionary" target="1.7" />
+      <module name="kylin-core-job" target="1.7" />
+      <module name="kylin-core-metadata" target="1.7" />
+      <module name="kylin-core-storage" target="1.7" />
+      <module name="kylin-engine-mr" target="1.7" />
+      <module name="kylin-engine-spark" target="1.7" />
+      <module name="kylin-engine-streaming" target="1.7" />
+      <module name="kylin-invertedindex" target="1.7" />
+      <module name="kylin-it" target="1.7" />
+      <module name="kylin-jdbc" target="1.7" />
+      <module name="kylin-query" target="1.7" />
+      <module name="kylin-server" target="1.7" />
+      <module name="kylin-server-base" target="1.7" />
+      <module name="kylin-source-hive" target="1.7" />
+      <module name="kylin-source-kafka" target="1.7" />
+      <module name="kylin-storage-hbase" target="1.7" />
+      <module name="kylin-tool" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

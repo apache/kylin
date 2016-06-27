@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/assembly" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/atopcalcite" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-cube" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-dictionary" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-job" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-metadata" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core-storage" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/engine-mr" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/engine-spark" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/engine-streaming" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/invertedindex" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jdbc" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kylin-it" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/query" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/server" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/server-base" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/source-hive" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/source-kafka" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/storage-hbase" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/tool" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>

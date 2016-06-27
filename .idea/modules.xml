@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/atopcalcite/atopcalcite.iml" filepath="$PROJECT_DIR$/atopcalcite/atopcalcite.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kylin.iml" filepath="$PROJECT_DIR$/kylin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/assembly/kylin-assembly.iml" filepath="$PROJECT_DIR$/assembly/kylin-assembly.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-common/kylin-core-common.iml" filepath="$PROJECT_DIR$/core-common/kylin-core-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-cube/kylin-core-cube.iml" filepath="$PROJECT_DIR$/core-cube/kylin-core-cube.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-dictionary/kylin-core-dictionary.iml" filepath="$PROJECT_DIR$/core-dictionary/kylin-core-dictionary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-job/kylin-core-job.iml" filepath="$PROJECT_DIR$/core-job/kylin-core-job.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-metadata/kylin-core-metadata.iml" filepath="$PROJECT_DIR$/core-metadata/kylin-core-metadata.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core-storage/kylin-core-storage.iml" filepath="$PROJECT_DIR$/core-storage/kylin-core-storage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/engine-mr/kylin-engine-mr.iml" filepath="$PROJECT_DIR$/engine-mr/kylin-engine-mr.iml" />
+      <module fileurl="file://$PROJECT_DIR$/engine-spark/kylin-engine-spark.iml" filepath="$PROJECT_DIR$/engine-spark/kylin-engine-spark.iml" />
+      <module fileurl="file://$PROJECT_DIR$/engine-streaming/kylin-engine-streaming.iml" filepath="$PROJECT_DIR$/engine-streaming/kylin-engine-streaming.iml" />
+      <module fileurl="file://$PROJECT_DIR$/invertedindex/kylin-invertedindex.iml" filepath="$PROJECT_DIR$/invertedindex/kylin-invertedindex.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kylin-it/kylin-it.iml" filepath="$PROJECT_DIR$/kylin-it/kylin-it.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jdbc/kylin-jdbc.iml" filepath="$PROJECT_DIR$/jdbc/kylin-jdbc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/query/kylin-query.iml" filepath="$PROJECT_DIR$/query/kylin-query.iml" />
+      <module fileurl="file://$PROJECT_DIR$/server/kylin-server.iml" filepath="$PROJECT_DIR$/server/kylin-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/server-base/kylin-server-base.iml" filepath="$PROJECT_DIR$/server-base/kylin-server-base.iml" />
+      <module fileurl="file://$PROJECT_DIR$/source-hive/kylin-source-hive.iml" filepath="$PROJECT_DIR$/source-hive/kylin-source-hive.iml" />
+      <module fileurl="file://$PROJECT_DIR$/source-kafka/kylin-source-kafka.iml" filepath="$PROJECT_DIR$/source-kafka/kylin-source-kafka.iml" />
+      <module fileurl="file://$PROJECT_DIR$/storage-hbase/kylin-storage-hbase.iml" filepath="$PROJECT_DIR$/storage-hbase/kylin-storage-hbase.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tool/kylin-tool.iml" filepath="$PROJECT_DIR$/tool/kylin-tool.iml" />
+    </modules>
+  </component>
+</project>
