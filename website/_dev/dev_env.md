@@ -118,12 +118,12 @@ For Eclipse users, just format the code before committing the code.
 
 For intellij IDEA users, you have to do a few more steps:
 
-1. Install "Eclipse Code Formatter" and configure it as follows:
+1. Install "Eclipse Code Formatter" and use "org.eclipse.jdt.core.prefs" and "org.eclipse.jdt.ui.prefs" in core-common/.settings to configure "Eclipse Java Formatter config file" and "Import order"
 
 	![Eclipse_Code_Formatter_Config](/images/develop/eclipse_code_formatter_config.png)
 
-2. Disable intellij IDEA's "Optimize imports on the fly"
+2. Go to Preference => Code Style => Java, set "Scheme" to Default, and set both "Class count to use import with '\*'" and "Names count to use static import with '\*'" to 99.
 
-	![Disable_Optimize_On_The_Fly](/images/develop/disable_import_on_the_fly.png)
+	![Kylin_Intellj_Code_Style](/images/develop/kylin-intellij-code-style.png)
 
 3. Format the code before committing the code.
