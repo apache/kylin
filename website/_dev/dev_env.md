@@ -126,4 +126,8 @@ For intellij IDEA users, you have to do a few more steps:
 
 	![Kylin_Intellj_Code_Style](/images/develop/kylin-intellij-code-style.png)
 
+3. Disable intellij IDEA's "Optimize imports on the fly"
+
+	![Disable_Optimize_On_The_Fly](/images/develop/disable_import_on_the_fly.png)
+
 3. Format the code before committing the code.
