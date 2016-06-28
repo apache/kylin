@@ -41,7 +41,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
 
         NumberBytesCodec(int maxDigitsBeforeDecimalPoint) {
             this.maxDigitsBeforeDecimalPoint = maxDigitsBeforeDecimalPoint;
-            this.buf = new byte[maxDigitsBeforeDecimalPoint * 2];
+            this.buf = new byte[maxDigitsBeforeDecimalPoint * 3];
             this.bufOffset = 0;
             this.bufLen = 0;
         }

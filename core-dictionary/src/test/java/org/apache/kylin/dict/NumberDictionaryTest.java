@@ -31,20 +31,31 @@ import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
- * @author yangli9
- * 
  */
-public class NumberDictionaryTest {
+public class NumberDictionaryTest extends LocalFileMetadataTestCase {
 
     NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec(NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT);
     Random rand = new Random();
+
+    @Before
+    public void setup() throws Exception {
+        createTestMetadata();
+    }
+
+    @After
+    public void tearDown() {
+        cleanupTestMetadata();
+    }
 
     @Test
     public void testMinMax() {
@@ -84,6 +95,10 @@ public class NumberDictionaryTest {
         checkCodec("-12345.123", "-9999999999999987654.876;");
         checkCodec("0", "00000000000000000000");
         checkCodec("0.0", "00000000000000000000.0");
+        //test resolved jira-1800
+        checkCodec("-0.0045454354354354359999999999877218", "-9999999999999999999.9954545645645645640000000000122781;");
+        checkCodec("-0.009999999999877218", "-9999999999999999999.990000000000122781;");
+        checkCodec("12343434372493274.438403840384023840253554345345345345", "00012343434372493274.438403840384023840253554345345345345");
     }
 
     private void checkCodec(String number, String code) {
@@ -187,8 +202,7 @@ public class NumberDictionaryTest {
         if (digits2 > 0) {
             buf.append(".");
             for (int i = 0; i < digits2; i++)
-                buf.append("" + rand.nextInt(9) + 1); // BigDecimal thinks 4.5
-            // != 4.50, my god!
+                buf.append("" + rand.nextInt(9) + 1); // BigDecimal thinks 4.5 != 4.50, my god!
         }
         return buf.toString();
     }
