@@ -1,6 +1,5 @@
 {
   "uuid" : "0928468a-9fab-4185-9a14-6f2e7c74823f",
-
   "name" : "kylin_sales_model",
   "lookups" : [ {
     "table" : "DEFAULT.KYLIN_CAL_DT",
@@ -22,17 +21,16 @@
     "columns" : ["CAL_DT", "WEEK_BEG_DT"]
   }, {
     "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
-    "columns" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER" ]
-  }, {
-    "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
-    "columns" : [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ]
+    "columns" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ]
   }, {
     "table" : "DEFAULT.KYLIN_SALES",
-    "columns" : [ "LSTG_FORMAT_NAME", "SELLER_ID" ]
+    "columns" : [ "LSTG_FORMAT_NAME", "SELLER_ID", "PART_DT" ]
   } ],
   "metrics": [
     "PRICE",
-    "ITEM_COUNT"
+    "ITEM_COUNT",
+    "SELLER_ID",
+    "LSTG_FORMAT_NAME"
   ],
   "last_modified" : 1422435345362,
   "fact_table" : "DEFAULT.KYLIN_SALES",
