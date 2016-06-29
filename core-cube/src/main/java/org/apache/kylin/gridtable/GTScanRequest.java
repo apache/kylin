@@ -267,6 +267,16 @@ public class GTScanRequest {
         aggrCacheGB = -limit;
     }
 
+    public List<Integer> getRequiredMeasures() {
+        List<Integer> measures = Lists.newArrayList();
+        int numDim = info.getPrimaryKey().trueBitCount();
+        for (int i = 0; i < aggrMetrics.trueBitCount(); i++) {
+            int index = aggrMetrics.trueBitAt(i);
+            measures.add(index - numDim);
+        }
+        return measures;
+    }
+
     @Override
     public String toString() {
         return "GTScanRequest [range=" + ranges + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
@@ -354,5 +364,4 @@ public class GTScanRequest {
         }
 
     };
-
 }

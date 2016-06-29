@@ -271,6 +271,14 @@ public class GTInfo {
     public IGTCodeSystem getCodeSystem() {
         return codeSystem;
     }
+    
+    public int getMaxLength() {
+        int ret = 0;
+        for (int i = 0; i < colAll.trueBitCount(); i++) {
+            ret += codeSystem.maxCodeLength(colAll.trueBitAt(i));
+        }
+        return ret;
+    }
 
     public static final BytesSerializer<GTInfo> serializer = new BytesSerializer<GTInfo>() {
         @Override
@@ -340,4 +348,6 @@ public class GTInfo {
             enableRowBlock(newRowBlockSize).build();
         }
     };
+
+  
 }
