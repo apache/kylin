@@ -201,11 +201,6 @@ abstract public class KylinConfigBase implements Serializable {
         return new StringBuffer(root).append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).append("/").toString();
     }
 
-    public String[] getRealizationProviders() {
-        return getOptionalStringArray("kylin.realization.providers", //
-                new String[] { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager", "org.apache.kylin.invertedindex.IIManager" });
-    }
-
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
         CliCommandExecutor exec = new CliCommandExecutor();
         if (getRunAsRemoteCommand()) {
