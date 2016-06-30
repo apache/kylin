@@ -138,34 +138,39 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         badQueryHistoryManager = BadQueryHistoryManager.getInstance(kylinConfig);
 
         if (optionsHelper.hasOption(OPTION_PROJECT)) {
-            String projectName = optionsHelper.getOptionValue(OPTION_PROJECT);
-            ProjectInstance projectInstance = projectManager.getProject(projectName);
-            if (projectInstance == null) {
-                throw new IllegalArgumentException("Project " + projectName + " does not exist");
+            String projectNames = optionsHelper.getOptionValue(OPTION_PROJECT);
+            for (String projectName : projectNames.split(",")) {
+                ProjectInstance projectInstance = projectManager.getProject(projectName);
+                if (projectInstance == null) {
+                    throw new IllegalArgumentException("Project " + projectName + " does not exist");
+                }
+                addRequired(projectInstance.getResourcePath());
+                List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
+                for (RealizationEntry realizationEntry : realizationEntries) {
+                    retrieveResourcePath(getRealization(realizationEntry));
+                }
+                addOptional(badQueryHistoryManager.getBadQueriesForProject(projectName).getResourcePath());
             }
-            addRequired(projectInstance.getResourcePath());
-            List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
-            for (RealizationEntry realizationEntry : realizationEntries) {
-                retrieveResourcePath(getRealization(realizationEntry));
-            }
-            addOptional(badQueryHistoryManager.getBadQueriesForProject(projectName).getResourcePath());
         } else if (optionsHelper.hasOption(OPTION_CUBE)) {
-            String cubeName = optionsHelper.getOptionValue(OPTION_CUBE);
-            IRealization realization;
-
-            if ((realization = cubeManager.getRealization(cubeName)) != null) {
-                retrieveResourcePath(realization);
-            } else {
-                throw new IllegalArgumentException("No cube found with name of " + cubeName);
+            String cubeNames = optionsHelper.getOptionValue(OPTION_CUBE);
+            for (String cubeName : cubeNames.split(",")) {
+                IRealization realization = cubeManager.getRealization(cubeName);
+                if (realization == null) {
+                    throw new IllegalArgumentException("No cube found with name of " + cubeName);
+                } else {
+                    retrieveResourcePath(realization);
+                }
             }
         } else if (optionsHelper.hasOption(OPTION_HYBRID)) {
-            String hybridName = optionsHelper.getOptionValue(OPTION_HYBRID);
-            IRealization realization;
+            String hybridNames = optionsHelper.getOptionValue(OPTION_HYBRID);
+            for (String hybridName : hybridNames.split(",")) {
+                IRealization realization = hybridManager.getRealization(hybridName);
 
-            if ((realization = hybridManager.getRealization(hybridName)) != null) {
-                retrieveResourcePath(realization);
-            } else {
-                throw new IllegalArgumentException("No hybrid found with name of" + hybridName);
+                if (realization != null) {
+                    retrieveResourcePath(realization);
+                } else {
+                    throw new IllegalArgumentException("No hybrid found with name of" + hybridName);
+                }
             }
         }
 

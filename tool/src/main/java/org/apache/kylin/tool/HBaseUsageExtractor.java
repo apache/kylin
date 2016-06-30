@@ -99,22 +99,26 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
         projectManager = ProjectManager.getInstance(kylinConfig);
 
         if (optionsHelper.hasOption(OPTION_PROJECT)) {
-            String projectName = optionsHelper.getOptionValue(OPTION_PROJECT);
-            ProjectInstance projectInstance = projectManager.getProject(projectName);
-            if (projectInstance == null) {
-                throw new IllegalArgumentException("Project " + projectName + " does not exist");
-            }
-            List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
-            for (RealizationEntry realizationEntry : realizationEntries) {
-                retrieveResourcePath(getRealization(realizationEntry));
+            String projectNames = optionsHelper.getOptionValue(OPTION_PROJECT);
+            for (String projectName: projectNames.split(",")) {
+                ProjectInstance projectInstance = projectManager.getProject(projectName);
+                if (projectInstance == null) {
+                    throw new IllegalArgumentException("Project " + projectName + " does not exist");
+                }
+                List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
+                for (RealizationEntry realizationEntry : realizationEntries) {
+                    retrieveResourcePath(getRealization(realizationEntry));
+                }
             }
         } else if (optionsHelper.hasOption(OPTION_CUBE)) {
-            String cubeName = optionsHelper.getOptionValue(OPTION_CUBE);
-            IRealization realization;
-            if ((realization = cubeManager.getRealization(cubeName)) != null) {
-                retrieveResourcePath(realization);
-            } else {
-                throw new IllegalArgumentException("No cube found with name of " + cubeName);
+            String cubeNames = optionsHelper.getOptionValue(OPTION_CUBE);
+            for (String cubeName : cubeNames.split(",")) {
+                IRealization realization = cubeManager.getRealization(cubeName);
+                if (realization != null) {
+                    retrieveResourcePath(realization);
+                } else {
+                    throw new IllegalArgumentException("No cube found with name of " + cubeName);
+                }
             }
         }
 

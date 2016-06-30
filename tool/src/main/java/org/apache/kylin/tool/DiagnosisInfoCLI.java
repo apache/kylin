@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -91,21 +92,20 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         boolean includeHBase = optionsHelper.hasOption(OPTION_INCLUDE_HBASE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_HBASE)) : true;
         boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
         boolean includeJob = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : true;
+        String projectNames = StringUtils.join(getProjects(projectInput), ",");
 
-        for (String project : getProjects(projectInput)) {
-            // export cube metadata
-            String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", project, "-compress", "false", "-includeJobs", Boolean.toString(includeJob), "-submodule", "true" };
-            CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
-            logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
-            cubeMetaExtractor.execute(cubeMetaArgs);
+        // export cube metadata
+        String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-includeJobs", Boolean.toString(includeJob), "-submodule", "true" };
+        CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
+        logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
+        cubeMetaExtractor.execute(cubeMetaArgs);
 
-            // export HBase
-            if (includeHBase) {
-                String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", project, "-compress", "false", "-submodule", "true" };
-                HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
-                logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
-                hBaseUsageExtractor.execute(hbaseArgs);
-            }
+        // export HBase
+        if (includeHBase) {
+            String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-submodule", "true" };
+            HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
+            logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
+            hBaseUsageExtractor.execute(hbaseArgs);
         }
 
         // export conf
