@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,37 +81,25 @@ public class RealizationRegistry {
         providers = Maps.newConcurrentMap();
 
         // use reflection to load providers
-        // Note: keep "Class.forName" and "getMethod" on same line, allow detection of the use of reflection
-        try {
-            IRealizationProvider p = (IRealizationProvider) Class.forName("org.apache.kylin.cube.CubeManager").getMethod("getInstance", KylinConfig.class).invoke(null, config);
-            providers.put(p.getRealizationType(), p);
-        } catch (Exception | NoClassDefFoundError e) {
-            logEx(e);
-        }
-        try {
-            IRealizationProvider p = (IRealizationProvider) Class.forName("org.apache.kylin.storage.hybrid.HybridManager").getMethod("getInstance", KylinConfig.class).invoke(null, config);
-            providers.put(p.getRealizationType(), p);
-        } catch (Exception | NoClassDefFoundError e) {
-            logEx(e);
-        }
-        try {
-            IRealizationProvider p = (IRealizationProvider) Class.forName("org.apache.kylin.invertedindex.IIManager").getMethod("getInstance", KylinConfig.class).invoke(null, config);
-            providers.put(p.getRealizationType(), p);
-        } catch (Exception | NoClassDefFoundError e) {
-            logEx(e);
+        String[] providerNames = config.getRealizationProviders();
+        for (String clsName : providerNames) {
+            try {
+                Class<? extends IRealizationProvider> cls = ClassUtil.forName(clsName, IRealizationProvider.class);
+                IRealizationProvider p = (IRealizationProvider) cls.getMethod("getInstance", KylinConfig.class).invoke(null, config);
+                providers.put(p.getRealizationType(), p);
+
+            } catch (Exception | NoClassDefFoundError e) {
+                if (e instanceof ClassNotFoundException || e instanceof NoClassDefFoundError)
+                    logger.warn("Failed to create realization provider " + e);
+                else
+                    logger.error("Failed to create realization provider", e);
+            }
         }
 
         if (providers.isEmpty())
             throw new IllegalArgumentException("Failed to find realization provider by url: " + config.getMetadataUrl());
 
         logger.info("RealizationRegistry is " + providers);
-    }
-
-    private void logEx(Throwable e) {
-        if (e instanceof ClassNotFoundException || e instanceof NoClassDefFoundError)
-            logger.warn("Failed to create realization provider ", e);
-        else
-            logger.error("Failed to create realization provider", e);
     }
 
     public Set<RealizationType> getRealizationTypes() {
