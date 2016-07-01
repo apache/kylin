@@ -40,5 +40,6 @@
     }
   ],
   "database": "DEFAULT",
+  "source_type": 1,
   "last_modified": 0
 }
