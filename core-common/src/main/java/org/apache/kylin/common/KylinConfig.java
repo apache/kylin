@@ -174,7 +174,7 @@ public class KylinConfig extends KylinConfigBase {
         return config;
     }
 
-    private static File getKylinProperties() {
+    static File getKylinPropertiesFile() {
         String kylinConfHome = System.getProperty(KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {
             logger.info("Use KYLIN_CONF=" + kylinConfHome);
@@ -193,7 +193,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public static InputStream getKylinPropertiesAsInputStream() {
-        File propFile = getKylinProperties();
+        File propFile = getKylinPropertiesFile();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate kylin.properties");
             throw new RuntimeException("fail to locate kylin.properties");
@@ -337,7 +337,7 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public static void writeOverrideProperties(Properties properties) throws IOException {
-        File propFile = getKylinProperties();
+        File propFile = getKylinPropertiesFile();
         File overrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
         overrideFile.createNewFile();
         FileInputStream fis2 = null;
