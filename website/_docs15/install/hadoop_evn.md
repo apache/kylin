@@ -9,8 +9,8 @@ Kylin need run in a Hadoop node, to get better stability, we suggest you to depl
 
 ## Recommended Hadoop Versions
 
-* Hadoop: 2.4 - 2.7
-* Hive: 0.13 - 0.14
+* Hadoop: 2.6 - 2.7
+* Hive: 0.13 - 1.2.1
 * HBase: 0.98 - 0.99, 1.x
 * JDK: 1.7+
 
