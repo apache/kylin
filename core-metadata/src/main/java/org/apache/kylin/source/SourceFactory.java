@@ -18,6 +18,7 @@
 
 package org.apache.kylin.source;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
@@ -43,6 +44,10 @@ public class SourceFactory {
 
     public static <T> T createEngineAdapter(ISourceAware table, Class<T> engineInterface) {
         return tableSource(table).adaptToBuildEngine(engineInterface);
+    }
+
+    public static List<String> getMRDependentResources(TableDesc table) {
+        return tableSource(table).getMRDependentResources(table);
     }
 
 }

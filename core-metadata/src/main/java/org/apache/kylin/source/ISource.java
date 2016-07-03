@@ -20,9 +20,13 @@ package org.apache.kylin.source;
 
 import org.apache.kylin.metadata.model.TableDesc;
 
+import java.util.List;
+
 public interface ISource {
 
     public <I> I adaptToBuildEngine(Class<I> engineInterface);
 
     public ReadableTable createReadableTable(TableDesc tableDesc);
+
+    public List<String> getMRDependentResources(TableDesc table);
 }

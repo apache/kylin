@@ -105,6 +105,9 @@
       "joint_dims" : [ ]
     }
   } ],
+  "override_kylin_properties": {
+    "kylin.cube.algorithm": "random"
+  },
   "notify_list" : [ ],
   "status_need_notify" : [ ],
   "auto_merge_time_ranges" : null,

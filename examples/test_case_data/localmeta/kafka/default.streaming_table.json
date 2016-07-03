@@ -1,7 +1,7 @@
 {
  
   "uuid": "8b2b9dfe-777c-4d39-bf89-8472ec909193",
-  "name": "default.streaming_table",
+  "name": "DEFAULT.STREAMING_TABLE",
   "topic": "test_streaming_table_topic_xyz",
   "timeout": 60000,
   "bufferSize": 65536,

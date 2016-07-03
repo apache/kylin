@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -67,6 +68,7 @@ import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,6 +166,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         String kylinHiveDependency = System.getProperty("kylin.hive.dependency");
         String kylinHBaseDependency = System.getProperty("kylin.hbase.dependency");
+        String kylinKafkaDependency = System.getProperty("kylin.kafka.dependency");
         logger.info("append kylin.hbase.dependency: " + kylinHBaseDependency + " to " + MAP_REDUCE_CLASSPATH);
 
         Configuration jobConf = job.getConfiguration();
@@ -218,6 +221,29 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 logger.info("hive-metastore jar file: " + hiveMetaStoreJarPath);
             } catch (ClassNotFoundException e) {
                 logger.error("Cannot found hive dependency jars: " + e);
+            }
+        }
+
+        // for hive dependencies
+        if (kylinKafkaDependency != null) {
+            kylinKafkaDependency = kylinKafkaDependency.replace(":", ",");
+
+            logger.info("Kafka Dependencies Before Filtered: " + kylinHiveDependency);
+
+            if (kylinDependency.length() > 0)
+                kylinDependency.append(",");
+            kylinDependency.append(kylinKafkaDependency);
+        } else {
+
+            logger.info("No Kafka dependency jars set in the environment, will find them from jvm:");
+
+            try {
+                String kafkaClientJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.kafka.clients.consumer.KafkaConsumer"));
+                kylinDependency.append(kafkaClientJarPath).append(",");
+                logger.info("kafka jar file: " + kafkaClientJarPath);
+
+            } catch (ClassNotFoundException e) {
+                logger.error("Cannot found kafka dependency jars: " + e);
             }
         }
 
@@ -442,6 +468,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         for (String tableName : cube.getDescriptor().getModel().getAllTables()) {
             TableDesc table = metaMgr.getTableDesc(tableName);
             dumpList.add(table.getResourcePath());
+            List<String> dependentResources = SourceFactory.getMRDependentResources(table);
+            dumpList.addAll(dependentResources);
         }
         for (CubeSegment segment : cube.getSegments()) {
             dumpList.addAll(segment.getDictionaryPaths());

@@ -18,10 +18,13 @@
 
 package org.apache.kylin.source.hive;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ReadableTable;
+
+import java.util.List;
 
 //used by reflection
 public class HiveSource implements ISource {
@@ -39,6 +42,11 @@ public class HiveSource implements ISource {
     @Override
     public ReadableTable createReadableTable(TableDesc tableDesc) {
         return new HiveTable(tableDesc);
+    }
+
+    @Override
+    public List<String> getMRDependentResources(TableDesc table) {
+        return Lists.newArrayList();
     }
 
 }
