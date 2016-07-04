@@ -53,7 +53,7 @@ public class KylinResultSet extends AvaticaResultSet {
         if (!(statement instanceof KylinPreparedStatement)) {
             params = null;
         } else if (params != null && params.size() > 0) {
-            paramValues = ((KylinPreparedStatement) statement).getParameterValues2();
+            paramValues = ((KylinPreparedStatement) statement).getParameterJDBCValues();
         }
 
         IRemoteClient client = ((KylinConnection) statement.connection).getRemoteClient();

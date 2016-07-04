@@ -25,12 +25,14 @@ import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.calcite.avatica.AvaticaConnection;
 import org.apache.calcite.avatica.AvaticaPreparedStatement;
 import org.apache.calcite.avatica.Meta.Signature;
 import org.apache.calcite.avatica.Meta.StatementHandle;
+import org.apache.calcite.avatica.remote.TypedValue;
 
 public class KylinPreparedStatement extends AvaticaPreparedStatement {
 
@@ -40,12 +42,13 @@ public class KylinPreparedStatement extends AvaticaPreparedStatement {
             this.handle.signature = signature;
     }
 
-    protected List<Object> getParameterValues2() {
-        List<Object> values = new ArrayList<>(slots.length);
-        for (int i = 0; i < slots.length; i++) {
-            values.add(slots[i].value);
+    protected List<Object> getParameterJDBCValues() {
+        List<TypedValue> typeValues = getParameterValues();
+        List<Object> jdbcValues = new ArrayList<Object>(typeValues.size());
+        for(TypedValue typeValue: typeValues){
+            jdbcValues.add(typeValue.toJdbc(getCalendar()));
         }
-        return values;
+        return jdbcValues;
     }
 
     // ============================================================================
