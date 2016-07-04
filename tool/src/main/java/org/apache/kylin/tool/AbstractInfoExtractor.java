@@ -87,7 +87,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
 
         // create new folder to contain the output
         String packageName = packageType.toLowerCase() + "_" + new SimpleDateFormat("YYYY_MM_dd_HH_mm_ss").format(new Date());
-        if (new File(exportDest).exists()) {
+        if (!isSubmodule && new File(exportDest).exists()) {
             exportDest = exportDest + packageName + "/";
         }
         exportDir = new File(exportDest);

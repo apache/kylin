@@ -34,7 +34,7 @@ package_name=apache-kylin-${version}-bin
 cd build/
 rm -rf ${package_name}
 mkdir ${package_name}
-cp -r lib bin conf tomcat ../examples/sample_cube commit_SHA1 ${package_name}
+cp -r lib tool bin conf tomcat ../examples/sample_cube commit_SHA1 ${package_name}
 rm -rf lib tomcat commit_SHA1
 find ${package_name} -type d -exec chmod 755 {} \;
 find ${package_name} -type f -exec chmod 644 {} \;

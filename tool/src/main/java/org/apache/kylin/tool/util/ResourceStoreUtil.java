@@ -20,7 +20,7 @@
 package org.apache.kylin.tool.util;
 
 import java.lang.reflect.Method;
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
@@ -31,7 +31,7 @@ import org.apache.kylin.metadata.MetadataConstants;
  * Created by dongli on 5/5/16.
  */
 public class ResourceStoreUtil {
-    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws Exception {
+    public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, Collection<String> paths) throws Exception {
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
         for (String path : paths) {

@@ -20,6 +20,7 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -53,7 +54,7 @@ import org.apache.kylin.tool.util.ResourceStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * extract cube related info for debugging/distributing purpose
@@ -98,9 +99,9 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     boolean includeSegmentDetails;
     boolean onlyJobOutput;
 
-    List<String> requiredResources = Lists.newArrayList();
-    List<String> optionalResources = Lists.newArrayList();
-    List<CubeInstance> cubesToTrimAndSave = Lists.newArrayList();//these cubes needs to be saved skipping segments
+    Set<String> requiredResources = Sets.newLinkedHashSet();
+    Set<String> optionalResources = Sets.newLinkedHashSet();
+    Set<CubeInstance> cubesToTrimAndSave = Sets.newLinkedHashSet();//these cubes needs to be saved skipping segments
 
     public CubeMetaExtractor() {
         super();
@@ -148,6 +149,10 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
                 List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
                 for (RealizationEntry realizationEntry : realizationEntries) {
                     retrieveResourcePath(getRealization(realizationEntry));
+                }
+                List<DataModelDesc> modelDescs = metadataManager.getModels(projectName);
+                for (DataModelDesc modelDesc : modelDescs) {
+                    addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
                 }
                 addOptional(badQueryHistoryManager.getBadQueriesForProject(projectName).getResourcePath());
             }

@@ -49,7 +49,7 @@ then
     fi
     export HBASE_CLASSPATH=$hive_dependency:${HBASE_CLASSPATH}
 
-    diagJar=`ls ${KYLIN_HOME}/tool/kylin-diagnosis-*.jar`
+    diagJar=`ls ${KYLIN_HOME}/tool/kylin-tool-*.jar`
     if [ -f "${diagJar}" ]; then
         if [ -f "${KYLIN_HOME}/commit_SHA1" ]; then
             export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${diagJar}:${KYLIN_HOME}/lib/*
@@ -64,7 +64,7 @@ then
     if [ ${#patient} -eq 36 ]; then
         exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.JobDiagnosisInfoCLI -jobId $patient -destDir $destDir
     else
-        exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.DiagnosisInfoCLI -project $patient -destDir $destDir
+        exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.tool.DiagnosisInfoCLI -project -all -destDir $destDir
     fi
 
     exit 0

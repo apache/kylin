@@ -54,9 +54,9 @@ mvn clean install -DskipTests	 || { exit 1; }
 echo "copy libraries"
 rm -rf build/tool
 mkdir build/tool
-cp tool/target/kylin-tool-${version}-assembly.jar build/tool/kylin-diagnosis-${version}.jar
+cp tool/target/kylin-tool-${version}-assembly.jar build/tool/kylin-tool-${version}.jar
 # Copied file becomes 000 for some env (e.g. my Cygwin)
-chmod 644 build/tool/kylin-diagnosis-${version}.jar
+chmod 644 build/tool/kylin-tool-${version}.jar
 
 echo 'package tar.gz'
 package_name=apache-kylin-${version}-diag
@@ -65,7 +65,7 @@ rm -rf ${package_name}
 mkdir ${package_name}
 mkdir ${package_name}/bin
 cp -r tool ${package_name}
-cp deploy/diag.sh ${package_name}/bin/
+cp bin/diag.sh ${package_name}/bin/
 rm -rf tool
 find ${package_name} -type d -exec chmod 755 {} \;
 find ${package_name} -type f -exec chmod 644 {} \;

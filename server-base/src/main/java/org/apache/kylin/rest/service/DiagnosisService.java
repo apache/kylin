@@ -22,10 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.tool.DiagnosisInfoCLI;
-import org.apache.kylin.tool.JobDiagnosisInfoCLI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,6 +44,19 @@ public class DiagnosisService extends BasicService {
         return Files.createTempDir();
     }
 
+    private String getDiagnosisPackageName(File destDir) {
+        for (File subDir : destDir.listFiles()) {
+            if (subDir.isDirectory()) {
+                for (File file : subDir.listFiles()) {
+                    if (file.getName().endsWith(".zip")) {
+                        return file.getAbsolutePath();
+                    }
+                }
+            }
+        }
+        throw new RuntimeException("Diagnosis package not found in directory: " + destDir.getAbsolutePath());
+    }
+
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public BadQueryHistory getProjectBadQueryHistory(String project) throws IOException {
         return getBadQueryHistoryManager().getBadQueriesForProject(project);
@@ -49,26 +64,37 @@ public class DiagnosisService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String dumpProjectDiagnosisInfo(String project) throws IOException {
-        String[] args = { "-project", "-all", "-destDir", getDumpDir().getAbsolutePath() };
-        logger.info("DiagnosisInfoCLI args: " + Arrays.toString(args));
-        DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
-        diagnosisInfoCli.execute(args);
-        return diagnosisInfoCli.getExportDest();
+        File exportPath = getDumpDir();
+        String[] args = { project, exportPath.getAbsolutePath() };
+        runDiagnosisCLI(args);
+        return getDiagnosisPackageName(exportPath);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String dumpJobDiagnosisInfo(String jobId) throws IOException {
-        String[] args = { "-jobId", jobId, "-destDir", getDumpDir().getAbsolutePath() };
-        logger.info("JobDiagnosisInfoCLI args: " + Arrays.toString(args));
-        JobDiagnosisInfoCLI jobInfoExtractor = new JobDiagnosisInfoCLI();
-        jobInfoExtractor.execute(args);
-        return jobInfoExtractor.getExportDest();
+        File exportPath = getDumpDir();
+        String[] args = { jobId, exportPath.getAbsolutePath() };
+        runDiagnosisCLI(args);
+        return getDiagnosisPackageName(exportPath);
     }
 
-    public static void main(String[] args1) {
-        String[] args = { "-project", "-all", "-destDir", Files.createTempDir().getAbsolutePath() };
+    private void runDiagnosisCLI(String[] args) throws IOException {
+        File cwd = new File("");
+        logger.info("Current path: " + cwd.getAbsolutePath());
+
         logger.info("DiagnosisInfoCLI args: " + Arrays.toString(args));
-        DiagnosisInfoCLI diagnosisInfoCli = new DiagnosisInfoCLI();
-        diagnosisInfoCli.execute(args);
+        File script = new File(KylinConfig.getKylinHome() + File.separator + "bin", "diag.sh");
+        if (!script.exists()) {
+            throw new RuntimeException("diag.sh not found at " + script.getAbsolutePath());
+        }
+
+        String diagCmd = script.getAbsolutePath() + " " + StringUtils.join(args, " ");
+        CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
+        Pair<Integer, String> cmdOutput = executor.execute(diagCmd);
+        logger.info(cmdOutput.getValue());
+
+        if (cmdOutput.getKey() != 0) {
+            throw new RuntimeException("Failed to generate diagnosis package.");
+        }
     }
 }
