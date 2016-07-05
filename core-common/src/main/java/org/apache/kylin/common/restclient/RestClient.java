@@ -23,15 +23,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.kylin.common.util.Bytes;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.util.JsonUtil;
 
 /**
@@ -44,7 +45,7 @@ public class RestClient {
     protected String baseUrl;
     protected String userName;
     protected String password;
-    protected HttpClient client;
+    protected CloseableHttpClient client;
 
     protected static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
 
@@ -78,27 +79,28 @@ public class RestClient {
         this.password = password;
         this.baseUrl = "http://" + host + ":" + port + "/kylin/api";
 
-        client = new HttpClient();
+        client = HttpClients.createDefault();
 
         if (userName != null && password != null) {
-            client.getParams().setAuthenticationPreemptive(true);
-            Credentials creds = new UsernamePasswordCredentials(userName, password);
-            client.getState().setCredentials(new AuthScope(host, port, AuthScope.ANY_REALM), creds);
+            CredentialsProvider provider = new BasicCredentialsProvider();
+            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(userName, password);
+            provider.setCredentials(AuthScope.ANY, credentials);
+            client = HttpClients.custom().setDefaultCredentialsProvider(provider).build();
         }
     }
 
     public void wipeCache(String type, String action, String name) throws IOException {
         String url = baseUrl + "/cache/" + type + "/" + name + "/" + action;
-        HttpMethod request = new PutMethod(url);
+        HttpPut request = new HttpPut(url);
 
         try {
-            int code = client.executeMethod(request);
-            String msg = Bytes.toString(request.getResponseBody());
+            CloseableHttpResponse response = client.execute(request);
+            String msg = EntityUtils.toString(response.getEntity());
 
-            if (code != 200)
-                throw new IOException("Invalid response " + code + " with cache wipe url " + url + "\n" + msg);
-
-        } catch (HttpException ex) {
+            if (response.getStatusLine().getStatusCode() != 200)
+                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with cache wipe url " + url + "\n" + msg);
+            response.close();
+        } catch (Exception ex) {
             throw new IOException(ex);
         } finally {
             request.releaseConnection();
@@ -107,18 +109,17 @@ public class RestClient {
 
     public String getKylinProperties() throws IOException {
         String url = baseUrl + "/admin/config";
-        HttpMethod request = new GetMethod(url);
+        HttpGet request = new HttpGet(url);
         try {
-            int code = client.executeMethod(request);
-            String msg = Bytes.toString(request.getResponseBody());
+            CloseableHttpResponse response = client.execute(request);
+            String msg = EntityUtils.toString(response.getEntity());
             Map<String, String> map = JsonUtil.readValueAsMap(msg);
             msg = map.get("config");
 
-            if (code != 200)
-                throw new IOException("Invalid response " + code + " with cache wipe url " + url + "\n" + msg);
-
+            if (response.getStatusLine().getStatusCode() != 200)
+                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with cache wipe url " + url + "\n" + msg);
+            response.close();
             return msg;
-
         } finally {
             request.releaseConnection();
         }

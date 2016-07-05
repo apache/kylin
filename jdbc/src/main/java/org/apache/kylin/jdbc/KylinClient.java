@@ -20,6 +20,7 @@ package org.apache.kylin.jdbc;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.security.cert.X509Certificate;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -30,19 +31,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.net.ssl.SSLContext;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.calcite.avatica.ColumnMetaData.ScalarType;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethodBase;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.protocol.Protocol;
-import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.util.EntityUtils;
 import org.apache.kylin.jdbc.KylinMeta.KMetaCatalog;
 import org.apache.kylin.jdbc.KylinMeta.KMetaColumn;
 import org.apache.kylin.jdbc.KylinMeta.KMetaProject;
@@ -54,7 +62,6 @@ import org.apache.kylin.jdbc.json.SQLResponseStub;
 import org.apache.kylin.jdbc.json.StatementParameter;
 import org.apache.kylin.jdbc.json.TableMetaStub;
 import org.apache.kylin.jdbc.json.TableMetaStub.ColumnMetaStub;
-import org.apache.kylin.jdbc.util.DefaultSslProtocolSocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,18 +74,28 @@ public class KylinClient implements IRemoteClient {
 
     private final KylinConnection conn;
     private final Properties connProps;
-    private final HttpClient httpClient;
+    private CloseableHttpClient httpClient;
     private final ObjectMapper jsonMapper;
 
     public KylinClient(KylinConnection conn) {
         this.conn = conn;
         this.connProps = conn.getConnectionProperties();
-        this.httpClient = new HttpClient();
+        this.httpClient = HttpClients.createDefault();
         this.jsonMapper = new ObjectMapper();
 
         // trust all certificates
         if (isSSL()) {
-            Protocol.registerProtocol("https", new Protocol("https", (ProtocolSocketFactory) new DefaultSslProtocolSocketFactory(), 443));
+            try {
+                TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
+                    public boolean isTrusted(X509Certificate[] certificate, String type) {
+                        return true;
+                    }
+                };
+                SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
+                httpClient = HttpClients.custom().setSSLHostnameVerifier(new DefaultHostnameVerifier()).setSSLContext(sslContext).build();
+            } catch (Exception e) {
+                throw new RuntimeException("Initialize HTTPS client failed", e);
+            }
         }
     }
 
@@ -193,28 +210,29 @@ public class KylinClient implements IRemoteClient {
         return (isSSL() ? "https://" : "http://") + conn.getBaseUrl();
     }
 
-    private void addHttpHeaders(HttpMethodBase method) {
-        method.addRequestHeader("Accept", "application/json, text/plain, */*");
-        method.addRequestHeader("Content-Type", "application/json");
+    private void addHttpHeaders(HttpRequestBase method) {
+        method.addHeader("Accept", "application/json, text/plain, */*");
+        method.addHeader("Content-Type", "application/json");
 
         String username = connProps.getProperty("user");
         String password = connProps.getProperty("password");
         String basicAuth = DatatypeConverter.printBase64Binary((username + ":" + password).getBytes());
-        method.addRequestHeader("Authorization", "Basic " + basicAuth);
+        method.addHeader("Authorization", "Basic " + basicAuth);
     }
 
     @Override
     public void connect() throws IOException {
-        PostMethod post = new PostMethod(baseUrl() + "/kylin/api/user/authentication");
+        HttpPost post = new HttpPost(baseUrl() + "/kylin/api/user/authentication");
         addHttpHeaders(post);
-        StringRequestEntity requestEntity = new StringRequestEntity("{}", "application/json", "UTF-8");
-        post.setRequestEntity(requestEntity);
+        StringEntity requestEntity = new StringEntity("{}", ContentType.create("application/json", "UTF-8"));
+        post.setEntity(requestEntity);
 
-        httpClient.executeMethod(post);
+        CloseableHttpResponse response = httpClient.execute(post);
 
-        if (post.getStatusCode() != 200 && post.getStatusCode() != 201) {
-            throw asIOException(post);
+        if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
+            throw asIOException(post, response);
         }
+        response.close();
     }
 
     @Override
@@ -222,21 +240,22 @@ public class KylinClient implements IRemoteClient {
         assert conn.getProject().equals(project);
 
         String url = baseUrl() + "/kylin/api/tables_and_columns?project=" + project;
-        GetMethod get = new GetMethod(url);
+        HttpGet get = new HttpGet(url);
         addHttpHeaders(get);
 
-        httpClient.executeMethod(get);
+        CloseableHttpResponse response = httpClient.execute(get);
 
-        if (get.getStatusCode() != 200 && get.getStatusCode() != 201) {
-            throw asIOException(get);
+        if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
+            throw asIOException(get, response);
         }
 
-        List<TableMetaStub> tableMetaStubs = jsonMapper.readValue(get.getResponseBodyAsStream(), new TypeReference<List<TableMetaStub>>() {
+        List<TableMetaStub> tableMetaStubs = jsonMapper.readValue(response.getEntity().getContent(), new TypeReference<List<TableMetaStub>>() {
         });
 
         List<KMetaTable> tables = convertMetaTables(tableMetaStubs);
         List<KMetaSchema> schemas = convertMetaSchemas(tables);
         List<KMetaCatalog> catalogs = convertMetaCatalogs(schemas);
+        response.close();
         return new KMetaProject(project, catalogs);
     }
 
@@ -341,21 +360,23 @@ public class KylinClient implements IRemoteClient {
         request.setSql(sql);
         request.setProject(project);
 
-        PostMethod post = new PostMethod(url);
+        HttpPost post = new HttpPost(url);
         addHttpHeaders(post);
 
         String postBody = jsonMapper.writeValueAsString(request);
         logger.debug("Post body:\n " + postBody);
-        StringRequestEntity requestEntity = new StringRequestEntity(postBody, "application/json", "UTF-8");
-        post.setRequestEntity(requestEntity);
+        StringEntity requestEntity = new StringEntity(postBody, ContentType.create("application/json", "UTF-8"));
+        post.setEntity(requestEntity);
 
-        httpClient.executeMethod(post);
+        CloseableHttpResponse response = httpClient.execute(post);
 
-        if (post.getStatusCode() != 200 && post.getStatusCode() != 201) {
-            throw asIOException(post);
+        if (response.getStatusLine().getStatusCode() != 200 && response.getStatusLine().getStatusCode() != 201) {
+            throw asIOException(post, response);
         }
 
-        return jsonMapper.readValue(post.getResponseBodyAsStream(), SQLResponseStub.class);
+        SQLResponseStub stub = jsonMapper.readValue(response.getEntity().getContent(), SQLResponseStub.class);
+        response.close();
+        return stub;
     }
 
     private List<ColumnMetaData> convertColumnMeta(SQLResponseStub queryResp) {
@@ -388,11 +409,14 @@ public class KylinClient implements IRemoteClient {
         return (List<Object>) data;
     }
 
-    private IOException asIOException(HttpMethodBase method) throws IOException {
-        return new IOException(method + " failed, error code " + method.getStatusCode() + " and response: " + method.getResponseBodyAsString());
+    private IOException asIOException(HttpRequestBase request, HttpResponse response) throws IOException {
+        return new IOException(request.getMethod() + " failed, error code " + response.getStatusLine().getStatusCode() + " and response: " + EntityUtils.toString(response.getEntity()));
     }
 
     @Override
     public void close() throws IOException {
+        if (httpClient != null) {
+            httpClient.close();
+        }
     }
 }

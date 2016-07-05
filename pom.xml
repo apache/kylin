@@ -69,7 +69,6 @@
         <commons-collections.version>3.2.1</commons-collections.version>
         <commons-io.version>2.4</commons-io.version>
         <commons-daemon.version>1.0.15</commons-daemon.version>
-        <commons-httpclient.version>3.1</commons-httpclient.version>
         <commons-email.version>1.1</commons-email.version>
         <commons-math3.version>3.6</commons-math3.version>
 
@@ -385,11 +384,6 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>commons-httpclient</groupId>
-                <artifactId>commons-httpclient</artifactId>
-                <version>${commons-httpclient.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-email</artifactId>
                 <version>${commons-email.version}</version>
@@ -460,12 +454,11 @@
                 <artifactId>curator-recipes</artifactId>
                 <version>${curator.version}</version>
             </dependency>
-                <dependency>
-                      <groupId>org.apache.httpcomponents</groupId>
-                  <artifactId>httpclient</artifactId>
-                     <version>${apache-httpclient.version}</version>
-                  </dependency>
-
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${apache-httpclient.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.roaringbitmap</groupId>
                 <artifactId>RoaringBitmap</artifactId>
