@@ -25,7 +25,6 @@ import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.calcite.avatica.AvaticaConnection;
@@ -45,7 +44,7 @@ public class KylinPreparedStatement extends AvaticaPreparedStatement {
     protected List<Object> getParameterJDBCValues() {
         List<TypedValue> typeValues = getParameterValues();
         List<Object> jdbcValues = new ArrayList<Object>(typeValues.size());
-        for(TypedValue typeValue: typeValues){
+        for (TypedValue typeValue : typeValues) {
             jdbcValues.add(typeValue.toJdbc(getCalendar()));
         }
         return jdbcValues;
