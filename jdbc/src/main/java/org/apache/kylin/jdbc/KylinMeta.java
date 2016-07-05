@@ -35,8 +35,6 @@ import org.apache.calcite.avatica.NoSuchStatementException;
 import org.apache.calcite.avatica.QueryState;
 import org.apache.calcite.avatica.remote.TypedValue;
 
-import com.google.common.collect.ImmutableList;
-
 /**
  * Implementation of Avatica interface
  */
@@ -64,7 +62,7 @@ public class KylinMeta extends MetaImpl {
     @Override
     public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, long maxRowCount) throws NoSuchStatementException {
         final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
-        return new ExecuteResult(ImmutableList.of(metaResultSet));
+        return new ExecuteResult(Collections.singletonList(metaResultSet));
     }
 
     // mimic from CalciteMetaImpl, real execution happens via callback in KylinResultSet.execute()
@@ -78,7 +76,7 @@ public class KylinMeta extends MetaImpl {
             }
             callback.execute();
             final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
-            return new ExecuteResult(ImmutableList.of(metaResultSet));
+            return new ExecuteResult(Collections.singletonList(metaResultSet));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
