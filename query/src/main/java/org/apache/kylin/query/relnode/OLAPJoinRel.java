@@ -117,14 +117,15 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         this.isTopJoin = !this.context.hasJoin;
         this.context.hasJoin = true;
 
-        int nJoinPossibility = 0;
+        boolean leftHasSubquery = false;
+        boolean rightHasSubquery = false;
 
         // as we keep the first table as fact table, we need to visit from left to right
         implementor.visitChild(this.left, this);
         if (this.context != implementor.getContext() || ((OLAPRel) this.left).hasSubQuery()) {
             this.hasSubQuery = true;
+            leftHasSubquery = true;
             // if child is also an OLAPJoin, then the context has already been popped
-            nJoinPossibility--;
             if (this.context != implementor.getContext()) {
                 implementor.freeContext();
             }
@@ -132,7 +133,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         implementor.visitChild(this.right, this);
         if (this.context != implementor.getContext() || ((OLAPRel) this.right).hasSubQuery()) {
             this.hasSubQuery = true;
-            nJoinPossibility++;
+            rightHasSubquery = true;
             // if child is also an OLAPJoin, then the context has already been popped
             if (this.context != implementor.getContext()) {
                 implementor.freeContext();
@@ -157,13 +158,13 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
             join.setType(joinType);
 
             this.context.joins.add(join);
-        } else if (0 != nJoinPossibility) {
+        } else if (leftHasSubquery != rightHasSubquery) {
             //When join contains subquery, the join-condition fields of fact_table will add into context.
             Map<TblColRef, TblColRef> joinCol = new HashMap<TblColRef, TblColRef>();
             translateJoinColumn((RexCall) this.getCondition(), joinCol);
 
             for (Map.Entry<TblColRef, TblColRef> columnPair : joinCol.entrySet()) {
-                TblColRef fromCol = (-1 == nJoinPossibility ? columnPair.getValue() : columnPair.getKey());
+                TblColRef fromCol = (rightHasSubquery ? columnPair.getKey() : columnPair.getValue());
                 this.context.groupByColumns.add(fromCol);
             }
             joinCol.clear();
