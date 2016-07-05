@@ -43,7 +43,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -92,7 +92,7 @@ public class KylinClient implements IRemoteClient {
                     }
                 };
                 SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
-                httpClient = HttpClients.custom().setSSLHostnameVerifier(new DefaultHostnameVerifier()).setSSLContext(sslContext).build();
+                httpClient = HttpClients.custom().setSSLHostnameVerifier(new NoopHostnameVerifier()).setSSLContext(sslContext).build();
             } catch (Exception e) {
                 throw new RuntimeException("Initialize HTTPS client failed", e);
             }
