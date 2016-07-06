@@ -34,6 +34,9 @@ public interface IMRInput {
     /** Return an InputFormat that reads from specified table. */
     public IMRTableInputFormat getTableInputFormat(TableDesc table);
 
+    /** Return a helper to participate in batch cubing merge job flow. */
+    public IMRBatchMergeInputSide getBatchMergeInputSide(CubeSegment seg);
+
     /**
      * Utility that configures mapper to read from a table.
      */
@@ -65,5 +68,12 @@ public interface IMRInput {
 
         /** Add step that does necessary clean up, like delete the intermediate flat table */
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
+    }
+
+    public interface IMRBatchMergeInputSide {
+
+        /** Add step that executes before merge dictionary and before merge cube. */
+        public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow);
+
     }
 }

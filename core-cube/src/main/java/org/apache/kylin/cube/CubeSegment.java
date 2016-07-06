@@ -121,19 +121,18 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable {
      * returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
      */
     public static String makeSegmentName(long startDate, long endDate, long startOffset, long endOffset) {
-        if (startOffset == 0 && endOffset == 0) {
-            startOffset = startDate;
-            endOffset = endDate;
+        if (startOffset != 0 || endOffset != 0) {
+            if (startOffset == 0 && (endOffset == 0 || endOffset == Long.MAX_VALUE)) {
+                return "FULL_BUILD";
+            }
+
+            return startOffset + "_" + endOffset;
         }
 
-        if (startOffset == 0 && (endOffset == 0 || endOffset == Long.MAX_VALUE)) {
-            return "FULL_BUILD";
-        }
-
+        // using time
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-        return dateFormat.format(startOffset) + "_" + dateFormat.format(endOffset);
+        return dateFormat.format(startDate) + "_" + dateFormat.format(endDate);
     }
 
     // ============================================================================
