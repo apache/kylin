@@ -49,6 +49,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
+import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
@@ -233,6 +234,7 @@ public class CubeStatsReader {
         out.println("Total estimated size(MB): " + SumHelper.sumDouble(cuboidSizes.values()));
         out.println("Sampling percentage:  " + samplingPercentage);
         out.println("Mapper overlap ratio: " + mapperOverlapRatioOfFirstBuild);
+        printKVInfo(out);
         printCuboidInfoTreeEntry(cuboidRows, cuboidSizes, out);
         out.println("----------------------------------------------------------------------------");
     }
@@ -243,6 +245,14 @@ public class CubeStatsReader {
         long baseCuboid = Cuboid.getBaseCuboidId(cubeDesc);
         int dimensionCount = Long.bitCount(baseCuboid);
         printCuboidInfoTree(-1L, baseCuboid, scheduler, cuboidRows, cuboidSizes, dimensionCount, 0, out);
+    }
+
+    private void printKVInfo(PrintWriter writer) {
+        Cuboid cuboid = Cuboid.getBaseCuboid(seg.getCubeDesc());
+        RowKeyEncoder encoder = new RowKeyEncoder(seg, cuboid);
+        for (TblColRef col : cuboid.getColumns()) {
+            writer.println("Length of dimension " + col + " is " + encoder.getColumnLength(col));
+        }
     }
 
     private static void printCuboidInfoTree(long parent, long cuboidID, final CuboidScheduler scheduler, Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, int dimensionCount, int depth, PrintWriter out) {
