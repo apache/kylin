@@ -502,6 +502,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dict.cache.max.entry", "3000"));
     }
 
+    public int getCachedSnapshotMaxEntrySize(){
+        return Integer.parseInt(getOptional("kylin.snapshot.cache.max.entry", "500"));
+    }
+
     public boolean getQueryRunLocalCoprocessor() {
         return Boolean.parseBoolean(getOptional("kylin.query.run.local.coprocessor", "false"));
     }
