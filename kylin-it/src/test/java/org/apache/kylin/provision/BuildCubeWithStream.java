@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
@@ -36,6 +37,7 @@ import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
+import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +63,7 @@ public class BuildCubeWithStream {
             buildCubeWithStream.before();
             buildCubeWithStream.build();
             logger.info("Build is done");
-            afterClass();
+            buildCubeWithStream.cleanup();
             logger.info("Going to exit");
             System.exit(0);
         } catch (Exception e) {
@@ -101,8 +103,16 @@ public class BuildCubeWithStream {
         DeployUtil.prepareTestDataForStreamingCube(startTime, endTime, cubeName, streamingConfig);
     }
 
-    public static void afterClass() throws Exception {
+    public void cleanup() throws Exception {
+        cleanupOldStorage();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
+    }
+
+    private static int cleanupOldStorage() throws Exception {
+        String[] args = { "--delete", "true" };
+
+        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
+        return exitCode;
     }
 
     public void build() throws Exception {

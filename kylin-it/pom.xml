@@ -18,7 +18,8 @@
 -->
 
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>kylin</artifactId>
         <groupId>org.apache.kylin</groupId>
@@ -30,8 +31,8 @@
     <name>Kylin:IT</name>
 
     <properties>
-        <hdp.version />
-        <fastBuildMode />
+        <hdp.version/>
+        <fastBuildMode/>
     </properties>
 
     <!-- Dependencies. -->
@@ -283,9 +284,13 @@
                         <executions>
                             <execution>
                                 <id>integration-tests</id>
-                                <phase>integration-test</phase>
                                 <goals>
                                     <goal>integration-test</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>verify</id>
+                                <goals>
                                     <goal>verify</goal>
                                 </goals>
                             </execution>
@@ -323,7 +328,7 @@
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
                                         <argument>-classpath</argument>
-                                        <classpath />
+                                        <classpath/>
                                         <argument>org.apache.kylin.provision.BuildCubeWithEngine</argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>
@@ -344,29 +349,8 @@
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
                                         <argument>-classpath</argument>
-                                        <classpath />
+                                        <classpath/>
                                         <argument>org.apache.kylin.provision.BuildCubeWithStream</argument>
-                                    </arguments>
-                                    <workingDirectory>${project.basedir}</workingDirectory>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>build_ii_with_stream</id>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <phase>pre-integration-test</phase>
-                                <configuration>
-                                    <skip>${skipTests}</skip>
-                                    <classpathScope>test</classpathScope>
-                                    <executable>java</executable>
-                                    <arguments>
-                                        <argument>-DuseSandbox=true</argument>
-                                        <argument>-Dhdp.version=${hdp.version}</argument>
-                                        <argument>-DfastBuildMode=${fastBuildMode}</argument>
-                                        <argument>-classpath</argument>
-                                        <classpath />
-                                        <argument>org.apache.kylin.provision.BuildIIWithStream</argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>
                                 </configuration>
