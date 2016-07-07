@@ -44,9 +44,9 @@
       "realization": "test_kylin_hybrid_inner_join"
     },
     {
-      "name": "test_kylin_cube_with_view_empty",
+      "name": "test_kylin_cube_with_view_left_join_empty",
       "type": "CUBE",
-      "realization": "test_kylin_cube_with_view_empty"
+      "realization": "test_kylin_cube_with_view_left_join_empty"
     },
     {
       "name": "test_kylin_cube_with_view_inner_join_empty",

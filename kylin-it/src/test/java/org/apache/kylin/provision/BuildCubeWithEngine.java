@@ -326,7 +326,7 @@ public class BuildCubeWithEngine {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         List<String> result = Lists.newArrayList();
-        final String cubeName = "test_kylin_cube_with_view_empty";
+        final String cubeName = "test_kylin_cube_with_view_left_join_empty";
         clearSegment(cubeName);
 
         long date1 = cubeManager.getCube(cubeName).getDescriptor().getPartitionDateStart();
