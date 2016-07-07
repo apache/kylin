@@ -810,13 +810,20 @@ public class CubeManager implements IRealizationProvider {
         ResourceStore store = getStore();
         List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_RESOURCE_ROOT, ".json");
 
-        logger.debug("Loading Cube from folder " + store.getReadableResourcePath(ResourceStore.CUBE_RESOURCE_ROOT));
+        logger.info("Loading Cube from folder " + store.getReadableResourcePath(ResourceStore.CUBE_RESOURCE_ROOT));
 
+        int succeed = 0;
+        int fail = 0;
         for (String path : paths) {
-            reloadCubeLocalAt(path);
+            CubeInstance cube = reloadCubeLocalAt(path);
+            if (cube == null) {
+                fail++;
+            } else {
+                succeed++;
+            }
         }
 
-        logger.debug("Loaded " + paths.size() + " Cube(s)");
+        logger.info("Loaded " + succeed + " cubes, fail on " + fail + " cubes");
     }
 
     private synchronized CubeInstance reloadCubeLocalAt(String path) {
@@ -855,7 +862,7 @@ public class CubeManager implements IRealizationProvider {
 
             return cubeInstance;
         } catch (Exception e) {
-            logger.error("Error during load cube instance " + path, e);
+            logger.error("Error during load cube instance, skipping : " + path, e);
             return null;
         }
     }

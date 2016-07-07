@@ -282,8 +282,15 @@ public class CubeService extends BasicService {
             throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
         }
 
-        this.releaseAllSegments(cube);
-        getCubeManager().dropCube(cube.getName(), true);
+        try {
+            this.releaseAllJobs(cube);
+        } catch (Exception e) {
+            logger.error("error when releasing all jobs", e);
+            //ignore the exception
+        }
+
+        int cubeNum = getCubeManager().getCubesByDesc(cube.getDescriptor().getName()).size();
+        getCubeManager().dropCube(cube.getName(), cubeNum == 1);//only delete cube desc when no other cube is using it
         accessService.clean(cube, true);
     }
 
@@ -550,13 +557,7 @@ public class CubeService extends BasicService {
         return CubeManager.getInstance(getConfig()).updateCube(update);
     }
 
-    /**
-     * purge the cube
-     *
-     * @throws IOException
-     * @throws JobException
-     */
-    private CubeInstance releaseAllSegments(CubeInstance cube) throws IOException, JobException {
+    private void releaseAllJobs(CubeInstance cube) {
         final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
             final ExecutableState status = cubingJob.getStatus();
@@ -564,9 +565,20 @@ public class CubeService extends BasicService {
                 getExecutableManager().discardJob(cubingJob.getId());
             }
         }
+    }
+
+    /**
+     * purge the cube
+     *
+     * @throws IOException
+     * @throws JobException
+     */
+    private void releaseAllSegments(CubeInstance cube) throws IOException, JobException {
+        releaseAllJobs(cube);
+
         CubeUpdate update = new CubeUpdate(cube);
         update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
-        return CubeManager.getInstance(getConfig()).updateCube(update);
+        CubeManager.getInstance(getConfig()).updateCube(update);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
