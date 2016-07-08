@@ -20,7 +20,6 @@ package org.apache.kylin.storage.hbase.steps;
 
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMROutput;
-import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 
 public class HBaseMROutput implements IMROutput {
@@ -38,23 +37,6 @@ public class HBaseMROutput implements IMROutput {
             @Override
             public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
                 steps.addCubingGarbageCollectionSteps(jobFlow);
-            }
-        };
-    }
-
-    @Override
-    public IMRBatchInvertedIndexingOutputSide getBatchInvertedIndexingOutputSide(final IISegment seg) {
-        return new IMRBatchInvertedIndexingOutputSide() {
-            HBaseMRSteps steps = new HBaseMRSteps(seg);
-
-            @Override
-            public void addStepPhase3_BuildII(DefaultChainedExecutable jobFlow, String rootPath) {
-                steps.addSaveIIToHTableSteps(jobFlow, rootPath);
-            }
-
-            @Override
-            public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-                steps.addInvertedIndexGarbageCollectionSteps(jobFlow);
             }
         };
     }

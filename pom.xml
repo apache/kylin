@@ -677,7 +677,6 @@
         <module>server-base</module>
         <module>server</module>
         <module>jdbc</module>
-        <module>invertedindex</module>
         <module>assembly</module>
         <module>tool</module>
         <module>kylin-it</module>

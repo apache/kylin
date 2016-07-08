@@ -29,7 +29,6 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowKeyEncoder;
-import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -55,20 +54,7 @@ public class CoprocessorProjector {
         byte[] mask = rowKeyMaskEncoder.encode(new byte[cuboid.getColumns().size()][]);
         return new CoprocessorProjector(mask, dimensionColumns.size() != 0);
     }
-
-    public static CoprocessorProjector makeForEndpoint(final TableRecordInfo tableInfo, final Collection<TblColRef> groupby) {
-        byte[] mask = new byte[tableInfo.getDigest().getByteFormLen()];
-        int maskIdx = 0;
-        for (int i = 0; i < tableInfo.getDigest().getColumnCount(); ++i) {
-            TblColRef tblColRef = tableInfo.getColumns().get(i);
-            int length = tableInfo.getDigest().length(i);
-            byte bits = groupby.contains(tblColRef) ? (byte) 0xff : 0x00;
-            for (int j = 0; j < length; ++j) {
-                mask[maskIdx++] = bits;
-            }
-        }
-        return new CoprocessorProjector(mask, groupby.size() != 0);
-    }
+  
 
     public static byte[] serialize(CoprocessorProjector o) {
         ByteBuffer buf = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);

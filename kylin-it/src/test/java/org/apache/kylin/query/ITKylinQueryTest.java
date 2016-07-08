@@ -51,7 +51,6 @@ public class ITKylinQueryTest extends KylinTestBase {
     @BeforeClass
     public static void setUp() throws Exception {
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
-        priorities.put(RealizationType.INVERTED_INDEX, 2);
         priorities.put(RealizationType.HYBRID, 0);
         priorities.put(RealizationType.CUBE, 0);
         Candidate.setPriorities(priorities);

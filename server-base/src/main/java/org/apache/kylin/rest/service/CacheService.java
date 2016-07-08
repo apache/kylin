@@ -38,8 +38,6 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.engine.streaming.StreamingManager;
-import org.apache.kylin.invertedindex.IIDescManager;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -186,28 +184,16 @@ public class CacheService extends BasicService {
             case PROJECT:
                 reloadProjectCache(cacheKey);
                 break;
-            case INVERTED_INDEX:
-                //II update does not need to update storage cache because it is dynamic already
-                getIIManager().reloadIILocal(cacheKey);
-                getHybridManager().reloadHybridInstanceByChild(RealizationType.INVERTED_INDEX, cacheKey);
-                getProjectManager().clearL2Cache();
-                break;
-            case INVERTED_INDEX_DESC:
-                getIIDescManager().reloadIIDescLocal(cacheKey);
-                break;
             case TABLE:
                 getMetadataManager().reloadTableCache(cacheKey);
-                IIDescManager.clearCache();
                 CubeDescManager.clearCache();
                 break;
             case EXTERNAL_FILTER:
                 getMetadataManager().reloadExtFilter(cacheKey);
-                IIDescManager.clearCache();
                 CubeDescManager.clearCache();
                 break;
             case DATA_MODEL:
                 getMetadataManager().reloadDataModelDesc(cacheKey);
-                IIDescManager.clearCache();
                 CubeDescManager.clearCache();
                 break;
             case ALL:
@@ -215,8 +201,6 @@ public class CacheService extends BasicService {
                 MetadataManager.clearCache();
                 CubeDescManager.clearCache();
                 CubeManager.clearCache();
-                IIDescManager.clearCache();
-                IIManager.clearCache();
                 HybridManager.clearCache();
                 RealizationRegistry.clearCache();
                 ProjectManager.clearCache();
@@ -258,12 +242,6 @@ public class CacheService extends BasicService {
                 break;
             case PROJECT:
                 ProjectManager.clearCache();
-                break;
-            case INVERTED_INDEX:
-                getIIManager().removeIILocal(cacheKey);
-                break;
-            case INVERTED_INDEX_DESC:
-                getIIDescManager().removeIIDescLocal(cacheKey);
                 break;
             case TABLE:
                 throw new UnsupportedOperationException(log);

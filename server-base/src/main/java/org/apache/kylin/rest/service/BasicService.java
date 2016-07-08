@@ -30,8 +30,6 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.streaming.StreamingManager;
-import org.apache.kylin.invertedindex.IIDescManager;
-import org.apache.kylin.invertedindex.IIManager;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
@@ -92,14 +90,6 @@ public abstract class BasicService {
 
     public ExecutableManager getExecutableManager() {
         return ExecutableManager.getInstance(getConfig());
-    }
-
-    public IIDescManager getIIDescManager() {
-        return IIDescManager.getInstance(getConfig());
-    }
-
-    public IIManager getIIManager() {
-        return IIManager.getInstance(getConfig());
     }
 
     public BadQueryHistoryManager getBadQueryHistoryManager() {

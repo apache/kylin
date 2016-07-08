@@ -27,7 +27,6 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
-import org.apache.kylin.invertedindex.index.TableRecordInfo;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -39,17 +38,6 @@ import com.google.common.collect.Maps;
  */
 public class CoprocessorRowType {
 
-    //for endpoint
-    public static CoprocessorRowType fromTableRecordInfo(TableRecordInfo tableRecordInfo, List<TblColRef> cols) {
-
-        int[] colSizes = new int[cols.size()];
-        for (int i = 0; i < cols.size(); i++) {
-            colSizes[i] = tableRecordInfo.getDigest().length(i);
-        }
-
-        //TODO:check0
-        return new CoprocessorRowType(cols.toArray(new TblColRef[cols.size()]), colSizes, 0);
-    }
 
     //for observer
     public static CoprocessorRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {

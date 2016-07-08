@@ -31,8 +31,6 @@ public abstract class AbstractKylinTestCase {
     public static final String[] SERVICES_WITH_CACHE = { //
             "org.apache.kylin.cube.CubeManager", //
             "org.apache.kylin.cube.CubeDescManager", //
-            "org.apache.kylin.invertedindex.IIDescManager", //
-            "org.apache.kylin.invertedindex.IIManager", //
             "org.apache.kylin.storage.hybrid.HybridManager", //
             "org.apache.kylin.metadata.realization.RealizationRegistry", //
             "org.apache.kylin.metadata.project.ProjectManager", //

@@ -18,17 +18,7 @@
 
 package org.apache.kylin.storage.hbase.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -48,17 +38,17 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.invertedindex.IIInstance;
-import org.apache.kylin.invertedindex.IIManager;
-import org.apache.kylin.invertedindex.IISegment;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Matcher;
 
 /**
  */
@@ -184,7 +174,6 @@ public class DeployCoprocessorCLI {
 
     public static void addCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
         logger.info("Add coprocessor on " + desc.getNameAsString());
-        desc.addCoprocessor(IIEndpointClass, hdfsCoprocessorJar, 1000, null);
         desc.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
         desc.addCoprocessor(CubeObserverClass, hdfsCoprocessorJar, 1002, null);
     }
@@ -380,18 +369,6 @@ public class DeployCoprocessorCLI {
                 if (StringUtils.isBlank(tableName) == false) {
                     result.add(tableName);
                     System.out.println("added new table: " + tableName);
-                }
-            }
-        }
-
-        for (IIInstance ii : IIManager.getInstance(config).listAllIIs()) {
-            if (ii.getStatus() == RealizationStatusEnum.READY) {
-                for (IISegment seg : ii.getSegments()) {//streaming segment is never "READY"
-                    String tableName = seg.getStorageLocationIdentifier();
-                    if (StringUtils.isBlank(tableName) == false) {
-                        result.add(tableName);
-                        System.out.println("added new table: " + tableName);
-                    }
                 }
             }
         }

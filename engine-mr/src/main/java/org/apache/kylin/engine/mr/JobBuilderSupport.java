@@ -25,7 +25,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
-import org.apache.kylin.engine.mr.invertedindex.UpdateIIInfoAfterBuildStep;
 import org.apache.kylin.engine.mr.steps.CreateDictionaryJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.engine.mr.steps.FactDistinctColumnsJob;
@@ -128,14 +127,6 @@ public class JobBuilderSupport {
         CubingExecutableUtil.setIndexPath(this.getSecondaryIndexPath(jobId), result.getParams());
 
         return result;
-    }
-
-    public UpdateIIInfoAfterBuildStep createUpdateIIInfoAfterBuildStep(String jobId) {
-        final UpdateIIInfoAfterBuildStep updateIIInfoStep = new UpdateIIInfoAfterBuildStep();
-        updateIIInfoStep.setName(ExecutableConstants.STEP_NAME_UPDATE_II_INFO);
-        updateIIInfoStep.setInvertedIndexName(seg.getRealization().getName());
-        updateIIInfoStep.setJobId(jobId);
-        return updateIIInfoStep;
     }
 
     // ============================================================================

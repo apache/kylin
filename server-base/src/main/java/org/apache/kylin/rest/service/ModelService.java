@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.invertedindex.model.IIDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
@@ -114,14 +113,6 @@ public class ModelService extends BasicService {
         for (CubeDesc cubeDesc : cubeDescs) {
             if (cubeDesc.getModelName().equals(desc.getName())) {
                 throw new InternalErrorException("Model referenced by cube,drop cubes under model and try again.");
-            }
-        }
-
-        //check II desc exist
-        List<IIDesc> iiDescs = getIIDescManager().listAllDesc();
-        for (IIDesc iidesc : iiDescs) {
-            if (iidesc.getModelName().equals(desc.getName())) {
-                throw new InternalErrorException("Model referenced by IIDesc.");
             }
         }
 

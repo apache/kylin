@@ -24,16 +24,6 @@
       "realization": "test_kylin_cube_without_slr_left_join_empty"
     },
     {
-      "name": "test_kylin_ii_left_join",
-      "type": "INVERTED_INDEX",
-      "realization": "test_kylin_ii_left_join"
-    },
-    {
-      "name": "test_kylin_ii_inner_join",
-      "type": "INVERTED_INDEX",
-      "realization": "test_kylin_ii_inner_join"
-    },
-    {
       "name": "test_streaming_table_cube",
       "type": "CUBE",
       "realization": "test_streaming_table_cube"

@@ -42,9 +42,7 @@ abstract public class ResourceStore {
     private static final Logger logger = LoggerFactory.getLogger(ResourceStore.class);
 
     public static final String CUBE_RESOURCE_ROOT = "/cube";
-    public static final String II_RESOURCE_ROOT = "/invertedindex";
     public static final String CUBE_DESC_RESOURCE_ROOT = "/cube_desc";
-    public static final String II_DESC_RESOURCE_ROOT = "/invertedindex_desc";
     public static final String DATA_MODEL_DESC_RESOURCE_ROOT = "/model_desc";
     public static final String DICT_RESOURCE_ROOT = "/dict";
     public static final String PROJECT_RESOURCE_ROOT = "/project";
