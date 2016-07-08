@@ -95,4 +95,8 @@ public class Candidate implements Comparable<Candidate> {
         return 0;
     }
 
+    @Override
+    public String toString() {
+        return realization.toString();
+    }
 }
