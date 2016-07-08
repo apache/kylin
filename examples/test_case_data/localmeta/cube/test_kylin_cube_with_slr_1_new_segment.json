@@ -7,6 +7,7 @@
   "descriptor" : "test_kylin_cube_with_slr_desc",
   "cost" : 50,
   "segments" : [ {
+    "uuid" : "198va32a-a33e-4b69-83dd-0bb8b1f8c53b",
     "name" : "20130331080000_20131212080000",
     "storage_location_identifier" : "KYLIN-CUBE-TEST_KYLIN_CUBE_WITH_SLR_READY-F24668F6-DCFF-4CB6-A89B-77F1119DF8FA",
     "date_range_start" : 1364688000000,

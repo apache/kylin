@@ -56,7 +56,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             options.addOption(OPTION_CUBE_NAME);
             options.addOption(OPTION_CUBING_JOB_ID);
             options.addOption(OPTION_OUTPUT_PATH);
-            options.addOption(OPTION_SEGMENT_NAME);
+            options.addOption(OPTION_SEGMENT_ID);
             options.addOption(OPTION_STATISTICS_ENABLED);
             options.addOption(OPTION_STATISTICS_OUTPUT);
             options.addOption(OPTION_STATISTICS_SAMPLING_PERCENT);
@@ -68,7 +68,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             String cubeName = getOptionValue(OPTION_CUBE_NAME);
             Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
 
-            String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
+            String segmentID = getOptionValue(OPTION_SEGMENT_ID);
             String statistics_enabled = getOptionValue(OPTION_STATISTICS_ENABLED);
             String statistics_output = getOptionValue(OPTION_STATISTICS_OUTPUT);
             String statistics_sampling_percent = getOptionValue(OPTION_STATISTICS_SAMPLING_PERCENT);
@@ -80,7 +80,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             List<TblColRef> columnsNeedDict = cubeMgr.getAllDictColumnsOnFact(cube.getDescriptor());
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-            job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
+            job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_ENABLED, statistics_enabled);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_OUTPUT, statistics_output);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, statistics_sampling_percent);
@@ -88,10 +88,10 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
             setJobClasspath(job, cube.getConfig());
 
-            CubeSegment segment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+            CubeSegment segment = cube.getSegmentById(segmentID);
             if (segment == null) {
-                logger.error("Failed to find {} in cube {}", segmentName, cube);
-                System.out.println("Failed to find {} in cube {} " + segmentName + "," + cube);
+                logger.error("Failed to find {} in cube {}", segmentID, cube);
+                System.out.println("Failed to find {} in cube {} " + segmentID + "," + cube);
                 for (CubeSegment s : cube.getSegments()) {
                     logger.error(s.getName() + " with status " + s.getStatus());
                     System.out.println(s.getName() + " with status " + s.getStatus());
@@ -101,7 +101,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
                 logger.info("Found segment: " + segment);
                 System.out.println("Found segment " + segment);
             }
-            setupMapper(segment);
+            setupMapper(cube.getSegmentById(segmentID));
             setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 1 : columnsNeedDict.size());
 
             attachKylinPropsAndMetadata(cube, job.getConfiguration());

@@ -69,7 +69,7 @@ public class KafkaDataLoader extends StreamDataLoader {
 
         List<KeyedMessage<String, String>> keyedMessages = Lists.newArrayList();
         for (int i = 0; i < messages.size(); ++i) {
-            KeyedMessage<String, String> keyedMessage = new KeyedMessage<String, String>(clusterConfig.getTopic(), String.valueOf(i), messages.get(i));
+            KeyedMessage<String, String> keyedMessage = new KeyedMessage<>(clusterConfig.getTopic(), String.valueOf(i), messages.get(i));
             keyedMessages.add(keyedMessage);
         }
         producer.send(keyedMessages);

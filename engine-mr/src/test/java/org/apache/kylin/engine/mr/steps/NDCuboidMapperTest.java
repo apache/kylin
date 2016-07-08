@@ -70,9 +70,9 @@ public class NDCuboidMapperTest extends LocalFileMetadataTestCase {
     public void testMapReduceWithSlr() throws IOException {
 
         String cubeName = "test_kylin_cube_with_slr_1_new_segment";
-        String segmentName = "20130331080000_20131212080000";
+        String segmentID = "198va32a-a33e-4b69-83dd-0bb8b1f8c53b";
         mapReduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-        mapReduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_NAME, segmentName);
+        mapReduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
 
         byte[] key = { 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, -104, -106, -128, 11, 54, -105, 55, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 13, 71, 114, 65, 66, 73, 78, 9, 9, 9, 9, 9, 9, 9, 9, 0, 10, 0 };
         byte[] value = { 14, 7, 23, -16, 56, 92, 114, -80, 118, 14, 7, 23, -16, 56, 92, 114, -80, 118, 14, 7, 23, -16, 56, 92, 114, -80, 118, 1, 1 };

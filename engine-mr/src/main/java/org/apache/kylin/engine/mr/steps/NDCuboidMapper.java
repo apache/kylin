@@ -52,7 +52,7 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private Text outputKey = new Text();
     private String cubeName;
-    private String segmentName;
+    private String segmentID;
     private CubeSegment cubeSegment;
     private CubeDesc cubeDesc;
     private CuboidScheduler cuboidScheduler;
@@ -70,12 +70,12 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         super.bindCurrentConfiguration(context.getConfiguration());
 
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
-        segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
+        segmentID = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_ID);
 
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
-        cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+        cubeSegment = cube.getSegmentById(segmentID);
         cubeDesc = cube.getDescriptor();
 
         // initialize CubiodScheduler

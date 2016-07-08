@@ -66,7 +66,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
     CubeInstance cube = null;
     CubeDesc cubeDesc = null;
-    String segmentName = null;
+    String segmentID = null;
     KylinConfig kylinConfig;
     Path partitionFilePath;
 
@@ -75,7 +75,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
         Options options = new Options();
 
         options.addOption(OPTION_CUBE_NAME);
-        options.addOption(OPTION_SEGMENT_NAME);
+        options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_PARTITION_FILE_PATH);
         options.addOption(OPTION_STATISTICS_ENABLED);
         parseOptions(options, args);
@@ -88,8 +88,8 @@ public class CreateHTableJob extends AbstractHadoopJob {
         cube = cubeMgr.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
         kylinConfig = cube.getConfig();
-        segmentName = getOptionValue(OPTION_SEGMENT_NAME);
-        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+        segmentID = getOptionValue(OPTION_SEGMENT_ID);
+        CubeSegment cubeSegment = cube.getSegmentById(segmentID);
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 

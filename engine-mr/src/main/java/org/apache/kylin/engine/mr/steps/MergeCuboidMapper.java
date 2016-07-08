@@ -65,7 +65,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private KylinConfig config;
     private String cubeName;
-    private String segmentName;
+    private String segmentID;
     private CubeManager cubeManager;
     private CubeInstance cube;
     private CubeDesc cubeDesc;
@@ -95,14 +95,14 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         super.bindCurrentConfiguration(context.getConfiguration());
 
         cubeName = context.getConfiguration().get(BatchConstants.CFG_CUBE_NAME).toUpperCase();
-        segmentName = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_NAME).toUpperCase();
+        segmentID = context.getConfiguration().get(BatchConstants.CFG_CUBE_SEGMENT_ID);
 
         config = AbstractHadoopJob.loadKylinPropsAndMetadata();
 
         cubeManager = CubeManager.getInstance(config);
         cube = cubeManager.getCube(cubeName);
         cubeDesc = cube.getDescriptor();
-        mergedCubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+        mergedCubeSegment = cube.getSegmentById(segmentID);
 
         // int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         newKeyBodyBuf = new byte[RowConstants.ROWKEY_BUFFER_SIZE];// size will auto-grow

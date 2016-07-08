@@ -106,7 +106,7 @@
     }
   } ],
   "override_kylin_properties": {
-    "kylin.cube.algorithm": "random"
+    "kylin.cube.algorithm": "inmem"
   },
   "notify_list" : [ ],
   "status_need_notify" : [ ],

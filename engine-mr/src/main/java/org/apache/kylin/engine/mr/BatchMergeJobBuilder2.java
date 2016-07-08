@@ -88,6 +88,21 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
 
     protected Class<? extends AbstractHadoopJob> getMergeCuboidJob() {
         return MergeCuboidJob.class;
+//    private MapReduceExecutable createMergeCuboidDataStep(CubeSegment seg, String inputPath, String outputPath) {
+//        MapReduceExecutable mergeCuboidDataStep = new MapReduceExecutable();
+//        mergeCuboidDataStep.setName(ExecutableConstants.STEP_NAME_MERGE_CUBOID);
+//        StringBuilder cmd = new StringBuilder();
+//
+//        appendMapReduceParameters(cmd);
+//        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getCubeInstance().getName());
+//        appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
+//        appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, inputPath);
+//        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, outputPath);
+//        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Merge_Cuboid_" + seg.getCubeInstance().getName() + "_Step");
+//
+//        mergeCuboidDataStep.setMapReduceParams(cmd.toString());
+//        mergeCuboidDataStep.setMapReduceJobClass(MergeCuboidJob.class);
+//        return mergeCuboidDataStep;
     }
 
 }

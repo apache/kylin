@@ -78,7 +78,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         if (cubeSegment == null) {
             this.tableName = "kylin_intermediate_" + cubeDesc.getName();
         } else {
-            this.tableName = "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getName();
+            this.tableName = "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getUuid();
         }
 
         int columnIndex = 0;

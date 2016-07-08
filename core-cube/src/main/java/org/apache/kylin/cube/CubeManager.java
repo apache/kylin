@@ -421,10 +421,14 @@ public class CubeManager implements IRealizationProvider {
             // try figure out a reasonable start if missing
             if (startDate == 0 && startOffset == 0) {
                 boolean isOffsetsOn = endOffset != 0;
-                if (isOffsetsOn)
-                    startOffset = calculateStartDateForAppendSegment(cube);
-                else
+                if (isOffsetsOn) {
+                    startOffset = calculateStartOffsetForAppendSegment(cube);
+                    if (startOffset == Long.MAX_VALUE) {
+                        throw new IllegalStateException("There is already one pending for building segment, please submit request later.");
+                    }
+                } else {
                     startDate = calculateStartDateForAppendSegment(cube);
+                }
             }
         } else {
             startDate = 0;
@@ -570,12 +574,23 @@ public class CubeManager implements IRealizationProvider {
         return max;
     }
 
+
+    private long calculateStartOffsetForAppendSegment(CubeInstance cube) {
+        List<CubeSegment> existing = cube.getSegments();
+        if (existing.isEmpty()) {
+            return 0;
+        } else {
+            return existing.get(existing.size() - 1).getSourceOffsetEnd();
+        }
+    }
+
+
     private long calculateStartDateForAppendSegment(CubeInstance cube) {
         List<CubeSegment> existing = cube.getSegments();
         if (existing.isEmpty()) {
             return cube.getDescriptor().getPartitionDateStart();
         } else {
-            return existing.get(existing.size() - 1).getSourceOffsetEnd();
+            return existing.get(existing.size() - 1).getDateRangeStart();
         }
     }
 

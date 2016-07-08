@@ -43,17 +43,17 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
 
         try {
             options.addOption(OPTION_CUBE_NAME);
-            options.addOption(OPTION_SEGMENT_NAME);
+            options.addOption(OPTION_SEGMENT_ID);
             options.addOption(OPTION_INPUT_PATH);
             parseOptions(options, args);
 
             final String cubeName = getOptionValue(OPTION_CUBE_NAME);
-            final String segmentName = getOptionValue(OPTION_SEGMENT_NAME);
+            final String segmentID = getOptionValue(OPTION_SEGMENT_ID);
             final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
 
             KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-            DictionaryGeneratorCLI.processSegment(config, cubeName, segmentName, new DistinctColumnValuesProvider() {
+            DictionaryGeneratorCLI.processSegment(config, cubeName, segmentID, new DistinctColumnValuesProvider() {
                 @Override
                 public ReadableTable getDistinctValuesFor(TblColRef col) {
                     return new DFSFileTable(factColumnsInputPath + "/" + col.getName(), -1);
