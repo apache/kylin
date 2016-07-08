@@ -290,9 +290,9 @@ public class DictionaryManager {
             MetadataManager metadataManager = MetadataManager.getInstance(config);
             TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
             if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
-                tableDesc.setDatabase(config.getHiveDatabaseForIntermediateTable());
-                String tableName = tableDesc.getMaterializedName();
-                tableDesc.setName(tableName);
+                TableDesc materializedTbl = new TableDesc();
+                materializedTbl.setDatabase(config.getHiveDatabaseForIntermediateTable());
+                materializedTbl.setName(tableDesc.getMaterializedName());
                 inpTable = SourceFactory.createReadableTable(tableDesc);
             } else {
                 inpTable = SourceFactory.createReadableTable(tableDesc);
