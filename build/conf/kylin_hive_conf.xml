@@ -35,7 +35,7 @@
 
     <property>
         <name>hive.auto.convert.join.noconditionaltask.size</name>
-        <value>300000000</value>
+        <value>100000000</value>
         <description>enable map-side join</description>
     </property>
 
