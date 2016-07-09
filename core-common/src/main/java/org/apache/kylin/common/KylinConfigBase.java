@@ -320,7 +320,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getHadoopJobMapperInputRows() {
-        return Integer.parseInt(getOptional("kylin.job.mapreduce.mapper.input.rows", "500000"));
+        return Integer.parseInt(getOptional("kylin.job.mapreduce.mapper.input.rows", "1000000"));
     }
 
     public boolean getRunAsRemoteCommand() {
