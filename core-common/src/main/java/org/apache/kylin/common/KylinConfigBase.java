@@ -695,7 +695,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public Map<Integer, String> getJobEngines() {
-        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.job.engine."));
+        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.cube.engine."));
         // ref constants in IEngineAware
         r.put(0, "org.apache.kylin.engine.mr.MRBatchCubingEngine");
         r.put(2, "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
