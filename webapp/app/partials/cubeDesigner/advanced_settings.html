@@ -261,7 +261,7 @@
                       <!--Column Length -->
                       <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
                              tooltip="rowkey column length.." tooltip-trigger="focus"
-                             ng-disabled="rowkey_column.encoding=='dict'"
+                             ng-disabled="rowkey_column.encoding=='dict'||rowkey_column.encoding=='date'||rowkey_column.encoding=='time'"
                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
                              ng-model="rowkey_column.valueLength" class="form-control">
 
