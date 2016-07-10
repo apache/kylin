@@ -94,10 +94,10 @@ public abstract class StreamingParser {
         long normalized = 0;
         if (columnName.equals("minute_start")) {
             normalized = TimeUtil.getMinuteStart(t);
-            result.add(DateFormat.formatToTimeStr(normalized));
+            result.add(DateFormat.formatToTimeWithoutMilliStr(normalized));
         } else if (columnName.equals("hour_start")) {
             normalized = TimeUtil.getHourStart(t);
-            result.add(DateFormat.formatToTimeStr(normalized));
+            result.add(DateFormat.formatToTimeWithoutMilliStr(normalized));
         } else if (columnName.equals("day_start")) {
             //from day_start on, formatTs will output date format
             normalized = TimeUtil.getDayStart(t);
