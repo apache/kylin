@@ -21,6 +21,8 @@ package org.apache.kylin.tool.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -70,4 +72,27 @@ public class ToolUtil {
         return null;
     }
 
+    public static String getHostName() {
+        String hostname = System.getenv("COMPUTERNAME");
+        if (StringUtils.isEmpty(hostname)) {
+            InetAddress address = null;
+            try {
+                address = InetAddress.getLocalHost();
+                hostname = address.getHostName();
+                if (StringUtils.isEmpty(hostname)) {
+                    hostname = address.getHostAddress();
+                }
+            } catch (UnknownHostException uhe) {
+                String host = uhe.getMessage(); // host = "hostname: hostname"
+                if (host != null) {
+                    int colon = host.indexOf(':');
+                    if (colon > 0) {
+                        return host.substring(0, colon);
+                    }
+                }
+                hostname = "Unknown";
+            }
+        }
+        return hostname;
+    }
 }

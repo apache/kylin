@@ -136,6 +136,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         StringBuilder basicSb = new StringBuilder();
         basicSb.append("MetaStoreID: ").append(ToolUtil.getHBaseMetaStoreId()).append("\n");
         basicSb.append("PackageType: ").append(packageType.toUpperCase()).append("\n");
+        basicSb.append("Host: ").append(ToolUtil.getHostName()).append("\n");
         FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString());
     }
 
