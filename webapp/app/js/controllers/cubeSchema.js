@@ -267,6 +267,9 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
           if(rowkey.isShardBy == true){
             shardRowkeyList.push(rowkey.column);
           }
+          if(rowkey.encoding.substr(0,3)=='int' && (rowkey.encoding.substr(4)<1 || rowkey.encoding.substr(4)>8)){
+            errors.push("int encoding column length should between 1 and 8.");
+          }
         })
         if(shardRowkeyList.length >1){
           errors.push("At most one 'shard by' column is allowed.");
