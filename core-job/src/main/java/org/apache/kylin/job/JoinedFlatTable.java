@@ -42,8 +42,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 /**
- * @author George Song (ysong1)
- * 
+ *
  */
 
 public class JoinedFlatTable {
@@ -113,11 +112,6 @@ public class JoinedFlatTable {
         sql.append(generateHiveSetStatements(engineConfig));
         sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName() + " " + generateSelectDataStatement(intermediateTableDesc) + ";").append("\n");
         return sql.toString();
-    }
-
-    public static String generateRedistributeDataStatement(IJoinedFlatTableDesc intermediateTableDesc) {
-        final String tableName = intermediateTableDesc.getTableName();
-        return "INSERT OVERWRITE TABLE " + tableName + " SELECT * FROM " + tableName + " distribute by rand();\n";
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc intermediateTableDesc) {
@@ -222,9 +216,9 @@ public class JoinedFlatTable {
 
         if (distDcol != null) {
             String tblAlias = tableAliasMap.get(distDcol.getTable());
-            sql.append(" distribute by ").append(tblAlias).append(".").append(distDcol.getName());
+            sql.append(" DISTRIBUTE BY ").append(tblAlias).append(".").append(distDcol.getName());
         } else {
-            sql.append(" distribute by rand()");
+            sql.append(" DISTRIBUTE BY RAND()");
         }
     }
 
