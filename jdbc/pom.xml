@@ -93,6 +93,10 @@
                                     <shadedPattern>${shadeBase}.com.fasterxml.jackson</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>org.apache.http</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.http</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.apache.commons</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons</shadedPattern>
                                 </relocation>
@@ -104,12 +108,6 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>commons-httpclient:commons-httpclient</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
