@@ -30,7 +30,6 @@ import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.metadata.realization.IRealizationSegment;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
 import com.google.common.base.Preconditions;
@@ -38,7 +37,7 @@ import com.google.common.collect.Lists;
 
 public class HBaseMRSteps extends JobBuilderSupport {
 
-    public HBaseMRSteps(IRealizationSegment seg) {
+    public HBaseMRSteps(CubeSegment seg) {
         super(seg, null);
     }
 

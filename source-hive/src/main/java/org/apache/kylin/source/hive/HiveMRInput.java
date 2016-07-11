@@ -29,6 +29,7 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput;
@@ -47,7 +48,6 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.realization.IRealizationSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ import com.google.common.collect.Sets;
 public class HiveMRInput implements IMRInput {
 
     @Override
-    public IMRBatchCubingInputSide getBatchCubingInputSide(IRealizationSegment seg) {
+    public IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
         return new BatchCubingInputSide(seg);
     }
 
@@ -101,11 +101,11 @@ public class HiveMRInput implements IMRInput {
     public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
 
         final JobEngineConfig conf;
-        final IRealizationSegment seg;
+        final CubeSegment seg;
         final IJoinedFlatTableDesc flatHiveTableDesc;
         String hiveViewIntermediateTables = "";
 
-        public BatchCubingInputSide(IRealizationSegment seg) {
+        public BatchCubingInputSide(CubeSegment seg) {
             this.conf = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
             this.seg = seg;
             this.flatHiveTableDesc = seg.getJoinedFlatTableDesc();

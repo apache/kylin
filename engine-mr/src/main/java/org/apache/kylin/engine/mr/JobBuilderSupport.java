@@ -33,7 +33,6 @@ import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterBuildStep;
 import org.apache.kylin.engine.mr.steps.UpdateCubeInfoAfterMergeStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.metadata.realization.IRealizationSegment;
 
 import com.google.common.base.Preconditions;
 
@@ -43,10 +42,10 @@ import com.google.common.base.Preconditions;
 public class JobBuilderSupport {
 
     final protected JobEngineConfig config;
-    final protected IRealizationSegment seg;
+    final protected CubeSegment seg;
     final protected String submitter;
 
-    public JobBuilderSupport(IRealizationSegment seg, String submitter) {
+    public JobBuilderSupport(CubeSegment seg, String submitter) {
         Preconditions.checkNotNull(seg, "segment cannot be null");
         this.config = new JobEngineConfig(seg.getConfig());
         this.seg = seg;
