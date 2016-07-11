@@ -62,7 +62,8 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         int mapperInputRows = config.getHadoopJobMapperInputRows();
 
         int numReducers = Math.round(rowCount / ((float) mapperInputRows));
-        numReducers = Math.max(1, numReducers);
+        numReducers = Math.max(numReducers, config.getHadoopJobMinReducerNumber());
+        numReducers = Math.min(numReducers, config.getHadoopJobMaxReducerNumber());
 
         stepLogger.log("total input rows = " + rowCount);
         stepLogger.log("expected input rows per mapper = " + mapperInputRows);
