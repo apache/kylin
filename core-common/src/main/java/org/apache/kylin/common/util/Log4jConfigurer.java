@@ -26,14 +26,12 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-/**
- * Created by dongli on 11/24/15.
- */
 public class Log4jConfigurer {
     private static boolean INITIALIZED = false;
 
-    public static void initLogger() {
+    public static synchronized void initLogger() {
         if (!INITIALIZED && !isConfigured()) {
+            System.out.println("Initing the logger");
             InputStream is = Log4jConfigurer.class.getClassLoader().getResourceAsStream("kylin-log4j.properties");
             PropertyConfigurator.configure(is);
             IOUtils.closeQuietly(is);

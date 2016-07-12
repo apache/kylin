@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -33,12 +31,15 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public abstract class KVGTRecordWriter implements ICuboidWriter {
 
-    private static final Log logger = LogFactory.getLog(KVGTRecordWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(KVGTRecordWriter.class);
+
     private Long lastCuboidId;
     protected CubeSegment cubeSegment;
     protected CubeDesc cubeDesc;

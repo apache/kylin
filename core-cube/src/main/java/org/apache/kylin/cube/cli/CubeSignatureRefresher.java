@@ -21,8 +21,6 @@ package org.apache.kylin.cube.cli;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeDescManager;
@@ -30,6 +28,8 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.project.ProjectManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -38,7 +38,8 @@ import com.google.common.collect.Lists;
  * won't be useful unless something went wrong.
  */
 public class CubeSignatureRefresher {
-    private static final Log logger = LogFactory.getLog(CubeSignatureRefresher.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeSignatureRefresher.class);
+
     private KylinConfig config = null;
     private ResourceStore store;
     private String[] cubeNames;

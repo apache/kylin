@@ -21,12 +21,12 @@ package org.apache.kylin.storage.hbase.steps;
 import java.io.File;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a helper class for developer to directly manipulate the metadata store in sandbox
@@ -37,7 +37,7 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
  */
 public class SandboxMetastoreCLI {
 
-    private static final Log logger = LogFactory.getLog(SandboxMetastoreCLI.class);
+    private static final Logger logger = LoggerFactory.getLogger(SandboxMetastoreCLI.class);
 
     public static void main(String[] args) throws Exception {
         logger.info("Adding to classpath: " + new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());

@@ -21,25 +21,23 @@ package org.apache.kylin.common.util;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.kylin.common.KylinConfig;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author xduo
  */
 public class MailService {
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MailService.class);
 
     private Boolean enabled = Boolean.TRUE;
     private String host;
     private String username;
     private String password;
     private String sender;
-
-    private static final Log logger = LogFactory.getLog(MailService.class);
 
     public MailService(KylinConfig config) {
         this(config.isMailEnabled(), config.getMailHost(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());

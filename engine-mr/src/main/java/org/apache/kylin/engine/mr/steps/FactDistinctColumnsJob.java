@@ -88,8 +88,10 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             CubeSegment segment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
             if (segment == null) {
                 logger.error("Failed to find {} in cube {}", segmentName, cube);
+                System.out.println("Failed to find {} in cube {} " + segmentName + "," + cube);
                 for (CubeSegment s : cube.getSegments()) {
                     logger.error(s.getName() + " with status " + s.getStatus());
+                    System.out.println(s.getName() + " with status " + s.getStatus());
                 }
                 throw new IllegalStateException();
             }

@@ -24,8 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -35,8 +33,9 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -44,7 +43,8 @@ import com.google.common.collect.Lists;
  * Created by dongli on 1/18/16.
  */
 public class UpdateHTableHostCLI {
-    private static final Log logger = LogFactory.getLog(UpdateHTableHostCLI.class);
+    private static final Logger logger = LoggerFactory.getLogger(UpdateHTableHostCLI.class);
+
     private List<String> updatedResources = Lists.newArrayList();
     private List<String> errorMsgs = Lists.newArrayList();
 

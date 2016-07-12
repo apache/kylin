@@ -32,8 +32,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -61,6 +59,8 @@ import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -71,7 +71,7 @@ public class BuildCubeWithEngine {
     protected ExecutableManager jobService;
     private static boolean fastBuildMode = false;
 
-    private static final Log logger = LogFactory.getLog(BuildCubeWithEngine.class);
+    private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithEngine.class);
 
     public static void main(String[] args) throws Exception {
         try {
@@ -209,7 +209,7 @@ public class BuildCubeWithEngine {
                 }
             }
         } catch (Exception ex) {
-            logger.error(ex);
+            logger.error("error", ex);
             throw ex;
         }
     }

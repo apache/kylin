@@ -21,8 +21,6 @@ package org.apache.kylin.job;
 import java.io.File;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -31,6 +29,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This test case is ONLY for dev use, it deploys local meta to sandbox
@@ -38,7 +38,7 @@ import org.junit.Test;
 @Ignore("dev use only")
 public class DeployLocalMetaToRemoteTest {
 
-    private static final Log logger = LogFactory.getLog(DeployLocalMetaToRemoteTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(DeployLocalMetaToRemoteTest.class);
 
     @BeforeClass
     public static void beforeClass() throws Exception {
