@@ -17,14 +17,15 @@
  limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>16</version>
-        <relativePath />
+        <relativePath/>
         <!-- no parent resolution -->
     </parent>
 
@@ -168,8 +169,8 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf/kylin.git</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -486,12 +487,12 @@
     </repositories>
 
     <build>
-        
+
         <pluginManagement>
-            
+
             <plugins>
-               
-              
+
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -803,12 +804,12 @@
                                 <exclude>lib/**</exclude>
                                 <exclude>dist/**</exclude>
                                 <exclude>website/**</exclude>
-                                
+
                                 <!-- text files without comments -->
                                 <exclude>**/*.csv</exclude>
                                 <exclude>**/*.json</exclude>
                                 <exclude>**/*.md</exclude>
-                                
+
                                 <!-- binary files -->
                                 <exclude>**/*.dict</exclude>
                                 <exclude>**/*.dic</exclude>
@@ -818,13 +819,13 @@
                                 <exclude>**/*.doc</exclude>
                                 <exclude>**/*.txt</exclude>
                                 <exclude>**/.checkstyle</exclude>
-                                
+
                                 <!-- Kylin's website content -->
                                 <exclude>**/.sass-cache/**</exclude>
 
                                 <!-- tomcat package -->
                                 <exclude>tomcat/**</exclude>
-                                
+
                                 <!-- front end libary and generated files -->
                                 <exclude>webapp/node_modules/**</exclude>
                                 <exclude>webapp/dist/**</exclude>

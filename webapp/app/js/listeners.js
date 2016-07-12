@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService, $cookieStore,ProjectService,ProjectModel,AccessService,SweetAlert,loadingRequest) {
+KylinApp.run(function ($rootScope, $http, $location, UserService, AuthenticationService, MessageService, $cookieStore, ProjectService, ProjectModel, AccessService, SweetAlert, loadingRequest) {
 
   $rootScope.permissions = {
     READ: {name: 'CUBE QUERY', value: 'READ', mask: 1},
@@ -28,17 +28,17 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
   $rootScope.$on("$routeChangeStart", function () {
     AuthenticationService.ping(function (data) {
       UserService.setCurUser(data);
-      if(!data.userDetails){
+      if (!data.userDetails) {
         $location.path(UserService.getHomePage());
-      }else{
+      } else {
         //get project info when login
-        if (!ProjectModel.projects.length&&!$rootScope.userAction.islogout) {
+        if (!ProjectModel.projects.length && !$rootScope.userAction.islogout) {
 
           loadingRequest.show();
           ProjectService.listReadable({}, function (projects) {
             loadingRequest.hide();
 
-            if(!projects.length){
+            if (!projects.length) {
               return;
             }
 
@@ -48,15 +48,15 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
             });
             ProjectModel.setProjects(_projects);
             var projectInCookie = $cookieStore.get("project");
-            if(projectInCookie&&ProjectModel.getIndex(projectInCookie)==-1){
+            if (projectInCookie && ProjectModel.getIndex(projectInCookie) == -1) {
               projectInCookie = null;
             }
             var selectedProject = projectInCookie != null ? projectInCookie : null;
-            if(projectInCookie!=null){
+            if (projectInCookie != null) {
               selectedProject = projectInCookie;
-            }else if(UserService.hasRole('ROLE_ADMIN')){
+            } else if (UserService.hasRole('ROLE_ADMIN')) {
               selectedProject = null;
-            }else{
+            } else {
               selectedProject = ProjectModel.projects[0].name
             }
 
@@ -70,7 +70,7 @@ KylinApp.run(function ($rootScope, $http, $location, UserService, Authentication
               });
             });
 
-          },function(e){
+          }, function (e) {
             loadingRequest.hide();
             $location.path(UserService.getHomePage());
           });

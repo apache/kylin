@@ -25,37 +25,37 @@
         </description>
     </property>
 
-	<property>
-		<name>mapred.compress.map.output</name>
-		<value>true</value>
-		<description>Compress map outputs</description>
-	</property>
+    <property>
+        <name>mapred.compress.map.output</name>
+        <value>true</value>
+        <description>Compress map outputs</description>
+    </property>
 
-	<property>
-		<name>mapred.map.output.compression.codec</name>
-		<value>org.apache.hadoop.io.compress.SnappyCodec</value>
-		<description>The compression codec to use for map outputs
-		</description>
-	</property>
+    <property>
+        <name>mapred.map.output.compression.codec</name>
+        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+        <description>The compression codec to use for map outputs
+        </description>
+    </property>
 
-	<property>
-		<name>mapred.output.compress</name>
-		<value>true</value>
-		<description>Compress the output of a MapReduce job</description>
-	</property>
+    <property>
+        <name>mapred.output.compress</name>
+        <value>true</value>
+        <description>Compress the output of a MapReduce job</description>
+    </property>
 
-	<property>
-		<name>mapred.output.compression.codec</name>
-		<value>org.apache.hadoop.io.compress.SnappyCodec</value>
-		<description>The compression codec to use for job outputs
-		</description>
-	</property>
+    <property>
+        <name>mapred.output.compression.codec</name>
+        <value>org.apache.hadoop.io.compress.SnappyCodec</value>
+        <description>The compression codec to use for job outputs
+        </description>
+    </property>
 
-	<property>
-		<name>mapred.output.compression.type</name>
-		<value>BLOCK</value>
-		<description>The compression type to use for job outputs</description>
-	</property>
+    <property>
+        <name>mapred.output.compression.type</name>
+        <value>BLOCK</value>
+        <description>The compression type to use for job outputs</description>
+    </property>
 
 
     <property>
@@ -76,23 +76,23 @@
         <description>Set task timeout to 1 hour</description>
     </property>
 
-	<!--Additional config for in-mem cubing, giving mapper more memory -->
-	<property>
-		<name>mapreduce.map.memory.mb</name>
-		<value>3072</value>
-		<description></description>
-	</property>
+    <!--Additional config for in-mem cubing, giving mapper more memory -->
+    <property>
+        <name>mapreduce.map.memory.mb</name>
+        <value>3072</value>
+        <description></description>
+    </property>
 
-	<property>
-		<name>mapreduce.map.java.opts</name>
-		<value>-Xmx2700m</value>
-		<description></description>
-	</property>
+    <property>
+        <name>mapreduce.map.java.opts</name>
+        <value>-Xmx2700m</value>
+        <description></description>
+    </property>
 
-	<property>
-		<name>mapreduce.task.io.sort.mb</name>
-		<value>200</value>
-		<description></description>
-	</property>
+    <property>
+        <name>mapreduce.task.io.sort.mb</name>
+        <value>200</value>
+        <description></description>
+    </property>
 
 </configuration>

@@ -17,7 +17,8 @@
  limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-server</artifactId>
@@ -105,7 +106,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
-        
+
         <!-- Test & Env -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -128,7 +129,7 @@
             <scope>test</scope>
             <version>${project.parent.version}</version>
         </dependency>
-        
+
         <!-- depends on kylin-jdbc just for running jdbc test cases in server module -->
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -266,7 +267,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        
+
         <!-- Tomcat Env -->
         <dependency>
             <groupId>org.apache.tomcat</groupId>

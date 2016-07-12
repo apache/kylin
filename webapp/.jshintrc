@@ -14,7 +14,6 @@
   "strict": false,
   "trailing": true,
   "undef": true,
-
   "globals": {
     "angular": true,
     "Config": true

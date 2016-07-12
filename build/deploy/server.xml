@@ -24,13 +24,13 @@
     <Listener className="org.apache.catalina.security.SecurityListener" />
     -->
     <!--APR library loader. Documentation at /docs/apr.html -->
-    <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
+    <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on"/>
     <!--Initialize Jasper prior to webapps are loaded. Documentation at /docs/jasper-howto.html -->
-    <Listener className="org.apache.catalina.core.JasperListener" />
+    <Listener className="org.apache.catalina.core.JasperListener"/>
     <!-- Prevent memory leaks due to use of particular java/javax APIs-->
-    <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
-    <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
-    <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+    <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener"/>
+    <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener"/>
+    <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener"/>
 
     <!-- Global JNDI resources
          Documentation at /docs/jndi-resources-howto.html
@@ -43,7 +43,7 @@
                   type="org.apache.catalina.UserDatabase"
                   description="User database that can be updated and saved"
                   factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
-                  pathname="conf/tomcat-users.xml" />
+                  pathname="conf/tomcat-users.xml"/>
     </GlobalNamingResources>
 
     <!-- A "Service" is a collection of one or more "Connectors" that share
@@ -74,7 +74,7 @@
                    compressionMinSize="2048"
                    noCompressionUserAgents="gozilla,traviata"
                    compressableMimeType="text/html,text/xml,text/javascript,application/javascript,application/json,text/css,text/plain"
-                />
+        />
         <!-- A "Connector" using the shared thread pool-->
         <!--
         <Connector executor="tomcatThreadPool"
@@ -96,7 +96,7 @@
         -->
 
         <!-- Define an AJP 1.3 Connector on port 8009 -->
-        <Connector port="9009" protocol="AJP/1.3" redirectPort="9443" />
+        <Connector port="9009" protocol="AJP/1.3" redirectPort="9443"/>
 
 
         <!-- An Engine represents the entry point (within Catalina) that processes
@@ -128,7 +128,7 @@
                        resourceName="UserDatabase"/>
             </Realm>
 
-            <Host name="localhost"  appBase="webapps"
+            <Host name="localhost" appBase="webapps"
                   unpackWARs="true" autoDeploy="true">
 
                 <!-- SingleSignOn valve, share authentication between web applications
@@ -142,7 +142,7 @@
                      Note: The pattern used is equivalent to using pattern="common" -->
                 <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
                        prefix="localhost_access_log." suffix=".txt"
-                       pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+                       pattern="%h %l %u %t &quot;%r&quot; %s %b"/>
 
             </Host>
         </Engine>

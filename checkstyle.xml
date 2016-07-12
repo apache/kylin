@@ -21,12 +21,12 @@
         "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 <module name="Checker">
     <module name="FileTabCharacter"/>
-    <module name="SuppressWarningsFilter" />
+    <module name="SuppressWarningsFilter"/>
     <module name="TreeWalker">
         <module name="AvoidStarImport"/>
         <module name="RedundantImport"/>
         <module name="UnusedImports">
-                <property name="processJavadoc" value="true"/>
+            <property name="processJavadoc" value="true"/>
         </module>
         <module name="LineLength">
             <property name="max" value="1000"/>
@@ -57,6 +57,6 @@
         <module name="WhitespaceAfter">
             <property name="tokens" value="COMMA"/>
         </module>
-        <module name="SuppressWarningsHolder" />
+        <module name="SuppressWarningsHolder"/>
     </module>
 </module>
