@@ -22,6 +22,7 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.RowKeyDesc;
 import org.apache.kylin.engine.mr.IMRInput.IMRBatchCubingInputSide;
 import org.apache.kylin.engine.mr.IMROutput2.IMRBatchCubingOutputSide2;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.BaseCuboidJob;
@@ -115,9 +116,13 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
 
         cubeStep.setMapReduceParams(cmd.toString());
-        cubeStep.setMapReduceJobClass(InMemCuboidJob.class);
+        cubeStep.setMapReduceJobClass(getInMemCuboidJob());
         cubeStep.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES + "," + CubingJob.CUBE_SIZE_BYTES);
         return cubeStep;
+    }
+
+    protected Class<? extends AbstractHadoopJob> getInMemCuboidJob() {
+        return InMemCuboidJob.class;
     }
 
     private MapReduceExecutable createBaseCuboidStep(String[] cuboidOutputTempPath, String jobId) {
@@ -138,9 +143,13 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
 
         baseCuboidStep.setMapReduceParams(cmd.toString());
-        baseCuboidStep.setMapReduceJobClass(BaseCuboidJob.class);
+        baseCuboidStep.setMapReduceJobClass(getBaseCuboidJob());
         baseCuboidStep.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES);
         return baseCuboidStep;
+    }
+
+    protected Class<? extends AbstractHadoopJob> getBaseCuboidJob() {
+        return BaseCuboidJob.class;
     }
 
     private MapReduceExecutable createNDimensionCuboidStep(String[] cuboidOutputTempPath, int dimNum, int totalRowkeyColumnCount, String jobId) {
@@ -160,7 +169,11 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
 
         ndCuboidStep.setMapReduceParams(cmd.toString());
-        ndCuboidStep.setMapReduceJobClass(NDCuboidJob.class);
+        ndCuboidStep.setMapReduceJobClass(getNDCuboidJob());
         return ndCuboidStep;
+    }
+
+    protected Class<? extends AbstractHadoopJob> getNDCuboidJob() {
+        return NDCuboidJob.class;
     }
 }

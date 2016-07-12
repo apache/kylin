@@ -305,6 +305,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         return result;
     }
+    
 
     public CubeSegment getSegment(String name, SegmentStatusEnum status) {
         for (CubeSegment segment : segments) {

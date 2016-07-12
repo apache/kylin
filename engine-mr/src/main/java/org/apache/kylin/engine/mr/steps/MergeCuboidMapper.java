@@ -143,7 +143,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
     private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
 
-    public static CubeSegment findSourceSegment(FileSplit fileSplit, CubeInstance cube) {
+    public CubeSegment findSourceSegment(FileSplit fileSplit, CubeInstance cube) {
         String filePath = fileSplit.getPath().toString();
         String jobID = extractJobIDFromPath(filePath);
         return findSegmentWithUuid(jobID, cube);

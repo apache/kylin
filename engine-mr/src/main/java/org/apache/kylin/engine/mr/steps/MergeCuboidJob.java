@@ -69,7 +69,6 @@ public class MergeCuboidJob extends CuboidJob {
             job.setMapOutputKeyClass(Text.class);
             job.setMapOutputValueClass(Text.class);
 
-            // Reducer - only one
             job.setReducerClass(CuboidReducer.class);
             job.setOutputFormatClass(SequenceFileOutputFormat.class);
             job.setOutputKeyClass(Text.class);
