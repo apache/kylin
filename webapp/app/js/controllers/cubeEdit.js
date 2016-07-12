@@ -119,6 +119,58 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   };
 
 
+  $scope.getExtendedColumns = function (measure) {
+    //metric from model
+    var me_columns = [];
+    if($scope.metaModel.model.metrics){
+      angular.forEach($scope.metaModel.model.metrics,function(metric,index){
+        me_columns.push(metric);
+      })
+    }
+    angular.forEach($scope.metaModel.model.dimensions,function(dimension,index){
+        if(dimension.columns){
+          me_columns = me_columns.concat(dimension.columns);
+        }
+    })
+
+    return me_columns;
+
+  };
+
+  $scope.getExtendedFactColumns = function (measure) {
+    var me_columns = [];
+    angular.forEach($scope.metaModel.model.dimensions,function(dimension,index){
+      if($scope.metaModel.model.fact_table !== dimension.table){
+        return;
+      }
+
+      if(dimension.columns){
+        me_columns = me_columns.concat(dimension.columns);
+      }
+    })
+
+    return me_columns;
+
+  };
+
+
+  $scope.getFactColumns = function () {
+    var me_columns = [];
+    angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension,index){
+      if($scope.metaModel.model.fact_table !== dimension.table){
+        return;
+      }
+      if(dimension.column && dimension.derived == null){
+        me_columns.push(dimension.column);
+      }
+
+    });
+
+    return me_columns;
+
+  };
+
+
 
   $scope.getColumnType = function (_column, table) {
     var columns = $scope.getColumnsByTable(table);

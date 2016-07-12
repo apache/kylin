@@ -332,6 +332,29 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
       };
     }
   };
+}).directive("extendedcolumntree", function($compile) {
+  return {
+    restrict: "E",
+    transclude: true,
+    scope: {
+      nextpara: '='
+    },
+    template:
+    '<li class="parent_li">Host Column:<b>{{nextpara.value}}</b></b></li>' +
+    '<li class="parent_li">Extended Column:<b>{{nextpara.next_parameter.value}}</b></li>',
+    compile: function(tElement, tAttr, transclude) {
+      var contents = tElement.contents().remove();
+      var compiledContents;
+      return function(scope, iElement, iAttr) {
+        if(!compiledContents) {
+          compiledContents = $compile(contents, transclude);
+        }
+        compiledContents(scope, function(clone, scope) {
+          iElement.append(clone);
+        });
+      };
+    }
+  };
 }).directive('kylinpopover', function ($compile,$templateCache) {
   return {
     restrict: "A",
@@ -355,4 +378,24 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
       $(element).popover(options);
     }
   };
+}).directive('extendedColumnReturn', function() {
+  return {
+    require: 'ngModel',
+    link: function(scope, element, attrs, ngModelController) {
+
+      var prefix = "extendedcolumn(";
+      var suffix = ")";
+      ngModelController.$parsers.push(function(data) {
+        //convert data from view format to model format
+        return prefix +data+suffix; //converted
+      });
+
+      ngModelController.$formatters.push(function(data) {
+        //convert data from model format to view format
+        var prefixIndex = data.indexOf("(")+1;
+        var suffixIndex = data.indexOf(")");
+        return data.substring(prefixIndex,suffixIndex); //converted
+      });
+    }
+  }
 });
