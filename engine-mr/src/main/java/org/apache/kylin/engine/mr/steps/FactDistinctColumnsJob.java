@@ -94,6 +94,9 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
                     System.out.println(s.getName() + " with status " + s.getStatus());
                 }
                 throw new IllegalStateException();
+            } else {
+                logger.info("Found segment: " + segment);
+                System.out.println("Found segment " + segment);
             }
             setupMapper(segment);
             setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 1 : columnsNeedDict.size());
