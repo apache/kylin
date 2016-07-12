@@ -24,27 +24,30 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   $scope.addNewMeasure = function (measure) {
     $scope.nextParameters = [];
     $scope.newMeasure = (!!measure)? measure:CubeDescModel.createMeasure();
-    if(!!measure){
-      $scope.convertNextParameters();
+    //if(!!measure){
+    //  $scope.convertNextParameters();
+    //}
+    if(!!measure && measure.function.parameter.next_parameter){
+      $scope.nextPara.value = measure.function.parameter.next_parameter.value;
     }
   };
-  $scope.convertNextParameters = function(){
-    $scope.nextParameters = [];
-    var paramater = jQuery.extend(true, {}, $scope.newMeasure.function.parameter);
-    while(paramater.next_parameter){
-      var paraMeter =
-      {
-       "type": paramater.next_parameter.type,
-       "value":paramater.next_parameter.value,
-        "next_parameter":null
-      }
-      $scope.nextParameters.push(paraMeter);
-
-      paramater = paramater.next_parameter;
-
-    }
-
-  }
+  //$scope.convertNextParameters = function(){
+  //  $scope.nextParameters = [];
+  //  var paramater = jQuery.extend(true, {}, $scope.newMeasure.function.parameter);
+  //  while(paramater.next_parameter){
+  //    var paraMeter =
+  //    {
+  //     "type": paramater.next_parameter.type,
+  //     "value":paramater.next_parameter.value,
+  //      "next_parameter":null
+  //    }
+  //    $scope.nextParameters.push(paraMeter);
+  //
+  //    paramater = paramater.next_parameter;
+  //
+  //  }
+  //
+  //}
 
   $scope.updateNextParameter = function(){
     //jQuery.extend(true, {},$scope.newMeasure.function.parameter.next_parameter)
@@ -70,6 +73,14 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     }
     $scope.updateNextParameter();
   }
+
+
+  $scope.nextPara = {
+    "type":"column",
+    "value":"",
+    "next_parameter":null
+  }
+
   $scope.openParameterModal = function (parameter) {
     $modal.open({
       templateUrl: 'nextParameter.html',
@@ -95,13 +106,19 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
 
   $scope.clearNewMeasure = function () {
     $scope.newMeasure = null;
+    $scope.nextPara.value = "";
   };
 
   $scope.saveNewMeasure = function () {
-    if ($scope.newMeasure.function.expression === 'TOP_N' && $scope.nextParameters.length == 0) {
+
+    if ($scope.newMeasure.function.expression === 'TOP_N' && $scope.nextPara.value == "") {
       SweetAlert.swal('', '[TOP_N] Group by Column is required', 'warning');
       return false;
     }
+    if($scope.nextPara.value!=="" && ($scope.newMeasure.function.expression == 'EXTENDED_COLUMN' || $scope.newMeasure.function.expression == 'TOP_N')){
+      $scope.newMeasure.function.parameter.next_parameter = $scope.nextPara;
+    }
+
     if ($scope.cubeMetaFrame.measures.indexOf($scope.newMeasure) === -1) {
       $scope.cubeMetaFrame.measures.push($scope.newMeasure);
     }
@@ -112,7 +129,8 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   //map right return type for param
   $scope.measureReturnTypeUpdate = function(){
 
-    if($scope.newMeasure.function.expression == 'TOP_N'){
+    if($scope.newMeasure.function.expression == 'TOP_N'||$scope.newMeasure.function.expression == 'EXTENDED_COLUMN'){
+      $scope.newMeasure.function.parameter.type= 'column';
       return;
     }
 
