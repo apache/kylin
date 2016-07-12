@@ -191,8 +191,8 @@
                                 <input extended-column-return
                                   ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'"
                                   type="text" placeholder="Kylin won’t save more than this number of bytes" class="form-control"
-                                        tooltip-trigger="focus"
-                                        ng-init=""
+                                       tooltip-trigger="focus"
+                                       ng-init="newMeasure.function.returntype=newMeasure.function.returntype?newMeasure.function.returntype:'extendedcolumn(100)'"
                                        ng-model="newMeasure.function.returntype" required />
 
                                   <span class="font-color-default"
