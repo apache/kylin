@@ -85,7 +85,15 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
             setJobClasspath(job, cube.getConfig());
 
-            setupMapper(cube.getSegment(segmentName, SegmentStatusEnum.NEW));
+            CubeSegment segment = cube.getSegment(segmentName, SegmentStatusEnum.NEW);
+            if (segment == null) {
+                logger.error("Failed to find {} in cube {}", segmentName, cube);
+                for (CubeSegment s : cube.getSegments()) {
+                    logger.error(s.getName() + " with status " + s.getStatus());
+                }
+                throw new IllegalStateException();
+            }
+            setupMapper(segment);
             setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 1 : columnsNeedDict.size());
 
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
