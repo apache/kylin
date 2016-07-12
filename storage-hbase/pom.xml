@@ -40,12 +40,10 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-mr</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-streaming</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
 
         <!-- Env & Test -->
@@ -54,14 +52,12 @@
             <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-storage</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
@@ -81,7 +77,6 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-testing-util</artifactId>
-            <version>${hbase-hadoop2.version}</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -112,7 +107,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -198,7 +192,6 @@
                             <dependency>
                                 <groupId>org.apache.maven.doxia</groupId>
                                 <artifactId>doxia-core</artifactId>
-                                <version>1.6</version>
                                 <exclusions>
                                     <exclusion>
                                         <groupId>xerces</groupId>
@@ -211,7 +204,6 @@
                     <plugin>
                         <groupId>net.ju-n.maven.plugins</groupId>
                         <artifactId>checksum-maven-plugin</artifactId>
-                        <version>1.2</version>
                         <executions>
                             <execution>
                                 <goals>

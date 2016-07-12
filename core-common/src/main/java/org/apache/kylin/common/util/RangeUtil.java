@@ -29,7 +29,6 @@ import com.google.common.collect.BoundType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
-import com.google.common.collect.Ranges;
 
 /**
  */
@@ -41,7 +40,7 @@ public class RangeUtil {
     public static <C extends Comparable<?>, V> NavigableMap<C, V> filter(NavigableMap<C, V> values, Range<C> filterRange) {
         if (filterRange == null || filterRange.isEmpty()) {
             return Maps.newTreeMap();
-        } else if (filterRange.equals(Ranges.all())) {
+        } else if (filterRange.equals(Range.all())) {
             return values;
         }
 
@@ -106,29 +105,29 @@ public class RangeUtil {
         if (!self.hasLowerBound()) {
             if (share.hasLowerBound()) {
                 if (share.lowerBoundType() == BoundType.CLOSED) {
-                    ret.add(Ranges.lessThan(share.lowerEndpoint()));
+                    ret.add(Range.lessThan(share.lowerEndpoint()));
                 } else {
-                    ret.add(Ranges.atMost(share.lowerEndpoint()));
+                    ret.add(Range.atMost(share.lowerEndpoint()));
                 }
             }
         } else {
             if (self.lowerEndpoint() != share.lowerEndpoint()) {
                 if (self.lowerBoundType() == BoundType.CLOSED) {
                     if (share.lowerBoundType() == BoundType.CLOSED) {
-                        ret.add(Ranges.closedOpen(self.lowerEndpoint(), share.lowerEndpoint()));
+                        ret.add(Range.closedOpen(self.lowerEndpoint(), share.lowerEndpoint()));
                     } else {
-                        ret.add(Ranges.closed(self.lowerEndpoint(), share.lowerEndpoint()));
+                        ret.add(Range.closed(self.lowerEndpoint(), share.lowerEndpoint()));
                     }
                 } else {
                     if (share.lowerBoundType() == BoundType.CLOSED) {
-                        ret.add(Ranges.open(self.lowerEndpoint(), share.lowerEndpoint()));
+                        ret.add(Range.open(self.lowerEndpoint(), share.lowerEndpoint()));
                     } else {
-                        ret.add(Ranges.openClosed(self.lowerEndpoint(), share.lowerEndpoint()));
+                        ret.add(Range.openClosed(self.lowerEndpoint(), share.lowerEndpoint()));
                     }
                 }
             } else {
                 if (self.lowerBoundType() == BoundType.CLOSED && share.lowerBoundType() == BoundType.OPEN) {
-                    ret.add(Ranges.closed(self.lowerEndpoint(), share.lowerEndpoint()));
+                    ret.add(Range.closed(self.lowerEndpoint(), share.lowerEndpoint()));
                 }
             }
         }
@@ -137,29 +136,29 @@ public class RangeUtil {
         if (!self.hasUpperBound()) {
             if (share.hasUpperBound()) {
                 if (share.upperBoundType() == BoundType.CLOSED) {
-                    ret.add(Ranges.greaterThan(share.upperEndpoint()));
+                    ret.add(Range.greaterThan(share.upperEndpoint()));
                 } else {
-                    ret.add(Ranges.atLeast(share.upperEndpoint()));
+                    ret.add(Range.atLeast(share.upperEndpoint()));
                 }
             }
         } else {
             if (self.upperEndpoint() != share.upperEndpoint()) {
                 if (self.upperBoundType() == BoundType.CLOSED) {
                     if (share.upperBoundType() == BoundType.CLOSED) {
-                        ret.add(Ranges.openClosed(share.upperEndpoint(), self.upperEndpoint()));
+                        ret.add(Range.openClosed(share.upperEndpoint(), self.upperEndpoint()));
                     } else {
-                        ret.add(Ranges.closed(share.upperEndpoint(), self.upperEndpoint()));
+                        ret.add(Range.closed(share.upperEndpoint(), self.upperEndpoint()));
                     }
                 } else {
                     if (share.upperBoundType() == BoundType.CLOSED) {
-                        ret.add(Ranges.open(share.upperEndpoint(), self.upperEndpoint()));
+                        ret.add(Range.open(share.upperEndpoint(), self.upperEndpoint()));
                     } else {
-                        ret.add(Ranges.closedOpen(share.upperEndpoint(), self.upperEndpoint()));
+                        ret.add(Range.closedOpen(share.upperEndpoint(), self.upperEndpoint()));
                     }
                 }
             } else {
                 if (self.upperBoundType() == BoundType.CLOSED && share.upperBoundType() == BoundType.OPEN) {
-                    ret.add(Ranges.closed(self.upperEndpoint(), share.upperEndpoint()));
+                    ret.add(Range.closed(self.upperEndpoint(), share.upperEndpoint()));
                 }
             }
         }
@@ -212,12 +211,12 @@ public class RangeUtil {
         for (int index = 1; index < values.size(); index++) {
             temp = iter.next();
             if (temp - lastEnd != 1) {
-                ranges.add(Ranges.closed(lastBegin, lastEnd));
+                ranges.add(Range.closed(lastBegin, lastEnd));
                 lastBegin = temp;
             }
             lastEnd = temp;
         }
-        ranges.add(Ranges.closed(lastBegin, lastEnd));
+        ranges.add(Range.closed(lastBegin, lastEnd));
         return ranges;
     }
 }

@@ -43,6 +43,8 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Sets;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 public class MassInValueProviderImpl implements MassInValueProvider {
     public static final Logger logger = LoggerFactory.getLogger(MassInValueProviderImpl.class);
 
@@ -73,14 +75,14 @@ public class MassInValueProviderImpl implements MassInValueProvider {
                     Pair<Long, Set<ByteArray>> cached = hdfs_caches.getIfPresent(filterResourceIdentifier);
                     if (cached != null && cached.getFirst().equals(modificationTime)) {
                         ret = cached.getSecond();
-                        logger.info("Load HDFS from cache using " + stopwatch.elapsedMillis() + " millis");
+                        logger.info("Load HDFS from cache using " + stopwatch.elapsed(MILLISECONDS) + " millis");
                         return;
                     }
 
                     InputStream inputStream = fileSystem.open(new Path(filterResourceIdentifier));
                     List<String> lines = IOUtils.readLines(inputStream);
 
-                    logger.info("Load HDFS finished after " + stopwatch.elapsedMillis() + " millis");
+                    logger.info("Load HDFS finished after " + stopwatch.elapsed(MILLISECONDS) + " millis");
 
                     for (String line : lines) {
                         if (StringUtils.isEmpty(line)) {
@@ -98,7 +100,7 @@ public class MassInValueProviderImpl implements MassInValueProvider {
 
                     hdfs_caches.put(filterResourceIdentifier, Pair.newPair(modificationTime, ret));
 
-                    logger.info("Mass In values constructed after " + stopwatch.elapsedMillis() + " millis, containing " + ret.size() + " entries");
+                    logger.info("Mass In values constructed after " + stopwatch.elapsed(MILLISECONDS) + " millis, containing " + ret.size() + " entries");
                 }
 
             } catch (IOException e) {

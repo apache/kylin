@@ -25,7 +25,6 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Range;
-import com.google.common.collect.Ranges;
 
 /**
  */
@@ -42,12 +41,12 @@ public class TsConditionExtractor {
 
     private static Range<Long> extractTsConditionInternal(TupleFilter filter, TblColRef colRef) {
         if (filter == null) {
-            return Ranges.all();
+            return Range.all();
         }
 
         if (filter instanceof LogicalTupleFilter) {
             if (filter.getOperator() == TupleFilter.FilterOperatorEnum.AND) {
-                Range<Long> ret = Ranges.all();
+                Range<Long> ret = Range.all();
                 for (TupleFilter child : filter.getChildren()) {
                     Range childRange = extractTsConditionInternal(child, colRef);
                     if (childRange != null) {
@@ -64,14 +63,14 @@ public class TsConditionExtractor {
             } else {
                 //for conditions like date > DATE'2000-11-11' OR date < DATE '1999-01-01'
                 //we will use Ranges.all() rather than two ranges to represent them
-                return Ranges.all();
+                return Range.all();
             }
         }
 
         if (filter instanceof CompareTupleFilter) {
             CompareTupleFilter compareTupleFilter = (CompareTupleFilter) filter;
             if (compareTupleFilter.getColumn() == null)// column will be null at filters like " 1<>1"
-                return Ranges.all();
+                return Range.all();
 
             if (compareTupleFilter.getColumn().equals(colRef)) {
                 Object firstValue = compareTupleFilter.getFirstValue();
@@ -79,19 +78,19 @@ public class TsConditionExtractor {
                 switch (compareTupleFilter.getOperator()) {
                 case EQ:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Ranges.closed(t, t);
+                    return Range.closed(t, t);
                 case LT:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Ranges.lessThan(t);
+                    return Range.lessThan(t);
                 case LTE:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Ranges.atMost(t);
+                    return Range.atMost(t);
                 case GT:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Ranges.greaterThan(t);
+                    return Range.greaterThan(t);
                 case GTE:
                     t = DateFormat.stringToMillis((String) firstValue);
-                    return Ranges.atLeast(t);
+                    return Range.atLeast(t);
                 case NEQ:
                 case IN://not handled for now
                     break;
@@ -99,6 +98,6 @@ public class TsConditionExtractor {
                 }
             }
         }
-        return Ranges.all();
+        return Range.all();
     }
 }
