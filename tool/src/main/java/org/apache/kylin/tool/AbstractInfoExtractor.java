@@ -90,7 +90,9 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         if (!isSubmodule && new File(exportDest).exists()) {
             exportDest = exportDest + packageName + "/";
         }
+
         exportDir = new File(exportDest);
+        FileUtils.forceMkdir(exportDir);
 
         if (!isSubmodule) {
             dumpBasicDiagInfo();

@@ -53,7 +53,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     private static final Option OPTION_INCLUDE_CLIENT = OptionBuilder.withArgName("includeClient").hasArg().isRequired(false).withDescription("Specify whether to include client info to extract. Default true.").create("includeClient");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("Specify whether to include job output to extract. Default true.").create("includeJobs");
+    private static final Option OPTION_INCLUDE_JOB = OptionBuilder.withArgName("includeJobs").hasArg().isRequired(false).withDescription("Specify whether to include job info to extract. Default true.").create("includeJobs");
 
     public DiagnosisInfoCLI() {
         super();
@@ -82,6 +82,9 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         } else {
             result.add(projectSeed);
         }
+        if (result.isEmpty()) {
+            throw new RuntimeException("No project to extract.");
+        }
         return result;
     }
 
@@ -95,10 +98,17 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         String projectNames = StringUtils.join(getProjects(projectInput), ",");
 
         // export cube metadata
-        String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-includeJobs", Boolean.toString(includeJob), "-submodule", "true" };
+        String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-includeJobs", "false", "-submodule", "true" };
         CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
         logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
         cubeMetaExtractor.execute(cubeMetaArgs);
+
+        // extract all job instances
+        if (includeJob) {
+            String[] jobArgs = { "-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
+            JobInstanceExtractor jobInstanceExtractor = new JobInstanceExtractor();
+            jobInstanceExtractor.execute(jobArgs);
+        }
 
         // export HBase
         if (includeHBase) {
