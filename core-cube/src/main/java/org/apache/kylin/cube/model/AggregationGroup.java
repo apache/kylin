@@ -36,7 +36,7 @@ public class AggregationGroup {
     public static class HierarchyMask {
         public long fullMask;// 00000111
         public long[] allMasks;// 00000100,00000110,00000111
-        public long[] dims;// 00000100,00000100,00000001
+        public long[] dims;// 00000100,00000010,00000001
     }
 
     @JsonProperty("includes")
