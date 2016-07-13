@@ -42,6 +42,8 @@ import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.restclient.Broadcaster;
+import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
@@ -148,6 +150,7 @@ public class CubeMigrationCLI {
         if (realExecute.equalsIgnoreCase("true")) {
             doOpts();
             checkMigrationSuccess(dstConfig, cubeName, true);
+            updateMeta(dstConfig);
         } else {
             showOpts();
         }
@@ -545,6 +548,19 @@ public class CubeMigrationCLI {
             //do nothing
             break;
         }
+        }
+    }
+
+    private static void updateMeta(KylinConfig config){
+        String[] nodes = config.getRestServers();
+        for (String node : nodes) {
+            RestClient restClient = new RestClient(node);
+            try {
+                logger.info("update meta cache for " + node);
+                restClient.wipeCache(Broadcaster.TYPE.ALL.getType(), Broadcaster.EVENT.UPDATE.getType(), "all");
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+            }
         }
     }
 }
