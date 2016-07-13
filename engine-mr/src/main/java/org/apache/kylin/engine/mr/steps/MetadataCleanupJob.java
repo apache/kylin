@@ -101,15 +101,6 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     public void cleanup() throws Exception {
         CubeManager cubeManager = CubeManager.getInstance(config);
 
-        Set<String> activeResourceList = Sets.newHashSet();
-        for (org.apache.kylin.cube.CubeInstance cube : cubeManager.listAllCubes()) {
-            for (org.apache.kylin.cube.CubeSegment segment : cube.getSegments()) {
-                activeResourceList.addAll(segment.getSnapshotPaths());
-                activeResourceList.addAll(segment.getDictionaryPaths());
-                activeResourceList.add(segment.getStatisticsResourcePath());
-            }
-        }
-
         List<String> toDeleteResource = Lists.newArrayList();
 
         // two level resources, snapshot tables and cube statistics
@@ -121,10 +112,8 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
                     NavigableSet<String> snapshotNames = getStore().listResources(snapshotTable);
                     if (snapshotNames != null)
                         for (String snapshot : snapshotNames) {
-                            if (!activeResourceList.contains(snapshot)) {
-                                if (isOlderThanThreshold(getStore().getResourceTimestamp(snapshot)))
-                                    toDeleteResource.add(snapshot);
-                            }
+                            if (isOlderThanThreshold(getStore().getResourceTimestamp(snapshot)))
+                                toDeleteResource.add(snapshot);
                         }
                 }
             }
@@ -140,12 +129,21 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
                     NavigableSet<String> dictionaries = getStore().listResources(tableCol);
                     if (dictionaries != null)
                         for (String dict : dictionaries)
-                            if (!activeResourceList.contains(dict)) {
-                                if (isOlderThanThreshold(getStore().getResourceTimestamp(dict)))
-                                    toDeleteResource.add(dict);
-                            }
+                            if (isOlderThanThreshold(getStore().getResourceTimestamp(dict)))
+                                toDeleteResource.add(dict);
                 }
         }
+
+        Set<String> activeResourceList = Sets.newHashSet();
+        for (org.apache.kylin.cube.CubeInstance cube : cubeManager.listAllCubes()) {
+            for (org.apache.kylin.cube.CubeSegment segment : cube.getSegments()) {
+                activeResourceList.addAll(segment.getSnapshotPaths());
+                activeResourceList.addAll(segment.getDictionaryPaths());
+                activeResourceList.add(segment.getStatisticsResourcePath());
+            }
+        }
+
+        toDeleteResource.removeAll(activeResourceList);
 
         // delete old and completed jobs
         ExecutableDao executableDao = ExecutableDao.getInstance(KylinConfig.getInstanceFromEnv());
