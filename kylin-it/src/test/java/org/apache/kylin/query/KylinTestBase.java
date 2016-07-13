@@ -358,7 +358,7 @@ public class KylinTestBase {
     }
 
     protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
-        printInfo("---------- test folder: " + queryFolder);
+        printInfo("---------- test folder: " + new File(queryFolder).getAbsolutePath());
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
@@ -431,7 +431,7 @@ public class KylinTestBase {
     protected int runSQL(File sqlFile, boolean debug, boolean explain) throws Exception {
         if (debug) {
             System.setProperty("calcite.debug", "true");
-            InputStream inputStream = new FileInputStream(ITDirHeader + "src/test/resources/logging.properties");
+            InputStream inputStream = new FileInputStream("src/test/resources/logging.properties");
             LogManager.getLogManager().readConfiguration(inputStream);
         }
 

@@ -47,7 +47,7 @@ public class ScannerWorker {
             IGTStorage rpc = (IGTStorage) Class.forName(gtStorage).getConstructor(CubeSegment.class, Cuboid.class, GTInfo.class).newInstance(cubeSeg, cuboid, info); // default behavior
             internal = rpc.getGTScanner(scanRequest);
         } catch (IOException | InstantiationException | InvocationTargetException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException e) {
-            throw new RuntimeException("error", e);
+            throw new RuntimeException(e);
         }
     }
 

@@ -55,7 +55,7 @@ public class ITKylinQueryTest extends KylinTestBase {
         priorities.put(RealizationType.CUBE, 0);
         Candidate.setPriorities(priorities);
 
-        printInfo("setUp in KylinQueryTest");
+        printInfo("setUp in ITKylinQueryTest");
         joinType = "left";
 
         setupAll();
@@ -64,7 +64,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @AfterClass
     public static void tearDown() throws Exception {
         Candidate.restorePriorities();
-        printInfo("tearDown in KylinQueryTest");
+        printInfo("tearDown in ITKylinQueryTest");
         clean();
     }
 
@@ -98,16 +98,20 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     }
 
+    protected String getQueryFolderPrefix() {
+        return "";
+    }
+
     @Ignore("this is only for debug")
     @Test
     public void testTempQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/temp", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/temp", null, true);
     }
 
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/temp/query01.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/temp/query01.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
@@ -119,7 +123,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleExecuteQuery() throws Exception {
 
-        String queryFileName = "src/test/resources/query/sql_tableau/query20.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_tableau/query20.sql";
 
         File sqlFile = new File(queryFileName);
         String sql = getTextFromFile(sqlFile);
@@ -131,22 +135,22 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Ignore
     @Test
     public void testTableauProbing() throws Exception {
-        batchExecuteQuery("src/test/resources/query/tableau_probing");
+        batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/tableau_probing");
     }
 
     @Test
     public void testCommonQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql", null, true);
     }
 
     @Test
     public void testVerifyQuery() throws Exception {
-        verifyResultRowCount("src/test/resources/query/sql_verifyCount");
+        verifyResultRowCount(getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount");
     }
 
     @Test
     public void testOrderByQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_orderby", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_orderby", null, true);
         // FIXME
         // as of optiq 0.8, we lost metadata type with "order by" clause, e.g. sql_orderby/query01.sql
         // thus, temporarily the "order by" clause was cross out, and the needSort is set to true
@@ -155,74 +159,74 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testLookupQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_lookup", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_lookup", null, true);
     }
 
     @Test
     public void testCachedQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_cache", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_cache", null, true);
     }
 
     @Test
     public void testDerivedColumnQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_derived", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_derived", null, true);
     }
 
     @Test
     public void testDistinctCountQuery() throws Exception {
         if ("left".equalsIgnoreCase(joinType)) {
-            batchExecuteQuery("src/test/resources/query/sql_distinct");
+            batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct");
         }
     }
 
     @Test
     public void testDimDistinctCountQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_distinct_dim", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_dim", null, true);
     }
 
     @Test
     public void testPreciselyDistinctCountQuery() throws Exception {
         if ("left".equalsIgnoreCase(joinType)) {
-            execAndCompQuery("src/test/resources/query/sql_distinct_precisely", null, true);
+            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_precisely", null, true);
         }
     }
 
     @Test
     public void testStreamingTableQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_streaming", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_streaming", null, true);
     }
 
     @Test
     public void testTableauQuery() throws Exception {
-        execAndCompResultSize("src/test/resources/query/sql_tableau", null, true);
+        execAndCompResultSize(getQueryFolderPrefix() + "src/test/resources/query/sql_tableau", null, true);
     }
 
     @Test
     public void testSubQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_subquery", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_subquery", null, true);
     }
 
     @Test
     public void testCaseWhen() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_casewhen", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_casewhen", null, true);
     }
 
     @Ignore
     @Test
     public void testHiveQuery() throws Exception {
-        execAndCompQuery("src/test/resources/query/sql_hive", null, true);
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_hive", null, true);
     }
 
     @Test
     public void testH2Query() throws Exception {
-        this.execQueryUsingH2("src/test/resources/query/sql_orderby", false);
+        this.execQueryUsingH2(getQueryFolderPrefix() + "src/test/resources/query/sql_orderby", false);
     }
 
     @Test
     public void testInvalidQuery() throws Exception {
 
         printInfo("-------------------- Test Invalid Query --------------------");
-        String queryFolder = "src/test/resources/query/sql_invalid";
+        String queryFolder = getQueryFolderPrefix() + "src/test/resources/query/sql_invalid";
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
         for (File sqlFile : sqlFiles) {
             String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
@@ -242,26 +246,26 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testDynamicQuery() throws Exception {
-        execAndCompDynamicQuery("src/test/resources/query/sql_dynamic", null, true);
+        execAndCompDynamicQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_dynamic", null, true);
     }
 
     @Ignore("simple query will be supported by ii")
     @Test
     public void testLimitEnabled() throws Exception {
-        runSqlFile("src/test/resources/query/sql_optimize/enable-limit01.sql");
+        runSqlFile(getQueryFolderPrefix() + "src/test/resources/query/sql_optimize/enable-limit01.sql");
         assertLimitWasEnabled();
     }
 
     @Test
     public void testTopNQuery() throws Exception {
         if ("left".equalsIgnoreCase(joinType)) {
-            this.execAndCompQuery("src/test/resources/query/sql_topn", null, true);
+            this.execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_topn", null, true);
         }
     }
 
     @Test
     public void testRawQuery() throws Exception {
-        this.execAndCompQuery("src/test/resources/query/sql_raw", null, true);
+        this.execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_raw", null, true);
     }
 
     private void assertLimitWasEnabled() {
