@@ -19,10 +19,7 @@
 package org.apache.kylin.job;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -172,6 +169,8 @@ public class JoinedFlatTable {
     }
 
     private static void appendJoinStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
+        List<JoinDesc> cubeJoins = intermediateTableDesc.getUsedJoinsSet();
+
         Set<String> dimTableCache = new HashSet<String>();
 
         DataModelDesc dataModelDesc = intermediateTableDesc.getDataModel();
@@ -181,6 +180,9 @@ public class JoinedFlatTable {
 
         for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
             JoinDesc join = lookupDesc.getJoin();
+            if (!cubeJoins.contains(join)) {
+                continue;
+            }
             if (join != null && join.getType().equals("") == false) {
                 String joinType = join.getType().toUpperCase();
                 String dimTableName = lookupDesc.getTable();

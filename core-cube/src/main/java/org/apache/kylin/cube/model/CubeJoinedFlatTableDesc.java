@@ -18,18 +18,12 @@
 
 package org.apache.kylin.cube.model;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.kylin.common.util.BytesSplitter;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.IntermediateColumnDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -50,10 +44,13 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
     private Map<String, Integer> columnIndexMap;
 
+    private List<JoinDesc> cubeJoins;
+
     public CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
         this.columnIndexMap = Maps.newHashMap();
+        this.cubeJoins = new ArrayList<JoinDesc>(cubeDesc.getDimensions().size());
         parseCubeDesc();
     }
 
@@ -138,6 +135,12 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         }
 
         columnCount = columnIndex;
+
+        for (DimensionDesc d : cubeDesc.getDimensions()) {
+            if (d.getJoin() != null) {
+                cubeJoins.add(d.getJoin());
+            }
+        }
     }
 
     private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
@@ -184,6 +187,11 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     @Override
     public DataModelDesc getDataModel() {
         return cubeDesc.getModel();
+    }
+
+    @Override
+    public List<JoinDesc> getUsedJoinsSet() {
+        return cubeJoins;
     }
 
     private static String colName(String canonicalColName) {

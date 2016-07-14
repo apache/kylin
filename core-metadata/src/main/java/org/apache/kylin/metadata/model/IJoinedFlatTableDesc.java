@@ -30,4 +30,5 @@ public interface IJoinedFlatTableDesc {
 
     DataModelDesc getDataModel();
 
+    List<JoinDesc> getUsedJoinsSet();
 }
