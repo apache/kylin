@@ -156,7 +156,6 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
                 toDeleteResource.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid());
 
                 for (ExecutablePO task : executable.getTasks()) {
-                    toDeleteResource.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + task.getUuid());
                     toDeleteResource.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid());
                 }
             }
