@@ -189,6 +189,8 @@ public class TableController extends BasicController {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
         TableDesc desc = cubeMgmtService.getMetadataManager().getTableDesc(tableName);
+        if(desc == null)
+            return false;
         tableType = desc.getSourceType();
 
         try {
