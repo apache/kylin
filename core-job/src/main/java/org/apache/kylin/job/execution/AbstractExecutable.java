@@ -95,7 +95,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     @Override
     public final ExecuteResult execute(ExecutableContext executableContext) throws ExecuteException {
 
-        logger.info("Executing >>>>>>>>>>>>>   " + this.getName() + "   <<<<<<<<<<<<<");
+        logger.info("Executing AbstractExecutable (" + this.getName() + ")");
 
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
         ExecuteResult result = null;

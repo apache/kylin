@@ -27,8 +27,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.util.ToolRunner;
-import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.common.util.AbstractApplication;
+import org.apache.kylin.common.util.OptionsHelper;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,38 +37,17 @@ import org.slf4j.LoggerFactory;
 /**
  */
 @SuppressWarnings("static-access")
-public class HtableAlterMetadataCLI extends AbstractHadoopJob {
+public class HtableAlterMetadataCLI extends AbstractApplication {
 
     private static final Option OPTION_METADATA_KEY = OptionBuilder.withArgName("key").hasArg().isRequired(true).withDescription("The metadata key").create("key");
     private static final Option OPTION_METADATA_VALUE = OptionBuilder.withArgName("value").hasArg().isRequired(true).withDescription("The metadata value").create("value");
+    protected static final Option OPTION_HTABLE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_HTABLE_NAME).hasArg().isRequired(true).withDescription("HTable name").create(BatchConstants.ARG_HTABLE_NAME);
 
     protected static final Logger logger = LoggerFactory.getLogger(HtableAlterMetadataCLI.class);
 
     String tableName;
     String metadataKey;
     String metadataValue;
-
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
-        try {
-            options.addOption(OPTION_HTABLE_NAME);
-            options.addOption(OPTION_METADATA_KEY);
-            options.addOption(OPTION_METADATA_VALUE);
-
-            parseOptions(options, args);
-            tableName = getOptionValue(OPTION_HTABLE_NAME);
-            metadataKey = getOptionValue(OPTION_METADATA_KEY);
-            metadataValue = getOptionValue(OPTION_METADATA_VALUE);
-
-            alter();
-
-            return 0;
-        } catch (Exception e) {
-            printUsage(options);
-            throw e;
-        }
-    }
 
     private void alter() throws IOException {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
@@ -82,7 +62,26 @@ public class HtableAlterMetadataCLI extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new HtableAlterMetadataCLI(), args);
-        System.exit(exitCode);
+        HtableAlterMetadataCLI cli = new HtableAlterMetadataCLI();
+        cli.execute(args);
+    }
+
+    @Override
+    protected Options getOptions() {
+        Options options = new Options();
+        options.addOption(OPTION_HTABLE_NAME);
+        options.addOption(OPTION_METADATA_KEY);
+        options.addOption(OPTION_METADATA_VALUE);
+        return options;
+    }
+
+    @Override
+    protected void execute(OptionsHelper optionsHelper) throws Exception {
+        tableName = optionsHelper.getOptionValue(OPTION_HTABLE_NAME);
+        metadataKey = optionsHelper.getOptionValue(OPTION_METADATA_KEY);
+        metadataValue = optionsHelper.getOptionValue(OPTION_METADATA_VALUE);
+
+        alter();
+
     }
 }

@@ -24,8 +24,8 @@ import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.util.ToolRunner;
-import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.common.util.AbstractApplication;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
@@ -33,23 +33,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-public class CleanHtableCLI extends AbstractHadoopJob {
+public class CleanHtableCLI extends AbstractApplication {
 
     protected static final Logger logger = LoggerFactory.getLogger(CleanHtableCLI.class);
-
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
-        try {
-
-            clean();
-
-            return 0;
-        } catch (Exception e) {
-            printUsage(options);
-            throw e;
-        }
-    }
 
     private void clean() throws IOException {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
@@ -71,7 +57,18 @@ public class CleanHtableCLI extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new CleanHtableCLI(), args);
-        System.exit(exitCode);
+        CleanHtableCLI cli = new CleanHtableCLI();
+        cli.execute(args);
+    }
+
+    @Override
+    protected Options getOptions() {
+        Options options = new Options();
+        return options;
+    }
+
+    @Override
+    protected void execute(OptionsHelper optionsHelper) throws Exception {
+        clean();
     }
 }

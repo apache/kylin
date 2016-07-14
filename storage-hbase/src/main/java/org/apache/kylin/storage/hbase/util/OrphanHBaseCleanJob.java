@@ -20,7 +20,6 @@ package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -32,15 +31,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.util.ToolRunner;
-import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.common.util.AbstractApplication;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  */
-public class OrphanHBaseCleanJob extends AbstractHadoopJob {
+public class OrphanHBaseCleanJob extends AbstractApplication {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
@@ -51,37 +50,6 @@ public class OrphanHBaseCleanJob extends AbstractHadoopJob {
 
     boolean delete = false;
     Set<String> metastoreWhitelistSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
-
-        logger.info("jobs args: " + Arrays.toString(args));
-        try {
-            options.addOption(OPTION_DELETE);
-            options.addOption(OPTION_WHITELIST);
-            parseOptions(options, args);
-
-            logger.info("options: '" + getOptionsAsString() + "'");
-            logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
-            delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
-            String[] metastoreWhitelist = getOptionValue(OPTION_WHITELIST).split(",");
-
-            for (String ms : metastoreWhitelist) {
-                logger.info("metadata store in white list: " + ms);
-                metastoreWhitelistSet.add(ms);
-            }
-
-            Configuration conf = HBaseConfiguration.create(getConf());
-
-            cleanUnusedHBaseTables(conf);
-
-            return 0;
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            throw e;
-        }
-    }
 
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
 
@@ -128,7 +96,31 @@ public class OrphanHBaseCleanJob extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new OrphanHBaseCleanJob(), args);
-        System.exit(exitCode);
+        OrphanHBaseCleanJob job = new OrphanHBaseCleanJob();
+        job.execute(args);
+    }
+
+    @Override
+    protected Options getOptions() {
+        Options options = new Options();
+        options.addOption(OPTION_DELETE);
+        options.addOption(OPTION_WHITELIST);
+        return options;
+    }
+
+    @Override
+    protected void execute(OptionsHelper optionsHelper) throws Exception {
+        logger.info("options: '" + optionsHelper.getOptionsAsString() + "'");
+        logger.info("delete option value: '" + optionsHelper.getOptionValue(OPTION_DELETE) + "'");
+        delete = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_DELETE));
+        String[] metastoreWhitelist = optionsHelper.getOptionValue(OPTION_WHITELIST).split(",");
+
+        for (String ms : metastoreWhitelist) {
+            logger.info("metadata store in white list: " + ms);
+            metastoreWhitelistSet.add(ms);
+        }
+
+        Configuration conf = HBaseConfiguration.create();
+        cleanUnusedHBaseTables(conf);
     }
 }

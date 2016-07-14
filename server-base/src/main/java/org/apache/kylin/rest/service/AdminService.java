@@ -25,7 +25,6 @@ import java.util.Properties;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -101,7 +100,7 @@ public class AdminService extends BasicService {
         StorageCleanupJob job = new StorageCleanupJob();
         String[] args = new String[] { "-delete", "true" };
         try {
-            ToolRunner.run(job, args);
+            job.execute(args);
         } catch (Exception e) {
             throw new InternalErrorException(e.getMessage(), e);
         }

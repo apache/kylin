@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -42,14 +41,14 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -58,49 +57,16 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StorageCleanupJob extends AbstractHadoopJob {
+public class StorageCleanupJob extends AbstractApplication {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
 
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanupJob.class);
-
     public static final int TIME_THRESHOLD_DELETE_HTABLE = 10; // Unit minute
 
     boolean delete = false;
-
     protected static ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.hadoop.util.Tool#run(java.lang.String[])
-     */
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
-
-        logger.info("jobs args: " + Arrays.toString(args));
-        try {
-            options.addOption(OPTION_DELETE);
-            parseOptions(options, args);
-
-            logger.info("options: '" + getOptionsAsString() + "'");
-            logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
-            delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
-
-            Configuration conf = HBaseConfiguration.create(getConf());
-
-            cleanUnusedIntermediateHiveTable(conf);
-            cleanUnusedHdfsFiles(conf);
-            cleanUnusedHBaseTables(conf);
-
-            return 0;
-        } catch (Exception e) {
-            printUsage(options);
-            throw e;
-        }
-    }
 
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -160,6 +126,27 @@ public class StorageCleanupJob extends AbstractHadoopJob {
         }
 
         hbaseAdmin.close();
+    }
+
+    @Override
+    protected Options getOptions() {
+        Options options = new Options();
+        options.addOption(OPTION_DELETE);
+        return options;
+    }
+
+    @Override
+    protected void execute(OptionsHelper optionsHelper) throws Exception {
+        logger.info("options: '" + optionsHelper.getOptionsAsString() + "'");
+        logger.info("delete option value: '" + optionsHelper.getOptionValue(OPTION_DELETE) + "'");
+        delete = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_DELETE));
+
+        Configuration conf = HBaseConfiguration.create();
+
+        cleanUnusedIntermediateHiveTable(conf);
+        cleanUnusedHdfsFiles(conf);
+        cleanUnusedHBaseTables(conf);
+
     }
 
     class DeleteHTableRunnable implements Callable {
@@ -322,7 +309,7 @@ public class StorageCleanupJob extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        System.exit(exitCode);
+        StorageCleanupJob cli = new StorageCleanupJob();
+        cli.execute(args);
     }
 }

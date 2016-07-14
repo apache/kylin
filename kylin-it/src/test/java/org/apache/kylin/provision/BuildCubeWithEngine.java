@@ -37,7 +37,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -414,8 +413,9 @@ public class BuildCubeWithEngine {
     private int cleanupOldStorage() throws Exception {
         String[] args = { "--delete", "true" };
 
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        return exitCode;
+        StorageCleanupJob cli = new StorageCleanupJob();
+        cli.execute(args);
+        return 0;
     }
 
     private void checkHFilesInHBase(CubeSegment segment) throws IOException {

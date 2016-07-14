@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
@@ -111,8 +110,9 @@ public class BuildCubeWithStream {
     private static int cleanupOldStorage() throws Exception {
         String[] args = { "--delete", "true" };
 
-        int exitCode = ToolRunner.run(new StorageCleanupJob(), args);
-        return exitCode;
+        StorageCleanupJob cli = new StorageCleanupJob();
+        cli.execute(args);
+        return 0;
     }
 
     public void build() throws Exception {

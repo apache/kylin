@@ -39,7 +39,7 @@ import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 public class RowKeyDistributionCheckerJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
-    protected static final Option rowKeyStatsFilePath = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("rowKeyStatsFilePath").create("rowKeyStatsFilePath");
+    protected static final Option ROW_KEY_STATS_FILE_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("rowKeyStatsFilePath").create("rowKeyStatsFilePath");
 
     @Override
     public int run(String[] args) throws Exception {
@@ -49,11 +49,11 @@ public class RowKeyDistributionCheckerJob extends AbstractHadoopJob {
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_JOB_NAME);
-            options.addOption(rowKeyStatsFilePath);
+            options.addOption(ROW_KEY_STATS_FILE_PATH);
 
             parseOptions(options, args);
 
-            String statsFilePath = getOptionValue(rowKeyStatsFilePath);
+            String statsFilePath = getOptionValue(ROW_KEY_STATS_FILE_PATH);
 
             // start job
             String jobName = getOptionValue(OPTION_JOB_NAME);

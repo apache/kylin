@@ -19,7 +19,6 @@
 package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -28,8 +27,8 @@ import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.util.ToolRunner;
-import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
+import org.apache.kylin.common.util.AbstractApplication;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
@@ -40,7 +39,7 @@ import com.google.common.collect.Lists;
 /**
  * clean hbase tables by tag
  */
-public class HBaseClean extends AbstractHadoopJob {
+public class HBaseClean extends AbstractApplication {
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(true).withDescription("actually delete or not").create("delete");
@@ -49,32 +48,9 @@ public class HBaseClean extends AbstractHadoopJob {
     private static final Option OPTION_TAG = OptionBuilder.withArgName("tag").hasArg().isRequired(true).withDescription("the tag of HTable").create("tag");
 
     protected static final Logger logger = LoggerFactory.getLogger(HBaseClean.class);
+
     boolean delete = false;
     String tag = null;
-
-    @Override
-    public int run(String[] args) throws Exception {
-        Options options = new Options();
-
-        logger.info("jobs args: " + Arrays.toString(args));
-        try {
-            options.addOption(OPTION_DELETE);
-            options.addOption(OPTION_TAG);
-            parseOptions(options, args);
-
-            logger.info("options: '" + getOptionsAsString() + "'");
-
-            tag = getOptionValue(OPTION_TAG);
-            delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
-
-            cleanUp();
-
-            return 0;
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            throw e;
-        }
-    }
 
     private void cleanUp() {
         try {
@@ -121,7 +97,24 @@ public class HBaseClean extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        int exitCode = ToolRunner.run(new HBaseClean(), args);
-        System.exit(exitCode);
+        HBaseClean cli = new HBaseClean();
+        cli.execute(args);
+    }
+
+    @Override
+    protected Options getOptions() {
+        Options options = new Options();
+        options.addOption(OPTION_DELETE);
+        options.addOption(OPTION_TAG);
+        return options;
+
+    }
+
+    @Override
+    protected void execute(OptionsHelper optionsHelper) throws Exception {
+        tag = optionsHelper.getOptionValue(OPTION_TAG);
+        delete = Boolean.parseBoolean(optionsHelper.getOptionValue(OPTION_DELETE));
+
+        cleanUp();
     }
 }
