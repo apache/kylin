@@ -73,6 +73,12 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     }
 
     @Override
+    protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
+        super.onExecuteError(exception,executableContext);
+        notifyUserStatusChange(executableContext, ExecutableState.ERROR);
+    }
+
+    @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         if (isDiscarded()) {
             setEndTime(System.currentTimeMillis());
