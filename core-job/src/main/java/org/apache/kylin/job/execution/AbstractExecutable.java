@@ -30,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.MailService;
 import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.exception.PersistentException;
 import org.apache.kylin.job.impl.threadpool.DefaultContext;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.slf4j.Logger;
@@ -99,31 +100,62 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
         Preconditions.checkArgument(executableContext instanceof DefaultContext);
         ExecuteResult result = null;
+        try {
+            onExecuteStart(executableContext);
+            Throwable exception;
+            do {
+                if (retry > 0) {
+                    logger.info("Retry " + retry);
+                }
+                exception = null;
+                result = null;
+                try {
+                    result = doWork(executableContext);
+                } catch (Throwable e) {
+                    logger.error("error running Executable: " + this.toString());
+                    exception = e;
+                }
+                retry++;
+            } while (((result != null && result.succeed() == false) || exception != null) && needRetry() == true);
 
-        onExecuteStart(executableContext);
-        Throwable exception;
-        do {
-            if (retry > 0) {
-                logger.info("Retry " + retry);
+            if (exception != null) {
+                onExecuteError(exception, executableContext);
+                throw new ExecuteException(exception);
             }
-            exception = null;
-            result = null;
-            try {
-                result = doWork(executableContext);
-            } catch (Throwable e) {
-                logger.error("error running Executable: " + this.toString());
-                exception = e;
-            }
-            retry++;
-        } while (((result != null && result.succeed() == false) || exception != null) && needRetry() == true);
 
-        if (exception != null) {
-            onExecuteError(exception, executableContext);
-            throw new ExecuteException(exception);
+            onExecuteFinished(result, executableContext);
+        } catch (Exception e) {
+            if (isMetaDataPersistException(e)){
+                handleMetaDataPersistException(e);
+            }
+            if (e instanceof ExecuteException){
+                throw e;
+            } else {
+                throw new ExecuteException(e);
+            }
+        }
+        return result;
+    }
+
+    protected void handleMetaDataPersistException(Exception e) {
+        // do nothing.
+    }
+
+    private boolean isMetaDataPersistException(Exception e) {
+        if (e instanceof PersistentException){
+            return true;
         }
 
-        onExecuteFinished(result, executableContext);
-        return result;
+        Throwable t = e.getCause();
+        int depth = 0;
+        while (t!= null && depth<5) {
+            depth ++;
+            if (t instanceof PersistentException){
+                return true;
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 
     protected abstract ExecuteResult doWork(ExecutableContext context) throws ExecuteException;
@@ -209,29 +241,52 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected final void notifyUserStatusChange(ExecutableContext context, ExecutableState state) {
         try {
-            List<String> users = Lists.newArrayList();
-            users.addAll(getNotifyList());
             final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            final String[] adminDls = kylinConfig.getAdminDls();
-            if (null != adminDls) {
-                for (String adminDl : adminDls) {
-                    users.add(adminDl);
-                }
-            }
+            List<String> users =  getAllNofifyUsers(kylinConfig);
             if (users.isEmpty()) {
                 logger.warn("no need to send email, user list is empty");
                 return;
             }
             final Pair<String, String> email = formatNotifications(context, state);
-            if (email == null) {
-                logger.warn("no need to send email, content is null");
+            doSendMail(kylinConfig,users,email);
+        } catch (Exception e) {
+            logger.error("error send email", e);
+        }
+    }
+
+    private List<String> getAllNofifyUsers(KylinConfig kylinConfig){
+        List<String> users = Lists.newArrayList();
+        users.addAll(getNotifyList());
+        final String[] adminDls = kylinConfig.getAdminDls();
+        if (null != adminDls) {
+            for (String adminDl : adminDls) {
+                users.add(adminDl);
+            }
+        }
+        return users;
+    }
+
+    private void doSendMail(KylinConfig kylinConfig, List<String> users, Pair<String,String> email){
+        if (email == null) {
+            logger.warn("no need to send email, content is null");
+            return;
+        }
+        logger.info("prepare to send email to:" + users);
+        logger.info("job name:" + getName());
+        logger.info("submitter:" + getSubmitter());
+        logger.info("notify list:" + users);
+        new MailService(kylinConfig).sendMail(users, email.getLeft(), email.getRight());
+    }
+
+    protected void sendMail(Pair<String, String> email) {
+        try {
+            final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            List<String> users = getAllNofifyUsers(kylinConfig);
+            if (users.isEmpty()) {
+                logger.warn("no need to send email, user list is empty");
                 return;
             }
-            logger.info("prepare to send email to:" + users);
-            logger.info("job name:" + getName());
-            logger.info("submitter:" + getSubmitter());
-            logger.info("notify list:" + users);
-            new MailService(kylinConfig).sendMail(users, email.getLeft(), email.getRight());
+            doSendMail(kylinConfig, users, email);
         } catch (Exception e) {
             logger.error("error send email", e);
         }

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.engine.mr;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -181,6 +183,44 @@ public class CubingJob extends DefaultChainedExecutable {
         }
         setMapReduceWaitTime(time);
         super.onExecuteFinished(result, executableContext);
+    }
+
+    /**
+     * build fail because the metadata store has problem.
+     * @param exception
+     */
+    @Override
+    protected void handleMetaDataPersistException(Exception exception) {
+        String title = "[ERROR] - [" + getDeployEnvName() + "] - [" + getProjectName() + "] - " + CubingExecutableUtil.getCubeName(this.getParams());
+        String content = ExecutableConstants.NOTIFY_EMAIL_TEMPLATE;
+        final String UNKNOWN = "UNKNOWN";
+        String errMsg = null;
+        if (exception != null) {
+            final StringWriter out = new StringWriter();
+            exception.printStackTrace(new PrintWriter(out));
+            errMsg = out.toString();
+        }
+
+        content = content.replaceAll("\\$\\{job_name\\}", getName());
+        content = content.replaceAll("\\$\\{result\\}", ExecutableState.ERROR.toString());
+        content = content.replaceAll("\\$\\{env_name\\}", getDeployEnvName());
+        content = content.replaceAll("\\$\\{project_name\\}", getProjectName());
+        content = content.replaceAll("\\$\\{cube_name\\}", CubingExecutableUtil.getCubeName(this.getParams()));
+        content = content.replaceAll("\\$\\{source_records_count\\}", UNKNOWN);
+        content = content.replaceAll("\\$\\{start_time\\}", UNKNOWN);
+        content = content.replaceAll("\\$\\{duration\\}", UNKNOWN);
+        content = content.replaceAll("\\$\\{mr_waiting\\}", UNKNOWN);
+        content = content.replaceAll("\\$\\{last_update_time\\}", UNKNOWN);
+        content = content.replaceAll("\\$\\{submitter\\}", StringUtil.noBlank(getSubmitter(), "missing submitter"));
+        content = content.replaceAll("\\$\\{error_log\\}", Matcher.quoteReplacement(StringUtil.noBlank(errMsg, "no error message")));
+
+        try {
+            InetAddress inetAddress = InetAddress.getLocalHost();
+            content = content.replaceAll("\\$\\{job_engine\\}", inetAddress.getCanonicalHostName());
+        } catch (UnknownHostException e) {
+            logger.warn(e.getLocalizedMessage(), e);
+        }
+        sendMail(Pair.of(title,content));
     }
 
     public long getMapReduceWaitTime() {
