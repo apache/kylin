@@ -131,7 +131,14 @@ public abstract class BasicService {
         }, new Predicate<CubingJob>() {
             @Override
             public boolean apply(CubingJob executable) {
-                return statusList.contains(allOutputs.get(executable.getId()).getState());
+                try {
+                    Output output = allOutputs.get(executable.getId());
+                    ExecutableState state = output.getState();
+                    boolean ret = statusList.contains(state);
+                    return ret;
+                } catch (Exception e) {
+                    throw e;
+                }
             }
         })));
         return results;

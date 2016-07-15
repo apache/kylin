@@ -80,7 +80,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                     return;
                 }
 
-                int nRunning = 0, nReady = 0, nOthers = 0;
+                int nRunning = 0, nReady = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
                 for (final String id : executableManager.getAllJobIds()) {
                     if (runningJobs.containsKey(id)) {
                         // logger.debug("Job id:" + id + " is already running");
@@ -90,7 +90,15 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                     final Output output = executableManager.getOutput(id);
                     if ((output.getState() != ExecutableState.READY)) {
                         // logger.debug("Job id:" + id + " not runnable");
-                        nOthers++;
+                        if (output.getState() == ExecutableState.DISCARDED) {
+                            nDiscarded++;
+                        } else if (output.getState() == ExecutableState.ERROR) {
+                            nError++;
+                        } else if (output.getState() == ExecutableState.SUCCEED) {
+                            nSUCCEED++;
+                        } else {
+                            nOthers++;
+                        }
                         continue;
                     }
                     nReady++;
@@ -106,7 +114,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         logger.warn(jobDesc + " fail to schedule", ex);
                     }
                 }
-                logger.info("Job Fetcher: " + nRunning + " running, " + runningJobs.size() + " actual running, " + nReady + " ready, " + nOthers + " others");
+                logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError + " error, " + nDiscarded + " discarded, " + nOthers + " others");
             } catch (Exception e) {
                 logger.warn("Job Fetcher caught a exception " + e);
             }
