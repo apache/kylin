@@ -56,7 +56,7 @@ public class AppendTrieDictionaryTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setAppendDictEntrySize(50000);
         config.setAppendDictCacheSize(3);
-        config.setProperty("kylin.hdfs.working.dir", "/tmp");
+        config.setProperty("kylin.hdfs.working.dir", "/tmp/kylin_append_dict");
     }
 
     @AfterClass
@@ -122,7 +122,7 @@ public class AppendTrieDictionaryTest {
     @Test
     public void testHugeKeySet() throws IOException {
         BytesConverter converter = new StringBytesConverter();
-        AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create("/tmp");
+        AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create("/tmp/kylin_append_dict");
         AppendTrieDictionary<String> dict = null;
 
         InputStream is = new FileInputStream("src/test/resources/dict/huge_key");
@@ -152,7 +152,7 @@ public class AppendTrieDictionaryTest {
         }
         BytesConverter converter = new StringBytesConverter();
 
-        AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create("/tmp");
+        AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create("/tmp/kylin_append_dict");
         AppendTrieDictionary<String> dict = null;
         TreeMap<Integer, String> checkMap = new TreeMap<>();
         int firstAppend = rnd.nextInt(strList.size() / 2);
