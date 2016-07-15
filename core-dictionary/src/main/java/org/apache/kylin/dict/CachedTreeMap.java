@@ -32,6 +32,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -58,6 +59,8 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
     private final TreeSet<String> fileList;
     private final Configuration conf;
     private final String baseDir;
+    private final String tmpDir;
+    private final FileSystem fs;
     private final boolean persistent;
     private final boolean immutable;
     private long writeValueTime = 0;
@@ -110,7 +113,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             return this;
         }
 
-        public CachedTreeMap build() {
+        public CachedTreeMap build() throws IOException {
             if (baseDir == null) {
                 throw new RuntimeException("CachedTreeMap need a baseDir to cache data");
             }
@@ -122,13 +125,19 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         }
     }
 
-    private CachedTreeMap(int maxCount, Class<K> keyClazz, Class<V> valueClazz, String baseDir, boolean persistent, boolean immutable) {
+    private CachedTreeMap(int maxCount, Class<K> keyClazz, Class<V> valueClazz, String baseDir, boolean persistent, boolean immutable) throws IOException {
         super();
         this.keyClazz = keyClazz;
         this.valueClazz = valueClazz;
         this.fileList = new TreeSet<>();
         this.conf = new Configuration();
-        this.baseDir = baseDir;
+        if (baseDir.endsWith("/")) {
+            this.baseDir = baseDir.substring(0, baseDir.length()-1);
+        } else {
+            this.baseDir = baseDir;
+        }
+        this.tmpDir = this.baseDir + ".tmp";
+        this.fs = FileSystem.get(new Path(baseDir).toUri(), conf);
         this.persistent = persistent;
         this.immutable = immutable;
         CacheBuilder builder = CacheBuilder.newBuilder().removalListener(new RemovalListener<K, V>() {
@@ -140,17 +149,27 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
                     writeValue(notification.getKey(), notification.getValue());
                     break;
                 case EXPLICIT:
-                    // skip delete files to recover from error during dict appending
-                    // deleteValue(notification.getKey());
+                    deleteValue(notification.getKey());
                     break;
                 default:
                     throw new RuntimeException("unexpected evict reason " + notification.getCause());
                 }
             }
-        }).maximumSize(maxCount);
-        // For immutable values, use soft reference to free memory when gc, and just load again when need it
+        });
+        // For immutable values, load all values as much as possible, and evict by soft reference to free memory when gc
         if (this.immutable) {
             builder.softValues();
+        } else {
+            builder.maximumSize(maxCount);
+            // For mutable map, copy all data into tmp and modify on tmp data, avoiding suddenly server crash made data corrupt
+            if (fs.exists(new Path(tmpDir))) {
+                fs.delete(new Path(tmpDir), true);
+            }
+            if (fs.exists(new Path(this.baseDir))) {
+                FileUtil.copy(fs, new Path(this.baseDir), fs, new Path(tmpDir), false, true, conf);
+            } else {
+                fs.mkdirs(new Path(this.baseDir));
+            }
         }
         this.valueCache = builder.build(new CacheLoader<K, V>() {
             @Override
@@ -163,8 +182,45 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
     }
 
     private String generateFileName(K key) {
-        String file = baseDir + "/cached_" + key.toString();
+        String file = (immutable ? baseDir : tmpDir) + "/cached_" + key.toString();
         return file;
+    }
+
+    public String getCurrentDir() {
+        return immutable ? baseDir : tmpDir;
+    }
+
+    public void commit(boolean stillMutable) throws IOException {
+        assert !immutable : "Only support commit method with immutable false";
+
+        Path basePath = new Path(baseDir);
+        Path backupPath = new Path(baseDir+".bak");
+        Path tmpPath = new Path(tmpDir);
+        try {
+            fs.rename(basePath, backupPath);
+        } catch (IOException e) {
+            logger.info("CachedTreeMap commit backup basedir failed, " + e, e);
+            throw e;
+        }
+
+        try {
+            if (stillMutable) {
+                FileUtil.copy(fs, tmpPath, fs, basePath, false, true, conf);
+            } else {
+                fs.rename(tmpPath, basePath);
+            }
+            fs.delete(backupPath, true);
+        } catch (IOException e) {
+            fs.rename(backupPath, basePath);
+            logger.info("CachedTreeMap commit move/copy tmpdir failed, " + e, e);
+            throw e;
+        }
+    }
+
+    public void loadEntry(CachedTreeMap other) {
+        for (Object key : other.keySet()) {
+            super.put((K)key, null);
+        }
     }
 
     private void writeValue(K key, V value) {
@@ -174,10 +230,10 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         long t0 = System.currentTimeMillis();
         String fileName = generateFileName(key);
         Path filePath = new Path(fileName);
-        try (FSDataOutputStream out = (FileSystem.get(filePath.toUri(), conf)).create(filePath, true, BUFFER_SIZE, (short) 2, BUFFER_SIZE * 8)) {
+        try (FSDataOutputStream out = fs.create(filePath, true, BUFFER_SIZE, (short) 5, BUFFER_SIZE * 8)) {
             value.write(out);
             if (!persistent) {
-                FileSystem.get(filePath.toUri(), conf).deleteOnExit(filePath);
+                fs.deleteOnExit(filePath);
             }
         } catch (Exception e) {
             logger.error(String.format("write value into %s exception: %s", fileName, e), e);
@@ -192,7 +248,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         long t0 = System.currentTimeMillis();
         String fileName = generateFileName(key);
         Path filePath = new Path(fileName);
-        try (FSDataInputStream input = (FileSystem.get(filePath.toUri(), conf)).open(filePath, BUFFER_SIZE)) {
+        try (FSDataInputStream input = fs.open(filePath, BUFFER_SIZE)) {
             V value = valueClazz.newInstance();
             value.readFields(input);
             return value;
@@ -211,7 +267,6 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         String fileName = generateFileName(key);
         Path filePath = new Path(fileName);
         try {
-            FileSystem fs = FileSystem.get(filePath.toUri(), conf);
             if (fs.exists(filePath)) {
                 fs.delete(filePath, true);
             }
@@ -224,6 +279,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
     @Override
     public V put(K key, V value) {
+        assert !immutable : "Only support put method with immutable false";
         super.put(key, null);
         valueCache.put(key, value);
         return null;
@@ -245,6 +301,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
     @Override
     public V remove(Object key) {
+        assert !immutable : "Only support remove method with immutable false";
         super.remove(key);
         valueCache.invalidate(key);
         return null;
@@ -300,6 +357,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
         @Override
         public void remove() {
+            assert !immutable : "Only support remove method with immutable false";
             keyIterator.remove();
             valueCache.invalidate(currentKey);
         }
@@ -344,7 +402,6 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             for (String file : fileList) {
                 try {
                     Path filePath = new Path(file);
-                    FileSystem fs = FileSystem.get(filePath.toUri(), conf);
                     fs.delete(filePath, true);
                 } catch (Throwable t) {
                     //do nothing?
