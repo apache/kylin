@@ -50,7 +50,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-linq4j</artifactId>
+            <artifactId>calcite-core</artifactId>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>

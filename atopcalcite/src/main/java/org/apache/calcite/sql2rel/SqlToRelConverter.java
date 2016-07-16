@@ -35,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.calcite.avatica.util.Spaces;
 import org.apache.calcite.linq4j.Ord;
@@ -187,6 +185,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.slf4j.Logger;
 
 /*
  * OVERRIDE POINT:
@@ -500,9 +499,8 @@ public class SqlToRelConverter {
                 final RelTraitSet traitSet = rootRel.getTraitSet().replace(RelCollationTraitDef.INSTANCE, collations);
                 rootRel = rootRel.copy(traitSet, rootRel.getInputs());
             }
-            boolean dumpPlan = SQL2REL_LOGGER.isLoggable(Level.FINE);
-            if (dumpPlan) {
-                SQL2REL_LOGGER.fine(RelOptUtil.dumpPlan("Plan after trimming unused fields", rootRel, false, SqlExplainLevel.EXPPLAN_ATTRIBUTES));
+            if (SQL2REL_LOGGER.isDebugEnabled()) {
+                SQL2REL_LOGGER.debug(RelOptUtil.dumpPlan("Plan after trimming unused fields", rootRel, false, SqlExplainLevel.EXPPLAN_ATTRIBUTES));
             }
         }
         return rootRel;
@@ -548,9 +546,8 @@ public class SqlToRelConverter {
         }
         checkConvertedType(query, result);
 
-        boolean dumpPlan = SQL2REL_LOGGER.isLoggable(Level.FINE);
-        if (dumpPlan) {
-            SQL2REL_LOGGER.fine(RelOptUtil.dumpPlan("Plan after converting SqlNode to RelNode", result, false, SqlExplainLevel.EXPPLAN_ATTRIBUTES));
+        if (SQL2REL_LOGGER.isDebugEnabled()) {
+            SQL2REL_LOGGER.debug(RelOptUtil.dumpPlan("Plan after converting SqlNode to RelNode", result, false, SqlExplainLevel.EXPPLAN_ATTRIBUTES));
         }
 
         final RelDataType validatedRowType = validator.getValidatedNodeType(query);

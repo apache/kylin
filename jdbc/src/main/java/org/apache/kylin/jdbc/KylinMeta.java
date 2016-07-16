@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import org.apache.calcite.avatica.AvaticaUtils;
 import org.apache.calcite.avatica.ColumnMetaData;
+import org.apache.calcite.avatica.Meta;
 import org.apache.calcite.avatica.MetaImpl;
 import org.apache.calcite.avatica.MissingResultsException;
 import org.apache.calcite.avatica.NoSuchStatementException;
@@ -58,16 +59,50 @@ public class KylinMeta extends MetaImpl {
         return result;
     }
 
+    @Override
+    public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle sh, List<String> sqlCommands) throws NoSuchStatementException {
+        return new ExecuteBatchResult(new long[]{});
+    }
+
+    @Override
+    public ExecuteBatchResult executeBatch(StatementHandle sh, List<List<TypedValue>> parameterValues) throws NoSuchStatementException {
+        return new ExecuteBatchResult(new long[]{});
+    }
+
     // real execution happens in KylinResultSet.execute()
     @Override
+    @Deprecated
     public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, long maxRowCount) throws NoSuchStatementException {
+        final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
+        return new ExecuteResult(Collections.singletonList(metaResultSet));
+    }
+
+    @Override
+    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, int maxRowsInFirstFrame) throws NoSuchStatementException {
         final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
         return new ExecuteResult(Collections.singletonList(metaResultSet));
     }
 
     // mimic from CalciteMetaImpl, real execution happens via callback in KylinResultSet.execute()
     @Override
+    @Deprecated
     public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, PrepareCallback callback) {
+        try {
+            synchronized (callback.getMonitor()) {
+                callback.clear();
+                sh.signature = connection().mockPreparedSignature(sql);
+                callback.assign(sh.signature, null, -1);
+            }
+            callback.execute();
+            final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
+            return new ExecuteResult(Collections.singletonList(metaResultSet));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
         try {
             synchronized (callback.getMonitor()) {
                 callback.clear();
