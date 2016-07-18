@@ -166,7 +166,7 @@
                                         ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'"
                                         ng-model="newMeasure.function.parameter.value"
                                         ng-change="measureReturnTypeUpdate();"
-                                        ng-options="column as column for column in getFactColumns()" >
+                                        ng-options="column as column for column in getExtendedHostColumn()" >
                                   <option value="">-- Select a Column --</option>
                                 </select>
                               </div>

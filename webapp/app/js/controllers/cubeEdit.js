@@ -180,31 +180,23 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         me_columns.push(metric);
       })
     }
-    angular.forEach($scope.metaModel.model.dimensions,function(dimension,index){
-        if(dimension.columns){
-          me_columns = me_columns.concat(dimension.columns);
-        }
-    })
 
     return me_columns;
-
   };
 
-  $scope.getExtendedFactColumns = function (measure) {
+  $scope.getExtendedHostColumn = function(){
     var me_columns = [];
-    angular.forEach($scope.metaModel.model.dimensions,function(dimension,index){
+    //add cube dimension column for specific measure
+    angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension,index){
       if($scope.metaModel.model.fact_table !== dimension.table){
         return;
       }
-
-      if(dimension.columns){
-        me_columns = me_columns.concat(dimension.columns);
+      if(dimension.column && dimension.derived == null){
+        me_columns.push(dimension.column);
       }
-    })
-
+    });
     return me_columns;
-
-  };
+  }
 
 
   $scope.getFactColumns = function () {
