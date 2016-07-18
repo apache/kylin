@@ -368,7 +368,7 @@ public class MetadataManager {
     }
 
     public List<DataModelDesc> getModels() {
-        return new ArrayList<DataModelDesc>(dataModelDescMap.values());
+        return new ArrayList<>(dataModelDescMap.values());
     }
 
     public List<DataModelDesc> getModels(String projectName) throws IOException {
@@ -383,21 +383,6 @@ public class MetadataManager {
                 } else {
                     logger.error("Failed to load model" + modelName);
                 }
-            }
-        }
-
-        //TODO, list model from realization,compatible with old meta data,will remove
-        RealizationRegistry registry = RealizationRegistry.getInstance(config);
-        for (RealizationEntry realization : projectInstance.getRealizationEntries()) {
-            IRealization rel = registry.getRealization(realization.getType(), realization.getRealization());
-            if (rel != null) {
-                DataModelDesc modelDesc = rel.getDataModelDesc();
-                if (modelDesc != null && !ret.contains(modelDesc)) {
-                    ProjectManager.getInstance(config).updateModelToProject(modelDesc.getName(), projectName);
-                    ret.add(modelDesc);
-                }
-            } else {
-                logger.warn("Realization '" + realization + "' defined under project '" + projectInstance + "' is not found");
             }
         }
 

@@ -46,19 +46,18 @@ public class ModelService extends BasicService {
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<DataModelDesc> listAllModels(final String modelName, final String projectName) throws IOException {
-        List<DataModelDesc> models = null;
+        List<DataModelDesc> models;
         ProjectInstance project = (null != projectName) ? getProjectManager().getProject(projectName) : null;
 
         if (null == project) {
             models = getMetadataManager().getModels();
         } else {
             models = getMetadataManager().getModels(projectName);
-            project.getModels();
         }
 
         List<DataModelDesc> filterModels = new ArrayList<DataModelDesc>();
         for (DataModelDesc modelDesc : models) {
-            boolean isModelMatch = (null == modelName) || modelDesc.getName().toLowerCase().contains(modelName.toLowerCase());
+            boolean isModelMatch = (null == modelName) || modelName.length() == 0 || modelDesc.getName().toLowerCase().equals(modelName.toLowerCase());
 
             if (isModelMatch) {
                 filterModels.add(modelDesc);
@@ -70,8 +69,7 @@ public class ModelService extends BasicService {
 
     public List<DataModelDesc> getModels(final String modelName, final String projectName, final Integer limit, final Integer offset) throws IOException {
 
-        List<DataModelDesc> modelDescs;
-        modelDescs = listAllModels(modelName, projectName);
+        List<DataModelDesc> modelDescs = listAllModels(modelName, projectName);
 
         if (limit == null || offset == null) {
             return modelDescs;
