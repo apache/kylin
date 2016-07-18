@@ -41,11 +41,11 @@ KylinApp.constant('cubeConfig', {
     {name: 'STRING', value: 'string'}
   ],
   distinctDataTypes: [
-    {name: 'Error Rate < 9.75%', value: 'hllc10'},
-    {name: 'Error Rate < 4.88%', value: 'hllc12'},
-    {name: 'Error Rate < 2.44%', value: 'hllc14'},
-    {name: 'Error Rate < 1.72%', value: 'hllc15'},
-    {name: 'Error Rate < 1.22%', value: 'hllc16'},
+    {name: 'Error Rate < 9.75%', value: 'hllc(10)'},
+    {name: 'Error Rate < 4.88%', value: 'hllc(12)'},
+    {name: 'Error Rate < 2.44%', value: 'hllc(14)'},
+    {name: 'Error Rate < 1.72%', value: 'hllc(15)'},
+    {name: 'Error Rate < 1.22%', value: 'hllc(16)'},
     {name: 'Precisely (More Memory And Storage Needed)', value: 'bitmap'}
   ],
   topNTypes: [

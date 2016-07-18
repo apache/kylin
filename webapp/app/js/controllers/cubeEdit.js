@@ -86,10 +86,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     return avaColObject;
   };
 
-  $scope.getCommonMetricColumns = function (measure) {
-    var nonCustomMeasures = ['SUM','MIN','MAX','COUNT'];
-    var expression = measure.function.expression;
-
+  $scope.getCommonMetricColumns = function () {
     //metric from model
     var me_columns = [];
     if($scope.metaModel.model.metrics){
@@ -98,60 +95,22 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       })
     }
 
-    if(nonCustomMeasures.indexOf(expression)!==-1){
-      return me_columns;
-    }
+    return me_columns;
+  };
 
+  $scope.getExtendedHostColumn = function(){
+    var me_columns = [];
     //add cube dimension column for specific measure
     angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension,index){
-      if(dimension.column && dimension.derived == null){
-        me_columns.push(dimension.column);
-      }
-
-      if(dimension.derived&&dimension.derived.length>=1){
-        me_columns = me_columns.concat(dimension.derived);
-      }
-
-    });
-
-    return me_columns;
-
-  };
-
-
-  $scope.getExtendedColumns = function (measure) {
-    //metric from model
-    var me_columns = [];
-    if($scope.metaModel.model.metrics){
-      angular.forEach($scope.metaModel.model.metrics,function(metric,index){
-        me_columns.push(metric);
-      })
-    }
-    angular.forEach($scope.metaModel.model.dimensions,function(dimension,index){
-        if(dimension.columns){
-          me_columns = me_columns.concat(dimension.columns);
-        }
-    })
-
-    return me_columns;
-
-  };
-
-  $scope.getExtendedFactColumns = function (measure) {
-    var me_columns = [];
-    angular.forEach($scope.metaModel.model.dimensions,function(dimension,index){
       if($scope.metaModel.model.fact_table !== dimension.table){
         return;
       }
-
-      if(dimension.columns){
-        me_columns = me_columns.concat(dimension.columns);
+      if(dimension.column && dimension.derived == null){
+        me_columns.push(dimension.column);
       }
-    })
-
+    });
     return me_columns;
-
-  };
+  }
 
 
   $scope.getFactColumns = function () {
