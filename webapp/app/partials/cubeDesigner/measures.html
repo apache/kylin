@@ -56,7 +56,7 @@
                           </td>
                           <td ng-if="state.mode=='edit'">
                               <!--Edit Button -->
-                              <button class="btn btn-xs btn-info" ng-click="addNewMeasure(measure)">
+                              <button class="btn btn-xs btn-info" ng-click="addNewMeasure(measure, $index)">
                                   <i class="fa fa-pencil"></i>
                               </button>
                               <!--Remove Button -->
@@ -152,14 +152,14 @@
                                         ng-if="newMeasure.function.parameter.type == 'column' && newMeasure.function.expression !== 'EXTENDED_COLUMN'"
                                         ng-model="newMeasure.function.parameter.value"
                                         ng-change="measureReturnTypeUpdate();"
-                                        ng-options="column as column for column in getCommonMetricColumns(newMeasure)" >
+                                        ng-options="column as column for column in getCommonMetricColumns()" >
                                   <option value="">-- Select a Column --</option>
                                 </select>
                                 <select class="form-control" chosen
                                         ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'"
                                         ng-model="newMeasure.function.parameter.value"
                                         ng-change="measureReturnTypeUpdate();"
-                                        ng-options="column as column for column in getFactColumns()" >
+                                        ng-options="column as column for column in getExtendedHostColumn()" >
                                   <option value="">-- Select a Column --</option>
                                 </select>
                               </div>
@@ -212,7 +212,7 @@
                           <div class="col-xs-12 col-sm-6">
                             <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
                                     ng-model="nextPara.value"
-                                    ng-options="column as column for column in getExtendedFactColumns()" >
+                                    ng-options="column as column for column in getCommonMetricColumns()" >
                               <option value=""></option>
                             </select>
                           </div>
@@ -227,7 +227,7 @@
                           <div class="col-xs-12 col-sm-6">
                             <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
                                     ng-model="nextPara.value"
-                                    ng-options="column as column for column in getExtendedColumns(newMeasure)" >
+                                    ng-options="column as column for column in getCommonMetricColumns()" >
                               <option value=""></option>
                             </select>
                           </div>
@@ -260,14 +260,6 @@
                               </tr>
                             </table>
 
-
-
-                            <!--<button class="btn btn-sm btn-info" ng-click="addNextParameter()" ng-show="newMeasure.function.expression == 'TOP_N' && nextParameters.length==0"-->
-                                    <!--ng-show="state.mode=='edit'"><i class="fa fa-plus"> Group by Column</i>-->
-                            <!--</button>-->
-                            <!--<button class="btn btn-sm btn-info" ng-click="addNextParameter()" ng-show="newMeasure.function.expression == 'EXTENDED_COLUMN' && nextParameters.length==0"-->
-                                    <!--ng-show="state.mode=='edit'"><i class="fa fa-plus"> Extended Column On Fact Table</i>-->
-                            <!--</button>-->
                           </div>
                         </div>
                       </div>
@@ -285,93 +277,6 @@
 </div>
 
 
-
-
-<script type="text/ng-template" id="nextParameter.html">
-  <div class="modal-header">
-    <h4 tooltip="submit" ng-if="newmea.measure&&newmea.measure.function.expression == 'EXTENDED_COLUMN'">Add Extended Column</h4>
-    <h4 tooltip="submit" ng-if="newmea.measure&&newmea.measure.function.expression == 'TOP_N'">Select Group By Column</h4>
-  </div>
-  <div class="modal-body" style="background-color: white">
-
-    <div class="row">
-      <div class="col-md-2"></div>
-      <div class="col-md-8">
-        <div class="row">
-          <div class="form-group">
-            <div class="row" ng-if="newmea.measure&&newmea.measure.function.expression !== 'TOP_N' && newmea.measure.function.expression !== 'EXTENDED_COLUMN'">
-              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Type</b></label>
-              <div class="col-xs-12 col-sm-6">
-                <select class="form-control"
-                        chosen ng-model="nextPara.type" required
-                        ng-options="mpt as mpt for mpt in cubeConfig.measureParamType">
-                  <option value=""></option>
-                </select>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-      <div class="col-md-2"></div>
-    </div>
-    <div class="row">
-      <div class="col-md-2"></div>
-      <div class="col-md-8">
-        <div class="row">
-          <div class="form-group">
-
-            <div ng-if="newmea.measure&&newmea.measure.function.expression !== 'TOP_N' && newmea.measure.function.expression !== 'EXTENDED_COLUMN" class="row">
-              <label  class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Value</b></label>
-                <!--COUNT_DISTINCT-->
-              <div class="col-xs-12 col-sm-6">
-                <select class="form-control" chosen ng-if="nextPara.type !== 'constant'"
-                        ng-model="nextPara.value"
-                        ng-options="column as column for column in getCommonMetricColumns(newmea.measure)" >
-                  <option value=""></option>
-                </select>
-               <span class="font-color-default"
-                     ng-if="nextPara.type == 'constant'"
-                     ng-init="nextPara.value = 1"><b>&nbsp;&nbsp;1</b></span>
-              </div>
-            </div>
-
-            <div ng-if="newmea.measure&&newmea.measure.function.expression == 'TOP_N'" ng-init="nextPara.type='column'" class="row">
-              <label  class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Group By Column</b></label>
-              <!--COUNT_DISTINCT-->
-              <div class="col-xs-12 col-sm-6">
-                <select class="form-control" chosen
-                        ng-model="nextPara.value"
-                        ng-options="column as column for column in getExtendedColumns(newmea.measure)" >
-                  <option value=""></option>
-                </select>
-              </div>
-            </div>
-
-            <div ng-if="newmea.measure&&newmea.measure.function.expression == 'EXTENDED_COLUMN'" ng-init="nextPara.type='column'" class="row">
-              <label  class="col-xs-12 col-sm-4 control-label no-padding-right font-color-default"><b>Extended Column On Fact Table</b></label>
-              <!--COUNT_DISTINCT-->
-              <div class="col-xs-12 col-sm-6">
-                <select class="form-control" chosen
-                        ng-model="nextPara.value"
-                        ng-options="column as column for column in getExtendedColumns(newmea.measure)" >
-                  <option value=""></option>
-                </select>
-              </div>
-            </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-2"></div>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-success" ng-click="ok()">OK</button>
-    <button class="btn btn-primary" ng-click="cancel()">Close</button>
-  </div>
-</script>
 <script type="text/ng-template" id="expressionTip.html">
   <p>All cubes have to contain one measure for Count(1), suggest use "_Count_" as name (Has been generated automatically)</p>
 </script>
