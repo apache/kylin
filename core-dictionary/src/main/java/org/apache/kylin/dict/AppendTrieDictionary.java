@@ -950,8 +950,8 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             if (dict == null) {
                 dict = new AppendTrieDictionary<T>();
             }
-            dict.flushIndex((CachedTreeMap) mutableDictSliceMap);
             dict.update(baseDir, baseId, maxId, maxValueLength, nValues, bytesConverter, (CachedTreeMap)mutableDictSliceMap);
+            dict.flushIndex((CachedTreeMap) mutableDictSliceMap);
 
             return dict;
         }
