@@ -49,6 +49,7 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -187,7 +188,7 @@ public class StorageCleanupJob extends AbstractApplication {
         for (FileStatus status : fStatus) {
             String path = status.getPath().getName();
             // System.out.println(path);
-            if (path.startsWith(JobInstance.JOB_WORKING_DIR_PREFIX)) {
+            if (path.startsWith("kylin-")) {
                 String kylinJobPath = engineConfig.getHdfsWorkingDirectory() + path;
                 allHdfsPathsNeedToBeDeleted.add(kylinJobPath);
             }
@@ -198,7 +199,7 @@ public class StorageCleanupJob extends AbstractApplication {
             // only remove FINISHED and DISCARDED job intermediate files
             final ExecutableState state = executableManager.getOutput(jobId).getState();
             if (!state.isFinalState()) {
-                String path = JobInstance.getJobWorkingDir(jobId, engineConfig.getHdfsWorkingDirectory());
+                String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobId);
                 allHdfsPathsNeedToBeDeleted.remove(path);
                 logger.info("Skip " + path + " from deletion list, as the path belongs to job " + jobId + " with status " + state);
             }
@@ -209,7 +210,7 @@ public class StorageCleanupJob extends AbstractApplication {
             for (CubeSegment seg : cube.getSegments()) {
                 String jobUuid = seg.getLastBuildJobID();
                 if (jobUuid != null && jobUuid.equals("") == false) {
-                    String path = JobInstance.getJobWorkingDir(jobUuid, engineConfig.getHdfsWorkingDirectory());
+                    String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(),jobUuid);
                     allHdfsPathsNeedToBeDeleted.remove(path);
                     logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
                 }

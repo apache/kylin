@@ -21,10 +21,12 @@ package org.apache.kylin.storage.hbase.steps;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
+import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
@@ -49,7 +51,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
         // create htable step
         jobFlow.addTask(createCreateHTableStep(jobId));
         // generate hfiles step
-        jobFlow.addTask(createConvertCuboidToHfileStep(cuboidRootPath, jobId));
+        jobFlow.addTask(createConvertCuboidToHfileStep(jobId));
         // bulk load step
         jobFlow.addTask(createBulkLoadStep(jobId));
     }
@@ -95,7 +97,33 @@ public class HBaseMRSteps extends JobBuilderSupport {
         return createHtableStep;
     }
 
-    public MapReduceExecutable createConvertCuboidToHfileStep(String cuboidRootPath, String jobId) {
+    public MapReduceExecutable createMergeCuboidDataStep(CubeSegment seg, List<CubeSegment> mergingSegments, String jobID, Class<? extends AbstractHadoopJob> clazz) {
+
+        final List<String> mergingCuboidPaths = Lists.newArrayList();
+        for (CubeSegment merging : mergingSegments) {
+            mergingCuboidPaths.add(getCuboidRootPath(merging) + "*");
+        }
+        String formattedPath = StringUtil.join(mergingCuboidPaths, ",");
+        String outputPath = getCuboidRootPath(jobID);
+
+        MapReduceExecutable mergeCuboidDataStep = new MapReduceExecutable();
+        mergeCuboidDataStep.setName(ExecutableConstants.STEP_NAME_MERGE_CUBOID);
+        StringBuilder cmd = new StringBuilder();
+
+        appendMapReduceParameters(cmd);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getCubeInstance().getName());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_NAME, seg.getName());
+        appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, formattedPath);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, outputPath);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Merge_Cuboid_" + seg.getCubeInstance().getName() + "_Step");
+
+        mergeCuboidDataStep.setMapReduceParams(cmd.toString());
+        mergeCuboidDataStep.setMapReduceJobClass(clazz);
+        return mergeCuboidDataStep;
+    }
+
+    public MapReduceExecutable createConvertCuboidToHfileStep(String jobId) {
+        String cuboidRootPath = getCuboidRootPath(jobId);
         String inputPath = cuboidRootPath + (cuboidRootPath.endsWith("/") ? "" : "/") + "*";
 
         MapReduceExecutable createHFilesStep = new MapReduceExecutable();

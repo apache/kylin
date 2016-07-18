@@ -178,7 +178,14 @@ public class JobBuilderSupport {
     // ----------------------------------------------------------------------------
 
     public static String getJobWorkingDir(JobEngineConfig conf, String jobId) {
-        return conf.getHdfsWorkingDirectory() + "kylin-" + jobId;
+        return getJobWorkingDir(conf.getHdfsWorkingDirectory(), jobId);
+    }
+
+    public static String getJobWorkingDir(String hdfsDir, String jobId) {
+        if (!hdfsDir.endsWith("/")) {
+            hdfsDir = hdfsDir + "/";
+        }
+        return hdfsDir + "kylin-" + jobId;
     }
 
     public static StringBuilder appendExecCmdParameters(StringBuilder buf, String paraName, String paraValue) {

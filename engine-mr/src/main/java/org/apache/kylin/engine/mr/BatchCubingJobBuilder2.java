@@ -66,7 +66,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         // Phase 3: Build Cube
         addLayerCubingSteps(result, jobId, cuboidRootPath); // layer cubing, only selected algorithm will execute
         result.addTask(createInMemCubingStep(jobId, cuboidRootPath)); // inmem cubing, only selected algorithm will execute
-        outputSide.addStepPhase3_BuildCube(result, cuboidRootPath);
+        outputSide.addStepPhase3_BuildCube(result);
 
         // Phase 4: Update Metadata & Cleanup
         result.addTask(createUpdateCubeInfoAfterBuildStep(jobId));
