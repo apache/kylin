@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,6 +50,8 @@ import org.junit.Test;
  */
 public class AppendTrieDictionaryTest {
 
+    public static final String BASE_DIR = "/tmp/kylin_append_dict";
+
     @BeforeClass
     public static void setUp() {
         KylinConfig.destroyInstance();
@@ -56,7 +59,7 @@ public class AppendTrieDictionaryTest {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setAppendDictEntrySize(50000);
         config.setAppendDictCacheSize(3);
-        config.setProperty("kylin.hdfs.working.dir", "/tmp/kylin_append_dict");
+        config.setProperty("kylin.hdfs.working.dir", BASE_DIR);
     }
 
     @AfterClass
@@ -65,6 +68,13 @@ public class AppendTrieDictionaryTest {
         try {
             FileSystem.get(new Path(workingDir).toUri(), new Configuration()).delete(new Path(workingDir), true);
         } catch (IOException e) {
+        }
+        File tmpLocalDir = new File(BASE_DIR);
+        if (tmpLocalDir.exists()) {
+            for (File f : tmpLocalDir.listFiles()) {
+                f.delete();
+            }
+            tmpLocalDir.delete();
         }
     }
 
@@ -122,7 +132,7 @@ public class AppendTrieDictionaryTest {
     @Test
     public void testHugeKeySet() throws IOException {
         BytesConverter converter = new StringBytesConverter();
-        AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create("/tmp/kylin_append_dict");
+        AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create(BASE_DIR);
         AppendTrieDictionary<String> dict = null;
 
         InputStream is = new FileInputStream("src/test/resources/dict/huge_key");
@@ -152,7 +162,7 @@ public class AppendTrieDictionaryTest {
         }
         BytesConverter converter = new StringBytesConverter();
 
-        AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create("/tmp/kylin_append_dict");
+        AppendTrieDictionary.Builder<String> b = AppendTrieDictionary.Builder.create(BASE_DIR);
         AppendTrieDictionary<String> dict = null;
         TreeMap<Integer, String> checkMap = new TreeMap<>();
         int firstAppend = rnd.nextInt(strList.size() / 2);

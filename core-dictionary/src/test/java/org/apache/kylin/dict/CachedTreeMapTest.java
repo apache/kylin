@@ -3,6 +3,7 @@ package org.apache.kylin.dict;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,8 +82,7 @@ public class CachedTreeMapTest {
     public static final String backupDir = "/tmp/kylin_cachedtreemap_test.bak/";
     public static final String tmpDir = "/tmp/kylin_cachedtreemap_test.tmp/";
 
-    @After
-    public void afterTest() {
+    private static void cleanup() {
         File dir = new File(baseDir);
         if (dir.exists()) {
             for (File f : dir.listFiles()) {
@@ -110,9 +110,19 @@ public class CachedTreeMapTest {
         VALUE_WRITE_ERROR_TOGGLE = false;
     }
 
+    @After
+    public void afterTest() {
+        cleanup();
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        cleanup();
+    }
+
     @Test
     public void testCachedTreeMap() throws IOException {
-        CachedTreeMap map = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        CachedTreeMap map = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(false).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map.put(Key.of(1), Value.of("a"));
         map.put(Key.of(2), Value.of("b"));
@@ -133,7 +143,7 @@ public class CachedTreeMapTest {
         assertEquals(5, dir.listFiles(new CachedFileFilter()).length);
 
         DataInputStream in = new DataInputStream(new FileInputStream(baseDir+".index"));
-        CachedTreeMap map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        CachedTreeMap map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(true).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map2.readFields(in);
         assertEquals(5, map2.size());
@@ -152,7 +162,7 @@ public class CachedTreeMapTest {
     @Test
     public void testWriteFailed() throws IOException {
         // normal case
-        CachedTreeMap map = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        CachedTreeMap map = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(false).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map.put(Key.of(1), Value.of("a"));
         map.put(Key.of(2), Value.of("b"));
@@ -167,14 +177,14 @@ public class CachedTreeMapTest {
         map.commit(false);
 
         DataInputStream in = new DataInputStream(new FileInputStream(baseDir+".index"));
-        CachedTreeMap map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        CachedTreeMap map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(true).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map2.readFields(in);
         assertEquals(3, map2.size());
         assertEquals("a", ((Value)map2.get(Key.of(1))).valueStr);
 
         // suppose write value failed and didn't commit data
-        map = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        map = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(false).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         VALUE_WRITE_ERROR_TOGGLE = true;
         map.put(Key.of(1), Value.of("aa"));
@@ -191,7 +201,7 @@ public class CachedTreeMapTest {
 
         // read map data should not be modified
         in = new DataInputStream(new FileInputStream(baseDir+".index"));
-        map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(true).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map2.readFields(in);
         assertEquals(3, map2.size());
@@ -203,7 +213,7 @@ public class CachedTreeMapTest {
 
     @Test
     public void testCommit() throws IOException {
-        CachedTreeMap map = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        CachedTreeMap map = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(false).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map.put(Key.of(1), Value.of("a"));
         map.put(Key.of(2), Value.of("b"));
@@ -220,7 +230,7 @@ public class CachedTreeMapTest {
         assertFalse(new File(backupDir).exists());
 
         DataInputStream in = new DataInputStream(new FileInputStream(baseDir+".index"));
-        CachedTreeMap map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        CachedTreeMap map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(true).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map2.readFields(in);
         assertEquals(4, map2.size());
@@ -242,7 +252,7 @@ public class CachedTreeMapTest {
         assertEquals(4, new File(baseDir).listFiles(new CachedFileFilter()).length);
 
         in = new DataInputStream(new FileInputStream(baseDir+".index"));
-        map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(true).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map2.readFields(in);
         assertEquals(4, map2.size());
@@ -254,7 +264,7 @@ public class CachedTreeMapTest {
         assertEquals(6, new File(baseDir).listFiles(new CachedFileFilter()).length);
 
         in = new DataInputStream(new FileInputStream(baseDir+".index"));
-        map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir("file://"+baseDir)
+        map2 = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir)
                 .persistent(true).immutable(true).maxSize(2).keyClazz(Key.class).valueClazz(Value.class).build();
         map2.readFields(in);
         assertEquals(6, map2.size());
