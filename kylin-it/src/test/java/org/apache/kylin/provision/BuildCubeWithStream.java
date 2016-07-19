@@ -107,7 +107,7 @@ public class BuildCubeWithStream {
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
-    private static int cleanupOldStorage() throws Exception {
+    protected int cleanupOldStorage() throws Exception {
         String[] args = { "--delete", "true" };
 
         StorageCleanupJob cli = new StorageCleanupJob();
