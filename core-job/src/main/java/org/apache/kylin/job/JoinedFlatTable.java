@@ -137,8 +137,8 @@ public class JoinedFlatTable {
         final Map<String, String> tableAliasMap = buildTableAliasMap(intermediateTableDesc.getDataModel());
         final StringBuilder sql = new StringBuilder();
         final String factTbl = intermediateTableDesc.getDataModel().getFactTable();
-        sql.append("dfs -mkdir -p " + outputDir + ";");
-        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) from " + factTbl + " " + tableAliasMap.get(factTbl) + "\n");
+        sql.append("dfs -mkdir -p " + outputDir + ";\n");
+        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + factTbl + " " + tableAliasMap.get(factTbl) + "\n");
         appendWhereStatement(intermediateTableDesc, sql, tableAliasMap);
         return sql.toString();
     }
