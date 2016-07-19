@@ -370,7 +370,7 @@
             var date = new Date();
             if(!modelValue){
               var tmp = new Date();
-              date = new Date(tmp.getFullYear(),tmp.getMonth()+1,tmp.getDate());
+              date = new Date(tmp.getFullYear(),tmp.getMonth(),tmp.getDate());
             }else{
               date = new Date(modelValue);
             }
