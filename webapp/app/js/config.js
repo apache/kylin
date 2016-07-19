@@ -116,6 +116,10 @@ KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $log
   });
 
 // This runs when all code has loaded, and loads the config and route json manifests, before bootstrapping angular.
+
+
+
+
 window.onload = function () {
 
   // Files to load initially.
