@@ -789,6 +789,7 @@
                                 <exclude>**/*.iml</exclude>
                                 <exclude>**/.classpath</exclude>
                                 <exclude>**/.project</exclude>
+                                <exclude>**/.settings/**</exclude>
 
                                 <!-- image files constitute images required for documentation. .pptx contain the sources for images -->
                                 <exclude>**/*.png</exclude>
