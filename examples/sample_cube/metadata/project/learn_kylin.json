@@ -1,12 +1,19 @@
 {
   "uuid": "1eaca32a-a33e-4b69-83dd-0bb8b1f8c91b",
- 
   "name": "learn_kylin",
   "realizations": [
     {
       "name": "kylin_sales_cube",
       "type": "CUBE",
       "realization": "kylin_sales_cube"
-    }],
-  "tables": ["DEFAULT.KYLIN_SALES", "DEFAULT.KYLIN_CAL_DT", "DEFAULT.KYLIN_CATEGORY_GROUPINGS"]
+    }
+  ],
+  "tables": [
+    "DEFAULT.KYLIN_SALES",
+    "DEFAULT.KYLIN_CAL_DT",
+    "DEFAULT.KYLIN_CATEGORY_GROUPINGS"
+  ],
+  "models": [
+    "kylin_sales_model"
+  ]
 }
