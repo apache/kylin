@@ -414,7 +414,7 @@ public class CubeMigrationCLI {
         case RENAME_FOLDER_IN_HDFS: {
             String srcPath = (String) opt.params[0];
             String dstPath = (String) opt.params[1];
-            hdfsFS.rename(new Path(srcPath), new Path(dstPath));
+            renameHDFSPath(srcPath, dstPath);
             logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
             break;
         }
@@ -516,7 +516,7 @@ public class CubeMigrationCLI {
             String dstPath = (String) opt.params[0];
 
             if (hdfsFS.exists(new Path(srcPath)) && !hdfsFS.exists(new Path(dstPath))) {
-                hdfsFS.rename(new Path(srcPath), new Path(dstPath));
+                renameHDFSPath(srcPath, dstPath);
                 logger.info("HDFS Folder renamed from " + srcPath + " to " + dstPath);
             }
             break;
@@ -560,6 +560,19 @@ public class CubeMigrationCLI {
                 restClient.wipeCache(Broadcaster.TYPE.ALL.getType(), Broadcaster.EVENT.UPDATE.getType(), "all");
             } catch (IOException e) {
                 logger.error(e.getMessage());
+            }
+        }
+    }
+
+    private static void renameHDFSPath(String srcPath, String dstPath) throws IOException, InterruptedException {
+        int nRetry = 0;
+        int sleepTime = 5000;
+        while (!hdfsFS.rename(new Path(srcPath), new Path(dstPath))) {
+            ++nRetry;
+            if (nRetry > 3) {
+                throw new InterruptedException("Cannot rename folder " + srcPath + " to folder " + dstPath);
+            } else {
+                Thread.sleep(sleepTime * nRetry * nRetry);
             }
         }
     }
