@@ -69,7 +69,7 @@ abstract public class ResourceStore {
             try {
                 knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hbase.HBaseResourceStore", ResourceStore.class));
             } catch (Throwable e) {
-                logger.warn("Failed to load ResourceStore impl class: " + e.toString());
+                logger.warn("Failed to load HBaseResourceStore impl class: " + e.toString());
             }
         }
         return knownImpl;

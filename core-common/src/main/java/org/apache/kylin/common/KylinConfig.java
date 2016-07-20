@@ -185,7 +185,7 @@ public class KylinConfig extends KylinConfigBase {
 
         String kylinHome = getKylinHome();
         if (StringUtils.isEmpty(kylinHome))
-            throw new RuntimeException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
+            throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
 
         String path = kylinHome + File.separator + "conf";
         return getKylinPropertiesFile(path);

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigCannotInitException;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
@@ -31,6 +32,8 @@ import org.apache.kylin.measure.raw.RawMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -61,6 +64,8 @@ import com.google.common.collect.Maps;
  * @param <T> the Java type of aggregation data object, e.g. HyperLogLogPlusCounter
  */
 abstract public class MeasureTypeFactory<T> {
+
+    private static final Logger logger = LoggerFactory.getLogger(MeasureTypeFactory.class);
 
     /**
      * Create a measure type with specified aggregation function and data type.
@@ -102,12 +107,19 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new RawMeasureType.Factory());
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
 
-        for (String customFactory : KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().values()) {
-            try {
-                factoryInsts.add((MeasureTypeFactory<?>) Class.forName(customFactory).newInstance());
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Unrecognized MeasureTypeFactory classname: " + customFactory, e);
+        logger.info("Checking custom measure types from kylin config");
+
+        try {
+            for (String customFactory : KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().values()) {
+                try {
+                    logger.info("Checking custom measure types from kylin config: " + customFactory);
+                    factoryInsts.add((MeasureTypeFactory<?>) Class.forName(customFactory).newInstance());
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Unrecognized MeasureTypeFactory classname: " + customFactory, e);
+                }
             }
+        } catch (KylinConfigCannotInitException e) {
+            logger.warn("Will not add custome MeasureTypeFactory as KYLIN_CONF nor KYLIN_HOME is set");
         }
 
         // register factories & data type serializers
@@ -120,6 +132,7 @@ abstract public class MeasureTypeFactory<T> {
                 throw new IllegalArgumentException("Aggregation data type name '" + dataTypeName + "' must be in lower case");
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
 
+            logger.info("registering " + dataTypeName);
             DataType.register(dataTypeName);
             DataTypeSerializer.register(dataTypeName, serializer);
             List<MeasureTypeFactory<?>> list = factories.get(funcName);
