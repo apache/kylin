@@ -371,33 +371,44 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return classpath;
     }
 
-    public static void addInputDirs(String input, Job job) throws IOException {
-        addInputDirs(StringSplitter.split(input, ","), job);
+    public static int addInputDirs(String input, Job job) throws IOException {
+        int folderNum = addInputDirs(StringSplitter.split(input, ","), job);
+        logger.info("Number of added folders:" + folderNum);
+        return folderNum;
     }
 
-    public static void addInputDirs(String[] inputs, Job job) throws IOException {
+    public static int addInputDirs(String[] inputs, Job job) throws IOException {
+        int ret = 0;//return number of added folders
         for (String inp : inputs) {
             inp = inp.trim();
             if (inp.endsWith("/*")) {
                 inp = inp.substring(0, inp.length() - 2);
                 FileSystem fs = FileSystem.get(job.getConfiguration());
                 Path path = new Path(inp);
+
+                if (!fs.exists(path)) {
+                    logger.warn("Path not exist:" + path.toString());
+                    continue;
+                }
+
                 FileStatus[] fileStatuses = fs.listStatus(path);
                 boolean hasDir = false;
                 for (FileStatus stat : fileStatuses) {
                     if (stat.isDirectory() && !stat.getPath().getName().startsWith("_")) {
                         hasDir = true;
-                        addInputDirs(stat.getPath().toString(), job);
+                        ret += addInputDirs(new String[] { stat.getPath().toString() }, job);
                     }
                 }
                 if (fileStatuses.length > 0 && !hasDir) {
-                    addInputDirs(path.toString(), job);
+                    ret += addInputDirs(new String[] { path.toString() }, job);
                 }
             } else {
                 logger.debug("Add input " + inp);
                 FileInputFormat.addInputPath(job, new Path(inp));
+                ret++;
             }
         }
+        return ret;
     }
 
     public static KylinConfig loadKylinPropsAndMetadata() throws IOException {

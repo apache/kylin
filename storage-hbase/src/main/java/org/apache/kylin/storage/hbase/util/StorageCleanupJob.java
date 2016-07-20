@@ -50,7 +50,6 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
-import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.manager.ExecutableManager;
@@ -210,7 +209,7 @@ public class StorageCleanupJob extends AbstractApplication {
             for (CubeSegment seg : cube.getSegments()) {
                 String jobUuid = seg.getLastBuildJobID();
                 if (jobUuid != null && jobUuid.equals("") == false) {
-                    String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(),jobUuid);
+                    String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobUuid);
                     allHdfsPathsNeedToBeDeleted.remove(path);
                     logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
                 }
