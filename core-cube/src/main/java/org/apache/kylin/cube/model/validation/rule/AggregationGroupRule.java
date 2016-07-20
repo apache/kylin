@@ -110,8 +110,9 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             int normalDimSize = normalDims.size();
             int hierarchySize = count(agg.getSelectRule().hierarchy_dims);
             int jointSize = count(agg.getSelectRule().joint_dims);
+            int mandatorySize = mandatoryDims.size() > 0 ? 1 : 0 ;
 
-            if (mandatoryDims.size() + normalDimSize + hierarchySize + jointSize > maxSize) {
+            if ( mandatorySize + normalDimSize + hierarchySize + jointSize > maxSize) {
                 context.addResult(ResultLevel.ERROR, "Aggregation group " + index + " has too many dimensions");
                 continue;
             }
