@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,7 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.util.Threads;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.engine.mr.HadoopUtil;
@@ -140,6 +142,7 @@ public class HBaseConnection {
 
     private static Configuration newHBaseConfiguration(String url) {
         Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
+        addHBaseClusterNNHAConfiguration(conf);
 
         // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
         if (!(StringUtils.isEmpty(url) || "hbase".equals(url)))
@@ -166,6 +169,37 @@ public class HBaseConnection {
         // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
 
         return conf;
+    }
+
+    // See YARN-3021. Copy here in case of missing in dependency MR client jars
+    public static final String JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE = "mapreduce.job.hdfs-servers.token-renewal.exclude";
+
+    public static void addHBaseClusterNNHAConfiguration(Configuration conf) {
+        String hdfsConfigFile = KylinConfig.getInstanceFromEnv().getHBaseClusterHDFSConfigFile();
+        if (hdfsConfigFile == null || hdfsConfigFile.isEmpty()) {
+            return;
+        }
+        Configuration hdfsConf = new Configuration(false);
+        hdfsConf.addResource(hdfsConfigFile);
+        Collection<String> nameServices = hdfsConf.getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
+        Collection<String> mainNameServices = conf.getTrimmedStringCollection(DFSConfigKeys.DFS_NAMESERVICES);
+        for (String serviceId : nameServices) {
+            mainNameServices.add(serviceId);
+
+            String serviceConfKey = DFSConfigKeys.DFS_HA_NAMENODES_KEY_PREFIX + "." + serviceId;
+            String proxyConfKey = DFSConfigKeys.DFS_CLIENT_FAILOVER_PROXY_PROVIDER_KEY_PREFIX + "." + serviceId;
+            conf.set(serviceConfKey, hdfsConf.get(serviceConfKey, ""));
+            conf.set(proxyConfKey, hdfsConf.get(proxyConfKey, ""));
+
+            Collection<String> nameNodes = hdfsConf.getTrimmedStringCollection(serviceConfKey);
+            for (String nameNode : nameNodes) {
+                String rpcConfKey = DFSConfigKeys.DFS_NAMENODE_RPC_ADDRESS_KEY + "." + serviceId + "." + nameNode;
+                conf.set(rpcConfKey, hdfsConf.get(rpcConfKey, ""));
+            }
+        }
+        conf.setStrings(DFSConfigKeys.DFS_NAMESERVICES, mainNameServices.toArray(new String[0]));
+        // See YARN-3021, instruct RM skip renew token of hbase cluster name services
+        conf.setStrings(JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE, nameServices.toArray(new String[0]));
     }
 
     public static String makeQualifiedPathInHBaseCluster(String path) {
