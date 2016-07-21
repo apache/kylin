@@ -586,8 +586,6 @@ KylinApp
             'fromSource':'Y'
           });
 
-          //var
-          columnList = _.sortBy(columnList, function (i) { return i.type; });
         }
 
           var timeMeasure = $scope.cubeConfig.streamingAutoGenerateMeasure;
