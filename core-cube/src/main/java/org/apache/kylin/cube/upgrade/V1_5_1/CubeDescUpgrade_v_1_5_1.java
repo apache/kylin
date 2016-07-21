@@ -270,13 +270,20 @@ public class CubeDescUpgrade_v_1_5_1 {
 
     private void copyUnChangedProperties(CubeDesc oldModel, org.apache.kylin.cube.model.CubeDesc newModel) {
         newModel.setUuid(oldModel.getUuid());
-        newModel.setName(oldModel.getName());
-        newModel.setDescription(oldModel.getDescription());
-        newModel.setMeasures(oldModel.getMeasures());
-        newModel.setNullStrings(oldModel.getNullStrings());
-        newModel.setModelName(oldModel.getModelName());
-        newModel.setNotifyList(oldModel.getNotifyList());
         newModel.setLastModified(oldModel.getLastModified());
+
+        newModel.setName(oldModel.getName());
+        newModel.setModelName(oldModel.getModelName());
+        newModel.setDescription(oldModel.getDescription());
+        newModel.setNullStrings(oldModel.getNullStrings());
+        newModel.setMeasures(oldModel.getMeasures());
+        newModel.setNotifyList(oldModel.getNotifyList());
+        newModel.setStatusNeedNotify(oldModel.getStatusNeedNotify());
+
+        newModel.setPartitionDateStart(oldModel.getPartitionDateStart());
+        newModel.setPartitionDateEnd(oldModel.getPartitionDateEnd());
+        newModel.setAutoMergeTimeRanges(oldModel.getAutoMergeTimeRanges());
+        newModel.setRetentionRange(oldModel.getRetentionRange());
         newModel.setStorageType(oldModel.getStorageType());
         newModel.setEngineType(oldModel.getEngineType());
     }
