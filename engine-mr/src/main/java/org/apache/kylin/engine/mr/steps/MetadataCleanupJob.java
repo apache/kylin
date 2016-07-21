@@ -122,16 +122,18 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         // three level resources, only dictionaries
         NavigableSet<String> dictTables = getStore().listResources(ResourceStore.DICT_RESOURCE_ROOT);
 
-        for (String table : dictTables) {
-            NavigableSet<String> tableColNames = getStore().listResources(table);
-            if (tableColNames != null)
-                for (String tableCol : tableColNames) {
-                    NavigableSet<String> dictionaries = getStore().listResources(tableCol);
-                    if (dictionaries != null)
-                        for (String dict : dictionaries)
-                            if (isOlderThanThreshold(getStore().getResourceTimestamp(dict)))
-                                toDeleteResource.add(dict);
-                }
+        if (dictTables != null) {
+            for (String table : dictTables) {
+                NavigableSet<String> tableColNames = getStore().listResources(table);
+                if (tableColNames != null)
+                    for (String tableCol : tableColNames) {
+                        NavigableSet<String> dictionaries = getStore().listResources(tableCol);
+                        if (dictionaries != null)
+                            for (String dict : dictionaries)
+                                if (isOlderThanThreshold(getStore().getResourceTimestamp(dict)))
+                                    toDeleteResource.add(dict);
+                    }
+            }
         }
 
         Set<String> activeResourceList = Sets.newHashSet();
