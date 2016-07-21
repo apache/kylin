@@ -20,6 +20,7 @@ package org.apache.kylin.source.hive;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -78,6 +79,9 @@ public class HiveCmdBuilder {
                 buf.append(tmpHql.getAbsolutePath());
 
                 logger.info("The statements to execute in beeline: \n" + hqlBuf);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("THe SQL to execute in beeline: \n" + IOUtils.toString(new FileReader(tmpHql)));
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
