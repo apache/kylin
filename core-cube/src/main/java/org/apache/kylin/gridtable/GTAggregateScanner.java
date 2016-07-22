@@ -239,7 +239,7 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         void aggregate(GTRecord r) {
-            if (++aggregatedRowCount % 1000 == 0) {
+            if (++aggregatedRowCount % 100000 == 0) {
                 if (memTracker != null) {
                     memTracker.markHigh();
                 }

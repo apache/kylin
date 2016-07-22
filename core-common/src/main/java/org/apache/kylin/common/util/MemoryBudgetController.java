@@ -284,7 +284,7 @@ public class MemoryBudgetController {
             int mb = MemoryBudgetController.getSystemAvailMB();
             if (mb < lowAvail) {
                 lowAvail = mb;
-                logger.debug("Lower system avail " + lowAvail + " MB in markHigh()");
+                logger.warn("Lower system avail " + lowAvail + " MB in markHigh()");
             }
         }
 
@@ -293,7 +293,7 @@ public class MemoryBudgetController {
             int mb = MemoryBudgetController.gcAndGetSystemAvailMB();
             if (mb > highAvail) {
                 highAvail = mb;
-                logger.debug("Higher system avail " + highAvail + " MB in markLow()");
+                logger.warn("Higher system avail " + highAvail + " MB in markLow()");
             }
         }
 

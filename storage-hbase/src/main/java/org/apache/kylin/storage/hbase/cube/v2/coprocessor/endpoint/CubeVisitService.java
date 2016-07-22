@@ -258,7 +258,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                     if (rowLimit > 0 && rowLimit <= counter)
                         return false;
 
-                    if (counter % 1000 == 1) {
+                    if (counter % 100000 == 1) {
                         if (System.currentTimeMillis() - startTime > timeout) {
                             scanNormalComplete.setValue(false);
                             logger.error("scanner aborted because timeout");
@@ -302,7 +302,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                     break;
                 }
 
-                if (finalRowCount % 1000 == 1) {
+                if (finalRowCount % 100000 == 1) {
                     if (System.currentTimeMillis() - startTime > timeout) {
                         logger.error("aggregate iterator aborted because timeout");
                         break;
