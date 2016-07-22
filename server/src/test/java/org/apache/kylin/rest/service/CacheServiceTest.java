@@ -72,12 +72,12 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     public static void beforeClass() throws Exception {
         staticCreateTestMetadata();
         configA = KylinConfig.getInstanceFromEnv();
-        configA.setProperty("kylin.rest.servers", "localhost:7070");
+        configA.setProperty("kylin.rest.servers", "localhost:7777");
         configB = KylinConfig.createKylinConfigFromInputStream(KylinConfig.getKylinPropertiesAsInputStream());
-        configB.setProperty("kylin.rest.servers", "localhost:7070");
+        configB.setProperty("kylin.rest.servers", "localhost:7777");
         configB.setMetadataUrl("../examples/test_metadata");
 
-        server = new Server(7070);
+        server = new Server(7777);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
         server.setHandler(context);
