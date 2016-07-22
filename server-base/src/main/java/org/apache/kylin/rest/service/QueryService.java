@@ -30,6 +30,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,6 +72,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -260,6 +262,13 @@ public class QueryService extends BasicService {
     }
 
     private SQLResponse queryWithSqlMassage(SQLRequest sqlRequest) throws Exception {
+        String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
+        final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+        for (GrantedAuthority grantedAuthority : grantedAuthorities) {
+            userInfo += ",";
+            userInfo += grantedAuthority.getAuthority();
+        }
+
         SQLResponse fakeResponse = QueryUtil.tableauIntercept(sqlRequest.getSql());
         if (null != fakeResponse) {
             logger.debug("Return fake response, is exception? " + fakeResponse.getIsException());
@@ -272,6 +281,7 @@ public class QueryService extends BasicService {
 
         // add extra parameters into olap context, like acceptPartial
         Map<String, String> parameters = new HashMap<String, String>();
+        parameters.put(OLAPContext.PRM_USER_AUTHEN_INFO, userInfo);
         parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(sqlRequest.isAcceptPartial()));
         OLAPContext.setParameters(parameters);
 

@@ -46,6 +46,7 @@ import com.google.common.collect.Lists;
 public class OLAPContext {
 
     public static final String PRM_ACCEPT_PARTIAL_RESULT = "AcceptPartialResult";
+    public static final String PRM_USER_AUTHEN_INFO = "UserAuthenInfo";
 
     private static final ThreadLocal<Map<String, String>> _localPrarameters = new ThreadLocal<Map<String, String>>();
 
@@ -92,6 +93,9 @@ public class OLAPContext {
             if (acceptPartialResult != null) {
                 this.storageContext.setAcceptPartialResult(Boolean.parseBoolean(acceptPartialResult));
             }
+            String acceptUserInfo = parameters.get(PRM_USER_AUTHEN_INFO);
+            if (null != acceptUserInfo)
+                this.olapAuthen.parseUserInfo(acceptUserInfo);
         }
     }
 
@@ -128,6 +132,8 @@ public class OLAPContext {
     // hive query
     public String sql = "";
 
+    public OLAPAuthentication olapAuthen = new OLAPAuthentication();
+
     public boolean isSimpleQuery() {
         return (joins.size() == 0) && (groupByColumns.size() == 0) && (aggregations.size() == 0);
     }
@@ -160,6 +166,16 @@ public class OLAPContext {
             sortMeasures.add(measure);
             sortOrders.add(order);
         }
+    }
+    public interface IAccessController {
+        /*
+        * @return {TupleFilter} if the filter condition exists
+        * @OLAPAuthentication the authentication info
+        * @columns required columns from logic query plan
+        * @realization the cube used in this query
+        * @OLAPInsufficientException no rights exception
+        */
+        public TupleFilter check(OLAPAuthentication olapAuthentication, Collection<TblColRef> columns, IRealization realization) throws IllegalArgumentException;
     }
 
 }

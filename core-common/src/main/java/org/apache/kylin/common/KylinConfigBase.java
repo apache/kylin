@@ -502,7 +502,7 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dict.cache.max.entry", "3000"));
     }
 
-    public int getCachedSnapshotMaxEntrySize(){
+    public int getCachedSnapshotMaxEntrySize() {
         return Integer.parseInt(getOptional("kylin.snapshot.cache.max.entry", "500"));
     }
 
@@ -553,6 +553,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public int getQueryStorageVisitScanRangeMax() {
         return Integer.valueOf(this.getOptional("kylin.query.storage.visit.scanrange.max", "1000000"));
+    }
+
+    public String getQueryAccessController() {
+        return getOptional("kylin.query.access.controller", null);
     }
 
     public long getSequenceExpireTime() {

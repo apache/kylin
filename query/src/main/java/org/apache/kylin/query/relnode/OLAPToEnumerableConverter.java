@@ -38,6 +38,11 @@ import org.apache.calcite.rel.convert.ConverterImpl;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlExplainLevel;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.metadata.filter.LogicalTupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
 import org.apache.kylin.query.routing.QueryRouter;
@@ -68,7 +73,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         OLAPRel.OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
         olapImplementor.visitChild(getInput(), this);
 
-        // find cube from olap context
+        // find cube from olap context and apply cell level security
         try {
             for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
                 // Context has no table scan is created by OLAPJoinRel which looks like
@@ -77,8 +82,16 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
                 if (context.firstTableScan == null) {
                     continue;
                 }
+
                 IRealization realization = QueryRouter.selectRealization(context);
                 context.realization = realization;
+
+                String controllerCls = KylinConfig.getInstanceFromEnv().getQueryAccessController();
+                if (null != controllerCls && !controllerCls.isEmpty()) {
+                    OLAPContext.IAccessController accessController = (OLAPContext.IAccessController) ClassUtil.newInstance(controllerCls);
+                    TupleFilter tupleFilter = accessController.check(context.olapAuthen, context.allColumns, context.realization);
+                    context.filter = and(context.filter, tupleFilter);
+                }
             }
         } catch (NoRealizationFoundException e) {
             OLAPContext ctx0 = (OLAPContext) OLAPContext.getThreadLocalContexts().toArray()[0];
@@ -106,6 +119,28 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         }
 
         return impl.visitChild(this, 0, inputAsEnum, pref);
+    }
+
+    private TupleFilter and(TupleFilter f1, TupleFilter f2) {
+        if (f1 == null)
+            return f2;
+        if (f2 == null)
+            return f1;
+        
+        if (f1.getOperator() == FilterOperatorEnum.AND) {
+            f1.addChild(f2);
+            return f1;
+        }
+        
+        if (f2.getOperator() == FilterOperatorEnum.AND) {
+            f2.addChild(f1);
+            return f2;
+        }
+        
+        LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
+        and.addChild(f1);
+        and.addChild(f2);
+        return and;
     }
 
     private Result buildHiveResult(EnumerableRelImplementor enumImplementor, Prefer pref, OLAPContext context) {
