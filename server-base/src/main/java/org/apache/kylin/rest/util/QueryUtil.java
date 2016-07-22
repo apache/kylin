@@ -102,7 +102,7 @@ public class QueryUtil {
     public static String massageSql(SQLRequest sqlRequest) {
         String sql = sqlRequest.getSql();
         sql = sql.trim();
-        sql = sql.replace("\r", "").replace("\n", System.getProperty("line.separator"));
+        sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
 
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
