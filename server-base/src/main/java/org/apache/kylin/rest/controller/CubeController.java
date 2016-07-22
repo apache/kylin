@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -172,8 +173,13 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT })
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        if (cube == null) {
+            throw new InternalErrorException("Cannot find cube " + cubeName);
+        }
+
         try {
-            return cubeService.updateCubeCost(cubeName, cost);
+            return cubeService.updateCubeCost(cube, cost);
         } catch (Exception e) {
             String message = "Failed to update cube cost: " + cubeName + " : " + cost;
             logger.error(message, e);
@@ -203,7 +209,9 @@ public class CubeController extends BasicController {
     @ResponseBody
     public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName, @RequestParam(value = "lookupTable") String lookupTable) {
         try {
-            return cubeService.rebuildLookupSnapshot(cubeName, segmentName, lookupTable);
+            final CubeManager cubeMgr = cubeService.getCubeManager();
+            final CubeInstance cube = cubeMgr.getCube(cubeName);
+            return cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable);
         } catch (IOException e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());

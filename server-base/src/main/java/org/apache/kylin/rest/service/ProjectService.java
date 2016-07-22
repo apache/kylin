@@ -32,6 +32,7 @@ import org.apache.kylin.rest.security.AclPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -48,6 +49,7 @@ public class ProjectService extends BasicService {
     @Autowired
     private AccessService accessService;
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public ProjectInstance createProject(CreateProjectRequest projectRequest) throws IOException {
         String projectName = projectRequest.getName();
         String description = projectRequest.getDescription();
@@ -81,6 +83,14 @@ public class ProjectService extends BasicService {
         return updatedProject;
     }
 
+
+    @PostFilter(Constant.ACCESS_POST_FILTER_READ)
+    public List<ProjectInstance> listProjects(final Integer limit, final Integer offset) {
+        List<ProjectInstance> projects = listAllProjects(limit, offset);
+        return projects;
+    }
+
+    @Deprecated
     public List<ProjectInstance> listAllProjects(final Integer limit, final Integer offset) {
         List<ProjectInstance> projects = getProjectManager().listAllProjects();
 

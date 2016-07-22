@@ -128,6 +128,7 @@ public class CubeService extends BasicService {
         return filterCubes;
     }
 
+    @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<CubeInstance> getCubes(final String cubeName, final String projectName, final String modelName, final Integer limit, final Integer offset) {
 
         List<CubeInstance> cubes;
@@ -147,12 +148,9 @@ public class CubeService extends BasicService {
         return cubes.subList(coffset, coffset + climit);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public CubeInstance updateCubeCost(String cubeName, int cost) throws IOException {
-        CubeInstance cube = getCubeManager().getCube(cubeName);
-        if (cube == null) {
-            throw new IOException("Cannot find cube " + cubeName);
-        }
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeInstance updateCubeCost(CubeInstance cube, int cost) throws IOException {
+
         if (cube.getCost() == cost) {
             // Do nothing
             return cube;
@@ -167,6 +165,7 @@ public class CubeService extends BasicService {
         return getCubeManager().updateCube(cubeBuilder);
     }
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or " + Constant.ACCESS_HAS_ROLE_MODELER)
     public CubeInstance createCubeAndDesc(String cubeName, String projectName, CubeDesc desc) throws IOException {
         if (getCubeManager().getCube(cubeName) != null) {
             throw new InternalErrorException("The cube named " + cubeName + " already exists");
@@ -485,6 +484,7 @@ public class CubeService extends BasicService {
      *
      * @param tableName
      */
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinality(String tableName, String submitter) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
@@ -526,11 +526,10 @@ public class CubeService extends BasicService {
         getCubeDescManager().updateCubeDesc(desc);
     }
 
-    public CubeInstance rebuildLookupSnapshot(String cubeName, String segmentName, String lookupTable) throws IOException {
-        CubeManager cubeMgr = getCubeManager();
-        CubeInstance cube = cubeMgr.getCube(cubeName);
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable) throws IOException {
         CubeSegment seg = cube.getSegment(segmentName, SegmentStatusEnum.READY);
-        cubeMgr.buildSnapshotTable(seg, lookupTable);
+        getCubeManager().buildSnapshotTable(seg, lookupTable);
 
         return cube;
     }

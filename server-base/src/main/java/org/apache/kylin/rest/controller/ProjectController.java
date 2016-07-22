@@ -76,7 +76,7 @@ public class ProjectController extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
-        return projectService.listAllProjects(limit, offset);
+        return projectService.listProjects(limit, offset);
     }
 
     @RequestMapping(value = "/readable", method = { RequestMethod.GET })
