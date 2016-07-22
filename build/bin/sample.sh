@@ -25,6 +25,10 @@ job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
 echo "Going to create sample tables in hive..."
 cd ${KYLIN_HOME}/sample_cube/data
 
+echo "Loading sample data into HDFS tmp path: /tmp/kylin/sample_cube/data"
+hadoop fs -mkdir -p /tmp/kylin/sample_cube/data
+hadoop fs -put * /tmp/kylin/sample_cube/data/
+
 hive_client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.client`
 if [ "${hive_client_mode}" == "beeline" ]
 then
@@ -35,6 +39,8 @@ else
 fi
 
 echo "Sample hive tables are created successfully; Going to create sample cube..."
+hadoop fs -rm -r /tmp/kylin/sample_cube
+
 cd ${KYLIN_HOME}
 hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
 echo "Sample cube is created successfully in project 'learn_kylin'; Restart Kylin server or reload the metadata from web UI to see the change."
