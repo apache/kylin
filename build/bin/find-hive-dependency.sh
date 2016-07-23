@@ -31,6 +31,12 @@ hive_env=
 
 if [ "${client_mode}" == "beeline" ]
 then
+    # when use beeline, need explicitly provide HIVE_CONF
+    if [ -z "$HIVE_CONF" ]
+    then
+        echo "Please set HIVE_CONF to the path which has hive-site.xml."
+        exit 1
+    fi
     beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.beeline.params`
     hive_env=`beeline ${beeline_params} --outputformat=dsv -e set | grep 'env:CLASSPATH'`
 else
@@ -69,7 +75,7 @@ done
 
 if [ -z "$hive_conf_path" ]
 then
-    echo "Couldn't find hive configuration directory. Please set HIVE_CONF to the path which contains hive-site.xml."
+    echo "Couldn't find hive configuration directory. Please set HIVE_CONF to the path which has hive-site.xml."
     exit 1
 fi
 
