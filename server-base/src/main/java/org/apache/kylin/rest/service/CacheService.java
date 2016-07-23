@@ -244,7 +244,8 @@ public class CacheService extends BasicService {
                 ProjectManager.clearCache();
                 break;
             case TABLE:
-                throw new UnsupportedOperationException(log);
+                MetadataManager.clearCache();
+                break;
             case EXTERNAL_FILTER:
                 throw new UnsupportedOperationException(log);
             case DATA_MODEL:

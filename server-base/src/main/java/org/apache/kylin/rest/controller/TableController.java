@@ -169,8 +169,8 @@ public class TableController extends BasicController {
                 unLoadFail.add(tableName);
             }
         }
-        result.put("result.unload.success", (String[]) unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
-        result.put("result.unload.fail", (String[]) unLoadFail.toArray(new String[unLoadFail.size()]));
+        result.put("result.unload.success", unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
+        result.put("result.unload.fail", unLoadFail.toArray(new String[unLoadFail.size()]));
         return result;
     }
 
