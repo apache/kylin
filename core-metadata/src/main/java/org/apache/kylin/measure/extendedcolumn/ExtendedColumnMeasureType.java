@@ -147,6 +147,11 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
 
             @Override
             public void reload(Object measureValue) {
+                if (measureValue == null) {
+                    value = null;
+                    return;
+                }
+                
                 ByteArray byteArray = (ByteArray) measureValue;
                 //the array in ByteArray is guaranteed to be completed owned by the ByteArray
                 value = Bytes.toString(byteArray.array());
