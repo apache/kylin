@@ -106,6 +106,15 @@ abstract public class KylinConfigBase implements Serializable {
         }
     }
 
+    final protected int[] getOptionalIntArray(String prop, String[] dft) {
+        String[] strArray = getOptionalStringArray(prop, dft);
+        int[] intArray = new int[strArray.length];
+        for (int i = 0; i < strArray.length; i++) {
+            intArray[i] = Integer.parseInt(strArray[i]);
+        }
+        return intArray;
+    }
+
     final public String getRequired(String prop) {
         String r = getOptional(prop);
         if (StringUtils.isEmpty(r)) {
@@ -559,6 +568,11 @@ abstract public class KylinConfigBase implements Serializable {
 
     public long getSequenceExpireTime() {
         return Long.valueOf(this.getOptional("kylin.query.sequence.expire.time", "86400000"));//default a day
+    }
+
+    public int[] getQueryMetricsPercentilesIntervals() {
+        String[] dft = { "60", "300", "3600" };
+        return getOptionalIntArray("kylin.query.metrics.percentiles.intervals", dft);
     }
 
     public int getHBaseKeyValueSize() {

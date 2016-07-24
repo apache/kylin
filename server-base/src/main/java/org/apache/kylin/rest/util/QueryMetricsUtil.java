@@ -1,0 +1,94 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+package org.apache.kylin.rest.util;
+
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.rest.metrics.QueryMetrics;
+import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.response.SQLResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.concurrent.ThreadSafe;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * update metrics about query
+ */
+@ThreadSafe
+public class QueryMetricsUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(QueryMetricsUtil.class);
+
+    public static void updateMetrics(SQLRequest sqlRequest, SQLResponse sqlResponse, ConcurrentHashMap<String, QueryMetrics> metricsMap) {
+        String projectName = sqlRequest.getProject();
+        String cubeName = sqlResponse.getCube();
+
+        update(getQueryMetrics("Server_Total", metricsMap), sqlResponse);
+
+        update(getQueryMetrics(projectName, metricsMap), sqlResponse);
+
+        String cubeMetricName = projectName + ",sub=" + cubeName;
+        update(getQueryMetrics(cubeMetricName, metricsMap), sqlResponse);
+    }
+
+    private static void update(QueryMetrics queryMetrics, SQLResponse sqlResponse) {
+        try {
+            incrQueryCount(queryMetrics, sqlResponse);
+            incrCacheHitCount(queryMetrics, sqlResponse);
+
+            if (!sqlResponse.getIsException()) {
+                queryMetrics.addQueryLatency(sqlResponse.getDuration());
+                queryMetrics.addScanRowCount(sqlResponse.getTotalScanCount());
+                queryMetrics.addResultRowCount(sqlResponse.getResults().size());
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+
+    }
+
+    private static void incrQueryCount(QueryMetrics queryMetrics, SQLResponse sqlResponse) {
+        if (!sqlResponse.isHitExceptionCache() && !sqlResponse.getIsException()) {
+            queryMetrics.incrQuerySuccessCount();
+        } else {
+            queryMetrics.incrQueryFailCount();
+        }
+        queryMetrics.incrQueryCount();
+    }
+
+    private static void incrCacheHitCount(QueryMetrics queryMetrics, SQLResponse sqlResponse) {
+        if (sqlResponse.isStorageCacheUsed()) {
+            queryMetrics.addCacheHitCount(1);
+        }
+    }
+
+    private static QueryMetrics getQueryMetrics(String name, ConcurrentHashMap<String, QueryMetrics> metricsMap) {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        int[] intervals = config.getQueryMetricsPercentilesIntervals();
+
+        if (metricsMap.containsKey(name)) {
+            return metricsMap.get(name);
+        } else {
+            QueryMetrics queryMetrics = new QueryMetrics(intervals).registerWith(name);
+            metricsMap.put(name, queryMetrics);
+            return queryMetrics;
+        }
+    }
+}
