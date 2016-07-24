@@ -42,6 +42,7 @@ import com.google.common.collect.Lists;
 
 public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisInfoCLI.class);
+    private static final int DEFAULT_PERIOD = 3;
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
@@ -61,6 +62,9 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
     @SuppressWarnings("static-access")
     private static final Option OPTION_THREADS = OptionBuilder.withArgName("threads").hasArg().isRequired(false).withDescription("Specify number of threads for parallel extraction.").create("threads");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_PERIOD = OptionBuilder.withArgName("period").hasArg().isRequired(false).withDescription("specify how many days of kylin info to extract. Default " + DEFAULT_PERIOD + ".").create("period");
+
     private static final int DEFAULT_PARALLEL_SIZE = 4;
 
     private ExecutorService executorService;
@@ -75,6 +79,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_HBASE);
         options.addOption(OPTION_INCLUDE_CLIENT);
         options.addOption(OPTION_INCLUDE_JOB);
+        options.addOption(OPTION_PERIOD);
 
     }
 
@@ -108,6 +113,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         final boolean includeJob = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : true;
         final int threadsNum = optionsHelper.hasOption(OPTION_THREADS) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_THREADS)) : DEFAULT_PARALLEL_SIZE;
         final String projectNames = StringUtils.join(getProjects(projectInput), ",");
+        final int period = optionsHelper.hasOption(OPTION_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_PERIOD)) : DEFAULT_PERIOD;
 
         logger.info("Start diagnosis info extraction in {} threads.", threadsNum);
         executorService = Executors.newFixedThreadPool(threadsNum);
@@ -128,7 +134,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    String[] jobArgs = { "-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
+                    String[] jobArgs = { "-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-period", Integer.toString(period), "-compress", "false", "-submodule", "true" };
                     JobInstanceExtractor jobInstanceExtractor = new JobInstanceExtractor();
                     jobInstanceExtractor.execute(jobArgs);
                 }
@@ -185,7 +191,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-compress", "false", "-submodule", "true" };
+                String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-logPeriod", Integer.toString(period), "-compress", "false", "-submodule", "true" };
                 KylinLogExtractor logExtractor = new KylinLogExtractor();
                 logger.info("KylinLogExtractor args: " + Arrays.toString(logsArgs));
                 logExtractor.execute(logsArgs);

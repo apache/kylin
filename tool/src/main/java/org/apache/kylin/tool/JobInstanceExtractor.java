@@ -52,10 +52,14 @@ import com.google.common.collect.Lists;
 public class JobInstanceExtractor extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(JobInstanceExtractor.class);
 
+    private static final int DEFAULT_PERIOD = 3;
+
     @SuppressWarnings("static-access")
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify jobs in which project to extract").create("project");
     @SuppressWarnings("static-access")
     private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false).withDescription("Specify jobs related to which cube to extract").create("cube");
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_PERIOD = OptionBuilder.withArgName("period").hasArg().isRequired(false).withDescription("specify how many days of kylin jobs to extract. Default " + DEFAULT_PERIOD + ".").create("period");
 
     KylinConfig config;
     ProjectManager projectManager;
@@ -70,15 +74,17 @@ public class JobInstanceExtractor extends AbstractInfoExtractor {
 
         options.addOption(OPTION_PROJECT);
         options.addOption(OPTION_CUBE);
+        options.addOption(OPTION_PERIOD);
     }
 
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         String cube = optionsHelper.hasOption(OPTION_CUBE) ? optionsHelper.getOptionValue(OPTION_CUBE) : null;
         String project = optionsHelper.hasOption(OPTION_PROJECT) ? optionsHelper.getOptionValue(OPTION_PROJECT) : null;
+        int period = optionsHelper.hasOption(OPTION_PERIOD) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_PERIOD)) : DEFAULT_PERIOD;
 
         long endTime = System.currentTimeMillis();
-        long startTime = endTime - 3 * 24 * 3600 * 1000;
+        long startTime = endTime - period * 24 * 3600 * 1000; // time in Millis
         List<JobInstance> jobInstances = listJobInstances(cube, project, startTime, endTime);
         logger.info("There are {} jobInstances to extract.", jobInstances.size());
 
