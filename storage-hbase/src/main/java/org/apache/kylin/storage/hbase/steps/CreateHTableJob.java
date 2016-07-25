@@ -210,6 +210,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             for (int i = 0; i < nRegion; i++) {
                 innerRegionSplits.add(new HashMap<Long, Double>());
             }
+            
             double[] regionSizes = new double[nRegion];
             for (long cuboidId : allCuboids) {
                 double estimatedSize = cubeSizeMap.get(cuboidId);

@@ -23,9 +23,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.collect.Lists;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.job.execution.ExecutableContext;
+
+import javax.annotation.Nullable;
 
 public class CubingExecutableUtil {
 
@@ -63,6 +71,38 @@ public class CubingExecutableUtil {
 
     public static void setMergingSegmentIds(List<String> ids, Map<String, String> params) {
         params.put(MERGING_SEGMENT_IDS, StringUtils.join(ids, ","));
+    }
+
+    public static CubeSegment findSegment(ExecutableContext context, String cubeName, String segmentId) {
+        final CubeManager mgr = CubeManager.getInstance(context.getConfig());
+        final CubeInstance cube = mgr.getCube(cubeName);
+
+        if (cube == null) {
+            String cubeList = StringUtils.join(Iterables.transform(mgr.listAllCubes(), new Function<CubeInstance, String>() {
+                @Nullable
+                @Override
+                public String apply(@Nullable CubeInstance input) {
+                    return input.getName();
+                }
+            }).iterator(), ",");
+
+            throw new IllegalStateException("target cube name: " + cubeName + " cube list: " + cubeList);
+        }
+
+        final CubeSegment newSegment = cube.getSegmentById(segmentId);
+
+        if (newSegment == null) {
+            String segmentList = StringUtils.join(Iterables.transform(cube.getSegments(), new Function<CubeSegment, String>() {
+                @Nullable
+                @Override
+                public String apply(@Nullable CubeSegment input) {
+                    return input.getUuid();
+                }
+            }).iterator(), ",");
+
+            throw new IllegalStateException("target segment id: " + segmentId + " segment list: " + segmentList);
+        }
+        return newSegment;
     }
 
     public static List<String> getMergingSegmentIds(Map<String, String> params) {

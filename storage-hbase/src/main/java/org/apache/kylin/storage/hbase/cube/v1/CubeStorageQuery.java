@@ -697,7 +697,7 @@ public class CubeStorageQuery implements IStorageQuery {
             short cuboidShardNum = segment.getCuboidShardNum(scan.getCuboid().getId());
             short cuboidShardBase = segment.getCuboidBaseShard(scan.getCuboid().getId());
             for (short i = 0; i < cuboidShardNum; ++i) {
-                short newShard = ShardingHash.normalize(cuboidShardBase, i, segment.getTotalShards());
+                short newShard = ShardingHash.normalize(cuboidShardBase, i, segment.getTotalShards(scan.getCuboid().getId()));
                 byte[] newStartKey = duplicateKeyAndChangeShard(newShard, startKey);
                 byte[] newStopKey = duplicateKeyAndChangeShard(newShard, stopKey);
                 HBaseKeyRange newRange = new HBaseKeyRange(segment, scan.getCuboid(), newStartKey, newStopKey, //

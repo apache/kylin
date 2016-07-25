@@ -270,7 +270,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         Pair<Short, Short> shardNumAndBaseShard = getShardNumAndBaseShard();
         short shardNum = shardNumAndBaseShard.getFirst();
         short cuboidBaseShard = shardNumAndBaseShard.getSecond();
-        int totalShards = cubeSeg.getTotalShards();
+        int totalShards = cubeSeg.getTotalShards(cuboid.getId());
 
         ByteString scanRequestByteString = null;
         ByteString rawScanByteString = null;

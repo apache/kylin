@@ -76,7 +76,7 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
             int shardSeedLength = UHCLength == -1 ? bodyLength : UHCLength;
             short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
             short shardOffset = ShardingHash.getShard(key, RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN + shardSeedOffset, shardSeedLength, cuboidShardNum);
-            return ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), shardOffset, cubeSeg.getTotalShards());
+            return ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), shardOffset, cubeSeg.getTotalShards(cuboid.getId()));
         } else {
             throw new RuntimeException("If enableSharding false, you should never calculate shard");
         }

@@ -137,7 +137,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         } else {
             List<byte[]> ret = Lists.newArrayList();
             for (short i = 0; i < cuboidShardNum; ++i) {
-                short shard = ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), i, cubeSeg.getTotalShards());
+                short shard = ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), i, cubeSeg.getTotalShards(cuboid.getId()));
                 byte[] cookedKey = Arrays.copyOf(halfCookedKey, halfCookedKey.length);
                 BytesUtil.writeShort(shard, cookedKey, 0, RowConstants.ROWKEY_SHARDID_LEN);
                 ret.add(cookedKey);
