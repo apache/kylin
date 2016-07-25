@@ -136,7 +136,6 @@ public class HBaseCuboidWriter implements ICuboidWriter {
             logger.info("commit total " + puts.size() + " puts, totally cost:" + (System.currentTimeMillis() - t) + "ms");
             puts.clear();
         }
-        logger.info("commit total " + puts.size() + " puts, totally cost:" + (System.currentTimeMillis() - t) + "ms");
         puts.clear();
     }
 

@@ -146,17 +146,12 @@ public class UserService implements UserDetailsManager {
     public void updateUser(UserDetails user) {
         Table htable = null;
         try {
-            byte[] userAuthorities = serialize(user.getAuthorities());
             htable = aclHBaseStorage.getTable(userTableName);
 
-<<<<<<< b6296775f7793a63baf7f6a97cf4c0759d654341:server-base/src/main/java/org/apache/kylin/rest/service/UserService.java
             Pair<byte[], byte[]> pair = userToHBaseRow(user);
             Put put = new Put(pair.getKey());
-            put.add(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
-=======
-            Put put = new Put(Bytes.toBytes(user.getUsername()));
-            put.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), userAuthorities);
->>>>>>> KYLIN-1528 Create a branch for v1.5 with HBase 1.x API:server/src/main/java/org/apache/kylin/rest/service/UserService.java
+
+            put.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
 
             htable.put(put);
         } catch (IOException e) {
@@ -219,13 +214,8 @@ public class UserService implements UserDetailsManager {
         Scan s = new Scan();
         s.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
 
-<<<<<<< b6296775f7793a63baf7f6a97cf4c0759d654341:server-base/src/main/java/org/apache/kylin/rest/service/UserService.java
         List<UserDetails> all = new ArrayList<UserDetails>();
-        HTableInterface htable = null;
-=======
-        List<String> authorities = new ArrayList<String>();
         Table htable = null;
->>>>>>> KYLIN-1528 Create a branch for v1.5 with HBase 1.x API:server/src/main/java/org/apache/kylin/rest/service/UserService.java
         ResultScanner scanner = null;
         try {
             htable = aclHBaseStorage.getTable(userTableName);
