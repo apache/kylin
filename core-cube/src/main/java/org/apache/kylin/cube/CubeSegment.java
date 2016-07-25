@@ -41,8 +41,6 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -54,7 +52,6 @@ import com.google.common.collect.Maps;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment>, IBuildable {
-    private static final Logger logger = LoggerFactory.getLogger(CubeSegment.class);
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -495,11 +492,11 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable {
     public int getTotalShards(long cuboidId) {
         if (totalShards > 0) {
             //shard squashed case
-            logger.info("total shards for {} is {}", cuboidId, totalShards);
+            //logger.info("total shards for {} is {}", cuboidId, totalShards);
             return totalShards;
         } else {
             int ret = getCuboidShardNum(cuboidId);
-            logger.info("total shards for {} is {}", cuboidId, ret);
+            //logger.info("total shards for {} is {}", cuboidId, ret);
             return ret;
         }
     }
@@ -518,10 +515,10 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable {
                 cuboidBaseShards.put(cuboidId, ret);
             }
 
-            logger.info("base for cuboid {} is {}", cuboidId, ret);
+            //logger.info("base for cuboid {} is {}", cuboidId, ret);
             return ret;
         } else {
-            logger.info("base for cuboid {} is {}", cuboidId, 0);
+            //logger.info("base for cuboid {} is {}", cuboidId, 0);
             return 0;
         }
     }
