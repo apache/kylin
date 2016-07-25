@@ -24,9 +24,17 @@
     }
   },
   {
-    "url": "/cubes/edit/:cubeName/json",
+    "url": "/cubes/edit/:cubeName/descriptionjson",
     "params": {
       "templateUrl": "partials/cubes/cube_json_edit.html",
+      "tab": "models",
+      "controller": "CubeEditCtrl"
+    }
+  },
+  {
+    "url": "/cubes/view/:cubeName/instancejson",
+    "params": {
+      "templateUrl": "partials/cubes/cube_json_view.html",
       "tab": "models",
       "controller": "CubeEditCtrl"
     }

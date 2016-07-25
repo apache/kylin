@@ -166,6 +166,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   // ~ Define data
   $scope.state = {
     "cubeSchema": "",
+    "cubeInstance":"",
     "mode": 'edit'
   };
 
@@ -192,6 +193,28 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
 
 
+      }
+    });
+
+    var queryParam = {
+      cube_name: $routeParams.cubeName
+    };
+    CubeService.list(queryParam, {},function(instance){
+      if (instance.length > 0) {
+        $scope.instance = instance[0];
+        $scope.state.cubeInstance =angular.toJson($scope.instance,true);
+
+      } else {
+        SweetAlert.swal('Oops...', "No cube detail info loaded.", 'error');
+      }
+
+    },function(e){
+      if (e.data && e.data.exception) {
+        var message = e.data.exception;
+        var msg = !!(message) ? message : 'Failed to take action.';
+        SweetAlert.swal('Oops...', msg, 'error');
+      } else {
+        SweetAlert.swal('Oops...', "Failed to take action.", 'error');
       }
     });
 

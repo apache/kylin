@@ -105,7 +105,8 @@
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu">
-                        <li ng-if="cube.status=='DISABLED'"><a href="cubes/edit/{{cube.name}}/json">Edit(JSON)</a></li>
+                        <li ng-if="cube.status=='DISABLED'"><a href="cubes/edit/{{cube.name}}/descriptionjson">Edit CubeDesc</a></li>
+                      <li ng-if="cube.status=='DISABLED'"><a href="cubes/view/{{cube.name}}/instancejson">View Cube</a></li>
                     </ul>
                 </div>
             </td>
