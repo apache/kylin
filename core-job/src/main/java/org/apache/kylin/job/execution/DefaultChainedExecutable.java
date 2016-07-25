@@ -74,7 +74,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     @Override
     protected void onExecuteError(Throwable exception, ExecutableContext executableContext) {
-        super.onExecuteError(exception,executableContext);
+        super.onExecuteError(exception, executableContext);
         notifyUserStatusChange(executableContext, ExecutableState.ERROR);
     }
 

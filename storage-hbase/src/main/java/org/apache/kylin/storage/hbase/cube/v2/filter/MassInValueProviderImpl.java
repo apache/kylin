@@ -43,8 +43,6 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Sets;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 public class MassInValueProviderImpl implements MassInValueProvider {
     public static final Logger logger = LoggerFactory.getLogger(MassInValueProviderImpl.class);
 
