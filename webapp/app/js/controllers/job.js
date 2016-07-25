@@ -68,6 +68,8 @@ KylinApp
                 statusIds.push(statusObj.value);
             });
 
+          $scope.cubeName=$scope.cubeName == ""?null:$scope.cubeName;
+          
             var jobRequest = {
                 cubeName: $scope.cubeName,
                 projectName: $scope.state.projectName,
