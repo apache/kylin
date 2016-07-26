@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.enumerable.EnumerableAggregate;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
@@ -105,32 +106,37 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     private List<TblColRef> groups;
     private List<FunctionDesc> aggregations;
 
-    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, ImmutableBitSet groupSet, List<AggregateCall> aggCalls) throws InvalidRelException {
-        super(cluster, traits, child, false, groupSet, asList(groupSet), aggCalls);
+    public OLAPAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) throws InvalidRelException {
+        super(cluster, traits, child, indicator, groupSet, groupSets, aggCalls);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         this.afterAggregate = false;
         this.rewriteAggCalls = aggCalls;
         this.rowType = getRowType();
     }
 
-    private static List<ImmutableBitSet> asList(ImmutableBitSet groupSet) {
-        ArrayList<ImmutableBitSet> l = new ArrayList<ImmutableBitSet>(1);
-        l.add(groupSet);
-        return l;
-    }
-
     @Override
     public Aggregate copy(RelTraitSet traitSet, RelNode input, boolean indicator, ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets, List<AggregateCall> aggCalls) {
         try {
-            return new OLAPAggregateRel(getCluster(), traitSet, input, groupSet, aggCalls);
+            return new OLAPAggregateRel(getCluster(), traitSet, input, indicator, groupSet, groupSets, aggCalls);
         } catch (InvalidRelException e) {
             throw new IllegalStateException("Can't create OLAPAggregateRel!", e);
         }
     }
 
+    /**
+     * Since the grouping aggregate will be expanded by {@link org.apache.kylin.query.optrule.AggregateMultipleExpandRule},
+     * made the cost of grouping aggregate more expensive to use the expanded aggregates
+     */
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-        return super.computeSelfCost(planner, mq).multiplyBy(.05);
+        RelOptCost cost;
+        if (getGroupType() == Group.SIMPLE) {
+            cost = super.computeSelfCost(planner, mq).multiplyBy(.05);
+        } else {
+            cost = super.computeSelfCost(planner, mq).multiplyBy(.05).plus(planner.getCost(getInput(), mq))
+                    .multiplyBy(groupSets.size() * 1.5);
+        }
+        return cost;
     }
 
     @Override
@@ -164,6 +170,22 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         List<TblColRef> columns = new ArrayList<TblColRef>(this.rowType.getFieldCount());
         columns.addAll(this.groups);
+
+        // Add group column indicators
+        if (indicator) {
+            final Set<String> containedNames = Sets.newHashSet();
+            for (TblColRef groupCol: groups) {
+                String base = "i$" + groupCol.getName();
+                String name = base;
+                int i = 0;
+                while (containedNames.contains(name)) {
+                    name = base + "_" + i++;
+                }
+                containedNames.add(name);
+                TblColRef indicatorCol = TblColRef.newInnerColumn(name, TblColRef.InnerDataTypeEnum.LITERAL);
+                columns.add(indicatorCol);
+            }
+        }
 
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
@@ -378,7 +400,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
         try {
             return new EnumerableAggregate(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE), //
-                    sole(inputs), false, this.groupSet, this.groupSets, rewriteAggCalls);
+                    sole(inputs), indicator, this.groupSet, this.groupSets, rewriteAggCalls);
         } catch (InvalidRelException e) {
             throw new IllegalStateException("Can't create EnumerableAggregate!", e);
         }

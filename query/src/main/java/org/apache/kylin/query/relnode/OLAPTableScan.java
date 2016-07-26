@@ -44,18 +44,23 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateJoinTransposeRule;
 import org.apache.calcite.rel.rules.AggregateProjectMergeRule;
+import org.apache.calcite.rel.rules.AggregateUnionTransposeRule;
 import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.rel.rules.FilterProjectTransposeRule;
 import org.apache.calcite.rel.rules.JoinCommuteRule;
 import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
+import org.apache.calcite.rel.rules.JoinUnionTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
 import org.apache.calcite.rel.rules.SortJoinTransposeRule;
+import org.apache.calcite.rel.rules.SortUnionTransposeRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.query.optrule.AggregateMultipleExpandRule;
+import org.apache.kylin.query.optrule.AggregateProjectReduceRule;
 import org.apache.kylin.query.optrule.OLAPAggregateRule;
 import org.apache.kylin.query.optrule.OLAPFilterRule;
 import org.apache.kylin.query.optrule.OLAPJoinRule;
@@ -63,6 +68,7 @@ import org.apache.kylin.query.optrule.OLAPLimitRule;
 import org.apache.kylin.query.optrule.OLAPProjectRule;
 import org.apache.kylin.query.optrule.OLAPSortRule;
 import org.apache.kylin.query.optrule.OLAPToEnumerableConverterRule;
+import org.apache.kylin.query.optrule.OLAPUnionRule;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.query.schema.OLAPTable;
 
@@ -126,6 +132,11 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.addRule(OLAPJoinRule.INSTANCE);
         planner.addRule(OLAPLimitRule.INSTANCE);
         planner.addRule(OLAPSortRule.INSTANCE);
+        planner.addRule(OLAPUnionRule.INSTANCE);
+
+        // Support translate the grouping aggregate into union of simple aggregates
+        planner.addRule(AggregateMultipleExpandRule.INSTANCE);
+        planner.addRule(AggregateProjectReduceRule.INSTANCE);
 
         // CalcitePrepareImpl.CONSTANT_REDUCTION_RULES
         planner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
@@ -152,8 +163,13 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.removeRule(FilterProjectTransposeRule.INSTANCE);
         planner.removeRule(SortJoinTransposeRule.INSTANCE);
         planner.removeRule(JoinPushExpressionsRule.INSTANCE);
+        planner.removeRule(SortUnionTransposeRule.INSTANCE);
+        planner.removeRule(JoinUnionTransposeRule.LEFT_UNION);
+        planner.removeRule(JoinUnionTransposeRule.RIGHT_UNION);
+        planner.removeRule(AggregateUnionTransposeRule.INSTANCE);
         // distinct count will be split into a separated query that is joined with the left query
         planner.removeRule(AggregateExpandDistinctAggregatesRule.INSTANCE);
+
 
         // see Dec 26th email @ http://mail-archives.apache.org/mod_mbox/calcite-dev/201412.mbox/browser
         planner.removeRule(ExpandConversionRule.INSTANCE);

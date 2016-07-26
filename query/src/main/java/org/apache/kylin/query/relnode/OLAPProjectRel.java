@@ -86,9 +86,13 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         return rewriteProjects;
     }
 
+    /**
+     * Since the project under aggregate maybe reduce expressions by {@link org.apache.kylin.query.optrule.AggregateProjectReduceRule},
+     * consider the count of expressions into cost, the reduced project will be used.
+     */
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-        return super.computeSelfCost(planner, mq).multiplyBy(.05);
+        return super.computeSelfCost(planner, mq).multiplyBy(.05).multiplyBy(getProjects().size());
     }
 
     @Override
