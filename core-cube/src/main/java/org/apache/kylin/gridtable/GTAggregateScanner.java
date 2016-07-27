@@ -30,16 +30,16 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.SortedMap;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
-import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
 import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureAggregators;
@@ -119,7 +119,7 @@ public class GTAggregateScanner implements IGTScanner {
     }
 
     @Override
-    public int getScannedRowCount() {
+    public long getScannedRowCount() {
         return inputScanner.getScannedRowCount();
     }
 
@@ -131,9 +131,12 @@ public class GTAggregateScanner implements IGTScanner {
 
     @Override
     public Iterator<GTRecord> iterator() {
+        long count = 0;
         for (GTRecord r : inputScanner) {
+            count++;
             aggrCache.aggregate(r);
         }
+        logger.info("GTAggregateScanner input rows: " + count);
         return aggrCache.iterator();
     }
 

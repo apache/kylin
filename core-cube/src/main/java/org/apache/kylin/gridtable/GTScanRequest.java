@@ -33,11 +33,15 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.SerializeToByteBuffer;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class GTScanRequest {
+
+    private static final Logger logger = LoggerFactory.getLogger(GTScanRequest.class);
 
     private GTInfo info;
     private List<GTScanRange> ranges;
@@ -160,16 +164,22 @@ public class GTScanRequest {
             }
 
             if (!doAggr) {//Skip reading this section if you're not profiling! 
-                int scanned = result.getScannedRowCount();
+                long scanned = result.getScannedRowCount();
                 lookAndForget(result);
                 return new EmptyGTScanner(scanned);
             }
 
-            if (this.allowPreAggregation && this.hasAggregation()) {
+            if (!this.allowPreAggregation) {
+                logger.info("pre aggregation is not beneficial, skip it");
+            } else if (this.hasAggregation()) {
+                logger.info("pre aggregating results before returning");
                 result = new GTAggregateScanner(result, this);
+            } else {
+                logger.info("has no aggregation, skip it");
             }
             return result;
         }
+
     }
 
     //touch every byte of the cell so that the cost of scanning will be truly reflected

@@ -20,12 +20,16 @@ package org.apache.kylin.engine.mr;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class KylinMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
+    private static final Logger logger = LoggerFactory.getLogger(KylinMapper.class);
 
     protected void bindCurrentConfiguration(Configuration conf) {
+        logger.info("The conf for current mapper will be " + System.identityHashCode(conf));
         HadoopUtil.setCurrentConfiguration(conf);
     }
 }

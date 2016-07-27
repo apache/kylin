@@ -154,7 +154,7 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
         final DataInputStream din;
         long fileLen;
         long readOffset;
-        int count;
+        long count;
 
         Reader(long startOffset) throws IOException {
             this.fileLen = diskFile.length();
@@ -265,7 +265,7 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
         }
 
         @Override
-        public int getScannedRowCount() {
+        public long getScannedRowCount() {
             return count;
         }
 

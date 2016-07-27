@@ -24,6 +24,6 @@ public interface IGTScanner extends Iterable<GTRecord>, Closeable {
 
     GTInfo getInfo();
 
-    int getScannedRowCount();
+    long getScannedRowCount();
 
 }

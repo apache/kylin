@@ -47,8 +47,8 @@ message CubeVisitResponse {
     message Stats {
         optional int64 serviceStartTime = 1;
         optional int64 serviceEndTime = 2;
-        optional int32 scannedRowCount = 3;
-        optional int32 aggregatedRowCount = 4;
+        optional int64 scannedRowCount = 3;
+        optional int64 aggregatedRowCount = 4;
         optional double systemCpuLoad = 5;
         optional double freePhysicalMemorySize = 6;
         optional double freeSwapSpaceSize = 7;

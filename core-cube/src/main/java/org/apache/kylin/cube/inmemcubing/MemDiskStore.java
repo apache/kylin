@@ -278,7 +278,7 @@ public class MemDiskStore implements IGTStore, Closeable {
         }
 
         @Override
-        public int getScannedRowCount() {
+        public long getScannedRowCount() {
             return count;
         }
 

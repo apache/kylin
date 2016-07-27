@@ -27,7 +27,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DataFormatException;
 
 import javax.annotation.Nullable;
@@ -60,10 +60,10 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest;
-import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
-import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitService;
+import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList;
+import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,9 +165,9 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         private GTInfo info;
         private Iterator<byte[]> blocks;
         private ImmutableBitSet columns;
-        private int totalScannedCount;
+        private long totalScannedCount;
 
-        public EndpointResultsAsGTScanner(GTInfo info, Iterator<byte[]> blocks, ImmutableBitSet columns, int totalScannedCount) {
+        public EndpointResultsAsGTScanner(GTInfo info, Iterator<byte[]> blocks, ImmutableBitSet columns, long totalScannedCount) {
             this.info = info;
             this.blocks = blocks;
             this.columns = columns;
@@ -180,7 +180,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
 
         @Override
-        public int getScannedRowCount() {
+        public long getScannedRowCount() {
             return totalScannedCount;
         }
 
@@ -330,7 +330,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", shardNum, cuboidBaseShard, rawScans.size());
 
-        final AtomicInteger totalScannedCount = new AtomicInteger(0);
+        final AtomicLong totalScannedCount = new AtomicLong(0);
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum);
 
         // KylinConfig: use env instance instead of CubeSegment, because KylinConfig will share among queries

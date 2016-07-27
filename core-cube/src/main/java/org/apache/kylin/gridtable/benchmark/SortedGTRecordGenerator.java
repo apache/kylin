@@ -186,7 +186,7 @@ public class SortedGTRecordGenerator {
         }
 
         @Override
-        public int getScannedRowCount() {
+        public long getScannedRowCount() {
             return counter;
         }
 

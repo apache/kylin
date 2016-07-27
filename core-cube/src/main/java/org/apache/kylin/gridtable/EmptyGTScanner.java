@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class EmptyGTScanner implements IGTScanner {
-    private int reportScannedRowCount;
+    private long reportScannedRowCount;
 
-    public EmptyGTScanner(int reportScannedRowCount) {
+    public EmptyGTScanner(long reportScannedRowCount) {
         this.reportScannedRowCount = reportScannedRowCount;
     }
 
@@ -34,7 +34,7 @@ public class EmptyGTScanner implements IGTScanner {
     }
 
     @Override
-    public int getScannedRowCount() {
+    public long getScannedRowCount() {
         return reportScannedRowCount;
     }
 

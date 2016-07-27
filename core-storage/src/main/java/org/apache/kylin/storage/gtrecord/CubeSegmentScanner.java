@@ -69,7 +69,7 @@ public class CubeSegmentScanner implements IGTScanner {
         }
         scanRequest = scanRangePlanner.planScanRequest();
         if (scanRequest != null) {
-            scanRequest.setAllowPreAggregation(!context.isExactAggregation());
+            scanRequest.setAllowPreAggregation(context.isNeedStorageAggregation());
             scanRequest.setAggrCacheGB(cubeSeg.getCubeInstance().getConfig().getQueryCoprocessorMemGB());
             if (context.isLimitEnabled())
                 scanRequest.setRowLimit(context.getLimit());
@@ -93,7 +93,7 @@ public class CubeSegmentScanner implements IGTScanner {
     }
 
     @Override
-    public int getScannedRowCount() {
+    public long getScannedRowCount() {
         return scanner.getScannedRowCount();
     }
 

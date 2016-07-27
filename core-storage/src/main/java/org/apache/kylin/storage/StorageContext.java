@@ -39,6 +39,7 @@ public class StorageContext {
     private boolean acceptPartialResult;
 
     private boolean exactAggregation;
+    private boolean needStorageAggregation;
     private boolean enableLimit;
     private boolean enableCoprocessor;
 
@@ -141,6 +142,14 @@ public class StorageContext {
 
     public void setPartialResultReturned(boolean partialResultReturned) {
         this.partialResultReturned = partialResultReturned;
+    }
+
+    public boolean isNeedStorageAggregation() {
+        return needStorageAggregation;
+    }
+
+    public void setNeedStorageAggregation(boolean needStorageAggregation) {
+        this.needStorageAggregation = needStorageAggregation;
     }
 
     public void setExactAggregation(boolean isExactAggregation) {

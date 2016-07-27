@@ -59,7 +59,7 @@ public class ScannerWorker {
         internal.close();
     }
 
-    public int getScannedRowCount() {
+    public long getScannedRowCount() {
         return internal.getScannedRowCount();
     }
 

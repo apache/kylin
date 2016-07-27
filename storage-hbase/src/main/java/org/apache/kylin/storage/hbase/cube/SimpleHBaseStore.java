@@ -207,7 +207,7 @@ public class SimpleHBaseStore implements IGTStore {
         }
 
         @Override
-        public int getScannedRowCount() {
+        public long getScannedRowCount() {
             return count;
         }
     }

@@ -30,8 +30,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.io.Writable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HadoopUtil {
+    private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
     private static final ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
 
     public static void setCurrentConfiguration(Configuration conf) {
@@ -41,9 +44,13 @@ public class HadoopUtil {
     public static Configuration getCurrentConfiguration() {
         if (hadoopConfig.get() == null) {
             Configuration conf = healSickConfig(new Configuration());
+            hadoopConfig.set(conf);
+            logger.info("The conf for current mapper will be " + System.identityHashCode(conf));
             return conf;
         }
-        return hadoopConfig.get();
+        Configuration conf = hadoopConfig.get();
+        logger.info("The conf for current mapper will be " + System.identityHashCode(conf));
+        return conf;
     }
 
     private static Configuration healSickConfig(Configuration conf) {

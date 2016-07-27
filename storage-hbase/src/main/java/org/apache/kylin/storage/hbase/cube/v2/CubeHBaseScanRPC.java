@@ -110,8 +110,8 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             }
 
             @Override
-            public int getScannedRowCount() {
-                int sum = 0;
+            public long getScannedRowCount() {
+                long sum = 0;
                 sum += scanner.getScannedRowCount();
                 return sum;
             }
@@ -226,7 +226,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             }
 
             @Override
-            public int getScannedRowCount() {
+            public long getScannedRowCount() {
                 return decorateScanner.getScannedRowCount();
             }
 

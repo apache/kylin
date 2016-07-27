@@ -98,7 +98,7 @@ public class GTSimpleMemStore implements IGTStore {
     public IGTScanner scan(GTScanRequest scanRequest) {
 
         return new IGTScanner() {
-            int count;
+            long count;
 
             @Override
             public GTInfo getInfo() {
@@ -106,7 +106,7 @@ public class GTSimpleMemStore implements IGTStore {
             }
 
             @Override
-            public int getScannedRowCount() {
+            public long getScannedRowCount() {
                 return count;
             }
 

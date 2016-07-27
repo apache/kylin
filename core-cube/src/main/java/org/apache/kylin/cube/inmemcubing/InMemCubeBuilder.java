@@ -558,8 +558,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         }
 
         @Override
-        public int getScannedRowCount() {
-            return 0;
+        public long getScannedRowCount() {
+            return 0L;
         }
     }
 }
