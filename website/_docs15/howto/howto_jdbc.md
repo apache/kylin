@@ -1,13 +1,13 @@
 ---
 layout: docs15
-title:  Use kylin Remote JDBC Driver
+title:  Use JDBC Driver
 categories: howto
 permalink: /docs15/howto/howto_jdbc.html
 ---
 
 ### Authentication
 
-###### Build on kylin authentication restful service. Supported parameters:
+###### Build on Apache Kylin authentication restful service. Supported parameters:
 * user : username 
 * password : password
 * ssl: true/false. Default be false; If true, all the services call will use https.

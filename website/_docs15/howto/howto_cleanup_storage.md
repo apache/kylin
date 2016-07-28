@@ -1,6 +1,6 @@
 ---
 layout: docs15
-title:  Cleanup Storage (HDFS & HBase Tables)
+title:  Cleanup Storage (HDFS & HBase)
 categories: howto
 permalink: /docs15/howto/howto_cleanup_storage.html
 ---

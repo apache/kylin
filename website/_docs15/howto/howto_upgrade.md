@@ -1,10 +1,21 @@
 ---
 layout: docs15
-title:  Upgrade from old versions
+title:  Upgrade From Old Versions
 categories: howto
 permalink: /docs15/howto/howto_upgrade.html
 since: v1.5.1
 ---
+
+
+## Upgrade from 1.5.2 to v1.5.3
+Kylin v1.5.3 metadata is compitible with v1.5.2, your cubes don't need rebuilt, as usual, some actions need to be performed:
+
+#### 1. Update HBase coprocessor
+The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto_update_coprocessor.html) to update;
+
+#### 2. Update conf/kylin_hive_conf.xml
+From 1.5.3, Kylin doesn't need Hive to merge small files anymore; For users who copy the conf/ from previous version, please remove the "merge" related properties in kylin_hive_conf.xml, including "hive.merge.mapfiles", "hive.merge.mapredfiles", and "hive.merge.size.per.task"; this will save the time on extracting data from Hive.
+
 
 ## Upgrade from 1.5.1 to v1.5.2
 Kylin v1.5.2 metadata is compitible with v1.5.1, your cubes don't need upgrade, while some actions need to be performed:
@@ -12,7 +23,7 @@ Kylin v1.5.2 metadata is compitible with v1.5.1, your cubes don't need upgrade, 
 #### 1. Update HBase coprocessor
 The HBase tables for existing cubes need be updated to the latest coprocessor; Follow [this guide](howto_update_coprocessor.html) to update;
 
-#### 2. Update kylin.properties
+#### 2. Update conf/kylin.properties
 In v1.5.2 several properties are deprecated, and several new one are added:
 
 Deprecated:
