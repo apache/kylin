@@ -69,6 +69,7 @@ import org.apache.kylin.query.optrule.OLAPProjectRule;
 import org.apache.kylin.query.optrule.OLAPSortRule;
 import org.apache.kylin.query.optrule.OLAPToEnumerableConverterRule;
 import org.apache.kylin.query.optrule.OLAPUnionRule;
+import org.apache.kylin.query.optrule.OLAPWindowRule;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.query.schema.OLAPTable;
 
@@ -133,6 +134,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.addRule(OLAPLimitRule.INSTANCE);
         planner.addRule(OLAPSortRule.INSTANCE);
         planner.addRule(OLAPUnionRule.INSTANCE);
+        planner.addRule(OLAPWindowRule.INSTANCE);
 
         // Support translate the grouping aggregate into union of simple aggregates
         planner.addRule(AggregateMultipleExpandRule.INSTANCE);

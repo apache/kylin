@@ -274,6 +274,11 @@ public class ITKylinQueryTest extends KylinTestBase {
         this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_grouping");
     }
 
+    @Test
+    public void testWindowQuery() throws Exception {
+        this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_window");
+    }
+
     private void assertLimitWasEnabled() {
         OLAPContext context = getFirstOLAPContext();
         assertTrue(context.storageContext.isLimitEnabled());

@@ -44,6 +44,7 @@ import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexProgram;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlCaseOperator;
@@ -89,10 +90,14 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     /**
      * Since the project under aggregate maybe reduce expressions by {@link org.apache.kylin.query.optrule.AggregateProjectReduceRule},
      * consider the count of expressions into cost, the reduced project will be used.
+     *
+     * Made RexOver much more expensive so we can transform into {@link org.apache.kylin.query.relnode.OLAPWindowRel}
+     * by rules in {@link org.apache.calcite.rel.rules.ProjectToWindowRule}
      */
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-        return super.computeSelfCost(planner, mq).multiplyBy(.05).multiplyBy(getProjects().size());
+        boolean hasRexOver = RexOver.containsOver(getProjects(), null);
+        return super.computeSelfCost(planner, mq).multiplyBy(.05).multiplyBy(getProjects().size()  * (hasRexOver ? 50 : 1));
     }
 
     @Override
