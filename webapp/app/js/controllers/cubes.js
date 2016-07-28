@@ -438,6 +438,11 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
     };
 
     $scope.cloneCube = function(cube){
+      if(!$scope.projectModel.selectedProject){
+        SweetAlert.swal('Oops...', "Please choose project before clone.", 'info');
+        return;
+      }
+
       $scope.loadDetail(cube).then(function () {
         $modal.open({
           templateUrl: 'cubeClone.html',
