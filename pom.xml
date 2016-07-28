@@ -32,7 +32,7 @@
     <groupId>org.apache.kylin</groupId>
     <artifactId>kylin</artifactId>
     <packaging>pom</packaging>
-    <version>1.5.3-SNAPSHOT</version>
+    <version>1.5.4-SNAPSHOT</version>
 
     <name>Kylin:HadoopOLAPEngine</name>
     <url>http://kylin.apache.org</url>
