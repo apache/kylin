@@ -7,26 +7,27 @@ __最新发布(源代码)__
 
 最新发布的Apache Kylin™可以从ASF网站下载：:
 
-* [Apache Kylin v1.5.3](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.3/)
+* [apache-kylin-1.5.3-src.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-src.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-src.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-src.tar.gz.md5)\]
 * [发布日志](http://kylin.apache.org/docs15/release_notes.html)
 * Git 标签: [kylin-1.5.3](https://github.com/apache/kylin/tree/kylin-1.5.3)
 * Git Commit: [4cdc07ea34d0c2fb12951500e0fa28130659affb](https://github.com/apache/kylin/commit/4cdc07ea34d0c2fb12951500e0fa28130659affb)
 
+
+为方便使用，我们提供预编译的二进制安装包，请选择合适的版本下载请参照[安装帮助](http://kylin.apache.org/docs15/install)进行安装：
+
 __1.5.3 二进制包 for HBase 0.98/0.99__
 
-为方便使用，我们提供预打包的二进制安装包：
-
-* [apache-kylin-1.5.3-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-bin.tar.gz)
-* [安装帮助](http://kylin.apache.org/docs15/install)
+* [apache-kylin-1.5.3-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-bin.tar.gz.md5)\]
+* Git Commit: [4cdc07ea34d0c2fb12951500e0fa28130659affb](https://github.com/apache/kylin/commit/4cdc07ea34d0c2fb12951500e0fa28130659affb)
 
 __1.5.3 二进制包 for HBase 1.x__
 
-* [apache-kylin-1.5.3-HBase1.x-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-HBase1.x-bin.tar.gz)
+* [apache-kylin-1.5.3-HBase1.x-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-HBase1.x-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-HBase1.x-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-HBase1.x-bin.tar.gz.md5)\]
 * Git commit [90a0c5baba0c0d8e7c1f84ea4b94f0886fa8c19e](https://github.com/apache/kylin/commit/90a0c5baba0c0d8e7c1f84ea4b94f0886fa8c19e)
 
 __1.5.3 二进制包 for CDH 5.7__
 
-* [apache-kylin-1.5.3-cdh5.7-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-cdh5.7-bin.tar.gz)
+* [apache-kylin-1.5.3-cdh5.7-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-cdh5.7-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-cdh5.7-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.3/apache-kylin-1.5.3-cdh5.7-bin.tar.gz.md5)\]
 * Git commit [b46029fba7e3c5d387acb9ea37e788de5dcaf0be](https://github.com/apache/kylin/commit/b46029fba7e3c5d387acb9ea37e788de5dcaf0be)
 
 __构建二进制包__

@@ -119,7 +119,7 @@ __Fix license issues and make a snapshot__
 $ read -s GPG_PASSPHRASE
 
 # Make sure that there are no junk files in the sandbox
-$ git clean -xn
+$ git clean -xf
 $ mvn clean
 
 # Fix any license issues as reported by target/rat.txt
@@ -419,7 +419,8 @@ After publish the release, you need generate the binary packages and then put th
 * Git checkout the tag for current release; 
 * Make a binary package by refering to [this doc](howto_package.html);
 * Sign the generated binary package with gpg, e.g,: "gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz"
-* Move both the binary package and the signature file to the svn release folder for this version;
+* Generate the md5 file for the binary package, e.g,: "md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5"
+* Move the binary package, the signature file and the md5 fileto the svn release folder for this version;
 * For different Hadoop/HBase version, you may need repeat the above steps;
 * Add the files and then commit the svn changes. 
 
@@ -457,8 +458,8 @@ Apache Kylin is an open source Distributed Analytics Engine designed to provide 
 
 Apache Kylin lets you query big Hive tables at sub-second latency in 3 simple steps:
 1. Identify a set of Hive tables in star schema.
-2. Build a cube from the Hive tables in an offline batch process.
-3. Query the Hive tables using SQL and get results in sub-seconds, via Rest API, ODBC, or JDBC.
+2. Build Cube from the Hive tables in an offline batch process (MR or Spark).
+3. Query the tables with ANSI-SQL and get results in sub-seconds to seconds, via ODBC, JDBC or RESTful API.
 
 Thanks everyone who have contributed to the 1.5.2.1 release.
 
