@@ -13,12 +13,12 @@ title: Home
           <div class="row" style="margin-top:-20px;">
             <div class="col-sm-12 col-md-12">              
               <p class="title_text">Apache Kylin™ is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop supporting extremely large datasets, original contributed from eBay Inc.</p>
-              <p class="title_text">Apache Kylin™ lets you query big Hive tables at sub-second latency in 3 simple steps.</p>
+              <p class="title_text">Apache Kylin™ lets you query massive data set at sub-second latency in 3 steps.</p>
               <div align="left">
                 <ol>
-                  <li>Identify a set of Hive tables in star schema.</li>
-                  <li>Build a cube from the Hive tables in an offline batch process.</li>
-                  <li>Query the Hive tables using SQL and get results in sub-seconds, via Rest API, ODBC, or JDBC.</li>
+                  <li>Identify a Star Schema data on Hadoop.</li>
+                  <li>Build Cube on Hadoop.</li>
+                  <li>Query data with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.</li>
                 </ol>
               </div>
               <img id="diagram" src="assets/images/kylin_diagram.png">

@@ -434,7 +434,7 @@ After publish the release, you need to manually update some source code:
 Refer to [How to document](howto_docs.html) for more detail.
 
 ## Send announcement mail to mailing list
-Send one mail with subject like "[Announce] Apache Kylin x.y released" to following list:
+Send one mail with subject like "[Announce] Apache Kylin x.y.z released" to following list:
 
 * Apache Kylin Dev mailing list: dev@kylin.apache.org
 * Apache Kylin User mailing list: user@kylin.apache.org
@@ -444,9 +444,9 @@ Please notice to always use your Apache mail address to send this;
 Here is a sample of announcement email (by studying Kafka's):
 
 {% highlight text %} 
-The Apache Kylin team is pleased to announce the immediate availability of the 1.5.2.1 release. 
+The Apache Kylin team is pleased to announce the immediate availability of the x.y.z release. 
 
-This is a bug fix release based on 1.5.2; All of the changes in this release can be found:
+This is a bug fix release based on 1.5.2; All of the changes in this release can be found in:
 https://kylin.apache.org/docs15/release_notes.html
 
 You can download the source release and binary packages from 
@@ -456,12 +456,12 @@ More information about the binary packages is on Kylin's download page https://k
 
 Apache Kylin is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop, supporting extremely large datasets.
 
-Apache Kylin lets you query big Hive tables at sub-second latency in 3 simple steps:
-1. Identify a set of Hive tables in star schema.
-2. Build Cube from the Hive tables in an offline batch process (MR or Spark).
-3. Query the tables with ANSI-SQL and get results in sub-seconds to seconds, via ODBC, JDBC or RESTful API.
+Apache Kylin lets you query massive data set at sub-second latency in 3 steps:
+1. Identify a Star Schema data on Hadoop.
+2. Build Cube on Hadoop.
+3. Query data with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.
 
-Thanks everyone who have contributed to the 1.5.2.1 release.
+Thanks everyone who have contributed to the x.y.z release.
 
 We welcome your help and feedback. For more information on how to
 report problems, and to get involved, visit the project website at
