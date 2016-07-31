@@ -29,9 +29,9 @@ import org.apache.calcite.util.Pair;
  * With this rule, the rolled up dimensions in aggregate will be reduced, we can use higher layer cuboid data.
  */
 public class AggregateProjectReduceRule extends RelOptRule {
-    public static final AggregateProjectReduceRule INSTANCE
-        = new AggregateProjectReduceRule(operand(LogicalAggregate.class, null,
-            Aggregate.IS_SIMPLE, operand(LogicalProject.class, any())), RelFactories.LOGICAL_BUILDER, "AggregateProjectReduceRule");
+    public static final AggregateProjectReduceRule INSTANCE = new AggregateProjectReduceRule( //
+            operand(LogicalAggregate.class, null, Aggregate.IS_SIMPLE, operand(LogicalProject.class, any())), //
+            RelFactories.LOGICAL_BUILDER, "AggregateProjectReduceRule");
 
     private AggregateProjectReduceRule(RelOptRuleOperand operand, RelBuilderFactory factory, String description) {
         super(operand, factory, description);

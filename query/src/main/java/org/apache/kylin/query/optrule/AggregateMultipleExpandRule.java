@@ -38,13 +38,13 @@ import java.util.List;
  *     }
  */
 public class AggregateMultipleExpandRule extends RelOptRule {
-    public static final AggregateMultipleExpandRule INSTANCE
-            = new AggregateMultipleExpandRule(operand(LogicalAggregate.class, null, new Predicate<Aggregate>(){
-        @Override
-        public boolean apply(@Nullable Aggregate input) {
-            return input.getGroupType() != Aggregate.Group.SIMPLE;
-        }
-    }, operand(RelNode.class, any())), "AggregateMultipleExpandRule");
+    public static final AggregateMultipleExpandRule INSTANCE = new AggregateMultipleExpandRule( //
+            operand(LogicalAggregate.class, null, new Predicate<Aggregate>() {
+                @Override
+                public boolean apply(@Nullable Aggregate input) {
+                    return input.getGroupType() != Aggregate.Group.SIMPLE;
+                }
+            }, operand(RelNode.class, any())), "AggregateMultipleExpandRule");
 
     private AggregateMultipleExpandRule(RelOptRuleOperand operand, String description) {
         super(operand, description);
@@ -58,7 +58,7 @@ public class AggregateMultipleExpandRule extends RelOptRule {
 
     @Override
     public void onMatch(RelOptRuleCall call) {
-        LogicalAggregate aggr = (LogicalAggregate)call.getRelList().get(0);
+        LogicalAggregate aggr = (LogicalAggregate) call.getRelList().get(0);
         RelNode input = aggr.getInput();
         RelBuilder relBuilder = call.builder();
         RexBuilder rexBuilder = aggr.getCluster().getRexBuilder();
@@ -81,7 +81,6 @@ public class AggregateMultipleExpandRule extends RelOptRule {
                 if (groupKey == aggrGroupKey) {
                     rexNodes.add(rexBuilder.makeInputRef(type, index++));
                     groupKey = groupKeyIter.next();
-                    continue;
                 } else {
                     rexNodes.add(rexBuilder.makeNullLiteral(type.getSqlTypeName()));
                 }
@@ -98,7 +97,6 @@ public class AggregateMultipleExpandRule extends RelOptRule {
                     if (groupKey == aggrGroupKey) {
                         rexNodes.add(rexBuilder.makeLiteral(false, type, true));
                         groupKey = groupKeyIter.next();
-                        continue;
                     } else {
                         rexNodes.add(rexBuilder.makeLiteral(true, type, true));
                     }
@@ -106,7 +104,7 @@ public class AggregateMultipleExpandRule extends RelOptRule {
             }
 
             // fill aggr calls input ref
-            while(typeIterator.hasNext()) {
+            while (typeIterator.hasNext()) {
                 RelDataType type = typeIterator.next().getType();
                 rexNodes.add(rexBuilder.makeInputRef(type, index++));
             }

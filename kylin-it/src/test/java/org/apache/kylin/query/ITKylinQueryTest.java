@@ -270,6 +270,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testGroupingQuery() throws Exception {
+        // cannot compare coz H2 does not support grouping set yet..
         this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_grouping");
     }
 
