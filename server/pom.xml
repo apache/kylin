@@ -33,9 +33,6 @@
 
     </parent>
 
-    <properties>
-        <start-class>org.apache.kylin.odbc.Application</start-class>
-    </properties>
     <dependencies>
 
         <dependency>

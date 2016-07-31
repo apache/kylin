@@ -17,6 +17,7 @@
 package org.apache.kylin.common;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -145,7 +146,7 @@ public class KylinVersion {
             if (!commitFile.exists()) {
                 commitFile = new File(KylinConfig.getKylinHome(), COMMIT_SHA1_v13);
             }
-            List<String> lines = FileUtils.readLines(commitFile);
+            List<String> lines = FileUtils.readLines(commitFile, Charset.defaultCharset());
             StringBuilder sb = new StringBuilder();
             for (String line : lines) {
                 if (!line.startsWith("#")) {

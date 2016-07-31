@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
@@ -144,7 +145,7 @@ public class KylinConfig extends KylinConfigBase {
                 KylinConfig config = new KylinConfig();
                 RestClient client = new RestClient(uri);
                 String propertyText = client.getKylinProperties();
-                InputStream is = IOUtils.toInputStream(propertyText);
+                InputStream is = IOUtils.toInputStream(propertyText, Charset.defaultCharset());
                 config.reloadKylinConfig(is);
                 is.close();
                 return config;

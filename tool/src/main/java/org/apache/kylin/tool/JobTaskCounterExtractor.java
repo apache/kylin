@@ -20,6 +20,7 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -136,7 +137,7 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor {
     private void extractTaskCounterFile(String taskId, File exportDir, String taskUrl) throws IOException {
         try {
             String response = getHttpResponse(taskUrl + taskId + "/counters");
-            FileUtils.writeStringToFile(new File(exportDir, taskId + ".json"), response);
+            FileUtils.writeStringToFile(new File(exportDir, taskId + ".json"), response, Charset.defaultCharset());
         } catch (Exception e) {
             logger.warn("Failed to get task counters rest response" + e);
         }

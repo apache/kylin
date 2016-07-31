@@ -19,6 +19,7 @@ package org.apache.kylin.source.hive;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
@@ -50,7 +51,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         FileSystem fs = FileSystem.get(rowCountFile.toUri(), HadoopUtil.getCurrentConfiguration());
         InputStream in = fs.open(rowCountFile);
         try {
-            String content = IOUtils.toString(in);
+            String content = IOUtils.toString(in, Charset.defaultCharset());
             return Long.valueOf(content.trim()); // strip the '\n' character
 
         } finally {

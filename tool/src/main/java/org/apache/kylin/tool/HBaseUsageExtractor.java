@@ -21,6 +21,7 @@ package org.apache.kylin.tool;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -188,9 +189,9 @@ public class HBaseUsageExtractor extends AbstractInfoExtractor {
             FileUtils.forceMkdir(hdfsDir);
             CliCommandExecutor cliCommandExecutor = kylinConfig.getCliCommandExecutor();
             String output = cliCommandExecutor.execute("hadoop fs -ls -R " + conf.get("hbase.rootdir") + "/data/default/KYLIN_*").getSecond();
-            FileUtils.writeStringToFile(new File(hdfsDir, "hdfs-files.list"), output);
+            FileUtils.writeStringToFile(new File(hdfsDir, "hdfs-files.list"), output, Charset.defaultCharset());
             output = cliCommandExecutor.execute("hadoop fs -ls -R " + conf.get("hbase.rootdir") + "/data/default/kylin_*").getSecond();
-            FileUtils.writeStringToFile(new File(hdfsDir, "hdfs-files.list"), output, true);
+            FileUtils.writeStringToFile(new File(hdfsDir, "hdfs-files.list"), output, Charset.defaultCharset(), true);
         } catch (Exception e) {
             logger.warn("HBase hdfs status fetch failed: ", e);
         }

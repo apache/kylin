@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase.cube.v2.filter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Set;
 
@@ -78,7 +79,7 @@ public class MassInValueProviderImpl implements MassInValueProvider {
                     }
 
                     InputStream inputStream = fileSystem.open(new Path(filterResourceIdentifier));
-                    List<String> lines = IOUtils.readLines(inputStream);
+                    List<String> lines = IOUtils.readLines(inputStream, Charset.defaultCharset());
 
                     logger.info("Load HDFS finished after " + stopwatch.elapsedMillis() + " millis");
 

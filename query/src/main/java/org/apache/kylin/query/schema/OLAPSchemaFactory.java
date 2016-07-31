@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -127,7 +128,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
             out.close();
             tmp.deleteOnExit();
 
-            logger.info("Schema json:" + StringUtils.join(FileUtils.readLines(tmp), "\n"));
+            logger.info("Schema json:" + StringUtils.join(FileUtils.readLines(tmp, Charset.defaultCharset()), "\n"));
 
             return tmp;
 

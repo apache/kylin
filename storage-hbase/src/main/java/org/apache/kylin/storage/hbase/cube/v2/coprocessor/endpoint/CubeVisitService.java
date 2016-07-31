@@ -24,6 +24,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
@@ -181,7 +182,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             region.startRegionOperation();
 
             // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
-            KylinConfig.setKylinConfigFromInputStream(IOUtils.toInputStream(request.getKylinProperties()));
+            KylinConfig.setKylinConfigFromInputStream(IOUtils.toInputStream(request.getKylinProperties(), Charset.defaultCharset()));
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
             debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);

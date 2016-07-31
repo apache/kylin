@@ -193,7 +193,7 @@ public class KafkaStreamingInput implements IStreamingInput {
                         continue;
                     }
 
-                    logger.info("fetching topic {} partition id {} offset {} leader {}", new String[] { topic, String.valueOf(partitionId), String.valueOf(offset), leadBroker.toString() });
+                    logger.info("fetching topic {} partition id {} offset {} leader {}", topic, String.valueOf(partitionId), String.valueOf(offset), leadBroker.toString());
 
                     final FetchResponse fetchResponse = KafkaRequester.fetchResponse(topic, partitionId, offset, leadBroker, kafkaClusterConfig);
                     if (fetchResponse.errorCode(topic, partitionId) != 0) {

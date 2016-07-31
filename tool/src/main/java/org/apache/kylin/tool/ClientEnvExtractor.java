@@ -21,6 +21,7 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -93,7 +94,7 @@ public class ClientEnvExtractor extends AbstractInfoExtractor {
             }
             Pair<Integer, String> result = cmdExecutor.execute(cmd);
             String output = result.getSecond();
-            FileUtils.writeStringToFile(new File(destDirFile, filename), output);
+            FileUtils.writeStringToFile(new File(destDirFile, filename), output, Charset.defaultCharset());
         } catch (Exception e) {
             logger.warn("Failed to run command: " + cmd + ".", e);
         }

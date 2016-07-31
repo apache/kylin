@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -143,7 +144,7 @@ public class CacheService extends BasicService {
             File modelJson = OLAPSchemaFactory.createTempOLAPJson(project, getConfig());
 
             try {
-                String text = FileUtils.readFileToString(modelJson);
+                String text = FileUtils.readFileToString(modelJson, Charset.defaultCharset());
                 logger.debug("The new temp olap json is :" + text);
             } catch (IOException e) {
                 e.printStackTrace(); // logging failure is not critical

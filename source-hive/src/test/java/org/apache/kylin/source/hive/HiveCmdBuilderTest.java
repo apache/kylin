@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -70,7 +71,7 @@ public class HiveCmdBuilderTest {
         assertTrue(cmd.startsWith("beeline -u jdbc_url -f") && cmd.contains(";rm -f"));
 
         String hqlFile = cmd.substring(cmd.lastIndexOf("-f ") + 3).trim();
-        String hqlStatement = FileUtils.readFileToString(new File(hqlFile));
+        String hqlStatement = FileUtils.readFileToString(new File(hqlFile), Charset.defaultCharset());
         assertEquals("USE default;" + lineSeparator + "DROP TABLE test;" + lineSeparator + "SHOW\n TABLES;" + lineSeparator, hqlStatement);
 
         FileUtils.forceDelete(new File(hqlFile));

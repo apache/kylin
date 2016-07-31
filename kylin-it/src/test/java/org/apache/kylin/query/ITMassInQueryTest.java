@@ -19,6 +19,7 @@
 package org.apache.kylin.query;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Random;
@@ -79,7 +80,7 @@ public class ITMassInQueryTest extends KylinTestBase {
         Path path = new Path("/tmp/vip_customers.txt");
         fileSystem.delete(path, false);
         FSDataOutputStream outputStream = fileSystem.create(path);
-        org.apache.commons.io.IOUtils.write(StringUtils.join(vipSellers, "\n"), outputStream);
+        org.apache.commons.io.IOUtils.write(StringUtils.join(vipSellers, "\n"), outputStream, Charset.defaultCharset());
         outputStream.close();
 
         System.out.println("The filter is " + vipSellers);

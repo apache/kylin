@@ -21,6 +21,7 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -133,13 +134,13 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         }
 
         String output = KylinVersion.getKylinClientInformation() + "\n";
-        FileUtils.writeStringToFile(new File(exportDir, "kylin_env"), output);
+        FileUtils.writeStringToFile(new File(exportDir, "kylin_env"), output, Charset.defaultCharset());
 
         StringBuilder basicSb = new StringBuilder();
         basicSb.append("MetaStoreID: ").append(ToolUtil.getHBaseMetaStoreId()).append("\n");
         basicSb.append("PackageType: ").append(packageType.toUpperCase()).append("\n");
         basicSb.append("Host: ").append(ToolUtil.getHostName()).append("\n");
-        FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString());
+        FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString(), Charset.defaultCharset());
     }
 
     protected abstract void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception;

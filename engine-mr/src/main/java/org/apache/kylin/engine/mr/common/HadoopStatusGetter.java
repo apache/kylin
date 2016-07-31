@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr.common;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.charset.Charset;
 import java.security.Principal;
 
 import org.apache.commons.httpclient.Header;
@@ -143,7 +144,7 @@ public class HadoopStatusGetter {
                 }
 
                 if (redirect == null) {
-                    response = IOUtils.toString(httpResponse.getEntity().getContent());
+                    response = IOUtils.toString(httpResponse.getEntity().getContent(), Charset.defaultCharset());
                     logger.debug("Job " + mrJobId + " get status check result.\n");
                 } else {
                     url = redirect;
