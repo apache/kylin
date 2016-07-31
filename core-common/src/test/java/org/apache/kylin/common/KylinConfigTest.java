@@ -48,4 +48,16 @@ public class KylinConfigTest extends LocalFileMetadataTestCase {
         assertEquals("test2", override.get("test2"));
     }
 
+    @Test
+    public void testAccountConfig() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals("need_reset", config.getMailPassword());
+    }
+
+    @Test
+    public void testAccountOverrideConfig(){
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals("override.mail.com", config.getMailHost());
+    }
+
 }

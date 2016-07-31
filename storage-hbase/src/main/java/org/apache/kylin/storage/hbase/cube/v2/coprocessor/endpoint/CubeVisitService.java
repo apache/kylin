@@ -20,13 +20,14 @@ package org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -184,7 +185,10 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             region.startRegionOperation();
 
             // if user change kylin.properties on kylin server, need to manually redeploy coprocessor jar to update KylinConfig of Env.
-            KylinConfig.setKylinConfigFromInputStream(IOUtils.toInputStream(request.getKylinProperties(), Charset.defaultCharset()));
+            String serverPropString = request.getKylinProperties();
+            Properties serverProp = new Properties();
+            serverProp.load(new StringReader(serverPropString));
+            KylinConfig.setKylinConfig(serverProp);
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
             debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);

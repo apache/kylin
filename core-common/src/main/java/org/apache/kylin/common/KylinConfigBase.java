@@ -20,7 +20,6 @@ package org.apache.kylin.common;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
@@ -29,7 +28,6 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
@@ -124,16 +122,8 @@ abstract public class KylinConfigBase implements Serializable {
         properties.setProperty(key, value);
     }
 
-    final protected void reloadKylinConfig(InputStream is) {
-        Properties newProperties = new Properties();
-        try {
-            newProperties.load(is);
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot load kylin config.", e);
-        } finally {
-            IOUtils.closeQuietly(is);
-        }
-        this.properties = newProperties;
+    final protected void reloadKylinConfig(Properties properties) {
+        this.properties = properties;
     }
 
     // ============================================================================
