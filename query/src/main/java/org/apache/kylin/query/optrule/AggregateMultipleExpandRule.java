@@ -38,7 +38,7 @@ import java.util.List;
  *     }
  */
 public class AggregateMultipleExpandRule extends RelOptRule {
-    public static final AggregateMultipleExpandRule INSTANCE = new AggregateMultipleExpandRule( //
+    public static final AggregateMultipleExpandRule INSTANCE = new AggregateMultipleExpandRule(//
             operand(LogicalAggregate.class, null, new Predicate<Aggregate>() {
                 @Override
                 public boolean apply(@Nullable Aggregate input) {
