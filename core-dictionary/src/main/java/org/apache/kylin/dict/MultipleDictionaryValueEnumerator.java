@@ -55,19 +55,21 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
 
     @Override
     public boolean moveNext() throws IOException {
-        if (curDictIndex < dictionaryList.size() && curKey <= curDict.getMaxId()) {
-            byte[] buffer = new byte[curDict.getSizeOfValue()];
-            int size = curDict.getValueBytesFromId(curKey, buffer, 0);
-            curValue = Bytes.copy(buffer, 0, size);
+        while (curDictIndex < dictionaryList.size()) {
+            if (curKey <= curDict.getMaxId()) {
+                byte[] buffer = new byte[curDict.getSizeOfValue()];
+                int size = curDict.getValueBytesFromId(curKey, buffer, 0);
+                curValue = Bytes.copy(buffer, 0, size);
+                curKey ++;
 
-            if (++curKey > curDict.getMaxId()) {
-                if (++curDictIndex < dictionaryList.size()) {
-                    curDict = dictionaryList.get(curDictIndex);
-                    curKey = curDict.getMinId();
-                }
+                return true;
             }
 
-            return true;
+            // move to next dict if exists
+            if (++curDictIndex < dictionaryList.size()) {
+                curDict = dictionaryList.get(curDictIndex);
+                curKey = curDict.getMinId();
+            }
         }
         curValue = null;
         return false;
