@@ -276,6 +276,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testWindowQuery() throws Exception {
+        // cannot compare coz H2 does not support window function yet..
         this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_window");
     }
 

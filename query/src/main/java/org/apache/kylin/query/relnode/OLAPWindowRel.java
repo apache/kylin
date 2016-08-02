@@ -65,9 +65,9 @@ public class OLAPWindowRel extends Window implements OLAPRel {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw)
-            .itemIf("constants", constants, !constants.isEmpty())
-            .itemIf("groups", groups, !groups.isEmpty());
+        return super.explainTerms(pw) //
+                .itemIf("constants", constants, !constants.isEmpty()) //
+                .itemIf("groups", groups, !groups.isEmpty());
     }
 
     @Override
@@ -130,7 +130,7 @@ public class OLAPWindowRel extends Window implements OLAPRel {
     @Override
     public boolean hasSubQuery() {
         for (RelNode child : getInputs()) {
-            if (((OLAPRel)child).hasSubQuery()) {
+            if (((OLAPRel) child).hasSubQuery()) {
                 return true;
             }
         }
