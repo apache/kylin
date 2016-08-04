@@ -44,7 +44,7 @@ public class HadoopUtil {
     public static Configuration getCurrentConfiguration() {
         if (hadoopConfig.get() == null) {
             Configuration conf = healSickConfig(new Configuration());
-            hadoopConfig.set(conf);
+            // do not cache this conf, or will affect following mr jobs
             logger.info("The conf for current mapper will be " + System.identityHashCode(conf));
             return conf;
         }
