@@ -30,7 +30,6 @@
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
         <version>1.5.4-SNAPSHOT</version>
-
     </parent>
 
     <dependencies>
@@ -118,13 +117,6 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-server-base</artifactId>
             <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- depends on kylin-jdbc just for running jdbc test cases in server module -->
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-jdbc</artifactId>
             <scope>test</scope>
         </dependency>
 
