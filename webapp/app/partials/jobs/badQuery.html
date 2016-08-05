@@ -49,10 +49,11 @@
       ng-class="{accordion:true}" ng-click="bqstate.selectedQuery = bquery"
       style="cursor: pointer"
       class="{{bquery==bqstate.selectedQuery? 'tr-highlight': ''}} table-bordered">
-      <td style="max-width: 350px;word-wrap: break-word;word-break: normal;">
+      <td style="max-width: 200px;word-wrap: break-word;word-break: normal;">
         {{bquery.server}}
       </td>
-      <td>{{bquery.sql}}</td>
+      <td>{{bquery.user}}</td>
+      <td style="max-width: 350px;word-wrap: break-word;word-break: normal;">{{bquery.sql}}</td>
       <td>
         {{bquery.adj}}
       </td>

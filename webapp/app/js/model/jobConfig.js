@@ -41,6 +41,7 @@ KylinApp.constant('jobConfig', {
   ],
   queryitems: [
   {attr: 'server', name: 'Server'},
+  {attr: 'user', name: 'User'},
   {attr: 'sql', name: 'Sql'},
   {attr: 'adj', name: 'Description'},
   {attr: 'running_seconds', name: 'Running Seconds'},
