@@ -52,7 +52,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
         BadQueryDetector badQueryDetector = new BadQueryDetector(alertRunningSec * 1000, alertMB, alertRunningSec);
         badQueryDetector.registerNotifier(new BadQueryDetector.Notifier() {
             @Override
-            public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, Thread t) {
+            public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
                 alerts.add(new String[] { adj, sql });
             }
         });
@@ -63,7 +63,7 @@ public class BadQueryDetectorTest extends LocalFileMetadataTestCase {
 
             SQLRequest sqlRequest = new SQLRequest();
             sqlRequest.setSql(mockSql);
-            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest);
+            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, "user");
 
             // make sure bad query check happens twice
             Thread.sleep((alertRunningSec * 2 + 1) * 1000);

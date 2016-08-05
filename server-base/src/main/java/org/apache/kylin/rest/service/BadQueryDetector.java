@@ -39,14 +39,13 @@ import com.google.common.collect.Maps;
 
 public class BadQueryDetector extends Thread {
 
+    public static final int ONE_MB = 1024 * 1024;
     private static final Logger logger = LoggerFactory.getLogger(BadQueryDetector.class);
-
     private final ConcurrentMap<Thread, Entry> runningQueries = Maps.newConcurrentMap();
     private final long detectionInterval;
     private final int alertMB;
     private final int alertRunningSec;
     private KylinConfig kylinConfig;
-
     private ArrayList<Notifier> notifiers = new ArrayList<Notifier>();
 
     public BadQueryDetector() {
@@ -71,6 +70,20 @@ public class BadQueryDetector extends Thread {
         initNotifiers();
     }
 
+    public static long getSystemAvailBytes() {
+        Runtime runtime = Runtime.getRuntime();
+        long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
+        long freeMemory = runtime.freeMemory(); // out of the current heap, how much is free
+        long maxMemory = runtime.maxMemory(); // Max heap VM can use e.g. Xmx setting
+        long usedMemory = totalMemory - freeMemory; // how much of the current heap the VM is using
+        long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
+        return availableMemory;
+    }
+
+    public static int getSystemAvailMB() {
+        return (int) (getSystemAvailBytes() / ONE_MB);
+    }
+
     private void initNotifiers() {
         this.notifiers.add(new LoggerNotifier());
         if (kylinConfig.getBadQueryPersistentEnabled()) {
@@ -82,95 +95,22 @@ public class BadQueryDetector extends Thread {
         notifiers.add(notifier);
     }
 
-    private void notify(String adj, float runningSec, long startTime, String project, String sql, Thread t) {
+    private void notify(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
         for (Notifier notifier : notifiers) {
             try {
-                notifier.badQueryFound(adj, runningSec, startTime, project, sql, t);
+                notifier.badQueryFound(adj, runningSec, startTime, project, sql, user, t);
             } catch (Exception e) {
                 logger.error("", e);
             }
         }
     }
 
-    public interface Notifier {
-        void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, Thread t);
-    }
-
-    private class LoggerNotifier implements Notifier {
-        @Override
-        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, Thread t) {
-            logger.info(adj + " query has been running " + runningSec + " seconds (project:" + project + ", thread: 0x" + Long.toHexString(t.getId()) + ") -- " + sql);
-        }
-    }
-
-    private class PersistenceNotifier implements Notifier {
-        BadQueryHistoryManager badQueryManager = BadQueryHistoryManager.getInstance(kylinConfig);
-        String serverHostname;
-        NavigableSet<Pair<Long, String>> cacheQueue = new TreeSet<>(new Comparator<Pair<Long, String>>() {
-            @Override
-            public int compare(Pair<Long, String> o1, Pair<Long, String> o2) {
-                if (o1.equals(o2)) {
-                    return 0;
-                } else if (o1.getFirst().equals(o2.getFirst())) {
-                    return o2.getSecond().compareTo(o2.getSecond());
-                } else {
-                    return (int) (o1.getFirst() - o2.getFirst());
-                }
-            }
-        });
-
-        public PersistenceNotifier() {
-            try {
-                serverHostname = InetAddress.getLocalHost().getHostName();
-            } catch (UnknownHostException e) {
-                serverHostname = "Unknow";
-                logger.warn("Error in get current hostname.", e);
-            }
-        }
-
-        @Override
-        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, Thread t) {
-            try {
-                long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 30;
-                Pair<Long, String> sqlPair = new Pair<>(startTime, sql);
-                if (!cacheQueue.contains(sqlPair)) {
-                    badQueryManager.addEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), project);
-                    cacheQueue.add(sqlPair);
-                    while (!cacheQueue.isEmpty() && (System.currentTimeMillis() - cacheQueue.first().getFirst() > cachingSeconds * 1000 || cacheQueue.size() > kylinConfig.getBadQueryHistoryNum() * 3)) {
-                        cacheQueue.pollFirst();
-                    }
-                } else {
-                    badQueryManager.updateEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), project);
-                }
-            } catch (IOException e) {
-                logger.error("Error in bad query persistence.", e);
-            }
-        }
-    }
-
-    public void queryStart(Thread thread, SQLRequest sqlRequest) {
-        runningQueries.put(thread, new Entry(sqlRequest, thread));
+    public void queryStart(Thread thread, SQLRequest sqlRequest, String user) {
+        runningQueries.put(thread, new Entry(sqlRequest, user, thread));
     }
 
     public void queryEnd(Thread thread) {
         runningQueries.remove(thread);
-    }
-
-    private class Entry implements Comparable<Entry> {
-        final SQLRequest sqlRequest;
-        final long startTime;
-        final Thread thread;
-
-        Entry(SQLRequest sqlRequest, Thread thread) {
-            this.sqlRequest = sqlRequest;
-            this.startTime = System.currentTimeMillis();
-            this.thread = thread;
-        }
-
-        @Override
-        public int compareTo(Entry o) {
-            return (int) (this.startTime - o.startTime);
-        }
     }
 
     public void run() {
@@ -199,7 +139,7 @@ public class BadQueryDetector extends Thread {
         for (Entry e : entries) {
             float runningSec = (float) (now - e.startTime) / 1000;
             if (runningSec >= alertRunningSec) {
-                notify("Slow", runningSec, e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.thread);
+                notify("Slow", runningSec, e.startTime, e.sqlRequest.getProject(), e.sqlRequest.getSql(), e.user, e.thread);
                 dumpStackTrace(e.thread);
             } else {
                 break; // entries are sorted by startTime
@@ -229,20 +169,79 @@ public class BadQueryDetector extends Thread {
         logger.info(buf.toString());
     }
 
-    public static final int ONE_MB = 1024 * 1024;
-
-    public static long getSystemAvailBytes() {
-        Runtime runtime = Runtime.getRuntime();
-        long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
-        long freeMemory = runtime.freeMemory(); // out of the current heap, how much is free
-        long maxMemory = runtime.maxMemory(); // Max heap VM can use e.g. Xmx setting
-        long usedMemory = totalMemory - freeMemory; // how much of the current heap the VM is using
-        long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
-        return availableMemory;
+    public interface Notifier {
+        void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t);
     }
 
-    public static int getSystemAvailMB() {
-        return (int) (getSystemAvailBytes() / ONE_MB);
+    private class LoggerNotifier implements Notifier {
+        @Override
+        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
+            logger.info("{} query has been running {} seconds (project:{}, thread: 0x{}, user:{}) -- {}", adj, runningSec, project, Long.toHexString(t.getId()), user, sql);
+        }
+    }
+
+    private class PersistenceNotifier implements Notifier {
+        BadQueryHistoryManager badQueryManager = BadQueryHistoryManager.getInstance(kylinConfig);
+        String serverHostname;
+        NavigableSet<Pair<Long, String>> cacheQueue = new TreeSet<>(new Comparator<Pair<Long, String>>() {
+            @Override
+            public int compare(Pair<Long, String> o1, Pair<Long, String> o2) {
+                if (o1.equals(o2)) {
+                    return 0;
+                } else if (o1.getFirst().equals(o2.getFirst())) {
+                    return o2.getSecond().compareTo(o2.getSecond());
+                } else {
+                    return (int) (o1.getFirst() - o2.getFirst());
+                }
+            }
+        });
+
+        public PersistenceNotifier() {
+            try {
+                serverHostname = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                serverHostname = "Unknow";
+                logger.warn("Error in get current hostname.", e);
+            }
+        }
+
+        @Override
+        public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
+            try {
+                long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 30;
+                Pair<Long, String> sqlPair = new Pair<>(startTime, sql);
+                if (!cacheQueue.contains(sqlPair)) {
+                    badQueryManager.addEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), user, project);
+                    cacheQueue.add(sqlPair);
+                    while (!cacheQueue.isEmpty() && (System.currentTimeMillis() - cacheQueue.first().getFirst() > cachingSeconds * 1000 || cacheQueue.size() > kylinConfig.getBadQueryHistoryNum() * 3)) {
+                        cacheQueue.pollFirst();
+                    }
+                } else {
+                    badQueryManager.updateEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), user, project);
+                }
+            } catch (IOException e) {
+                logger.error("Error in bad query persistence.", e);
+            }
+        }
+    }
+
+    private class Entry implements Comparable<Entry> {
+        final SQLRequest sqlRequest;
+        final long startTime;
+        final Thread thread;
+        final String user;
+
+        Entry(SQLRequest sqlRequest, String user, Thread thread) {
+            this.sqlRequest = sqlRequest;
+            this.startTime = System.currentTimeMillis();
+            this.thread = thread;
+            this.user = user;
+        }
+
+        @Override
+        public int compareTo(Entry o) {
+            return (int) (this.startTime - o.startTime);
+        }
     }
 
 }

@@ -118,7 +118,8 @@ public class QueryService extends BasicService {
 
     public SQLResponse query(SQLRequest sqlRequest) throws Exception {
         try {
-            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest);
+            final String user = SecurityContextHolder.getContext().getAuthentication().getName();
+            badQueryDetector.queryStart(Thread.currentThread(), sqlRequest, user);
 
             return queryWithSqlMassage(sqlRequest);
 
