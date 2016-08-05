@@ -26,7 +26,7 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.gridtable.GTBuilder;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.UnitTestSupport;
@@ -84,7 +84,7 @@ public class ConcurrentDiskStoreTest extends LocalFileMetadataTestCase {
             t[i] = new Thread() {
                 public void run() {
                     try {
-                        IGTScanner scanner = table.scan(new GTScanRequest(table.getInfo(), null, null, null));
+                        IGTScanner scanner = table.scan(new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
                         int i = 0;
                         for (GTRecord r : scanner) {
                             assertEquals(data.get(i++), r);

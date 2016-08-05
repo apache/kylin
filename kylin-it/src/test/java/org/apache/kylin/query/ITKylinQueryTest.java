@@ -35,6 +35,7 @@ import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
+import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
@@ -123,7 +124,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleExecuteQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_tableau/query20.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/temp/query01.sql";
 
         File sqlFile = new File(queryFileName);
         String sql = getTextFromFile(sqlFile);
@@ -187,7 +188,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testPreciselyDistinctCountQuery() throws Exception {
         if ("left".equalsIgnoreCase(joinType)) {
-            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_precisely", null, true);
+            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/temp", null, true);
         }
     }
 
@@ -254,6 +255,13 @@ public class ITKylinQueryTest extends KylinTestBase {
     public void testLimitEnabled() throws Exception {
         runSqlFile(getQueryFolderPrefix() + "src/test/resources/query/sql_optimize/enable-limit01.sql");
         assertLimitWasEnabled();
+    }
+
+    @Test
+    public void testLimitCorrectness() throws Exception {
+        if (HBaseStorage.overwriteStorageQuery == null) {//v1 query engine will not work
+            execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
+        }
     }
 
     @Test

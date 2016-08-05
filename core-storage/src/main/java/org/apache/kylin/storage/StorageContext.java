@@ -104,6 +104,10 @@ public class StorageContext {
         return this.enableLimit;
     }
 
+    public int getStoragePushDownLimit() {
+        return this.isLimitEnabled() ? this.getOffset() + this.getLimit() : Integer.MAX_VALUE;
+    }
+    
     public void markSort() {
         this.hasSort = true;
     }

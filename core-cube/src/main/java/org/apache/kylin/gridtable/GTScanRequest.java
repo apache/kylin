@@ -57,20 +57,14 @@ public class GTScanRequest {
     private String[] aggrMetricsFuncs;
 
     // hint to storage behavior
-    private boolean allowPreAggregation = true;
-    private double aggrCacheGB = 0; // 0 means no row/memory limit; positive means memory limit in GB; negative means row limit
+    private boolean allowStorageAggregation;
+    private double aggCacheMemThreshold;
+    private int storageScanRowNumThreshold;
+    private int storagePushDownLimit;
 
-    public GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet columns, TupleFilter filterPushDown) {
-        this(info, ranges, columns, null, null, null, filterPushDown, true, 0);
-    }
-
-    public GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
-            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown) {
-        this(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, true, 0);
-    }
-
-    public GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
-            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, boolean allowPreAggregation, double aggrCacheGB) {
+    GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
+            ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, boolean allowStorageAggregation, //
+            double aggCacheMemThreshold, int storageScanRowNumThreshold, int storagePushDownLimit) {
         this.info = info;
         if (ranges == null) {
             this.ranges = Lists.newArrayList(new GTScanRange(new GTRecord(info), new GTRecord(info)));
@@ -84,8 +78,10 @@ public class GTScanRequest {
         this.aggrMetrics = aggrMetrics;
         this.aggrMetricsFuncs = aggrMetricsFuncs;
 
-        this.allowPreAggregation = allowPreAggregation;
-        this.aggrCacheGB = aggrCacheGB;
+        this.allowStorageAggregation = allowStorageAggregation;
+        this.aggCacheMemThreshold = aggCacheMemThreshold;
+        this.storageScanRowNumThreshold = storageScanRowNumThreshold;
+        this.storagePushDownLimit = storagePushDownLimit;
 
         validate(info);
     }
@@ -143,7 +139,7 @@ public class GTScanRequest {
     }
 
     public IGTScanner decorateScanner(IGTScanner scanner) throws IOException {
-        return decorateScanner(scanner, true, true);
+        return decorateScanner(scanner, true, true, Long.MAX_VALUE);
     }
 
     /**
@@ -152,7 +148,7 @@ public class GTScanRequest {
      * <p/>
      * Refer to CoprocessorBehavior for explanation
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean doFilter, boolean doAggr) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean doFilter, boolean doAggr, long deadline) throws IOException {
         IGTScanner result = scanner;
         if (!doFilter) { //Skip reading this section if you're not profiling! 
             int scanned = lookAndForget(result);
@@ -169,11 +165,11 @@ public class GTScanRequest {
                 return new EmptyGTScanner(scanned);
             }
 
-            if (!this.allowPreAggregation) {
+            if (!this.isAllowStorageAggregation()) {
                 logger.info("pre aggregation is not beneficial, skip it");
             } else if (this.hasAggregation()) {
                 logger.info("pre aggregating results before returning");
-                result = new GTAggregateScanner(result, this);
+                result = new GTAggregateScanner(result, this, deadline);
             } else {
                 logger.info("has no aggregation, skip it");
             }
@@ -235,6 +231,10 @@ public class GTScanRequest {
         return filterPushDown;
     }
 
+    public ImmutableBitSet getDimensions() {
+        return this.getColumns().andNot(this.getAggrMetrics());
+    }
+
     public ImmutableBitSet getAggrGroupBy() {
         return aggrGroupBy;
     }
@@ -247,34 +247,41 @@ public class GTScanRequest {
         return aggrMetricsFuncs;
     }
 
-    public boolean isAllowPreAggregation() {
-        return allowPreAggregation;
+    public boolean isAllowStorageAggregation() {
+        return allowStorageAggregation;
     }
 
-    public void setAllowPreAggregation(boolean allowPreAggregation) {
-        this.allowPreAggregation = allowPreAggregation;
+    public void setAllowStorageAggregation(boolean allowStorageAggregation) {
+        this.allowStorageAggregation = allowStorageAggregation;
     }
 
-    public double getAggrCacheGB() {
-        if (aggrCacheGB < 0)
+    public double getAggCacheMemThreshold() {
+        if (aggCacheMemThreshold < 0)
             return 0;
         else
-            return aggrCacheGB;
+            return aggCacheMemThreshold;
     }
 
-    public void setAggrCacheGB(double gb) {
-        this.aggrCacheGB = gb;
+    public void setAggCacheMemThreshold(double gb) {
+        this.aggCacheMemThreshold = gb;
     }
 
-    public int getRowLimit() {
-        if (aggrCacheGB < 0)
-            return (int) -aggrCacheGB;
-        else
-            return 0;
+    public int getStorageScanRowNumThreshold() {
+        return storageScanRowNumThreshold;
     }
 
-    public void setRowLimit(int limit) {
-        aggrCacheGB = -limit;
+    public void setStorageScanRowNumThreshold(int storageScanRowNumThreshold) {
+        logger.info("storageScanRowNumThreshold is set to " + storageScanRowNumThreshold);
+        this.storageScanRowNumThreshold = storageScanRowNumThreshold;
+    }
+
+    public int getStoragePushDownLimit() {
+        return this.storagePushDownLimit;
+    }
+
+    public void setStoragePushDownLimit(int limit) {
+        logger.info("storagePushDownLimit is set to " + storagePushDownLimit);
+        this.storagePushDownLimit = limit;
     }
 
     public List<Integer> getRequiredMeasures() {
@@ -323,8 +330,10 @@ public class GTScanRequest {
             ImmutableBitSet.serializer.serialize(value.aggrGroupBy, out);
             ImmutableBitSet.serializer.serialize(value.aggrMetrics, out);
             BytesUtil.writeAsciiStringArray(value.aggrMetricsFuncs, out);
-            BytesUtil.writeVInt(value.allowPreAggregation ? 1 : 0, out);
-            out.putDouble(value.aggrCacheGB);
+            BytesUtil.writeVInt(value.allowStorageAggregation ? 1 : 0, out);
+            out.putDouble(value.aggCacheMemThreshold);
+            BytesUtil.writeVInt(value.storageScanRowNumThreshold, out);
+            BytesUtil.writeVInt(value.storagePushDownLimit, out);
         }
 
         @Override
@@ -353,8 +362,13 @@ public class GTScanRequest {
             String[] sAggrMetricFuncs = BytesUtil.readAsciiStringArray(in);
             boolean sAllowPreAggr = (BytesUtil.readVInt(in) == 1);
             double sAggrCacheGB = in.getDouble();
+            int storageScanRowNumThreshold = BytesUtil.readVInt(in);
+            int storagePushDownLimit = BytesUtil.readVInt(in);
 
-            return new GTScanRequest(sInfo, sRanges, sColumns, sAggGroupBy, sAggrMetrics, sAggrMetricFuncs, sGTFilter, sAllowPreAggr, sAggrCacheGB);
+            return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns).//
+            setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs).//
+            setFilterPushDown(sGTFilter).setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB).//
+            setStorageScanRowNumThreshold(storageScanRowNumThreshold).setStoragePushDownLimit(storagePushDownLimit).createGTScanRequest();
         }
 
         private void serializeGTRecord(GTRecord gtRecord, ByteBuffer out) {

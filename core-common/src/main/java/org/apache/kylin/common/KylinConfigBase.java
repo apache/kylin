@@ -23,9 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.SortedSet;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -468,6 +468,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public float getHBaseHFileSizeGB() {
         return Float.parseFloat(getOptional("kylin.hbase.hfile.size.gb", "2.0"));
+    }
+
+    public int getStoragePushDownLimitMax() {
+        return Integer.parseInt(getOptional("kylin.query.pushdown.limit.max", "10000"));
     }
 
     public int getScanThreshold() {

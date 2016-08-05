@@ -55,6 +55,11 @@ public class Tuple implements ITuple {
     }
 
     @Override
+    public Object clone() {
+        return makeCopy();
+    }
+
+    @Override
     public ITuple makeCopy() {
         Tuple ret = new Tuple(this.info);
         for (int i = 0; i < this.values.length; ++i) {

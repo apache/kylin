@@ -34,6 +34,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -61,6 +62,33 @@ import com.google.common.io.Files;
 /**
  */
 public class KylinTestBase {
+
+    class ObjectArray {
+        Object[] data;
+
+        public ObjectArray(Object[] data) {
+            this.data = data;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            ObjectArray that = (ObjectArray) o;
+
+            // Probably incorrect - comparing Object[] arrays with Arrays.equals
+            return Arrays.equals(data, that.data);
+
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(data);
+        }
+    }
 
     // Hack for the different constant integer type between optiq (INTEGER) and
     // h2 (BIGINT)
@@ -355,6 +383,50 @@ public class KylinTestBase {
                 zeroResultQueries.add(sql);
             }
         }
+    }
+
+    protected void execLimitAndValidate(String queryFolder) throws Exception {
+        printInfo("---------- test folder: " + new File(queryFolder).getAbsolutePath());
+
+        int appendLimitQueries = 0;
+        List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
+        for (File sqlFile : sqlFiles) {
+            String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
+            String sql = getTextFromFile(sqlFile);
+
+            String sqlWithLimit;
+            if (sql.toLowerCase().contains("limit ")) {
+                sqlWithLimit = sql;
+            } else {
+                sqlWithLimit = sql + " limit 5";
+                appendLimitQueries++;
+            }
+
+            // execute Kylin
+            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sqlWithLimit, false);
+
+            // execute H2
+            printInfo("Query Result from H2 - " + queryName);
+            H2Connection h2Conn = new H2Connection(h2Connection, null);
+            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
+            ITable h2Table = executeQuery(h2Conn, queryName, sql, false);
+
+            try {
+                HackedDbUnitAssert hackedDbUnitAssert = new HackedDbUnitAssert();
+                hackedDbUnitAssert.assertEquals(h2Table, kylinTable);
+            } catch (Throwable t) {
+                printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
+                throw t;
+            }
+
+            compQueryCount++;
+            if (kylinTable.getRowCount() == 0) {
+                zeroResultQueries.add(sql);
+            }
+        }
+        printInfo("Queries appended with limit: " + appendLimitQueries);
     }
 
     protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {

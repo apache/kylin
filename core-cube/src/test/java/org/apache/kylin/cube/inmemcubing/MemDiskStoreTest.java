@@ -27,7 +27,7 @@ import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.gridtable.GTBuilder;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.UnitTestSupport;
@@ -100,7 +100,7 @@ public class MemDiskStoreTest extends LocalFileMetadataTestCase {
         }
         builder.close();
 
-        IGTScanner scanner = table.scan(new GTScanRequest(info, null, null, null));
+        IGTScanner scanner = table.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
         int i = 0;
         for (GTRecord r : scanner) {
             assertEquals(data.get(i++), r);

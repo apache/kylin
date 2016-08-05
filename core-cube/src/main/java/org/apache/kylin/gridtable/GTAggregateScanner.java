@@ -63,24 +63,28 @@ public class GTAggregateScanner implements IGTScanner {
     final IGTScanner inputScanner;
     final AggregationCache aggrCache;
     final long spillThreshold;
+    final int storagePushDownLimit;//default to be Int.MAX
+    final long deadline;
 
     private int aggregatedRowCount = 0;
     private MemoryWaterLevel memTracker;
     private boolean[] aggrMask;
 
-    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
+    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, long deadline) {
         if (!req.hasAggregation())
             throw new IllegalStateException();
 
         this.info = inputScanner.getInfo();
-        this.dimensions = req.getColumns().andNot(req.getAggrMetrics());
+        this.dimensions = req.getDimensions();
         this.groupBy = req.getAggrGroupBy();
         this.metrics = req.getAggrMetrics();
         this.metricsAggrFuncs = req.getAggrMetricsFuncs();
         this.inputScanner = inputScanner;
         this.aggrCache = new AggregationCache();
-        this.spillThreshold = (long) (req.getAggrCacheGB() * MemoryBudgetController.ONE_GB);
+        this.spillThreshold = (long) (req.getAggCacheMemThreshold() * MemoryBudgetController.ONE_GB);
         this.aggrMask = new boolean[metricsAggrFuncs.length];
+        this.storagePushDownLimit = req.getStoragePushDownLimit();
+        this.deadline = deadline;
 
         Arrays.fill(aggrMask, true);
     }
@@ -133,8 +137,25 @@ public class GTAggregateScanner implements IGTScanner {
     public Iterator<GTRecord> iterator() {
         long count = 0;
         for (GTRecord r : inputScanner) {
+
             count++;
-            aggrCache.aggregate(r);
+
+            if (getNumOfSpills() == 0) {
+                //check limit
+                boolean ret = aggrCache.aggregate(r, storagePushDownLimit);
+
+                if (!ret) {
+                    logger.info("abort reading inputScanner because storage push down limit is hit");
+                    break;//limit is hit
+                }
+            } else {//else if dumps is not empty, it means a lot of row need aggregated, so it's less likely that limit clause is helping 
+                aggrCache.aggregate(r, Integer.MAX_VALUE);
+            }
+
+            //check deadline
+            if (count % 10000 == 1 && System.currentTimeMillis() > deadline) {
+                throw new GTScanTimeoutException("Timeout in GTAggregateScanner with scanned count " + count);
+            }
         }
         logger.info("GTAggregateScanner input rows: " + count);
         return aggrCache.iterator();
@@ -241,7 +262,7 @@ public class GTAggregateScanner implements IGTScanner {
             return result;
         }
 
-        void aggregate(GTRecord r) {
+        boolean aggregate(GTRecord r, int stopForLimit) {
             if (++aggregatedRowCount % 100000 == 0) {
                 if (memTracker != null) {
                     memTracker.markHigh();
@@ -257,6 +278,12 @@ public class GTAggregateScanner implements IGTScanner {
             final byte[] key = createKey(r);
             MeasureAggregator[] aggrs = aggBufMap.get(key);
             if (aggrs == null) {
+
+                //for storage push down limit
+                if (aggBufMap.size() >= stopForLimit) {
+                    return false;
+                }
+
                 aggrs = newAggregators();
                 aggBufMap.put(key, aggrs);
             }
@@ -267,6 +294,7 @@ public class GTAggregateScanner implements IGTScanner {
                     aggrs[i].aggregate(metrics);
                 }
             }
+            return true;
         }
 
         private void spillBuffMap() throws RuntimeException {

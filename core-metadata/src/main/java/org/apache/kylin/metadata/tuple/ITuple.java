@@ -28,7 +28,7 @@ import org.apache.kylin.metadata.model.TblColRef;
  * 
  * @author yangli9
  */
-public interface ITuple extends IEvaluatableTuple {
+public interface ITuple extends IEvaluatableTuple, Cloneable {
 
     List<String> getAllFields();
 

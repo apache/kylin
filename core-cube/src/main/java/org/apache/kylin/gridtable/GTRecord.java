@@ -20,6 +20,7 @@ package org.apache.kylin.gridtable;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -27,7 +28,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 
 import com.google.common.base.Preconditions;
 
-public class GTRecord implements Comparable<GTRecord> {
+public class GTRecord implements Comparable<GTRecord>, Cloneable {
 
     final transient GTInfo info;
     final ByteArray[] cols;
@@ -52,6 +53,11 @@ public class GTRecord implements Comparable<GTRecord> {
         for (int i = 0; i < other.cols.length; i++) {
             this.cols[i] = other.cols[i].copy();
         }
+    }
+
+    @Override
+    public Object clone() {
+        return new GTRecord(this);
     }
 
     public GTInfo getInfo() {
@@ -189,12 +195,33 @@ public class GTRecord implements Comparable<GTRecord> {
 
     @Override
     public int compareTo(GTRecord o) {
+        return compareToInternal(o, info.colAll);
+    }
+
+    public int compareToOnPrimaryKey(GTRecord o) {
+        return compareToInternal(o, info.primaryKey);
+    }
+
+    public static Comparator<GTRecord> getPrimaryKeyComparator() {
+        return new Comparator<GTRecord>() {
+            @Override
+            public int compare(GTRecord o1, GTRecord o2) {
+                if (o1 == null || o2 == null) {
+                    throw new IllegalStateException("Cannot handle null");
+                }
+
+                return o1.compareToOnPrimaryKey(o2);
+            }
+        };
+    }
+
+    private int compareToInternal(GTRecord o, ImmutableBitSet participateCols) {
         assert this.info == o.info; // reference equal for performance
         IGTComparator comparator = info.codeSystem.getComparator();
 
         int comp = 0;
-        for (int i = 0; i < info.colAll.trueBitCount(); i++) {
-            int c = info.colAll.trueBitAt(i);
+        for (int i = 0; i < participateCols.trueBitCount(); i++) {
+            int c = participateCols.trueBitAt(i);
             comp = comparator.compare(cols[c], o.cols[c]);
             if (comp != 0)
                 return comp;

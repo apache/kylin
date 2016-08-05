@@ -29,7 +29,7 @@ import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTInfo.Builder;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTSampleCodeSystem;
-import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTWriter;
 import org.apache.kylin.gridtable.benchmark.SortedGTRecordGenerator;
@@ -109,7 +109,7 @@ public class HBaseScannerBenchmark {
     private void testScanRaw(String msg) throws IOException {
         long t = System.currentTimeMillis();
 
-        IGTScanner scan = simpleStore.scan(new GTScanRequest(info, null, null, null));
+        IGTScanner scan = simpleStore.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
         ResultScanner innerScanner = ((SimpleHBaseStore.Reader) scan).getHBaseScanner();
         int count = 0;
         for (Result r : innerScanner) {
@@ -125,7 +125,7 @@ public class HBaseScannerBenchmark {
     private void testScanRecords(String msg) throws IOException {
         long t = System.currentTimeMillis();
 
-        IGTScanner scan = simpleStore.scan(new GTScanRequest(info, null, null, null));
+        IGTScanner scan = simpleStore.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
         int count = 0;
         for (GTRecord rec : scan) {
             count++;

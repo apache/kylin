@@ -21,153 +21,77 @@ package org.apache.kylin.storage.gtrecord;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
-import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 public class SequentialCubeTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(SequentialCubeTupleIterator.class);
 
-    protected final Cuboid cuboid;
-    protected final Set<TblColRef> selectedDimensions;
-    protected final Set<FunctionDesc> selectedMetrics;
-    protected final TupleInfo tupleInfo;
-    protected final Tuple tuple;
-    protected final Iterator<CubeSegmentScanner> scannerIterator;
-    protected final StorageContext context;
-
-    protected CubeSegmentScanner curScanner;
-    protected Iterator<GTRecord> curRecordIterator;
-    protected CubeTupleConverter curTupleConverter;
-    protected Tuple next;
-
-    private List<IAdvMeasureFiller> advMeasureFillers;
-    private int advMeasureRowsRemaining;
-    private int advMeasureRowIndex;
+    protected List<CubeSegmentScanner> scanners;
+    protected List<SegmentCubeTupleIterator> segmentCubeTupleIterators;
+    protected Iterator<ITuple> tupleIterator;
+    protected final int storagePushDownLimit;
+    protected StorageContext context;
 
     private int scanCount;
     private int scanCountDelta;
 
     public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
             Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context) {
-        this.cuboid = cuboid;
-        this.selectedDimensions = selectedDimensions;
-        this.selectedMetrics = selectedMetrics;
-        this.tupleInfo = returnTupleInfo;
-        this.tuple = new Tuple(returnTupleInfo);
-        this.scannerIterator = scanners.iterator();
         this.context = context;
+        this.scanners = scanners;
+
+        segmentCubeTupleIterators = Lists.newArrayList();
+        for (CubeSegmentScanner scanner : scanners) {
+            segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context));
+        }
+        
+        this.storagePushDownLimit = context.getStoragePushDownLimit();
+        if (storagePushDownLimit > KylinConfig.getInstanceFromEnv().getStoragePushDownLimitMax()) {
+            //normal case
+            tupleIterator = Iterators.concat(segmentCubeTupleIterators.iterator());
+        } else {
+            //query with limit
+            Iterator<Iterator<ITuple>> transformed = Iterators.transform(segmentCubeTupleIterators.iterator(), new Function<SegmentCubeTupleIterator, Iterator<ITuple>>() {
+                @Nullable
+                @Override
+                public Iterator<ITuple> apply(@Nullable SegmentCubeTupleIterator input) {
+                    return input;
+                }
+            });
+            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, storagePushDownLimit, segmentCubeTupleIterators.get(0).getCubeTupleConverter().getTupleDimensionComparator()).getIterator();
+        }
     }
 
     @Override
     public boolean hasNext() {
-        if (next != null)
-            return true;
-
-        if (hitLimitAndThreshold())
-            return false;
-
-        // consume any left rows from advanced measure filler
-        if (advMeasureRowsRemaining > 0) {
-            for (IAdvMeasureFiller filler : advMeasureFillers) {
-                filler.fillTuple(tuple, advMeasureRowIndex);
-            }
-            advMeasureRowIndex++;
-            advMeasureRowsRemaining--;
-            next = tuple;
-            return true;
-        }
-
-        // get the next GTRecord
-        if (curScanner == null) {
-            if (scannerIterator.hasNext()) {
-                curScanner = scannerIterator.next();
-                curRecordIterator = curScanner.iterator();
-                if (curRecordIterator.hasNext()) {
-                    //if the segment does not has any tuples, don't bother to create a converter
-                    curTupleConverter = new CubeTupleConverter(curScanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
-                }
-            } else {
-                return false;
-            }
-        }
-        if (curRecordIterator.hasNext() == false) {
-            close(curScanner);
-            curScanner = null;
-            curRecordIterator = null;
-            curTupleConverter = null;
-            return hasNext();
-        }
-
-        // now we have a GTRecord
-        GTRecord curRecord = curRecordIterator.next();
-
-        // translate into tuple
-        advMeasureFillers = curTupleConverter.translateResult(curRecord, tuple);
-
-        // the simple case
-        if (advMeasureFillers == null) {
-            next = tuple;
-            return true;
-        }
-
-        // advanced measure filling, like TopN, will produce multiple tuples out of one record
-        advMeasureRowsRemaining = -1;
-        for (IAdvMeasureFiller filler : advMeasureFillers) {
-            if (advMeasureRowsRemaining < 0)
-                advMeasureRowsRemaining = filler.getNumOfRows();
-            if (advMeasureRowsRemaining != filler.getNumOfRows())
-                throw new IllegalStateException();
-        }
-        if (advMeasureRowsRemaining < 0)
-            throw new IllegalStateException();
-
-        advMeasureRowIndex = 0;
-        return hasNext();
-    }
-
-    private boolean hitLimitAndThreshold() {
-        // check limit
-        if (context.isLimitEnabled() && scanCount >= context.getLimit() + context.getOffset()) {
-            return true;
-        }
-        // check threshold
-        if (scanCount >= context.getThreshold()) {
-            throw new ScanOutOfLimitException("Scan row count exceeded threshold: " + context.getThreshold() + ", please add filter condition to narrow down backend scan range, like where clause.");
-        }
-        return false;
+        return tupleIterator.hasNext();
     }
 
     @Override
     public ITuple next() {
-        // fetch next record
-        if (next == null) {
-            hasNext();
-            if (next == null)
-                throw new NoSuchElementException();
-        }
-
         scanCount++;
         if (++scanCountDelta >= 1000)
             flushScanCountDelta();
 
-        ITuple result = next;
-        next = null;
-        return result;
+        return tupleIterator.next();
     }
 
     @Override
@@ -181,11 +105,8 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         // close all the remaining segmentIterator
         flushScanCountDelta();
 
-        if (curScanner != null)
-            close(curScanner);
-
-        while (scannerIterator.hasNext()) {
-            close(scannerIterator.next());
+        for (SegmentCubeTupleIterator iterator : segmentCubeTupleIterators) {
+            iterator.close();
         }
     }
 

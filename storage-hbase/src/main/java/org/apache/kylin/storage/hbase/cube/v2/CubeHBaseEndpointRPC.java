@@ -21,20 +21,11 @@ package org.apache.kylin.storage.hbase.cube.v2;
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DataFormatException;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
@@ -52,7 +43,6 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
@@ -67,8 +57,6 @@ import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.Cub
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.HBaseZeroCopyByteString;
@@ -78,153 +66,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     public static final Logger logger = LoggerFactory.getLogger(CubeHBaseEndpointRPC.class);
 
     private static ExecutorService executorService = new LoggableCachedThreadPool();
-
-    static class ExpectedSizeIterator implements Iterator<byte[]> {
-
-        BlockingQueue<byte[]> queue;
-
-        int expectedSize;
-        int current = 0;
-        long timeout;
-        long timeoutTS;
-        volatile Throwable coprocException;
-
-        public ExpectedSizeIterator(int expectedSize) {
-            this.expectedSize = expectedSize;
-            this.queue = new ArrayBlockingQueue<byte[]>(expectedSize);
-
-            Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
-            this.timeout = hconf.getInt(HConstants.HBASE_CLIENT_RETRIES_NUMBER, 5) * hconf.getInt(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, 60000);
-            this.timeout = Math.max(this.timeout, 5 * 60000);
-            this.timeout *= KylinConfig.getInstanceFromEnv().getCubeVisitTimeoutTimes();
-
-            if (BackdoorToggles.getQueryTimeout() != -1) {
-                this.timeout = BackdoorToggles.getQueryTimeout();
-            }
-
-            this.timeout *= 1.1; // allow for some delay
-
-            logger.info("Timeout for ExpectedSizeIterator is: " + this.timeout);
-
-            this.timeoutTS = System.currentTimeMillis() + this.timeout;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return (current < expectedSize);
-        }
-
-        @Override
-        public byte[] next() {
-            if (current >= expectedSize) {
-                throw new IllegalStateException("Won't have more data");
-            }
-            try {
-                current++;
-                byte[] ret = null;
-
-                while (ret == null && coprocException == null && timeoutTS - System.currentTimeMillis() > 0) {
-                    ret = queue.poll(5000, TimeUnit.MILLISECONDS);
-                }
-
-                if (coprocException != null) {
-                    throw new RuntimeException("Error in coprocessor", coprocException);
-                } else if (ret == null) {
-                    throw new RuntimeException("Timeout visiting cube!");
-                } else {
-                    return ret;
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Error when waiting queue", e);
-            }
-        }
-
-        @Override
-        public void remove() {
-            throw new NotImplementedException();
-        }
-
-        public void append(byte[] data) {
-            try {
-                queue.put(data);
-            } catch (InterruptedException e) {
-                throw new RuntimeException("error when waiting queue", e);
-            }
-        }
-
-        public long getTimeout() {
-            return timeout;
-        }
-
-        public void notifyCoprocException(Throwable ex) {
-            coprocException = ex;
-        }
-    }
-
-    static class EndpointResultsAsGTScanner implements IGTScanner {
-        private GTInfo info;
-        private Iterator<byte[]> blocks;
-        private ImmutableBitSet columns;
-        private long totalScannedCount;
-
-        public EndpointResultsAsGTScanner(GTInfo info, Iterator<byte[]> blocks, ImmutableBitSet columns, long totalScannedCount) {
-            this.info = info;
-            this.blocks = blocks;
-            this.columns = columns;
-            this.totalScannedCount = totalScannedCount;
-        }
-
-        @Override
-        public GTInfo getInfo() {
-            return info;
-        }
-
-        @Override
-        public long getScannedRowCount() {
-            return totalScannedCount;
-        }
-
-        @Override
-        public void close() throws IOException {
-            //do nothing
-        }
-
-        @Override
-        public Iterator<GTRecord> iterator() {
-            return Iterators.concat(Iterators.transform(blocks, new Function<byte[], Iterator<GTRecord>>() {
-                @Nullable
-                @Override
-                public Iterator<GTRecord> apply(@Nullable final byte[] input) {
-
-                    return new Iterator<GTRecord>() {
-                        private ByteBuffer inputBuffer = null;
-                        private GTRecord oneRecord = null;
-
-                        @Override
-                        public boolean hasNext() {
-                            if (inputBuffer == null) {
-                                inputBuffer = ByteBuffer.wrap(input);
-                                oneRecord = new GTRecord(info);
-                            }
-
-                            return inputBuffer.position() < inputBuffer.limit();
-                        }
-
-                        @Override
-                        public GTRecord next() {
-                            oneRecord.loadColumns(columns, inputBuffer);
-                            return oneRecord;
-                        }
-
-                        @Override
-                        public void remove() {
-                            throw new UnsupportedOperationException();
-                        }
-                    };
-                }
-            }));
-        }
-    }
 
     public CubeHBaseEndpointRPC(CubeSegment cubeSeg, Cuboid cuboid, GTInfo fullGTInfo) {
         super(cubeSeg, cuboid, fullGTInfo);
@@ -345,7 +186,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
         builder.setBehavior(toggle);
         builder.setStartTime(System.currentTimeMillis());
-        builder.setTimeout(epResultItr.getTimeout());
+        builder.setTimeout(epResultItr.getRpcTimeout());
         builder.setKylinProperties(kylinConfig.getConfigAsString());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
@@ -407,7 +248,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                     }
 
                     if (abnormalFinish[0]) {
-                        Throwable ex = new RuntimeException(logHeader + "The coprocessor thread stopped itself due to scan timeout, failing current query...");
+                        Throwable ex = new RuntimeException(logHeader + "The coprocessor thread stopped itself due to scan timeout or scan threshold(check region server log), failing current query...");
                         logger.error(logHeader + "Error when visiting cubes by endpoint", ex); // double log coz the query thread may already timeout
                         epResultItr.notifyCoprocException(ex);
                         return;
@@ -416,7 +257,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             });
         }
 
-        return new EndpointResultsAsGTScanner(fullGTInfo, epResultItr, scanRequest.getColumns(), totalScannedCount.get());
+        return new GTBlobScatter(fullGTInfo, epResultItr, scanRequest.getColumns(), totalScannedCount.get(), scanRequest.getStoragePushDownLimit());
     }
 
     private String getStatsString(byte[] region, CubeVisitResponse result) {

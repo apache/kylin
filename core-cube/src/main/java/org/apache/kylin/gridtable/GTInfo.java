@@ -151,7 +151,7 @@ public class GTInfo {
         if (!expected.equals(ref))
             throw new IllegalArgumentException();
     }
-
+    
     void validate() {
         if (codeSystem == null)
             throw new IllegalStateException();

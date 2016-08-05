@@ -48,7 +48,9 @@ import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GTScanExceedThresholdException;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTScanTimeoutException;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.measure.BufferedMeasureEncoder;
@@ -235,13 +237,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             }
 
             if (behavior.ordinal() < CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
-                scanReq.setAggrCacheGB(0); // disable mem check if so told
+                scanReq.setAggCacheMemThreshold(0); // disable mem check if so told
             }
 
             final MutableBoolean scanNormalComplete = new MutableBoolean(true);
-            final long startTime = this.serviceStartTime;
-            final long timeout = request.getTimeout();
-            final int rowLimit = scanReq.getRowLimit();
+            final long deadline = request.getTimeout() + this.serviceStartTime;
+            final long storagePushDownLimit = scanReq.getStoragePushDownLimit();
 
             final CellListIterator cellListIterator = new CellListIterator() {
 
@@ -256,19 +257,13 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
                 @Override
                 public boolean hasNext() {
-                    if (rowLimit > 0 && rowLimit <= counter)
-                        return false;
 
-                    if (counter % 100000 == 1) {
-                        if (System.currentTimeMillis() - startTime > timeout) {
-                            scanNormalComplete.setValue(false);
-                            logger.error("scanner aborted because timeout");
-                            return false;
-                        }
+                    if (counter > scanReq.getStorageScanRowNumThreshold()) {
+                        throw new GTScanExceedThresholdException("Exceed scan threshold at " + counter);
                     }
 
                     if (counter % 100000 == 1) {
-                        logger.info("Scanned " + counter + " rows.");
+                        logger.info("Scanned " + counter + " rows from HBase.");
                     }
                     counter++;
                     return allCellLists.hasNext();
@@ -290,38 +285,47 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             IGTScanner rawScanner = store.scan(scanReq);
             IGTScanner finalScanner = scanReq.decorateScanner(rawScanner, //
                     behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal(), //
-                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal());
+                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal(), deadline);
 
             ByteBuffer buffer = ByteBuffer.allocate(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE);//ByteArrayOutputStream will auto grow
             int finalRowCount = 0;
-            for (GTRecord oneRecord : finalScanner) {
 
-                if (!scanNormalComplete.booleanValue()) {
-                    logger.error("aggregate iterator aborted because input iterator aborts");
-                    break;
-                }
+            try {
+                for (GTRecord oneRecord : finalScanner) {
 
-                if (finalRowCount % 100000 == 1) {
-                    if (System.currentTimeMillis() - startTime > timeout) {
-                        logger.error("aggregate iterator aborted because timeout");
+                    if (finalRowCount > storagePushDownLimit) {
+                        logger.info("The finalScanner aborted because storagePushDownLimit is satisfied");
                         break;
                     }
-                }
 
-                buffer.clear();
-                try {
-                    oneRecord.exportColumns(scanReq.getColumns(), buffer);
-                } catch (BufferOverflowException boe) {
-                    buffer = ByteBuffer.allocate(oneRecord.sizeOf(scanReq.getColumns()) * 2);
-                    oneRecord.exportColumns(scanReq.getColumns(), buffer);
-                }
+                    if (finalRowCount % 100000 == 1) {
+                        if (System.currentTimeMillis() > deadline) {
+                            throw new GTScanTimeoutException("finalScanner timeouts after scanned " + finalRowCount);
+                        }
+                    }
 
-                outputStream.write(buffer.array(), 0, buffer.position());
-                finalRowCount++;
+                    buffer.clear();
+                    try {
+                        oneRecord.exportColumns(scanReq.getColumns(), buffer);
+                    } catch (BufferOverflowException boe) {
+                        buffer = ByteBuffer.allocate(oneRecord.sizeOf(scanReq.getColumns()) * 2);
+                        oneRecord.exportColumns(scanReq.getColumns(), buffer);
+                    }
+
+                    outputStream.write(buffer.array(), 0, buffer.position());
+                    finalRowCount++;
+                }
+            } catch (GTScanTimeoutException e) {
+                scanNormalComplete.setValue(false);
+                logger.info("The cube visit did not finish normally because scan timeout", e);
+            } catch (GTScanExceedThresholdException e) {
+                scanNormalComplete.setValue(false);
+                logger.info("The cube visit did not finish normally because scan num exceeds threshold", e);
+            } finally {
+                finalScanner.close();
             }
-            finalScanner.close();
 
             appendProfileInfo(sb, "agg done");
 

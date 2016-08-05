@@ -101,13 +101,13 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         Set<TblColRef> singleValuesD = findSingleValueColumns(filter);
         boolean exactAggregation = isExactAggregation(cuboid, groups, otherDimsD, singleValuesD, derivedPostAggregation);
         context.setExactAggregation(exactAggregation);
-        context.setNeedStorageAggregation(isNeedStorageAggregation(cuboid, groupsD, singleValuesD, exactAggregation));
 
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
         TupleFilter filterD = translateDerived(filter, groupsD);
 
+        context.setNeedStorageAggregation(isNeedStorageAggregation(cuboid, groupsD, singleValuesD, exactAggregation));
+        enableStoragePushDownLimit(cuboid, groups, derivedPostAggregation, groupsD, filter, sqlDigest.aggregations, context);
         setThreshold(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
-        setLimit(filter, context);
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
@@ -227,6 +227,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         return !isExactAggregation;
     }
 
+    //exact aggregation was introduced back when we had some measures (like holistic distinct count) that is sensitive
+    //to post aggregation. Now that we don't have such measure any more, isExactAggregation should be useless (at least in v2 storage and above)
     public boolean isExactAggregation(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> othersD, Set<TblColRef> singleValuesD, Set<TblColRef> derivedPostAggregation) {
         boolean exact = true;
 
@@ -372,11 +374,44 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
-    private void setLimit(TupleFilter filter, StorageContext context) {
-        boolean goodAggr = context.isExactAggregation();
+    private void enableStoragePushDownLimit(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter, Collection<FunctionDesc> functionDescs, StorageContext context) {
+        boolean possible = true;
+
         boolean goodFilter = filter == null || (TupleFilter.isEvaluableRecursively(filter) && context.isCoprocessorEnabled());
-        boolean goodSort = context.hasSort() == false;
-        if (goodAggr && goodFilter && goodSort) {
+        if (!goodFilter) {
+            possible = false;
+            logger.info("Storage limit push down is impossible because the filter is unevaluatable");
+        }
+
+        boolean goodSort = !context.hasSort();
+        if (!goodSort) {
+            possible = false;
+            logger.info("Storage limit push down is impossible because the query has order by");
+        }
+
+        // derived aggregation is bad, unless expanded columns are already in group by
+        if (!groups.containsAll(derivedPostAggregation)) {
+            possible = false;
+            logger.info("Storage limit push down is impossible because derived column require post aggregation: " + derivedPostAggregation);
+        }
+
+        //if groupsD is clustered at "head" of the rowkey, then limit push down is possible
+        int size = groupsD.size();
+        if (!groupsD.containsAll(cuboid.getColumns().subList(0, size))) {
+            possible = false;
+            logger.info("Storage limit push down is impossible because groupD is not clustered at head, groupsD: " + groupsD //
+                    + " with cuboid columns: " + cuboid.getColumns());
+        }
+
+        //if exists measures like max(cal_dt), then it's not a perfect cuboid match, cannot apply limit
+        for (FunctionDesc functionDesc : functionDescs) {
+            if (functionDesc.isDimensionAsMetric()) {
+                possible = false;
+                logger.info("Storage limit push down is impossible because {} isDimensionAsMetric ", functionDesc);
+            }
+        }
+
+        if (possible) {
             logger.info("Enable limit " + context.getLimit());
             context.enableLimit();
         }
