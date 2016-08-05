@@ -125,6 +125,10 @@ public class ProjectInstance extends RootPersistentEntity {
         this.description = description;
     }
 
+    public void setExtFilters(Set<String> extFilters) {
+        this.extFilters = extFilters;
+    }
+
     public ProjectStatusEnum getStatus() {
         return status;
     }

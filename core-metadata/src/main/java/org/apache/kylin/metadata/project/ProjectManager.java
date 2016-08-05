@@ -191,6 +191,8 @@ public class ProjectManager {
             newProject.recordUpdateTime(System.currentTimeMillis());
             newProject.setRealizationEntries(project.getRealizationEntries());
             newProject.setTables(project.getTables());
+            newProject.setModels(project.getModels());
+            newProject.setExtFilters(project.getExtFilters());
 
             removeProject(project);
             updateProject(newProject);
