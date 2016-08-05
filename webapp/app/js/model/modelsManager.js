@@ -43,7 +43,15 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
                 if(model.uuid){
                   modelPermission.push(
                   AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
-                      model.accessEntities = accessEntities;
+                    model.accessEntities = accessEntities;
+                    try{
+                      if(!model.owner){
+                          model.owner = accessEntities[0].sid.principal;
+                      }
+                    } catch(error){
+                      $log.error("No acl info.");
+                    }
+
                   }).$promise
                   )
                 }

@@ -465,6 +465,7 @@ public class MetadataManager {
         if (dataModelDescMap.containsKey(name))
             throw new IllegalArgumentException("DataModelDesc '" + name + "' already exists");
         ProjectManager.getInstance(config).updateModelToProject(name, projectName);
+        desc.setOwner(owner);
         return saveDataModelDesc(desc);
     }
 

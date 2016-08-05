@@ -51,6 +51,9 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("owner")
+    private String owner;
+
     @JsonProperty("description")
     private String description;
 
@@ -90,6 +93,14 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
     public String getDescription() {

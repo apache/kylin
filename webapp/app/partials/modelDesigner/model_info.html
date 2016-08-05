@@ -44,6 +44,19 @@
                 </div>
             </div>
 
+            <!--Model Name-->
+            <div class="form-group middle-popover" ng-if="state.mode=='view'">
+              <div class="row">
+                <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                  <b>Owner</b>
+                </label>
+
+                <div class="col-xs-12 col-sm-6">
+                  <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.owner}}</span>
+                </div>
+              </div>
+            </div>
+
             <!--Description-->
             <div class="form-group">
                 <div class="row">
