@@ -57,5 +57,4 @@ public interface IRealization extends IStorageAware {
 
     public long getDateRangeEnd();
 
-    public String getModelName();
 }

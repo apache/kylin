@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
 /**
  * Project is a concept in Kylin similar to schema in DBMS
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ProjectInstance extends RootPersistentEntity {
 

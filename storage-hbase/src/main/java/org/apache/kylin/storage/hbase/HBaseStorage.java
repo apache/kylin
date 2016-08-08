@@ -75,7 +75,7 @@ public class HBaseStorage implements IStorage {
     }
 
     private static TblColRef getPartitionCol(IRealization realization) {
-        String modelName = realization.getModelName();
+        String modelName = realization.getDataModelDesc().getName();
         DataModelDesc dataModelDesc = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getDataModelDesc(modelName);
         PartitionDesc partitionDesc = dataModelDesc.getPartitionDesc();
         Preconditions.checkArgument(partitionDesc != null, "PartitionDesc for " + realization + " is null!");

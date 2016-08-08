@@ -404,11 +404,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return endTime;
     }
 
-    @Override
-    public String getModelName() {
-        return this.getDescriptor().getModelName();
-    }
-
     public int getRowKeyColumnCount() {
         return getDescriptor().getRowkey().getRowKeyColumns().length;
     }

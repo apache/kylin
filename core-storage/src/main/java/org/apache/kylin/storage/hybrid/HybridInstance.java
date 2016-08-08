@@ -257,11 +257,6 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     }
 
     @Override
-    public String getModelName() {
-        return this.getLatestRealization().getModelName();
-    }
-
-    @Override
     public List<TblColRef> getAllDimensions() {
         init();
         return allDimensions;
