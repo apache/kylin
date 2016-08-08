@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.service.AclService;
+import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
@@ -48,7 +49,7 @@ public class RealAclHBaseStorage implements AclHBaseStorage {
             return aclTableName;
         } else if (clazz == UserService.class) {
             userTableName = tableNameBase + USER_TABLE_NAME;
-            HBaseConnection.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY);
+            HBaseConnection.createHTableIfNeeded(hbaseUrl, userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
             return userTableName;
         } else {
             throw new IllegalStateException("prepareHBaseTable for unknown class: " + clazz);
