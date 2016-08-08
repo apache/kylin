@@ -18,6 +18,7 @@ Installation & Setup
 1. [Installation Guide](install/index.html)
 3. [Advanced settings](install/advance_settings.html)
 4. [Deploy in cluster mode](install/kylin_cluster.html)
+5. [Run Kylin with Docker](install/kylin_docker.html)
 
 
 Tutorial
