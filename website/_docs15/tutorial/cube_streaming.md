@@ -29,6 +29,8 @@ cd $KYLINN_HOME
 ./bin/kylin.sh org.apache.kylin.source.kafka.util.KafkaSampleProducer --topic kylin_demo --broker sandbox:6667 —delay 0
 {% endhighlight %}
 
+Note: you may encounter "java.lang.NoClassDefFoundError: kafka/producer/ProducerConfig" error here; the reason is Kylin doesn't embed kafka jar any more since v1.5.3; You need copy the kafka client jar file to $KYLIN_HOME/lib folder and then re-run this command.
+
 It will send 1 record to Kafka every 2 second, with "delay" be 0, the "order_time" will be the same as the timestamp that the message be created. Please don't press CTRL+C before finishing this tutorial, otherwise the streaming will be stopped.
 
 Thirdly, you can check the sample message with kafka-console-consumer.sh, with another shell session:
