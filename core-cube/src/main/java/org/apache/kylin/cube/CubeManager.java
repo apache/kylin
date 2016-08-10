@@ -590,7 +590,7 @@ public class CubeManager implements IRealizationProvider {
         if (existing.isEmpty()) {
             return cube.getDescriptor().getPartitionDateStart();
         } else {
-            return existing.get(existing.size() - 1).getDateRangeStart();
+            return existing.get(existing.size() - 1).getDateRangeEnd();
         }
     }
 

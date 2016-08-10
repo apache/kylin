@@ -51,7 +51,6 @@ import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
