@@ -109,10 +109,11 @@ public class ITKylinQueryTest extends KylinTestBase {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/temp", null, true);
     }
 
+    @Ignore
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/temp/query01.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql/query01.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
@@ -121,10 +122,11 @@ public class ITKylinQueryTest extends KylinTestBase {
         }
     }
 
+    @Ignore
     @Test
     public void testSingleExecuteQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/temp/query01.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql/query01.sql";
 
         File sqlFile = new File(queryFileName);
         String sql = getTextFromFile(sqlFile);
