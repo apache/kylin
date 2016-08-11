@@ -168,6 +168,9 @@ RETCODE SQL_API SQLPrepare ( SQLHSTMT    pStmt,
 RETCODE SQL_API SQLPrepareW ( SQLHSTMT    pStmt,
                               SQLWCHAR*    pStmtText,
                               SQLINTEGER  pTextLength ) {
+
+	
+
     wchar_t*      s;
     __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLPrepareW called on: %d", pStmt ) );
     __CHK_HANDLE ( pStmt, SQL_HANDLE_STMT, SQL_ERROR );
@@ -196,7 +199,11 @@ RETCODE SQL_API SQLPrepareW ( SQLHSTMT    pStmt,
     // MARK as prepared
     // set the flag
     ( ( pODBCStmt ) pStmt )->Prepared = 1;
-    return SQL_SUCCESS;
+
+
+	return _SQLExecStmtFromReq((pODBCStmt)pStmt,1);
+
+    //return SQL_SUCCESS;
 }
 
 
