@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
 
 @Controller
 @RequestMapping(value = "/diag")
-public class DiagnosisController {
+public class DiagnosisController extends BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisController.class);
 
@@ -66,7 +66,7 @@ public class DiagnosisController {
             BadQueryHistory badQueryHistory = dgService.getProjectBadQueryHistory(project);
             badEntry.addAll(badQueryHistory.getEntries());
         } catch (IOException e) {
-            throw new InternalErrorException(e + " Caused by: " + e.getMessage(), e);
+            throw new InternalErrorException("Failed to get bad queries.", e);
         }
 
         return badEntry;
@@ -82,7 +82,7 @@ public class DiagnosisController {
         try {
             filePath = dgService.dumpProjectDiagnosisInfo(project);
         } catch (IOException e) {
-            throw new InternalErrorException(e + " Caused by: " + e.getMessage(), e);
+            throw new InternalErrorException("Failed to dump diagnosis info.", e);
         }
 
         setDownloadResponse(filePath, response);
@@ -98,7 +98,7 @@ public class DiagnosisController {
         try {
             filePath = dgService.dumpJobDiagnosisInfo(jobId);
         } catch (IOException e) {
-            throw new InternalErrorException(e + " Caused by: " + e.getMessage(), e);
+            throw new InternalErrorException("Failed to dump diagnosis info.", e);
         }
 
         setDownloadResponse(filePath, response);
@@ -114,7 +114,7 @@ public class DiagnosisController {
             IOUtils.copyLarge(fileInputStream, output);
             output.flush();
         } catch (IOException e) {
-            throw new InternalErrorException(e + " Caused by: " + e.getMessage(), e);
+            throw new InternalErrorException("Failed to dump diagnosis info.", e);
         }
     }
 }

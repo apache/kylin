@@ -90,8 +90,12 @@ public class DiagnosisService extends BasicService {
 
         String diagCmd = script.getAbsolutePath() + " " + StringUtils.join(args, " ");
         CliCommandExecutor executor = KylinConfig.getInstanceFromEnv().getCliCommandExecutor();
-        Pair<Integer, String> cmdOutput = executor.execute(diagCmd);
-        logger.info(cmdOutput.getValue());
+        Pair<Integer, String> cmdOutput = executor.execute(diagCmd, new org.apache.kylin.common.util.Logger() {
+            @Override
+            public void log(String message) {
+                logger.info(message);
+            }
+        });
 
         if (cmdOutput.getKey() != 0) {
             throw new RuntimeException("Failed to generate diagnosis package.");
