@@ -20,4 +20,5 @@ List of articles about Kylin best practices contributed by community. Some of th
 
 * [Kylin and Mondrain Interaction](https://github.com/mustangore/kylin-mondrian-interaction)
 
-* [Kylin And Tableau Tutorial] (https://github.com/albertoRamon/Kylin/tree/master/KylinWithTableau)
+* [Kylin And Tableau Tutorial](https://github.com/albertoRamon/Kylin/tree/master/KylinWithTableau)
+
