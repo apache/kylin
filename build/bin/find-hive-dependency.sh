@@ -17,6 +17,15 @@
 # limitations under the License.
 #
 
+if [ -z "$KYLIN_HOME" ]
+then
+    echo 'please make sure KYLIN_HOME has been set'
+    exit 1
+else
+    echo "KYLIN_HOME is set to ${KYLIN_HOME}"
+fi
+
+
 client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.client`
 hive_env=
 
