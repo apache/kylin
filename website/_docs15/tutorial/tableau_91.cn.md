@@ -45,6 +45,8 @@ Tableau 9.1中有两种数据源连接类型，选择｀在线｀选项以确保
 ![](/images/tutorial/odbc/tableau_91/7.png)
 
 ### 更多
-请参考[Tableau 教程](./tableau.html)以获得更多信息
+
+- 请参考[Tableau 教程](./tableau.html)以获得更多信息
+- 也可以参考社区用户Alberto Ramon Portoles (a.ramonportoles@gmail.com)提供的分享: [KylinWithTableau](https://github.com/albertoRamon/Kylin/tree/master/KylinWithTableau)
 
 
