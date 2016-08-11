@@ -21,9 +21,7 @@ package org.apache.kylin.engine.mr;
 import java.util.List;
 
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
-import org.apache.kylin.engine.mr.steps.MergeCuboidJob;
 import org.apache.kylin.engine.mr.steps.MergeStatisticsStep;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
@@ -85,24 +83,4 @@ public class BatchMergeJobBuilder2 extends JobBuilderSupport {
 
         return result;
     }
-
-    protected Class<? extends AbstractHadoopJob> getMergeCuboidJob() {
-        return MergeCuboidJob.class;
-//    private MapReduceExecutable createMergeCuboidDataStep(CubeSegment seg, String inputPath, String outputPath) {
-//        MapReduceExecutable mergeCuboidDataStep = new MapReduceExecutable();
-//        mergeCuboidDataStep.setName(ExecutableConstants.STEP_NAME_MERGE_CUBOID);
-//        StringBuilder cmd = new StringBuilder();
-//
-//        appendMapReduceParameters(cmd);
-//        appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getCubeInstance().getName());
-//        appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
-//        appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, inputPath);
-//        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, outputPath);
-//        appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Merge_Cuboid_" + seg.getCubeInstance().getName() + "_Step");
-//
-//        mergeCuboidDataStep.setMapReduceParams(cmd.toString());
-//        mergeCuboidDataStep.setMapReduceJobClass(MergeCuboidJob.class);
-//        return mergeCuboidDataStep;
-    }
-
 }
