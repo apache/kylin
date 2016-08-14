@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,12 +50,13 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-/**
- * Created by dongli on 12/28/15.
- */
-public class CubeStorageQueryTest extends LocalFileMetadataTestCase {
+public class MeasureTypeOnlyAggrInBaseTest extends LocalFileMetadataTestCase {
 
     private CubeInstance cube;
+    private CubeDesc cubeDesc;
+
+    private Set<TblColRef> dimensions;
+    private List<FunctionDesc> metrics;
 
     public CubeManager getCubeManager() {
         return CubeManager.getInstance(getTestConfig());
@@ -70,6 +72,19 @@ public class CubeStorageQueryTest extends LocalFileMetadataTestCase {
         MetadataManager.clearCache();
 
         cube = getTestKylinCubeWithSeller();
+        cubeDesc = cube.getDescriptor();
+
+        dimensions = Sets.newHashSet();
+        metrics = Lists.newArrayList();
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            Collections.addAll(metrics, measureDesc.getFunction());
+        }
+
+        FunctionDesc mockUpFuncDesc = new FunctionDesc();
+        Field field = FunctionDesc.class.getDeclaredField("measureType");
+        field.setAccessible(true);
+        field.set(mockUpFuncDesc, new MockUpMeasureType());
+        metrics.add(mockUpFuncDesc);
     }
 
     @After
@@ -77,51 +92,31 @@ public class CubeStorageQueryTest extends LocalFileMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
-    private void validateIdentifyCuboidOnStorageQnery(CubeDesc cubeDesc, IStorageQuery query) {
+    @Test
+    public void testIdentifyCuboidV1() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, NoSuchFieldException {
+        IStorageQuery query = new org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery(cube);
         long baseCuboidId = cubeDesc.getRowkey().getFullMask();
 
-        try {
-            Method method = query.getClass().getDeclaredMethod("identifyCuboid", Set.class, Collection.class);
-            method.setAccessible(true);
+        Method method = query.getClass().getDeclaredMethod("identifyCuboid", Set.class, Collection.class);
+        method.setAccessible(true);
 
-            Set<TblColRef> dimensions = Sets.newHashSet();
-            List<FunctionDesc> metrics = Lists.newArrayList();
+        Object ret = method.invoke(query, Sets.newHashSet(), Lists.newArrayList());
 
-            Object ret = method.invoke(query, dimensions, metrics);
+        assertTrue(ret instanceof Cuboid);
+        assertNotEquals(baseCuboidId, ((Cuboid) ret).getId());
 
-            assertTrue(ret instanceof Cuboid);
-            assertNotEquals(baseCuboidId, ((Cuboid) ret).getId());
-
-            for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
-                Collections.addAll(metrics, measureDesc.getFunction());
-            }
-
-            FunctionDesc mockUpFuncDesc = new FunctionDesc();
-            Field field = FunctionDesc.class.getDeclaredField("measureType");
-            field.setAccessible(true);
-            field.set(mockUpFuncDesc, new MockUpMeasureType());
-            metrics.add(mockUpFuncDesc);
-
-            ret = method.invoke(query, dimensions, metrics);
-            assertEquals(baseCuboidId, ((Cuboid) ret).getId());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        ret = method.invoke(query, dimensions, metrics);
+        assertEquals(baseCuboidId, ((Cuboid) ret).getId());
     }
 
     @Test
-    public void testIdentifyCuboidV1() {
+    public void testIdentifyCuboidV2() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, NoSuchFieldException {
         CubeDesc cubeDesc = cube.getDescriptor();
-        IStorageQuery query = new org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery(cube);
-        validateIdentifyCuboidOnStorageQnery(cubeDesc, query);
-    }
-
-    @Test
-    public void testIdentifyCuboidV2() {
-        CubeDesc cubeDesc = cube.getDescriptor();
-        IStorageQuery query = new org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery(cube);
-        validateIdentifyCuboidOnStorageQnery(cubeDesc, query);
+        Cuboid ret = Cuboid.identifyCuboid(cubeDesc, Sets.<TblColRef> newHashSet(), Lists.<FunctionDesc> newArrayList());
+        long baseCuboidId = cubeDesc.getRowkey().getFullMask();
+        assertNotEquals(baseCuboidId, ret.getId());
+        ret = Cuboid.identifyCuboid(cubeDesc, dimensions, metrics);
+        assertEquals(baseCuboidId, ret.getId());
     }
 
     class MockUpMeasureType extends MeasureType<String> {
