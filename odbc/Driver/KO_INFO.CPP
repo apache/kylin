@@ -392,7 +392,7 @@ RETCODE SQL_API SQLGetInfoW ( SQLHDBC pConn,
             break;
 
         case SQL_DBMS_NAME : // 17 called
-            _SQLCopyWCharData ( _DIAGCONN ( pConn ), pInfoValuePtr, pBufferLength, pStringLengthPtr, 16, "Gen ODBC Server", -1 );
+            _SQLCopyWCharData ( _DIAGCONN ( pConn ), pInfoValuePtr, pBufferLength, pStringLengthPtr, 16, "MySQL", -1 );
             break;
 
         case SQL_ODBC_SQL_CONFORMANCE : // 15
@@ -970,7 +970,7 @@ RETCODE SQL_API SQLGetInfo ( SQLHDBC pConn,
             break;
 
         case SQL_DBMS_NAME : // 17 called
-            _SQLCopyCharData ( _DIAGCONN ( pConn ), pInfoValuePtr, pBufferLength, pStringLengthPtr, 16, "Gen ODBC Server", -1 );
+            _SQLCopyCharData ( _DIAGCONN ( pConn ), pInfoValuePtr, pBufferLength, pStringLengthPtr, 16, "MySQL", -1 );
             break;
 
         case SQL_ODBC_SQL_CONFORMANCE : // 15
