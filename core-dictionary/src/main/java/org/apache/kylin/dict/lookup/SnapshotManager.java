@@ -115,7 +115,7 @@ public class SnapshotManager {
     }
 
     public SnapshotTable buildSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
-        SnapshotTable snapshot = new SnapshotTable(table);
+        SnapshotTable snapshot = new SnapshotTable(table, tableDesc.getName());
         snapshot.updateRandomUuid();
 
         String dup = checkDupByInfo(snapshot);
@@ -135,7 +135,7 @@ public class SnapshotManager {
     }
 
     public SnapshotTable rebuildSnapshot(ReadableTable table, TableDesc tableDesc, String overwriteUUID) throws IOException {
-        SnapshotTable snapshot = new SnapshotTable(table);
+        SnapshotTable snapshot = new SnapshotTable(table, tableDesc.getName());
         snapshot.setUuid(overwriteUUID);
 
         snapshot.takeSnapshot(table, tableDesc);

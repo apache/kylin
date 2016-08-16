@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.base.Strings;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -49,6 +50,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class SnapshotTable extends RootPersistentEntity implements ReadableTable {
 
+    @JsonProperty("tableName")
+    private String tableName;
     @JsonProperty("signature")
     private TableSignature signature;
     @JsonProperty("useDictionary")
@@ -61,7 +64,8 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     public SnapshotTable() {
     }
 
-    SnapshotTable(ReadableTable table) throws IOException {
+    SnapshotTable(ReadableTable table, String tableName) throws IOException {
+        this.tableName = tableName;
         this.signature = table.getSignature();
         this.useDictionary = true;
     }
@@ -111,10 +115,18 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     }
 
     public String getResourcePath() {
-        return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new File(signature.getPath()).getName() + "/" + uuid + ".snapshot";
+        return getResourceDir() + "/" + uuid + ".snapshot";
     }
 
     public String getResourceDir() {
+        if (Strings.isNullOrEmpty(tableName)) {
+            return getOldResourceDir();
+        } else {
+            return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + tableName;
+        }
+    }
+
+    private String getOldResourceDir() {
         return ResourceStore.SNAPSHOT_RESOURCE_ROOT + "/" + new File(signature.getPath()).getName();
     }
 
