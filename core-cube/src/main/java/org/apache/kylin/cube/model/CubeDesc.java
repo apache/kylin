@@ -29,9 +29,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -64,9 +64,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -992,6 +992,11 @@ public class CubeDesc extends RootPersistentEntity {
 
     public void setNullStrings(String[] nullStrings) {
         this.nullStrings = nullStrings;
+    }
+
+    public boolean supportsLimitPushDown() {
+        //currently only ID_SHARDED_HBASE supports limit push down
+        return getStorageType() == IStorageAware.ID_SHARDED_HBASE;
     }
 
     public int getStorageType() {

@@ -97,4 +97,8 @@ public class CubeSegmentScanner implements IGTScanner {
         return scanner.getScannedRowCount();
     }
 
+    public CubeSegment getSegment() {
+        return this.cubeSeg;
+    }
+
 }

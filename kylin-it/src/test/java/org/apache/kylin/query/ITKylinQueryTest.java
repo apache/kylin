@@ -35,7 +35,6 @@ import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
-import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
@@ -261,9 +260,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testLimitCorrectness() throws Exception {
-        if (HBaseStorage.overwriteStorageQuery == null) {//v1 query engine will not work
-            execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
-        }
+        execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
     }
 
     @Test
