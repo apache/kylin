@@ -19,12 +19,8 @@
 package org.apache.kylin.common.util;
 
 import java.io.InputStream;
-import java.util.Enumeration;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 public class Log4jConfigurer {
     private static boolean INITIALIZED = false;
@@ -33,23 +29,12 @@ public class Log4jConfigurer {
         if (!INITIALIZED && !isConfigured()) {
             System.out.println("Initing the logger");
             InputStream is = Log4jConfigurer.class.getClassLoader().getResourceAsStream("kylin-log4j.properties");
-            PropertyConfigurator.configure(is);
             IOUtils.closeQuietly(is);
         }
         INITIALIZED = true;
     }
 
     private static boolean isConfigured() {
-        if (LogManager.getRootLogger().getAllAppenders().hasMoreElements()) {
-            return true;
-        } else {
-            Enumeration<?> loggers = LogManager.getCurrentLoggers();
-            while (loggers.hasMoreElements()) {
-                Logger logger = (Logger) loggers.nextElement();
-                if (logger.getAllAppenders().hasMoreElements())
-                    return true;
-            }
-        }
         return false;
     }
 }
