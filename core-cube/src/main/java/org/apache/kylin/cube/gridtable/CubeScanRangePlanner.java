@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.gridtable;
+package org.apache.kylin.cube.gridtable;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -41,9 +41,14 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.common.FuzzyValueCombination;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.gridtable.CubeGridTable;
-import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.gridtable.GTInfo;
+import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GTScanRange;
+import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTScanRequestBuilder;
+import org.apache.kylin.gridtable.GTUtil;
+import org.apache.kylin.gridtable.IGTComparator;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
@@ -59,9 +64,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class GTScanRangePlanner {
+public class CubeScanRangePlanner {
 
-    private static final Logger logger = LoggerFactory.getLogger(GTScanRangePlanner.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeScanRangePlanner.class);
 
     protected int maxScanRanges;
     protected int maxFuzzyKeys;
@@ -89,7 +94,7 @@ public class GTScanRangePlanner {
     final protected RecordComparator rangeEndComparator;
     final protected RecordComparator rangeStartEndComparator;
 
-    public GTScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, Set<TblColRef> groupbyDims, //
+    public CubeScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, Set<TblColRef> groupbyDims, //
             Collection<FunctionDesc> metrics) {
 
         this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
@@ -108,7 +113,7 @@ public class GTScanRangePlanner {
         this.gtInfo = CubeGridTable.newGTInfo(cubeSegment, cuboid.getId());
         CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
 
-        IGTComparator comp = gtInfo.codeSystem.getComparator();
+        IGTComparator comp = gtInfo.getCodeSystem().getComparator();
         //start key GTRecord compare to start key GTRecord
         this.rangeStartComparator = getRangeStartComparator(comp);
         //stop key GTRecord compare to stop key GTRecord
@@ -141,14 +146,14 @@ public class GTScanRangePlanner {
      * @param gtPartitionCol
      * @param gtFilter
      */
-    public GTScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> gtStartAndEnd, TblColRef gtPartitionCol, TupleFilter gtFilter) {
+    public CubeScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> gtStartAndEnd, TblColRef gtPartitionCol, TupleFilter gtFilter) {
 
         this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
         this.maxFuzzyKeys = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
 
         this.gtInfo = info;
 
-        IGTComparator comp = gtInfo.codeSystem.getComparator();
+        IGTComparator comp = gtInfo.getCodeSystem().getComparator();
         //start key GTRecord compare to start key GTRecord
         this.rangeStartComparator = getRangeStartComparator(comp);
         //stop key GTRecord compare to stop key GTRecord
@@ -176,7 +181,7 @@ public class GTScanRangePlanner {
      * Overwrite this method to provide smarter storage visit plans
      * @return
      */
-    protected List<GTScanRange> planScanRanges() {
+    public List<GTScanRange> planScanRanges() {
         TupleFilter flatFilter = flattenToOrAndFilter(gtFilter);
 
         List<Collection<ColumnRange>> orAndDimRanges = translateToOrAndDimRanges(flatFilter);
@@ -321,7 +326,7 @@ public class GTScanRangePlanner {
             }
 
             int col = range.column.getColumnDesc().getZeroBasedIndex();
-            if (!gtInfo.primaryKey.get(col))
+            if (!gtInfo.getPrimaryKey().get(col))
                 continue;
 
             pkStart.set(col, range.begin);
@@ -612,7 +617,7 @@ public class GTScanRangePlanner {
             if (valueSet != null) {
                 return valueSet.isEmpty();
             } else if (begin.array() != null && end.array() != null) {
-                return gtInfo.codeSystem.getComparator().compare(begin, end) > 0;
+                return gtInfo.getCodeSystem().getComparator().compare(begin, end) > 0;
             } else {
                 return false;
             }
@@ -772,12 +777,13 @@ public class GTScanRangePlanner {
 
         @Override
         public int compare(GTRecord a, GTRecord b) {
-            assert a.info == b.info;
+            assert a.getInfo() == b.getInfo();
 
             int comp;
-            for (int i = 0; i < a.info.colAll.trueBitCount(); i++) {
-                int c = a.info.colAll.trueBitAt(i);
-                comp = comparator.compare(a.cols[c], b.cols[c]);
+            ImmutableBitSet allColumns = a.getInfo().getAllColumns();
+            for (int i = 0; i < allColumns.trueBitCount(); i++) {
+                int c = allColumns.trueBitAt(i);
+                comp = comparator.compare(a.get(c), b.get(c));
                 if (comp != 0)
                     return comp;
             }

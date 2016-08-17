@@ -26,10 +26,10 @@ import java.util.Set;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.gridtable.CubeScanRangePlanner;
 import org.apache.kylin.dict.BuildInFunctionTransformer;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTScanRangePlanner;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.ScannerWorker;
@@ -61,9 +61,9 @@ public class CubeSegmentScanner implements IGTScanner {
         filter = translator.transform(filter);
 
         String plannerName = KylinConfig.getInstanceFromEnv().getQueryStorageVisitPlanner();
-        GTScanRangePlanner scanRangePlanner;
+        CubeScanRangePlanner scanRangePlanner;
         try {
-            scanRangePlanner = (GTScanRangePlanner) Class.forName(plannerName).getConstructor(CubeSegment.class, Cuboid.class, TupleFilter.class, Set.class, Set.class, Collection.class).newInstance(cubeSeg, cuboid, filter, dimensions, groups, metrics);
+            scanRangePlanner = (CubeScanRangePlanner) Class.forName(plannerName).getConstructor(CubeSegment.class, Cuboid.class, TupleFilter.class, Set.class, Set.class, Collection.class).newInstance(cubeSeg, cuboid, filter, dimensions, groups, metrics);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
