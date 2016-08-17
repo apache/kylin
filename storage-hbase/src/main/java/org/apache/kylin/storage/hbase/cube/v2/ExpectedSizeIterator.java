@@ -24,6 +24,8 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -31,6 +33,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 class ExpectedSizeIterator implements Iterator<byte[]> {
+    private static final Logger logger = LoggerFactory.getLogger(ExpectedSizeIterator.class);
 
     BlockingQueue<byte[]> queue;
 
@@ -48,7 +51,7 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
         Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         this.rpcTimeout = hconf.getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
         this.timeout = this.rpcTimeout * hconf.getInt(HConstants.HBASE_CLIENT_RETRIES_NUMBER, HConstants.DEFAULT_HBASE_CLIENT_RETRIES_NUMBER);
-        CubeHBaseEndpointRPC.logger.info("rpc timeout is {} and after multiply retry times become {}", this.rpcTimeout, this.timeout);
+        logger.info("rpc timeout is {} and after multiply retry times become {}", this.rpcTimeout, this.timeout);
         this.timeout = Math.max(this.timeout, 5 * 60000);
         this.timeout *= KylinConfig.getInstanceFromEnv().getCubeVisitTimeoutTimes();
 
@@ -58,7 +61,7 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
 
         this.timeout *= 1.1; // allow for some delay
 
-        CubeHBaseEndpointRPC.logger.info("Final Timeout for ExpectedSizeIterator is: " + this.timeout);
+        logger.info("Final Timeout for ExpectedSizeIterator is: " + this.timeout);
 
         this.timeoutTS = System.currentTimeMillis() + this.timeout;
     }

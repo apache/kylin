@@ -46,5 +46,21 @@ mv build/apache-tomcat-7.0.69 build/tomcat
 rm -rf build/tomcat/webapps/*
 
 mv build/tomcat/conf/server.xml build/tomcat/conf/server.xml.bak
+mv build/tomcat/conf/context.xml build/tomcat/conf/context.xml.bak
 cp build/deploy/server.xml build/tomcat/conf/server.xml
 echo "server.xml overwritten..."
+cp build/deploy/context.xml build/tomcat/conf/context.xml
+echo "context.xml overwritten..."
+
+
+if [ -z "$version" ]
+then
+    echo 'version not set'
+    version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\['`
+fi
+echo "version ${version}"
+export version
+
+cp tomcat-ext/target/kylin-tomcat-ext-${version}.jar build/tomcat/lib/kylin-tomcat-ext-${version}.jar
+chmod 644 build/tomcat/lib/kylin-tomcat-ext-${version}.jar
+

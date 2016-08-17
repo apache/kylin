@@ -148,7 +148,7 @@ public class QueryController extends BasicController {
                 csvWriter.write(row);
             }
         } catch (IOException e) {
-            logger.error("", e);
+            throw new InternalErrorException(e);
         } finally {
             IOUtils.closeQuietly(csvWriter);
         }
@@ -160,7 +160,6 @@ public class QueryController extends BasicController {
         try {
             return queryService.getMetadata(metaRequest.getProject());
         } catch (SQLException e) {
-            logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage(), e);
         }
     }
@@ -206,7 +205,7 @@ public class QueryController extends BasicController {
                 checkQueryAuth(sqlResponse);
 
             } catch (Throwable e) { // calcite may throw AssertError
-                logger.error("Exception when execute sql", e);
+                //logger.error("Exception when execute sql", e);
                 String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
 
                 sqlResponse = new SQLResponse(null, null, 0, true, errMsg);

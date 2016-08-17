@@ -74,8 +74,8 @@ cat << EOF > build/commit_SHA1
 EOF
 git rev-parse HEAD >> build/commit_SHA1
 
-sh build/script/download-tomcat.sh || { exit 1; }
 sh build/script/build.sh || { exit 1; }
+sh build/script/download-tomcat.sh || { exit 1; }
 sh build/script/prepare.sh || { exit 1; }
 sh build/script/compress.sh || { exit 1; }
 

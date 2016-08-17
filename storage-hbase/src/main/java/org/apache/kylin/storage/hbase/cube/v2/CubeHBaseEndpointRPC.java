@@ -63,7 +63,7 @@ import com.google.protobuf.HBaseZeroCopyByteString;
 
 public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
-    public static final Logger logger = LoggerFactory.getLogger(CubeHBaseEndpointRPC.class);
+    private static final Logger logger = LoggerFactory.getLogger(CubeHBaseEndpointRPC.class);
 
     private static ExecutorService executorService = new LoggableCachedThreadPool();
 

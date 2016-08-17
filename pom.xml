@@ -16,7 +16,6 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -454,6 +453,7 @@
                 <groupId>org.apache.calcite.avatica</groupId>
                 <artifactId>avatica</artifactId>
                 <version>${calcite.version}</version>
+
             </dependency>
             <!-- Workaround for hive 0.14 avatica dependency -->
             <dependency>
@@ -945,7 +945,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -993,6 +993,7 @@
         <module>assembly</module>
         <module>tool</module>
         <module>kylin-it</module>
+        <module>tomcat-ext</module>
     </modules>
 
     <profiles>
