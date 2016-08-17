@@ -106,16 +106,16 @@ public class CubingJob extends DefaultChainedExecutable {
         setParam(DEPLOY_ENV_NAME, name);
     }
 
-    public static String getDeployEnvName() {
-        return DEPLOY_ENV_NAME;
+    public String getDeployEnvName() {
+        return getParam(DEPLOY_ENV_NAME);
     }
 
     void setProjectName(String name) {
         setParam(PROJECT_INSTANCE_NAME, name);
     }
 
-    public static String getProjectName() {
-        return PROJECT_INSTANCE_NAME;
+    public String getProjectName() {
+        return getParam(PROJECT_INSTANCE_NAME);
     }
 
     @Override
