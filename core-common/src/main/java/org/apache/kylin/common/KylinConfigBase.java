@@ -533,7 +533,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getQueryStorageVisitPlanner() {
-        return this.getOptional("kylin.query.storage.visit.planner", "org.apache.kylin.gridtable.GTScanRangePlanner");
+        return this.getOptional("kylin.query.storage.visit.planner", "org.apache.kylin.cube.gridtable.CubeScanRangePlanner");
     }
 
     // for test only
