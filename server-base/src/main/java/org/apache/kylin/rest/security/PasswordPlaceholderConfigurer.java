@@ -18,21 +18,13 @@
 
 package org.apache.kylin.rest.security;
 
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.charset.Charset;
 import java.util.Properties;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
@@ -47,15 +39,6 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
     private static byte[] key = { 0x74, 0x68, 0x69, 0x73, 0x49, 0x73, 0x41, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4b, 0x65, 0x79 };
 
     public PasswordPlaceholderConfigurer() {
-        Resource[] resources = new Resource[1];
-        Properties prop = KylinConfig.getKylinProperties();
-        StringWriter writer = new StringWriter();
-        prop.list(new PrintWriter(writer));
-        String propString = writer.getBuffer().toString();
-        IOUtils.closeQuietly(writer);
-        InputStream is = IOUtils.toInputStream(propString, Charset.defaultCharset());
-        resources[0] = new InputStreamResource(is);
-        this.setLocations(resources);
     }
 
     public static String encrypt(String strToEncrypt) {

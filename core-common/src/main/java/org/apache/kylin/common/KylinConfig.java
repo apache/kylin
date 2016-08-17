@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
@@ -60,7 +61,9 @@ public class KylinConfig extends KylinConfigBase {
         synchronized (KylinConfig.class) {
             if (ENV_INSTANCE == null) {
                 try {
-                    KylinConfig config = loadKylinConfig();
+                    KylinConfig config = new KylinConfig();
+                    config.reloadKylinConfig(getKylinProperties());
+
                     logger.info("Initialized a new KylinConfig from getInstanceFromEnv : " + System.identityHashCode(config));
                     ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
@@ -130,9 +133,7 @@ public class KylinConfig extends KylinConfigBase {
             try {
                 config = new KylinConfig();
                 InputStream is = new FileInputStream(uri);
-                Properties prop = new Properties();
-                prop.load(is);
-                IOUtils.closeQuietly(is);
+                Properties prop = streamToProps(is);
                 config.reloadKylinConfig(prop);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -144,9 +145,7 @@ public class KylinConfig extends KylinConfigBase {
                 RestClient client = new RestClient(uri);
                 String propertyText = client.getKylinProperties();
                 InputStream is = IOUtils.toInputStream(propertyText, Charset.defaultCharset());
-                Properties prop = new Properties();
-                prop.load(is);
-                IOUtils.closeQuietly(is);
+                Properties prop = streamToProps(is);
                 config.reloadKylinConfig(prop);
                 return config;
             } catch (IOException e) {
@@ -155,7 +154,14 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    public static void setKylinConfig(Properties prop) {
+    private static Properties streamToProps(InputStream is) throws IOException {
+        Properties prop = new Properties();
+        prop.load(is);
+        IOUtils.closeQuietly(is);
+        return prop;
+    }
+
+    public static void setKylinConfigInEnvIfMissing(Properties prop) {
         synchronized (KylinConfig.class) {
             if (ENV_INSTANCE == null) {
                 try {
@@ -170,6 +176,16 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
+    public static KylinConfig createKylinConfig(String propsInStr) throws IOException {
+        Properties props = new Properties();
+        props.load(new StringReader(propsInStr));
+        return createKylinConfig(props);
+    }
+    
+    public static KylinConfig createKylinConfig(KylinConfig another) {
+        return createKylinConfig(another.getAllProperties());
+    }
+    
     public static KylinConfig createKylinConfig(Properties prop) {
         KylinConfig kylinConfig = new KylinConfig();
         kylinConfig.reloadKylinConfig(prop);
@@ -210,7 +226,7 @@ public class KylinConfig extends KylinConfigBase {
         return getKylinSecurityPropertiesFile(path);
     }
 
-    public static Properties getKylinProperties() {
+    private static Properties getKylinProperties() {
         File propFile = getKylinPropertiesFile();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
@@ -276,18 +292,6 @@ public class KylinConfig extends KylinConfigBase {
         }
 
         return new File(path, KYLIN_SECURITY_CONF_PROPERTIES_FILE);
-    }
-
-    /**
-     * Find config from environment. The Search process: 1. Check the
-     * $KYLIN_CONF/kylin.properties 2. Check the $KYLIN_HOME/conf/kylin.properties
-     */
-    private static KylinConfig loadKylinConfig() {
-        Properties prop = getKylinProperties();
-
-        KylinConfig config = new KylinConfig();
-        config.reloadKylinConfig(prop);
-        return config;
     }
 
     public static void setSandboxEnvIfPossible() {

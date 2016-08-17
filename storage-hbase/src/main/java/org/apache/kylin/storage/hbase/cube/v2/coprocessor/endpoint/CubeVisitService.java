@@ -188,7 +188,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             String serverPropString = request.getKylinProperties();
             Properties serverProp = new Properties();
             serverProp.load(new StringReader(serverPropString));
-            KylinConfig.setKylinConfig(serverProp);
+            KylinConfig.setKylinConfigInEnvIfMissing(serverProp);
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
 
             debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);

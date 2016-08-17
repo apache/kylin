@@ -40,6 +40,7 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -153,13 +154,28 @@ public class MetadataManager {
     }
 
     /**
-     * Get Table Desc object
-     * 
-     * @param tableName
-     * @return
+     * Get ColumnDesc by name, like "table.column"
+     */
+    public ColumnDesc getColumnDesc(String tableDotColumnName) {
+        int cut = tableDotColumnName.lastIndexOf('.');
+        if (cut < 0)
+            throw new IllegalArgumentException();
+        
+        String tableName = tableDotColumnName.substring(0, cut);
+        String columnName = tableDotColumnName.substring(cut + 1);
+        
+        TableDesc table = getTableDesc(tableName);
+        if (table == null)
+            return null;
+        
+        return table.findColumnByName(columnName);
+    }
+    
+    /**
+     * Get TableDesc by name
      */
     public TableDesc getTableDesc(String tableName) {
-        if (tableName != null && tableName.indexOf(".") < 0)
+        if (tableName.indexOf(".") < 0)
             tableName = "DEFAULT." + tableName;
 
         TableDesc result = srcTableMap.get(tableName.toUpperCase());
