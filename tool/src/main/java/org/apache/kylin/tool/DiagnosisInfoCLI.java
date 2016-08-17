@@ -38,6 +38,7 @@ import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class DiagnosisInfoCLI extends AbstractInfoExtractor {
@@ -161,13 +162,23 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                 public void run() {
                     logger.info("Start to extract kylin conf files.");
                     try {
-                        FileUtils.copyDirectoryToDirectory(new File(ToolUtil.getConfFolder()), exportDir);
+                        File destConfDir = new File(exportDir, "conf");
+                        FileUtils.forceMkdir(destConfDir);
+                        File srcConfDir = new File(ToolUtil.getConfFolder());
+                        Preconditions.checkState(srcConfDir.exists(), "Cannot find config dir: " + srcConfDir.getAbsolutePath());
+                        File[] confFiles = srcConfDir.listFiles();
+                        if (confFiles != null) {
+                            for (File confFile : confFiles) {
+                                if (!KylinConfig.KYLIN_SECURITY_CONF_PROPERTIES_FILE.equals(confFile.getName())) {
+                                    FileUtils.copyFileToDirectory(confFile, destConfDir);
+                                }
+                            }
+                        }
                     } catch (Exception e) {
                         logger.warn("Error in export conf.", e);
                     }
                 }
             });
-
         }
 
         // export client
