@@ -766,7 +766,7 @@
     </dependencyManagement>
 
     <dependencies>
-        
+
         <!-- the logging dependencies are inherited by all modules for their generality
             log4j and slf4j-log4j12 test scope only for UT/IT use
         -->
@@ -1061,6 +1061,10 @@
                                 <property>
                                     <name>buildCubeUsingProvidedData</name>
                                     <value>false</value>
+                                </property>
+                                <property>
+                                    <name>log4j.configuration</name>
+                                    <value>kylin-log4j.properties</value>
                                 </property>
                             </systemProperties>
                             <argLine>-Xms1G -Xmx2G -XX:MaxPermSize=512M</argLine>

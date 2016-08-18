@@ -270,6 +270,10 @@
                                     <name>useSandbox</name>
                                     <value>true</value>
                                 </property>
+                                <property>
+                                    <name>log4j.configuration</name>
+                                    <value>kylin-log4j.properties</value>
+                                </property>
                             </systemProperties>
                             <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
                         </configuration>
@@ -292,6 +296,7 @@
                                         <argument>-DuseSandbox=true</argument>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
+                                        <argument>-Dlog4j.configuration=kylin-log4j.properties</argument>
                                         <argument>-classpath</argument>
                                         <classpath/>
                                         <argument>org.apache.kylin.provision.BuildCubeWithEngine</argument>
@@ -313,6 +318,7 @@
                                         <argument>-DuseSandbox=true</argument>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
+                                        <argument>-Dlog4j.configuration=kylin-log4j.properties</argument>
                                         <argument>-classpath</argument>
                                         <classpath/>
                                         <argument>org.apache.kylin.provision.BuildCubeWithStream</argument>
