@@ -72,7 +72,10 @@ public class CubeSegmentScanner implements IGTScanner {
             scanRequest.setAllowStorageAggregation(context.isNeedStorageAggregation());
             scanRequest.setAggCacheMemThreshold(cubeSeg.getCubeInstance().getConfig().getQueryCoprocessorMemGB());
             scanRequest.setStorageScanRowNumThreshold(context.getThreshold());//TODO: devide by shard number?
-            scanRequest.setStoragePushDownLimit(context.getStoragePushDownLimit());
+
+            if (cubeSeg.getCubeDesc().supportsLimitPushDown()) {
+                scanRequest.setStoragePushDownLimit(context.getStoragePushDownLimit());
+            }
         }
         scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest, gtStorage);
     }
