@@ -107,6 +107,12 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       SweetAlert.swal('', '[TOP_N] Group by Column is required', 'warning');
       return false;
     }
+
+    if ($scope.isNameDuplicated($scope.cubeMetaFrame.measures, $scope.newMeasure) == true) {
+      SweetAlert.swal('', 'The measure name: ' + $scope.newMeasure.name + ' is duplicated', 'warning');
+      return false;
+    }
+
     if($scope.nextPara.value!=="" && ($scope.newMeasure.function.expression == 'EXTENDED_COLUMN' || $scope.newMeasure.function.expression == 'TOP_N')){
       $scope.newMeasure.function.parameter.next_parameter = jQuery.extend(true,{},$scope.nextPara);
     }
@@ -117,11 +123,21 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     else {
       $scope.cubeMetaFrame.measures.push($scope.newMeasure);
     }
+
     $scope.newMeasure = null;
     $scope.initUpdateMeasureStatus();
     $scope.nextParameterInit();
     return true;
   };
+
+  $scope.isNameDuplicated = function (measures, newMeasure) {
+    var names = [];
+    for(var i = 0;i < measures.length; i++){
+        names.push(measures[i].name);
+    }
+    var index = names.indexOf(newMeasure.name);
+    return index > -1;
+  }
 
   $scope.nextParameterInit = function(){
     $scope.nextPara = {
