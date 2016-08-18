@@ -141,12 +141,12 @@ public class HBaseConnection {
     }
 
     private static Configuration newHBaseConfiguration(String url) {
-        Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
-        addHBaseClusterNNHAConfiguration(conf);
-
         // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
         if (!(StringUtils.isEmpty(url) || "hbase".equals(url)))
             throw new IllegalArgumentException("to use hbase storage, pls set 'kylin.storage.url=hbase' in kylin.properties");
+        
+        Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
+        addHBaseClusterNNHAConfiguration(conf);
 
         // support hbase using a different FS
         String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
