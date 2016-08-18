@@ -447,7 +447,7 @@ public class MetadataManager {
         ResourceStore store = getStore();
         try {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
-            dataModelDesc.init(this.getAllTablesMap());
+            dataModelDesc.init(config, this.getAllTablesMap());
             dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
             return dataModelDesc;
         } catch (IOException e) {
@@ -495,7 +495,7 @@ public class MetadataManager {
     }
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-        dataModelDesc.init(this.getAllTablesMap());
+        dataModelDesc.init(config, this.getAllTablesMap());
 
         String path = dataModelDesc.getResourcePath();
         getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);

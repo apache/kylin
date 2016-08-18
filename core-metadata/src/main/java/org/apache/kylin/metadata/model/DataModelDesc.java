@@ -31,14 +31,14 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
@@ -47,6 +47,8 @@ public class DataModelDesc extends RootPersistentEntity {
     public static enum RealizationCapacity {
         SMALL, MEDIUM, LARGE
     }
+    
+    private KylinConfig config;
 
     @JsonProperty("name")
     private String name;
@@ -86,6 +88,10 @@ public class DataModelDesc extends RootPersistentEntity {
      * Error messages during resolving json metadata
      */
     private List<String> errors = new ArrayList<String>();
+
+    public KylinConfig getConfig() {
+        return config;
+    }
 
     public String getName() {
         return name;
@@ -236,7 +242,8 @@ public class DataModelDesc extends RootPersistentEntity {
         throw new IllegalArgumentException("Table not found by " + table);
     }
 
-    public void init(Map<String, TableDesc> tables) {
+    public void init(KylinConfig config, Map<String, TableDesc> tables) {
+        this.config = config;
         this.factTable = this.factTable.toUpperCase();
         this.factTableDesc = tables.get(this.factTable.toUpperCase());
         if (factTableDesc == null) {

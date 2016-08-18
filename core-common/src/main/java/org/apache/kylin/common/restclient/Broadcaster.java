@@ -167,7 +167,19 @@ public class Broadcaster {
     }
 
     public enum TYPE {
-        ALL("all"), CUBE("cube"), STREAMING("streaming"), KAFKA("kafka"), CUBE_DESC("cube_desc"), PROJECT("project"), INVERTED_INDEX("inverted_index"), INVERTED_INDEX_DESC("ii_desc"), TABLE("table"), DATA_MODEL("data_model"), EXTERNAL_FILTER("external_filter"), HYBRID("hybrid");
+        ALL("all"), //
+        PROJECT("project"), //
+        CUBE("cube"), //
+        CUBE_DESC("cube_desc"), //
+        STREAMING("streaming"), //
+        KAFKA("kafka"), //
+        INVERTED_INDEX("inverted_index"), //
+        INVERTED_INDEX_DESC("ii_desc"), // 
+        TABLE("table"), //
+        DATA_MODEL("data_model"), //
+        EXTERNAL_FILTER("external_filter"), //
+        HYBRID("hybrid");
+        
         private String text;
 
         TYPE(String text) {

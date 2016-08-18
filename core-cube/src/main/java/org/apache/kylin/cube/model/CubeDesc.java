@@ -271,10 +271,7 @@ public class CubeDesc extends RootPersistentEntity {
 
             List<DeriveInfo> wantedInfo = new ArrayList<DeriveInfo>();
             for (DeriveInfo info : entry.getValue()) {
-                if (wantedCols == null || Collections.disjoint(wantedCols, Arrays.asList(info.columns)) == false) // has
-                    // any
-                    // wanted
-                    // columns?
+                if (wantedCols == null || Collections.disjoint(wantedCols, Arrays.asList(info.columns)) == false) // has any wanted columns?
                     wantedInfo.add(info);
             }
 
