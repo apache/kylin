@@ -28,10 +28,11 @@
                ng-class="{'glyphicon-chevron-down': state.isKfkSettingOpen, 'glyphicon-chevron-right': !state.isKfkSettingOpen}"></i>
           </accordion-heading>
 
-          <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+          <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
         <div class="row">
           <label class="col-xs-12 col-sm-3 control-label no-padding-right">
             <b>Topic</b>
+            <i class="fa fa-info-circle" kylinpopover placement="right" title="Topic"  template="KafkaTopicTip.html"></i>
           </label>
           <div class="col-xs-12 col-sm-6"   ng-class="{'has-error':form.cube_streaming_form.topic.$invalid && (form.cube_streaming_form.topic.$dirty||form.cube_streaming_form.$submitted)}">
             <input  ng-if="state.mode=='edit'"  name="topic" required ng-model="kafkaMeta.topic" type="text"
@@ -133,10 +134,11 @@
                ng-class="{'glyphicon-chevron-down': state.isStreamingAdOpen, 'glyphicon-chevron-right': !state.isStreamingAdOpen}"></i>
           </accordion-heading>
 
-          <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+          <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                 <b>Timeout</b>
+                <i class="fa fa-info-circle" kylinpopover placement="right" title="Timeout" template="TimeoutTip.html"></i>
               </label>
 
               <div class="col-xs-12 col-sm-6"
@@ -158,10 +160,11 @@
             </div>
           </div>
 
-          <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+          <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                 <b>Buffer Size</b>
+                <i class="fa fa-info-circle" kylinpopover placement="right" title="Buffer Size" template="BufferSizecTip.html"></i>
               </label>
 
               <div class="col-xs-12 col-sm-6"
@@ -183,10 +186,11 @@
             </div>
           </div>
 
-          <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+          <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                 <b>Margin</b>
+                <i class="fa fa-info-circle" kylinpopover placement="right" title="Margin" template="MarginTip.html"></i>
               </label>
 
               <div class="col-xs-12 col-sm-6"
@@ -220,10 +224,11 @@
                ng-class="{'glyphicon-chevron-down': state.isParserHeaderOpen, 'glyphicon-chevron-right': !state.isParserHeaderOpen}"></i>
           </accordion-heading>
 
-          <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+          <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                 <b>Parser Name</b>
+                <i class="fa fa-info-circle" kylinpopover placement="right" title="Parser Name" template="ParserName.html"></i>
               </label>
 
               <div class="col-xs-12 col-sm-6"
@@ -243,10 +248,11 @@
               </div>
             </div>
           </div>
-          <div class="form-group" ng-if="state.mode=='edit'" ng-class="{'required':state.mode=='edit'}">
+          <div class="form-group middle-popover" ng-if="state.mode=='edit'" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
-                <b>Parser Timestamp Column</b>
+                <b>Parser Timestamp Field</b>
+                <i class="fa fa-info-circle" kylinpopover placement="right" title="Parser Timestamp Field" template="ParserTimestampFieldsTip.html"></i>
               </label>
 
               <div class="col-xs-12 col-sm-6 streamingParserCtr">
@@ -260,10 +266,11 @@
               </div>
             </div>
           </div>
-          <div class="form-group" ng-class="{'required':state.mode=='edit'}">
+          <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                 <b>Parser Properties</b>
+                <i class="fa fa-info-circle" kylinpopover placement="right" title="Parser Properties" template="ParserPropertiesTip.html"></i>
               </label>
 
               <div class="col-xs-12 col-sm-6"
@@ -289,3 +296,25 @@
     </div>
   </form>
 </div>
+
+<script type="text/ng-template" id="KafkaTopicTip.html">
+    <p>Input the kafka topic that contains source data.</p>
+  </script>
+<script type="text/ng-template" id="TimeoutTip.html">
+    <p>Set timeout for kafka client.</p>
+  </script>
+<script type="text/ng-template" id="BufferSizecTip.html">
+    <p>Set byte size for kafka client’s buffer.</p>
+  </script>
+<script type="text/ng-template" id="MarginTip.html">
+    <p>When the messages in kafka is not strictly sorted on timestamp, read more data (expressed in ts) before and after the specified interval to avoid data loss.</p>
+  </script>
+<script type="text/ng-template" id="ParserName.html">
+    <p>Set the parser to parse source data messages. The default parser works for json messages with a timestamp field.</p>
+  </script>
+<script type="text/ng-template" id="ParserTimestampFieldsTip.html">
+    <p>Provide the name of the timestamp field to the default parser.</p>
+  </script>
+<script type="text/ng-template" id="ParserPropertiesTip.html">
+    <p>Provide a list of KV properties to the parser, delimited by semicolon.</p>
+</script>
