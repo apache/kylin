@@ -125,8 +125,9 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
     private void dumpBasicDiagInfo() throws IOException {
         try {
             for (String commitSHA1File : COMMIT_SHA1_FILES) {
-                if (new File(commitSHA1File).exists()) {
-                    FileUtils.copyFileToDirectory(new File(KylinConfig.getKylinHome(), commitSHA1File), exportDir);
+                File commitFile = new File(KylinConfig.getKylinHome(), commitSHA1File);
+                if (commitFile.exists()) {
+                    FileUtils.copyFileToDirectory(commitFile, exportDir);
                 }
             }
         } catch (IOException e) {
