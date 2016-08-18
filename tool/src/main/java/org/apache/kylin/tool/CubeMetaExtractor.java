@@ -28,12 +28,15 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.engine.streaming.StreamingConfig;
+import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
@@ -48,12 +51,13 @@ import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
-import org.apache.kylin.tool.util.ResourceStoreUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -88,7 +92,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private ProjectManager projectManager;
     private HybridManager hybridManager;
     private CubeManager cubeManager;
-    //    private StreamingManager streamingManager;
+    private StreamingManager streamingManager;
     private CubeDescManager cubeDescManager;
     private ExecutableDao executableDao;
     private RealizationRegistry realizationRegistry;
@@ -198,17 +202,17 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
             KylinConfig dstConfig = KylinConfig.createInstanceFromUri(dest);
 
-            ResourceStoreUtil.copy(srcConfig, dstConfig, requiredResources);
+            ResourceTool.copy(srcConfig, dstConfig, Lists.newArrayList(requiredResources));
 
             try {
-                ResourceStoreUtil.copy(srcConfig, dstConfig, optionalResources);
+                ResourceTool.copy(srcConfig, dstConfig, Lists.newArrayList(optionalResources));
             } catch (Exception e) {
                 logger.warn("Exception when copying optional resource {}. May be caused by resource missing. Ignore it.");
             }
 
             ResourceStore dstStore = ResourceStore.getStore(dstConfig);
             for (CubeInstance cube : cubesToTrimAndSave) {
-                CubeInstance trimmedCube = copyCubeInstance(cube);
+                CubeInstance trimmedCube = CubeInstance.getCopyOf(cube);
                 trimmedCube.getSegments().clear();
                 trimmedCube.setUuid(cube.getUuid());
                 dstStore.putResource(trimmedCube.getResourcePath(), trimmedCube, CubeManager.CUBE_SERIALIZER);
@@ -223,29 +227,15 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         return realizationRegistry.getRealization(realizationEntry.getType(), realizationEntry.getRealization());
     }
 
-    // do not call CubeInstance.getCopyOf() to keep backward compatible with 1.3.x
-    private static CubeInstance copyCubeInstance(CubeInstance cubeInstance) {
-        CubeInstance newCube = new CubeInstance();
-        newCube.setName(cubeInstance.getName());
-        newCube.setSegments(cubeInstance.getSegments());
-        newCube.setDescName(cubeInstance.getDescName());
-        newCube.setStatus(cubeInstance.getStatus());
-        newCube.setOwner(cubeInstance.getOwner());
-        newCube.setCost(cubeInstance.getCost());
-        newCube.setCreateTimeUTC(System.currentTimeMillis());
-        newCube.updateRandomUuid();
-        return newCube;
+    private void dealWithStreaming(CubeInstance cube) {
+        streamingManager = StreamingManager.getInstance(kylinConfig);
+        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
+            if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getFactTable())) {
+                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
+                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
+            }
+        }
     }
-
-    //    private void dealWithStreaming(CubeInstance cube) {
-    //        streamingManager = StreamingManager.getInstance(kylinConfig);
-    //        for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
-    //            if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getFactTable())) {
-    //                addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
-    //                addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
-    //            }
-    //        }
-    //    }
 
     private void retrieveResourcePath(IRealization realization) {
 
@@ -258,7 +248,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             String modelName = cubeDesc.getModelName();
             DataModelDesc modelDesc = metadataManager.getDataModelDesc(modelName);
 
-            //            dealWithStreaming(cube);
+            dealWithStreaming(cube);
 
             for (String tableName : modelDesc.getAllTables()) {
                 addRequired(TableDesc.concatResourcePath(tableName));
@@ -266,14 +256,12 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             }
 
             addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
-
-            // backward compatible with 1.3
-            addRequired(ResourceStoreUtil.concatCubeDescResourcePath(cubeDesc.getName()));
+            addRequired(CubeDesc.concatResourcePath(cubeDesc.getName()));
 
             if (includeSegments) {
                 addRequired(CubeInstance.concatResourcePath(cube.getName()));
                 for (CubeSegment segment : cube.getSegments(SegmentStatusEnum.READY)) {
-                    addRequired(ResourceStoreUtil.concatCubeSegmentStatisticsResourcePath(cube.getName(), segment.getUuid()));
+                    addRequired(CubeSegment.getStatisticsResourcePath(cube.getName(), segment.getUuid()));
                     if (includeSegmentDetails) {
                         for (String dictPat : segment.getDictionaryPaths()) {
                             addRequired(dictPat);
@@ -291,14 +279,14 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
                             try {
                                 if (onlyJobOutput) {
                                     ExecutablePO executablePO = executableDao.getJob(lastJobId);
-                                    addRequired(ResourceStoreUtil.concatJobOutputPath(lastJobId));
+                                    addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + lastJobId);
                                 } else {
                                     ExecutablePO executablePO = executableDao.getJob(lastJobId);
-                                    addRequired(ResourceStoreUtil.concatJobPath(lastJobId));
-                                    addRequired(ResourceStoreUtil.concatJobOutputPath(lastJobId));
+                                    addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + lastJobId);
+                                    addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + lastJobId);
                                     for (ExecutablePO task : executablePO.getTasks()) {
-                                        addRequired(ResourceStoreUtil.concatJobPath(task.getUuid()));
-                                        addRequired(ResourceStoreUtil.concatJobOutputPath(task.getUuid()));
+                                        addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + task.getUuid());
+                                        addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid());
                                     }
                                 }
                             } catch (PersistentException e) {

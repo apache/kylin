@@ -29,11 +29,12 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
-import org.apache.kylin.tool.util.ResourceStoreUtil;
 import org.apache.kylin.tool.util.ToolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,11 +96,11 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         // dump job output
         logger.info("Start to dump job output");
         ExecutablePO executablePO = executableDao.getJob(jobId);
-        addRequired(ResourceStoreUtil.concatJobPath(jobId));
-        addRequired(ResourceStoreUtil.concatJobOutputPath(jobId));
+        addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + jobId);
+        addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + jobId);
         for (ExecutablePO task : executablePO.getTasks()) {
-            addRequired(ResourceStoreUtil.concatJobPath(task.getUuid()));
-            addRequired(ResourceStoreUtil.concatJobOutputPath(task.getUuid()));
+            addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executablePO.getTasks());
+            addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executablePO.getTasks());
             if (includeYarnLogs) {
                 yarnLogsResources.add(task.getUuid());
             }
@@ -164,7 +165,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         try {
             KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
             KylinConfig dstConfig = KylinConfig.createInstanceFromUri(destDir.getAbsolutePath());
-            ResourceStoreUtil.copy(srcConfig, dstConfig, requiredResources);
+            ResourceTool.copy(srcConfig, dstConfig, requiredResources);
         } catch (Exception e) {
             throw new RuntimeException("Failed to extract job resources. ", e);
         }
