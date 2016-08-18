@@ -127,6 +127,27 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     });
   };
 
+  $scope.editModel = function(model){
+    var cubename = [];
+    var modelstate=false;
+    var i=0;
+    if (model.cubes.length != 0) {
+      angular.forEach(model.cubes,function(cube){
+        if (cube.status=="READY"){
+          modelstate=true;
+          cubename[i] =cube.name;
+          i++;
+        }
+      })
+    }
+    if(modelstate==false){
+      $location.path("/models/edit/"+model.name);
+    }
+    else{
+      SweetAlert.swal('Sorry','This model is still used by '+ cubename.join(','));
+    }
+  };
+
   $scope.cloneModel = function(model){
     $modal.open({
       templateUrl: 'modelClone.html',

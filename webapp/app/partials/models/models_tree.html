@@ -47,7 +47,7 @@
           <li class="list-group-item" ng-repeat="model in modelsManager.models">
 
             <div class="pull-right" showonhoverparent style="display:none;">
-              <a href="models/edit/{{model.name}}" data-placement="bottom" title="Edit Model" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-pencil fa-lg fa-fw"></span></a>
+              <a ng-click="editModel(model)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-pencil fa-lg fa-fw"></span></a>
               <a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-copy fa-lg fa-fw"></span></a>
               <a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
             </div>
