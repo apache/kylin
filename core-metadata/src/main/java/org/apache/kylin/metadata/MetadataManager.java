@@ -137,6 +137,10 @@ public class MetadataManager {
         return ResourceStore.getStore(this.config);
     }
 
+    public List<DataModelDesc> listDataModels() {
+        return Lists.newArrayList(this.dataModelDescMap.values());
+    }
+
     public List<TableDesc> listAllTables() {
         return Lists.newArrayList(srcTableMap.values());
     }
@@ -160,17 +164,17 @@ public class MetadataManager {
         int cut = tableDotColumnName.lastIndexOf('.');
         if (cut < 0)
             throw new IllegalArgumentException();
-        
+
         String tableName = tableDotColumnName.substring(0, cut);
         String columnName = tableDotColumnName.substring(cut + 1);
-        
+
         TableDesc table = getTableDesc(tableName);
         if (table == null)
             return null;
-        
+
         return table.findColumnByName(columnName);
     }
-    
+
     /**
      * Get TableDesc by name
      */

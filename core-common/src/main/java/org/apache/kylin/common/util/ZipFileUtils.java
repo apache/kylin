@@ -23,12 +23,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.LoggerFactory;
 
 public class ZipFileUtils {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ZipFileUtils.class);
+
     public static void compressZipFile(String sourceDir, String zipFilename) throws IOException {
         if (!validateZipFilename(zipFilename)) {
             throw new RuntimeException("Zipfile must end with .zip");
@@ -36,6 +41,29 @@ public class ZipFileUtils {
         ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream(zipFilename));
         compressDirectoryToZipfile(normDir(new File(sourceDir).getParent()), normDir(sourceDir), zipFile);
         IOUtils.closeQuietly(zipFile);
+    }
+
+    public static void decompressZipfileToDirectory(String zipFileName, File outputFolder) throws IOException {
+
+        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFileName));
+        ZipEntry zipEntry = null;
+        while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+            logger.info("decompressing " + zipEntry.getName() + " is directory:" + zipEntry.isDirectory() + " available: " + zipInputStream.available());
+
+            File temp = new File(outputFolder, zipEntry.getName());
+            if (zipEntry.isDirectory()) {
+                temp.mkdirs();
+            } else {
+                temp.getParentFile().mkdirs();
+                temp.createNewFile();
+                temp.setLastModified(zipEntry.getTime());
+                FileOutputStream outputStream = new FileOutputStream(temp);
+                IOUtils.copy(zipInputStream, outputStream);
+                IOUtils.closeQuietly(outputStream);
+            }
+        }
+        IOUtils.closeQuietly(zipInputStream);
+
     }
 
     private static void compressDirectoryToZipfile(String rootDir, String sourceDir, ZipOutputStream out) throws IOException {

@@ -26,8 +26,8 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringSplitter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
 /**
  * Table Metadata from Source. All name should be uppercase.
@@ -184,16 +184,37 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return getIdentity().hashCode();
     }
 
+    //    @Override
+    //    public boolean equals(Object obj) {
+    //        if (this == obj)
+    //            return true;
+    //        if (!super.equals(obj))
+    //            return false;
+    //        if (getClass() != obj.getClass())
+    //            return false;
+    //        TableDesc other = (TableDesc) obj;
+    //        return getIdentity().equals(other.getIdentity());
+    //    }
+
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(Object o) {
+        if (this == o)
             return true;
-        if (!super.equals(obj))
+        if (o == null || getClass() != o.getClass())
             return false;
-        if (getClass() != obj.getClass())
+
+        TableDesc tableDesc = (TableDesc) o;
+
+        if (sourceType != tableDesc.sourceType)
             return false;
-        TableDesc other = (TableDesc) obj;
-        return getIdentity().equals(other.getIdentity());
+        if (name != null ? !name.equals(tableDesc.name) : tableDesc.name != null)
+            return false;
+        if (!Arrays.equals(columns, tableDesc.columns))
+            return false;
+        //        if (tableType != null ? !tableType.equals(tableDesc.tableType) : tableDesc.tableType != null)
+        //            return false;
+        return getIdentity().equals(tableDesc.getIdentity());
+
     }
 
     public String getMaterializedName() {
@@ -202,7 +223,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     @Override
     public String toString() {
-        return "TableDesc [database=" + getDatabase() + " name=" + name + "]";
+        return "TableDesc{" + "name='" + name + '\'' + ", columns=" + Arrays.toString(columns) + ", sourceType=" + sourceType + ", tableType='" + tableType + '\'' + ", database=" + database + ", identity='" + getIdentity() + '\'' + '}';
     }
 
     /** create a mockup table for unit test */

@@ -62,7 +62,6 @@ import com.google.common.collect.Sets;
 
 /**
  * extract cube related info for debugging/distributing purpose
- * TODO: deal with II case
  */
 public class CubeMetaExtractor extends AbstractInfoExtractor {
 
@@ -204,10 +203,12 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
             ResourceTool.copy(srcConfig, dstConfig, Lists.newArrayList(requiredResources));
 
-            try {
-                ResourceTool.copy(srcConfig, dstConfig, Lists.newArrayList(optionalResources));
-            } catch (Exception e) {
-                logger.warn("Exception when copying optional resource {}. May be caused by resource missing. Ignore it.");
+            for (String r : optionalResources) {
+                try {
+                    ResourceTool.copy(srcConfig, dstConfig, Lists.newArrayList(r));
+                } catch (Exception e) {
+                    logger.warn("Exception when copying optional resource {}. May be caused by resource missing. skip it.", r);
+                }
             }
 
             ResourceStore dstStore = ResourceStore.getStore(dstConfig);

@@ -173,21 +173,28 @@ public class ColumnDesc implements Serializable {
         if (getClass() != obj.getClass())
             return false;
         ColumnDesc other = (ColumnDesc) obj;
+        
         if (name == null) {
             if (other.name != null)
                 return false;
         } else if (!name.equals(other.name))
             return false;
-        if (table == null) {
-            if (other.table != null)
+        
+        if (datatype == null) {
+            if (other.datatype != null)
                 return false;
-        } else if (!table.equals(other.table))
+        } else if (!datatype.equals(other.datatype))
             return false;
+        
         return true;
     }
 
     @Override
     public String toString() {
-        return "ColumnDesc [name=" + name + ",table=" + table.getIdentity() + "]";
+        return "ColumnDesc{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", datatype='" + datatype + '\'' +
+                '}';
     }
 }

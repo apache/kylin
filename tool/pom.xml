@@ -49,6 +49,15 @@
             <artifactId>hbase-client</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Env & Test -->
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        
     </dependencies>
 
 

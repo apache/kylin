@@ -18,6 +18,7 @@
 package org.apache.kylin.storage.hybrid;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -146,6 +147,10 @@ public class HybridManager implements IRealizationProvider {
     @Override
     public IRealization getRealization(String name) {
         return getHybridInstance(name);
+    }
+
+    public Collection<HybridInstance> listHybridInstances() {
+        return hybridMap.values();
     }
 
     public HybridInstance getHybridInstance(String name) {

@@ -26,6 +26,12 @@ dir="$KYLIN_HOME/bin"
 source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
 
+
+mkdir -p ${KYLIN_HOME}/ext
+export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
+export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
+        
+
 # start command
 if [ "$1" == "start" ]
 then
@@ -69,9 +75,8 @@ then
         then source ${dir}/setenv.sh
     fi
 
-    export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:$HBASE_CLASSPATH_PREFIX
-    mkdir -p ${KYLIN_HOME}/ext
-    export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}:${KYLIN_HOME}/conf
+    #additionally add tomcat libs to HBASE_CLASSPATH_PREFIX
+    export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:${HBASE_CLASSPATH_PREFIX}
 
     if [ -z "$KYLIN_REST_ADDRESS" ]
     then
@@ -83,7 +88,8 @@ then
     fi
 
     #debug if encounter NoClassDefError
-    #hbase classpath
+    echo "hbase classpath is:"
+    hbase classpath
 
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     hbase ${KYLIN_EXTRA_START_OPTS} \
@@ -146,10 +152,7 @@ then
         if [ -f "${dir}/setenv.sh" ]
             then source ${dir}/setenv.sh
         fi
-
-        mkdir -p ${KYLIN_HOME}/ext
-        export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
-
+     
         # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
         hbase ${KYLIN_EXTRA_START_OPTS} \
         -Dlog4j.configuration=kylin-log4j.properties\
@@ -195,9 +198,6 @@ then
         then source ${dir}/setenv.sh
     fi
 
-    mkdir -p ${KYLIN_HOME}/ext
-    export HBASE_CLASSPATH=$hive_dependency:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH}
-
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     hbase ${KYLIN_EXTRA_START_OPTS} \
     -Dlog4j.configuration=kylin-log4j.properties\
@@ -209,14 +209,12 @@ then
 
 elif [ "$1" = "version" ]
 then
-    export HBASE_CLASSPATH=${KYLIN_HOME}/lib/*
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.common.KylinVersion
     exit 0
 
 elif [ "$1" = "diag" ]
 then
-    shift
-    exec $KYLIN_HOME/bin/diag.sh $@
+    echo "kylin.sh diag no longer supported, use diag.sh instead"
     exit 0
 
 # tool command
@@ -229,8 +227,6 @@ then
     if [ -f "${dir}/setenv-tool.sh" ]
         then source ${dir}/setenv-tool.sh
     fi
-
-    export HBASE_CLASSPATH=${KYLIN_HOME}/conf/:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/tool/*:$hive_dependency:${HBASE_CLASSPATH}
 
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=kylin-log4j.properties "$@"
 
