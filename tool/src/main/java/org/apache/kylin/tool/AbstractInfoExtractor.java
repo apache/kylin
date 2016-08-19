@@ -119,6 +119,7 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
             output.append("\nDump " + packageType + " package locates at: \n" + exportDir.getAbsolutePath());
             output.append("\n========================================");
             logger.info(output.toString());
+            System.out.println(output.toString());
         }
     }
 
