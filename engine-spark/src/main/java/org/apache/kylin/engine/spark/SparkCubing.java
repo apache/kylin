@@ -177,7 +177,7 @@ public class SparkCubing extends AbstractApplication {
         final String[] columns = intermediateTable.columns();
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
-        final CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
+        final CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc);
         final List<TblColRef> baseCuboidColumn = Cuboid.findById(cubeDesc, Cuboid.getBaseCuboidId(cubeDesc)).getColumns();
         final long start = System.currentTimeMillis();
         final RowKeyDesc rowKey = cubeDesc.getRowkey();
@@ -248,7 +248,7 @@ public class SparkCubing extends AbstractApplication {
             zeroValue.put(id, new HyperLogLogPlusCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision()));
         }
 
-        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
+        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cubeDesc);
 
         final int[] rowKeyColumnIndexes = flatTableDesc.getRowKeyColumnIndexes();
         final int nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;

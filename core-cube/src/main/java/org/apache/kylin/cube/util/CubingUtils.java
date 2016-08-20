@@ -75,7 +75,7 @@ public class CubingUtils {
     private static Logger logger = LoggerFactory.getLogger(CubingUtils.class);
 
     public static Map<Long, HyperLogLogPlusCounter> sampling(CubeDesc cubeDesc, Iterable<List<String>> streams) {
-        CubeJoinedFlatTableDesc intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
+        CubeJoinedFlatTableDesc flatDesc = new CubeJoinedFlatTableDesc(cubeDesc);
         final int rowkeyLength = cubeDesc.getRowkey().getRowKeyColumns().length;
         final List<Long> allCuboidIds = new CuboidScheduler(cubeDesc).getAllCuboidIds();
         final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
@@ -125,7 +125,7 @@ public class CubingUtils {
             //generate hash for each row key column
             for (int i = 0; i < rowkeyLength; i++) {
                 Hasher hc = hf.newHasher();
-                final String cell = row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]);
+                final String cell = row.get(flatDesc.getRowKeyColumnIndexes()[i]);
                 if (cell != null) {
                     row_hashcodes[i].set(hc.putString(cell).hash().asBytes());
                 } else {

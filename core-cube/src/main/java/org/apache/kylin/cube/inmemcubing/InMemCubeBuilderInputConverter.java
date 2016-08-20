@@ -50,7 +50,7 @@ public class InMemCubeBuilderInputConverter {
 
     public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap, GTInfo gtInfo) {
         this.gtInfo = gtInfo;
-        this.intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc, null);
+        this.intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc);
         this.measureCount = cubeDesc.getMeasures().size();
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
         this.measureIngesters = MeasureIngester.create(cubeDesc.getMeasures());

@@ -30,6 +30,8 @@ public class LookupDesc {
 
     @JsonProperty("join")
     private JoinDesc join;
+    
+    private TableDesc tableDesc;
 
     public String getTable() {
         return table;
@@ -46,5 +48,15 @@ public class LookupDesc {
     public void setJoin(JoinDesc join) {
         this.join = join;
     }
+
+    public TableDesc getTableDesc() {
+        return tableDesc;
+    }
+
+    void setTableDesc(TableDesc tableDesc) {
+        this.tableDesc = tableDesc;
+    }
+    
+    
 
 }

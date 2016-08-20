@@ -28,7 +28,6 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.IntermediateColumnDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -48,13 +47,21 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private int[] rowKeyColumnIndexes; // the column index on flat table
     private int[][] measureColumnIndexes; // [i] is the i.th measure related column index on flat table
 
-    private List<IntermediateColumnDesc> columnList = Lists.newArrayList();
-
-    private Map<String, Integer> columnIndexMap;
+    private List<TblColRef> columnList = Lists.newArrayList();
+    private Map<TblColRef, Integer> columnIndexMap;
 
     private List<JoinDesc> cubeJoins;
 
-    public CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment) {
+    
+    public CubeJoinedFlatTableDesc(CubeDesc cubeDesc) {
+        this(cubeDesc, null);
+    }
+    
+    public CubeJoinedFlatTableDesc(CubeSegment cubeSegment) {
+        this(cubeSegment.getCubeDesc(), cubeSegment);
+    }
+    
+    private CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment /* can be null */) {
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
         this.columnIndexMap = Maps.newHashMap();
@@ -62,16 +69,8 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         parseCubeDesc();
     }
 
-    /**
-     * @return the cubeSegment
-     */
-    public CubeSegment getCubeSegment() {
-        return cubeSegment;
-    }
-
     // check what columns from hive tables are required, and index them
     private void parseCubeDesc() {
-        int rowkeyColCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
@@ -83,19 +82,20 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
         int columnIndex = 0;
         for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived(false)) {
-            columnIndexMap.put(colName(col.getCanonicalName()), columnIndex);
-            columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), col));
+            columnIndexMap.put(col, columnIndex);
+            columnList.add(col);
             columnIndex++;
         }
 
         // build index for rowkey columns
         List<TblColRef> cuboidColumns = baseCuboid.getColumns();
+        int rowkeyColCount = cubeDesc.getRowkey().getRowKeyColumns().length;
         rowKeyColumnIndexes = new int[rowkeyColCount];
         for (int i = 0; i < rowkeyColCount; i++) {
-            String colName = colName(cuboidColumns.get(i).getCanonicalName());
-            Integer dimIdx = columnIndexMap.get(colName);
+            TblColRef col = cuboidColumns.get(i);
+            Integer dimIdx = columnIndexMap.get(col);
             if (dimIdx == null) {
-                throw new RuntimeException("Can't find column " + colName);
+                throw new RuntimeException("Can't find column " + col);
             }
             rowKeyColumnIndexes[i] = dimIdx;
         }
@@ -112,11 +112,11 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
                 measureColumnIndexes[i] = new int[colRefs.size()];
                 for (int j = 0; j < colRefs.size(); j++) {
                     TblColRef c = colRefs.get(j);
-                    measureColumnIndexes[i][j] = contains(columnList, c);
+                    measureColumnIndexes[i][j] = columnList.indexOf(c);
                     if (measureColumnIndexes[i][j] < 0) {
                         measureColumnIndexes[i][j] = columnIndex;
-                        columnIndexMap.put(colName(c.getCanonicalName()), columnIndex);
-                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c));
+                        columnIndexMap.put(c, columnIndex);
+                        columnList.add(c);
                         columnIndex++;
                     }
                 }
@@ -126,16 +126,16 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         if (cubeDesc.getDictionaries() != null) {
             for (DictionaryDesc dictDesc : cubeDesc.getDictionaries()) {
                 TblColRef c = dictDesc.getColumnRef();
-                if (contains(columnList, c) < 0) {
-                    columnIndexMap.put(colName(c.getCanonicalName()), columnIndex);
-                    columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c));
+                if (columnList.indexOf(c) < 0) {
+                    columnIndexMap.put(c, columnIndex);
+                    columnList.add(c);
                     columnIndex++;
                 }
                 if (dictDesc.getResuseColumnRef() != null) {
                     c = dictDesc.getResuseColumnRef();
-                    if (contains(columnList, c) < 0) {
-                        columnIndexMap.put(colName(c.getCanonicalName()), columnIndex);
-                        columnList.add(new IntermediateColumnDesc(String.valueOf(columnIndex), c));
+                    if (columnList.indexOf(c) < 0) {
+                        columnIndexMap.put(c, columnIndex);
+                        columnList.add(c);
                         columnIndex++;
                     }
                 }
@@ -149,16 +149,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
                 cubeJoins.add(d.getJoin());
             }
         }
-    }
-
-    private int contains(List<IntermediateColumnDesc> columnList, TblColRef c) {
-        for (int i = 0; i < columnList.size(); i++) {
-            IntermediateColumnDesc col = columnList.get(i);
-
-            if (col.isSameAs(c.getTable(), c.getName()))
-                return i;
-        }
-        return -1;
     }
 
     // sanity check the input record (in bytes) matches what's expected
@@ -188,18 +178,13 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     }
 
     @Override
-    public List<IntermediateColumnDesc> getColumnList() {
+    public List<TblColRef> getAllColumns() {
         return columnList;
     }
 
     @Override
     public DataModelDesc getDataModel() {
         return cubeDesc.getModel();
-    }
-
-    @Override
-    public List<JoinDesc> getUsedJoinsSet() {
-        return cubeJoins;
     }
 
     private static String colName(String canonicalColName) {
@@ -213,6 +198,21 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
             throw new IllegalArgumentException("Column " + colRef.toString() + " wasn't found on flat table.");
 
         return index.intValue();
+    }
+
+    @Override
+    public long getSourceOffsetStart() {
+        return cubeSegment.getSourceOffsetStart();
+    }
+
+    @Override
+    public long getSourceOffsetEnd() {
+        return cubeSegment.getSourceOffsetEnd();
+    }
+
+    @Override
+    public TblColRef getDistributedBy() {
+        return cubeDesc.getDistributedByColumn();
     }
 
 }

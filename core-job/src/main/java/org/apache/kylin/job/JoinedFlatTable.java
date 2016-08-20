@@ -28,19 +28,18 @@ import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.IntermediateColumnDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  *
@@ -79,24 +78,24 @@ public class JoinedFlatTable {
         return buffer.toString();
     }
 
-    public static String generateCreateTableStatement(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir) {
+    public static String generateCreateTableStatement(IJoinedFlatTableDesc flatDesc, String storageDfsDir) {
         StringBuilder ddl = new StringBuilder();
 
-        ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediateTableDesc.getTableName() + "\n");
+        ddl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + flatDesc.getTableName() + "\n");
 
         ddl.append("(" + "\n");
-        for (int i = 0; i < intermediateTableDesc.getColumnList().size(); i++) {
-            IntermediateColumnDesc col = intermediateTableDesc.getColumnList().get(i);
+        for (int i = 0; i < flatDesc.getAllColumns().size(); i++) {
+            TblColRef col = flatDesc.getAllColumns().get(i);
             if (i > 0) {
                 ddl.append(",");
             }
-            ddl.append(colName(col.getCanonicalName()) + " " + getHiveDataType(col.getDataType()) + "\n");
+            ddl.append(colName(col.getCanonicalName()) + " " + getHiveDataType(col.getDatatype()) + "\n");
         }
         ddl.append(")" + "\n");
 
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\177'" + "\n");
         ddl.append("STORED AS SEQUENCEFILE" + "\n");
-        ddl.append("LOCATION '" + getTableDir(intermediateTableDesc, storageDfsDir) + "';").append("\n");
+        ddl.append("LOCATION '" + getTableDir(flatDesc, storageDfsDir) + "';").append("\n");
         // ddl.append("TBLPROPERTIES ('serialization.null.format'='\\\\N')" +
         // ";\n");
         return ddl.toString();
@@ -115,32 +114,32 @@ public class JoinedFlatTable {
         return sql.toString();
     }
 
-    public static String generateSelectDataStatement(IJoinedFlatTableDesc intermediateTableDesc) {
+    public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + "\n");
         String tableAlias;
-        Map<String, String> tableAliasMap = buildTableAliasMap(intermediateTableDesc.getDataModel());
-        for (int i = 0; i < intermediateTableDesc.getColumnList().size(); i++) {
-            IntermediateColumnDesc col = intermediateTableDesc.getColumnList().get(i);
+        Map<String, String> tableAliasMap = buildTableAliasMap(flatDesc.getDataModel());
+        for (int i = 0; i < flatDesc.getAllColumns().size(); i++) {
+            TblColRef col = flatDesc.getAllColumns().get(i);
             if (i > 0) {
                 sql.append(",");
             }
-            tableAlias = tableAliasMap.get(col.getTableName());
-            sql.append(tableAlias + "." + col.getColumnName() + "\n");
+            tableAlias = tableAliasMap.get(col.getTable());
+            sql.append(tableAlias + "." + col.getName() + "\n");
         }
-        appendJoinStatement(intermediateTableDesc, sql, tableAliasMap);
-        appendWhereStatement(intermediateTableDesc, sql, tableAliasMap);
-        appendDistributeStatement(intermediateTableDesc, sql, tableAliasMap);
+        appendJoinStatement(flatDesc, sql, tableAliasMap);
+        appendWhereStatement(flatDesc, sql, tableAliasMap);
+        appendDistributeStatement(flatDesc, sql, tableAliasMap);
         return sql.toString();
     }
 
-    public static String generateCountDataStatement(IJoinedFlatTableDesc intermediateTableDesc, final String outputDir) {
-        final Map<String, String> tableAliasMap = buildTableAliasMap(intermediateTableDesc.getDataModel());
+    public static String generateCountDataStatement(IJoinedFlatTableDesc flatDesc, final String outputDir) {
+        final Map<String, String> tableAliasMap = buildTableAliasMap(flatDesc.getDataModel());
         final StringBuilder sql = new StringBuilder();
-        final String factTbl = intermediateTableDesc.getDataModel().getFactTable();
+        final String factTbl = flatDesc.getDataModel().getFactTable();
         sql.append("dfs -mkdir -p " + outputDir + ";\n");
         sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + factTbl + " " + tableAliasMap.get(factTbl) + "\n");
-        appendWhereStatement(intermediateTableDesc, sql, tableAliasMap);
+        appendWhereStatement(flatDesc, sql, tableAliasMap);
         return sql.toString();
     }
 
@@ -172,12 +171,12 @@ public class JoinedFlatTable {
         tableAliasMap.put(table, alias);
     }
 
-    private static void appendJoinStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
-        List<JoinDesc> cubeJoins = intermediateTableDesc.getUsedJoinsSet();
+    private static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
+        List<JoinDesc> cubeJoins = getUsedJoinsSet(flatDesc);
 
         Set<String> dimTableCache = new HashSet<String>();
 
-        DataModelDesc dataModelDesc = intermediateTableDesc.getDataModel();
+        DataModelDesc dataModelDesc = flatDesc.getDataModel();
         String factTableName = dataModelDesc.getFactTable();
         String factTableAlias = tableAliasMap.get(factTableName);
         sql.append("FROM " + factTableName + " as " + factTableAlias + " \n");
@@ -212,13 +211,25 @@ public class JoinedFlatTable {
         }
     }
 
-    private static void appendDistributeStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
-        if (!(intermediateTableDesc instanceof CubeJoinedFlatTableDesc)) {
-            return;//TODO: for now only cube segments support distribution
+    private static List<JoinDesc> getUsedJoinsSet(IJoinedFlatTableDesc flatDesc) {
+        Set<String> usedTableIdentities = Sets.newHashSet();
+        for (TblColRef col : flatDesc.getAllColumns()) {
+            usedTableIdentities.add(col.getTable());
         }
-        CubeJoinedFlatTableDesc desc = (CubeJoinedFlatTableDesc) intermediateTableDesc;
+        
+        List<JoinDesc> result = Lists.newArrayList();
+        for (LookupDesc lookup : flatDesc.getDataModel().getLookups()) {
+            String table = lookup.getTableDesc().getIdentity();
+            if (usedTableIdentities.contains(table)) {
+                result.add(lookup.getJoin());
+            }
+        }
+        
+        return result;
+    }
 
-        TblColRef distDcol = desc.getCubeDesc().getDistributedByColumn();
+    private static void appendDistributeStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
+        TblColRef distDcol = flatDesc.getDistributedBy();
 
         if (distDcol != null) {
             String tblAlias = tableAliasMap.get(distDcol.getTable());
@@ -228,30 +239,22 @@ public class JoinedFlatTable {
         }
     }
 
-    private static void appendWhereStatement(IJoinedFlatTableDesc intermediateTableDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
-        if (!(intermediateTableDesc instanceof CubeJoinedFlatTableDesc)) {
-            return;//TODO: for now only cube segments support filter and partition
-        }
-        CubeJoinedFlatTableDesc desc = (CubeJoinedFlatTableDesc) intermediateTableDesc;
-
+    private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
         boolean hasCondition = false;
         StringBuilder whereBuilder = new StringBuilder();
         whereBuilder.append("WHERE");
 
-        CubeDesc cubeDesc = desc.getCubeDesc();
-        DataModelDesc model = cubeDesc.getModel();
+        DataModelDesc model = flatDesc.getDataModel();
 
         if (model.getFilterCondition() != null && model.getFilterCondition().equals("") == false) {
             whereBuilder.append(" (").append(model.getFilterCondition()).append(") ");
             hasCondition = true;
         }
 
-        CubeSegment cubeSegment = desc.getCubeSegment();
-
-        if (null != cubeSegment) {
-            PartitionDesc partDesc = model.getPartitionDesc();
-            long dateStart = cubeSegment.getDateRangeStart();
-            long dateEnd = cubeSegment.getDateRangeEnd();
+        PartitionDesc partDesc = model.getPartitionDesc();
+        if (partDesc != null && partDesc.getPartitionDateColumn() != null) {
+            long dateStart = flatDesc.getSourceOffsetStart();
+            long dateEnd = flatDesc.getSourceOffsetEnd();
 
             if (!(dateStart == 0 && dateEnd == Long.MAX_VALUE)) {
                 whereBuilder.append(hasCondition ? " AND (" : " (");

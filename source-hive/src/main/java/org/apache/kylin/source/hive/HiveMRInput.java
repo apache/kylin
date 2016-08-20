@@ -28,9 +28,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -56,23 +53,13 @@ import com.google.common.collect.Sets;
 public class HiveMRInput implements IMRInput {
 
     @Override
-    public IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
-        return new BatchCubingInputSide(seg);
+    public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
+        return new BatchCubingInputSide(flatDesc);
     }
 
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
         return new HiveTableInputFormat(table.getIdentity());
-    }
-
-    @Override
-    public IMRBatchMergeInputSide getBatchMergeInputSide(CubeSegment seg) {
-        return new IMRBatchMergeInputSide() {
-            @Override
-            public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
-                // doing nothing
-            }
-        };
     }
 
     public static class HiveTableInputFormat implements IMRTableInputFormat {
@@ -111,14 +98,12 @@ public class HiveMRInput implements IMRInput {
     public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
 
         final JobEngineConfig conf;
-        final CubeSegment seg;
-        final IJoinedFlatTableDesc flatHiveTableDesc;
+        final IJoinedFlatTableDesc flatDesc;
         String hiveViewIntermediateTables = "";
 
-        public BatchCubingInputSide(CubeSegment seg) {
+        public BatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
             this.conf = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
-            this.seg = seg;
-            this.flatHiveTableDesc = seg.getJoinedFlatTableDesc();
+            this.flatDesc = flatDesc;
         }
 
         @Override
@@ -127,8 +112,8 @@ public class HiveMRInput implements IMRInput {
 
             final String rowCountOutputDir = JobBuilderSupport.getJobWorkingDir(conf, jobFlow.getId()) + "/row_count";
 
-            jobFlow.addTask(createCountHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), rowCountOutputDir));
-            jobFlow.addTask(createFlatHiveTableStep(conf, flatHiveTableDesc, jobFlow.getId(), cubeName, rowCountOutputDir));
+            jobFlow.addTask(createCountHiveTableStep(conf, flatDesc, jobFlow.getId(), rowCountOutputDir));
+            jobFlow.addTask(createFlatHiveTableStep(conf, flatDesc, jobFlow.getId(), cubeName, rowCountOutputDir));
             AbstractExecutable task = createLookupHiveViewMaterializationStep(jobFlow.getId());
             if (task != null) {
                 jobFlow.addTask(task);
@@ -155,13 +140,10 @@ public class HiveMRInput implements IMRInput {
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
 
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            CubeManager cubeMgr = CubeManager.getInstance(kylinConfig);
-            String cubeName = seg.getRealization().getName();
-            CubeDesc cubeDesc = cubeMgr.getCube(cubeName).getDescriptor();
             MetadataManager metadataManager = MetadataManager.getInstance(kylinConfig);
             final Set<TableDesc> lookupViewsTables = Sets.newHashSet();
 
-            for (LookupDesc lookupDesc : cubeDesc.getModel().getLookups()) {
+            for (LookupDesc lookupDesc : flatDesc.getDataModel().getLookups()) {
                 TableDesc tableDesc = metadataManager.getTableDesc(lookupDesc.getTable());
                 if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
                     lookupViewsTables.add(tableDesc);
@@ -216,7 +198,7 @@ public class HiveMRInput implements IMRInput {
             GarbageCollectionStep step = new GarbageCollectionStep();
             step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
             step.setIntermediateTableIdentity(getIntermediateTableIdentity());
-            step.setExternalDataPath(JoinedFlatTable.getTableDir(flatHiveTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobFlow.getId())));
+            step.setExternalDataPath(JoinedFlatTable.getTableDir(flatDesc, JobBuilderSupport.getJobWorkingDir(conf, jobFlow.getId())));
             step.setHiveViewIntermediateTableIdentities(hiveViewIntermediateTables);
             jobFlow.addTask(step);
         }
@@ -227,7 +209,7 @@ public class HiveMRInput implements IMRInput {
         }
 
         private String getIntermediateTableIdentity() {
-            return conf.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatHiveTableDesc.getTableName();
+            return conf.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatDesc.getTableName();
         }
     }
 

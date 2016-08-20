@@ -149,8 +149,8 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     }
 
     static void feedData(final CubeInstance cube, final String flatTable, ArrayBlockingQueue<List<String>> queue, int count, long randSeed) throws IOException, InterruptedException {
-        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), null);
-        int nColumns = flatTableDesc.getColumnList().size();
+        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor());
+        int nColumns = flatTableDesc.getAllColumns().size();
 
         @SuppressWarnings("unchecked")
         Set<String>[] distinctSets = new Set[nColumns];
@@ -190,8 +190,8 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     static Map<TblColRef, Dictionary<String>> getDictionaryMap(CubeInstance cube, String flatTable) throws IOException {
         Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
         CubeDesc desc = cube.getDescriptor();
-        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(desc, null);
-        int nColumns = flatTableDesc.getColumnList().size();
+        CubeJoinedFlatTableDesc flatTableDesc = new CubeJoinedFlatTableDesc(desc);
+        int nColumns = flatTableDesc.getAllColumns().size();
 
         List<TblColRef> columns = Cuboid.getBaseCuboid(desc).getColumns();
         for (int c = 0; c < columns.size(); c++) {

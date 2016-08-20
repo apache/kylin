@@ -102,7 +102,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
 
-        intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
+        intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
 
         bytesSplitter = new BytesSplitter(200, 16384);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);

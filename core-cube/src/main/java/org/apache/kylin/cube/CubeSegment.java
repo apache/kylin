@@ -531,7 +531,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable {
     }
 
     public IJoinedFlatTableDesc getJoinedFlatTableDesc() {
-        return new CubeJoinedFlatTableDesc(this.getCubeDesc(), this);
+        return new CubeJoinedFlatTableDesc(this);
     }
 
     public String getIndexPath() {

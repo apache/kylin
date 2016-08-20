@@ -37,7 +37,7 @@ import org.apache.kylin.storage.StorageFactory;
 public class MRUtil {
 
     public static IMRBatchCubingInputSide getBatchCubingInputSide(CubeSegment seg) {
-        return SourceFactory.createEngineAdapter(seg, IMRInput.class).getBatchCubingInputSide(seg);
+        return SourceFactory.createEngineAdapter(seg, IMRInput.class).getBatchCubingInputSide(seg.getJoinedFlatTableDesc());
     }
 
     public static IMRTableInputFormat getTableInputFormat(String tableName) {
@@ -66,10 +66,6 @@ public class MRUtil {
 
     public static IMRBatchMergeOutputSide2 getBatchMergeOutputSide2(CubeSegment seg) {
         return StorageFactory.createEngineAdapter(seg, IMROutput2.class).getBatchMergeOutputSide(seg);
-    }
-
-    public static IMRInput.IMRBatchMergeInputSide getBatchMergeInputSide(CubeSegment seg) {
-        return SourceFactory.createEngineAdapter(seg, IMRInput.class).getBatchMergeInputSide(seg);
     }
 
     // use this method instead of ToolRunner.run() because ToolRunner.run() is not thread-sale

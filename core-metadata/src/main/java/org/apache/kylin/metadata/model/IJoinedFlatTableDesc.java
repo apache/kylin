@@ -26,9 +26,13 @@ public interface IJoinedFlatTableDesc {
 
     String getTableName();
 
-    List<IntermediateColumnDesc> getColumnList();
-
     DataModelDesc getDataModel();
+    
+    List<TblColRef> getAllColumns();
 
-    List<JoinDesc> getUsedJoinsSet();
+    long getSourceOffsetStart();
+    
+    long getSourceOffsetEnd();
+    
+    TblColRef getDistributedBy();
 }

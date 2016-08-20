@@ -51,7 +51,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready");
         cubeSegment = cube.getSegments().get(0);
-        intermediateTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor(), cubeSegment);
+        intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
     }
 
     @After

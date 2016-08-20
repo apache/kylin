@@ -270,6 +270,7 @@ public class DataModelDesc extends RootPersistentEntity {
             if (dimTable == null) {
                 throw new IllegalStateException("Table " + lookup.getTable() + " does not exist for " + this);
             }
+            lookup.setTableDesc(dimTable);
             this.lookupTableDescs.add(dimTable);
 
             JoinDesc join = lookup.getJoin();
