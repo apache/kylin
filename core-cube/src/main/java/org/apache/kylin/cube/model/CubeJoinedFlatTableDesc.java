@@ -18,7 +18,6 @@
 
 package org.apache.kylin.cube.model;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +27,6 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
-import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -50,9 +48,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private List<TblColRef> columnList = Lists.newArrayList();
     private Map<TblColRef, Integer> columnIndexMap;
 
-    private List<JoinDesc> cubeJoins;
-
-    
     public CubeJoinedFlatTableDesc(CubeDesc cubeDesc) {
         this(cubeDesc, null);
     }
@@ -65,7 +60,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
         this.columnIndexMap = Maps.newHashMap();
-        this.cubeJoins = new ArrayList<JoinDesc>(cubeDesc.getDimensions().size());
         parseCubeDesc();
     }
 
@@ -143,12 +137,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         }
 
         columnCount = columnIndex;
-
-        for (DimensionDesc d : cubeDesc.getDimensions()) {
-            if (d.getJoin() != null) {
-                cubeJoins.add(d.getJoin());
-            }
-        }
     }
 
     // sanity check the input record (in bytes) matches what's expected
@@ -187,13 +175,8 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         return cubeDesc.getModel();
     }
 
-    private static String colName(String canonicalColName) {
-        return canonicalColName.replace(".", "_");
-    }
-
     public int getColumnIndex(TblColRef colRef) {
-        String key = colName(colRef.getCanonicalName());
-        Integer index = columnIndexMap.get(key);
+        Integer index = columnIndexMap.get(colRef);
         if (index == null)
             throw new IllegalArgumentException("Column " + colRef.toString() + " wasn't found on flat table.");
 
