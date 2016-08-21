@@ -29,6 +29,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.common.restclient.CaseInsensitiveStringCache;
+import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -102,8 +103,8 @@ public class HybridManager implements IRealizationProvider {
     public void reloadHybridInstanceByChild(RealizationType type, String realizationName) {
         for (HybridInstance hybridInstance : hybridMap.values()) {
             boolean includes = false;
-            for (IRealization realization : hybridInstance.getRealizations()) {
-                if (realization.getType() == type && realization.getName().equalsIgnoreCase(realizationName)) {
+            for (RealizationEntry realizationEntry : hybridInstance.getRealizationEntries()) {
+                if (realizationEntry.getType() == type && realizationEntry.getRealization().equalsIgnoreCase(realizationName)) {
                     includes = true;
                     break;
                 }
