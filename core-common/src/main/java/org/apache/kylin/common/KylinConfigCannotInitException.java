@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common;
 
+@SuppressWarnings("serial")
 public class KylinConfigCannotInitException extends RuntimeException {
     public KylinConfigCannotInitException(String message) {
         super(message);

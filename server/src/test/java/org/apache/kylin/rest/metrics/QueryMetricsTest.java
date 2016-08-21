@@ -18,26 +18,24 @@
 
 package org.apache.kylin.rest.metrics;
 
-import org.apache.kylin.rest.request.SQLRequest;
-import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.service.ServiceTestBase;
-import org.apache.kylin.rest.util.QueryMetricsUtil;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import org.apache.kylin.rest.request.SQLRequest;
+import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.service.ServiceTestBase;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class QueryMetricsTest extends ServiceTestBase {
 
     private static MBeanServer mBeanServer;
     private static ObjectName objectName;
-    private ConcurrentHashMap<String, QueryMetrics> metricsMap = new ConcurrentHashMap<String, QueryMetrics>();
 
     @Before
     public void setup() throws Exception {
@@ -71,7 +69,7 @@ public class QueryMetricsTest extends ServiceTestBase {
         sqlResponse.setResults(results);
         sqlResponse.setStorageCacheUsed(true);
 
-        QueryMetricsUtil.updateMetrics(sqlRequest, sqlResponse, metricsMap);
+        QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
 
         Thread.sleep(2000);
 
@@ -100,7 +98,7 @@ public class QueryMetricsTest extends ServiceTestBase {
         sqlResponse2.setCube("test_cube");
         sqlResponse2.setIsException(true);
 
-        QueryMetricsUtil.updateMetrics(sqlRequest, sqlResponse2, metricsMap);
+        QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse2);
 
         Thread.sleep(2000);
 

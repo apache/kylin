@@ -570,6 +570,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Long.valueOf(this.getOptional("kylin.query.sequence.expire.time", "86400000"));//default a day
     }
 
+    public boolean getQueryMetricsEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.metrics.enabled", "false"));
+    }
+    
     public int[] getQueryMetricsPercentilesIntervals() {
         String[] dft = { "60", "300", "3600" };
         return getOptionalIntArray("kylin.query.metrics.percentiles.intervals", dft);

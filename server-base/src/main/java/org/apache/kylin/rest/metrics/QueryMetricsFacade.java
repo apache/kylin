@@ -16,10 +16,10 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.rest.metrics;
 
+import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.metrics.QueryMetrics;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
@@ -29,14 +29,28 @@ import javax.annotation.concurrent.ThreadSafe;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * update metrics about query
+ * The entrance of metrics features.
  */
 @ThreadSafe
-public class QueryMetricsUtil {
+public class QueryMetricsFacade {
 
-    private static final Logger logger = LoggerFactory.getLogger(QueryMetricsUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueryMetricsFacade.class);
 
-    public static void updateMetrics(SQLRequest sqlRequest, SQLResponse sqlResponse, ConcurrentHashMap<String, QueryMetrics> metricsMap) {
+    private static boolean enabled = false;
+    private static ConcurrentHashMap<String, QueryMetrics> metricsMap = new ConcurrentHashMap<String, QueryMetrics>();
+    
+    public static void init() {
+        enabled = KylinConfig.getInstanceFromEnv().getQueryMetricsEnabled();
+        if (!enabled)
+            return;
+        
+        DefaultMetricsSystem.initialize("Kylin");
+    }
+
+    public static void updateMetrics(SQLRequest sqlRequest, SQLResponse sqlResponse) {
+        if (!enabled)
+            return;
+        
         String projectName = sqlRequest.getProject();
         String cubeName = sqlResponse.getCube();
 

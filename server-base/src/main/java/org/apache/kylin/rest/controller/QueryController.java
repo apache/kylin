@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
@@ -33,7 +32,7 @@ import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.rest.metrics.QueryMetrics;
+import org.apache.kylin.rest.metrics.QueryMetricsFacade;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.model.SelectedColumnMeta;
 import org.apache.kylin.rest.model.TableMeta;
@@ -43,7 +42,6 @@ import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.request.SaveSqlRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
-import org.apache.kylin.rest.util.QueryMetricsUtil;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.slf4j.Logger;
@@ -76,9 +74,6 @@ import net.sf.ehcache.Element;
 public class QueryController extends BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryController.class);
-
-    private ConcurrentHashMap<String, QueryMetrics> metricsMap =
-            new ConcurrentHashMap<String, QueryMetrics>();
 
     public static final String SUCCESS_QUERY_CACHE = "StorageCache";
     public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
@@ -225,7 +220,7 @@ public class QueryController extends BasicController {
 
             queryService.logQuery(sqlRequest, sqlResponse);
 
-            QueryMetricsUtil.updateMetrics(sqlRequest, sqlResponse, metricsMap);
+            QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
 
             if (sqlResponse.getIsException())
                 throw new InternalErrorException(sqlResponse.getExceptionMessage());

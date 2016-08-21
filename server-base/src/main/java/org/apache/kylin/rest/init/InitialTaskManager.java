@@ -19,8 +19,8 @@
 package org.apache.kylin.rest.init;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.rest.metrics.QueryMetricsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -37,12 +37,12 @@ public class InitialTaskManager implements InitializingBean {
         logger.info("Kylin service is starting.....");
 
         runInitialTasks();
-
-        //init mrtrics system for kylin
-        DefaultMetricsSystem.initialize("Kylin");
     }
 
     private void runInitialTasks() {
+        // init metrics system for kylin
+        QueryMetricsFacade.init();
+        
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String initTasks = kylinConfig.getInitTasks();
         if (!StringUtils.isEmpty(initTasks)) {
