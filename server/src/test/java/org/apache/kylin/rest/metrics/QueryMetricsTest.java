@@ -39,7 +39,6 @@ public class QueryMetricsTest extends ServiceTestBase {
 
     @Before
     public void setup() throws Exception {
-
         super.setup();
 
         mBeanServer = ManagementFactory.getPlatformMBeanServer();
@@ -48,6 +47,9 @@ public class QueryMetricsTest extends ServiceTestBase {
 
     @Test
     public void testQueryMetrics() throws Exception {
+        System.setProperty("kylin.query.metrics.enabled", "true");
+        QueryMetricsFacade.init();
+
         SQLRequest sqlRequest = new SQLRequest();
         sqlRequest.setSql("select * from TEST_KYLIN_FACT");
         sqlRequest.setProject("default");
@@ -106,10 +108,7 @@ public class QueryMetricsTest extends ServiceTestBase {
         Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QuerySuccessCount"));
         Assert.assertEquals(1L, mBeanServer.getAttribute(objectName, "QueryFailCount"));
 
+        System.clearProperty("kylin.query.metrics.enabled");
     }
 
-    @Test
-    public void test() throws Exception {
-
-    }
 }
