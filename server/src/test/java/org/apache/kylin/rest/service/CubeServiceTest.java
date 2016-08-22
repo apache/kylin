@@ -48,12 +48,9 @@ public class CubeServiceTest extends ServiceTestBase {
         Assert.assertNotNull(cubeService.getMetadataManager());
         Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
 
-        List<CubeInstance> cubes = cubeService.getCubes(null, null, null, null, null);
+        List<CubeInstance> cubes = cubeService.listAllCubes(null, null, null);
         Assert.assertNotNull(cubes);
         CubeInstance cube = cubes.get(0);
         cubeService.isCubeDescFreeEditable(cube.getDescriptor());
-
-        cubes = cubeService.getCubes(null, null, null, 1, 0);
-        Assert.assertTrue(cubes.size() == 1);
     }
 }

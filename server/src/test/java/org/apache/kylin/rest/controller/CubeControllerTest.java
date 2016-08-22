@@ -163,4 +163,10 @@ public class CubeControllerTest extends ServiceTestBase {
         Assert.assertTrue(segNumber == newSegNumber + 1);
     }
 
+    @Test
+    public void testGetCubes() {
+        List<CubeInstance> cubes = cubeController.getCubes(null, null, null, 1, 0);
+        Assert.assertTrue(cubes.size() == 1);
+    }
+
 }
