@@ -46,7 +46,7 @@ import org.apache.kylin.common.util.StreamingBatch;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.streaming.IStreamingInput;
 import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.engine.streaming.StreamingManager;
@@ -90,7 +90,7 @@ public class KafkaStreamingInput implements IStreamingInput {
             try {
                 final KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(kylinConfig);
                 final KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(streaming);
-                List<TblColRef> columns = new CubeJoinedFlatTableDesc(cube.getDescriptor()).getAllColumns();
+                List<TblColRef> columns = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor()).getAllColumns();
 
                 final StreamingParser streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getParserProperties(), columns);
                 final ExecutorService executorService = Executors.newCachedThreadPool();

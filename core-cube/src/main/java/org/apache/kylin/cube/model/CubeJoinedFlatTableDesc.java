@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.BytesSplitter;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
@@ -42,8 +41,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private final CubeSegment cubeSegment;
 
     private int columnCount;
-    private int[] rowKeyColumnIndexes; // the column index on flat table
-    private int[][] measureColumnIndexes; // [i] is the i.th measure related column index on flat table
 
     private List<TblColRef> columnList = Lists.newArrayList();
     private Map<TblColRef, Integer> columnIndexMap;
@@ -65,9 +62,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
     // check what columns from hive tables are required, and index them
     private void parseCubeDesc() {
-        long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
-
         if (cubeSegment == null) {
             this.tableName = "kylin_intermediate_" + cubeDesc.getName();
         } else {
@@ -81,34 +75,15 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
             columnIndex++;
         }
 
-        // build index for rowkey columns
-        List<TblColRef> cuboidColumns = baseCuboid.getColumns();
-        int rowkeyColCount = cubeDesc.getRowkey().getRowKeyColumns().length;
-        rowKeyColumnIndexes = new int[rowkeyColCount];
-        for (int i = 0; i < rowkeyColCount; i++) {
-            TblColRef col = cuboidColumns.get(i);
-            Integer dimIdx = columnIndexMap.get(col);
-            if (dimIdx == null) {
-                throw new RuntimeException("Can't find column " + col);
-            }
-            rowKeyColumnIndexes[i] = dimIdx;
-        }
-
         List<MeasureDesc> measures = cubeDesc.getMeasures();
         int measureSize = measures.size();
-        measureColumnIndexes = new int[measureSize][];
         for (int i = 0; i < measureSize; i++) {
             FunctionDesc func = measures.get(i).getFunction();
             List<TblColRef> colRefs = func.getParameter().getColRefs();
-            if (colRefs == null) {
-                measureColumnIndexes[i] = null;
-            } else {
-                measureColumnIndexes[i] = new int[colRefs.size()];
+            if (colRefs != null) {
                 for (int j = 0; j < colRefs.size(); j++) {
                     TblColRef c = colRefs.get(j);
-                    measureColumnIndexes[i][j] = columnList.indexOf(c);
-                    if (measureColumnIndexes[i][j] < 0) {
-                        measureColumnIndexes[i][j] = columnIndex;
+                    if (columnList.indexOf(c) < 0) {
                         columnIndexMap.put(c, columnIndex);
                         columnList.add(c);
                         columnIndex++;
@@ -148,18 +123,6 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         // TODO: check data types here
     }
 
-    public CubeDesc getCubeDesc() {
-        return cubeDesc;
-    }
-
-    public int[] getRowKeyColumnIndexes() {
-        return rowKeyColumnIndexes;
-    }
-
-    public int[][] getMeasureColumnIndexes() {
-        return measureColumnIndexes;
-    }
-
     @Override
     public String getTableName() {
         return tableName;
@@ -175,6 +138,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         return cubeDesc.getModel();
     }
 
+    @Override
     public int getColumnIndex(TblColRef colRef) {
         Integer index = columnIndexMap.get(colRef);
         if (index == null)

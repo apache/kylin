@@ -23,11 +23,12 @@ import java.util.Map;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableEnrich;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -40,7 +41,7 @@ public class InMemCubeBuilderInputConverter {
 
     public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
 
-    private final CubeJoinedFlatTableDesc intermediateTableDesc;
+    private final CubeJoinedFlatTableEnrich flatDesc;
     private final MeasureDesc[] measureDescs;
     private final MeasureIngester<?>[] measureIngesters;
     private final int measureCount;
@@ -48,9 +49,9 @@ public class InMemCubeBuilderInputConverter {
     private final GTInfo gtInfo;
     protected List<byte[]> nullBytes;
 
-    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap, GTInfo gtInfo) {
+    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap, GTInfo gtInfo) {
         this.gtInfo = gtInfo;
-        this.intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeDesc);
+        this.flatDesc = new CubeJoinedFlatTableEnrich(flatDesc, cubeDesc);
         this.measureCount = cubeDesc.getMeasures().size();
         this.measureDescs = cubeDesc.getMeasures().toArray(new MeasureDesc[measureCount]);
         this.measureIngesters = MeasureIngester.create(cubeDesc.getMeasures());
@@ -74,11 +75,11 @@ public class InMemCubeBuilderInputConverter {
     }
 
     private Object[] buildKey(List<String> row) {
-        int keySize = intermediateTableDesc.getRowKeyColumnIndexes().length;
+        int keySize = flatDesc.getRowKeyColumnIndexes().length;
         Object[] key = new Object[keySize];
 
         for (int i = 0; i < keySize; i++) {
-            key[i] = row.get(intermediateTableDesc.getRowKeyColumnIndexes()[i]);
+            key[i] = row.get(flatDesc.getRowKeyColumnIndexes()[i]);
             if (key[i] != null && isNull(Bytes.toBytes((String) key[i]))) {
                 key[i] = null;
             }
@@ -98,7 +99,7 @@ public class InMemCubeBuilderInputConverter {
     private Object buildValueOf(int idxOfMeasure, List<String> row) {
         MeasureDesc measure = measureDescs[idxOfMeasure];
         FunctionDesc function = measure.getFunction();
-        int[] colIdxOnFlatTable = intermediateTableDesc.getMeasureColumnIndexes()[idxOfMeasure];
+        int[] colIdxOnFlatTable = flatDesc.getMeasureColumnIndexes()[idxOfMeasure];
 
         int paramCount = function.getParameterCount();
         String[] inputToMeasure = new String[paramCount];

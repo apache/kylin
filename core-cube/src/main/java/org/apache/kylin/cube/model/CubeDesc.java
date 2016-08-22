@@ -78,7 +78,7 @@ import com.google.common.collect.Sets;
  */
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeDesc extends RootPersistentEntity {
+public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private static final Logger logger = LoggerFactory.getLogger(CubeDesc.class);
 
     public static class CannotFilterExtendedColumnException extends RuntimeException {
@@ -1004,6 +1004,7 @@ public class CubeDesc extends RootPersistentEntity {
         this.storageType = storageType;
     }
 
+    @Override
     public int getEngineType() {
         return engineType;
     }

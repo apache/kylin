@@ -19,10 +19,23 @@
 package org.apache.kylin.engine.mr;
 
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.IBatchCubingEngine;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 
 public class MRBatchCubingEngine2 implements IBatchCubingEngine {
+
+    @Override
+    public IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeDesc cubeDesc) {
+        return new CubeJoinedFlatTableDesc(cubeDesc);
+    }
+
+    @Override
+    public IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeSegment newSegment) {
+        return new CubeJoinedFlatTableDesc(newSegment);
+    }
 
     @Override
     public DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {

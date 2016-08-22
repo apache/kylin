@@ -38,6 +38,7 @@ import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.measure.MeasureAggregators;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +55,8 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
     private int splitRowThreshold = Integer.MAX_VALUE;
     private int unitRows = 1000;
 
-    public DoggedCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
-        super(cubeDesc, dictionaryMap);
+    public DoggedCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+        super(cubeDesc, flatDesc, dictionaryMap);
 
         // check memory more often if a single row is big
         if (cubeDesc.hasMemoryHungryMeasures())
@@ -270,7 +271,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
         RuntimeException exception;
 
         public SplitThread() {
-            this.builder = new InMemCubeBuilder(cubeDesc, dictionaryMap);
+            this.builder = new InMemCubeBuilder(cubeDesc, flatDesc, dictionaryMap);
             this.builder.setConcurrentThreads(taskThreadCount);
             this.builder.setReserveMemoryMB(reserveMemoryMB);
         }

@@ -29,6 +29,8 @@ public interface IJoinedFlatTableDesc {
     DataModelDesc getDataModel();
     
     List<TblColRef> getAllColumns();
+    
+    int getColumnIndex(TblColRef colRef);
 
     long getSourceOffsetStart();
     

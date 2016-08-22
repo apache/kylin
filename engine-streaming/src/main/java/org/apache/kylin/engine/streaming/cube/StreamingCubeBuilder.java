@@ -55,9 +55,11 @@ import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.inmemcubing.ICuboidWriter;
 import org.apache.kylin.cube.inmemcubing.InMemCubeBuilder;
 import org.apache.kylin.cube.util.CubingUtils;
+import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.streaming.StreamingBatchBuilder;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.model.IBuildable;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -84,8 +86,10 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
         try {
             CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
+            final IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cubeInstance.getDescriptor());
+            
             LinkedBlockingQueue<List<String>> blockingQueue = new LinkedBlockingQueue<List<String>>();
-            InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), dictionaryMap);
+            InMemCubeBuilder inMemCubeBuilder = new InMemCubeBuilder(cubeInstance.getDescriptor(), flatDesc, dictionaryMap);
             final Future<?> future = Executors.newCachedThreadPool().submit(inMemCubeBuilder.buildAsRunnable(blockingQueue, cuboidWriter));
             processedRowCount = streamingBatch.getMessages().size();
             for (StreamingMessage streamingMessage : streamingBatch.getMessages()) {
@@ -129,9 +133,10 @@ public class StreamingCubeBuilder implements StreamingBatchBuilder {
     public Map<Long, HyperLogLogPlusCounter> sampling(StreamingBatch streamingBatch) {
         final CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         final CubeInstance cubeInstance = cubeManager.reloadCubeLocal(cubeName);
+        final IJoinedFlatTableDesc flatDesc = EngineFactory.getJoinedFlatTableDesc(cubeInstance.getDescriptor());
         long start = System.currentTimeMillis();
 
-        final Map<Long, HyperLogLogPlusCounter> samplingResult = CubingUtils.sampling(cubeInstance.getDescriptor(), Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
+        final Map<Long, HyperLogLogPlusCounter> samplingResult = CubingUtils.sampling(cubeInstance.getDescriptor(), flatDesc, Lists.transform(streamingBatch.getMessages(), new Function<StreamingMessage, List<String>>() {
             @Nullable
             @Override
             public List<String> apply(@Nullable StreamingMessage input) {

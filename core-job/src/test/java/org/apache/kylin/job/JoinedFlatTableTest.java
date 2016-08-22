@@ -27,8 +27,9 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -42,7 +43,7 @@ import org.junit.Test;
 public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     CubeInstance cube = null;
-    CubeJoinedFlatTableDesc intermediateTableDesc = null;
+    IJoinedFlatTableDesc flatTableDesc = null;
     String fakeJobUUID = "abc-def";
     CubeSegment cubeSegment = null;
 
@@ -51,7 +52,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         cube = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready");
         cubeSegment = cube.getSegments().get(0);
-        intermediateTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
+        flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cubeSegment);
     }
 
     @After
@@ -61,7 +62,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGenCreateTableDDL() {
-        String ddl = JoinedFlatTable.generateCreateTableStatement(intermediateTableDesc, "/tmp");
+        String ddl = JoinedFlatTable.generateCreateTableStatement(flatTableDesc, "/tmp");
         System.out.println(ddl);
 
         System.out.println("The length for the ddl is " + ddl.length());
@@ -69,14 +70,14 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGenDropTableDDL() {
-        String ddl = JoinedFlatTable.generateDropTableStatement(intermediateTableDesc);
+        String ddl = JoinedFlatTable.generateDropTableStatement(flatTableDesc);
         System.out.println(ddl);
         assertEquals(101, ddl.length());
     }
 
     @Test
     public void testGenerateInsertSql() throws IOException {
-        String sqls = JoinedFlatTable.generateInsertDataStatement(intermediateTableDesc, new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        String sqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc, new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
         System.out.println(sqls);
 
         int length = sqls.length();

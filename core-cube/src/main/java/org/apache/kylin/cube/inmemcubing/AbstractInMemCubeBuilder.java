@@ -28,6 +28,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.GridTable;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +40,22 @@ abstract public class AbstractInMemCubeBuilder {
 
     private static Logger logger = LoggerFactory.getLogger(AbstractInMemCubeBuilder.class);
 
+    final protected IJoinedFlatTableDesc flatDesc;
     final protected CubeDesc cubeDesc;
     final protected Map<TblColRef, Dictionary<String>> dictionaryMap;
 
     protected int taskThreadCount = 4;
     protected int reserveMemoryMB = 100;
 
-    public AbstractInMemCubeBuilder(CubeDesc cubeDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public AbstractInMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+        if (flatDesc == null)
+            throw new NullPointerException();
         if (cubeDesc == null)
             throw new NullPointerException();
         if (dictionaryMap == null)
             throw new IllegalArgumentException("dictionary cannot be null");
 
+        this.flatDesc = flatDesc;
         this.cubeDesc = cubeDesc;
         this.dictionaryMap = dictionaryMap;
     }

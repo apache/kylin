@@ -23,8 +23,10 @@ import java.util.Map;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ImplementationSwitch;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IEngineAware;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 
 public class EngineFactory {
 
@@ -46,6 +48,16 @@ public class EngineFactory {
         return streamingEngines.get(aware.getEngineType());
     }
 
+    /** Mark deprecated to indicate for test purpose only */
+    @Deprecated
+    public static IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeDesc cubeDesc) {
+        return batchEngine(cubeDesc).getJoinedFlatTableDesc(cubeDesc);
+    }
+    
+    public static IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeSegment newSegment) {
+        return batchEngine(newSegment).getJoinedFlatTableDesc(newSegment);
+    }
+    
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
     public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
         return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter);

@@ -18,8 +18,10 @@
 package org.apache.kylin.engine.spark;
 
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.IBatchCubingEngine;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 
 /**
  */
@@ -51,5 +53,15 @@ public class SparkBatchCubingEngine implements IBatchCubingEngine {
     @Override
     public Class<?> getStorageInterface() {
         return null;
+    }
+
+    @Override
+    public IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeDesc cubeDesc) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeSegment newSegment) {
+        throw new UnsupportedOperationException();
     }
 }
