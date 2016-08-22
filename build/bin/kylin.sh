@@ -25,9 +25,17 @@ dir="$KYLIN_HOME/bin"
 
 source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
-
-
 mkdir -p ${KYLIN_HOME}/ext
+
+#retrive $hive_dependency and $hbase_dependency
+source ${dir}/find-hive-dependency.sh
+source ${dir}/find-hbase-dependency.sh
+
+#retrive $KYLIN_EXTRA_START_OPTS
+if [ -f "${dir}/setenv.sh" ]
+    then source ${dir}/setenv.sh
+fi
+
 export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
 export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
         
@@ -65,14 +73,6 @@ then
         exit 1
     else
         echo "kylin.security.profile is set to $spring_profile"
-    fi
-
-    #retrive $hive_dependency and $hbase_dependency
-    source ${dir}/find-hive-dependency.sh
-    source ${dir}/find-hbase-dependency.sh
-    #retrive $KYLIN_EXTRA_START_OPTS
-    if [ -f "${dir}/setenv.sh" ]
-        then source ${dir}/setenv.sh
     fi
 
     #additionally add tomcat libs to HBASE_CLASSPATH_PREFIX
@@ -143,16 +143,9 @@ then
     fi
     if [ "$2" == "start" ]
     then
-
-        #retrive $hive_dependency and $hbase_dependency
-        source ${dir}/find-hive-dependency.sh
-        source ${dir}/find-hbase-dependency.sh
+      
         source ${dir}/find-kafka-dependency.sh
-        #retrive $KYLIN_EXTRA_START_OPTS
-        if [ -f "${dir}/setenv.sh" ]
-            then source ${dir}/setenv.sh
-        fi
-     
+        
         # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
         hbase ${KYLIN_EXTRA_START_OPTS} \
         -Dlog4j.configuration=kylin-log4j.properties\
@@ -189,27 +182,20 @@ elif [ "$1" == "monitor" ]
 then
     echo "monitor job"
 
-    #retrive $hive_dependency and $hbase_dependency
-    source ${dir}/find-hive-dependency.sh
-    source ${dir}/find-hbase-dependency.sh
     source ${dir}/find-kafka-dependency.sh
-    #retrive $KYLIN_EXTRA_START_OPTS
-    if [ -f "${dir}/setenv.sh" ]
-        then source ${dir}/setenv.sh
-    fi
-
+    
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     hbase ${KYLIN_EXTRA_START_OPTS} \
     -Dlog4j.configuration=kylin-log4j.properties\
     -Dkylin.hive.dependency=${hive_dependency} \
-    -Dkyiln.kafka.dependency=${kafka_dependency} \
+    -Dkylin.kafka.dependency=${kafka_dependency} \
     -Dkylin.hbase.dependency=${hbase_dependency} \
     org.apache.kylin.engine.streaming.cli.MonitorCLI $@ > ${KYLIN_HOME}/logs/monitor.log 2>&1
     exit 0
 
 elif [ "$1" = "version" ]
 then
-    exec hbase ${KYLIN_EXTRA_START_OPTS} -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.common.KylinVersion
+    exec hbase -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.common.KylinVersion
     exit 0
 
 elif [ "$1" = "diag" ]
@@ -220,10 +206,9 @@ then
 # tool command
 elif [[ "$1" = org.apache.kylin.* ]]
 then
-    #retrive $hive_dependency and $hbase_dependency
-    source ${dir}/find-hive-dependency.sh
-    source ${dir}/find-hbase-dependency.sh
-    #retrive $KYLIN_EXTRA_START_OPTS
+
+    #retrive $KYLIN_EXTRA_START_OPTS from a separate file called setenv-tool.sh
+    reset KYLIN_EXTRA_START_OPTS # reset the global server setenv config first
     if [ -f "${dir}/setenv-tool.sh" ]
         then source ${dir}/setenv-tool.sh
     fi
