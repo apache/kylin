@@ -20,12 +20,7 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
@@ -98,7 +93,21 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
-        return cubeService.getCubes(cubeName, projectName, modelName, limit, offset);
+        List<CubeInstance> cubes;
+        cubes = cubeService.listAllCubes(cubeName, projectName, modelName);
+
+        int climit = (null == limit) ? cubes.size() : limit;
+        int coffset = (null == offset) ? 0 : offset;
+
+        if (cubes.size() <= coffset) {
+            return Collections.emptyList();
+        }
+
+        if ((cubes.size() - coffset) < climit) {
+            return cubes.subList(coffset, cubes.size());
+        }
+
+        return cubes.subList(coffset, coffset + climit);
     }
 
     @RequestMapping(value = "validEncodings", method = { RequestMethod.GET })

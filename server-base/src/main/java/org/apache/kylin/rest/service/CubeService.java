@@ -128,26 +128,6 @@ public class CubeService extends BasicService {
         return filterCubes;
     }
 
-    @PostFilter(Constant.ACCESS_POST_FILTER_READ)
-    public List<CubeInstance> getCubes(final String cubeName, final String projectName, final String modelName, final Integer limit, final Integer offset) {
-
-        List<CubeInstance> cubes;
-        cubes = listAllCubes(cubeName, projectName, modelName);
-
-        int climit = (null == limit) ? cubes.size() : limit;
-        int coffset = (null == offset) ? 0 : offset;
-
-        if (cubes.size() <= coffset) {
-            return Collections.emptyList();
-        }
-
-        if ((cubes.size() - coffset) < climit) {
-            return cubes.subList(coffset, cubes.size());
-        }
-
-        return cubes.subList(coffset, coffset + climit);
-    }
-
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance updateCubeCost(CubeInstance cube, int cost) throws IOException {
 
