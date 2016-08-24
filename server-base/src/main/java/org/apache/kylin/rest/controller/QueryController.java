@@ -30,6 +30,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
@@ -44,6 +46,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
+import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,9 +259,44 @@ public class QueryController extends BasicController {
 
     private void checkQueryAuth(SQLResponse sqlResponse) throws AccessDeniedException {
         if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
-            CubeInstance cubeInstance = this.queryService.getCubeManager().getCube(sqlResponse.getCube());
-            queryService.checkAuthorization(cubeInstance);
+            HybridInstance hybridInstance = this.queryService.getHybridManager().getHybridInstance(sqlResponse.getCube());
+            if (hybridInstance != null) {
+                if (checkHybridAuthorization(hybridInstance)) {
+                    logger.info(hybridInstance.getName() + " ACL validation success.");
+                } else {
+                    throw new AccessDeniedException("Access is denied");
+                }
+            } else {
+                CubeInstance cubeInstance = this.queryService.getCubeManager().getCube(sqlResponse.getCube());
+                queryService.checkAuthorization(cubeInstance);
+            }
         }
+    }
+    
+    private boolean checkHybridAuthorization(HybridInstance hybridInstance) {
+        boolean access = false;
+        List<RealizationEntry> realizationEntries = hybridInstance.getRealizationEntries();
+        for (RealizationEntry realizationEntry : realizationEntries) {
+            String reName = realizationEntry.getRealization();
+            logger.debug("[realizationEntry] realizationEntry name: " + reName + " realizationEntry type: " + realizationEntry.getType().name());
+            if (RealizationType.CUBE == realizationEntry.getType()) {
+                CubeInstance cubeInstance = queryService.getCubeManager().getCube(reName);
+                try {
+                    queryService.checkAuthorization(cubeInstance);
+                    logger.info(hybridInstance.getName() + " ACL validation cube: " + cubeInstance.getName() + " success.");
+                    logger.info(hybridInstance.getName() + " ACL validation success.");
+                    return true;
+                } catch (AccessDeniedException e) {
+                    logger.info(hybridInstance.getName() + " ACL validation cube: " + cubeInstance.getName() + " failed.");
+                }
+            } else if (RealizationType.HYBRID == realizationEntry.getType()) {
+                HybridInstance innerHybridInstance = queryService.getHybridManager().getHybridInstance(reName);
+                if (checkHybridAuthorization(innerHybridInstance)) {
+                    return true;
+                }
+            }
+        }
+        return access;
     }
 
     public void setQueryService(QueryService queryService) {
