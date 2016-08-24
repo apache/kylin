@@ -97,14 +97,14 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private RealizationRegistry realizationRegistry;
     private BadQueryHistoryManager badQueryHistoryManager;
 
-    boolean includeSegments;
-    boolean includeJobs;
-    boolean includeSegmentDetails;
-    boolean onlyJobOutput;
+    private boolean includeSegments;
+    private boolean includeJobs;
+    private boolean includeSegmentDetails;
+    private boolean onlyJobOutput;
 
-    Set<String> requiredResources = Sets.newLinkedHashSet();
-    Set<String> optionalResources = Sets.newLinkedHashSet();
-    Set<CubeInstance> cubesToTrimAndSave = Sets.newLinkedHashSet();//these cubes needs to be saved skipping segments
+    private Set<String> requiredResources = Sets.newLinkedHashSet();
+    private Set<String> optionalResources = Sets.newLinkedHashSet();
+    private Set<CubeInstance> cubesToTrimAndSave = Sets.newLinkedHashSet();//these cubes needs to be saved skipping segments
 
     public CubeMetaExtractor() {
         super();
@@ -239,6 +239,9 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     }
 
     private void retrieveResourcePath(IRealization realization) {
+        if (realization == null) {
+            return;
+        }
 
         logger.info("Deal with realization {} of type {}", realization.getName(), realization.getType());
 

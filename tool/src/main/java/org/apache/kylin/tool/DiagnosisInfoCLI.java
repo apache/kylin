@@ -123,10 +123,15 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-includeJobs", "false", "-submodule", "true" };
-                CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
-                logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
-                cubeMetaExtractor.execute(cubeMetaArgs);
+                logger.info("Start to extract metadata.");
+                try {
+                    String[] cubeMetaArgs = { "-destDir", new File(exportDir, "metadata").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-includeJobs", "false", "-submodule", "true" };
+                    CubeMetaExtractor cubeMetaExtractor = new CubeMetaExtractor();
+                    logger.info("CubeMetaExtractor args: " + Arrays.toString(cubeMetaArgs));
+                    cubeMetaExtractor.execute(cubeMetaArgs);
+                } catch (Exception e) {
+                    logger.error("Error in export metadata.", e);
+                }
             }
         });
 
@@ -135,9 +140,14 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    String[] jobArgs = { "-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-period", Integer.toString(period), "-compress", "false", "-submodule", "true" };
-                    JobInstanceExtractor jobInstanceExtractor = new JobInstanceExtractor();
-                    jobInstanceExtractor.execute(jobArgs);
+                    logger.info("Start to extract jobs.");
+                    try {
+                        String[] jobArgs = { "-destDir", new File(exportDir, "jobs").getAbsolutePath(), "-period", Integer.toString(period), "-compress", "false", "-submodule", "true" };
+                        JobInstanceExtractor jobInstanceExtractor = new JobInstanceExtractor();
+                        jobInstanceExtractor.execute(jobArgs);
+                    } catch (Exception e) {
+                        logger.error("Error in export jobs.", e);
+                    }
                 }
             });
         }
@@ -147,10 +157,15 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-submodule", "true" };
-                    HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
-                    logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
-                    hBaseUsageExtractor.execute(hbaseArgs);
+                    logger.info("Start to extract HBase usage.");
+                    try {
+                        String[] hbaseArgs = { "-destDir", new File(exportDir, "hbase").getAbsolutePath(), "-project", projectNames, "-compress", "false", "-submodule", "true" };
+                        HBaseUsageExtractor hBaseUsageExtractor = new HBaseUsageExtractor();
+                        logger.info("HBaseUsageExtractor args: " + Arrays.toString(hbaseArgs));
+                        hBaseUsageExtractor.execute(hbaseArgs);
+                    } catch (Exception e) {
+                        logger.error("Error in export HBase usage.", e);
+                    }
                 }
             });
         }
@@ -175,7 +190,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                             }
                         }
                     } catch (Exception e) {
-                        logger.warn("Error in export conf.", e);
+                        logger.error("Error in export conf.", e);
                     }
                 }
             });
@@ -191,8 +206,8 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                         ClientEnvExtractor clientEnvExtractor = new ClientEnvExtractor();
                         logger.info("ClientEnvExtractor args: " + Arrays.toString(clientArgs));
                         clientEnvExtractor.execute(clientArgs);
-                    } catch (IOException e) {
-                        logger.warn("Error in export client info.", e);
+                    } catch (Exception e) {
+                        logger.error("Error in export client info.", e);
                     }
                 }
             });
@@ -202,10 +217,15 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-logPeriod", Integer.toString(period), "-compress", "false", "-submodule", "true" };
-                KylinLogExtractor logExtractor = new KylinLogExtractor();
-                logger.info("KylinLogExtractor args: " + Arrays.toString(logsArgs));
-                logExtractor.execute(logsArgs);
+                logger.info("Start to extract logs.");
+                try {
+                    String[] logsArgs = { "-destDir", new File(exportDir, "logs").getAbsolutePath(), "-logPeriod", Integer.toString(period), "-compress", "false", "-submodule", "true" };
+                    KylinLogExtractor logExtractor = new KylinLogExtractor();
+                    logger.info("KylinLogExtractor args: " + Arrays.toString(logsArgs));
+                    logExtractor.execute(logsArgs);
+                } catch (Exception e) {
+                    logger.error("Error in export logs.", e);
+                }
             }
         });
 
