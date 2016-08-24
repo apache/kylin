@@ -23,11 +23,9 @@ import java.util.List;
 
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
-import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
-import org.apache.kylin.dict.GlobalDictionaryBuilder;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -45,43 +43,28 @@ public class DictionaryRule implements IValidatorRule<CubeDesc> {
         HashMap<TblColRef, String> colToBuilderMap = new HashMap<>();
         HashMap<TblColRef, TblColRef> colToReuseColMap = new HashMap<>();
         for (DictionaryDesc dictDesc : dictDescs) {
-            // Make sure the same column associate with same builder class, check the reuse column by default
-            TblColRef dictCol = dictDesc.getResuseColumnRef();
-            if (dictCol == null) {
-                dictCol = dictDesc.getColumnRef();
-            }
+            TblColRef dictCol = dictDesc.getColumnRef();
             if (dictCol == null) {
                 context.addResult(ResultLevel.ERROR, "Some column in dictionaries not found");
                 return;
             }
-            String builder = dictDesc.getBuilderClass();
-            String oldBuilder = colToBuilderMap.put(dictCol, builder);
-            if (oldBuilder != null && !oldBuilder.equals(builder)) {
-                context.addResult(ResultLevel.ERROR, "Column " + dictCol + " has inconsistent builders " + builder + " and " + oldBuilder);
-                return;
-            }
-
-            // Make sure one column only reuse another one column
-            if (dictDesc.getResuseColumnRef() != null) {
-                TblColRef oldReuseCol = colToReuseColMap.put(dictDesc.getColumnRef(), dictDesc.getResuseColumnRef());
-                if (oldReuseCol != null && !dictDesc.getResuseColumnRef().equals(oldReuseCol)) {
-                    context.addResult(ResultLevel.ERROR, "Column " + dictDesc.getColumnRef() + " reuse inconsistent column " + dictDesc.getResuseColumnRef() + " and " + oldReuseCol);
+            TblColRef reuseCol = dictDesc.getResuseColumnRef();
+            if (reuseCol == null) {
+                // Make sure the same column associate with same builder class
+                String builder = dictDesc.getBuilderClass();
+                String oldBuilder = colToBuilderMap.put(dictCol, builder);
+                if (oldBuilder != null && !oldBuilder.equals(builder)) {
+                    context.addResult(ResultLevel.ERROR, "Column " + dictCol + " has inconsistent builders " + builder + " and " + oldBuilder);
+                    return;
+                }
+            } else {
+                // Make sure one column only reuse another one column
+                TblColRef oldReuseCol = colToReuseColMap.put(dictCol, reuseCol);
+                if (oldReuseCol != null && !reuseCol.equals(oldReuseCol)) {
+                    context.addResult(ResultLevel.ERROR, "Column " + dictCol + " reuse inconsistent column " + reuseCol + " and " + oldReuseCol);
                     return;
                 }
             }
         }
-
-        // Make sure one column do not use GlobalDictBuilder and DimensionDictEncoding together
-        RowKeyColDesc[] rowKeyColDescs = cubeDesc.getRowkey().getRowKeyColumns();
-        for (RowKeyColDesc desc : rowKeyColDescs) {
-            if (desc.isUsingDictionary()) {
-                String builder = colToBuilderMap.get(desc.getColRef());
-                if (builder != null && builder.equals(GlobalDictionaryBuilder.class.getName())) {
-                    context.addResult(ResultLevel.ERROR, "Column " + desc.getColRef() + " used as dimension and conflict with GlobalDictBuilder");
-                    return;
-                }
-            }
-        }
-
     }
 }

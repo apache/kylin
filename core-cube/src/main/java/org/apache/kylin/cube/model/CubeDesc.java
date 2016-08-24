@@ -1104,9 +1104,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         for (DictionaryDesc desc : dictionaries) {
             if (desc.getBuilderClass() != null) {
-                if (col.equals(desc.getResuseColumnRef())) {
-                    return desc.getBuilderClass();
-                } else if (col.equals(desc.getColumnRef())) {
+                // column that reuses other's dict need not be built, thus should not reach here
+                if (col.equals(desc.getColumnRef())) {
                     return desc.getBuilderClass();
                 }
             }
