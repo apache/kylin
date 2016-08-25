@@ -132,7 +132,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
             LogicalTupleFilter filter = and(timeComp4, ageComp1);
             CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
-            assertEquals(1, r.size());
+            assertEquals(0, r.size());
         }
         {
             LogicalTupleFilter filter = and(timeComp5, ageComp1);

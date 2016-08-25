@@ -54,8 +54,8 @@ public class GTScanRequest {
     // optional aggregation
     private ImmutableBitSet aggrGroupBy;
     private ImmutableBitSet aggrMetrics;
-    private String[] aggrMetricsFuncs;
-
+    private String[] aggrMetricsFuncs;//
+    
     // hint to storage behavior
     private boolean allowStorageAggregation;
     private double aggCacheMemThreshold;
@@ -204,7 +204,7 @@ public class GTScanRequest {
 
     //TODO BUG?  select sum() from fact, no aggr by
     public boolean hasAggregation() {
-        return aggrGroupBy != null && aggrMetrics != null && aggrMetricsFuncs != null;
+        return !aggrGroupBy.isEmpty() || !aggrMetrics.isEmpty();
     }
 
     public GTInfo getInfo() {
@@ -282,16 +282,6 @@ public class GTScanRequest {
     public void setStoragePushDownLimit(int limit) {
         logger.info("storagePushDownLimit is set to " + storagePushDownLimit);
         this.storagePushDownLimit = limit;
-    }
-
-    public List<Integer> getRequiredMeasures() {
-        List<Integer> measures = Lists.newArrayList();
-        int numDim = info.getPrimaryKey().trueBitCount();
-        for (int i = 0; i < aggrMetrics.trueBitCount(); i++) {
-            int index = aggrMetrics.trueBitAt(i);
-            measures.add(index - numDim);
-        }
-        return measures;
     }
 
     @Override

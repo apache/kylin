@@ -31,6 +31,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.ISegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.FuzzyKeyEncoder;
 import org.apache.kylin.cube.kv.FuzzyMaskEncoder;
@@ -60,8 +61,10 @@ public abstract class CubeHBaseRPC implements IGTStorage {
     final private RowKeyEncoder fuzzyKeyEncoder;
     final private RowKeyEncoder fuzzyMaskEncoder;
 
-    public CubeHBaseRPC(CubeSegment cubeSeg, Cuboid cuboid, GTInfo fullGTInfo) {
-        this.cubeSeg = cubeSeg;
+    public CubeHBaseRPC(ISegment segment, Cuboid cuboid, GTInfo fullGTInfo) {
+        Preconditions.checkArgument(segment instanceof CubeSegment, "segment must be CubeSegment");
+        
+        this.cubeSeg = (CubeSegment) segment;
         this.cuboid = cuboid;
         this.fullGTInfo = fullGTInfo;
 

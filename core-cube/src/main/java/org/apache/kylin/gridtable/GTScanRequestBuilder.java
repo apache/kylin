@@ -18,6 +18,7 @@
 
 package org.apache.kylin.gridtable;
 
+import java.util.BitSet;
 import java.util.List;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -92,6 +93,18 @@ public class GTScanRequestBuilder {
     }
 
     public GTScanRequest createGTScanRequest() {
+        if (aggrGroupBy == null) {
+            aggrGroupBy = new ImmutableBitSet(new BitSet());
+        }
+
+        if (aggrMetrics == null) {
+            aggrMetrics = new ImmutableBitSet(new BitSet());
+        }
+
+        if (aggrMetricsFuncs == null) {
+            aggrMetricsFuncs = new String[0];
+        }
+        
         return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, allowStorageAggregation, aggCacheMemThreshold, storageScanRowNumThreshold, storagePushDownLimit);
     }
 }

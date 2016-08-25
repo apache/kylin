@@ -18,11 +18,9 @@
 
 package org.apache.kylin.cube.gridtable;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
@@ -31,26 +29,7 @@ import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Maps;
-
 public class CubeGridTable {
-
-    public static Map<TblColRef, Dictionary<String>> getDimensionToDictionaryMap(CubeSegment cubeSeg, long cuboidId) {
-        CubeDesc cubeDesc = cubeSeg.getCubeDesc();
-        CubeManager cubeMgr = CubeManager.getInstance(cubeSeg.getCubeInstance().getConfig());
-
-        // build a dictionary map
-        Map<TblColRef, Dictionary<String>> dictionaryMap = Maps.newHashMap();
-        List<TblColRef> dimCols = Cuboid.findById(cubeDesc, cuboidId).getColumns();
-        for (TblColRef col : dimCols) {
-            Dictionary<String> dictionary = cubeMgr.getDictionary(cubeSeg, col);
-            if (dictionary != null) {
-                dictionaryMap.put(col, dictionary);
-            }
-        }
-
-        return dictionaryMap;
-    }
 
     public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) {
         Cuboid cuboid = Cuboid.findById(cubeSeg.getCubeDesc(), cuboidId);

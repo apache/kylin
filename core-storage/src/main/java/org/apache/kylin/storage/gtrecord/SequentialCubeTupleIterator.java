@@ -54,7 +54,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private int scanCountDelta;
 
     public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
-            Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context) {
+            Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context, boolean supportLimitPushDown) {
         this.context = context;
         this.scanners = scanners;
 
@@ -62,8 +62,6 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         for (CubeSegmentScanner scanner : scanners) {
             segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context));
         }
-
-        boolean supportLimitPushDown = scanners.get(0).getSegment().getCubeDesc().supportsLimitPushDown();
 
         this.storagePushDownLimit = context.getStoragePushDownLimit();
         if (!supportLimitPushDown || storagePushDownLimit > KylinConfig.getInstanceFromEnv().getStoragePushDownLimitMax()) {

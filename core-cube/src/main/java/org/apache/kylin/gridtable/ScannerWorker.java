@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
-import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.ISegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +34,9 @@ public class ScannerWorker {
     private static final Logger logger = LoggerFactory.getLogger(ScannerWorker.class);
     private IGTScanner internal = null;
 
-    public ScannerWorker(CubeSegment cubeSeg, Cuboid cuboid, GTScanRequest scanRequest, String gtStorage) {
+    public ScannerWorker(ISegment segment, Cuboid cuboid, GTScanRequest scanRequest, String gtStorage) {
         if (scanRequest == null) {
-            logger.info("Segment {} will be skipped", cubeSeg);
+            logger.info("Segment {} will be skipped", segment);
             internal = new EmptyGTScanner(0);
             return;
         }
@@ -44,7 +44,7 @@ public class ScannerWorker {
         final GTInfo info = scanRequest.getInfo();
 
         try {
-            IGTStorage rpc = (IGTStorage) Class.forName(gtStorage).getConstructor(CubeSegment.class, Cuboid.class, GTInfo.class).newInstance(cubeSeg, cuboid, info); // default behavior
+            IGTStorage rpc = (IGTStorage) Class.forName(gtStorage).getConstructor(ISegment.class, Cuboid.class, GTInfo.class).newInstance(segment, cuboid, info); // default behavior
             internal = rpc.getGTScanner(scanRequest);
         } catch (IOException | InstantiationException | InvocationTargetException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException e) {
             throw new RuntimeException(e);

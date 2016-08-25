@@ -35,21 +35,22 @@ import org.apache.kylin.common.util.ShardingHash;
 import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, IBuildable {
+public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegment {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -173,6 +174,11 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable {
 
     public SegmentStatusEnum getStatus() {
         return status;
+    }
+
+    @Override
+    public DataModelDesc getModel() {
+        return this.getCubeDesc().getModel();
     }
 
     public void setStatus(SegmentStatusEnum status) {

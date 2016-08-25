@@ -18,7 +18,6 @@
 
 package org.apache.kylin.cube;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,18 +25,16 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
-import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +50,7 @@ public class CubeCapabilityChecker {
         result.capable = false;
 
         // match joins
-        boolean isJoinMatch = isJoinMatch(digest.joinDescs, cube);
+        boolean isJoinMatch = JoinChecker.isJoinMatch(digest.joinDescs, cube);
         if (!isJoinMatch) {
             logger.info("Exclude cube " + cube.getName() + " because unmatched joins");
             return result;
@@ -89,7 +86,15 @@ public class CubeCapabilityChecker {
         if (cube.getStorageType() == IStorageAware.ID_HBASE && MassInTupleFilter.containsMassInTupleFilter(digest.filter)) {
             logger.info("Exclude cube " + cube.getName() + " because only v2 storage + v2 query engine supports massin");
             return result;
+        }
 
+        if (digest.isRawQuery() && cube.getFactTable().equals(digest.factTable)) {
+            result.influences.add(new CapabilityInfluence() {
+                @Override
+                public double suggestCostMultiplier() {
+                    return 100;
+                }
+            });
         }
 
         // cost will be minded by caller
@@ -119,41 +124,6 @@ public class CubeCapabilityChecker {
         CubeDesc cubeDesc = cube.getDescriptor();
         result.removeAll(cubeDesc.listAllFunctions());
         return result;
-    }
-
-    private static boolean isJoinMatch(Collection<JoinDesc> joins, CubeInstance cube) {
-        CubeDesc cubeDesc = cube.getDescriptor();
-
-        List<JoinDesc> cubeJoins = new ArrayList<JoinDesc>(cubeDesc.getDimensions().size());
-        for (DimensionDesc d : cubeDesc.getDimensions()) {
-            if (d.getJoin() != null) {
-                cubeJoins.add(d.getJoin());
-            }
-        }
-        for (JoinDesc j : joins) {
-            // optiq engine can't decide which one is fk or pk
-            String pTable = j.getPrimaryKeyColumns()[0].getTable();
-            String factTable = cubeDesc.getFactTable();
-            if (factTable.equals(pTable)) {
-                j.swapPKFK();
-            }
-
-            // check primary key, all PK column should refer to same tale, the Fact Table of cube.
-            // Using first column's table name to check.
-            String fTable = j.getForeignKeyColumns()[0].getTable();
-            if (!factTable.equals(fTable)) {
-                logger.info("Fact Table" + factTable + " not matched in join: " + j + " on cube " + cube.getName());
-                return false;
-            }
-
-            // The hashcode() function of JoinDesc has been overwritten,
-            // which takes into consideration: pk,fk,jointype
-            if (!cubeJoins.contains(j)) {
-                logger.info("Query joins don't macth on cube " + cube.getName());
-                return false;
-            }
-        }
-        return true;
     }
 
     private static void tryDimensionAsMeasures(Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result) {

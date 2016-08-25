@@ -25,6 +25,7 @@ import org.apache.calcite.DataContext;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -162,8 +163,14 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     // Hack no-group-by query for better results
     private void hackNoGroupByAggregation(SQLDigest sqlDigest) {
-        if (!sqlDigest.groupbyColumns.isEmpty() || !sqlDigest.metricColumns.isEmpty())
+        if (!(olapContext.realization instanceof CubeInstance)) {
+            //the hack only makes sense for cubes
             return;
+        }
+
+        if (!sqlDigest.isRawQuery()) {
+            return;
+        }
 
         // If no group by and metric found, then it's simple query like select ... from ... where ...,
         // But we have no raw data stored, in order to return better results, we hack to output sum of metric column

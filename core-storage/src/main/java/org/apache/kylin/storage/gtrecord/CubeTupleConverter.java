@@ -53,19 +53,19 @@ public class CubeTupleConverter {
     final CubeSegment cubeSeg;
     final Cuboid cuboid;
     final TupleInfo tupleInfo;
-    final List<IDerivedColumnFiller> derivedColFillers;
+    private final List<IDerivedColumnFiller> derivedColFillers;
 
-    final int[] gtColIdx;
-    final int[] tupleIdx;
-    final Object[] gtValues;
-    final MeasureType<?>[] measureTypes;
+    private final int[] gtColIdx;
+    private final int[] tupleIdx;
+    private final Object[] gtValues;
+    private final MeasureType<?>[] measureTypes;
 
-    final List<IAdvMeasureFiller> advMeasureFillers;
-    final List<Integer> advMeasureIndexInGTValues;
+    private final List<IAdvMeasureFiller> advMeasureFillers;
+    private final List<Integer> advMeasureIndexInGTValues;
 
-    final int nSelectedDims;
+    private final int nSelectedDims;
 
-    final int[] dimensionIndexOnTuple;
+    private final int[] dimensionIndexOnTuple;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
                               Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo) {
@@ -102,44 +102,44 @@ public class CubeTupleConverter {
         
         ////////////
 
-        int iii = 0;
+        int i = 0;
 
         // pre-calculate dimension index mapping to tuple
         for (TblColRef dim : selectedDimensions) {
-            int i = mapping.getIndexOf(dim);
-            gtColIdx[iii] = i;
-            tupleIdx[iii] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
+            int dimIndex = mapping.getIndexOf(dim);
+            gtColIdx[i] = dimIndex;
+            tupleIdx[i] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
 
             //            if (tupleIdx[iii] == -1) {
             //                throw new IllegalStateException("dim not used in tuple:" + dim);
             //            }
 
-            iii++;
+            i++;
         }
 
         for (FunctionDesc metric : selectedMetrics) {
-            int i = mapping.getIndexOf(metric);
-            gtColIdx[iii] = i;
+            int metricIndex = mapping.getIndexOf(metric);
+            gtColIdx[i] = metricIndex;
 
             if (metric.needRewrite()) {
                 String rewriteFieldName = metric.getRewriteFieldName();
-                tupleIdx[iii] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
+                tupleIdx[i] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
             } else {
                 // a non-rewrite metrics (like sum, or dimension playing as metrics) is like a dimension column
                 TblColRef col = metric.getParameter().getColRefs().get(0);
-                tupleIdx[iii] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
+                tupleIdx[i] = tupleInfo.hasColumn(col) ? tupleInfo.getColumnIndex(col) : -1;
             }
 
             MeasureType<?> measureType = metric.getMeasureType();
             if (measureType.needAdvancedTupleFilling()) {
                 Map<TblColRef, Dictionary<String>> dictionaryMap = buildDictionaryMap(measureType.getColumnsNeedDictionary(metric));
                 advMeasureFillers.add(measureType.getAdvancedTupleFiller(metric, returnTupleInfo, dictionaryMap));
-                advMeasureIndexInGTValues.add(iii);
+                advMeasureIndexInGTValues.add(i);
             } else {
-                measureTypes[iii] = measureType;
+                measureTypes[i] = measureType;
             }
 
-            iii++;
+            i++;
         }
 
         // prepare derived columns and filler

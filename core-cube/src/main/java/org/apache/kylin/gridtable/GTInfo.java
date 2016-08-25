@@ -31,8 +31,11 @@ import org.apache.kylin.cube.gridtable.CubeCodeSystem;
 import org.apache.kylin.cube.gridtable.TrimmedCubeCodeSystem;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GTInfo {
+    private static final Logger logger = LoggerFactory.getLogger(GTInfo.class);
 
     public static Builder builder() {
         return new Builder();
@@ -151,7 +154,7 @@ public class GTInfo {
         if (!expected.equals(ref))
             throw new IllegalArgumentException();
     }
-    
+
     void validate() {
         if (codeSystem == null)
             throw new IllegalStateException();
@@ -271,7 +274,7 @@ public class GTInfo {
     public IGTCodeSystem getCodeSystem() {
         return codeSystem;
     }
-    
+
     public int getMaxLength() {
         int ret = 0;
         for (int i = 0; i < colAll.trueBitCount(); i++) {
@@ -291,7 +294,7 @@ public class GTInfo {
                 BytesUtil.writeAsciiString(GTSampleCodeSystem.class.getCanonicalName(), out);
                 GTSampleCodeSystem.serializer.serialize((GTSampleCodeSystem) value.codeSystem, out);
             } else {
-                throw new IllegalArgumentException("Can't recognize code system " + value.codeSystem.getClass());
+                BytesUtil.writeAsciiString(value.codeSystem.getClass().getCanonicalName(), out);
             }
 
             BytesUtil.writeUTFString(value.tableName, out);
@@ -317,7 +320,11 @@ public class GTInfo {
             } else if (GTSampleCodeSystem.class.getCanonicalName().equals(codeSystemType)) {
                 codeSystem = GTSampleCodeSystem.serializer.deserialize(in);
             } else {
-                throw new IllegalArgumentException("Can't recognize code system " + codeSystemType);
+                try {
+                    codeSystem = (IGTCodeSystem) Class.forName(codeSystemType).newInstance();
+                } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             String newTableName = BytesUtil.readUTFString(in);
@@ -349,5 +356,4 @@ public class GTInfo {
         }
     };
 
-  
 }

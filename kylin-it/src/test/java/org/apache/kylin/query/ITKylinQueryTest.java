@@ -51,12 +51,12 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        printInfo("setUp in ITKylinQueryTest");
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.HYBRID, 0);
         priorities.put(RealizationType.CUBE, 0);
         Candidate.setPriorities(priorities);
 
-        printInfo("setUp in ITKylinQueryTest");
         joinType = "left";
 
         setupAll();
@@ -64,8 +64,8 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        Candidate.restorePriorities();
         printInfo("tearDown in ITKylinQueryTest");
+        Candidate.restorePriorities();
         clean();
     }
 

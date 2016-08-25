@@ -352,7 +352,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return result;
     }
 
-    private int getCost(SQLDigest digest) {
+    public int getCost(SQLDigest digest) {
         int calculatedCost = cost;
 
         //the number of dimensions is not as accurate as number of row key cols

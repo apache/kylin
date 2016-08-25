@@ -44,7 +44,6 @@ public class SQLDigest {
     public Collection<FunctionDesc> aggregations;
     public Collection<MeasureDesc> sortMeasures;
     public Collection<OrderEnum> sortOrders;
-    private boolean isRawQuery = false;
 
     public SQLDigest(String factTable, TupleFilter filter, Collection<JoinDesc> joinDescs, Collection<TblColRef> allColumns, //
             Collection<TblColRef> groupbyColumns, Collection<TblColRef> filterColumns, Collection<TblColRef> aggregatedColumns, Collection<FunctionDesc> aggregateFunnc, Collection<MeasureDesc> sortMeasures, Collection<OrderEnum> sortOrders) {
@@ -58,11 +57,12 @@ public class SQLDigest {
         this.aggregations = aggregateFunnc;
         this.sortMeasures = sortMeasures;
         this.sortOrders = sortOrders;
-        this.isRawQuery = this.groupbyColumns.isEmpty() && this.metricColumns.isEmpty();
     }
 
     public boolean isRawQuery() {
-        return isRawQuery;
+        return this.groupbyColumns.isEmpty() && // select a group by a -> not raw
+                this.aggregations.isEmpty(); // has aggr -> not raw
+        //the reason to choose aggregations rather than metricColumns is because the former is set earlier at implOLAP
     }
 
     @Override
