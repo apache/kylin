@@ -48,16 +48,26 @@ public class DictionaryRule implements IValidatorRule<CubeDesc> {
                 context.addResult(ResultLevel.ERROR, "Some column in dictionaries not found");
                 return;
             }
+            String builder = dictDesc.getBuilderClass();
             TblColRef reuseCol = dictDesc.getResuseColumnRef();
             if (reuseCol == null) {
+                if (builder == null || builder.isEmpty()) {
+                    context.addResult(ResultLevel.ERROR, "Column " + dictCol + " cannot have builder and reuse column both empty");
+                    return;
+                }
+                
                 // Make sure the same column associate with same builder class
-                String builder = dictDesc.getBuilderClass();
                 String oldBuilder = colToBuilderMap.put(dictCol, builder);
                 if (oldBuilder != null && !oldBuilder.equals(builder)) {
                     context.addResult(ResultLevel.ERROR, "Column " + dictCol + " has inconsistent builders " + builder + " and " + oldBuilder);
                     return;
                 }
             } else {
+                if (builder != null && !builder.isEmpty()) {
+                    context.addResult(ResultLevel.ERROR, "Column " + dictCol + " cannot have builder and reuse column both");
+                    return;
+                }
+                
                 // Make sure one column only reuse another one column
                 TblColRef oldReuseCol = colToReuseColMap.put(dictCol, reuseCol);
                 if (oldReuseCol != null && !reuseCol.equals(oldReuseCol)) {

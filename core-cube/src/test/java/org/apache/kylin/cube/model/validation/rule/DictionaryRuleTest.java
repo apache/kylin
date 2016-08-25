@@ -72,20 +72,25 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBadDesc() throws IOException {
-        testBadDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " + "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder", DictionaryDesc.create("SITE_NAME", null, "FakeBuilderClass"));
+        testDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " + "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder", DictionaryDesc.create("SITE_NAME", null, "FakeBuilderClass"));
     }
 
     @Test
     public void testBadDesc2() throws IOException {
-        testBadDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " + "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder", DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
+        testDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID cannot have builder and reuse column both", DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
     }
 
     @Test
     public void testBadDesc3() throws IOException {
-        testBadDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID used as dimension and conflict with GlobalDictBuilder", DictionaryDesc.create("lstg_site_id", null, GlobalDictionaryBuilder.class.getName()));
+        testDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID cannot have builder and reuse column both empty", DictionaryDesc.create("lstg_site_id", null, null));
+    }
+    
+    @Test
+    public void testGoodDesc2() throws IOException {
+        testDictionaryDesc(null, DictionaryDesc.create("lstg_site_id", null, GlobalDictionaryBuilder.class.getName()));
     }
 
-    private void testBadDictionaryDesc(String expectMessage, DictionaryDesc... descs) throws IOException {
+    private void testDictionaryDesc(String expectMessage, DictionaryDesc... descs) throws IOException {
         DictionaryRule rule = new DictionaryRule();
         File f = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_without_slr_left_join_desc.json");
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
@@ -98,7 +103,12 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
         ValidateContext vContext = new ValidateContext();
         rule.validate(desc, vContext);
         vContext.print(System.out);
-        assertTrue(vContext.getResults().length >= 1);
-        assertEquals(expectMessage, vContext.getResults()[0].getMessage());
+
+        if (expectMessage == null) {
+            assertTrue(vContext.getResults().length == 0);
+        } else {
+            assertTrue(vContext.getResults().length >= 1);
+            assertEquals(expectMessage, vContext.getResults()[0].getMessage());
+        }
     }
 }
