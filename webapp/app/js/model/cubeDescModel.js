@@ -41,6 +41,7 @@ KylinApp.service('CubeDescModel', function () {
           }
         }
       ],
+      "dictionaries" :[],
       "rowkey": {
         "rowkey_columns": []
       },
@@ -78,6 +79,14 @@ KylinApp.service('CubeDescModel', function () {
     };
 
     return measure;
+  }
+  this.createDictionaries = function () {
+    var dictionaries = {
+      "column": null,
+      "builder": null,
+      "reuse":null
+    }
+    return dictionaries;
   }
 
   this.createAggGroup = function () {

@@ -18,14 +18,14 @@
 
 'use strict';
 
-KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,cubesManager,CubeDescModel) {
+KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,cubesManager,CubeDescModel,SweetAlert) {
     $scope.cubesManager = cubesManager;
 
 
   //rowkey
   $scope.convertedRowkeys = [];
   angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
-    //var _isDictionary = item.encoding === "dict"?"true":"false";
+    //var _isDictionaries = item.encoding === "dict"?"true":"false";
     var _isFixedLength = item.encoding.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
     var _isIntLength = item.encoding.substring(0,3) === "int"?"true":"false";//fixed_length:12
     var _encoding = item.encoding;
@@ -194,5 +194,115 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     }
 
   }
+
+  $scope.isReuse=false;
+  $scope.addNew=false;
+  $scope.newDictionaries = {
+    "column":null,
+    "builder": null,
+    "reuse": null
+  }
+
+  $scope.initUpdateDictionariesStatus = function(){
+    $scope.updateDictionariesStatus = {
+      isEdit:false,
+      editIndex:-1
+    }
+  };
+  $scope.initUpdateDictionariesStatus();
+
+
+  $scope.addNewDictionaries = function (dictionaries, index) {
+    if(dictionaries&&index>=0){
+      $scope.updateDictionariesStatus.isEdit = true;
+      $scope.addNew=true;
+      $scope.updateDictionariesStatus.editIndex = index;
+      if(dictionaries.builder==null){
+        $scope.isReuse=true;
+      }
+      else{
+        $scope.isReuse=false;
+      }
+    }
+    else{
+      $scope.addNew=!$scope.addNew;
+    }
+    $scope.newDictionaries = (!!dictionaries)? jQuery.extend(true, {},dictionaries):CubeDescModel.createDictionaries();
+  };
+
+  $scope.saveNewDictionaries = function (){
+    if(!$scope.cubeMetaFrame.dictionaries){
+      $scope.cubeMetaFrame.dictionaries=[];
+    }
+
+    if($scope.updateDictionariesStatus.isEdit == true) {
+      if ($scope.cubeMetaFrame.dictionaries[$scope.updateDictionariesStatus.editIndex].column != $scope.newDictionaries.column) {
+        if(!$scope.checkColumn()){
+          return false;
+        }
+      }
+      else {
+        $scope.cubeMetaFrame.dictionaries[$scope.updateDictionariesStatus.editIndex] = $scope.newDictionaries;
+      }
+    }
+    else
+      {
+        if(!$scope.checkColumn()){
+        return false;
+        }
+        $scope.cubeMetaFrame.dictionaries.push($scope.newDictionaries);
+      }
+      $scope.newDictionaries = null;
+      $scope.initUpdateDictionariesStatus();
+      $scope.nextDictionariesInit();
+      $scope.addNew = !$scope.addNew;
+      $scope.isReuse = false;
+      return true;
+
+  };
+
+  $scope.nextDictionariesInit = function(){
+    $scope.nextDic = {
+      "coiumn":null,
+      "builder":null,
+      "reuse":null
+    }
+  }
+
+  $scope.checkColumn = function (){
+    var isColumnExit=false;
+        angular.forEach($scope.cubeMetaFrame.dictionaries,function(dictionaries){
+          if(!isColumnExit){
+            if(dictionaries.column==$scope.newDictionaries.column)
+              isColumnExit=true;
+          }
+        })
+    if(isColumnExit){
+      SweetAlert.swal('Oops...', "The column named [" + $scope.newDictionaries.column + "] already exists", 'warning');
+      return false;
+    }
+    return true;
+  }
+
+  $scope.clearNewDictionaries = function (){
+    $scope.newDictionaries = null;
+    $scope.isReuse=false;
+    $scope.initUpdateDictionariesStatus();
+    $scope.nextDictionariesInit();
+    $scope.addNew=!$scope.addNew;
+  }
+
+  $scope.change = function (){
+    $scope.newDictionaries.builder=null;
+    $scope.newDictionaries.reuse=null;
+    $scope.isReuse=!$scope.isReuse;
+  }
+
+  $scope.removeDictionaries =  function(arr,element){
+    var index = arr.indexOf(element);
+    if (index > -1) {
+      arr.splice(index, 1);
+    }
+  };
 
 });

@@ -16,11 +16,9 @@
 * limitations under the License.
 -->
 
-<div ng-controller="CubeAdvanceSettingCtrl">
-
+  <div ng-controller="CubeAdvanceSettingCtrl">
     <ng-form name="forms.cube_setting_form">
       <div>
-
         <div class="form-group">
           <h3 style="margin-left:42px;">Aggregation Groups </h3>
           <div style="margin-left:22px;">
@@ -30,7 +28,6 @@
               </div>
             </div>
           </div>
-
           <table style="margin-left:42px; width:92%"
                  ng-if="cubeMetaFrame.aggregation_groups.length > 0"
                  class="table table-hover list">
@@ -97,8 +94,6 @@
                     <td class="col-xs-1">
                     </td>
                   </tr>
-
-
                   <tr class="row">
                     <td class="col-xs-3">
                       Hierarchy Dimensions
@@ -121,7 +116,6 @@
                             </ui-select>
                             <p ng-if="state.mode=='view'">
                               {{hierarchyDims}}</p>
-
                           </td>
                           <td class="col-xs-2">
                             <button class="btn btn-sm btn-info"
@@ -130,7 +124,6 @@
                             </button>
                           </td>
                         </tr>
-
                         <tr class="row">
                           <td class="col-xs-12">
                             <button class="btn btn-sm btn-info"
@@ -139,11 +132,8 @@
                           </td>
                         </tr>
                       </table>
-
                     </td>
                   </tr>
-
-
                   <tr class="row">
                     <td class="col-xs-3">
                       Joint Dimensions
@@ -175,7 +165,6 @@
                             </button>
                           </td>
                         </tr>
-
                         <tr class="row">
                           <td class="col-xs-12">
                             <button class="btn btn-sm btn-info"
@@ -184,11 +173,9 @@
                           </td>
                         </tr>
                       </table>
-
                     </td>
                   </tr>
                 </table>
-
               </td>
               <td ng-if="state.mode=='edit'" class="col-xs-1">
                 <button class="btn btn-xs btn-info"
@@ -198,15 +185,10 @@
               </td>
             </tr>
           </table>
-
           <button class="btn btn-sm btn-info" style="margin-left:42px" ng-click="addNewAggregationGroup()"
                   ng-show="state.mode=='edit'">New Aggregation Group<i class="fa fa-plus"></i>
           </button>
-
-
         </div>
-
-
         <div class="form-group large-popover" style="overflow:auto">
           <h3 style="margin-left:42px">Rowkeys  <i kylinpopover placement="right" title="Rowkey" template="rowkeyTip.html" class="fa fa-info-circle"></i></h3>
 
@@ -291,21 +273,132 @@
                   </tr>
                   </tbody>
                 </table>
-
-
               </div>
           </div>
-
           <button class="btn btn-sm btn-info" style="margin-left:42px"
                   ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i>
           </button>
         </div>
+        <div class="form-group large-popover" style="overflow:auto">
+          <h3 style="margin-left:42px">Advanced Dictionaries  <i kylinpopover placement="right" title="Advanced Dictionaries" template="AdvancedDictionariesTip.html" class="fa fa-info-circle"></i></h3>
+          <div style="margin-left:42px">
+            <div class="box-body">
+              <br/>
+              <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                  <th>Column</th>
+                  <th>Builder Class</th>
+                  <th>Reuse</th>
+                  <th ng-if="state.mode=='edit'">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="dictionaries in cubeMetaFrame.dictionaries | filter: state.measureFilter track by $index">
+                    <td>
+                      <!--Column -->
+                      <span>{{dictionaries.column}}</span>
+                    </td>
+                    <td>
+                      <!--Builder-->
+                      <span>{{dictionaries.builder}}</span>
+                    </td>
+                    <td>
+                      <!--Reuse-->
+                      <span>{{dictionaries.reuse}}</span>
+                    </td>
+                    <td ng-if="state.mode=='edit'">
+                      <!--Edit Button -->
+                      <button class="btn btn-xs btn-info" ng-click="addNewDictionaries(dictionaries, $index)" >
+                        <i class="fa fa-pencil"></i>
+                      </button>
+                      <!--Remove Button -->
+                      <button class="btn btn-xs  btn-danger" ng-click="removeDictionaries(cubeMetaFrame.dictionaries, dictionaries)">
+                        <i class="fa fa-trash-o"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!--Add Dictionaries Button-->
+        <div class="form-group" style="margin-left:42px;">
+          <button class="btn btn-sm btn-info" ng-click="addNewDictionaries()" ng-show="state.mode=='edit' && !addNew">
+            <i class="fa fa-plus"></i> Dictionaries
+          </button>
+       </div>
+       <!--Edit Dictionsry-->
+       <ng-form name="edit_mes_form" style="margin-left:42px;">
+         <div class="box box-solid"  ng-if="addNew" style="margin-left:42px;">
+           <div class="box-header">
+             <h4 class="box-title text-info">Edit Dictionaries</h4>
+           </div>
+           <div class="box-body">
+             <div class="row">
+               <div class="col-xs-8">
+                 <!--Column-->
+                 <div class="form-group middle-popover">
+                   <div class="row">
+                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Column</b></label>
+                     <div class="col-xs-12 col-sm-6">
+                       <select class="form-control" chosen
+                               ng-model="newDictionaries.column"
+                               ng-change="measureReturnTypeUpdate();"
+                               ng-options="column as column for column in getFactColumns()" required>
+                         <option value="">-- Select a Column --</option>
+                       </select>
+                     </div>
+                   </div>
+                 </div>
+                 <div class="form-group">
+                   <div class="row" style="margin-left:5px;">
+                     <label class="radio-inline ng-binding ng-scope">
+                       <input type="radio" name="reuse" ng-value=false ng-model="isReuse"  ng-change="change()"/><b>Builder Class</b>
+                     </label>
+                     <label class="radio-inline ng-binding ng-scope">
+                       <input type="radio" name="reuse"  ng-value=true ng-model="isReuse" ng-change="change()"/><b>Reuse</b>
+                     </label>
+                   </div>
+                 </div>
+                 <!--Builder-->
+                 <div class="form-group" ng-if="!isReuse" >
+                   <div class="row">
+                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Builder Class</b></label>
+                     <div class="col-xs-12 col-sm-6">
+                       <input type="text" name="builder"  ng-model="newDictionaries.builder" required  style="width:100% " />
+                     </div>
+                   </div>
+                 </div>
+                 <!--Reuse-->
+                 <div class="form-group middle-popover" ng-if="isReuse" >
+                   <div class="row">
+                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Reuse</b></label>
+                     <div class="col-xs-12 col-sm-6">
+                       <select class="form-control" chosen
+                               ng-model="newDictionaries.reuse"
+                               ng-change="measureReturnTypeUpdate();"
+                               ng-options="column as column for column in getFactColumns()" required>
+                         <option value="">-- Select a Column --</option>
+                       </select>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div class="box-footer">
+             <button class="btn btn-sm btn-info" ng-disabled="edit_mes_form.$invalid"
+                     ng-click="saveNewDictionaries()" ng-show="state.mode=='edit'">OK</button>
+             <button class="btn btn-link" ng-click="clearNewDictionaries()">Cancel</button>
+           </div>
+         </div>
+       </ng-form>
+     </div>
+   </ng-form>
+ </div>
 
-      </div>
-
-    </ng-form>
-
-</div>
 <script type="text/ng-template" id="rowkeyTip.html">
   <div>
     <h4>Shard By this column?</h4>
@@ -316,7 +409,7 @@
     <h4>RowKey Encoding</h4>
     <ol>
       <li>
-        "dict" encoding will try to build a dictionary for the dimension
+        "dict" encoding will try to build a dictionaries for the dimension
       </li>
       <li>
         "fixed_length" encoding will encode the dimension vlaues by fixed length bytes with padding
@@ -327,3 +420,4 @@
     </ol>
   </div>
 </script>
+<script type="text/ng-template" id="AdvancedDictionariesTip.html"

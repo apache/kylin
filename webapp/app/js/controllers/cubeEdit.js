@@ -116,16 +116,33 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   $scope.getFactColumns = function () {
     var me_columns = [];
     angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension,index){
-      if($scope.metaModel.model.fact_table !== dimension.table){
-        return;
-      }
       if(dimension.column && dimension.derived == null){
         me_columns.push(dimension.column);
+
+      }
+      else{
+        angular.forEach(dimension.derived,function(derived){
+          me_columns.push(derived);
+        });
+
       }
 
     });
+    angular.forEach($scope.cubeMetaFrame.measure,function(measure){
+         if(measure.function.parameter.type==column){
+           me_columns.push(measure.function.parameter.value);
+         }
+    });
 
-    return me_columns;
+    var unique = []
+
+    angular.forEach(me_columns, function (column) {
+        if (unique.indexOf(column) === -1) {
+          unique.push(column);
+        }
+      });
+
+      return unique;
 
   };
 
