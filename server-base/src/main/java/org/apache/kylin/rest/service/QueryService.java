@@ -55,6 +55,8 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.model.ColumnMeta;
@@ -67,6 +69,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -258,8 +261,34 @@ public class QueryService extends BasicService {
         logger.info(stringBuilder.toString());
     }
 
+    public void checkAuthorization(String cubeName) throws AccessDeniedException {
+        // special care for hybrid
+        HybridInstance hybridInstance = getHybridManager().getHybridInstance(cubeName);
+        if (hybridInstance != null) {
+            checkHybridAuthorization(hybridInstance);
+            return;
+        }
+
+        CubeInstance cubeInstance = getCubeManager().getCube(cubeName);
+        checkCubeAuthorization(cubeInstance);
+    }
+
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
-    public void checkAuthorization(CubeInstance cube) throws AccessDeniedException {
+    private void checkCubeAuthorization(CubeInstance cube) throws AccessDeniedException {
+    }
+
+    private void checkHybridAuthorization(HybridInstance hybridInstance) throws AccessDeniedException {
+        List<RealizationEntry> realizationEntries = hybridInstance.getRealizationEntries();
+        for (RealizationEntry realizationEntry : realizationEntries) {
+            String reName = realizationEntry.getRealization();
+            if (RealizationType.CUBE == realizationEntry.getType()) {
+                CubeInstance cubeInstance = getCubeManager().getCube(reName);
+                checkCubeAuthorization(cubeInstance);
+            } else if (RealizationType.HYBRID == realizationEntry.getType()) {
+                HybridInstance innerHybridInstance = getHybridManager().getHybridInstance(reName);
+                checkHybridAuthorization(innerHybridInstance);
+            }
+        }
     }
 
     private SQLResponse queryWithSqlMassage(SQLRequest sqlRequest) throws Exception {
