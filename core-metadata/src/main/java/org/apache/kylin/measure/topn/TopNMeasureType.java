@@ -39,8 +39,8 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
@@ -290,28 +290,30 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     }
 
     @Override
-    public void adjustSqlDigest(MeasureDesc measureDesc, SQLDigest sqlDigest) {
-        FunctionDesc topnFunc = measureDesc.getFunction();
-        List<TblColRef> topnLiteralCol = getTopNLiteralColumn(topnFunc);
+    public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
+        for (MeasureDesc measureDesc : measureDescs) {
+            FunctionDesc topnFunc = measureDesc.getFunction();
+            List<TblColRef> topnLiteralCol = getTopNLiteralColumn(topnFunc);
 
-        if (sqlDigest.groupbyColumns.containsAll(topnLiteralCol) == false)
-            return;
+            if (sqlDigest.groupbyColumns.containsAll(topnLiteralCol) == false)
+                return;
 
-        if (sqlDigest.aggregations.size() > 1) {
-            throw new IllegalStateException("When query with topN, only one metrics is allowed.");
-        }
-
-        if (sqlDigest.aggregations.size() > 0) {
-            FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
-            if (origFunc.isSum() == false && origFunc.isCount() == false) {
-                throw new IllegalStateException("When query with topN, only SUM function is allowed.");
+            if (sqlDigest.aggregations.size() > 1) {
+                throw new IllegalStateException("When query with topN, only one metrics is allowed.");
             }
-            logger.info("Rewrite function " + origFunc + " to " + topnFunc);
-        }
 
-        sqlDigest.aggregations = Lists.newArrayList(topnFunc);
-        sqlDigest.groupbyColumns.removeAll(topnLiteralCol);
-        sqlDigest.metricColumns.addAll(topnLiteralCol);
+            if (sqlDigest.aggregations.size() > 0) {
+                FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
+                if (origFunc.isSum() == false && origFunc.isCount() == false) {
+                    throw new IllegalStateException("When query with topN, only SUM function is allowed.");
+                }
+                logger.info("Rewrite function " + origFunc + " to " + topnFunc);
+            }
+
+            sqlDigest.aggregations = Lists.newArrayList(topnFunc);
+            sqlDigest.groupbyColumns.removeAll(topnLiteralCol);
+            sqlDigest.metricColumns.addAll(topnLiteralCol);
+        }
     }
 
     @Override

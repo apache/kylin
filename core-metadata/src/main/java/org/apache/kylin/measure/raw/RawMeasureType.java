@@ -166,7 +166,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
     public CapabilityResult.CapabilityInfluence influenceCapabilityCheck(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, MeasureDesc measureDesc) {
         //is raw query
-        if (!digest.isRawQuery())
+        if (!digest.isRawQuery)
             return null;
 
         TblColRef rawColumn = getRawColumn(measureDesc.getFunction());
@@ -196,27 +196,30 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
     }
 
     @Override
-    public void adjustSqlDigest(MeasureDesc measureDesc, SQLDigest sqlDigest) {
-        if (sqlDigest.isRawQuery()) {
-            TblColRef col = this.getRawColumn(measureDesc.getFunction());
-            ParameterDesc colParameter = new ParameterDesc();
-            colParameter.setType("column");
-            colParameter.setValue(col.getName());
-            FunctionDesc rawFunc = new FunctionDesc();
-            rawFunc.setExpression("RAW");
-            rawFunc.setParameter(colParameter);
+    public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
 
-            if (sqlDigest.allColumns.contains(col)) {
-                if (measureDesc.getFunction().equals(rawFunc)) {
-                    FunctionDesc sumFunc = new FunctionDesc();
-                    sumFunc.setExpression("SUM");
-                    sumFunc.setParameter(colParameter);
-                    sqlDigest.aggregations.remove(sumFunc);
-                    sqlDigest.aggregations.add(rawFunc);
-                    logger.info("Add RAW measure on column " + col);
-                }
-                if (!sqlDigest.metricColumns.contains(col)) {
-                    sqlDigest.metricColumns.add(col);
+        if (sqlDigest.isRawQuery) {
+            for (MeasureDesc measureDesc : measureDescs) {
+                TblColRef col = this.getRawColumn(measureDesc.getFunction());
+                ParameterDesc colParameter = new ParameterDesc();
+                colParameter.setType("column");
+                colParameter.setValue(col.getName());
+                FunctionDesc rawFunc = new FunctionDesc();
+                rawFunc.setExpression("RAW");
+                rawFunc.setParameter(colParameter);
+
+                if (sqlDigest.allColumns.contains(col)) {
+                    if (measureDesc.getFunction().equals(rawFunc)) {
+                        FunctionDesc sumFunc = new FunctionDesc();
+                        sumFunc.setExpression("SUM");
+                        sumFunc.setParameter(colParameter);
+                        sqlDigest.aggregations.remove(sumFunc);
+                        sqlDigest.aggregations.add(rawFunc);
+                        logger.info("Add RAW measure on column " + col);
+                    }
+                    if (!sqlDigest.metricColumns.contains(col)) {
+                        sqlDigest.metricColumns.add(col);
+                    }
                 }
             }
         }

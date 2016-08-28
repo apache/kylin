@@ -22,12 +22,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.cube.RawQueryLastHacker;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
@@ -53,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public abstract class GTCubeStorageQueryBase implements IStorageQuery {
@@ -69,7 +72,11 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
-        // allow custom measures hack
+        
+        //cope with queries with no aggregations
+        RawQueryLastHacker.hackNoAggregations(sqlDigest, cubeDesc);
+        
+        // Customized measure taking effect: e.g. allow custom measures to help raw queries
         notifyBeforeStorageQuery(sqlDigest);
 
         Collection<TblColRef> groups = sqlDigest.groupbyColumns;
@@ -418,9 +425,21 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     }
 
     private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
+        Map<String, List<MeasureDesc>> map = Maps.newHashMap();
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
             MeasureType<?> measureType = measure.getFunction().getMeasureType();
-            measureType.adjustSqlDigest(measure, sqlDigest);
+
+            String key = measureType.getClass().getCanonicalName();
+            List<MeasureDesc> temp = null;
+            if ((temp = map.get(key)) != null) {
+                temp.add(measure);
+            } else {
+                map.put(key, Lists.<MeasureDesc> newArrayList(measure));
+            }
+        }
+
+        for (List<MeasureDesc> sublist : map.values()) {
+            sublist.get(0).getFunction().getMeasureType().adjustSqlDigest(sublist, sqlDigest);
         }
     }
 

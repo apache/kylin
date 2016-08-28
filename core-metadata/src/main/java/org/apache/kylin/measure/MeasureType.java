@@ -124,7 +124,7 @@ abstract public class MeasureType<T> {
      * They need to adjust dimensions and measures in <code>sqlDigest</code> before scanning,
      * such that correct cuboid and measures can be selected by storage.
      */
-    public void adjustSqlDigest(MeasureDesc measureDesc, SQLDigest sqlDigest) {
+    public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
     }
 
     /** Return true if one storage record maps to multiple tuples, or false otherwise. */

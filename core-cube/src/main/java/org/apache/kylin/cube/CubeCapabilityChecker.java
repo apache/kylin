@@ -88,7 +88,7 @@ public class CubeCapabilityChecker {
             return result;
         }
 
-        if (digest.isRawQuery() && cube.getFactTable().equals(digest.factTable)) {
+        if (digest.isRawQuery && cube.getFactTable().equals(digest.factTable)) {
             result.influences.add(new CapabilityInfluence() {
                 @Override
                 public double suggestCostMultiplier() {

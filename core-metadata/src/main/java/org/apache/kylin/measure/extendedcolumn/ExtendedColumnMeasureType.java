@@ -93,19 +93,21 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
     }
 
     @Override
-    public void adjustSqlDigest(MeasureDesc measureDesc, SQLDigest sqlDigest) {
-        FunctionDesc extendColumnFunc = measureDesc.getFunction();
-        List<TblColRef> hosts = getExtendedColumnHosts(extendColumnFunc);
-        TblColRef extended = getExtendedColumn(extendColumnFunc);
+    public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
+        for (MeasureDesc measureDesc : measureDescs) {
+            FunctionDesc extendColumnFunc = measureDesc.getFunction();
+            List<TblColRef> hosts = getExtendedColumnHosts(extendColumnFunc);
+            TblColRef extended = getExtendedColumn(extendColumnFunc);
 
-        if (!sqlDigest.groupbyColumns.contains(extended)) {
-            return;
+            if (!sqlDigest.groupbyColumns.contains(extended)) {
+                return;
+            }
+
+            sqlDigest.aggregations.add(extendColumnFunc);
+            sqlDigest.groupbyColumns.remove(extended);
+            sqlDigest.groupbyColumns.addAll(hosts);
+            sqlDigest.metricColumns.add(extended);
         }
-
-        sqlDigest.aggregations.add(extendColumnFunc);
-        sqlDigest.groupbyColumns.remove(extended);
-        sqlDigest.groupbyColumns.addAll(hosts);
-        sqlDigest.metricColumns.add(extended);
     }
 
     @Override
@@ -151,7 +153,7 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
                     value = null;
                     return;
                 }
-                
+
                 ByteArray byteArray = (ByteArray) measureValue;
                 //the array in ByteArray is guaranteed to be completed owned by the ByteArray
                 value = Bytes.toString(byteArray.array());

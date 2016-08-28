@@ -18,6 +18,8 @@
 
 package org.apache.kylin.measure.dim;
 
+import java.util.List;
+
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
@@ -79,8 +81,10 @@ public class DimCountDistinctMeasureType extends MeasureType<Object> {
         return DimCountDistinctAggFunc.class;
     }
 
-    public void adjustSqlDigest(MeasureDesc measureDesc, SQLDigest sqlDigest) {
-        sqlDigest.groupbyColumns.addAll(measureDesc.getFunction().getParameter().getColRefs());
-        sqlDigest.aggregations.remove(measureDesc.getFunction());
+    public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
+        for (MeasureDesc measureDesc : measureDescs) {
+            sqlDigest.groupbyColumns.addAll(measureDesc.getFunction().getParameter().getColRefs());
+            sqlDigest.aggregations.remove(measureDesc.getFunction());
+        }
     }
 }
