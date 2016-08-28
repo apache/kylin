@@ -138,7 +138,7 @@ public class CubeMigrationCLI {
         copyFilesInMetaStore(cube, overwriteIfExists);
         renameFoldersInHdfs(cube);
         changeHtableHost(cube);
-        addCubeIntoProject(cubeName, projectName);
+        addCubeAndModelIntoProject(cube, cubeName, projectName);
         if (Boolean.parseBoolean(copyAcl) == true) {
             copyACL(cube, projectName);
         }
@@ -227,13 +227,12 @@ public class CubeMigrationCLI {
             operations.add(new Opt(OptType.COPY_DICT_OR_SNAPSHOT, new Object[] { item, cube.getName() }));
         }
     }
-
-    private static void addCubeIntoProject(String cubeName, String projectName) throws IOException {
+    private static void addCubeAndModelIntoProject(CubeInstance srcCube, String cubeName, String projectName) throws IOException {
         String projectResPath = ProjectInstance.concatResourcePath(projectName);
         if (!dstStore.exists(projectResPath))
             throw new IllegalStateException("The target project " + projectName + "does not exist");
 
-        operations.add(new Opt(OptType.ADD_INTO_PROJECT, new Object[] { cubeName, projectName }));
+        operations.add(new Opt(OptType.ADD_INTO_PROJECT, new Object[] { srcCube, cubeName, projectName }));
     }
 
     private static void purgeAndDisable(String cubeName) throws IOException {
@@ -419,13 +418,19 @@ public class CubeMigrationCLI {
             break;
         }
         case ADD_INTO_PROJECT: {
-            String cubeName = (String) opt.params[0];
-            String projectName = (String) opt.params[1];
+            CubeInstance srcCube = (CubeInstance) opt.params[0];
+            String cubeName = (String) opt.params[1];
+            String projectName = (String) opt.params[2];
+            String modelName = srcCube.getDescriptor().getModelName();
+
             String projectResPath = ProjectInstance.concatResourcePath(projectName);
             Serializer<ProjectInstance> projectSerializer = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
             ProjectInstance project = dstStore.getResource(projectResPath, ProjectInstance.class, projectSerializer);
+
+            project.addModel(modelName);
             project.removeRealization(RealizationType.CUBE, cubeName);
             project.addRealizationEntry(RealizationType.CUBE, cubeName);
+
             dstStore.putResource(projectResPath, project, projectSerializer);
             logger.info("Project instance for " + projectName + " is corrected");
             break;
