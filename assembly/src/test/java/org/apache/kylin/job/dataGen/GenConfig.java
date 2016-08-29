@@ -38,7 +38,18 @@ public class GenConfig {
     @JsonProperty("columnConfigs")
     private ArrayList<ColumnConfig> columnConfigs;
 
+    @JsonProperty("differentiateBoundary")
+    private String differentiateBoundary; //data before and after the provided date will be different, so that different segments will have different segments
+
     private HashMap<String, ColumnConfig> cache = new HashMap<String, ColumnConfig>();
+
+    public String getDifferentiateBoundary() {
+        return differentiateBoundary;
+    }
+
+    public void setDifferentiateBoundary(String differentiateBoundary) {
+        this.differentiateBoundary = differentiateBoundary;
+    }
 
     public ArrayList<ColumnConfig> getColumnConfigs() {
         return columnConfigs;

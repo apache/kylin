@@ -35,6 +35,8 @@ public class ColumnConfig {
     private boolean exclusive;
     @JsonProperty("asRange")
     private boolean asRange;
+    @JsonProperty("differentiateByDateBoundary")
+    private boolean differentiateByDateBoundary;
 
     public boolean isAsRange() {
         return asRange;
@@ -68,4 +70,11 @@ public class ColumnConfig {
         this.valueSet = valueSet;
     }
 
+    public boolean isDifferentiateByDateBoundary() {
+        return differentiateByDateBoundary;
+    }
+
+    public void setDifferentiateByDateBoundary(boolean differentiateByDateBoundary) {
+        this.differentiateByDateBoundary = differentiateByDateBoundary;
+    }
 }

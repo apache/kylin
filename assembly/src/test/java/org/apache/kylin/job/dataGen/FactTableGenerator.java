@@ -50,6 +50,8 @@ import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import com.google.common.collect.Lists;
+
 /**
  */
 public class FactTableGenerator {
@@ -69,6 +71,11 @@ public class FactTableGenerator {
     int unlinkableRowCountMax;
     double conflictRatio;
     double linkableRatio;
+
+    long differentiateBoundary = -1;
+    List<Integer> differentiateColumns = Lists.newArrayList();
+
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     // the names of lookup table columns which is in relation with fact
     // table(appear as fk in fact table)
@@ -206,6 +213,25 @@ public class FactTableGenerator {
     private void prepare() throws Exception {
         // load config
         loadConfig();
+
+        int index = 0;
+        for (ColumnDesc cDesc : MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(factTableName).getColumns()) {
+            ColumnConfig cConfig = genConf.getColumnConfigByName(cDesc.getName());
+
+            if (cConfig != null && cConfig.isDifferentiateByDateBoundary()) {
+                if (!cDesc.getType().isStringFamily()) {
+                    throw new IllegalStateException("differentiateByDateBoundary only applies to text types, actual:" + cDesc.getType());
+                }
+                if (genConf.getDifferentiateBoundary() == null) {
+                    throw new IllegalStateException("differentiateBoundary not provided");
+                }
+                if (differentiateBoundary == -1) {
+                    differentiateBoundary = format.parse(genConf.getDifferentiateBoundary()).getTime();
+                }
+                differentiateColumns.add(index);
+            }
+            index++;
+        }
 
         TreeSet<String> factTableColumns = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
@@ -359,7 +385,6 @@ public class FactTableGenerator {
                 throw new RuntimeException("Does not support " + type);
             }
 
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             Date start = format.parse(range.get(0));
             Date end = format.parse(range.get(1));
             long diff = end.getTime() - start.getTime();
@@ -533,6 +558,8 @@ public class FactTableGenerator {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         LinkedList<String> columnValues = new LinkedList<String>();
 
+        long currentRowTime = -1;
+
         for (ColumnDesc cDesc : MetadataManager.getInstance(config).getTableDesc(factTableName).getColumns()) {
 
             String colName = cDesc.getName();
@@ -544,14 +571,25 @@ public class FactTableGenerator {
 
                 columnValues.add(candidates.get(r.nextInt(candidates.size())));
             } else if (usedCols.contains(colName)) {
-
-                // if the current column is a metric column in fact table
+                // if the current column is a metric or dimension column in fact table
                 columnValues.add(createCell(cDesc));
             } else {
 
                 // otherwise this column is not useful in OLAP
                 columnValues.add(createDefaultsCell(cDesc.getTypeName()));
                 defaultColumns.add(colName);
+            }
+
+            if (cDesc.getRef().equals(this.cube.getDescriptor().getModel().getPartitionDesc().getPartitionDateColumnRef())) {
+                currentRowTime = format.parse(columnValues.get(columnValues.size() - 1)).getTime();
+            }
+        }
+
+        for (Integer index : differentiateColumns) {
+            if (currentRowTime >= differentiateBoundary) {
+                columnValues.set(index, columnValues.get(index) + "_B");
+            } else {
+                columnValues.set(index, columnValues.get(index) + "_A");
             }
         }
 

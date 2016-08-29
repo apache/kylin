@@ -34,7 +34,9 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.ScannerWorker;
 import org.apache.kylin.metadata.filter.ITupleFilterTransformer;
+import org.apache.kylin.metadata.filter.StringCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.TupleFilterSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
@@ -52,10 +54,15 @@ public class CubeSegmentScanner implements IGTScanner {
     final GTScanRequest scanRequest;
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
-            Collection<FunctionDesc> metrics, TupleFilter filter, StorageContext context, String gtStorage) {
+            Collection<FunctionDesc> metrics, TupleFilter originalfilter, StorageContext context, String gtStorage) {
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
 
+        //the filter might be changed later in this CubeSegmentScanner (In ITupleFilterTransformer)
+        //to avoid issues like in https://issues.apache.org/jira/browse/KYLIN-1954, make sure each CubeSegmentScanner
+        //is working on its own copy
+        byte[] serialize = TupleFilterSerializer.serialize(originalfilter, StringCodeSystem.INSTANCE);
+        TupleFilter filter = TupleFilterSerializer.deserialize(serialize, StringCodeSystem.INSTANCE);
         // translate FunctionTupleFilter to IN clause
         ITupleFilterTransformer translator = new BuildInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
         filter = translator.transform(filter);
