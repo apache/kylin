@@ -62,7 +62,7 @@
         "app/components/angular-ui-grid/ui-grid.min.css",
         "app/components/animate.css/animate.min.css",
         "app/components/messenger/build/css/messenger.css",
-        "app/components/messenger/build/css/messenger-theme-ice.css",
+        "app/css/messenger-theme-ice.css",
         "app/components/chosen/chosen.css",
         "app/components/angular-chosen-localytics/chosen-spinner.css",
         "app/components/nvd3/nv.d3.min.css",

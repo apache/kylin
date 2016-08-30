@@ -1186,6 +1186,7 @@
 
                                 <!-- MIT license -->
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
+                                <exclude>webapp/app/css/messenger-theme-ice.css</exclude>
                                 <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
                                 <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
                                 <exclude>webapp/app/js/directives/datetimepicker.js</exclude>
