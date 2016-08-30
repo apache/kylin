@@ -136,6 +136,10 @@ public class ByteArray implements Comparable<ByteArray>, Serializable {
             return ByteBuffer.wrap(data, offset, length).slice();
     }
 
+    public byte[] toBytes() {
+        return Bytes.copy(this.array(), this.offset(), this.length());
+    }
+
     @Override
     public int hashCode() {
         if (data == null) {

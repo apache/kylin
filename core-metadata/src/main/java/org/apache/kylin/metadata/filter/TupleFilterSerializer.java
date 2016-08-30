@@ -186,7 +186,7 @@ public class TupleFilterSerializer {
             filter = new DynamicTupleFilter(null);
             break;
         case FUNCTION:
-            filter = new BuildInFunctionTupleFilter(null);
+            filter = new BuiltInFunctionTupleFilter(null);
             break;
         case MASSIN:
             filter = new MassInTupleFilter();
