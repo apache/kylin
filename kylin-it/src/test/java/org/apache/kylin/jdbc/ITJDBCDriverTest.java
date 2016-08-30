@@ -217,7 +217,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
         PreparedStatement statement = conn.prepareStatement("select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact " + "where LSTG_FORMAT_NAME = ? group by LSTG_FORMAT_NAME");
 
-        statement.setString(1, "FP-GTC");
+        statement.setString(1, "FP-GTC_A");
 
         ResultSet rs = statement.executeQuery();
 
@@ -225,7 +225,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
         String format_name = rs.getString(1);
 
-        Assert.assertTrue("FP-GTC".equals(format_name));
+        Assert.assertTrue("FP-GTC_A".equals(format_name));
 
         rs.close();
         statement.close();

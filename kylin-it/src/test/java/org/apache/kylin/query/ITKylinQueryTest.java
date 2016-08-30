@@ -34,6 +34,7 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.Candidate;
+import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
@@ -46,7 +47,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-@Ignore("KylinQueryTest is contained by ITCombinationTest")
 public class ITKylinQueryTest extends KylinTestBase {
 
     @BeforeClass
@@ -57,9 +57,12 @@ public class ITKylinQueryTest extends KylinTestBase {
         priorities.put(RealizationType.CUBE, 0);
         Candidate.setPriorities(priorities);
 
-        joinType = "left";
+        joinType = "inner";
 
         setupAll();
+        
+        RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
+        RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
     }
 
     @AfterClass
@@ -96,6 +99,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
         ObserverEnabler.forceCoprocessorUnset();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
+        RemoveBlackoutRealizationsRule.blackouts.clear();
 
     }
 
@@ -144,6 +148,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testCommonQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql", null, true);
+    }
+
+    @Test
+    public void testLikeQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_like", null, true);
     }
 
     @Test

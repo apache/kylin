@@ -586,10 +586,12 @@ public class FactTableGenerator {
         }
 
         for (Integer index : differentiateColumns) {
-            if (currentRowTime >= differentiateBoundary) {
-                columnValues.set(index, columnValues.get(index) + "_B");
-            } else {
-                columnValues.set(index, columnValues.get(index) + "_A");
+            if (r.nextBoolean()) {//only change half of data
+                if (currentRowTime >= differentiateBoundary) {
+                    columnValues.set(index, columnValues.get(index) + "_B");
+                } else {
+                    columnValues.set(index, columnValues.get(index) + "_A");
+                }
             }
         }
 

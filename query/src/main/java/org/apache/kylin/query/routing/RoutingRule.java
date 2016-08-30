@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.rules.RealizationSortRule;
+import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.query.routing.rules.RemoveUncapableRealizationsRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ public abstract class RoutingRule {
     private static List<RoutingRule> rules = Lists.newLinkedList();
 
     static {
+        rules.add(new RemoveBlackoutRealizationsRule());
         rules.add(new RemoveUncapableRealizationsRule());
         rules.add(new RealizationSortRule());
     }

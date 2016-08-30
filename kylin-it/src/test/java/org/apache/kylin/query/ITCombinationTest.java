@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
+import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
@@ -64,13 +65,12 @@ public class ITCombinationTest extends ITKylinQueryTest {
      */
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
-        //       return Arrays.asList(new Object[][] { { "inner", "unset" }, { "left", "unset" }, { "inner", "off" }, { "left", "off" }, { "inner", "on" }, { "left", "on" }, });
-        return Arrays.asList(new Object[][] { { "inner", "on", "v2" }, { "left", "on", "v1" }, { "left", "on", "v2" } });
+        return Arrays.asList(new Object[][] { { "inner", "on", "v2", false }, { "left", "on", "v1", false }, { "left", "on", "v2", false }, { "inner", "on", "v2", true }, { "left", "on", "v2", true } });
     }
 
-    public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine) throws Exception {
+    public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine, boolean excludeViewCubes) throws Exception {
 
-        printInfo("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle + ", query engine: " + queryEngine);
+        printInfo("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle + ", query engine: " + queryEngine + ", excludeViewCubes: " + excludeViewCubes);
 
         ITKylinQueryTest.clean();
 
@@ -83,6 +83,12 @@ public class ITCombinationTest extends ITKylinQueryTest {
             ObserverEnabler.forceCoprocessorOff();
         } else if (coprocessorToggle.equals("unset")) {
             // unset
+        }
+
+        RemoveBlackoutRealizationsRule.blackouts.clear();
+        if (excludeViewCubes) {
+            RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
+            RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
         }
 
         if ("v1".equalsIgnoreCase(queryEngine))

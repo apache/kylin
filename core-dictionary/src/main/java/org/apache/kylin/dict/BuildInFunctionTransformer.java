@@ -70,8 +70,11 @@ public class BuildInFunctionTransformer implements ITupleFilterTransformer {
             ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) tupleFilter.getChildren().listIterator();
             while (childIterator.hasNext()) {
                 TupleFilter transformed = transform(childIterator.next());
-                if (transformed != null)
+                if (transformed != null) {
                     childIterator.set(transformed);
+                } else {
+                    throw new IllegalStateException("Should not be null");
+                }
             }
         }
         return translated == null ? tupleFilter : translated;
