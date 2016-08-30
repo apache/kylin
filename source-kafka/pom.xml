@@ -32,10 +32,11 @@
 
     </parent>
 
-    <properties>
-    </properties>
-
     <dependencies>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-engine-mr</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -60,16 +61,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.hive.hcatalog</groupId>
-            <artifactId>hive-hcatalog-core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
-
 
 </project>

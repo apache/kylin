@@ -50,6 +50,7 @@ import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
@@ -67,6 +68,16 @@ public class HiveMRInput implements IMRInput {
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
         return new HiveTableInputFormat(table.getIdentity());
+    }
+
+    @Override
+    public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
+        return new IMRBatchMergeInputSide() {
+            @Override
+            public void addStepPhase1_MergeDictionary(DefaultChainedExecutable jobFlow) {
+                // doing nothing
+            }
+        };
     }
 
     public static class HiveTableInputFormat implements IMRTableInputFormat {

@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.apache.kafka.common.protocol.SecurityProtocol;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
@@ -67,7 +68,7 @@ public class KafkaClusterConfig extends RootPersistentEntity {
             @Nullable
             @Override
             public Broker apply(BrokerConfig input) {
-                return new Broker(input.getId(), input.getHost(), input.getPort());
+                return new Broker(input.getId(), input.getHost(), input.getPort(), SecurityProtocol.PLAINTEXT);
             }
         });
     }
