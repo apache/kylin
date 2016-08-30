@@ -20,8 +20,10 @@ package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -213,7 +215,7 @@ public class CubeMigrationCLI {
     private static void copyFilesInMetaStore(CubeInstance cube, String overwriteIfExists) throws IOException {
 
         List<String> metaItems = new ArrayList<String>();
-        List<String> dictAndSnapshot = new ArrayList<String>();
+        Set<String> dictAndSnapshot = new HashSet<String>();
         listCubeRelatedResources(cube, metaItems, dictAndSnapshot);
 
         if (dstStore.exists(cube.getResourcePath()) && !overwriteIfExists.equalsIgnoreCase("true"))
@@ -239,7 +241,7 @@ public class CubeMigrationCLI {
         operations.add(new Opt(OptType.PURGE_AND_DISABLE, new Object[] { cubeName }));
     }
 
-    private static void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, List<String> dictAndSnapshot) throws IOException {
+    private static void listCubeRelatedResources(CubeInstance cube, List<String> metaResource, Set<String> dictAndSnapshot) throws IOException {
 
         CubeDesc cubeDesc = cube.getDescriptor();
         metaResource.add(cube.getResourcePath());
