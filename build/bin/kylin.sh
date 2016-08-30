@@ -213,7 +213,7 @@ then
     retrieveDependency
 
     #retrive $KYLIN_EXTRA_START_OPTS from a separate file called setenv-tool.sh
-    reset KYLIN_EXTRA_START_OPTS # reset the global server setenv config first
+    unset KYLIN_EXTRA_START_OPTS # unset the global server setenv config first
     if [ -f "${dir}/setenv-tool.sh" ]
         then source ${dir}/setenv-tool.sh
     fi
