@@ -24,19 +24,19 @@
     "datatype" : "string"
   }, {
     "id" : "6",
-    "name" : "CRE_DATE",
+    "name" : "DIM_CRE_DATE",
     "datatype" : "string"
   }, {
     "id" : "7",
-    "name" : "CRE_USER",
+    "name" : "DIM_CRE_USER",
     "datatype" : "string"
   }, {
     "id" : "8",
-    "name" : "UPD_DATE",
+    "name" : "DIM_UPD_DATE",
     "datatype" : "string"
   }, {
     "id" : "9",
-    "name" : "UPD_USER",
+    "name" : "DIM_UPD_USER",
     "datatype" : "string"
   } ],
   "database" : "edw",

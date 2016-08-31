@@ -36,7 +36,7 @@
     "datatype" : "string"
   }, {
     "id" : "9",
-    "name" : "CRE_DATE",
+    "name" : "KYLIN_GROUPINGS_CRE_DATE",
     "datatype" : "string"
   }, {
     "id" : "10",
@@ -44,7 +44,7 @@
     "datatype" : "string"
   }, {
     "id" : "11",
-    "name" : "CRE_USER",
+    "name" : "KYLIN_GROUPINGS_CRE_USER",
     "datatype" : "string"
   }, {
     "id" : "12",

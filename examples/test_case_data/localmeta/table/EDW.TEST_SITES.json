@@ -32,7 +32,7 @@
     "datatype" : "string"
   }, {
     "id" : "8",
-    "name" : "UPD_DATE",
+    "name" : "SITES_UPD_DATE",
     "datatype" : "string"
   }, {
     "id" : "9",
@@ -40,7 +40,7 @@
     "datatype" : "string"
   }, {
     "id" : "10",
-    "name" : "UPD_USER",
+    "name" : "SITES_UPD_USER",
     "datatype" : "string"
   } ],
   "database" : "edw",
