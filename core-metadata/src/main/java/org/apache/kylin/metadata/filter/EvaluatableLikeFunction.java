@@ -27,7 +27,12 @@ import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.StringSerializer;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
+/**
+ * typically like will be handled by BuiltInFunctionTupleFilter rather than this
+ */
 public class EvaluatableLikeFunction extends BuiltInFunctionTupleFilter {
+
+    private boolean patternExtracted;
 
     public EvaluatableLikeFunction(String name) {
         super(name, FilterOperatorEnum.LIKE);
@@ -86,11 +91,24 @@ public class EvaluatableLikeFunction extends BuiltInFunctionTupleFilter {
         return (filter instanceof ConstantTupleFilter) || (filter instanceof DynamicTupleFilter);
     }
 
+    @Override
+    public Object invokeFunction(Object input) throws InvocationTargetException, IllegalAccessException {
+        if (!patternExtracted) {
+            this.getLikePattern();
+        }
+        return super.invokeFunction(input);
+    }
+
+    //will replace the ByteArray pattern to String type
     public String getLikePattern() {
-        ByteArray byteArray = (ByteArray) methodParams.get(1);
-        StringSerializer s = new StringSerializer(DataType.getType("string"));
-        String pattern = s.deserialize(ByteBuffer.wrap(byteArray.array(), byteArray.offset(), byteArray.length()));
-        return pattern;
+        if (!patternExtracted) {
+            ByteArray byteArray = (ByteArray) methodParams.get(1);
+            StringSerializer s = new StringSerializer(DataType.getType("string"));
+            String pattern = s.deserialize(ByteBuffer.wrap(byteArray.array(), byteArray.offset(), byteArray.length()));
+            methodParams.set(1, pattern);
+            patternExtracted = true;
+        }
+        return (String) methodParams.get(1);
     }
 
 }
