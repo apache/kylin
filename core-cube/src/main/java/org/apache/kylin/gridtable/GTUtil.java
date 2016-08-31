@@ -75,195 +75,7 @@ public class GTUtil {
 
         IFilterCodeSystem<ByteArray> filterCodeSystem = wrap(info.codeSystem.getComparator());
 
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new TupleFilterSerializer.Decorator() {
-            @Override
-            public TupleFilter onSerialize(TupleFilter filter) {
-                if (filter == null)
-                    return null;
-
-                // In case of NOT(unEvaluatableFilter), we should immediately replace it as TRUE,
-                // Otherwise, unEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter)
-                // will always return FALSE.
-                if (filter.getOperator() == TupleFilter.FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
-                    TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
-                    return ConstantTupleFilter.TRUE;
-                }
-
-                // shortcut for unEvaluatable filter
-                if (!filter.isEvaluable()) {
-                    TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
-                    return ConstantTupleFilter.TRUE;
-                }
-
-                // map to column onto grid table
-                if (colMapping != null && filter instanceof ColumnTupleFilter) {
-                    ColumnTupleFilter colFilter = (ColumnTupleFilter) filter;
-                    int gtColIdx = colMapping.indexOf(colFilter.getColumn());
-                    return new ColumnTupleFilter(info.colRef(gtColIdx));
-                }
-
-                // encode constants
-                if (encodeConstants && filter instanceof CompareTupleFilter) {
-                    return encodeConstants((CompareTupleFilter) filter);
-                }
-                if (encodeConstants && filter instanceof BuiltInFunctionTupleFilter) {
-                    if (!((BuiltInFunctionTupleFilter) filter).hasNested()) {
-                        return encodeConstants((BuiltInFunctionTupleFilter) filter);
-                    } else {
-                        throw new IllegalStateException("Nested BuiltInFunctionTupleFilter is not supported to be pushed down");
-                    }
-                }
-
-                return filter;
-            }
-
-            @SuppressWarnings({ "rawtypes", "unchecked" })
-            private TupleFilter encodeConstants(CompareTupleFilter oldCompareFilter) {
-                // extract ColumnFilter & ConstantFilter
-                TblColRef externalCol = oldCompareFilter.getColumn();
-
-                if (externalCol == null) {
-                    return oldCompareFilter;
-                }
-
-                Collection constValues = oldCompareFilter.getValues();
-                if (constValues == null || constValues.isEmpty()) {
-                    return oldCompareFilter;
-                }
-
-                //CompareTupleFilter containing BuiltInFunctionTupleFilter will not reach here caz it will be transformed by BuiltInFunctionTransformer
-                CompareTupleFilter newCompareFilter = new CompareTupleFilter(oldCompareFilter.getOperator());
-                newCompareFilter.addChild(new ColumnTupleFilter(externalCol));
-
-                //for CompareTupleFilter containing dynamicVariables, the below codes will actually replace dynamicVariables
-                //with normal ConstantTupleFilter
-
-                Object firstValue = constValues.iterator().next();
-                int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : colMapping.indexOf(externalCol);
-
-                TupleFilter result;
-                ByteArray code;
-
-                // translate constant into code
-                switch (newCompareFilter.getOperator()) {
-                case EQ:
-                case IN:
-                    Set newValues = Sets.newHashSet();
-                    for (Object value : constValues) {
-                        code = translate(col, value, 0);
-                        if (code != null)
-                            newValues.add(code);
-                    }
-                    if (newValues.isEmpty()) {
-                        result = ConstantTupleFilter.FALSE;
-                    } else {
-                        newCompareFilter.addChild(new ConstantTupleFilter(newValues));
-                        result = newCompareFilter;
-                    }
-                    break;
-                case NEQ:
-                    code = translate(col, firstValue, 0);
-                    if (code == null) {
-                        result = ConstantTupleFilter.TRUE;
-                    } else {
-                        newCompareFilter.addChild(new ConstantTupleFilter(code));
-                        result = newCompareFilter;
-                    }
-                    break;
-                case LT:
-                    code = translate(col, firstValue, 1);
-                    if (code == null) {
-                        result = ConstantTupleFilter.TRUE;
-                    } else {
-                        newCompareFilter.addChild(new ConstantTupleFilter(code));
-                        result = newCompareFilter;
-                    }
-                    break;
-                case LTE:
-                    code = translate(col, firstValue, -1);
-                    if (code == null) {
-                        result = ConstantTupleFilter.FALSE;
-                    } else {
-                        newCompareFilter.addChild(new ConstantTupleFilter(code));
-                        result = newCompareFilter;
-                    }
-                    break;
-                case GT:
-                    code = translate(col, firstValue, -1);
-                    if (code == null) {
-                        result = ConstantTupleFilter.TRUE;
-                    } else {
-                        newCompareFilter.addChild(new ConstantTupleFilter(code));
-                        result = newCompareFilter;
-                    }
-                    break;
-                case GTE:
-                    code = translate(col, firstValue, 1);
-                    if (code == null) {
-                        result = ConstantTupleFilter.FALSE;
-                    } else {
-                        newCompareFilter.addChild(new ConstantTupleFilter(code));
-                        result = newCompareFilter;
-                    }
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot handle operator " + newCompareFilter.getOperator());
-                }
-                return result;
-            }
-
-            @SuppressWarnings({ "rawtypes", "unchecked" })
-            private TupleFilter encodeConstants(BuiltInFunctionTupleFilter funcFilter) {
-                // extract ColumnFilter & ConstantFilter
-                TblColRef externalCol = funcFilter.getColumn();
-
-                if (externalCol == null) {
-                    return funcFilter;
-                }
-
-                Collection constValues = funcFilter.getConstantTupleFilter().getValues();
-                if (constValues == null || constValues.isEmpty()) {
-                    return funcFilter;
-                }
-
-                BuiltInFunctionTupleFilter newFuncFilter;
-                try {
-                    newFuncFilter = funcFilter.getClass().getConstructor(String.class).newInstance(funcFilter.getName());
-                } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                }
-                newFuncFilter.addChild(new ColumnTupleFilter(externalCol));
-
-                int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : colMapping.indexOf(externalCol);
-
-                ByteArray code;
-
-                // translate constant into code
-                Set newValues = Sets.newHashSet();
-                for (Object value : constValues) {
-                    code = translate(col, value, 0);
-                    if (code == null) {
-                        throw new IllegalStateException("Cannot serialize BuiltInFunctionTupleFilter");
-                    }
-                    newValues.add(code);
-                }
-                newFuncFilter.addChild(new ConstantTupleFilter(newValues));
-
-                return newFuncFilter;
-            }
-
-            transient ByteBuffer buf = ByteBuffer.allocate(info.getMaxColumnLength());
-
-            private ByteArray translate(int col, Object value, int roundingFlag) {
-                try {
-                    buf.clear();
-                    info.codeSystem.encodeColumnValue(col, value, roundingFlag, buf);
-                    return ByteArray.copyOf(buf.array(), 0, buf.position());
-                } catch (IllegalArgumentException ex) {
-                    return null;
-                }
-            }
-        }, filterCodeSystem);
+        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new GTConvertDecorator(unevaluatableColumnCollector, colMapping, info, encodeConstants), filterCodeSystem);
 
         return TupleFilterSerializer.deserialize(bytes, filterCodeSystem);
     }
@@ -294,5 +106,208 @@ public class GTUtil {
                 return new ByteArray(BytesUtil.readByteArray(buffer));
             }
         };
+    }
+
+    private static class GTConvertDecorator implements TupleFilterSerializer.Decorator {
+        private final Set<TblColRef> unevaluatableColumnCollector;
+        private final List<TblColRef> colMapping;
+        private final GTInfo info;
+        private final boolean encodeConstants;
+
+        public GTConvertDecorator(Set<TblColRef> unevaluatableColumnCollector, List<TblColRef> colMapping, GTInfo info, boolean encodeConstants) {
+            this.unevaluatableColumnCollector = unevaluatableColumnCollector;
+            this.colMapping = colMapping;
+            this.info = info;
+            this.encodeConstants = encodeConstants;
+            buf = ByteBuffer.allocate(info.getMaxColumnLength());
+        }
+
+        @Override
+        public TupleFilter onSerialize(TupleFilter filter) {
+            if (filter == null)
+                return null;
+
+            // In case of NOT(unEvaluatableFilter), we should immediately replace it as TRUE,
+            // Otherwise, unEvaluatableFilter will later be replace with TRUE and NOT(unEvaluatableFilter)
+            // will always return FALSE.
+            if (filter.getOperator() == TupleFilter.FilterOperatorEnum.NOT && !TupleFilter.isEvaluableRecursively(filter)) {
+                TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
+                return ConstantTupleFilter.TRUE;
+            }
+
+            // shortcut for unEvaluatable filter
+            if (!filter.isEvaluable()) {
+                TupleFilter.collectColumns(filter, unevaluatableColumnCollector);
+                return ConstantTupleFilter.TRUE;
+            }
+
+            // map to column onto grid table
+            if (colMapping != null && filter instanceof ColumnTupleFilter) {
+                ColumnTupleFilter colFilter = (ColumnTupleFilter) filter;
+                int gtColIdx = colMapping.indexOf(colFilter.getColumn());
+                return new ColumnTupleFilter(info.colRef(gtColIdx));
+            }
+
+            // encode constants
+            if (encodeConstants && filter instanceof CompareTupleFilter) {
+                return encodeConstants((CompareTupleFilter) filter);
+            }
+            if (encodeConstants && filter instanceof BuiltInFunctionTupleFilter) {
+                if (!((BuiltInFunctionTupleFilter) filter).hasNested()) {
+                    return encodeConstants((BuiltInFunctionTupleFilter) filter);
+                } else {
+                    throw new IllegalStateException("Nested BuiltInFunctionTupleFilter is not supported to be pushed down");
+                }
+            }
+
+            return filter;
+        }
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        private TupleFilter encodeConstants(CompareTupleFilter oldCompareFilter) {
+            // extract ColumnFilter & ConstantFilter
+            TblColRef externalCol = oldCompareFilter.getColumn();
+
+            if (externalCol == null) {
+                return oldCompareFilter;
+            }
+
+            Collection constValues = oldCompareFilter.getValues();
+            if (constValues == null || constValues.isEmpty()) {
+                return oldCompareFilter;
+            }
+
+            //CompareTupleFilter containing BuiltInFunctionTupleFilter will not reach here caz it will be transformed by BuiltInFunctionTransformer
+            CompareTupleFilter newCompareFilter = new CompareTupleFilter(oldCompareFilter.getOperator());
+            newCompareFilter.addChild(new ColumnTupleFilter(externalCol));
+
+            //for CompareTupleFilter containing dynamicVariables, the below codes will actually replace dynamicVariables
+            //with normal ConstantTupleFilter
+
+            Object firstValue = constValues.iterator().next();
+            int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : colMapping.indexOf(externalCol);
+
+            TupleFilter result;
+            ByteArray code;
+
+            // translate constant into code
+            switch (newCompareFilter.getOperator()) {
+            case EQ:
+            case IN:
+                Set newValues = Sets.newHashSet();
+                for (Object value : constValues) {
+                    code = translate(col, value, 0);
+                    if (code != null)
+                        newValues.add(code);
+                }
+                if (newValues.isEmpty()) {
+                    result = ConstantTupleFilter.FALSE;
+                } else {
+                    newCompareFilter.addChild(new ConstantTupleFilter(newValues));
+                    result = newCompareFilter;
+                }
+                break;
+            case NEQ:
+                code = translate(col, firstValue, 0);
+                if (code == null) {
+                    result = ConstantTupleFilter.TRUE;
+                } else {
+                    newCompareFilter.addChild(new ConstantTupleFilter(code));
+                    result = newCompareFilter;
+                }
+                break;
+            case LT:
+                code = translate(col, firstValue, 1);
+                if (code == null) {
+                    result = ConstantTupleFilter.TRUE;
+                } else {
+                    newCompareFilter.addChild(new ConstantTupleFilter(code));
+                    result = newCompareFilter;
+                }
+                break;
+            case LTE:
+                code = translate(col, firstValue, -1);
+                if (code == null) {
+                    result = ConstantTupleFilter.FALSE;
+                } else {
+                    newCompareFilter.addChild(new ConstantTupleFilter(code));
+                    result = newCompareFilter;
+                }
+                break;
+            case GT:
+                code = translate(col, firstValue, -1);
+                if (code == null) {
+                    result = ConstantTupleFilter.TRUE;
+                } else {
+                    newCompareFilter.addChild(new ConstantTupleFilter(code));
+                    result = newCompareFilter;
+                }
+                break;
+            case GTE:
+                code = translate(col, firstValue, 1);
+                if (code == null) {
+                    result = ConstantTupleFilter.FALSE;
+                } else {
+                    newCompareFilter.addChild(new ConstantTupleFilter(code));
+                    result = newCompareFilter;
+                }
+                break;
+            default:
+                throw new IllegalStateException("Cannot handle operator " + newCompareFilter.getOperator());
+            }
+            return result;
+        }
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        private TupleFilter encodeConstants(BuiltInFunctionTupleFilter funcFilter) {
+            // extract ColumnFilter & ConstantFilter
+            TblColRef externalCol = funcFilter.getColumn();
+
+            if (externalCol == null) {
+                return funcFilter;
+            }
+
+            Collection constValues = funcFilter.getConstantTupleFilter().getValues();
+            if (constValues == null || constValues.isEmpty()) {
+                return funcFilter;
+            }
+
+            BuiltInFunctionTupleFilter newFuncFilter;
+            try {
+                newFuncFilter = funcFilter.getClass().getConstructor(String.class).newInstance(funcFilter.getName());
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+            newFuncFilter.addChild(new ColumnTupleFilter(externalCol));
+
+            int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : colMapping.indexOf(externalCol);
+
+            ByteArray code;
+
+            // translate constant into code
+            Set newValues = Sets.newHashSet();
+            for (Object value : constValues) {
+                code = translate(col, value, 0);
+                if (code == null) {
+                    throw new IllegalStateException("Cannot serialize BuiltInFunctionTupleFilter");
+                }
+                newValues.add(code);
+            }
+            newFuncFilter.addChild(new ConstantTupleFilter(newValues));
+
+            return newFuncFilter;
+        }
+
+        transient ByteBuffer buf;
+
+        private ByteArray translate(int col, Object value, int roundingFlag) {
+            try {
+                buf.clear();
+                info.codeSystem.encodeColumnValue(col, value, roundingFlag, buf);
+                return ByteArray.copyOf(buf.array(), 0, buf.position());
+            } catch (IllegalArgumentException ex) {
+                return null;
+            }
+        }
     }
 }
