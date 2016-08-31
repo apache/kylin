@@ -119,13 +119,13 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
         })
 
         $scope.loading = false;
-        $scope.listParams.cubeName = '';
+        //$scope.listParams.cubeName = '';
         defer.resolve(resp);
         return defer.promise;
 
       },function(resp){
         $scope.loading = false;
-        $scope.listParams.cubeName = '';
+        //$scope.listParams.cubeName = '';
         defer.resolve([]);
         SweetAlert.swal('Oops...', resp, 'error');
         return defer.promise;
