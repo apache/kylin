@@ -18,6 +18,7 @@
 
 package org.apache.kylin.gridtable;
 
+import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.filter.BuiltInFunctionTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
@@ -104,6 +106,13 @@ public class GTUtil {
                 if (encodeConstants && filter instanceof CompareTupleFilter) {
                     return encodeConstants((CompareTupleFilter) filter);
                 }
+                if (encodeConstants && filter instanceof BuiltInFunctionTupleFilter) {
+                    if (!((BuiltInFunctionTupleFilter) filter).hasNested()) {
+                        return encodeConstants((BuiltInFunctionTupleFilter) filter);
+                    } else {
+                        throw new IllegalStateException("Nested BuiltInFunctionTupleFilter is not supported to be pushed down");
+                    }
+                }
 
                 return filter;
             }
@@ -122,8 +131,12 @@ public class GTUtil {
                     return oldCompareFilter;
                 }
 
+                //CompareTupleFilter containing BuiltInFunctionTupleFilter will not reach here caz it will be transformed by BuiltInFunctionTransformer
                 CompareTupleFilter newCompareFilter = new CompareTupleFilter(oldCompareFilter.getOperator());
                 newCompareFilter.addChild(new ColumnTupleFilter(externalCol));
+
+                //for CompareTupleFilter containing dynamicVariables, the below codes will actually replace dynamicVariables
+                //with normal ConstantTupleFilter
 
                 Object firstValue = constValues.iterator().next();
                 int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : colMapping.indexOf(externalCol);
@@ -197,6 +210,46 @@ public class GTUtil {
                     throw new IllegalStateException("Cannot handle operator " + newCompareFilter.getOperator());
                 }
                 return result;
+            }
+
+            @SuppressWarnings({ "rawtypes", "unchecked" })
+            private TupleFilter encodeConstants(BuiltInFunctionTupleFilter funcFilter) {
+                // extract ColumnFilter & ConstantFilter
+                TblColRef externalCol = funcFilter.getColumn();
+
+                if (externalCol == null) {
+                    return funcFilter;
+                }
+
+                Collection constValues = funcFilter.getConstantTupleFilter().getValues();
+                if (constValues == null || constValues.isEmpty()) {
+                    return funcFilter;
+                }
+
+                BuiltInFunctionTupleFilter newFuncFilter;
+                try {
+                    newFuncFilter = funcFilter.getClass().getConstructor(String.class).newInstance(funcFilter.getName());
+                } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+                newFuncFilter.addChild(new ColumnTupleFilter(externalCol));
+
+                int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : colMapping.indexOf(externalCol);
+
+                ByteArray code;
+
+                // translate constant into code
+                Set newValues = Sets.newHashSet();
+                for (Object value : constValues) {
+                    code = translate(col, value, 0);
+                    if (code == null) {
+                        throw new IllegalStateException("Cannot serialize BuiltInFunctionTupleFilter");
+                    }
+                    newValues.add(code);
+                }
+                newFuncFilter.addChild(new ConstantTupleFilter(newValues));
+
+                return newFuncFilter;
             }
 
             transient ByteBuffer buf = ByteBuffer.allocate(info.getMaxColumnLength());

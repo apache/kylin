@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.filter.function.BuiltInMethod;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
@@ -40,13 +41,18 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     protected String name;
     // FIXME Only supports single parameter functions currently
     protected TupleFilter columnContainerFilter;//might be a ColumnTupleFilter(simple case) or FunctionTupleFilter(complex case like substr(lower()))
+    protected ConstantTupleFilter constantTupleFilter;
     protected int colPosition;
     protected Method method;
     protected List<Serializable> methodParams;
     protected boolean isValidFunc = false;
 
     public BuiltInFunctionTupleFilter(String name) {
-        super(Lists.<TupleFilter> newArrayList(), FilterOperatorEnum.FUNCTION);
+        this(name, null);
+    }
+
+    public BuiltInFunctionTupleFilter(String name, FilterOperatorEnum filterOperatorEnum) {
+        super(Lists.<TupleFilter> newArrayList(), filterOperatorEnum == null ? FilterOperatorEnum.FUNCTION : filterOperatorEnum);
         this.methodParams = Lists.newArrayList();
 
         if (name != null) {
@@ -59,6 +65,10 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
         return name;
     }
 
+    public ConstantTupleFilter getConstantTupleFilter() {
+        return constantTupleFilter;
+    }
+
     public TblColRef getColumn() {
         if (columnContainerFilter == null)
             return null;
@@ -69,6 +79,10 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
             return ((BuiltInFunctionTupleFilter) columnContainerFilter).getColumn();
 
         throw new UnsupportedOperationException("Wrong type TupleFilter in FunctionTupleFilter.");
+    }
+
+    public boolean hasNested() {
+        return (columnContainerFilter != null && columnContainerFilter instanceof BuiltInFunctionTupleFilter);
     }
 
     public Object invokeFunction(Object input) throws InvocationTargetException, IllegalAccessException {
@@ -90,6 +104,7 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
             colPosition = methodParams.size();
             methodParams.add(null);
         } else if (child instanceof ConstantTupleFilter) {
+            this.constantTupleFilter = (ConstantTupleFilter) child;
             Serializable constVal = (Serializable) child.getValues().iterator().next();
             try {
                 Class<?> clazz = Primitives.wrap(method.getParameterTypes()[methodParams.size()]);
@@ -122,12 +137,13 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
 
     @Override
     public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
-        throw new UnsupportedOperationException("Function filter cannot serialized");
+        BytesUtil.writeUTFString(name, buffer);
     }
 
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
-        throw new UnsupportedOperationException("Function filter cannot serialized");
+        this.name = BytesUtil.readUTFString(buffer);
+        this.initMethod();
     }
 
     @Override

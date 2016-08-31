@@ -188,6 +188,9 @@ public class TupleFilterSerializer {
         case FUNCTION:
             filter = new BuiltInFunctionTupleFilter(null);
             break;
+        case LIKE:
+            filter = new EvaluatableLikeFunction(null);
+            break;
         case MASSIN:
             filter = new MassInTupleFilter();
             break;

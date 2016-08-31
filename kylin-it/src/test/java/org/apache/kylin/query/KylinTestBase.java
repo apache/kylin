@@ -63,6 +63,8 @@ import com.google.common.io.Files;
  */
 public class KylinTestBase {
 
+    public static boolean PRINT_RESULT = false;
+
     class ObjectArray {
         Object[] data;
 
@@ -224,7 +226,8 @@ public class KylinTestBase {
         if (needSort) {
             queryTable = new SortedTable(queryTable, columnNames);
         }
-        //printResult(queryTable);
+        if (PRINT_RESULT)
+            printResult(queryTable);
 
         return queryTable;
     }
@@ -280,7 +283,8 @@ public class KylinTestBase {
         if (needSort) {
             queryTable = new SortedTable(queryTable, columnNames);
         }
-        //printResult(queryTable);
+        if (PRINT_RESULT)
+            printResult(queryTable);
         return queryTable;
     }
 
