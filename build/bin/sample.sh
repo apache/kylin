@@ -51,6 +51,10 @@ fi
 export default_engine_type
 export default_storage_type
 
+mkdir -p ${KYLIN_HOME}/sample_cube/metadata
+cp -rf ${KYLIN_HOME}/sample_cube/template/* ${KYLIN_HOME}/sample_cube/metadata
+envsubst < ${KYLIN_HOME}/sample_cube/template/cube_desc/kylin_sales_cube_desc.json > ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube_desc.json
+
 cd ${KYLIN_HOME}
 hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
 echo "Sample cube is created successfully in project 'learn_kylin'; Restart Kylin server or reload the metadata from web UI to see the change."
