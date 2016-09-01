@@ -36,10 +36,12 @@ import org.hamcrest.Description;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+@Ignore
 public class CubeMetaIngesterTest extends LocalFileMetadataTestCase {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
