@@ -316,6 +316,8 @@ public class QueryService extends BasicService {
         parameters.put(OLAPContext.PRM_USER_AUTHEN_INFO, userInfo);
         parameters.put(OLAPContext.PRM_ACCEPT_PARTIAL_RESULT, String.valueOf(sqlRequest.isAcceptPartial()));
         OLAPContext.setParameters(parameters);
+        // force clear the query context before a new query
+        OLAPContext.clearThreadLocalContexts();
 
         return execute(correctedSql, sqlRequest);
 
