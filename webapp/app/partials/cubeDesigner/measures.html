@@ -218,19 +218,80 @@
                           </div>
                         </div>
                       </div>
-
-                      <div class="form-group" ng-if="newMeasure.function.expression == 'TOP_N'">
+                      <!--Group by Column-->
+                      <div class="form-group" ng-if="newMeasure.function.expression == 'TOP_N'" >
                         <div class="row">
                           <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
                             <b>Group by Column</b>
                           </label>
-                          <div class="col-xs-12 col-sm-6">
-                            <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
-                                    ng-model="nextPara.value"
-                                    ng-options="column as column for column in getCommonMetricColumns()" >
-                              <option value=""></option>
-                            </select>
+                          <div class="form-group large-popover" >
+                              <div class="box-body">
+                                <table style="margin-left:width:92%"
+                                       class="table table-hover table-bordered list">
+                                  <thead>
+                                  <tr>
+                                    <th>ID</th>
+                                    <th>Column</th>
+                                    <th>Encoding</th>
+                                    <th>Length</th>
+                                    <th ng-if="state.mode=='edit'"></th>
+                                  </tr>
+                                  </thead>
+
+                                  <tbody>
+
+                                  <tr ng-repeat="groupby_column in convertedColumns track by $index"
+                                      ng-class="state.mode=='edit'?'sort-item':''">
+
+                                    <td>
+                                      <!-- ID -->
+                                      <span class="ng-binding" ng-class="state.mode=='edit'?'badge':''">{{($index + 1)}}</span>
+                                    </td>
+                                    <!--Column Name -->
+                                    <td>
+                                      <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
+                                              ng-model="groupby_column.name"
+                                              ng-options="column as column for column in getGroupBYColumns()" style="width:323px;">
+                                        <option value="">--Select A Column--</option>
+                                      </select>
+                                    </td>
+                                    <!--Column Encoding -->
+                                    <td>
+                                      <select ng-if="state.mode=='edit'" style="width:180px;"
+                                              chosen ng-model="groupby_column.encoding"
+                                              ng-change="refreshGroupBy(convertedColumns,$index,groupby_column)"
+                                              ng-options="dt as dt for dt in store.supportedEncoding">
+                                        <option value=""></option>
+                                      </select>
+                                      <span ng-if="state.mode=='view'">{{groupby_column.encoding}}</span>
+
+                                    </td>
+                                    <td>
+                                      <!--Column Length -->
+                                      <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
+                                             tooltip="group by column length.." tooltip-trigger="focus"
+                                             ng-change="refreshGroupBy(convertedColumns,$index,groupby_column);"
+                                             ng-disabled="groupby_column.encoding=='dict'||groupby_column.encoding=='date'||groupby_column.encoding=='time'"
+                                             ng-model="groupby_column.valueLength" class="form-control">
+
+                                      <small class="help-block red" ng-show="state.mode=='edit' && groupby_column.encoding=='int' && (groupby_column.valueLength>8 || groupby_column.valueLength<1)">int encoding column length should between 1 and 8</small>
+                                      <span ng-if="state.mode=='view'">{{groupby_column.valueLength}}</span>
+                                    </td>
+                                    <td ng-if="state.mode=='edit'">
+                                      <button class="btn btn-xs btn-info"
+                                              ng-click="removeColumn(convertedColumns, $index)"><i
+                                        class="fa fa-minus"></i>
+                                      </button>
+                                    </td>
+                                  </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            <button class="btn btn-sm btn-info" style="margin-left:10px"
+                                    ng-click="addNewGroupByColumn()" ng-show="state.mode=='edit'">New Column<i class="fa fa-plus"></i>
+                            </button>
                           </div>
+
                         </div>
                       </div>
 
