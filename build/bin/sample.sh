@@ -41,6 +41,16 @@ fi
 echo "Sample hive tables are created successfully; Going to create sample cube..."
 hadoop fs -rm -r /tmp/kylin/sample_cube
 
+# set engine type and storage type to cube desc
+default_engine_type=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.default.cube.engine`
+default_storage_type=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.default.storage.engine`
+if [ -z "$default_engine_type" ]; then
+    default_engine_type=2
+    default_storage_type=2
+fi
+export default_engine_type
+export default_storage_type
+
 cd ${KYLIN_HOME}
 hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
 echo "Sample cube is created successfully in project 'learn_kylin'; Restart Kylin server or reload the metadata from web UI to see the change."

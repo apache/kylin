@@ -738,6 +738,14 @@ abstract public class KylinConfigBase implements Serializable {
         return r;
     }
 
+    public int getDefaultStorageEngine() {
+        return Integer.parseInt(getOptional("kylin.default.storage.engine", "2"));
+    }
+
+    public int getDefaultCubeEngine() {
+        return Integer.parseInt(getOptional("kylin.default.cube.engine", "2"));
+    }
+
     public Map<Integer, String> getSchedulers() {
         Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.scheduler."));
         r.put(0, "org.apache.kylin.job.impl.threadpool.DefaultScheduler");
