@@ -37,7 +37,8 @@ KylinApp.service('CubeDescModel', function () {
               "type": "constant",
               "value": "1",
               "next_parameter":null
-            }
+            },
+            "configuration":{}
           }
         }
       ],
@@ -74,7 +75,8 @@ KylinApp.service('CubeDescModel', function () {
           "type": "",
           "value": "",
           "next_parameter":null
-        }
+        },
+        "configuration":null
       }
     };
 

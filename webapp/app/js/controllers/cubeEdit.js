@@ -98,6 +98,31 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     return me_columns;
   };
 
+  $scope.getGroupBYColumns = function () {
+    //metric from model
+    var me_columns = [];
+    var table_columns=[];
+    var groupby_columns=[];
+    var tableColumns = $scope.getColumnsByTable($scope.metaModel.model.fact_table);
+    if($scope.metaModel.model.metrics){
+      angular.forEach($scope.metaModel.model.metrics,function(metric,index){
+        me_columns.push(metric);
+      });
+    }
+    angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension){
+      if(dimension.table==$scope.metaModel.model.fact_table) {
+        table_columns.push(dimension.column);
+      }
+    });
+    angular.forEach(me_columns,function(column){
+      if(table_columns.indexOf(column)==-1) {
+        groupby_columns.push(column);
+      }
+    });
+
+    return groupby_columns;
+  };
+
   $scope.getExtendedHostColumn = function(){
     var me_columns = [];
     //add cube dimension column for specific measure

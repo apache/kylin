@@ -19,7 +19,9 @@
 'use strict';
 
 KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert) {
-
+  $scope.num=0;
+  $scope.convertedColumns=[];
+  $scope.groupby=[];
   $scope.initUpdateMeasureStatus = function(){
     $scope.updateMeasureStatus = {
       isEdit:false,
@@ -37,6 +39,31 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     $scope.newMeasure = (!!measure)? jQuery.extend(true, {},measure):CubeDescModel.createMeasure();
     if(!!measure && measure.function.parameter.next_parameter){
       $scope.nextPara.value = measure.function.parameter.next_parameter.value;
+    }
+    if($scope.newMeasure.function.expression=="TOP_N"){
+      $scope.convertedColumns=[];
+      for(var configuration in $scope.newMeasure.function.configuration) {
+        var _name=configuration.slice(14);
+        var item=$scope.newMeasure.function.configuration[configuration];
+        var _isFixedLength = item.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
+        var _isIntLength = item.substring(0,3) === "int"?"true":"false";//fixed_length:12
+        var _encoding = item;
+        var _valueLength = 0 ;
+        if(_isFixedLength !=="false"){
+          _valueLength = item.substring(13,item.length);
+          _encoding = "fixed_length";
+        }
+        if(_isIntLength!="false"){
+          _valueLength = item.substring(4,item.length);
+          _encoding = "int";
+        }
+        $scope.GroupBy = {
+          name:_name,
+          encoding:_encoding,
+          valueLength:_valueLength,
+        }
+        $scope.convertedColumns.push($scope.GroupBy);
+      };
     }
   };
 
@@ -103,9 +130,52 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
 
   $scope.saveNewMeasure = function () {
 
-    if ($scope.newMeasure.function.expression === 'TOP_N' && $scope.nextPara.value == "") {
-      SweetAlert.swal('', '[TOP_N] Group by Column is required', 'warning');
-      return false;
+    if ($scope.newMeasure.function.expression === 'TOP_N' ) {
+      if($scope.newMeasure.function.parameter.value == ""){
+        SweetAlert.swal('', '[TOP_N] ORDER|SUM by Column  is required', 'warning');
+        return false;
+      }
+      if($scope.convertedColumns.length<1){
+        SweetAlert.swal('', '[TOP_N] Group by Column is required', 'warning');
+        return false;
+      }
+
+      var hasExisted = [];
+
+      for (var column in $scope.convertedColumns){
+        if(hasExisted.indexOf($scope.convertedColumns[column].name)==-1){
+          hasExisted.push($scope.convertedColumns[column].name);
+        }
+        else{
+          SweetAlert.swal('', 'The column named ['+$scope.convertedColumns[column].name+'] already exits.', 'warning');
+          return false;
+        }
+        if ($scope.convertedColumns[column].encoding == 'int' && ($scope.convertedColumns[column].valueLength < 1 || $scope.convertedColumns[column].valueLength > 8)) {
+          SweetAlert.swal('', 'int encoding column length should between 1 and 8.', 'warning');
+          return false;
+        }
+      }
+        $scope.nextPara.next_parameter={};
+        $scope.newMeasure.function.configuration={};
+        $scope.groupby($scope.nextPara);
+        angular.forEach($scope.convertedColumns,function(item){
+          var a='topn.encoding.'+item.name;
+          var encoding="";
+          if(item.encoding!=="dict" && item.encoding!=="date"&& item.encoding!=="time"){
+            if(item.encoding=="fixed_length" && item.valueLength){
+              encoding = "fixed_length:"+item.valueLength;
+            }
+            else if(item.encoding=="int" && item.valueLength){
+              encoding = "int:"+item.valueLength;
+            }else{
+              encoding = item.encoding;
+            }
+          }else{
+            encoding = item.encoding;
+            item.valueLength=0;
+          }
+          $scope.newMeasure.function.configuration[a]=encoding;
+          });
     }
 
     if ($scope.isNameDuplicated($scope.cubeMetaFrame.measures, $scope.newMeasure) == true) {
@@ -143,17 +213,67 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     $scope.nextPara = {
       "type":"column",
       "value":"",
-      "next_parameter":null
+      "next_parameter":{}
     }
     if($scope.newMeasure){
       $scope.newMeasure.function.parameter.next_parameter = null;
     }
   }
 
+  $scope.addNewGroupByColumn = function () {
+    $scope.nextGroupBy = {
+      name:null,
+      encoding:"dict",
+      valueLength:0,
+    }
+    $scope.convertedColumns.push($scope.nextGroupBy);
+
+  };
+
+  $scope.removeColumn = function(arr,index){
+    if (index > -1) {
+      arr.splice(index, 1);
+    }
+  };
+  $scope.refreshGroupBy=function (list,index,item) {
+    var encoding;
+    var name = item.name;
+    if(item.encoding=="dict" || item.encoding=="date"|| item.encoding=="time"){
+      item.valueLength=0;
+    }
+  };
+
+  $scope.groupby= function (next_parameter){
+    if($scope.num<$scope.convertedColumns.length-1){
+      next_parameter.value=$scope.convertedColumns[$scope.num].name;
+      next_parameter.type="column";
+      next_parameter.next_parameter={};
+      $scope.num++;
+      $scope.groupby(next_parameter.next_parameter);
+    }
+    else{
+      next_parameter.value=$scope.convertedColumns[$scope.num].name;
+      next_parameter.type="column";
+      next_parameter.next_parameter=null;
+      $scope.num=0;
+      return false;
+    }
+  }
+  $scope.converted = function (next_parameter) {
+    if (next_parameter != null) {
+      $scope.groupby.push(next_parameter.value);
+      converted(next_parameter.next_parameter)
+    }
+    else {
+      $scope.groupby.push(next_parameter.value);
+      return false;
+    }
+  }
   //map right return type for param
   $scope.measureReturnTypeUpdate = function(){
 
     if($scope.newMeasure.function.expression == 'TOP_N'){
+      $scope.convertedColumns=[];
       $scope.newMeasure.function.parameter.type= 'column';
       $scope.newMeasure.function.returntype = "topn(100)";
       return;
