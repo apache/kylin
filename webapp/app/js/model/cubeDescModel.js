@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-KylinApp.service('CubeDescModel', function () {
+KylinApp.service('CubeDescModel', function (kylinConfig) {
 
   this.cubeMetaFrame = {};
 
@@ -57,8 +57,8 @@ KylinApp.service('CubeDescModel', function () {
       "retention_range": "0",
       "status_need_notify":['ERROR', 'DISCARDED', 'SUCCEED'],
       "auto_merge_time_ranges": [604800000, 2419200000],
-      "engine_type": 2,
-      "storage_type":2,
+      "engine_type": kylinConfig.getCubeEng(),
+      "storage_type":kylinConfig.getStorageEng(),
       "override_kylin_properties":{}
     };
 

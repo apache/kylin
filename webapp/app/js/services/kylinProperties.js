@@ -71,6 +71,22 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
     }
     return this.hiveLimit;
   }
+
+  this.getStorageEng = function () {
+    this.StorageEng = this.getProperty("kylin.default.storage.engine").trim();
+      if (!this.StorageEng) {
+        return 2;
+      }
+      return this.StorageEng;
+    }
+
+  this.getCubeEng = function () {
+    this.CubeEng = this.getProperty("kylin.default.cube.engine").trim();
+    if (!this.CubeEng) {
+      return 2;
+    }
+      return this.CubeEng;
+  }
   //fill config info for Config from backend
   this.initWebConfigInfo = function () {
 
