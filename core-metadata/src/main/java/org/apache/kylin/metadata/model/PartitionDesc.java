@@ -92,6 +92,9 @@ public class PartitionDesc {
     }
 
     public boolean partitionColumnIsTimeMillis() {
+        if (partitionDateColumnRef == null)
+            return false;
+        
         DataType type = partitionDateColumnRef.getType();
         return type.isBigInt();
     }
