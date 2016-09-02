@@ -226,11 +226,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             }
         }
 
-        // for hive dependencies
+        // for kafka dependencies
         if (kylinKafkaDependency != null) {
             kylinKafkaDependency = kylinKafkaDependency.replace(":", ",");
 
-            logger.info("Kafka Dependencies Before Filtered: " + kylinHiveDependency);
+            logger.info("Kafka Dependencies Before Filtered: " + kylinKafkaDependency);
 
             if (kylinDependency.length() > 0)
                 kylinDependency.append(",");
