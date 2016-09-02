@@ -63,7 +63,7 @@ public class DataType implements Serializable {
         register("any", "char", "varchar", "string", //
                 "boolean", "byte", "binary", //
                 "int", "short", "long", "integer", "tinyint", "smallint", "bigint", //
-                "int4", "long8", //
+                "int4", "long8", // for test only
                 "float", "real", "double", "decimal", "numeric", //
                 "date", "time", "datetime", "timestamp", //
                 InnerDataTypeEnum.LITERAL.getDataType(), InnerDataTypeEnum.DERIVED.getDataType());

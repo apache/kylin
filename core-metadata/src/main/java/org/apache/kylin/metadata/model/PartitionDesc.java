@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StringSplitter;
+import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -88,6 +89,11 @@ public class PartitionDesc {
         }
 
         partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
+    }
+
+    public boolean partitionColumnIsTimeMillis() {
+        DataType type = partitionDateColumnRef.getType();
+        return type.isBigInt();
     }
 
     public boolean isPartitioned() {
@@ -166,7 +172,9 @@ public class PartitionDesc {
             String partitionDateColumnName = partDesc.getPartitionDateColumn();
             String partitionTimeColumnName = partDesc.getPartitionTimeColumn();
 
-            if (partitionDateColumnName != null && partitionTimeColumnName == null) {
+            if (partDesc.partitionColumnIsTimeMillis()) {
+                buildSingleColumnRangeCondition(builder, partitionDateColumnName, startInclusive, endExclusive, tableAlias);
+            } else if (partitionDateColumnName != null && partitionTimeColumnName == null) {
                 buildSingleColumnRangeCondition(builder, partitionDateColumnName, startInclusive, endExclusive, partDesc.getPartitionDateFormat(), tableAlias);
             } else if (partitionDateColumnName == null && partitionTimeColumnName != null) {
                 buildSingleColumnRangeCondition(builder, partitionTimeColumnName, startInclusive, endExclusive, partDesc.getPartitionTimeFormat(), tableAlias);
@@ -188,6 +196,15 @@ public class PartitionDesc {
                     columnName = tableAlias.get(partitionTableName) + columnName.substring(indexOfDot);
             }
             return columnName;
+        }
+
+        private static void buildSingleColumnRangeCondition(StringBuilder builder, String partitionColumnName, long startInclusive, long endExclusive, Map<String, String> tableAlias) {
+            partitionColumnName = replaceColumnNameWithAlias(partitionColumnName, tableAlias);
+            if (startInclusive > 0) {
+                builder.append(partitionColumnName + " >= " + startInclusive);
+                builder.append(" AND ");
+            }
+            builder.append(partitionColumnName + " < " + endExclusive);
         }
 
         private static void buildSingleColumnRangeCondition(StringBuilder builder, String partitionColumnName, long startInclusive, long endExclusive, String partitionColumnDateFormat, Map<String, String> tableAlias) {
@@ -272,4 +289,5 @@ public class PartitionDesc {
         newPartDesc.setPartitionDateStart(partitionDesc.getPartitionDateStart());
         return newPartDesc;
     }
+
 }
