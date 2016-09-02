@@ -679,12 +679,28 @@ public class CubeManager implements IRealizationProvider {
             return null;
         }
 
-        if (cube.getBuildingSegments().size() > 0) {
-            logger.debug("Cube " + cube.getName() + " has bulding segment, will not trigger merge at this moment");
-            return null;
+        List<CubeSegment> buildingSegs = cube.getBuildingSegments();
+        if (buildingSegs.size() > 0) {
+            logger.debug("Cube " + cube.getName() + " has " + buildingSegs.size() + " building segments");
         }
 
-        List<CubeSegment> ready = cube.getSegments(SegmentStatusEnum.READY);
+        List<CubeSegment> readySegs = cube.getSegments(SegmentStatusEnum.READY);
+
+        List<CubeSegment> mergingSegs = Lists.newArrayList();
+        if (buildingSegs.size() > 0) {
+            
+            for (CubeSegment building : buildingSegs) {
+                // exclude those under-merging segs
+                for (CubeSegment ready : readySegs) {
+                    if (ready.getSourceOffsetStart() >= building.getSourceOffsetStart() && ready.getSourceOffsetEnd() <= building.getSourceOffsetEnd()) {
+                        mergingSegs.add(ready);
+                    }
+                }
+            }
+        }
+
+        // exclude those already under merging segments
+        readySegs.removeAll(mergingSegs);
 
         long[] timeRanges = cube.getDescriptor().getAutoMergeTimeRanges();
         Arrays.sort(timeRanges);
@@ -692,9 +708,9 @@ public class CubeManager implements IRealizationProvider {
         for (int i = timeRanges.length - 1; i >= 0; i--) {
             long toMergeRange = timeRanges[i];
 
-            for (int s = 0; s < ready.size(); s++) {
-                CubeSegment seg = ready.get(s);
-                Pair<CubeSegment, CubeSegment> p = findMergeOffsetsByDateRange(ready.subList(s, ready.size()), //
+            for (int s = 0; s < readySegs.size(); s++) {
+                CubeSegment seg = readySegs.get(s);
+                Pair<CubeSegment, CubeSegment> p = findMergeOffsetsByDateRange(readySegs.subList(s, readySegs.size()), //
                         seg.getDateRangeStart(), seg.getDateRangeStart() + toMergeRange, toMergeRange);
                 if (p != null && p.getSecond().getDateRangeEnd() - p.getFirst().getDateRangeStart() >= toMergeRange)
                     return Pair.newPair(p.getFirst().getSourceOffsetStart(), p.getSecond().getSourceOffsetEnd());
