@@ -17,6 +17,10 @@
 */
 package org.apache.kylin.source.kafka;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Maps;
+import org.apache.commons.math3.util.MathUtils;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.apache.kylin.source.kafka.util.KafkaOffsetMapping;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -34,6 +38,7 @@ import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -101,19 +106,39 @@ public class SeekOffsetStep extends AbstractExecutable {
             }
         }
 
-        KafkaOffsetMapping.saveOffsetStart(segment, startOffsets);
-        KafkaOffsetMapping.saveOffsetEnd(segment, endOffsets);
-
-        segment.setName(CubeSegment.makeSegmentName(0, 0, segment.getSourceOffsetStart(), segment.getSourceOffsetEnd()));
-        CubeUpdate cubeBuilder = new CubeUpdate(cube);
-        cubeBuilder.setToUpdateSegs(segment);
-        try {
-            cubeManager.updateCube(cubeBuilder);
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
-        } catch (IOException e) {
-            logger.error("fail to update cube segment offset", e);
-            return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+        long totalStartOffset = 0, totalEndOffset = 0;
+        for (Long v : startOffsets.values()) {
+            totalStartOffset += v;
         }
+        for (Long v : endOffsets.values()) {
+            totalEndOffset += v;
+        }
+
+        if (totalEndOffset > totalStartOffset) {
+            KafkaOffsetMapping.saveOffsetStart(segment, startOffsets);
+            KafkaOffsetMapping.saveOffsetEnd(segment, endOffsets);
+            segment.setName(CubeSegment.makeSegmentName(0, 0, totalStartOffset, totalEndOffset));
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
+            cubeBuilder.setToUpdateSegs(segment);
+            try {
+                cubeManager.updateCube(cubeBuilder);
+            } catch (IOException e) {
+                return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            }
+            return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
+        } else {
+            CubeUpdate cubeBuilder = new CubeUpdate(cube);
+            cubeBuilder.setToRemoveSegs(segment);
+            try {
+                cubeManager.updateCube(cubeBuilder);
+            } catch (IOException e) {
+                return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+            }
+
+            return new ExecuteResult(ExecuteResult.State.DISCARDED, "No new message comes");
+        }
+
+
     }
 
 }
