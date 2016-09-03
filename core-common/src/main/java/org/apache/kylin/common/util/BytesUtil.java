@@ -98,7 +98,7 @@ public class BytesUtil {
     /**
      * No. bytes needed to store a value as big as the given
      */
-    public static int sizeForValue(int maxValue) {
+    public static int sizeForValue(long maxValue) {
         int size = 0;
         while (maxValue > 0) {
             size++;

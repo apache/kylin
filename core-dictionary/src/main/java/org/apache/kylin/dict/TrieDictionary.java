@@ -58,8 +58,8 @@ import com.google.common.base.Preconditions;
 public class TrieDictionary<T> extends Dictionary<T> {
     private static final long serialVersionUID = 1L;
 
-    public static final byte[] HEAD_MAGIC = new byte[] { 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "TrieDict"
-    public static final int HEAD_SIZE_I = HEAD_MAGIC.length;
+    public static final byte[] MAGIC = new byte[] { 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "TrieDict"
+    public static final int MAGIC_SIZE_I = MAGIC.length;
 
     public static final int BIT_IS_LAST_CHILD = 0x80;
     public static final int BIT_IS_END_OF_VALUE = 0x40;
@@ -80,7 +80,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     transient private int nValues;
     transient private int sizeOfId;
-    transient private int childOffsetMask;
+    transient private long childOffsetMask;
     transient private int firstByteOffset;
 
     transient private boolean enableValueCache = true;
@@ -99,12 +99,12 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     private void init(byte[] trieBytes) {
         this.trieBytes = trieBytes;
-        if (BytesUtil.compareBytes(HEAD_MAGIC, 0, trieBytes, 0, HEAD_MAGIC.length) != 0)
+        if (BytesUtil.compareBytes(MAGIC, 0, trieBytes, 0, MAGIC.length) != 0)
             throw new IllegalArgumentException("Wrong file type (magic does not match)");
 
         try {
             DataInputStream headIn = new DataInputStream(//
-                    new ByteArrayInputStream(trieBytes, HEAD_SIZE_I, trieBytes.length - HEAD_SIZE_I));
+                    new ByteArrayInputStream(trieBytes, MAGIC_SIZE_I, trieBytes.length - MAGIC_SIZE_I));
             this.headSize = headIn.readShort();
             this.bodyLen = headIn.readInt();
             this.sizeChildOffset = headIn.read();
@@ -118,7 +118,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
             this.nValues = BytesUtil.readUnsigned(trieBytes, headSize + sizeChildOffset, sizeNoValuesBeneath);
             this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
-            this.childOffsetMask = ~((BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE) << ((sizeChildOffset - 1) * 8));
+            this.childOffsetMask = ~((long) (BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE) << ((sizeChildOffset - 1) * 8));
             this.firstByteOffset = sizeChildOffset + sizeNoValuesBeneath + 1; // the offset from begin of node to its first value byte
         } catch (Exception e) {
             if (e instanceof RuntimeException)
@@ -229,7 +229,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
                 seq++;
 
             // find a child to continue
-            int c = headSize + (BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask);
+            int c = getChildOffset(n);
             if (c == headSize) // has no children
                 return roundSeqNo(roundingFlag, seq - 1, -1, seq); // input only partially matched
             byte inpByte = inp[o];
@@ -251,6 +251,12 @@ public class TrieDictionary<T> extends Dictionary<T> {
                 }
             }
         }
+    }
+
+    private int getChildOffset(int n) {
+        long offset = headSize + (BytesUtil.readLong(trieBytes, n, sizeChildOffset) & childOffsetMask);
+        assert offset < trieBytes.length;
+        return (int) offset;
     }
 
     private int roundSeqNo(int roundingFlag, int i, int j, int k) {
@@ -338,7 +344,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
             }
 
             // find a child to continue
-            int c = headSize + (BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask);
+            int c = getChildOffset(n);
             if (c == headSize) // has no children
                 return -1; // no child? corrupted dictionary!
             int nValuesBeneath;
@@ -401,7 +407,7 @@ public class TrieDictionary<T> extends Dictionary<T> {
         }
 
         // find a child to continue
-        int c = headSize + (BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask);
+        int c = getChildOffset(n);
         if (c == headSize) // has no children 
             return;
 
@@ -446,14 +452,14 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        byte[] headPartial = new byte[HEAD_MAGIC.length + Short.SIZE + Integer.SIZE];
+        byte[] headPartial = new byte[MAGIC.length + Short.SIZE + Integer.SIZE];
         in.readFully(headPartial);
 
-        if (BytesUtil.compareBytes(HEAD_MAGIC, 0, headPartial, 0, HEAD_MAGIC.length) != 0)
+        if (BytesUtil.compareBytes(MAGIC, 0, headPartial, 0, MAGIC.length) != 0)
             throw new IllegalArgumentException("Wrong file type (magic does not match)");
 
         DataInputStream headIn = new DataInputStream(//
-                new ByteArrayInputStream(headPartial, HEAD_SIZE_I, headPartial.length - HEAD_SIZE_I));
+                new ByteArrayInputStream(headPartial, MAGIC_SIZE_I, headPartial.length - MAGIC_SIZE_I));
         int headSize = headIn.readShort();
         int bodyLen = headIn.readInt();
         headIn.close();

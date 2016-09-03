@@ -38,6 +38,8 @@ import org.apache.kylin.common.util.BytesUtil;
  * @author yangli9
  */
 public class TrieDictionaryBuilder<T> {
+    
+    private static final int _2GB = 2000000000;
 
     public static class Node {
         public byte[] part;
@@ -112,8 +114,7 @@ public class TrieDictionaryBuilder<T> {
             return;
         }
 
-        // if partially matched the current, split the current node, add the new
-        // value, make a 3-way
+        // if partially matched the current, split the current node, add the new value, make a 3-way
         if (i < n) {
             Node c1 = new Node(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
             Node c2 = new Node(BytesUtil.subarray(value, j, nn), true);
@@ -128,8 +129,7 @@ public class TrieDictionaryBuilder<T> {
             return;
         }
 
-        // out matched the current, binary search the next byte for a child node
-        // to continue
+        // out matched the current, binary search the next byte for a child node to continue
         byte lookfor = value[j];
         int lo = 0;
         int hi = node.children.size() - 1;
@@ -188,28 +188,21 @@ public class TrieDictionaryBuilder<T> {
         public int mbpn_nNodes; // number of nodes in trie
         public int mbpn_trieDepth; // depth of trie
         public int mbpn_maxFanOut; // the maximum no. children
-        public int mbpn_nChildLookups; // number of child lookups during lookup
-                                       // every value once
-        public int mbpn_nTotalFanOut; // the sum of fan outs during lookup every
-                                      // value once
+        public long mbpn_nChildLookups; // number of child lookups during lookup every value once
+        public long mbpn_nTotalFanOut; // the sum of fan outs during lookup every value once
         public int mbpn_sizeValueTotal; // the sum of value space in all nodes
         public int mbpn_sizeNoValueBytes; // size of field noValueBytes
-        public int mbpn_sizeNoValueBeneath; // size of field noValuesBeneath,
-                                            // depends on cardinality
-        public int mbpn_sizeChildOffset; // size of field childOffset, points to
-                                         // first child in flattened array
-        public int mbpn_footprint; // MBPN footprint in bytes
+        public int mbpn_sizeNoValueBeneath; // size of field noValuesBeneath, depends on cardinality
+        public int mbpn_sizeChildOffset; // size of field childOffset, points to first child in flattened array
+        public long mbpn_footprint; // MBPN footprint in bytes
 
         // stats for one-byte-per-node as well, so there's comparison
         public int obpn_sizeValue; // size of value per node, always 1
-        public int obpn_sizeNoValuesBeneath; // size of field noValuesBeneath,
-                                             // depends on cardinality
-        public int obpn_sizeChildCount; // size of field childCount, enables
-                                        // binary search among children
-        public int obpn_sizeChildOffset; // size of field childOffset, points to
-                                         // first child in flattened array
+        public int obpn_sizeNoValuesBeneath; // size of field noValuesBeneath, depends on cardinality
+        public int obpn_sizeChildCount; // size of field childCount, enables binary search among children
+        public int obpn_sizeChildOffset; // size of field childOffset, points to first child in flattened array
         public int obpn_nNodes; // no. nodes in OBPN trie
-        public int obpn_footprint; // OBPN footprint in bytes
+        public long obpn_footprint; // OBPN footprint in bytes
 
         public void print() {
             PrintStream out = System.out;
@@ -289,23 +282,12 @@ public class TrieDictionaryBuilder<T> {
         s.obpn_sizeValue = 1;
         s.obpn_sizeNoValuesBeneath = BytesUtil.sizeForValue(s.nValues);
         s.obpn_sizeChildCount = 1;
-        s.obpn_sizeChildOffset = 4; // MSB used as isEndOfValue flag
-        s.obpn_nNodes = s.nValueBytesCompressed; // no. nodes is the total
-                                                 // number of compressed
-                                                 // bytes in OBPN
-        s.obpn_footprint = s.obpn_nNodes * (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount + s.obpn_sizeChildOffset);
+        s.obpn_sizeChildOffset = 5; // MSB used as isEndOfValue flag
+        s.obpn_nNodes = s.nValueBytesCompressed; // no. nodes is the total number of compressed bytes in OBPN
+        s.obpn_footprint = s.obpn_nNodes * (long) (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount + s.obpn_sizeChildOffset);
         while (true) { // minimize the offset size to match the footprint
-            int t = s.obpn_nNodes * (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount + s.obpn_sizeChildOffset - 1);
-            if (BytesUtil.sizeForValue(t * 2) <= s.obpn_sizeChildOffset - 1) { // *2
-                                                                                   // because
-                                                                               // MSB
-                                                                               // of
-                                                                               // offset
-                                                                               // is
-                                                                               // used
-                                                                               // for
-                                                                               // isEndOfValue
-                                                                               // flag
+            long t = s.obpn_nNodes * (long) (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount + s.obpn_sizeChildOffset - 1);
+            if (BytesUtil.sizeForValue(t * 2) <= s.obpn_sizeChildOffset - 1) { // *2 because MSB of offset is used for isEndOfValue flag
                 s.obpn_sizeChildOffset--;
                 s.obpn_footprint = t;
             } else
@@ -316,23 +298,11 @@ public class TrieDictionaryBuilder<T> {
         s.mbpn_sizeValueTotal = s.nValueBytesCompressed;
         s.mbpn_sizeNoValueBytes = 1;
         s.mbpn_sizeNoValueBeneath = BytesUtil.sizeForValue(s.nValues);
-        s.mbpn_sizeChildOffset = 4;
-        s.mbpn_footprint = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset);
+        s.mbpn_sizeChildOffset = 5;
+        s.mbpn_footprint = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (long) (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset);
         while (true) { // minimize the offset size to match the footprint
-            int t = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset - 1);
-            if (BytesUtil.sizeForValue(t * 4) <= s.mbpn_sizeChildOffset - 1) { // *4
-                                                                                   // because
-                                                                               // 2
-                                                                               // MSB
-                                                                               // of
-                                                                               // offset
-                                                                               // is
-                                                                               // used
-                                                                               // for
-                                                                               // isEndOfValue
-                                                                               // &
-                                                                               // isEndChild
-                                                                               // flag
+            long t = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (long) (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset - 1);
+            if (BytesUtil.sizeForValue(t * 4) <= s.mbpn_sizeChildOffset - 1) { // *4 because 2 MSB of offset is used for isEndOfValue & isEndChild flag
                 s.mbpn_sizeChildOffset--;
                 s.mbpn_footprint = t;
             } else
@@ -415,8 +385,7 @@ public class TrieDictionaryBuilder<T> {
             }
         }
 
-        completeParts.append(node.part);// by here the node.children may have
-                                        // been changed
+        completeParts.append(node.part); // by here the node.children may have been changed
         for (Node child : node.children) {
             checkOverflowParts(child);
         }
@@ -427,11 +396,13 @@ public class TrieDictionaryBuilder<T> {
      * Flatten the trie into a byte array for a minimized memory footprint.
      * Lookup remains fast. Cost is inflexibility to modify (becomes immutable).
      * 
-     * Flattened node structure is HEAD + NODEs, for each node: - o byte, offset
-     * to child node, o = stats.mbpn_sizeChildOffset - 1 bit, isLastChild flag,
-     * the 1st MSB of o - 1 bit, isEndOfValue flag, the 2nd MSB of o - c byte,
-     * number of values beneath, c = stats.mbpn_sizeNoValueBeneath - 1 byte,
-     * number of value bytes - n byte, value bytes
+     * Flattened node structure is HEAD + NODEs, for each node:
+     * - o byte, offset to child node, o = stats.mbpn_sizeChildOffset
+     *    - 1 bit, isLastChild flag, the 1st MSB of o
+     *    - 1 bit, isEndOfValue flag, the 2nd MSB of o
+     * - c byte, number of values beneath, c = stats.mbpn_sizeNoValueBeneath
+     * - 1 byte, number of value bytes
+     * - n byte, value bytes
      */
     public TrieDictionary<T> build(int baseId) {
         byte[] trieBytes = buildTrieBytes(baseId);
@@ -445,15 +416,18 @@ public class TrieDictionaryBuilder<T> {
         Stats stats = stats();
         int sizeNoValuesBeneath = stats.mbpn_sizeNoValueBeneath;
         int sizeChildOffset = stats.mbpn_sizeChildOffset;
+        
+        if (stats.mbpn_footprint > _2GB)
+            throw new RuntimeException("Too big dictionary, dictionary cannot be bigger than 2GB");
 
         // write head
         byte[] head;
         try {
             ByteArrayOutputStream byteBuf = new ByteArrayOutputStream();
             DataOutputStream headOut = new DataOutputStream(byteBuf);
-            headOut.write(TrieDictionary.HEAD_MAGIC);
+            headOut.write(TrieDictionary.MAGIC);
             headOut.writeShort(0); // head size, will back fill
-            headOut.writeInt(stats.mbpn_footprint); // body size
+            headOut.writeInt((int) stats.mbpn_footprint); // body size
             headOut.write(sizeChildOffset);
             headOut.write(sizeNoValuesBeneath);
             headOut.writeShort(baseId);
@@ -461,13 +435,12 @@ public class TrieDictionaryBuilder<T> {
             headOut.writeUTF(bytesConverter == null ? "" : bytesConverter.getClass().getName());
             headOut.close();
             head = byteBuf.toByteArray();
-            BytesUtil.writeUnsigned(head.length, head, TrieDictionary.HEAD_SIZE_I, 2);
+            BytesUtil.writeUnsigned(head.length, head, TrieDictionary.MAGIC_SIZE_I, 2);
         } catch (IOException e) {
-            throw new RuntimeException(e); // shall not happen, as we are
-                                           // writing in memory
+            throw new RuntimeException(e); // shall not happen, as we are writing in memory
         }
 
-        byte[] trieBytes = new byte[stats.mbpn_footprint + head.length];
+        byte[] trieBytes = new byte[(int) stats.mbpn_footprint + head.length];
         System.arraycopy(head, 0, trieBytes, 0, head.length);
 
         LinkedList<Node> open = new LinkedList<Node>();
@@ -506,6 +479,8 @@ public class TrieDictionaryBuilder<T> {
 
     private int build_writeNode(Node n, int offset, boolean isLastChild, int sizeNoValuesBeneath, int sizeChildOffset, byte[] trieBytes) {
         int o = offset;
+        if (o > _2GB)
+            throw new IllegalStateException();
 
         // childOffset
         if (isLastChild)
