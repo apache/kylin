@@ -62,7 +62,7 @@
     </property>
     -->
     <property>
-        <name>mapred.output.compression.type</name>
+        <name>mapreduce.output.fileoutputformat.compress.type</name>
         <value>BLOCK</value>
         <description>The compression type to use for job outputs</description>
     </property>
