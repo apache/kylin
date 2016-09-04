@@ -615,7 +615,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getHbaseDefaultCompressionCodec() {
-        return getOptional("kylin.hbase.default.compression.codec", "");
+        return getOptional("kylin.hbase.default.compression.codec", "none");
     }
 
     public String getHbaseDefaultEncoding() {
