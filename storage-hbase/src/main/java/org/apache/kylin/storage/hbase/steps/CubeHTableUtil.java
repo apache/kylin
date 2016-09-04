@@ -183,8 +183,9 @@ public class CubeHTableUtil {
             cf.setCompressionType(Algorithm.LZ4);
             break;
         }
+        case "none":
         default: {
-            logger.info("hbase will not user any compression algorithm to compress data");
+            logger.info("hbase will not use any compression algorithm to compress data");
             cf.setCompressionType(Algorithm.NONE);
         }
         }
@@ -194,7 +195,7 @@ public class CubeHTableUtil {
             DataBlockEncoding encoding = DataBlockEncoding.valueOf(encodingStr);
             cf.setDataBlockEncoding(encoding);
         } catch (Exception e) {
-            logger.info("hbase will not use any encoding");
+            logger.info("hbase will not use any encoding", e);
             cf.setDataBlockEncoding(DataBlockEncoding.NONE);
         }
 
