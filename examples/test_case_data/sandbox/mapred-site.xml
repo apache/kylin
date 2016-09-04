@@ -27,12 +27,12 @@
     </property>
 
     <property>
-        <name>mapred.job.map.memory.mb</name>
+        <name>mapreduce.map.memory.mb</name>
         <value>512</value>
     </property>
 
     <property>
-        <name>mapred.job.reduce.memory.mb</name>
+        <name>mapreduce.reduce.memory.mb</name>
         <value>512</value>
     </property>
 
