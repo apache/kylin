@@ -47,7 +47,7 @@ public class KylinConfig extends KylinConfigBase {
 
     /** Kylin properties file name */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
-    public static final String KYLIN_SECURITY_CONF_PROPERTIES_FILE = "kylin_account.properties";
+    public static final String KYLIN_ACCOUNT_CONF_PROPERTIES_FILE = "kylin_account.properties";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     // static cached instances
@@ -205,11 +205,11 @@ public class KylinConfig extends KylinConfigBase {
         return getKylinPropertiesFile(path);
     }
 
-    static File getKylinSecurityPropertiesFile() {
+    static File getKylinAccountPropertiesFile() {
         String kylinConfHome = System.getProperty(KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {
             logger.info("Use KYLIN_CONF=" + kylinConfHome);
-            return getKylinSecurityPropertiesFile(kylinConfHome);
+            return getKylinAccountPropertiesFile(kylinConfHome);
         }
 
         logger.warn("KYLIN_CONF property was not set, will seek KYLIN_HOME env variable");
@@ -219,10 +219,10 @@ public class KylinConfig extends KylinConfigBase {
             throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
 
         String path = kylinHome + File.separator + "conf";
-        return getKylinSecurityPropertiesFile(path);
+        return getKylinAccountPropertiesFile(path);
     }
 
-    private static Properties getKylinProperties() {
+    public static Properties getKylinProperties() {
         File propFile = getKylinPropertiesFile();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
@@ -243,22 +243,22 @@ public class KylinConfig extends KylinConfigBase {
                 conf.putAll(propOverride);
             }
 
-            File securityPropFile = getKylinSecurityPropertiesFile();
-            if (securityPropFile.exists()) {
-                FileInputStream ois = new FileInputStream(securityPropFile);
-                Properties propSecurity = new Properties();
-                propSecurity.load(ois);
+            File accountPropFile = getKylinAccountPropertiesFile();
+            if (accountPropFile.exists()) {
+                FileInputStream ois = new FileInputStream(accountPropFile);
+                Properties propAccount = new Properties();
+                propAccount.load(ois);
                 IOUtils.closeQuietly(ois);
-                conf.putAll(propSecurity);
+                conf.putAll(propAccount);
             }
 
-            File securityPropOverrideFile = new File(securityPropFile.getParentFile(), securityPropFile.getName() + ".override");
-            if (securityPropOverrideFile.exists()) {
-                FileInputStream ois = new FileInputStream(securityPropOverrideFile);
-                Properties propSecurityOverride = new Properties();
-                propSecurityOverride.load(ois);
+            File accountPropOverrideFile = new File(accountPropFile.getParentFile(), accountPropFile.getName() + ".override");
+            if (accountPropOverrideFile.exists()) {
+                FileInputStream ois = new FileInputStream(accountPropOverrideFile);
+                Properties propAccountOverride = new Properties();
+                propAccountOverride.load(ois);
                 IOUtils.closeQuietly(ois);
-                conf.putAll(propSecurityOverride);
+                conf.putAll(propAccountOverride);
             }
 
         } catch (IOException e) {
@@ -282,12 +282,12 @@ public class KylinConfig extends KylinConfigBase {
         return new File(path, KYLIN_CONF_PROPERTIES_FILE);
     }
 
-    private static File getKylinSecurityPropertiesFile(String path) {
+    private static File getKylinAccountPropertiesFile(String path) {
         if (path == null) {
             return null;
         }
 
-        return new File(path, KYLIN_SECURITY_CONF_PROPERTIES_FILE);
+        return new File(path, KYLIN_ACCOUNT_CONF_PROPERTIES_FILE);
     }
 
     public static void setSandboxEnvIfPossible() {
