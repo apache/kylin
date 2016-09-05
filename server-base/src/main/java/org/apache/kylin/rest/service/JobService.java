@@ -19,6 +19,8 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -26,8 +28,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
@@ -38,15 +43,21 @@ import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
+import org.apache.kylin.job.Scheduler;
+import org.apache.kylin.job.SchedulerFactory;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
+import org.apache.kylin.job.lock.DistributedJobLock;
+import org.apache.kylin.job.lock.JobLock;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.constant.Constant;
@@ -56,7 +67,9 @@ import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -69,14 +82,63 @@ import com.google.common.collect.Sets;
 /**
  * @author ysong1
  */
+
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 @Component("jobService")
-public class JobService extends BasicService {
+public class JobService extends BasicService implements InitializingBean {
 
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(JobService.class);
 
+    private JobLock jobLock;
+
     @Autowired
     private AccessService accessService;
+
+    /*
+    * (non-Javadoc)
+    *
+    * @see
+    * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+    */
+    @SuppressWarnings("unchecked")
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+        String timeZone = getConfig().getTimeZone();
+        TimeZone tzone = TimeZone.getTimeZone(timeZone);
+        TimeZone.setDefault(tzone);
+
+        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory.scheduler(kylinConfig.getSchedulerType());
+
+        jobLock = (JobLock) ClassUtil.newInstance(kylinConfig.getJobControllerLock());
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    scheduler.init(new JobEngineConfig(kylinConfig), jobLock);
+                    if (!scheduler.hasStarted()) {
+                        logger.info("scheduler has not been started");
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    scheduler.shutdown();
+                } catch (SchedulerException e) {
+                    logger.error("error occurred to shutdown scheduler", e);
+                }
+            }
+        }));
+    }
 
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue, final JobTimeFilterEnum timeFilter) throws IOException, JobException {
         Integer limit = (null == limitValue) ? 30 : limitValue;
@@ -215,12 +277,15 @@ public class JobService extends BasicService {
             SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
             sourcePartition = source.parsePartitionBeforeBuild(cube, sourcePartition);
             CubeSegment newSeg = getCubeManager().appendSegment(cube, sourcePartition);
+            lockSegment(newSeg.getUuid());
             job = EngineFactory.createBatchCubingJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
+            lockSegment(newSeg.getUuid());
             job = EngineFactory.createBatchMergeJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.REFRESH) {
             CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
+            lockSegment(refreshSeg.getUuid());
             job = EngineFactory.createBatchCubingJob(refreshSeg, submitter);
         } else {
             throw new JobException("invalid build type:" + buildType);
@@ -363,6 +428,8 @@ public class JobService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) throws IOException, JobException {
+        lockSegment(job.getRelatedSegment());
+
         getExecutableManager().resumeJob(job.getId());
     }
 
@@ -380,7 +447,34 @@ public class JobService extends BasicService {
             }
         }
         getExecutableManager().discardJob(job.getId());
+
+        //release the segment lock when discarded the job but the job hasn't scheduled
+        releaseSegmentLock(job.getRelatedSegment());
+
         return job;
     }
 
+    private void lockSegment(String segmentId) throws JobException {
+        if (jobLock instanceof DistributedJobLock) {
+            if (!((DistributedJobLock) jobLock).lockWithName(segmentId, getServerName())) {
+                throw new JobException("Fail to get the segment lock, the segment may be building in another job server");
+            }
+        }
+    }
+
+    private void releaseSegmentLock(String segmentId) {
+        if (jobLock instanceof DistributedJobLock) {
+            ((DistributedJobLock) jobLock).unlockWithName(segmentId);
+        }
+    }
+
+    private String getServerName() {
+        String serverName = null;
+        try {
+            serverName = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            logger.error("fail to get the hostname");
+        }
+        return serverName;
+    }
 }

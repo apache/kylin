@@ -461,6 +461,8 @@ public class CubeService extends BasicService {
         }
 
         DefaultChainedExecutable job = new DefaultChainedExecutable();
+        //make sure the job could be scheduled when the DistributedScheduler is enable.
+        job.setParam("segmentId", tableName);
         job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
         job.setSubmitter(submitter);
 
@@ -471,6 +473,7 @@ public class CubeService extends BasicService {
 
         step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
         step1.setMapReduceParams(param);
+        step1.setParam("segmentId", tableName);
 
         job.addTask(step1);
 
@@ -478,6 +481,7 @@ public class CubeService extends BasicService {
 
         step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
         step2.setJobParams(param);
+        step2.setParam("segmentId", tableName);
         job.addTask(step2);
 
         getExecutableManager().addJob(job);

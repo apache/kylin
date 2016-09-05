@@ -235,11 +235,30 @@ public class ExecutableManager {
         }
     }
 
+    public void resumeRunningJobForce(String jobId) {
+        AbstractExecutable job = getJob(jobId);
+        if (job == null) {
+            return;
+        }
+
+        if (job instanceof DefaultChainedExecutable) {
+            List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
+            for (AbstractExecutable task : tasks) {
+                if (task.getStatus() == ExecutableState.RUNNING) {
+                    updateJobOutput(task.getId(), ExecutableState.READY, null, null);
+                    break;
+                }
+            }
+        }
+        updateJobOutput(jobId, ExecutableState.READY, null, null);
+    }
+
     public void resumeJob(String jobId) {
         AbstractExecutable job = getJob(jobId);
         if (job == null) {
             return;
         }
+
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
@@ -254,6 +273,10 @@ public class ExecutableManager {
 
     public void discardJob(String jobId) {
         AbstractExecutable job = getJob(jobId);
+        if (job == null) {
+            return;
+        }
+
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {

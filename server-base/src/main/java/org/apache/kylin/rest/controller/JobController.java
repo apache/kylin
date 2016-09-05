@@ -24,25 +24,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.job.JobInstance;
-import org.apache.kylin.job.Scheduler;
-import org.apache.kylin.job.SchedulerFactory;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.exception.SchedulerException;
-import org.apache.kylin.job.execution.AbstractExecutable;
-import org.apache.kylin.job.lock.JobLock;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.JobListRequest;
 import org.apache.kylin.rest.service.JobService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,63 +40,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-/**
- *
- */
 @Controller
 @RequestMapping(value = "jobs")
-public class JobController extends BasicController implements InitializingBean {
+public class JobController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(JobController.class);
 
     @Autowired
     private JobService jobService;
-
-    private JobLock jobLock;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public void afterPropertiesSet() throws Exception {
-
-        String timeZone = jobService.getConfig().getTimeZone();
-        TimeZone tzone = TimeZone.getTimeZone(timeZone);
-        TimeZone.setDefault(tzone);
-
-        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory.scheduler(kylinConfig.getSchedulerType());
-
-        jobLock = (JobLock) ClassUtil.newInstance(kylinConfig.getJobControllerLock());
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    scheduler.init(new JobEngineConfig(kylinConfig), jobLock);
-                    if (!scheduler.hasStarted()) {
-                        logger.info("Job engine doesn't start in this node.");
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }).start();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    scheduler.shutdown();
-                } catch (SchedulerException e) {
-                    logger.error("error occurred to shutdown scheduler", e);
-                }
-            }
-        }));
-    }
 
     /**
      * get all cube jobs
