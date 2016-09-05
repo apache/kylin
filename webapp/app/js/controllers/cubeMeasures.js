@@ -206,7 +206,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
         names.push(measures[i].name);
     }
     var index = names.indexOf(newMeasure.name);
-    return index > -1;
+    return (index > -1 && index != $scope.updateMeasureStatus.editIndex);
   }
 
   $scope.nextParameterInit = function(){
