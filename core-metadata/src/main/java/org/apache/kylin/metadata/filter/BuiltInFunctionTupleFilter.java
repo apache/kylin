@@ -43,6 +43,7 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     protected TupleFilter columnContainerFilter;//might be a ColumnTupleFilter(simple case) or FunctionTupleFilter(complex case like substr(lower()))
     protected ConstantTupleFilter constantTupleFilter;
     protected int colPosition;
+    protected int constantPosition;
     protected Method method;
     protected List<Serializable> methodParams;
     protected boolean isValidFunc = false;
@@ -69,6 +70,10 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
         return constantTupleFilter;
     }
 
+    public TupleFilter getColumnContainerFilter() {
+        return columnContainerFilter;
+    }
+
     public TblColRef getColumn() {
         if (columnContainerFilter == null)
             return null;
@@ -79,10 +84,6 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
             return ((BuiltInFunctionTupleFilter) columnContainerFilter).getColumn();
 
         throw new UnsupportedOperationException("Wrong type TupleFilter in FunctionTupleFilter.");
-    }
-
-    public boolean hasNested() {
-        return (columnContainerFilter != null && columnContainerFilter instanceof BuiltInFunctionTupleFilter);
     }
 
     public Object invokeFunction(Object input) throws InvocationTargetException, IllegalAccessException {
@@ -107,6 +108,7 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
             this.constantTupleFilter = (ConstantTupleFilter) child;
             Serializable constVal = (Serializable) child.getValues().iterator().next();
             try {
+                constantPosition = methodParams.size();
                 Class<?> clazz = Primitives.wrap(method.getParameterTypes()[methodParams.size()]);
                 if (!Primitives.isWrapperType(clazz))
                     methodParams.add(constVal);
@@ -131,7 +133,7 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     }
 
     @Override
-    public Collection<String> getValues() {
+    public Collection<?> getValues() {
         throw new UnsupportedOperationException("Function filter cannot be evaluated immediately");
     }
 

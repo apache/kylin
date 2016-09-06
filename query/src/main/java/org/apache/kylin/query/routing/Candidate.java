@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.routing;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.kylin.metadata.realization.CapabilityResult;
@@ -40,12 +41,12 @@ public class Candidate implements Comparable<Candidate> {
 
     /** for test only */
     public static void setPriorities(Map<RealizationType, Integer> priorities) {
-        PRIORITIES = priorities;
+        PRIORITIES = Collections.unmodifiableMap(priorities);
     }
 
     /** for test only */
     public static void restorePriorities() {
-        PRIORITIES = DEFAULT_PRIORITIES;
+        PRIORITIES = Collections.unmodifiableMap(DEFAULT_PRIORITIES);
     }
 
     // ============================================================================

@@ -47,6 +47,9 @@ public enum BuiltInMethod {
 
     /** SQL {@code LIKE} function. */
     public static boolean like(String s, String pattern) {
+        if (s == null)
+            return false;
+        
         final String regex = Like.sqlToRegexLike(pattern, null);
         return Pattern.matches(regex, s);
     }
@@ -95,16 +98,22 @@ public enum BuiltInMethod {
 
     /** SQL SUBSTRING(string FROM ... FOR ...) function. */
     public static String substring(String s, int from, int for_) {
+        if (s == null)
+            return null;
         return s.substring(from - 1, Math.min(from - 1 + for_, s.length()));
     }
 
     /** SQL UPPER(string) function. */
     public static String upper(String s) {
+        if (s == null)
+            return null;
         return s.toUpperCase();
     }
 
     /** SQL LOWER(string) function. */
     public static String lower(String s) {
+        if (s == null)
+            return null;
         return s.toLowerCase();
     }
 

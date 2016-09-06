@@ -37,9 +37,9 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
@@ -97,7 +97,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         boolean hasRexOver = RexOver.containsOver(getProjects(), null);
-        return super.computeSelfCost(planner, mq).multiplyBy(.05).multiplyBy(getProjects().size()  * (hasRexOver ? 50 : 1));
+        return super.computeSelfCost(planner, mq).multiplyBy(.05).multiplyBy(getProjects().size() * (hasRexOver ? 50 : 1));
     }
 
     @Override
@@ -244,7 +244,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         this.rewriting = true;
 
         // project before join or is just after OLAPToEnumerableConverter
-        if (!RewriteImplementor.needRewrite(this.context) || (this.hasJoin && !this.afterJoin) || this.afterAggregate) {
+        if (!RewriteImplementor.needRewrite(this.context) || (this.hasJoin && !this.afterJoin) || this.afterAggregate || !(this.context.hasPrecalculatedFields())) {
             this.columnRowType = this.buildColumnRowType();
             return;
         }

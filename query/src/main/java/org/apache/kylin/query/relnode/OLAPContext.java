@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
@@ -38,6 +39,7 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.hybrid.HybridInstance;
 
 import com.google.common.collect.Lists;
 
@@ -146,6 +148,10 @@ public class OLAPContext {
         return sqlDigest;
     }
 
+    public boolean hasPrecalculatedFields() {
+        return realization instanceof CubeInstance || realization instanceof HybridInstance;
+    }
+
     public void resetSQLDigest() {
         this.sqlDigest = null;
     }
@@ -167,6 +173,7 @@ public class OLAPContext {
             sortOrders.add(order);
         }
     }
+
     public interface IAccessController {
         /*
         * @return {TupleFilter} if the filter condition exists

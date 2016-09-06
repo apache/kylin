@@ -20,22 +20,30 @@ package org.apache.kylin.metadata.filter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.StringSerializer;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-/**
- * typically like will be handled by BuiltInFunctionTupleFilter rather than this
- */
-public class EvaluatableLikeFunction extends BuiltInFunctionTupleFilter {
+import com.google.common.collect.Lists;
 
-    private boolean patternExtracted;
+public class EvaluatableFunctionTupleFilter extends BuiltInFunctionTupleFilter {
 
-    public EvaluatableLikeFunction(String name) {
-        super(name, FilterOperatorEnum.LIKE);
+    private boolean constantsInitted = false;
+
+    //about non-like
+    private List<Object> values;
+    private Object tupleValue;
+
+    public EvaluatableFunctionTupleFilter(String name) {
+        super(name, FilterOperatorEnum.EVAL_FUNC);
+        values = Lists.newArrayListWithCapacity(1);
+        values.add(null);
     }
 
     @Override
@@ -50,28 +58,42 @@ public class EvaluatableLikeFunction extends BuiltInFunctionTupleFilter {
             }
         }
 
-        // consider null case
-        if (cs.isNull(tupleValue)) {
-            return false;
+        TblColRef tblColRef = this.getColumn();
+        DataType strDataType = DataType.getType("string");
+        if (tblColRef.getType() != strDataType) {
+            throw new IllegalStateException("Only String type is allow in BuiltInFunction");
         }
-
         ByteArray valueByteArray = (ByteArray) tupleValue;
-        StringSerializer serializer = new StringSerializer(DataType.getType("string"));
+        StringSerializer serializer = new StringSerializer(strDataType);
         String value = serializer.deserialize(ByteBuffer.wrap(valueByteArray.array(), valueByteArray.offset(), valueByteArray.length()));
+
         try {
-            return (Boolean) invokeFunction(value);
+            if (isLikeFunction()) {
+                return (Boolean) invokeFunction(value);
+            } else {
+                this.tupleValue = invokeFunction(value);
+                //convert back to ByteArray format because the outer EvaluatableFunctionTupleFilter assumes input as ByteArray
+                ByteBuffer buffer = ByteBuffer.allocate(valueByteArray.length() * 2);
+                serializer.serialize((String) this.tupleValue, buffer);
+                this.tupleValue = new ByteArray(buffer.array(), 0, buffer.position());
+
+                return true;
+            }
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
+    public Collection<?> getValues() {
+        this.values.set(0, tupleValue);
+        return values;
+    }
+
+    @Override
     public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
         if (!isValid()) {
             throw new IllegalStateException("must be valid");
-        }
-        if (methodParams.size() != 2 || methodParams.get(0) != null || methodParams.get(1) == null) {
-            throw new IllegalArgumentException("bad methodParams: " + methodParams);
         }
         BytesUtil.writeUTFString(name, buffer);
     }
@@ -93,22 +115,37 @@ public class EvaluatableLikeFunction extends BuiltInFunctionTupleFilter {
 
     @Override
     public Object invokeFunction(Object input) throws InvocationTargetException, IllegalAccessException {
-        if (!patternExtracted) {
-            this.getLikePattern();
-        }
+        if (isLikeFunction())
+            initConstants();
         return super.invokeFunction(input);
     }
 
-    //will replace the ByteArray pattern to String type
-    public String getLikePattern() {
-        if (!patternExtracted) {
-            ByteArray byteArray = (ByteArray) methodParams.get(1);
-            StringSerializer s = new StringSerializer(DataType.getType("string"));
-            String pattern = s.deserialize(ByteBuffer.wrap(byteArray.array(), byteArray.offset(), byteArray.length()));
-            methodParams.set(1, pattern);
-            patternExtracted = true;
+    private void initConstants() {
+        if (constantsInitted) {
+            return;
         }
+        //will replace the ByteArray pattern to String type
+        ByteArray byteArray = (ByteArray) methodParams.get(constantPosition);
+        StringSerializer s = new StringSerializer(DataType.getType("string"));
+        String pattern = s.deserialize(ByteBuffer.wrap(byteArray.array(), byteArray.offset(), byteArray.length()));
+        //TODO 
+        //pattern = pattern.toLowerCase();//to remove upper case
+        methodParams.set(constantPosition, pattern);
+        constantsInitted = true;
+    }
+
+    //even for "tolower(s)/toupper(s)/substring(like) like pattern", the like pattern can be used for index searching
+    public String getLikePattern() {
+        if (!isLikeFunction()) {
+            return null;
+        }
+
+        initConstants();
         return (String) methodParams.get(1);
+    }
+
+    public boolean isLikeFunction() {
+        return "like".equalsIgnoreCase(this.getName());
     }
 
 }
