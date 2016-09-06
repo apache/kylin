@@ -6,8 +6,12 @@
       "table": "EDW.V_TEST_CAL_DT",
       "join": {
         "type": "inner",
-        "primary_key": ["CAL_DT"],
-        "foreign_key": ["CAL_DT"]
+        "primary_key": [
+          "CAL_DT"
+        ],
+        "foreign_key": [
+          "CAL_DT"
+        ]
       }
     },
     {
@@ -28,16 +32,24 @@
       "table": "EDW.TEST_SITES",
       "join": {
         "type": "inner",
-        "primary_key": ["SITE_ID"],
-        "foreign_key": ["LSTG_SITE_ID"]
+        "primary_key": [
+          "SITE_ID"
+        ],
+        "foreign_key": [
+          "LSTG_SITE_ID"
+        ]
       }
     },
     {
       "table": "EDW.TEST_SELLER_TYPE_DIM",
       "join": {
         "type": "inner",
-        "primary_key": ["SELLER_TYPE_CD"],
-        "foreign_key": ["SLR_SEGMENT_CD"]
+        "primary_key": [
+          "SELLER_TYPE_CD"
+        ],
+        "foreign_key": [
+          "SLR_SEGMENT_CD"
+        ]
       }
     }
   ],

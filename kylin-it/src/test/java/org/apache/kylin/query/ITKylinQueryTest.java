@@ -55,12 +55,13 @@ public class ITKylinQueryTest extends KylinTestBase {
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.HYBRID, 0);
         priorities.put(RealizationType.CUBE, 0);
+        priorities.put(RealizationType.INVERTED_INDEX, 0);
         Candidate.setPriorities(priorities);
 
-        joinType = "inner";
+        joinType = "left";
 
         setupAll();
-        
+
         RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
         RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
     }
@@ -192,15 +193,22 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
-    public void testDimDistinctCountQuery() throws Exception {
-        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_dim", null, true);
+    public void testTopNQuery() throws Exception {
+        if ("left".equalsIgnoreCase(joinType)) {
+            this.execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_topn", null, true);
+        }
     }
 
     @Test
     public void testPreciselyDistinctCountQuery() throws Exception {
         if ("left".equalsIgnoreCase(joinType)) {
-            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/temp", null, true);
+            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_precisely", null, true);
         }
+    }
+
+    @Test
+    public void testDimDistinctCountQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_dim", null, true);
     }
 
     @Test
@@ -272,13 +280,6 @@ public class ITKylinQueryTest extends KylinTestBase {
     public void testLimitCorrectness() throws Exception {
         if (HBaseStorage.overwriteStorageQuery == null) {//v1 query engine will not work
             execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
-        }
-    }
-
-    @Test
-    public void testTopNQuery() throws Exception {
-        if ("left".equalsIgnoreCase(joinType)) {
-            this.execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_topn", null, true);
         }
     }
 

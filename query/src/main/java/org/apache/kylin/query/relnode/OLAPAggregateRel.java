@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.calcite.adapter.enumerable.EnumerableAggregate;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
@@ -67,6 +66,7 @@ import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -133,8 +133,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         if (getGroupType() == Group.SIMPLE) {
             cost = super.computeSelfCost(planner, mq).multiplyBy(.05);
         } else {
-            cost = super.computeSelfCost(planner, mq).multiplyBy(.05).plus(planner.getCost(getInput(), mq))
-                    .multiplyBy(groupSets.size() * 1.5);
+            cost = super.computeSelfCost(planner, mq).multiplyBy(.05).plus(planner.getCost(getInput(), mq)).multiplyBy(groupSets.size() * 1.5);
         }
         return cost;
     }
@@ -174,7 +173,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         // Add group column indicators
         if (indicator) {
             final Set<String> containedNames = Sets.newHashSet();
-            for (TblColRef groupCol: groups) {
+            for (TblColRef groupCol : groups) {
                 String base = "i$" + groupCol.getName();
                 String name = base;
                 int i = 0;
@@ -356,6 +355,14 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     }
 
     private AggregateCall rewriteAggregateCall(AggregateCall aggCall, FunctionDesc func) {
+
+        //if it's not a cube, then the "needRewriteField func" should not resort to any rewrite fields, 
+        // which do not exist at all
+        if (!this.context.hasPrecalculatedFields() && func.needRewriteField()) {
+            logger.info(func + "skip rewriteAggregateCall because no pre-aggregated field available");
+            return aggCall;
+        }
+
         // rebuild parameters
         List<Integer> newArgList = Lists.newArrayList(aggCall.getArgList());
         if (func.needRewriteField()) {

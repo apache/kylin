@@ -48,9 +48,9 @@ import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
@@ -166,6 +166,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
             for (Map.Entry<TblColRef, TblColRef> columnPair : joinCol.entrySet()) {
                 TblColRef fromCol = (rightHasSubquery ? columnPair.getKey() : columnPair.getValue());
                 this.context.groupByColumns.add(fromCol);
+                this.context.allColumns.add(fromCol);
             }
             joinCol.clear();
         }
@@ -295,26 +296,29 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         this.rowType = this.deriveRowType();
 
         if (this.isTopJoin && RewriteImplementor.needRewrite(this.context)) {
-            // find missed rewrite fields
-            int paramIndex = this.rowType.getFieldList().size();
-            List<RelDataTypeField> newFieldList = new LinkedList<RelDataTypeField>();
-            for (Map.Entry<String, RelDataType> rewriteField : this.context.rewriteFields.entrySet()) {
-                String fieldName = rewriteField.getKey();
-                if (this.rowType.getField(fieldName, true, false) == null) {
-                    RelDataType fieldType = rewriteField.getValue();
-                    RelDataTypeField newField = new RelDataTypeFieldImpl(fieldName, paramIndex++, fieldType);
-                    newFieldList.add(newField);
+            if (this.context.hasPrecalculatedFields()) {
+
+                // find missed rewrite fields
+                int paramIndex = this.rowType.getFieldList().size();
+                List<RelDataTypeField> newFieldList = new LinkedList<RelDataTypeField>();
+                for (Map.Entry<String, RelDataType> rewriteField : this.context.rewriteFields.entrySet()) {
+                    String fieldName = rewriteField.getKey();
+                    if (this.rowType.getField(fieldName, true, false) == null) {
+                        RelDataType fieldType = rewriteField.getValue();
+                        RelDataTypeField newField = new RelDataTypeFieldImpl(fieldName, paramIndex++, fieldType);
+                        newFieldList.add(newField);
+                    }
                 }
+
+                // rebuild row type
+                FieldInfoBuilder fieldInfo = getCluster().getTypeFactory().builder();
+                fieldInfo.addAll(this.rowType.getFieldList());
+                fieldInfo.addAll(newFieldList);
+                this.rowType = getCluster().getTypeFactory().createStructType(fieldInfo);
+
+                // rebuild columns
+                this.columnRowType = this.buildColumnRowType();
             }
-
-            // rebuild row type
-            FieldInfoBuilder fieldInfo = getCluster().getTypeFactory().builder();
-            fieldInfo.addAll(this.rowType.getFieldList());
-            fieldInfo.addAll(newFieldList);
-            this.rowType = getCluster().getTypeFactory().createStructType(fieldInfo);
-
-            // rebuild columns
-            this.columnRowType = this.buildColumnRowType();
         }
     }
 
