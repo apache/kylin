@@ -46,7 +46,7 @@
 
                       <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
                               ng-model="modelsManager.selectedModel.partition_desc.partition_date_column"
-                              ng-if="state.mode=='edit'"
+                              ng-if="state.mode=='edit'" ng-change="partitionChange(modelsManager.selectedModel.partition_desc.partition_date_column)"
                               data-placement=""
                               ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonColumns(modelsManager.selectedModel.fact_table)" >
                           <option value="">--Select Partition Column--</option>
@@ -60,14 +60,14 @@
           </div>
 
           <!--Date Format-->
-          <div class="form-group">
+          <div class="form-group"  ng-if="isBigInt==false">
             <div class="row">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Date Format</b></label>
               <div class="col-xs-12 col-sm-6">
                 <select style="width: 100%" chosen
                         ng-required="modelsManager.selectedModel.partition_desc.partition_date_format"
                         ng-model="modelsManager.selectedModel.partition_desc.partition_date_format"
-                        ng-if="state.mode=='edit'"
+                        ng-if="state.mode=='edit'"  ng-disable="isBigInt(modelsManager.selectedModel.partition_desc.partition_date_column)"
                         data-placement=""
                         ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt">
                   <option value="">--Select Date Format--</option>
@@ -78,7 +78,7 @@
           </div>
 
           <!--Date Format-->
-          <div class="form-group middle-popover">
+          <div class="form-group middle-popover" ng-if="isBigInt==false">
             <div class="row">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Has a separate "time of the day" column ?</b>  <i kylinpopover placement="right" title="Separate Time Column" template="separateTimeColumnTip.html" class="fa fa-info-circle"></i></label>
               <div class="col-xs-12 col-sm-6">
@@ -164,7 +164,7 @@
 <script type="text/ng-template" id="partitionTip.html">
     <ol>
       <li>Partition date column not required,leave as default if cube always need full build</Li>
-      <li>Column should contain date value (type can be Date, Timestamp, String, VARCHAR, etc.)</li>
+      <li>Column should contain date value (type can be Date, Timestamp, String, VARCHAR,BigInt, etc.)</li>
     </ol>
 </script>
 
