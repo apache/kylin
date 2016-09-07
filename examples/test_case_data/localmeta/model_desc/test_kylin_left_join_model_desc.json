@@ -1,5 +1,4 @@
 {
- 
   "uuid": "9c0f4ee2-1ccb-4b07-a38e-4c298563e0f7",
   "name": "test_kylin_left_join_model_desc",
   "lookups": [
@@ -81,6 +80,13 @@
       "columns": [
         "seller_type_cd",
         "seller_type_desc"
+      ]
+    },
+    {
+      "table": "EDW.TEST_CAL_DT",
+      "columns": [
+        "cal_dt",
+        "week_beg_dt"
       ]
     }
   ],
