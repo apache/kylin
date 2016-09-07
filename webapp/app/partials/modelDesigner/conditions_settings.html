@@ -67,7 +67,7 @@
                 <select style="width: 100%" chosen
                         ng-required="modelsManager.selectedModel.partition_desc.partition_date_format"
                         ng-model="modelsManager.selectedModel.partition_desc.partition_date_format"
-                        ng-if="state.mode=='edit'"  ng-disable="isBigInt(modelsManager.selectedModel.partition_desc.partition_date_column)"
+                        ng-if="state.mode=='edit'"
                         data-placement=""
                         ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt">
                   <option value="">--Select Date Format--</option>
@@ -164,7 +164,7 @@
 <script type="text/ng-template" id="partitionTip.html">
     <ol>
       <li>Partition date column not required,leave as default if cube always need full build</Li>
-      <li>Column should contain date value (type can be Date, Timestamp, String, VARCHAR,BigInt, etc.)</li>
+      <li>Column should contain date value (type can be Date, Timestamp, String, VARCHAR, Int, BigInt, etc.)</li>
     </ol>
 </script>
 
