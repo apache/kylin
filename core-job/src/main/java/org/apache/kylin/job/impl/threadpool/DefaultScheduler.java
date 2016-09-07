@@ -49,6 +49,7 @@ import com.google.common.collect.Maps;
  */
 public class DefaultScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
 
+    private JobLock jobLock;
     private ExecutableManager executableManager;
     private FetcherRunner fetcher;
     private ScheduledExecutorService fetcherPool;
@@ -181,6 +182,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     @Override
     public synchronized void init(JobEngineConfig jobEngineConfig, final JobLock jobLock) throws SchedulerException {
+        this.jobLock = jobLock;
+        
         String serverMode = jobEngineConfig.getConfig().getServerMode();
         if (!("job".equals(serverMode.toLowerCase()) || "all".equals(serverMode.toLowerCase()))) {
             logger.info("server mode: " + serverMode + ", no need to run job scheduler");
@@ -216,6 +219,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
     @Override
     public void shutdown() throws SchedulerException {
+        logger.info("Shutingdown Job Engine ....");
+        jobLock.unlock();
         fetcherPool.shutdown();
         jobPool.shutdown();
     }
