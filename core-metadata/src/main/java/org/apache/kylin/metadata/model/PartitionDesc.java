@@ -91,6 +91,14 @@ public class PartitionDesc {
         partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
     }
 
+    public boolean partitionColumnIsYmdInt() {
+        if (partitionDateColumnRef == null)
+            return false;
+        
+        DataType type = partitionDateColumnRef.getType();
+        return type.isInt();
+    }
+
     public boolean partitionColumnIsTimeMillis() {
         if (partitionDateColumnRef == null)
             return false;
@@ -175,8 +183,10 @@ public class PartitionDesc {
             String partitionDateColumnName = partDesc.getPartitionDateColumn();
             String partitionTimeColumnName = partDesc.getPartitionTimeColumn();
 
-            if (partDesc.partitionColumnIsTimeMillis()) {
-                buildSingleColumnRangeCondition(builder, partitionDateColumnName, startInclusive, endExclusive, tableAlias);
+            if (partDesc.partitionColumnIsYmdInt()) {
+                buildSingleColumnRangeCondAsYmdInt(builder, partitionDateColumnName, startInclusive, endExclusive, tableAlias);
+            } else if (partDesc.partitionColumnIsTimeMillis()) {
+                buildSingleColumnRangeCondAsTimeMillis(builder, partitionDateColumnName, startInclusive, endExclusive, tableAlias);
             } else if (partitionDateColumnName != null && partitionTimeColumnName == null) {
                 buildSingleColumnRangeCondition(builder, partitionDateColumnName, startInclusive, endExclusive, partDesc.getPartitionDateFormat(), tableAlias);
             } else if (partitionDateColumnName == null && partitionTimeColumnName != null) {
@@ -201,13 +211,22 @@ public class PartitionDesc {
             return columnName;
         }
 
-        private static void buildSingleColumnRangeCondition(StringBuilder builder, String partitionColumnName, long startInclusive, long endExclusive, Map<String, String> tableAlias) {
+        private static void buildSingleColumnRangeCondAsTimeMillis(StringBuilder builder, String partitionColumnName, long startInclusive, long endExclusive, Map<String, String> tableAlias) {
             partitionColumnName = replaceColumnNameWithAlias(partitionColumnName, tableAlias);
             if (startInclusive > 0) {
                 builder.append(partitionColumnName + " >= " + startInclusive);
                 builder.append(" AND ");
             }
             builder.append(partitionColumnName + " < " + endExclusive);
+        }
+
+        private static void buildSingleColumnRangeCondAsYmdInt(StringBuilder builder, String partitionColumnName, long startInclusive, long endExclusive, Map<String, String> tableAlias) {
+            partitionColumnName = replaceColumnNameWithAlias(partitionColumnName, tableAlias);
+            if (startInclusive > 0) {
+                builder.append(partitionColumnName + " >= " + DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_DATE_PATTERN));
+                builder.append(" AND ");
+            }
+            builder.append(partitionColumnName + " < " + DateFormat.formatToDateStr(endExclusive, DateFormat.COMPACT_DATE_PATTERN));
         }
 
         private static void buildSingleColumnRangeCondition(StringBuilder builder, String partitionColumnName, long startInclusive, long endExclusive, String partitionColumnDateFormat, Map<String, String> tableAlias) {
