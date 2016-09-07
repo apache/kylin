@@ -157,13 +157,13 @@
                                 <div ng-repeat="joinIndex in [] | range: newLookup.join.primary_key.length">
                                     <div>
                                         <select style="width: 45%" chosen data-placeholder="Fact Table Column"
-                                                ng-model="newLookup.join.foreign_key[$index]"
+                                                ng-model="newLookup.join.foreign_key[$index]"  ng-change="changeKey($index)"
                                                 ng-options="columns.name as columns.name for columns in getColumnsByTable(modelsManager.selectedModel.fact_table)" >
                                             <option value=""></option>
                                         </select>
                                         <b>=</b>
                                         <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
-                                                ng-model="newLookup.join.primary_key[$index]"
+                                                ng-model="newLookup.join.primary_key[$index]"  ng-change="changeKey($index)"
                                                 ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
                                             <option value=""></option>
                                         </select>
@@ -173,6 +173,7 @@
                                         </button>
                                     </div>
                                     <div class="space-4"></div>
+                                    <small class="help-block red" ng-show="newLookup.join.isCompatible[$index]==false"><i class="fa fa-exclamation-triangle"></i> <b>Column Type incompatible {{newLookup.join.primary_key[$index]}} [{{newLookup.join.pk_type[$index]}}],{{newLookup.join.foreign_key[$index]}}[{{newLookup.join.fk_type[$index]}}].</b></small>
                                 </div>
                             </div>
                         </div>
