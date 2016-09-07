@@ -1,16 +1,7 @@
 {
- 
   "uuid": "9c184ee2-1ccb-4b07-a38e-4c298563e0f7",
   "name": "test_kylin_left_join_view_model_desc",
   "lookups": [
-    {
-      "table": "EDW.TEST_CAL_DT",
-      "join": {
-        "type": "left",
-        "primary_key": ["CAL_DT"],
-        "foreign_key": ["CAL_DT"]
-      }
-    },
     {
       "table": "EDW.V_TEST_CAL_DT",
       "join": {
