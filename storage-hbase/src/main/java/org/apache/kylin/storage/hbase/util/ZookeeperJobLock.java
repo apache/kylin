@@ -73,7 +73,7 @@ public class ZookeeperJobLock implements JobLock {
             logger.warn("error acquire lock", e);
         }
         if (!hasLock) {
-            logger.warn("fail to acquire lock, scheduler has not been started");
+            logger.warn("fail to acquire lock, scheduler has not been started; maybe another kylin process is still running?");
             zkClient.close();
             return false;
         }

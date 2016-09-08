@@ -169,7 +169,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
     public List<String> getMergingHTables() {
         final List<CubeSegment> mergingSegments = ((CubeInstance) seg.getRealization()).getMergingSegments((CubeSegment) seg);
-        Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
+        Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge, target segment " + seg);
         final List<String> mergingHTables = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingHTables.add(merging.getStorageLocationIdentifier());
@@ -179,7 +179,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
     public List<String> getMergingHDFSPaths() {
         final List<CubeSegment> mergingSegments = ((CubeInstance) seg.getRealization()).getMergingSegments((CubeSegment) seg);
-        Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge");
+        Preconditions.checkState(mergingSegments.size() > 1, "there should be more than 2 segments to merge, target segment " + seg);
         final List<String> mergingHDFSPaths = Lists.newArrayList();
         for (CubeSegment merging : mergingSegments) {
             mergingHDFSPaths.add(getJobWorkingDir(merging.getLastBuildJobID()));
