@@ -152,16 +152,16 @@ KylinApp
       var convertedMillis = item;
       if (gmttimezone.indexOf("GMT+") != -1) {
         var offset = gmttimezone.substr(4, 1);
-        convertedMillis = item + offset * 60 * 60000 + localOffset * 60000;
+        convertedMillis = new Date(item).getTime() + offset * 60 * 60000 + localOffset * 60000;
       }
       else if (gmttimezone.indexOf("GMT-") != -1) {
         var offset = gmttimezone.substr(4, 1);
-        convertedMillis = item - offset * 60 * 60000 + localOffset * 60000;
+        convertedMillis = new Date(item).getTime() - offset * 60 * 60000 + localOffset * 60000;
       }
       else {
         // return PST by default
         timezone = "PST";
-        convertedMillis = item - 8 * 60 * 60000 + localOffset * 60000;
+        convertedMillis = new Date(item).getTime() - 8 * 60 * 60000 + localOffset * 60000;
       }
       return $filter('date')(convertedMillis, format) + " " + timezone;
 
