@@ -31,6 +31,7 @@ import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -146,7 +147,11 @@ public class CubeCapabilityChecker {
             }
 
             // calcite can do aggregation from columns on-the-fly
-            List<TblColRef> neededCols = functionDesc.getParameter().getColRefs();
+            ParameterDesc parameterDesc = functionDesc.getParameter();
+            if (parameterDesc == null) {
+                continue;
+            }
+            List<TblColRef> neededCols = parameterDesc.getColRefs();
             if (neededCols.size() > 0 && cubeDesc.listDimensionColumnsIncludingDerived().containsAll(neededCols) && FunctionDesc.BUILT_IN_AGGREGATIONS.contains(functionDesc.getExpression())) {
                 result.influences.add(new CapabilityResult.DimensionAsMeasure(functionDesc));
                 it.remove();
