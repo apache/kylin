@@ -44,6 +44,8 @@ import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -119,6 +121,22 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testTimeoutQuery() throws Exception {
+        thrown.expect(SQLException.class);
+
+        //should not break at table duplicate check, should fail at model duplicate check
+        thrown.expectCause(new BaseMatcher<Throwable>() {
+            @Override
+            public boolean matches(Object item) {
+                if (item instanceof GTScanSelfTerminatedException) {
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public void describeTo(Description description) {
+            }
+        });
 
         try {
 
@@ -133,10 +151,6 @@ public class ITKylinQueryTest extends KylinTestBase {
             RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_without_slr_inner_join_empty]");
 
             execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_timeout", null, true);
-        } catch (SQLException e) {
-            if (!(e.getCause() instanceof GTScanSelfTerminatedException)) {
-                throw new RuntimeException();
-            }
         } finally {
 
             //these two cubes has RAW measure, will disturb limit push down
