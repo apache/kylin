@@ -314,13 +314,7 @@ public class DataModelDesc extends RootPersistentEntity {
             }
             for (int i = 0; i < fkCols.length; i++) {
                 if (!fkCols[i].getDatatype().equals(pkCols[i].getDatatype())) {
-                    final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-                    final String msg = "Primary key " + lookup.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.getFactTable() + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype();
-                    if (kylinConfig.getTableJoinTypeCheck() == true) {
-                        throw new IllegalStateException(msg);
-                    } else {
-                        logger.warn(msg);
-                    }
+                    logger.warn("Primary key " + lookup.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.getFactTable() + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
                 }
             }
 

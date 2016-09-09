@@ -152,7 +152,7 @@ public class CubeController extends BasicController {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.READY);
         IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cubeSegment);
-        String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
+        String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc, false);
 
         GeneralResponse repsonse = new GeneralResponse();
         repsonse.setProperty("sql", sql);

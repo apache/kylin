@@ -107,14 +107,14 @@ public class JoinedFlatTable {
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, JobEngineConfig engineConfig) {
+    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, JobEngineConfig engineConfig, boolean redistribute) {
         StringBuilder sql = new StringBuilder();
         sql.append(generateHiveSetStatements(engineConfig));
-        sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName() + " " + generateSelectDataStatement(intermediateTableDesc) + ";").append("\n");
+        sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName() + " " + generateSelectDataStatement(intermediateTableDesc, redistribute) + ";").append("\n");
         return sql.toString();
     }
 
-    public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
+    public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc, boolean redistribute) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + "\n");
         String tableAlias;
@@ -129,7 +129,15 @@ public class JoinedFlatTable {
         }
         appendJoinStatement(flatDesc, sql, tableAliasMap);
         appendWhereStatement(flatDesc, sql, tableAliasMap);
-        appendDistributeStatement(flatDesc, sql, tableAliasMap);
+        if (redistribute == true) {
+            String redistributeCol = null;
+            TblColRef distDcol = flatDesc.getDistributedBy();
+            if (distDcol != null) {
+                String tblAlias = tableAliasMap.get(distDcol.getTable());
+                redistributeCol = tblAlias + "." + distDcol.getName();
+            }
+            appendDistributeStatement(sql, redistributeCol);
+        }
         return sql.toString();
     }
 
@@ -228,14 +236,11 @@ public class JoinedFlatTable {
         return result;
     }
 
-    private static void appendDistributeStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql, Map<String, String> tableAliasMap) {
-        TblColRef distDcol = flatDesc.getDistributedBy();
-
-        if (distDcol != null) {
-            String tblAlias = tableAliasMap.get(distDcol.getTable());
-            sql.append(" DISTRIBUTE BY ").append(tblAlias).append(".").append(distDcol.getName());
+    private static void appendDistributeStatement(StringBuilder sql, String redistributeCol) {
+        if (redistributeCol != null) {
+            sql.append(" DISTRIBUTE BY ").append(redistributeCol).append(";\n");
         } else {
-            sql.append(" DISTRIBUTE BY RAND()");
+            sql.append(" DISTRIBUTE BY RAND()").append(";\n");
         }
     }
 
@@ -278,6 +283,27 @@ public class JoinedFlatTable {
         hiveDataType = javaDataType.toLowerCase().startsWith("integer") ? "int" : hiveDataType;
 
         return hiveDataType.toLowerCase();
+    }
+
+    public static String generateSelectRowCountStatement(IJoinedFlatTableDesc intermediateTableDesc, String outputDir) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("set hive.exec.compress.output=false;\n");
+        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + intermediateTableDesc.getTableName() + ";\n");
+        return sql.toString();
+    }
+
+    public static String generateRedistributeFlatTableStatement(IJoinedFlatTableDesc intermediateTableDesc) {
+        final String tableName = intermediateTableDesc.getTableName();
+        StringBuilder sql = new StringBuilder();
+        sql.append("INSERT OVERWRITE TABLE " + tableName + " SELECT * FROM " + tableName);
+
+        String redistributeCol = null;
+        TblColRef distDcol = intermediateTableDesc.getDistributedBy();
+        if (distDcol != null) {
+            redistributeCol = colName(distDcol.getCanonicalName());
+        }
+        appendDistributeStatement(sql, redistributeCol);
+        return sql.toString();
     }
 
 }

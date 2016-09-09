@@ -76,8 +76,11 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
     private void createFlatHiveTable(KylinConfig config, int numReducers) throws IOException {
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement(getInitStatement());
-        hiveCmdBuilder.addStatement("set mapreduce.job.reduces=" + numReducers + ";\n");
-        hiveCmdBuilder.addStatement("set hive.merge.mapredfiles=false;\n"); //disable merge
+        boolean useRedistribute = getUseRedistribute();
+        if (useRedistribute == true) {
+            hiveCmdBuilder.addStatement("set mapreduce.job.reduces=" + numReducers + ";\n");
+            hiveCmdBuilder.addStatement("set hive.merge.mapredfiles=false;\n"); //disable merge
+        }
         hiveCmdBuilder.addStatement(getCreateTableStatement());
         final String cmd = hiveCmdBuilder.toString();
 
@@ -101,13 +104,20 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         KylinConfig config = getCubeSpecificConfig();
         try {
-            long rowCount = readRowCountFromFile();
-            if (!config.isEmptySegmentAllowed() && rowCount == 0) {
-                stepLogger.log("Detect upstream hive table is empty, " + "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
-                return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
+
+            boolean useRedistribute = getUseRedistribute();
+
+            int numReducers = 0;
+            if (useRedistribute == true) {
+                long rowCount = readRowCountFromFile();
+                if (!config.isEmptySegmentAllowed() && rowCount == 0) {
+                    stepLogger.log("Detect upstream hive table is empty, " + "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
+                    return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
+                }
+
+                numReducers = determineNumReducer(config, rowCount);
             }
 
-            int numReducers = determineNumReducer(config, rowCount);
             createFlatHiveTable(config, numReducers);
             return new ExecuteResult(ExecuteResult.State.SUCCEED, stepLogger.getBufferedLog());
 
@@ -123,6 +133,14 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
 
     public String getInitStatement() {
         return getParam("HiveInit");
+    }
+
+    public void setUseRedistribute(boolean useRedistribute) {
+        setParam("useRedistribute", String.valueOf(useRedistribute));
+    }
+
+    public boolean getUseRedistribute() {
+        return Boolean.valueOf(getParam("useRedistribute"));
     }
 
     public void setCreateTableStatement(String sql) {
