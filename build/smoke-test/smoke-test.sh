@@ -67,6 +67,7 @@ sleep 3m
 cd $dir/smoke-test
 python testBuildCube.py     || { exit 1; }
 python testQuery.py         || { exit 1; }
+python testDiag.py         || { exit 1; }
 cd -
 
 # Tear down stage
