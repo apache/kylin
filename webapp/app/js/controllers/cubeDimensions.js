@@ -67,20 +67,17 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
         var cols = $scope.getDimColumnsByTable(factTable);
 
         // Initialize selected available.
-        var factAvailable = {};
         var factSelectAvailable = {};
 
         for (var i = 0; i < cols.length; i++) {
             cols[i].table = factTable;
             cols[i].isLookup = false;
 
-            factAvailable[cols[i].name] = cols[i];
-
             // Default not selected and not disabled.
             factSelectAvailable[cols[i].name] = {selected: false, disabled: false};
         }
 
-        $scope.availableColumns[factTable] = factAvailable;
+        $scope.availableColumns[factTable] = cols;
         $scope.selectedColumns[factTable] = factSelectAvailable;
         $scope.availableTables.push(factTable);
 
@@ -91,20 +88,17 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
             var cols2 = $scope.getDimColumnsByTable(lookups[j].table);
 
             // Initialize selected available.
-            var lookupAvailable = {};
             var lookupSelectAvailable = {};
 
             for (var k = 0; k < cols2.length; k++) {
                 cols2[k].table = lookups[j].table;
                 cols2[k].isLookup = true;
 
-                lookupAvailable[cols2[k].name] = cols2[k];
-
                 // Default not selected and not disabled.
                 lookupSelectAvailable[cols2[k].name] = {selected: false, disabled: false};
             }
 
-            $scope.availableColumns[lookups[j].table] = lookupAvailable;
+            $scope.availableColumns[lookups[j].table] = cols2;
             $scope.selectedColumns[lookups[j].table] = lookupSelectAvailable;
             if($scope.availableTables.indexOf(lookups[j].table)==-1){
                 $scope.availableTables.push(lookups[j].table);
