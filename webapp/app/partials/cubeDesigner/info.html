@@ -49,7 +49,7 @@
             </div>
 
             <!--Cube Name-->
-            <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
+            <div class="form-group middle-popover required"  ng-if="state.mode=='edit'">
                 <div class="row">
                     <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
                         <b>Cube Name</b> <i class="fa fa-info-circle" kylinpopover placement="right" title="Cube Name" template="cubeNameTip.html"></i>
