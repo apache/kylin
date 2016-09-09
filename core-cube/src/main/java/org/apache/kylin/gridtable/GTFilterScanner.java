@@ -132,12 +132,12 @@ public class GTFilterScanner implements IGTScanner {
     }
 
     // cache the last one input and result, can reuse because rowkey are ordered, and same input could come in small group
-    static class FilterResultCache {
+    public static class FilterResultCache {
         static final int CHECKPOINT = 10000;
         static final double HIT_RATE_THRESHOLD = 0.5;
-        static boolean ENABLED = true; // enable cache by default
+        public static boolean ENABLED = true; // enable cache by default
 
-        boolean enabled = ENABLED;
+        public boolean enabled = ENABLED;
         ImmutableBitSet colsInFilter;
         int count;
         int hit;

@@ -18,9 +18,9 @@
 
 package org.apache.kylin.gridtable;
 
-public class GTScanTimeoutException extends GTScanSelfTerminatedException {
+public class GTScanSelfTerminatedException extends RuntimeException {
 
-    public GTScanTimeoutException(String message) {
-        super(message);
+    public GTScanSelfTerminatedException(String s) {
+        super(s);
     }
 }

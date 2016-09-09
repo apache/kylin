@@ -22,13 +22,16 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.enumerator.OLAPQuery;
@@ -37,17 +40,25 @@ import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.kylin.storage.hbase.HBaseStorage;
+import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.Maps;
 
 public class ITKylinQueryTest extends KylinTestBase {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -108,10 +119,52 @@ public class ITKylinQueryTest extends KylinTestBase {
         return "";
     }
 
-    @Ignore("this is only for debug")
+    @Test
+    public void testTimeoutQuery() throws Exception {
+
+        thrown.expect(SQLException.class);
+
+        //should not break at table duplicate check, should fail at model duplicate check
+        thrown.expectCause(new BaseMatcher<Throwable>() {
+            @Override
+            public boolean matches(Object item) {
+                if (item instanceof GTScanSelfTerminatedException) {
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public void describeTo(Description description) {
+            }
+        });
+
+        Map<String, String> toggles = Maps.newHashMap();
+        toggles.put(BackdoorToggles.DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR, CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM_WITHDELAY.toString());//delay 10ms for every scan
+        BackdoorToggles.setToggles(toggles);
+
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.query.cube.visit.timeout.times", "0.03");//set timeout to 9s
+
+        //these two cubes has RAW measure, will disturb limit push down
+        RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_without_slr_left_join_empty]");
+        RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_without_slr_inner_join_empty]");
+
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_timeout", null, true);
+
+        //these two cubes has RAW measure, will disturb limit push down
+        RemoveBlackoutRealizationsRule.blackouts.remove("CUBE[name=test_kylin_cube_without_slr_left_join_empty]");
+        RemoveBlackoutRealizationsRule.blackouts.remove("CUBE[name=test_kylin_cube_without_slr_inner_join_empty]");
+
+        KylinConfig.getInstanceFromEnv().setProperty("kylin.query.cube.visit.timeout.times", "1");//set timeout to 9s 
+        BackdoorToggles.cleanToggles();
+    }
+
+    //don't try to ignore this test, try to clean your "temp" folder
     @Test
     public void testTempQuery() throws Exception {
+        PRINT_RESULT = true;
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/temp", null, true);
+        PRINT_RESULT = false;
     }
 
     @Ignore

@@ -20,6 +20,7 @@ package org.apache.kylin.storage.gtrecord;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,10 +73,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
-        
+
         //cope with queries with no aggregations
         RawQueryLastHacker.hackNoAggregations(sqlDigest, cubeDesc);
-        
+
         // Customized measure taking effect: e.g. allow custom measures to help raw queries
         notifyBeforeStorageQuery(sqlDigest);
 
@@ -112,9 +113,9 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
         TupleFilter filterD = translateDerived(filter, groupsD);
 
-        context.setNeedStorageAggregation(isNeedStorageAggregation(cuboid, groupsD, singleValuesD, exactAggregation));
-        enableStoragePushDownLimit(cuboid, groups, derivedPostAggregation, groupsD, filter, sqlDigest.aggregations, context);
-        setThreshold(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
+        context.setNeedStorageAggregation(isNeedStorageAggregation(cuboid, groupsD, singleValuesD));
+        enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filter, sqlDigest.aggregations, context);
+        setThresholdIfNecessary(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
@@ -229,9 +230,22 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         return resultD;
     }
 
-    public boolean isNeedStorageAggregation(Cuboid cuboid, Collection<TblColRef> groupD, Collection<TblColRef> singleValueD, boolean isExactAggregation) {
-        logger.info("Set isNeedStorageAggregation to " + !isExactAggregation);
-        return !isExactAggregation;
+    public boolean isNeedStorageAggregation(Cuboid cuboid, Collection<TblColRef> groupD, Collection<TblColRef> singleValueD) {
+
+        logger.info("GroupD :" + groupD);
+        logger.info("SingleValueD :" + singleValueD);
+        logger.info("Cuboid columns :" + cuboid.getColumns());
+
+        HashSet<TblColRef> temp = Sets.newHashSet();
+        temp.addAll(groupD);
+        temp.addAll(singleValueD);
+        if (cuboid.getColumns().size() == temp.size()) {
+            logger.info("Does not need storage aggregation");
+            return false;
+        } else {
+            logger.info("Need storage aggregation");
+            return true;
+        }
     }
 
     //exact aggregation was introduced back when we had some measures (like holistic distinct count) that is sensitive
@@ -268,7 +282,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
 
         if (exact) {
-            logger.info("exactAggregation is true");
+            logger.info("exactAggregation is true, cuboid id is " + cuboid.getId());
         }
         return exact;
     }
@@ -355,7 +369,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
-    private void setThreshold(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics, StorageContext context) {
+    private void setThresholdIfNecessary(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics, StorageContext context) {
         boolean hasMemHungryMeasure = false;
         for (FunctionDesc func : metrics) {
             hasMemHungryMeasure |= func.getMeasureType().isMemoryHungry();
@@ -381,7 +395,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
-    private void enableStoragePushDownLimit(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter, Collection<FunctionDesc> functionDescs, StorageContext context) {
+    private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter, Collection<FunctionDesc> functionDescs, StorageContext context) {
         boolean possible = true;
 
         boolean goodFilter = filter == null || (TupleFilter.isEvaluableRecursively(filter) && context.isCoprocessorEnabled());

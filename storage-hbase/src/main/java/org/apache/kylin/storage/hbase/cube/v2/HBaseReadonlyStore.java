@@ -43,13 +43,15 @@ public class HBaseReadonlyStore implements IGTStore {
     private List<Pair<byte[], byte[]>> hbaseColumns;
     private List<List<Integer>> hbaseColumnsToGT;
     private int rowkeyPreambleSize;
+    private boolean withDelay = false;
 
-    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT, int rowkeyPreambleSize) {
+    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT, int rowkeyPreambleSize, boolean withDelay) {
         this.cellListIterator = cellListIterator;
         this.info = gtScanRequest.getInfo();
         this.hbaseColumns = hbaseColumns;
         this.hbaseColumnsToGT = hbaseColumnsToGT;
         this.rowkeyPreambleSize = rowkeyPreambleSize;
+        this.withDelay = withDelay;
     }
 
     @Override
@@ -95,6 +97,13 @@ public class HBaseReadonlyStore implements IGTStore {
 
                     @Override
                     public boolean hasNext() {
+                        if (withDelay) {
+                            try {
+                                Thread.sleep(10);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         return cellListIterator.hasNext();
                     }
 

@@ -43,8 +43,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.ISegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
@@ -106,7 +106,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         final String toggle = BackdoorToggles.getCoprocessorBehavior() == null ? CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString() : BackdoorToggles.getCoprocessorBehavior();
 
-        logger.debug("New scanner for current segment {} will use {} as endpoint's behavior", cubeSeg, toggle);
+        logger.info("New scanner for current segment {} will use {} as endpoint's behavior", cubeSeg, toggle);
 
         Pair<Short, Short> shardNumAndBaseShard = getShardNumAndBaseShard();
         short shardNum = shardNumAndBaseShard.getFirst();
@@ -146,7 +146,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 rawScanBufferSize *= 4;
             }
         }
-        scanRequest.setGTScanRanges(Lists.<GTScanRange> newArrayList());//since raw scans are sent to coprocessor, we don't need to duplicate sending it
+        scanRequest.clearScanRanges();//since raw scans are sent to coprocessor, we don't need to duplicate sending it
 
         int scanRequestBufferSize = BytesSerializer.SERIALIZE_BUFFER_SIZE;
         while (true) {
@@ -248,7 +248,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                     }
 
                     if (abnormalFinish[0]) {
-                        Throwable ex = new RuntimeException(logHeader + "The coprocessor thread stopped itself due to scan timeout or scan threshold(check region server log), failing current query...");
+                        Throwable ex = new GTScanSelfTerminatedException(logHeader + "The coprocessor thread stopped itself due to scan timeout or scan threshold(check region server log), failing current query...");
                         logger.error(logHeader + "Error when visiting cubes by endpoint", ex); // double log coz the query thread may already timeout
                         epResultItr.notifyCoprocException(ex);
                         return;
