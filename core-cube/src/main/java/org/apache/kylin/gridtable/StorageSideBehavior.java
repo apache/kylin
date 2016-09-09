@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.storage.hbase.common.coprocessor;
+package org.apache.kylin.gridtable;
 
 /**
  */
-public enum CoprocessorBehavior {
+public enum StorageSideBehavior {
     RAW_SCAN, //on use RegionScanner to scan raw data, for testing hbase scan speed
     SCAN, //only scan data, used for profiling tuple scan speed. Will not return any result
     SCAN_FILTER, //only scan+filter used,used for profiling filter speed.  Will not return any result

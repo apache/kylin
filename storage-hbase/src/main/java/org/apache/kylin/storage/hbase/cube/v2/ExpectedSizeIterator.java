@@ -92,8 +92,8 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
                 if (coprocException instanceof GTScanSelfTerminatedException)
                     throw (GTScanSelfTerminatedException) coprocException;
                 else
-                    throw new RuntimeException("Error in coprocessor",coprocException);
-                
+                    throw new RuntimeException("Error in coprocessor", coprocException);
+
             } else if (ret == null) {
                 throw new RuntimeException("Timeout visiting cube! Check why coprocessor exception is not sent back? In coprocessor Self-termination is checked every " + //
                         GTScanRequest.terminateCheckInterval + " scanned rows, the configured timeout(" + timeout + ") cannot support this many scans?");

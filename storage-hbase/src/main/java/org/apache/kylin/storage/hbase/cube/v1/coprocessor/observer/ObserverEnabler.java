@@ -35,7 +35,7 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
+import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
@@ -75,14 +75,14 @@ public class ObserverEnabler {
 
         if (localCoprocessor) {
             RegionScanner innerScanner = new RegionScannerAdapter(table.getScanner(scan));
-            AggregationScanner aggrScanner = new AggregationScanner(type, filter, projector, aggrs, innerScanner, CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM);
+            AggregationScanner aggrScanner = new AggregationScanner(type, filter, projector, aggrs, innerScanner, StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM);
             return new ResultScannerAdapter(aggrScanner);
         } else {
 
             // debug/profiling purpose
             String toggle = BackdoorToggles.getCoprocessorBehavior();
             if (toggle == null) {
-                toggle = CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString(); //default behavior
+                toggle = StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString(); //default behavior
             } else {
                 logger.info("The execution of this query will use " + toggle + " as observer's behavior");
             }
