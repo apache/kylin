@@ -32,7 +32,6 @@ import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
@@ -47,7 +46,6 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.storage.hbase.HBaseConnection;
-import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
@@ -104,10 +102,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     @Override
     public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
 
-        final String toggle = BackdoorToggles.getCoprocessorBehavior() == null ? CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString() : BackdoorToggles.getCoprocessorBehavior();
-
-        logger.info("New scanner for current segment {} will use {} as endpoint's behavior", cubeSeg, toggle);
-
         Pair<Short, Short> shardNumAndBaseShard = getShardNumAndBaseShard();
         short shardNum = shardNumAndBaseShard.getFirst();
         short cuboidBaseShard = shardNumAndBaseShard.getSecond();
@@ -130,39 +124,14 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         //TODO: raw scan can be constructed at region side to reduce traffic
         List<RawScan> rawScans = preparedHBaseScans(scanRequest.getGTScanRanges(), selectedColBlocks);
-        int rawScanBufferSize = BytesSerializer.SERIALIZE_BUFFER_SIZE;
-        while (true) {
-            try {
-                ByteBuffer rawScanBuffer = ByteBuffer.allocate(rawScanBufferSize);
-                BytesUtil.writeVInt(rawScans.size(), rawScanBuffer);
-                for (RawScan rs : rawScans) {
-                    RawScan.serializer.serialize(rs, rawScanBuffer);
-                }
-                rawScanBuffer.flip();
-                rawScanByteString = HBaseZeroCopyByteString.wrap(rawScanBuffer.array(), rawScanBuffer.position(), rawScanBuffer.limit());
-                break;
-            } catch (BufferOverflowException boe) {
-                logger.info("Buffer size {} cannot hold the raw scans, resizing to 4 times", rawScanBufferSize);
-                rawScanBufferSize *= 4;
-            }
-        }
+        rawScanByteString = serializeRawScans(rawScans);
+        
         scanRequest.clearScanRanges();//since raw scans are sent to coprocessor, we don't need to duplicate sending it
-
-        int scanRequestBufferSize = BytesSerializer.SERIALIZE_BUFFER_SIZE;
-        while (true) {
-            try {
-                ByteBuffer buffer = ByteBuffer.allocate(scanRequestBufferSize);
-                GTScanRequest.serializer.serialize(scanRequest, buffer);
-                buffer.flip();
-                scanRequestByteString = HBaseZeroCopyByteString.wrap(buffer.array(), buffer.position(), buffer.limit());
-                break;
-            } catch (BufferOverflowException boe) {
-                logger.info("Buffer size {} cannot hold the scan request, resizing to 4 times", scanRequestBufferSize);
-                scanRequestBufferSize *= 4;
-            }
-        }
-
-        logger.debug("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", scanRequestByteString.size(), rawScanByteString.size());
+        final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum);
+        scanRequest.setTimeout(epResultItr.getRpcTimeout());
+        scanRequestByteString = serializeGTScanReq(scanRequest);
+        
+        logger.info("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", scanRequestByteString.size(), rawScanByteString.size());
 
         logger.info("The scan {} for segment {} is as below with {} separate raw scans, shard part of start/end key is set to 0", Integer.toHexString(System.identityHashCode(scanRequest)), cubeSeg, rawScans.size());
         for (RawScan rs : rawScans) {
@@ -172,7 +141,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", shardNum, cuboidBaseShard, rawScans.size());
 
         final AtomicLong totalScannedCount = new AtomicLong(0);
-        final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum);
 
         // KylinConfig: use env instance instead of CubeSegment, because KylinConfig will share among queries
         // for different cubes until redeployment of coprocessor jar.
@@ -184,9 +152,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             builder.addHbaseColumnsToGT(intList);
         }
         builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
-        builder.setBehavior(toggle);
-        builder.setStartTime(System.currentTimeMillis());
-        builder.setTimeout(epResultItr.getRpcTimeout());
         builder.setKylinProperties(kylinConfig.getConfigAsString());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
@@ -258,6 +223,45 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
 
         return new GTBlobScatter(fullGTInfo, epResultItr, scanRequest.getColumns(), totalScannedCount.get(), scanRequest.getStoragePushDownLimit());
+    }
+
+    private ByteString serializeGTScanReq(GTScanRequest scanRequest) {
+        ByteString scanRequestByteString;
+        int scanRequestBufferSize = BytesSerializer.SERIALIZE_BUFFER_SIZE;
+        while (true) {
+            try {
+                ByteBuffer buffer = ByteBuffer.allocate(scanRequestBufferSize);
+                GTScanRequest.serializer.serialize(scanRequest, buffer);
+                buffer.flip();
+                scanRequestByteString = HBaseZeroCopyByteString.wrap(buffer.array(), buffer.position(), buffer.limit());
+                break;
+            } catch (BufferOverflowException boe) {
+                logger.info("Buffer size {} cannot hold the scan request, resizing to 4 times", scanRequestBufferSize);
+                scanRequestBufferSize *= 4;
+            }
+        }
+        return scanRequestByteString;
+    }
+
+    private ByteString serializeRawScans(List<RawScan> rawScans) {
+        ByteString rawScanByteString;
+        int rawScanBufferSize = BytesSerializer.SERIALIZE_BUFFER_SIZE;
+        while (true) {
+            try {
+                ByteBuffer rawScanBuffer = ByteBuffer.allocate(rawScanBufferSize);
+                BytesUtil.writeVInt(rawScans.size(), rawScanBuffer);
+                for (RawScan rs : rawScans) {
+                    RawScan.serializer.serialize(rs, rawScanBuffer);
+                }
+                rawScanBuffer.flip();
+                rawScanByteString = HBaseZeroCopyByteString.wrap(rawScanBuffer.array(), rawScanBuffer.position(), rawScanBuffer.limit());
+                break;
+            } catch (BufferOverflowException boe) {
+                logger.info("Buffer size {} cannot hold the raw scans, resizing to 4 times", rawScanBufferSize);
+                rawScanBufferSize *= 4;
+            }
+        }
+        return rawScanByteString;
     }
 
     private String getStatsString(byte[] region, CubeVisitResponse result) {

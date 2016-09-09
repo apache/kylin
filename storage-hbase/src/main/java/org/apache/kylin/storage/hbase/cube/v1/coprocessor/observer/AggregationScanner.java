@@ -27,7 +27,7 @@ import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
-import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
+import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
@@ -39,9 +39,9 @@ import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
 public class AggregationScanner implements RegionScanner {
 
     private RegionScanner outerScanner;
-    private CoprocessorBehavior behavior;
+    private StorageSideBehavior behavior;
 
-    public AggregationScanner(CoprocessorRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner, CoprocessorBehavior behavior) throws IOException {
+    public AggregationScanner(CoprocessorRowType type, CoprocessorFilter filter, CoprocessorProjector groupBy, ObserverAggregators aggrs, RegionScanner innerScanner, StorageSideBehavior behavior) throws IOException {
 
         AggregateRegionObserver.LOG.info("Kylin Coprocessor start");
 
@@ -79,23 +79,23 @@ public class AggregationScanner implements RegionScanner {
             Cell cell = results.get(0);
             tuple.setUnderlying(cell.getRowArray(), cell.getRowOffset(), cell.getRowLength());
 
-            if (behavior == CoprocessorBehavior.SCAN) {
+            if (behavior == StorageSideBehavior.SCAN) {
                 //touch every byte of the cell so that the cost of scanning will be trully reflected
                 int endIndex = cell.getRowOffset() + cell.getRowLength();
                 for (int i = cell.getRowOffset(); i < endIndex; ++i) {
                     meaninglessByte += cell.getRowArray()[i];
                 }
             } else {
-                if (behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal()) {
+                if (behavior.ordinal() >= StorageSideBehavior.SCAN_FILTER.ordinal()) {
                     if (filter != null && filter.evaluate(tuple) == false)
                         continue;
 
-                    if (behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal()) {
+                    if (behavior.ordinal() >= StorageSideBehavior.SCAN_FILTER_AGGR.ordinal()) {
                         AggrKey aggKey = projector.getAggrKey(results);
                         MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
                         aggregators.aggregate(bufs, results);
 
-                        if (behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
+                        if (behavior.ordinal() >= StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
                             aggCache.checkMemoryUsage();
                         }
                     }
@@ -103,7 +103,7 @@ public class AggregationScanner implements RegionScanner {
             }
         }
 
-        if (behavior == CoprocessorBehavior.SCAN) {
+        if (behavior == StorageSideBehavior.SCAN) {
             System.out.println("meaningless byte is now " + meaninglessByte);
         }
 

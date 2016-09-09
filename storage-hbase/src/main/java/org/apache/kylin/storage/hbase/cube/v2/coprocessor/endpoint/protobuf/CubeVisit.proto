@@ -30,14 +30,11 @@ option java_generate_equals_and_hash = true;
 option optimize_for = SPEED;
 
 message CubeVisitRequest {
-    required string behavior = 1;
-    required bytes gtScanRequest = 2;
-    required bytes hbaseRawScan = 3;
-    required int32 rowkeyPreambleSize = 4;
-    repeated IntList hbaseColumnsToGT = 5;
-    required int64 startTime = 6;//when client start the request
-    required int64 timeout = 7;//how long client will wait
-    required string kylinProperties = 8; // kylin properties
+    required bytes gtScanRequest = 1;
+    required bytes hbaseRawScan = 2;
+    required int32 rowkeyPreambleSize = 3;
+    repeated IntList hbaseColumnsToGT = 4;
+    required string kylinProperties = 5; // kylin properties
     message IntList {
         repeated int32 ints = 1;
     }

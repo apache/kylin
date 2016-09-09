@@ -59,6 +59,9 @@ public class GTScanRequest {
     private String[] aggrMetricsFuncs;//
 
     // hint to storage behavior
+    private String storageBehavior;
+    private long startTime;
+    private long timeout;
     private boolean allowStorageAggregation;
     private double aggCacheMemThreshold;
     private int storageScanRowNumThreshold;
@@ -69,7 +72,7 @@ public class GTScanRequest {
 
     GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
             ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, boolean allowStorageAggregation, //
-            double aggCacheMemThreshold, int storageScanRowNumThreshold, int storagePushDownLimit) {
+            double aggCacheMemThreshold, int storageScanRowNumThreshold, int storagePushDownLimit, String storageBehavior, long startTime, long timeout) {
         this.info = info;
         if (ranges == null) {
             this.ranges = Lists.newArrayList(new GTScanRange(new GTRecord(info), new GTRecord(info)));
@@ -83,6 +86,9 @@ public class GTScanRequest {
         this.aggrMetrics = aggrMetrics;
         this.aggrMetricsFuncs = aggrMetricsFuncs;
 
+        this.storageBehavior = storageBehavior;
+        this.startTime = startTime;
+        this.timeout = timeout;
         this.allowStorageAggregation = allowStorageAggregation;
         this.aggCacheMemThreshold = aggCacheMemThreshold;
         this.storageScanRowNumThreshold = storageScanRowNumThreshold;
@@ -113,6 +119,10 @@ public class GTScanRequest {
         if (hasFilterPushDown()) {
             validateFilterPushDown(info);
         }
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
 
     private void validateFilterPushDown(GTInfo info) {
@@ -280,6 +290,18 @@ public class GTScanRequest {
         return this.storagePushDownLimit;
     }
 
+    public String getStorageBehavior() {
+        return storageBehavior;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
     @Override
     public String toString() {
         return "GTScanRequest [range=" + ranges + ", columns=" + columns + ", filterPushDown=" + filterPushDown + ", aggrGroupBy=" + aggrGroupBy + ", aggrMetrics=" + aggrMetrics + ", aggrMetricsFuncs=" + Arrays.toString(aggrMetricsFuncs) + "]";
@@ -320,6 +342,9 @@ public class GTScanRequest {
             out.putDouble(value.aggCacheMemThreshold);
             BytesUtil.writeVInt(value.storageScanRowNumThreshold, out);
             BytesUtil.writeVInt(value.storagePushDownLimit, out);
+            BytesUtil.writeVLong(value.startTime, out);
+            BytesUtil.writeVLong(value.timeout, out);
+            BytesUtil.writeUTFString(value.storageBehavior, out);
         }
 
         @Override
@@ -350,11 +375,15 @@ public class GTScanRequest {
             double sAggrCacheGB = in.getDouble();
             int storageScanRowNumThreshold = BytesUtil.readVInt(in);
             int storagePushDownLimit = BytesUtil.readVInt(in);
+            long startTime = BytesUtil.readVLong(in);
+            long timeout = BytesUtil.readVLong(in);
+            String storageBehavior = BytesUtil.readUTFString(in);
 
             return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns).//
             setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs).//
             setFilterPushDown(sGTFilter).setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB).//
-            setStorageScanRowNumThreshold(storageScanRowNumThreshold).setStoragePushDownLimit(storagePushDownLimit).createGTScanRequest();
+            setStorageScanRowNumThreshold(storageScanRowNumThreshold).setStoragePushDownLimit(storagePushDownLimit).//
+            setStartTime(startTime).setTimeout(timeout).setStorageBehavior(storageBehavior).createGTScanRequest();
         }
 
         private void serializeGTRecord(GTRecord gtRecord, ByteBuffer out) {

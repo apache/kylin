@@ -11,115 +11,64 @@ public final class CubeVisitProtos {
   public interface CubeVisitRequestOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // required string behavior = 1;
+    // required bytes gtScanRequest = 1;
     /**
-     * <code>required string behavior = 1;</code>
-     */
-    boolean hasBehavior();
-    /**
-     * <code>required string behavior = 1;</code>
-     */
-    java.lang.String getBehavior();
-    /**
-     * <code>required string behavior = 1;</code>
-     */
-    com.google.protobuf.ByteString
-        getBehaviorBytes();
-
-    // required bytes gtScanRequest = 2;
-    /**
-     * <code>required bytes gtScanRequest = 2;</code>
+     * <code>required bytes gtScanRequest = 1;</code>
      */
     boolean hasGtScanRequest();
     /**
-     * <code>required bytes gtScanRequest = 2;</code>
+     * <code>required bytes gtScanRequest = 1;</code>
      */
     com.google.protobuf.ByteString getGtScanRequest();
 
-    // required bytes hbaseRawScan = 3;
+    // required bytes hbaseRawScan = 2;
     /**
-     * <code>required bytes hbaseRawScan = 3;</code>
+     * <code>required bytes hbaseRawScan = 2;</code>
      */
     boolean hasHbaseRawScan();
     /**
-     * <code>required bytes hbaseRawScan = 3;</code>
+     * <code>required bytes hbaseRawScan = 2;</code>
      */
     com.google.protobuf.ByteString getHbaseRawScan();
 
-    // required int32 rowkeyPreambleSize = 4;
+    // required int32 rowkeyPreambleSize = 3;
     /**
-     * <code>required int32 rowkeyPreambleSize = 4;</code>
+     * <code>required int32 rowkeyPreambleSize = 3;</code>
      */
     boolean hasRowkeyPreambleSize();
     /**
-     * <code>required int32 rowkeyPreambleSize = 4;</code>
+     * <code>required int32 rowkeyPreambleSize = 3;</code>
      */
     int getRowkeyPreambleSize();
 
-    // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;
+    // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> 
         getHbaseColumnsToGTList();
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList getHbaseColumnsToGT(int index);
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     int getHbaseColumnsToGTCount();
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     java.util.List<? extends org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> 
         getHbaseColumnsToGTOrBuilderList();
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder getHbaseColumnsToGTOrBuilder(
         int index);
 
-    // required int64 startTime = 6;
+    // required string kylinProperties = 5;
     /**
-     * <code>required int64 startTime = 6;</code>
-     *
-     * <pre>
-     *when client start the request
-     * </pre>
-     */
-    boolean hasStartTime();
-    /**
-     * <code>required int64 startTime = 6;</code>
-     *
-     * <pre>
-     *when client start the request
-     * </pre>
-     */
-    long getStartTime();
-
-    // required int64 timeout = 7;
-    /**
-     * <code>required int64 timeout = 7;</code>
-     *
-     * <pre>
-     *how long client will wait
-     * </pre>
-     */
-    boolean hasTimeout();
-    /**
-     * <code>required int64 timeout = 7;</code>
-     *
-     * <pre>
-     *how long client will wait
-     * </pre>
-     */
-    long getTimeout();
-
-    // required string kylinProperties = 8;
-    /**
-     * <code>required string kylinProperties = 8;</code>
+     * <code>required string kylinProperties = 5;</code>
      *
      * <pre>
      * kylin properties
@@ -127,7 +76,7 @@ public final class CubeVisitProtos {
      */
     boolean hasKylinProperties();
     /**
-     * <code>required string kylinProperties = 8;</code>
+     * <code>required string kylinProperties = 5;</code>
      *
      * <pre>
      * kylin properties
@@ -135,7 +84,7 @@ public final class CubeVisitProtos {
      */
     java.lang.String getKylinProperties();
     /**
-     * <code>required string kylinProperties = 8;</code>
+     * <code>required string kylinProperties = 5;</code>
      *
      * <pre>
      * kylin properties
@@ -197,44 +146,29 @@ public final class CubeVisitProtos {
             }
             case 10: {
               bitField0_ |= 0x00000001;
-              behavior_ = input.readBytes();
+              gtScanRequest_ = input.readBytes();
               break;
             }
             case 18: {
               bitField0_ |= 0x00000002;
-              gtScanRequest_ = input.readBytes();
-              break;
-            }
-            case 26: {
-              bitField0_ |= 0x00000004;
               hbaseRawScan_ = input.readBytes();
               break;
             }
-            case 32: {
-              bitField0_ |= 0x00000008;
+            case 24: {
+              bitField0_ |= 0x00000004;
               rowkeyPreambleSize_ = input.readInt32();
               break;
             }
-            case 42: {
-              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
                 hbaseColumnsToGT_ = new java.util.ArrayList<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList>();
-                mutable_bitField0_ |= 0x00000010;
+                mutable_bitField0_ |= 0x00000008;
               }
               hbaseColumnsToGT_.add(input.readMessage(org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.PARSER, extensionRegistry));
               break;
             }
-            case 48: {
-              bitField0_ |= 0x00000010;
-              startTime_ = input.readInt64();
-              break;
-            }
-            case 56: {
-              bitField0_ |= 0x00000020;
-              timeout_ = input.readInt64();
-              break;
-            }
-            case 66: {
-              bitField0_ |= 0x00000040;
+            case 42: {
+              bitField0_ |= 0x00000008;
               kylinProperties_ = input.readBytes();
               break;
             }
@@ -246,7 +180,7 @@ public final class CubeVisitProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
           hbaseColumnsToGT_ = java.util.Collections.unmodifiableList(hbaseColumnsToGT_);
         }
         this.unknownFields = unknownFields.build();
@@ -785,196 +719,105 @@ public final class CubeVisitProtos {
     }
 
     private int bitField0_;
-    // required string behavior = 1;
-    public static final int BEHAVIOR_FIELD_NUMBER = 1;
-    private java.lang.Object behavior_;
+    // required bytes gtScanRequest = 1;
+    public static final int GTSCANREQUEST_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString gtScanRequest_;
     /**
-     * <code>required string behavior = 1;</code>
+     * <code>required bytes gtScanRequest = 1;</code>
      */
-    public boolean hasBehavior() {
+    public boolean hasGtScanRequest() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required string behavior = 1;</code>
-     */
-    public java.lang.String getBehavior() {
-      java.lang.Object ref = behavior_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          behavior_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <code>required string behavior = 1;</code>
-     */
-    public com.google.protobuf.ByteString
-        getBehaviorBytes() {
-      java.lang.Object ref = behavior_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        behavior_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    // required bytes gtScanRequest = 2;
-    public static final int GTSCANREQUEST_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString gtScanRequest_;
-    /**
-     * <code>required bytes gtScanRequest = 2;</code>
-     */
-    public boolean hasGtScanRequest() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required bytes gtScanRequest = 2;</code>
+     * <code>required bytes gtScanRequest = 1;</code>
      */
     public com.google.protobuf.ByteString getGtScanRequest() {
       return gtScanRequest_;
     }
 
-    // required bytes hbaseRawScan = 3;
-    public static final int HBASERAWSCAN_FIELD_NUMBER = 3;
+    // required bytes hbaseRawScan = 2;
+    public static final int HBASERAWSCAN_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString hbaseRawScan_;
     /**
-     * <code>required bytes hbaseRawScan = 3;</code>
+     * <code>required bytes hbaseRawScan = 2;</code>
      */
     public boolean hasHbaseRawScan() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required bytes hbaseRawScan = 3;</code>
+     * <code>required bytes hbaseRawScan = 2;</code>
      */
     public com.google.protobuf.ByteString getHbaseRawScan() {
       return hbaseRawScan_;
     }
 
-    // required int32 rowkeyPreambleSize = 4;
-    public static final int ROWKEYPREAMBLESIZE_FIELD_NUMBER = 4;
+    // required int32 rowkeyPreambleSize = 3;
+    public static final int ROWKEYPREAMBLESIZE_FIELD_NUMBER = 3;
     private int rowkeyPreambleSize_;
     /**
-     * <code>required int32 rowkeyPreambleSize = 4;</code>
+     * <code>required int32 rowkeyPreambleSize = 3;</code>
      */
     public boolean hasRowkeyPreambleSize() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>required int32 rowkeyPreambleSize = 4;</code>
+     * <code>required int32 rowkeyPreambleSize = 3;</code>
      */
     public int getRowkeyPreambleSize() {
       return rowkeyPreambleSize_;
     }
 
-    // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;
-    public static final int HBASECOLUMNSTOGT_FIELD_NUMBER = 5;
+    // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;
+    public static final int HBASECOLUMNSTOGT_FIELD_NUMBER = 4;
     private java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> hbaseColumnsToGT_;
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     public java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> getHbaseColumnsToGTList() {
       return hbaseColumnsToGT_;
     }
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     public java.util.List<? extends org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> 
         getHbaseColumnsToGTOrBuilderList() {
       return hbaseColumnsToGT_;
     }
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     public int getHbaseColumnsToGTCount() {
       return hbaseColumnsToGT_.size();
     }
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList getHbaseColumnsToGT(int index) {
       return hbaseColumnsToGT_.get(index);
     }
     /**
-     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+     * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
      */
     public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder getHbaseColumnsToGTOrBuilder(
         int index) {
       return hbaseColumnsToGT_.get(index);
     }
 
-    // required int64 startTime = 6;
-    public static final int STARTTIME_FIELD_NUMBER = 6;
-    private long startTime_;
-    /**
-     * <code>required int64 startTime = 6;</code>
-     *
-     * <pre>
-     *when client start the request
-     * </pre>
-     */
-    public boolean hasStartTime() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
-    }
-    /**
-     * <code>required int64 startTime = 6;</code>
-     *
-     * <pre>
-     *when client start the request
-     * </pre>
-     */
-    public long getStartTime() {
-      return startTime_;
-    }
-
-    // required int64 timeout = 7;
-    public static final int TIMEOUT_FIELD_NUMBER = 7;
-    private long timeout_;
-    /**
-     * <code>required int64 timeout = 7;</code>
-     *
-     * <pre>
-     *how long client will wait
-     * </pre>
-     */
-    public boolean hasTimeout() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
-    }
-    /**
-     * <code>required int64 timeout = 7;</code>
-     *
-     * <pre>
-     *how long client will wait
-     * </pre>
-     */
-    public long getTimeout() {
-      return timeout_;
-    }
-
-    // required string kylinProperties = 8;
-    public static final int KYLINPROPERTIES_FIELD_NUMBER = 8;
+    // required string kylinProperties = 5;
+    public static final int KYLINPROPERTIES_FIELD_NUMBER = 5;
     private java.lang.Object kylinProperties_;
     /**
-     * <code>required string kylinProperties = 8;</code>
+     * <code>required string kylinProperties = 5;</code>
      *
      * <pre>
      * kylin properties
      * </pre>
      */
     public boolean hasKylinProperties() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required string kylinProperties = 8;</code>
+     * <code>required string kylinProperties = 5;</code>
      *
      * <pre>
      * kylin properties
@@ -995,7 +838,7 @@ public final class CubeVisitProtos {
       }
     }
     /**
-     * <code>required string kylinProperties = 8;</code>
+     * <code>required string kylinProperties = 5;</code>
      *
      * <pre>
      * kylin properties
@@ -1016,13 +859,10 @@ public final class CubeVisitProtos {
     }
 
     private void initFields() {
-      behavior_ = "";
       gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
       hbaseRawScan_ = com.google.protobuf.ByteString.EMPTY;
       rowkeyPreambleSize_ = 0;
       hbaseColumnsToGT_ = java.util.Collections.emptyList();
-      startTime_ = 0L;
-      timeout_ = 0L;
       kylinProperties_ = "";
     }
     private byte memoizedIsInitialized = -1;
@@ -1030,10 +870,6 @@ public final class CubeVisitProtos {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
 
-      if (!hasBehavior()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       if (!hasGtScanRequest()) {
         memoizedIsInitialized = 0;
         return false;
@@ -1043,14 +879,6 @@ public final class CubeVisitProtos {
         return false;
       }
       if (!hasRowkeyPreambleSize()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasStartTime()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasTimeout()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1066,28 +894,19 @@ public final class CubeVisitProtos {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, getBehaviorBytes());
+        output.writeBytes(1, gtScanRequest_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, gtScanRequest_);
+        output.writeBytes(2, hbaseRawScan_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, hbaseRawScan_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeInt32(4, rowkeyPreambleSize_);
+        output.writeInt32(3, rowkeyPreambleSize_);
       }
       for (int i = 0; i < hbaseColumnsToGT_.size(); i++) {
-        output.writeMessage(5, hbaseColumnsToGT_.get(i));
+        output.writeMessage(4, hbaseColumnsToGT_.get(i));
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeInt64(6, startTime_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeInt64(7, timeout_);
-      }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        output.writeBytes(8, getKylinPropertiesBytes());
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(5, getKylinPropertiesBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1100,35 +919,23 @@ public final class CubeVisitProtos {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getBehaviorBytes());
+          .computeBytesSize(1, gtScanRequest_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, gtScanRequest_);
+          .computeBytesSize(2, hbaseRawScan_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, hbaseRawScan_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, rowkeyPreambleSize_);
+          .computeInt32Size(3, rowkeyPreambleSize_);
       }
       for (int i = 0; i < hbaseColumnsToGT_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, hbaseColumnsToGT_.get(i));
+          .computeMessageSize(4, hbaseColumnsToGT_.get(i));
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(6, startTime_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(7, timeout_);
-      }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(8, getKylinPropertiesBytes());
+          .computeBytesSize(5, getKylinPropertiesBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1153,11 +960,6 @@ public final class CubeVisitProtos {
       org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest other = (org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest) obj;
 
       boolean result = true;
-      result = result && (hasBehavior() == other.hasBehavior());
-      if (hasBehavior()) {
-        result = result && getBehavior()
-            .equals(other.getBehavior());
-      }
       result = result && (hasGtScanRequest() == other.hasGtScanRequest());
       if (hasGtScanRequest()) {
         result = result && getGtScanRequest()
@@ -1175,16 +977,6 @@ public final class CubeVisitProtos {
       }
       result = result && getHbaseColumnsToGTList()
           .equals(other.getHbaseColumnsToGTList());
-      result = result && (hasStartTime() == other.hasStartTime());
-      if (hasStartTime()) {
-        result = result && (getStartTime()
-            == other.getStartTime());
-      }
-      result = result && (hasTimeout() == other.hasTimeout());
-      if (hasTimeout()) {
-        result = result && (getTimeout()
-            == other.getTimeout());
-      }
       result = result && (hasKylinProperties() == other.hasKylinProperties());
       if (hasKylinProperties()) {
         result = result && getKylinProperties()
@@ -1203,10 +995,6 @@ public final class CubeVisitProtos {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptorForType().hashCode();
-      if (hasBehavior()) {
-        hash = (37 * hash) + BEHAVIOR_FIELD_NUMBER;
-        hash = (53 * hash) + getBehavior().hashCode();
-      }
       if (hasGtScanRequest()) {
         hash = (37 * hash) + GTSCANREQUEST_FIELD_NUMBER;
         hash = (53 * hash) + getGtScanRequest().hashCode();
@@ -1222,14 +1010,6 @@ public final class CubeVisitProtos {
       if (getHbaseColumnsToGTCount() > 0) {
         hash = (37 * hash) + HBASECOLUMNSTOGT_FIELD_NUMBER;
         hash = (53 * hash) + getHbaseColumnsToGTList().hashCode();
-      }
-      if (hasStartTime()) {
-        hash = (37 * hash) + STARTTIME_FIELD_NUMBER;
-        hash = (53 * hash) + hashLong(getStartTime());
-      }
-      if (hasTimeout()) {
-        hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
-        hash = (53 * hash) + hashLong(getTimeout());
       }
       if (hasKylinProperties()) {
         hash = (37 * hash) + KYLINPROPERTIES_FIELD_NUMBER;
@@ -1345,26 +1125,20 @@ public final class CubeVisitProtos {
 
       public Builder clear() {
         super.clear();
-        behavior_ = "";
-        bitField0_ = (bitField0_ & ~0x00000001);
         gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
         hbaseRawScan_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         rowkeyPreambleSize_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         if (hbaseColumnsToGTBuilder_ == null) {
           hbaseColumnsToGT_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000010);
+          bitField0_ = (bitField0_ & ~0x00000008);
         } else {
           hbaseColumnsToGTBuilder_.clear();
         }
-        startTime_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000020);
-        timeout_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000040);
         kylinProperties_ = "";
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -1396,38 +1170,26 @@ public final class CubeVisitProtos {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.behavior_ = behavior_;
+        result.gtScanRequest_ = gtScanRequest_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.gtScanRequest_ = gtScanRequest_;
+        result.hbaseRawScan_ = hbaseRawScan_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.hbaseRawScan_ = hbaseRawScan_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
         result.rowkeyPreambleSize_ = rowkeyPreambleSize_;
         if (hbaseColumnsToGTBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          if (((bitField0_ & 0x00000008) == 0x00000008)) {
             hbaseColumnsToGT_ = java.util.Collections.unmodifiableList(hbaseColumnsToGT_);
-            bitField0_ = (bitField0_ & ~0x00000010);
+            bitField0_ = (bitField0_ & ~0x00000008);
           }
           result.hbaseColumnsToGT_ = hbaseColumnsToGT_;
         } else {
           result.hbaseColumnsToGT_ = hbaseColumnsToGTBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000010;
-        }
-        result.startTime_ = startTime_;
-        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
-          to_bitField0_ |= 0x00000020;
-        }
-        result.timeout_ = timeout_;
-        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
-          to_bitField0_ |= 0x00000040;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000008;
         }
         result.kylinProperties_ = kylinProperties_;
         result.bitField0_ = to_bitField0_;
@@ -1446,11 +1208,6 @@ public final class CubeVisitProtos {
 
       public Builder mergeFrom(org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest other) {
         if (other == org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.getDefaultInstance()) return this;
-        if (other.hasBehavior()) {
-          bitField0_ |= 0x00000001;
-          behavior_ = other.behavior_;
-          onChanged();
-        }
         if (other.hasGtScanRequest()) {
           setGtScanRequest(other.getGtScanRequest());
         }
@@ -1464,7 +1221,7 @@ public final class CubeVisitProtos {
           if (!other.hbaseColumnsToGT_.isEmpty()) {
             if (hbaseColumnsToGT_.isEmpty()) {
               hbaseColumnsToGT_ = other.hbaseColumnsToGT_;
-              bitField0_ = (bitField0_ & ~0x00000010);
+              bitField0_ = (bitField0_ & ~0x00000008);
             } else {
               ensureHbaseColumnsToGTIsMutable();
               hbaseColumnsToGT_.addAll(other.hbaseColumnsToGT_);
@@ -1477,7 +1234,7 @@ public final class CubeVisitProtos {
               hbaseColumnsToGTBuilder_.dispose();
               hbaseColumnsToGTBuilder_ = null;
               hbaseColumnsToGT_ = other.hbaseColumnsToGT_;
-              bitField0_ = (bitField0_ & ~0x00000010);
+              bitField0_ = (bitField0_ & ~0x00000008);
               hbaseColumnsToGTBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getHbaseColumnsToGTFieldBuilder() : null;
@@ -1486,14 +1243,8 @@ public final class CubeVisitProtos {
             }
           }
         }
-        if (other.hasStartTime()) {
-          setStartTime(other.getStartTime());
-        }
-        if (other.hasTimeout()) {
-          setTimeout(other.getTimeout());
-        }
         if (other.hasKylinProperties()) {
-          bitField0_ |= 0x00000080;
+          bitField0_ |= 0x00000010;
           kylinProperties_ = other.kylinProperties_;
           onChanged();
         }
@@ -1502,10 +1253,6 @@ public final class CubeVisitProtos {
       }
 
       public final boolean isInitialized() {
-        if (!hasBehavior()) {
-          
-          return false;
-        }
         if (!hasGtScanRequest()) {
           
           return false;
@@ -1515,14 +1262,6 @@ public final class CubeVisitProtos {
           return false;
         }
         if (!hasRowkeyPreambleSize()) {
-          
-          return false;
-        }
-        if (!hasStartTime()) {
-          
-          return false;
-        }
-        if (!hasTimeout()) {
           
           return false;
         }
@@ -1552,192 +1291,118 @@ public final class CubeVisitProtos {
       }
       private int bitField0_;
 
-      // required string behavior = 1;
-      private java.lang.Object behavior_ = "";
+      // required bytes gtScanRequest = 1;
+      private com.google.protobuf.ByteString gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required string behavior = 1;</code>
+       * <code>required bytes gtScanRequest = 1;</code>
        */
-      public boolean hasBehavior() {
+      public boolean hasGtScanRequest() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required string behavior = 1;</code>
-       */
-      public java.lang.String getBehavior() {
-        java.lang.Object ref = behavior_;
-        if (!(ref instanceof java.lang.String)) {
-          java.lang.String s = ((com.google.protobuf.ByteString) ref)
-              .toStringUtf8();
-          behavior_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>required string behavior = 1;</code>
-       */
-      public com.google.protobuf.ByteString
-          getBehaviorBytes() {
-        java.lang.Object ref = behavior_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          behavior_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>required string behavior = 1;</code>
-       */
-      public Builder setBehavior(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        behavior_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string behavior = 1;</code>
-       */
-      public Builder clearBehavior() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        behavior_ = getDefaultInstance().getBehavior();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required string behavior = 1;</code>
-       */
-      public Builder setBehaviorBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        behavior_ = value;
-        onChanged();
-        return this;
-      }
-
-      // required bytes gtScanRequest = 2;
-      private com.google.protobuf.ByteString gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes gtScanRequest = 2;</code>
-       */
-      public boolean hasGtScanRequest() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes gtScanRequest = 2;</code>
+       * <code>required bytes gtScanRequest = 1;</code>
        */
       public com.google.protobuf.ByteString getGtScanRequest() {
         return gtScanRequest_;
       }
       /**
-       * <code>required bytes gtScanRequest = 2;</code>
+       * <code>required bytes gtScanRequest = 1;</code>
        */
       public Builder setGtScanRequest(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000002;
+  bitField0_ |= 0x00000001;
         gtScanRequest_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes gtScanRequest = 2;</code>
+       * <code>required bytes gtScanRequest = 1;</code>
        */
       public Builder clearGtScanRequest() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
         gtScanRequest_ = getDefaultInstance().getGtScanRequest();
         onChanged();
         return this;
       }
 
-      // required bytes hbaseRawScan = 3;
+      // required bytes hbaseRawScan = 2;
       private com.google.protobuf.ByteString hbaseRawScan_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes hbaseRawScan = 3;</code>
+       * <code>required bytes hbaseRawScan = 2;</code>
        */
       public boolean hasHbaseRawScan() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required bytes hbaseRawScan = 3;</code>
+       * <code>required bytes hbaseRawScan = 2;</code>
        */
       public com.google.protobuf.ByteString getHbaseRawScan() {
         return hbaseRawScan_;
       }
       /**
-       * <code>required bytes hbaseRawScan = 3;</code>
+       * <code>required bytes hbaseRawScan = 2;</code>
        */
       public Builder setHbaseRawScan(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000004;
+  bitField0_ |= 0x00000002;
         hbaseRawScan_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes hbaseRawScan = 3;</code>
+       * <code>required bytes hbaseRawScan = 2;</code>
        */
       public Builder clearHbaseRawScan() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         hbaseRawScan_ = getDefaultInstance().getHbaseRawScan();
         onChanged();
         return this;
       }
 
-      // required int32 rowkeyPreambleSize = 4;
+      // required int32 rowkeyPreambleSize = 3;
       private int rowkeyPreambleSize_ ;
       /**
-       * <code>required int32 rowkeyPreambleSize = 4;</code>
+       * <code>required int32 rowkeyPreambleSize = 3;</code>
        */
       public boolean hasRowkeyPreambleSize() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>required int32 rowkeyPreambleSize = 4;</code>
+       * <code>required int32 rowkeyPreambleSize = 3;</code>
        */
       public int getRowkeyPreambleSize() {
         return rowkeyPreambleSize_;
       }
       /**
-       * <code>required int32 rowkeyPreambleSize = 4;</code>
+       * <code>required int32 rowkeyPreambleSize = 3;</code>
        */
       public Builder setRowkeyPreambleSize(int value) {
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000004;
         rowkeyPreambleSize_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required int32 rowkeyPreambleSize = 4;</code>
+       * <code>required int32 rowkeyPreambleSize = 3;</code>
        */
       public Builder clearRowkeyPreambleSize() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         rowkeyPreambleSize_ = 0;
         onChanged();
         return this;
       }
 
-      // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;
+      // repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;
       private java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> hbaseColumnsToGT_ =
         java.util.Collections.emptyList();
       private void ensureHbaseColumnsToGTIsMutable() {
-        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
           hbaseColumnsToGT_ = new java.util.ArrayList<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList>(hbaseColumnsToGT_);
-          bitField0_ |= 0x00000010;
+          bitField0_ |= 0x00000008;
          }
       }
 
@@ -1745,7 +1410,7 @@ public final class CubeVisitProtos {
           org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> hbaseColumnsToGTBuilder_;
 
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> getHbaseColumnsToGTList() {
         if (hbaseColumnsToGTBuilder_ == null) {
@@ -1755,7 +1420,7 @@ public final class CubeVisitProtos {
         }
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public int getHbaseColumnsToGTCount() {
         if (hbaseColumnsToGTBuilder_ == null) {
@@ -1765,7 +1430,7 @@ public final class CubeVisitProtos {
         }
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList getHbaseColumnsToGT(int index) {
         if (hbaseColumnsToGTBuilder_ == null) {
@@ -1775,7 +1440,7 @@ public final class CubeVisitProtos {
         }
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder setHbaseColumnsToGT(
           int index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList value) {
@@ -1792,7 +1457,7 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder setHbaseColumnsToGT(
           int index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder builderForValue) {
@@ -1806,7 +1471,7 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder addHbaseColumnsToGT(org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList value) {
         if (hbaseColumnsToGTBuilder_ == null) {
@@ -1822,7 +1487,7 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder addHbaseColumnsToGT(
           int index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList value) {
@@ -1839,7 +1504,7 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder addHbaseColumnsToGT(
           org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder builderForValue) {
@@ -1853,7 +1518,7 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder addHbaseColumnsToGT(
           int index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder builderForValue) {
@@ -1867,7 +1532,7 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder addAllHbaseColumnsToGT(
           java.lang.Iterable<? extends org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList> values) {
@@ -1881,12 +1546,12 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder clearHbaseColumnsToGT() {
         if (hbaseColumnsToGTBuilder_ == null) {
           hbaseColumnsToGT_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000010);
+          bitField0_ = (bitField0_ & ~0x00000008);
           onChanged();
         } else {
           hbaseColumnsToGTBuilder_.clear();
@@ -1894,7 +1559,7 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public Builder removeHbaseColumnsToGT(int index) {
         if (hbaseColumnsToGTBuilder_ == null) {
@@ -1907,14 +1572,14 @@ public final class CubeVisitProtos {
         return this;
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder getHbaseColumnsToGTBuilder(
           int index) {
         return getHbaseColumnsToGTFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder getHbaseColumnsToGTOrBuilder(
           int index) {
@@ -1924,7 +1589,7 @@ public final class CubeVisitProtos {
         }
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public java.util.List<? extends org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder> 
            getHbaseColumnsToGTOrBuilderList() {
@@ -1935,14 +1600,14 @@ public final class CubeVisitProtos {
         }
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder addHbaseColumnsToGTBuilder() {
         return getHbaseColumnsToGTFieldBuilder().addBuilder(
             org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.getDefaultInstance());
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder addHbaseColumnsToGTBuilder(
           int index) {
@@ -1950,7 +1615,7 @@ public final class CubeVisitProtos {
             index, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.getDefaultInstance());
       }
       /**
-       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 5;</code>
+       * <code>repeated .CubeVisitRequest.IntList hbaseColumnsToGT = 4;</code>
        */
       public java.util.List<org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder> 
            getHbaseColumnsToGTBuilderList() {
@@ -1963,7 +1628,7 @@ public final class CubeVisitProtos {
           hbaseColumnsToGTBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList.Builder, org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntListOrBuilder>(
                   hbaseColumnsToGT_,
-                  ((bitField0_ & 0x00000010) == 0x00000010),
+                  ((bitField0_ & 0x00000008) == 0x00000008),
                   getParentForChildren(),
                   isClean());
           hbaseColumnsToGT_ = null;
@@ -1971,118 +1636,20 @@ public final class CubeVisitProtos {
         return hbaseColumnsToGTBuilder_;
       }
 
-      // required int64 startTime = 6;
-      private long startTime_ ;
-      /**
-       * <code>required int64 startTime = 6;</code>
-       *
-       * <pre>
-       *when client start the request
-       * </pre>
-       */
-      public boolean hasStartTime() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
-      }
-      /**
-       * <code>required int64 startTime = 6;</code>
-       *
-       * <pre>
-       *when client start the request
-       * </pre>
-       */
-      public long getStartTime() {
-        return startTime_;
-      }
-      /**
-       * <code>required int64 startTime = 6;</code>
-       *
-       * <pre>
-       *when client start the request
-       * </pre>
-       */
-      public Builder setStartTime(long value) {
-        bitField0_ |= 0x00000020;
-        startTime_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required int64 startTime = 6;</code>
-       *
-       * <pre>
-       *when client start the request
-       * </pre>
-       */
-      public Builder clearStartTime() {
-        bitField0_ = (bitField0_ & ~0x00000020);
-        startTime_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      // required int64 timeout = 7;
-      private long timeout_ ;
-      /**
-       * <code>required int64 timeout = 7;</code>
-       *
-       * <pre>
-       *how long client will wait
-       * </pre>
-       */
-      public boolean hasTimeout() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
-      }
-      /**
-       * <code>required int64 timeout = 7;</code>
-       *
-       * <pre>
-       *how long client will wait
-       * </pre>
-       */
-      public long getTimeout() {
-        return timeout_;
-      }
-      /**
-       * <code>required int64 timeout = 7;</code>
-       *
-       * <pre>
-       *how long client will wait
-       * </pre>
-       */
-      public Builder setTimeout(long value) {
-        bitField0_ |= 0x00000040;
-        timeout_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required int64 timeout = 7;</code>
-       *
-       * <pre>
-       *how long client will wait
-       * </pre>
-       */
-      public Builder clearTimeout() {
-        bitField0_ = (bitField0_ & ~0x00000040);
-        timeout_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      // required string kylinProperties = 8;
+      // required string kylinProperties = 5;
       private java.lang.Object kylinProperties_ = "";
       /**
-       * <code>required string kylinProperties = 8;</code>
+       * <code>required string kylinProperties = 5;</code>
        *
        * <pre>
        * kylin properties
        * </pre>
        */
       public boolean hasKylinProperties() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>required string kylinProperties = 8;</code>
+       * <code>required string kylinProperties = 5;</code>
        *
        * <pre>
        * kylin properties
@@ -2100,7 +1667,7 @@ public final class CubeVisitProtos {
         }
       }
       /**
-       * <code>required string kylinProperties = 8;</code>
+       * <code>required string kylinProperties = 5;</code>
        *
        * <pre>
        * kylin properties
@@ -2120,7 +1687,7 @@ public final class CubeVisitProtos {
         }
       }
       /**
-       * <code>required string kylinProperties = 8;</code>
+       * <code>required string kylinProperties = 5;</code>
        *
        * <pre>
        * kylin properties
@@ -2131,26 +1698,26 @@ public final class CubeVisitProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000080;
+  bitField0_ |= 0x00000010;
         kylinProperties_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required string kylinProperties = 8;</code>
+       * <code>required string kylinProperties = 5;</code>
        *
        * <pre>
        * kylin properties
        * </pre>
        */
       public Builder clearKylinProperties() {
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000010);
         kylinProperties_ = getDefaultInstance().getKylinProperties();
         onChanged();
         return this;
       }
       /**
-       * <code>required string kylinProperties = 8;</code>
+       * <code>required string kylinProperties = 5;</code>
        *
        * <pre>
        * kylin properties
@@ -2161,7 +1728,7 @@ public final class CubeVisitProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000080;
+  bitField0_ |= 0x00000010;
         kylinProperties_ = value;
         onChanged();
         return this;
@@ -4521,26 +4088,25 @@ public final class CubeVisitProtos {
     java.lang.String[] descriptorData = {
       "\npstorage-hbase/src/main/java/org/apache" +
       "/kylin/storage/hbase/cube/v2/coprocessor" +
-      "/endpoint/protobuf/CubeVisit.proto\"\370\001\n\020C" +
-      "ubeVisitRequest\022\020\n\010behavior\030\001 \002(\t\022\025\n\rgtS" +
-      "canRequest\030\002 \002(\014\022\024\n\014hbaseRawScan\030\003 \002(\014\022\032" +
-      "\n\022rowkeyPreambleSize\030\004 \002(\005\0223\n\020hbaseColum" +
-      "nsToGT\030\005 \003(\0132\031.CubeVisitRequest.IntList\022" +
-      "\021\n\tstartTime\030\006 \002(\003\022\017\n\007timeout\030\007 \002(\003\022\027\n\017k" +
-      "ylinProperties\030\010 \002(\t\032\027\n\007IntList\022\014\n\004ints\030" +
-      "\001 \003(\005\"\321\002\n\021CubeVisitResponse\022\026\n\016compresse",
-      "dRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeVisitRe" +
-      "sponse.Stats\032\372\001\n\005Stats\022\030\n\020serviceStartTi" +
-      "me\030\001 \001(\003\022\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scan" +
-      "nedRowCount\030\003 \001(\003\022\032\n\022aggregatedRowCount\030" +
-      "\004 \001(\003\022\025\n\rsystemCpuLoad\030\005 \001(\001\022\036\n\026freePhys" +
-      "icalMemorySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSiz" +
-      "e\030\007 \001(\001\022\020\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(" +
-      "\t\022\026\n\016normalComplete\030\n \001(\0052F\n\020CubeVisitSe" +
-      "rvice\0222\n\tvisitCube\022\021.CubeVisitRequest\032\022." +
-      "CubeVisitResponseB`\nEorg.apache.kylin.st",
-      "orage.hbase.cube.v2.coprocessor.endpoint" +
-      ".generatedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
+      "/endpoint/protobuf/CubeVisit.proto\"\302\001\n\020C" +
+      "ubeVisitRequest\022\025\n\rgtScanRequest\030\001 \002(\014\022\024" +
+      "\n\014hbaseRawScan\030\002 \002(\014\022\032\n\022rowkeyPreambleSi" +
+      "ze\030\003 \002(\005\0223\n\020hbaseColumnsToGT\030\004 \003(\0132\031.Cub" +
+      "eVisitRequest.IntList\022\027\n\017kylinProperties" +
+      "\030\005 \002(\t\032\027\n\007IntList\022\014\n\004ints\030\001 \003(\005\"\321\002\n\021Cube" +
+      "VisitResponse\022\026\n\016compressedRows\030\001 \002(\014\022\'\n" +
+      "\005stats\030\002 \002(\0132\030.CubeVisitResponse.Stats\032\372",
+      "\001\n\005Stats\022\030\n\020serviceStartTime\030\001 \001(\003\022\026\n\016se" +
+      "rviceEndTime\030\002 \001(\003\022\027\n\017scannedRowCount\030\003 " +
+      "\001(\003\022\032\n\022aggregatedRowCount\030\004 \001(\003\022\025\n\rsyste" +
+      "mCpuLoad\030\005 \001(\001\022\036\n\026freePhysicalMemorySize" +
+      "\030\006 \001(\001\022\031\n\021freeSwapSpaceSize\030\007 \001(\001\022\020\n\010hos" +
+      "tname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016normalCom" +
+      "plete\030\n \001(\0052F\n\020CubeVisitService\0222\n\tvisit" +
+      "Cube\022\021.CubeVisitRequest\032\022.CubeVisitRespo" +
+      "nseB`\nEorg.apache.kylin.storage.hbase.cu" +
+      "be.v2.coprocessor.endpoint.generatedB\017Cu",
+      "beVisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4552,7 +4118,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitRequest_descriptor,
-              new java.lang.String[] { "Behavior", "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "StartTime", "Timeout", "KylinProperties", });
+              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "KylinProperties", });
           internal_static_CubeVisitRequest_IntList_descriptor =
             internal_static_CubeVisitRequest_descriptor.getNestedTypes().get(0);
           internal_static_CubeVisitRequest_IntList_fieldAccessorTable = new

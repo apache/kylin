@@ -21,6 +21,7 @@ package org.apache.kylin.gridtable;
 import java.util.BitSet;
 import java.util.List;
 
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.metadata.filter.TupleFilter;
 
@@ -36,6 +37,9 @@ public class GTScanRequestBuilder {
     private double aggCacheMemThreshold = 0;
     private int storageScanRowNumThreshold = Integer.MAX_VALUE;// storage should terminate itself when $storageScanRowNumThreshold cuboid rows are scanned, and throw exception.   
     private int storagePushDownLimit = Integer.MAX_VALUE;// storage can quit working when $toragePushDownLimit aggregated rows are produced. 
+    private long startTime = -1;
+    private long timeout = -1;
+    private String storageBehavior = null;
 
     public GTScanRequestBuilder setInfo(GTInfo info) {
         this.info = info;
@@ -92,6 +96,21 @@ public class GTScanRequestBuilder {
         return this;
     }
 
+    public GTScanRequestBuilder setStartTime(long startTime) {
+        this.startTime = startTime;
+        return this;
+    }
+
+    public GTScanRequestBuilder setTimeout(long timeout) {
+        this.timeout = timeout;
+        return this;
+    }
+
+    public GTScanRequestBuilder setStorageBehavior(String storageBehavior) {
+        this.storageBehavior = storageBehavior;
+        return this;
+    }
+
     public GTScanRequest createGTScanRequest() {
         if (aggrGroupBy == null) {
             aggrGroupBy = new ImmutableBitSet(new BitSet());
@@ -104,7 +123,14 @@ public class GTScanRequestBuilder {
         if (aggrMetricsFuncs == null) {
             aggrMetricsFuncs = new String[0];
         }
-        
-        return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, allowStorageAggregation, aggCacheMemThreshold, storageScanRowNumThreshold, storagePushDownLimit);
+
+        if (storageBehavior == null) {
+            storageBehavior = BackdoorToggles.getCoprocessorBehavior() == null ? StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString() : BackdoorToggles.getCoprocessorBehavior();
+        }
+
+        this.startTime = startTime == -1 ? System.currentTimeMillis() : startTime;
+        this.timeout = timeout == -1 ? 300000 : timeout;
+
+        return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, allowStorageAggregation, aggCacheMemThreshold, storageScanRowNumThreshold, storagePushDownLimit, storageBehavior, startTime, timeout);
     }
 }

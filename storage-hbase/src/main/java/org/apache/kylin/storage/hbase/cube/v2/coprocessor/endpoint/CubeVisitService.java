@@ -54,11 +54,11 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanTimeoutException;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
+import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.measure.BufferedMeasureEncoder;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
-import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorBehavior;
 import org.apache.kylin.storage.hbase.cube.v2.CellListIterator;
 import org.apache.kylin.storage.hbase.cube.v2.CubeHBaseRPC;
 import org.apache.kylin.storage.hbase.cube.v2.HBaseReadonlyStore;
@@ -198,10 +198,10 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             for (IntList intList : request.getHbaseColumnsToGTList()) {
                 hbaseColumnsToGT.add(intList.getIntsList());
             }
-            CoprocessorBehavior behavior = CoprocessorBehavior.valueOf(request.getBehavior());
+            StorageSideBehavior behavior = StorageSideBehavior.valueOf(scanReq.getStorageBehavior());
             final List<RawScan> hbaseRawScans = deserializeRawScans(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getHbaseRawScan())));
 
-            appendProfileInfo(sb, "start latency: " + (this.serviceStartTime - request.getStartTime()));
+            appendProfileInfo(sb, "start latency: " + (this.serviceStartTime - scanReq.getStartTime()));
 
             MassInTupleFilter.VALUE_PROVIDER_FACTORY = new MassInValueProviderFactoryImpl(new MassInValueProviderFactoryImpl.DimEncAware() {
                 @Override
@@ -228,7 +228,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             final Iterator<List<Cell>> allCellLists = Iterators.concat(cellListsForeachRawScan.iterator());
 
-            if (behavior.ordinal() < CoprocessorBehavior.SCAN.ordinal()) {
+            if (behavior.ordinal() < StorageSideBehavior.SCAN.ordinal()) {
                 //this is only for CoprocessorBehavior.RAW_SCAN case to profile hbase scan speed
                 List<Cell> temp = Lists.newArrayList();
                 int counter = 0;
@@ -240,12 +240,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 appendProfileInfo(sb, "scanned " + counter);
             }
 
-            if (behavior.ordinal() < CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
+            if (behavior.ordinal() < StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
                 scanReq.disableAggCacheMemCheck(); // disable mem check if so told
             }
 
             final MutableBoolean scanNormalComplete = new MutableBoolean(true);
-            final long deadline = request.getTimeout() + this.serviceStartTime;
+            final long deadline = scanReq.getTimeout() + this.serviceStartTime;
             final long storagePushDownLimit = scanReq.getStoragePushDownLimit();
 
             final CellListIterator cellListIterator = new CellListIterator() {
@@ -285,12 +285,12 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             };
 
             IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScans.get(0).hbaseColumns, hbaseColumnsToGT, //
-                    request.getRowkeyPreambleSize(), CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM_WITHDELAY.toString().equals(request.getBehavior()));
+                    request.getRowkeyPreambleSize(), StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM_WITHDELAY.toString().equals(scanReq.getStorageBehavior()));
 
             IGTScanner rawScanner = store.scan(scanReq);
             IGTScanner finalScanner = scanReq.decorateScanner(rawScanner, //
-                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER.ordinal(), //
-                    behavior.ordinal() >= CoprocessorBehavior.SCAN_FILTER_AGGR.ordinal(), deadline);
+                    behavior.ordinal() >= StorageSideBehavior.SCAN_FILTER.ordinal(), //
+                    behavior.ordinal() >= StorageSideBehavior.SCAN_FILTER_AGGR.ordinal(), deadline);
 
             ByteBuffer buffer = ByteBuffer.allocate(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE);
 
