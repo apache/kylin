@@ -1,5 +1,4 @@
 {
- 
   "uuid": "9ac9b7a8-3929-4dff-b59d-2100aadc8dbf",
   "name": "test_kylin_cube_without_slr_desc",
   "description": null,
@@ -160,54 +159,19 @@
         "returntype": "extendedcolumn(100)"
       },
       "dependent_measure_ref": null
-    }, {
-      "name" : "CAL_DT_RAW",
-      "function" : {
-        "expression" : "RAW",
-        "parameter" : {
-          "type" : "column",
-          "value" : "CAL_DT",
-          "next_parameter" : null
+    },
+    {
+      "name": "PRICE_RAW",
+      "function": {
+        "expression": "RAW",
+        "parameter": {
+          "type": "column",
+          "value": "PRICE",
+          "next_parameter": null
         },
-        "returntype" : "raw"
+        "returntype": "raw"
       },
-      "dependent_measure_ref" : null
-    }, {
-      "name" : "LSTG_FORMAT_NAME_RAW",
-      "function" : {
-        "expression" : "RAW",
-        "parameter" : {
-          "type" : "column",
-          "value" : "LSTG_FORMAT_NAME",
-          "next_parameter" : null
-        },
-        "returntype" : "raw"
-      },
-      "dependent_measure_ref" : null
-    }, {
-      "name" : "LEAF_CATEG_ID_RAW",
-      "function" : {
-        "expression" : "RAW",
-        "parameter" : {
-          "type" : "column",
-          "value" : "LEAF_CATEG_ID",
-          "next_parameter" : null
-        },
-        "returntype" : "raw"
-      },
-      "dependent_measure_ref" : null
-    }, {
-      "name" : "PRICE_RAW",
-      "function" : {
-        "expression" : "RAW",
-        "parameter" : {
-          "type" : "column",
-          "value" : "PRICE",
-          "next_parameter" : null
-        },
-        "returntype" : "raw"
-      },
-      "dependent_measure_ref" : null
+      "dependent_measure_ref": null
     }
   ],
   "rowkey": {
