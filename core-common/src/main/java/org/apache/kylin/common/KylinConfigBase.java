@@ -805,7 +805,7 @@ abstract public class KylinConfigBase implements Serializable {
         setProperty("kylin.dict.append.cache.size", String.valueOf(cacheSize));
     }
 
-    public boolean getTableJoinTypeCheck() {
-        return Boolean.valueOf(this.getOptional("kylin.table.join.strong.check", "true"));
+    public String getCreateFlatHiveTableMethod() {
+        return getOptional("kylin.hive.create.flat.table.method", "1");
     }
 }
