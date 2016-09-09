@@ -234,9 +234,6 @@
               "item_count_sum",
               "SITE_EXTENDED_1",
               "SITE_EXTENDED_2",
-              "CAL_DT_RAW",
-              "LSTG_FORMAT_NAME_RAW",
-              "LEAF_CATEG_ID_RAW",
               "PRICE_RAW"
             ]
           }

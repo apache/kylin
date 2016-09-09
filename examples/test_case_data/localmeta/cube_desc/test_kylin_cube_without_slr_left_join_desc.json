@@ -266,9 +266,6 @@
               "gmv_max",
               "trans_cnt",
               "item_count_sum",
-              "CAL_DT_RAW",
-              "LSTG_FORMAT_NAME_RAW",
-              "LEAF_CATEG_ID_RAW",
               "PRICE_RAW"
             ]
           }
