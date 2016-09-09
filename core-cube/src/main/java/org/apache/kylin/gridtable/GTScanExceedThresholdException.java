@@ -18,7 +18,7 @@
 
 package org.apache.kylin.gridtable;
 
-public class GTScanExceedThresholdException extends RuntimeException {
+public class GTScanExceedThresholdException extends GTScanSelfTerminatedException {
 
     public GTScanExceedThresholdException(String message) {
         super(message);

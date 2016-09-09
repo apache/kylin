@@ -170,7 +170,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
     @SuppressWarnings("checkstyle:methodlength")
     @Override
-    public void visitCube(final RpcController controller, CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
+    public void visitCube(final RpcController controller, final CubeVisitProtos.CubeVisitRequest request, RpcCallback<CubeVisitProtos.CubeVisitResponse> done) {
         List<RegionScanner> regionScanners = Lists.newArrayList();
         HRegion region = null;
 
@@ -241,7 +241,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             }
 
             if (behavior.ordinal() < CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM.ordinal()) {
-                scanReq.setAggCacheMemThreshold(0); // disable mem check if so told
+                scanReq.disableAggCacheMemCheck(); // disable mem check if so told
             }
 
             final MutableBoolean scanNormalComplete = new MutableBoolean(true);
@@ -266,7 +266,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                         throw new GTScanExceedThresholdException("Exceed scan threshold at " + counter);
                     }
 
-                    if (counter % 100000 == 1) {
+                    if (counter % (10 * GTScanRequest.terminateCheckInterval) == 1) {
                         logger.info("Scanned " + counter + " rows from HBase.");
                     }
                     counter++;
@@ -284,7 +284,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 }
             };
 
-            IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScans.get(0).hbaseColumns, hbaseColumnsToGT, request.getRowkeyPreambleSize());
+            IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScans.get(0).hbaseColumns, hbaseColumnsToGT, //
+                    request.getRowkeyPreambleSize(), CoprocessorBehavior.SCAN_FILTER_AGGR_CHECKMEM_WITHDELAY.toString().equals(request.getBehavior()));
 
             IGTScanner rawScanner = store.scan(scanReq);
             IGTScanner finalScanner = scanReq.decorateScanner(rawScanner, //
@@ -299,14 +300,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             try {
                 for (GTRecord oneRecord : finalScanner) {
 
-                    if (finalRowCount > storagePushDownLimit) {
-                        logger.info("The finalScanner aborted because storagePushDownLimit is satisfied");
-                        break;
-                    }
-
-                    if (finalRowCount % 100000 == 1) {
+                    if (finalRowCount % GTScanRequest.terminateCheckInterval == 1) {
                         if (System.currentTimeMillis() > deadline) {
-                            throw new GTScanTimeoutException("finalScanner timeouts after scanned " + finalRowCount);
+                            throw new GTScanTimeoutException("finalScanner timeouts after contributed " + finalRowCount);
                         }
                     }
 
@@ -319,7 +315,15 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                     }
 
                     outputStream.write(buffer.array(), 0, buffer.position());
+
                     finalRowCount++;
+
+                    //if it's doing storage aggr, then should rely on GTAggregateScanner's limit check
+                    if (!scanReq.isDoingStorageAggregation() && finalRowCount >= storagePushDownLimit) {
+                        //read one more record than limit
+                        logger.info("The finalScanner aborted because storagePushDownLimit is satisfied");
+                        break;
+                    }
                 }
             } catch (GTScanTimeoutException e) {
                 scanNormalComplete.setValue(false);

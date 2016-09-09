@@ -44,13 +44,14 @@ public class RawQueryLastHacker {
         // We need to retrieve cube to manually add columns into sqlDigest, so that we have full-columns results as output.
         boolean isSelectAll = sqlDigest.allColumns.isEmpty() || sqlDigest.allColumns.equals(sqlDigest.filterColumns);
         for (TblColRef col : cubeDesc.listAllColumns()) {
-            if (col.getTable().equals(sqlDigest.factTable) && (cubeDesc.listDimensionColumnsIncludingDerived().contains(col) || isSelectAll)) {
-                sqlDigest.allColumns.add(col);
+            if (cubeDesc.listDimensionColumnsIncludingDerived().contains(col) || isSelectAll) {
+                if (col.getTable().equals(sqlDigest.factTable))
+                    sqlDigest.allColumns.add(col);
             }
         }
 
         for (TblColRef col : sqlDigest.allColumns) {
-            if (cubeDesc.listDimensionColumnsIncludingDerived().contains(col)) {
+            if (cubeDesc.listDimensionColumnsExcludingDerived(true).contains(col)) {
                 // For dimension columns, take them as group by columns.
                 sqlDigest.groupbyColumns.add(col);
             } else {

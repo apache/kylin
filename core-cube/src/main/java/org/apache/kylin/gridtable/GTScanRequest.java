@@ -42,6 +42,8 @@ import com.google.common.collect.Sets;
 public class GTScanRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(GTScanRequest.class);
+    //it's not necessary to increase the checkInterval to very large because the check cost is not high
+    public static final int terminateCheckInterval = 1000;
 
     private GTInfo info;
     private List<GTScanRange> ranges;
@@ -55,12 +57,15 @@ public class GTScanRequest {
     private ImmutableBitSet aggrGroupBy;
     private ImmutableBitSet aggrMetrics;
     private String[] aggrMetricsFuncs;//
-    
+
     // hint to storage behavior
     private boolean allowStorageAggregation;
     private double aggCacheMemThreshold;
     private int storageScanRowNumThreshold;
     private int storagePushDownLimit;
+
+    // runtime computed fields
+    private transient boolean doingStorageAggregation = false;
 
     GTScanRequest(GTInfo info, List<GTScanRange> ranges, ImmutableBitSet dimensions, ImmutableBitSet aggrGroupBy, //
             ImmutableBitSet aggrMetrics, String[] aggrMetricsFuncs, TupleFilter filterPushDown, boolean allowStorageAggregation, //
@@ -169,6 +174,7 @@ public class GTScanRequest {
                 logger.info("pre aggregation is not beneficial, skip it");
             } else if (this.hasAggregation()) {
                 logger.info("pre aggregating results before returning");
+                this.doingStorageAggregation = true;
                 result = new GTAggregateScanner(result, this, deadline);
             } else {
                 logger.info("has no aggregation, skip it");
@@ -176,6 +182,10 @@ public class GTScanRequest {
             return result;
         }
 
+    }
+
+    public boolean isDoingStorageAggregation() {
+        return doingStorageAggregation;
     }
 
     //touch every byte of the cell so that the cost of scanning will be truly reflected
@@ -215,8 +225,8 @@ public class GTScanRequest {
         return ranges;
     }
 
-    public void setGTScanRanges(List<GTScanRange> ranges) {
-        this.ranges = ranges;
+    public void clearScanRanges() {
+        this.ranges = Lists.newArrayList();
     }
 
     public ImmutableBitSet getSelectedColBlocks() {
@@ -251,10 +261,6 @@ public class GTScanRequest {
         return allowStorageAggregation;
     }
 
-    public void setAllowStorageAggregation(boolean allowStorageAggregation) {
-        this.allowStorageAggregation = allowStorageAggregation;
-    }
-
     public double getAggCacheMemThreshold() {
         if (aggCacheMemThreshold < 0)
             return 0;
@@ -262,26 +268,16 @@ public class GTScanRequest {
             return aggCacheMemThreshold;
     }
 
-    public void setAggCacheMemThreshold(double gb) {
-        this.aggCacheMemThreshold = gb;
+    public void disableAggCacheMemCheck() {
+        this.aggCacheMemThreshold = 0;
     }
 
     public int getStorageScanRowNumThreshold() {
         return storageScanRowNumThreshold;
     }
 
-    public void setStorageScanRowNumThreshold(int storageScanRowNumThreshold) {
-        logger.info("storageScanRowNumThreshold is set to " + storageScanRowNumThreshold);
-        this.storageScanRowNumThreshold = storageScanRowNumThreshold;
-    }
-
     public int getStoragePushDownLimit() {
         return this.storagePushDownLimit;
-    }
-
-    public void setStoragePushDownLimit(int limit) {
-        logger.info("storagePushDownLimit is set to " + storagePushDownLimit);
-        this.storagePushDownLimit = limit;
     }
 
     @Override

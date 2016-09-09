@@ -481,8 +481,8 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
 
-    public int getCubeVisitTimeoutTimes() {
-        return Integer.parseInt(getOptional("kylin.query.cube.visit.timeout.times", "1"));
+    public float getCubeVisitTimeoutTimes() {
+        return Float.parseFloat(getOptional("kylin.query.cube.visit.timeout.times", "1"));
     }
 
     public int getBadQueryStackTraceDepth() {
@@ -545,15 +545,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.query.ignore_unknown_function", "false"));
     }
 
-    public String getQueryStorageVisitPlanner() {
-        return this.getOptional("kylin.query.storage.visit.planner", "org.apache.kylin.cube.gridtable.CubeScanRangePlanner");
-    }
-
-    // for test only
-    public void setQueryStorageVisitPlanner(String v) {
-        setProperty("kylin.query.storage.visit.planner", v);
-    }
-
     public int getQueryScanFuzzyKeyMax() {
         return Integer.parseInt(this.getOptional("kylin.query.scan.fuzzykey.max", "200"));
     }
@@ -573,7 +564,7 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean getQueryMetricsEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.metrics.enabled", "false"));
     }
-    
+
     public int[] getQueryMetricsPercentilesIntervals() {
         String[] dft = { "60", "300", "3600" };
         return getOptionalIntArray("kylin.query.metrics.percentiles.intervals", dft);

@@ -23,10 +23,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.gridtable.CubeScanRangePlanner;
 import org.apache.kylin.dict.BuiltInFunctionTransformer;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
@@ -67,23 +65,13 @@ public class CubeSegmentScanner implements IGTScanner {
         ITupleFilterTransformer translator = new BuiltInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
         filter = translator.transform(filter);
 
-        String plannerName = KylinConfig.getInstanceFromEnv().getQueryStorageVisitPlanner();
         CubeScanRangePlanner scanRangePlanner;
         try {
-            scanRangePlanner = (CubeScanRangePlanner) Class.forName(plannerName).getConstructor(CubeSegment.class, Cuboid.class, TupleFilter.class, Set.class, Set.class, Collection.class).newInstance(cubeSeg, cuboid, filter, dimensions, groups, metrics);
+            scanRangePlanner = new CubeScanRangePlanner(cubeSeg, cuboid, filter, dimensions, groups, metrics, context);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         scanRequest = scanRangePlanner.planScanRequest();
-        if (scanRequest != null) {
-            scanRequest.setAllowStorageAggregation(context.isNeedStorageAggregation());
-            scanRequest.setAggCacheMemThreshold(cubeSeg.getCubeInstance().getConfig().getQueryCoprocessorMemGB());
-            scanRequest.setStorageScanRowNumThreshold(context.getThreshold());//TODO: devide by shard number?
-
-            if (cubeSeg.getCubeDesc().supportsLimitPushDown()) {
-                scanRequest.setStoragePushDownLimit(context.getStoragePushDownLimit());
-            }
-        }
         scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest, gtStorage);
     }
 

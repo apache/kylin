@@ -138,7 +138,10 @@ public class GTAggregateScanner implements IGTScanner {
         long count = 0;
         for (GTRecord r : inputScanner) {
 
-            count++;
+            //check deadline
+            if (count % GTScanRequest.terminateCheckInterval == 1 && System.currentTimeMillis() > deadline) {
+                throw new GTScanTimeoutException("Timeout in GTAggregateScanner with scanned count " + count);
+            }
 
             if (getNumOfSpills() == 0) {
                 //check limit
@@ -152,10 +155,7 @@ public class GTAggregateScanner implements IGTScanner {
                 aggrCache.aggregate(r, Integer.MAX_VALUE);
             }
 
-            //check deadline
-            if (count % 10000 == 1 && System.currentTimeMillis() > deadline) {
-                throw new GTScanTimeoutException("Timeout in GTAggregateScanner with scanned count " + count);
-            }
+            count++;
         }
         logger.info("GTAggregateScanner input rows: " + count);
         return aggrCache.iterator();
