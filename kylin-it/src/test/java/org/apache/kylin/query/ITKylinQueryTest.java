@@ -121,6 +121,11 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testTimeoutQuery() throws Exception {
+        if (HBaseStorage.overwriteStorageQuery != null) {
+            //v1 engine does not suit
+            return;
+        }
+
         thrown.expect(SQLException.class);
 
         //should not break at table duplicate check, should fail at model duplicate check
