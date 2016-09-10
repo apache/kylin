@@ -86,9 +86,9 @@ then
       hcatalog_home=${hadoop_home}/hive/hcatalog
     elif [ -d "${hive_home}/hcatalog" ]; then
       hcatalog_home=${hive_home}/hcatalog
-    elif [ -n is_aws ] && [ -d "/usr/lib/oozie/lib" ]; then
-      # special handling for Amazon EMR, where hcat libs are under oozie!?
-      hcatalog_home=/usr/lib/oozie/lib
+    elif [ -n is_aws ] && [ -d "/usr/lib/hive-hcatalog" ]; then
+      # special handling for Amazon EMR
+      hcatalog_home=/usr/lib/hive-hcatalog
     else 
       echo "Couldn't locate hcatalog installation, please make sure it is installed and set HCAT_HOME to the path."
       exit 1
