@@ -281,23 +281,6 @@ public class HiveMRInput implements IMRInput {
             }
         }
 
-        private int determineNumReducer(KylinConfig config) throws IOException {
-            computeRowCount(config.getCliCommandExecutor());
-
-            Path rowCountFile = new Path(getRowCountOutputDir(), "000000_0");
-            long rowCount = readRowCountFromFile(rowCountFile);
-            int mapperInputRows = config.getHadoopJobMapperInputRows();
-
-            int numReducers = Math.round(rowCount / ((float) mapperInputRows));
-            numReducers = Math.max(1, numReducers);
-
-            stepLogger.log("total input rows = " + rowCount);
-            stepLogger.log("expected input rows per mapper = " + mapperInputRows);
-            stepLogger.log("num reducers for RedistributeFlatHiveTableStep = " + numReducers);
-
-            return numReducers;
-        }
-
         private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
             hiveCmdBuilder.addStatement(getInitStatement());
@@ -327,7 +310,25 @@ public class HiveMRInput implements IMRInput {
             KylinConfig config = getCubeSpecificConfig();
 
             try {
-                int numReducers = determineNumReducer(config);
+
+                computeRowCount(config.getCliCommandExecutor());
+
+                Path rowCountFile = new Path(getRowCountOutputDir(), "000000_0");
+                long rowCount = readRowCountFromFile(rowCountFile);
+                if (!config.isEmptySegmentAllowed() && rowCount == 0) {
+                    stepLogger.log("Detect upstream hive table is empty, " + "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
+                    return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
+                }
+
+                int mapperInputRows = config.getHadoopJobMapperInputRows();
+
+                int numReducers = Math.round(rowCount / ((float) mapperInputRows));
+                numReducers = Math.max(1, numReducers);
+
+                stepLogger.log("total input rows = " + rowCount);
+                stepLogger.log("expected input rows per mapper = " + mapperInputRows);
+                stepLogger.log("num reducers for RedistributeFlatHiveTableStep = " + numReducers);
+
                 redistributeTable(config, numReducers);
                 return new ExecuteResult(ExecuteResult.State.SUCCEED, stepLogger.getBufferedLog());
 
