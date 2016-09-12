@@ -449,7 +449,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getDictionaryMaxCardinality() {
-        return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "5000000"));
+        return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "30000000"));
     }
 
     public int getTableSnapshotMaxMB() {

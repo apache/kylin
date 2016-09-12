@@ -50,7 +50,7 @@ public class DictionaryGenerator {
         try {
             return KylinConfig.getInstanceFromEnv().getDictionaryMaxCardinality();
         } catch (Throwable e) {
-            return 5000000; // some test case does not have KylinConfig setup properly
+            return 30000000; // some test case does not have KylinConfig setup properly
         }
     }
 

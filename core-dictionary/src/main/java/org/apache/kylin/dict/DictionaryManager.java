@@ -321,6 +321,8 @@ public class DictionaryManager {
                 dictionary = DictionaryGenerator.buildDictionary(DataType.getType(dictInfo.getDataType()), columnValueEnumerator);
             else
                 dictionary = DictionaryGenerator.buildDictionary((IDictionaryBuilder) ClassUtil.newInstance(builderClass), dictInfo, columnValueEnumerator);
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to create dictionary on " + col, ex);
         } finally {
             if (columnValueEnumerator != null)
                 columnValueEnumerator.close();
