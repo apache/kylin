@@ -257,6 +257,11 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     }
 
     @Override
+    public boolean supportsLimitPushDown() {
+        return false;
+    }
+
+    @Override
     public List<TblColRef> getAllDimensions() {
         init();
         return allDimensions;

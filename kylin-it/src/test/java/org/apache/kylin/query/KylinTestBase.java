@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -38,12 +39,20 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.LogManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.query.enumerator.OLAPQuery;
+import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
+import org.apache.kylin.query.schema.OLAPSchemaFactory;
+import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.dbunit.Assertion;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
@@ -568,4 +577,51 @@ public class KylinTestBase {
         printInfo(sb.toString());
         return count;
     }
+
+    protected static void setupAll() throws Exception {
+        //setup env
+        HBaseMetadataTestCase.staticCreateTestMetadata();
+        config = KylinConfig.getInstanceFromEnv();
+
+        //setup cube conn
+        File olapTmp = OLAPSchemaFactory.createTempOLAPJson(ProjectInstance.DEFAULT_PROJECT_NAME, config);
+        Properties props = new Properties();
+        props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "10001");
+        cubeConnection = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath(), props);
+
+        //setup h2
+        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++), "sa", "");
+        // Load H2 Tables (inner join)
+        H2Database h2DB = new H2Database(h2Connection, config);
+        h2DB.loadAllTables();
+
+    }
+
+    protected static void clean() {
+        if (cubeConnection != null)
+            closeConnection(cubeConnection);
+        if (h2Connection != null)
+            closeConnection(h2Connection);
+
+        ObserverEnabler.forceCoprocessorUnset();
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
+        RemoveBlackoutRealizationsRule.blackList.clear();
+
+    }
+
+    protected boolean checkLimitEnabled() {
+        OLAPContext context = getFirstOLAPContext();
+        return (context.storageContext.isLimitEnabled());
+    }
+
+    protected boolean checkFinalPushDownLimit() {
+        OLAPContext context = getFirstOLAPContext();
+        return (context.storageContext.getFinalPushDownLimit() != Integer.MAX_VALUE);
+
+    }
+
+    private OLAPContext getFirstOLAPContext() {
+        return OLAPContext.getThreadLocalContexts().iterator().next();
+    }
+
 }

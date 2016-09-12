@@ -21,31 +21,22 @@ package org.apache.kylin.query;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
-import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
+import org.apache.kylin.gridtable.GTScanTimeoutException;
 import org.apache.kylin.gridtable.StorageSideBehavior;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.query.enumerator.OLAPQuery;
-import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
-import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.kylin.storage.hbase.HBaseStorage;
-import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -73,8 +64,8 @@ public class ITKylinQueryTest extends KylinTestBase {
 
         setupAll();
 
-        RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
-        RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
+        RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
+        RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
     }
 
     @AfterClass
@@ -84,39 +75,19 @@ public class ITKylinQueryTest extends KylinTestBase {
         clean();
     }
 
-    protected static void setupAll() throws Exception {
-        //setup env
-        HBaseMetadataTestCase.staticCreateTestMetadata();
-        config = KylinConfig.getInstanceFromEnv();
-
-        //setup cube conn
-        File olapTmp = OLAPSchemaFactory.createTempOLAPJson(ProjectInstance.DEFAULT_PROJECT_NAME, config);
-        Properties props = new Properties();
-        props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "10001");
-        cubeConnection = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath(), props);
-
-        //setup h2
-        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++), "sa", "");
-        // Load H2 Tables (inner join)
-        H2Database h2DB = new H2Database(h2Connection, config);
-        h2DB.loadAllTables();
-
-    }
-
-    protected static void clean() {
-        if (cubeConnection != null)
-            closeConnection(cubeConnection);
-        if (h2Connection != null)
-            closeConnection(h2Connection);
-
-        ObserverEnabler.forceCoprocessorUnset();
-        HBaseMetadataTestCase.staticCleanupTestMetadata();
-        RemoveBlackoutRealizationsRule.blackouts.clear();
-
-    }
-
     protected String getQueryFolderPrefix() {
         return "";
+    }
+
+    protected Throwable findRoot(Throwable throwable) {
+        while (true) {
+            if (throwable.getCause() != null) {
+                throwable = throwable.getCause();
+            } else {
+                break;
+            }
+        }
+        return throwable;
     }
 
     @Test
@@ -125,61 +96,45 @@ public class ITKylinQueryTest extends KylinTestBase {
             //v1 engine does not suit
             return;
         }
-
-        thrown.expect(SQLException.class);
-
-        //should not break at table duplicate check, should fail at model duplicate check
-        thrown.expect(new BaseMatcher<Throwable>() {
-            @Override
-            public boolean matches(Object item) {
-
-                //find the "root"
-                Throwable throwable = (Throwable) item;
-                while (true) {
-                    if (throwable.getCause() != null) {
-                        throwable = throwable.getCause();
-                    } else {
-                        break;
-                    }
-                }
-
-                if (throwable instanceof GTScanSelfTerminatedException) {
-                    return true;
-                }
-                return false;
-            }
-
-            @Override
-            public void describeTo(Description description) {
-            }
-        });
-
-        runTimetoutQueries();
-
-    }
-
-    protected void runTimetoutQueries() throws Exception {
         try {
 
             Map<String, String> toggles = Maps.newHashMap();
             toggles.put(BackdoorToggles.DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR, StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM_WITHDELAY.toString());//delay 10ms for every scan
             BackdoorToggles.setToggles(toggles);
 
-            KylinConfig.getInstanceFromEnv().setProperty("kylin.query.cube.visit.timeout.times", "0.03");//set timeout to 9s
+            KylinConfig.getInstanceFromEnv().setProperty("kylin.query.cube.visit.timeout.times", "0.01");//set timeout to 3s
 
             //these two cubes has RAW measure, will disturb limit push down
-            RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_without_slr_left_join_empty]");
-            RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_without_slr_inner_join_empty]");
+            RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_without_slr_left_join_empty]");
+            RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_without_slr_inner_join_empty]");
 
-            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_timeout", null, true);
+            runTimeoutQueries();
         } finally {
 
             //these two cubes has RAW measure, will disturb limit push down
-            RemoveBlackoutRealizationsRule.blackouts.remove("CUBE[name=test_kylin_cube_without_slr_left_join_empty]");
-            RemoveBlackoutRealizationsRule.blackouts.remove("CUBE[name=test_kylin_cube_without_slr_inner_join_empty]");
+            RemoveBlackoutRealizationsRule.blackList.remove("CUBE[name=test_kylin_cube_without_slr_left_join_empty]");
+            RemoveBlackoutRealizationsRule.blackList.remove("CUBE[name=test_kylin_cube_without_slr_inner_join_empty]");
 
             KylinConfig.getInstanceFromEnv().setProperty("kylin.query.cube.visit.timeout.times", "1");//set timeout to 9s 
             BackdoorToggles.cleanToggles();
+        }
+    }
+
+    protected void runTimeoutQueries() throws Exception {
+        List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_timeout"), ".sql");
+        for (File sqlFile : sqlFiles) {
+            try {
+                runSQL(sqlFile, false, false);
+            } catch (SQLException e) {
+
+                System.out.println(e.getMessage());
+
+                if (findRoot(e) instanceof GTScanSelfTerminatedException) {
+                    //expected
+                    continue;
+                }
+            }
+            throw new RuntimeException("Expecting GTScanTimeoutException");
         }
     }
 
@@ -346,11 +301,25 @@ public class ITKylinQueryTest extends KylinTestBase {
         execAndCompDynamicQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_dynamic", null, true);
     }
 
-    @Ignore("simple query will be supported by ii")
     @Test
     public void testLimitEnabled() throws Exception {
-        runSqlFile(getQueryFolderPrefix() + "src/test/resources/query/sql_optimize/enable-limit01.sql");
-        assertLimitWasEnabled();
+        if (HBaseStorage.overwriteStorageQuery == null) {//v1 query engine will not work
+
+            try {
+                //other cubes have strange aggregation groups
+                RemoveBlackoutRealizationsRule.whiteList.add("CUBE[name=test_kylin_cube_with_slr_empty]");
+
+                List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_limit"), ".sql");
+                for (File sqlFile : sqlFiles) {
+                    runSQL(sqlFile, false, false);
+                    assertTrue(checkLimitEnabled());
+                    assertTrue(checkFinalPushDownLimit());
+                }
+
+            } finally {
+                RemoveBlackoutRealizationsRule.whiteList.remove("CUBE[name=test_kylin_cube_with_slr_empty]");
+            }
+        }
     }
 
     @Test
@@ -375,15 +344,6 @@ public class ITKylinQueryTest extends KylinTestBase {
     public void testWindowQuery() throws Exception {
         // cannot compare coz H2 does not support window function yet..
         this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_window");
-    }
-
-    private void assertLimitWasEnabled() {
-        OLAPContext context = getFirstOLAPContext();
-        assertTrue(context.storageContext.isLimitEnabled());
-    }
-
-    private OLAPContext getFirstOLAPContext() {
-        return OLAPContext.getThreadLocalContexts().iterator().next();
     }
 
 }

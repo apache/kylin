@@ -16,4 +16,8 @@
 -- limitations under the License.
 --
 
-select * from test_kylin_fact limit 10
+
+
+select seller_id, sum(price) from test_kylin_fact
+  where lstg_format_name='FP-GTC' 
+  group by seller_id limit 20

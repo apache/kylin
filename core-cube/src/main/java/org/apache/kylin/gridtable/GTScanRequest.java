@@ -42,8 +42,10 @@ import com.google.common.collect.Sets;
 public class GTScanRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(GTScanRequest.class);
+    
     //it's not necessary to increase the checkInterval to very large because the check cost is not high
-    public static final int terminateCheckInterval = 1000;
+    //changing it might break org.apache.kylin.query.ITKylinQueryTest.testTimeoutQuery()
+    public static final int terminateCheckInterval = 100;
 
     private GTInfo info;
     private List<GTScanRange> ranges;

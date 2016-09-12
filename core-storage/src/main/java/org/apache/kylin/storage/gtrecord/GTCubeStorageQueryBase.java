@@ -113,9 +113,13 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         // replace derived columns in filter with host columns; columns on loosened condition must be added to group by
         TupleFilter filterD = translateDerived(filter, groupsD);
 
+        //set whether to aggr at storage
         context.setNeedStorageAggregation(isNeedStorageAggregation(cuboid, groupsD, singleValuesD));
+        // set limit push down
         enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filter, sqlDigest.aggregations, context);
-        setThresholdIfNecessary(dimensionsD, metrics, context); // set cautious threshold to prevent out of memory
+        context.setFinalPushDownLimit(cubeInstance);
+        // set cautious threshold to prevent out of memory
+        setThresholdIfNecessary(dimensionsD, metrics, context);
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
@@ -135,7 +139,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         if (scanners.isEmpty())
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
 
-        return new SequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo, context, cubeDesc.supportsLimitPushDown());
+        return new SequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo, context);
     }
 
     protected boolean skipZeroInputSegment(CubeSegment cubeSegment) {
@@ -398,7 +402,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter, Collection<FunctionDesc> functionDescs, StorageContext context) {
         boolean possible = true;
 
-        boolean goodFilter = filter == null || (TupleFilter.isEvaluableRecursively(filter) && context.isCoprocessorEnabled());
+        boolean goodFilter = filter == null || TupleFilter.isEvaluableRecursively(filter);
         if (!goodFilter) {
             possible = false;
             logger.info("Storage limit push down is impossible because the filter is unevaluatable");

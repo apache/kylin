@@ -85,10 +85,10 @@ public class ITCombinationTest extends ITKylinQueryTest {
             // unset
         }
 
-        RemoveBlackoutRealizationsRule.blackouts.clear();
+        RemoveBlackoutRealizationsRule.blackList.clear();
         if (excludeViewCubes) {
-            RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
-            RemoveBlackoutRealizationsRule.blackouts.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
+            RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
+            RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
         }
 
         if ("v1".equalsIgnoreCase(queryEngine))

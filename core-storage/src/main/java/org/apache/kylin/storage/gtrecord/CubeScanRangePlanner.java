@@ -152,9 +152,9 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
                     setAllowStorageAggregation(context.isNeedStorageAggregation()).setAggCacheMemThreshold(cubeSegment.getCubeInstance().getConfig().getQueryCoprocessorMemGB()).//
                     setStorageScanRowNumThreshold(context.getThreshold());
 
-            if (cubeDesc.supportsLimitPushDown()) {
-                builder.setStoragePushDownLimit(context.getStoragePushDownLimit());
-            }
+            if (context.getFinalPushDownLimit() != Integer.MAX_VALUE)
+                builder.setStoragePushDownLimit(context.getFinalPushDownLimit());
+
             scanRequest = builder.createGTScanRequest();
         } else {
             scanRequest = null;

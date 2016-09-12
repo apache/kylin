@@ -25,7 +25,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -54,7 +53,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private int scanCountDelta;
 
     public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
-            Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context, boolean supportLimitPushDown) {
+            Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context) {
         this.context = context;
         this.scanners = scanners;
 
@@ -63,8 +62,8 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context));
         }
 
-        this.storagePushDownLimit = context.getStoragePushDownLimit();
-        if (!supportLimitPushDown || storagePushDownLimit > KylinConfig.getInstanceFromEnv().getStoragePushDownLimitMax()) {
+        this.storagePushDownLimit = context.getFinalPushDownLimit();
+        if (storagePushDownLimit == Integer.MAX_VALUE) {
             //normal case
             tupleIterator = Iterators.concat(segmentCubeTupleIterators.iterator());
         } else {

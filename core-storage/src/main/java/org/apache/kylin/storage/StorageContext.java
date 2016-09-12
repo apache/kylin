@@ -20,7 +20,11 @@ package org.apache.kylin.storage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.metadata.realization.IRealization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Range;
 
@@ -28,6 +32,7 @@ import com.google.common.collect.Range;
  * @author xjiang
  */
 public class StorageContext {
+    private static final Logger logger = LoggerFactory.getLogger(StorageContext.class);
 
     public static final int DEFAULT_THRESHOLD = 1000000;
 
@@ -35,6 +40,7 @@ public class StorageContext {
     private int threshold;
     private int limit;
     private int offset;
+    private int finalPushDownLimit;
     private boolean hasSort;
     private boolean acceptPartialResult;
 
@@ -62,6 +68,7 @@ public class StorageContext {
 
         this.acceptPartialResult = false;
         this.partialResultReturned = false;
+        this.finalPushDownLimit = Integer.MAX_VALUE;
     }
 
     public String getConnUrl() {
@@ -104,10 +111,33 @@ public class StorageContext {
         return this.enableLimit;
     }
 
-    public int getStoragePushDownLimit() {
+    private int getStoragePushDownLimit() {
         return this.isLimitEnabled() ? this.getOffset() + this.getLimit() : Integer.MAX_VALUE;
     }
-    
+
+    public int getFinalPushDownLimit() {
+        return finalPushDownLimit;
+    }
+
+    public void setFinalPushDownLimit(IRealization realization) {
+
+        //decide the final limit push down
+        int tempPushDownLimit = this.getStoragePushDownLimit();
+        if (tempPushDownLimit == Integer.MAX_VALUE) {
+            return;
+        }
+        
+        int pushDownLimitMax = KylinConfig.getInstanceFromEnv().getStoragePushDownLimitMax();
+        if (!realization.supportsLimitPushDown()) {
+            logger.info("Not enabling limit push down because cube storage type not supported");
+        } else if (tempPushDownLimit > pushDownLimitMax) {
+            logger.info("Not enabling limit push down because the limit(including offset) {} is larger than kylin.query.pushdown.limit.max {}", //
+                    tempPushDownLimit, pushDownLimitMax);
+        } else {
+            this.finalPushDownLimit = tempPushDownLimit;
+        }
+    }
+
     public void markSort() {
         this.hasSort = true;
     }

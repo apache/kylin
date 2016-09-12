@@ -992,8 +992,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public boolean supportsLimitPushDown() {
-        //currently only ID_SHARDED_HBASE supports limit push down
-        return getStorageType() == IStorageAware.ID_SHARDED_HBASE;
+        return getStorageType() != IStorageAware.ID_HBASE && getStorageType() != IStorageAware.ID_HYBRID;
     }
 
     public int getStorageType() {

@@ -35,17 +35,17 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
@@ -305,7 +305,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         return result;
     }
-    
 
     public CubeSegment getSegment(String name, SegmentStatusEnum status) {
         for (CubeSegment segment : segments) {
@@ -402,6 +401,11 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         }
 
         return endTime;
+    }
+
+    @Override
+    public boolean supportsLimitPushDown() {
+        return getDescriptor().supportsLimitPushDown();
     }
 
     public int getRowKeyColumnCount() {

@@ -85,7 +85,7 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
             byte[] ret = null;
 
             while (ret == null && coprocException == null && timeoutTS > System.currentTimeMillis()) {
-                ret = queue.poll(5000, TimeUnit.MILLISECONDS);
+                ret = queue.poll(10000, TimeUnit.MILLISECONDS);
             }
 
             if (coprocException != null) {

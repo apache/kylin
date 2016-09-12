@@ -31,15 +31,22 @@ import com.google.common.collect.Sets;
  * for IT use, exclude some cubes 
  */
 public class RemoveBlackoutRealizationsRule extends RoutingRule {
-    public static Set<String> blackouts = Sets.newHashSet();
+    public static Set<String> blackList = Sets.newHashSet();
+    public static Set<String> whiteList = Sets.newHashSet();
 
     @Override
     public void apply(List<Candidate> candidates) {
         for (Iterator<Candidate> iterator = candidates.iterator(); iterator.hasNext();) {
             Candidate candidate = iterator.next();
 
-            if (blackouts.contains(candidate.getRealization().getCanonicalName())) {
+            if (blackList.contains(candidate.getRealization().getCanonicalName())) {
                 iterator.remove();
+                continue;
+            }
+
+            if (!whiteList.isEmpty() && !whiteList.contains(candidate.getRealization().getCanonicalName())) {
+                iterator.remove();
+                continue;
             }
         }
     }
