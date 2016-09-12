@@ -158,14 +158,14 @@ public class GTScanRequest {
     }
 
     /**
-     * doFilter,doAggr,doMemCheck are only for profiling use.
+     * filterToggledOn,aggrToggledOn are only for profiling/test use.
      * in normal cases they are all true.
-     * <p/>
+     * 
      * Refer to CoprocessorBehavior for explanation
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean doFilter, boolean doAggr, long deadline) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, long deadline) throws IOException {
         IGTScanner result = scanner;
-        if (!doFilter) { //Skip reading this section if you're not profiling! 
+        if (!filterToggledOn) { //Skip reading this section if you're not profiling! 
             int scanned = lookAndForget(result);
             return new EmptyGTScanner(scanned);
         } else {
@@ -174,7 +174,7 @@ public class GTScanRequest {
                 result = new GTFilterScanner(result, this);
             }
 
-            if (!doAggr) {//Skip reading this section if you're not profiling! 
+            if (!aggrToggledOn) {//Skip reading this section if you're not profiling! 
                 long scanned = result.getScannedRowCount();
                 lookAndForget(result);
                 return new EmptyGTScanner(scanned);

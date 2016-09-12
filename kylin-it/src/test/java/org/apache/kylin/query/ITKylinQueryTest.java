@@ -129,10 +129,21 @@ public class ITKylinQueryTest extends KylinTestBase {
         thrown.expect(SQLException.class);
 
         //should not break at table duplicate check, should fail at model duplicate check
-        thrown.expectCause(new BaseMatcher<Throwable>() {
+        thrown.expect(new BaseMatcher<Throwable>() {
             @Override
             public boolean matches(Object item) {
-                if (item instanceof GTScanSelfTerminatedException) {
+
+                //find the "root"
+                Throwable throwable = (Throwable) item;
+                while (true) {
+                    if (throwable.getCause() != null) {
+                        throwable = throwable.getCause();
+                    } else {
+                        break;
+                    }
+                }
+
+                if (throwable instanceof GTScanSelfTerminatedException) {
                     return true;
                 }
                 return false;
@@ -143,6 +154,11 @@ public class ITKylinQueryTest extends KylinTestBase {
             }
         });
 
+        runTimetoutQueries();
+
+    }
+
+    protected void runTimetoutQueries() throws Exception {
         try {
 
             Map<String, String> toggles = Maps.newHashMap();

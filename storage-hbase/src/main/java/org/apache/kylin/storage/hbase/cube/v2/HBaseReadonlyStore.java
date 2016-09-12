@@ -45,6 +45,10 @@ public class HBaseReadonlyStore implements IGTStore {
     private int rowkeyPreambleSize;
     private boolean withDelay = false;
 
+
+    /**
+     * @param withDelay is for test use
+     */
     public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT, int rowkeyPreambleSize, boolean withDelay) {
         this.cellListIterator = cellListIterator;
         this.info = gtScanRequest.getInfo();

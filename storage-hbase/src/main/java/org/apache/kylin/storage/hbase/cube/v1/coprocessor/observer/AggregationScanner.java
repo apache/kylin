@@ -25,9 +25,9 @@ import java.util.List;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
-import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
@@ -86,11 +86,11 @@ public class AggregationScanner implements RegionScanner {
                     meaninglessByte += cell.getRowArray()[i];
                 }
             } else {
-                if (behavior.ordinal() >= StorageSideBehavior.SCAN_FILTER.ordinal()) {
+                if (behavior.filterToggledOn()) {
                     if (filter != null && filter.evaluate(tuple) == false)
                         continue;
 
-                    if (behavior.ordinal() >= StorageSideBehavior.SCAN_FILTER_AGGR.ordinal()) {
+                    if (behavior.aggrToggledOn()) {
                         AggrKey aggKey = projector.getAggrKey(results);
                         MeasureAggregator[] bufs = aggCache.getBuffer(aggKey);
                         aggregators.aggregate(bufs, results);
