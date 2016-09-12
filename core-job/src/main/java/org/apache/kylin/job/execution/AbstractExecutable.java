@@ -125,10 +125,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
             onExecuteFinished(result, executableContext);
         } catch (Exception e) {
-            if (isMetaDataPersistException(e)){
+            if (isMetaDataPersistException(e)) {
                 handleMetaDataPersistException(e);
             }
-            if (e instanceof ExecuteException){
+            if (e instanceof ExecuteException) {
                 throw e;
             } else {
                 throw new ExecuteException(e);
@@ -142,15 +142,15 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     private boolean isMetaDataPersistException(Exception e) {
-        if (e instanceof PersistentException){
+        if (e instanceof PersistentException) {
             return true;
         }
 
         Throwable t = e.getCause();
         int depth = 0;
-        while (t!= null && depth<5) {
-            depth ++;
-            if (t instanceof PersistentException){
+        while (t != null && depth < 5) {
+            depth++;
+            if (t instanceof PersistentException) {
                 return true;
             }
             t = t.getCause();
@@ -242,19 +242,19 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     protected final void notifyUserStatusChange(ExecutableContext context, ExecutableState state) {
         try {
             final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            List<String> users =  getAllNofifyUsers(kylinConfig);
+            List<String> users = getAllNofifyUsers(kylinConfig);
             if (users.isEmpty()) {
                 logger.warn("no need to send email, user list is empty");
                 return;
             }
             final Pair<String, String> email = formatNotifications(context, state);
-            doSendMail(kylinConfig,users,email);
+            doSendMail(kylinConfig, users, email);
         } catch (Exception e) {
             logger.error("error send email", e);
         }
     }
 
-    private List<String> getAllNofifyUsers(KylinConfig kylinConfig){
+    private List<String> getAllNofifyUsers(KylinConfig kylinConfig) {
         List<String> users = Lists.newArrayList();
         users.addAll(getNotifyList());
         final String[] adminDls = kylinConfig.getAdminDls();
@@ -266,7 +266,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return users;
     }
 
-    private void doSendMail(KylinConfig kylinConfig, List<String> users, Pair<String,String> email){
+    private void doSendMail(KylinConfig kylinConfig, List<String> users, Pair<String, String> email) {
         if (email == null) {
             logger.warn("no need to send email, content is null");
             return;

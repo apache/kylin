@@ -220,7 +220,7 @@ public class CubingJob extends DefaultChainedExecutable {
         } catch (UnknownHostException e) {
             logger.warn(e.getLocalizedMessage(), e);
         }
-        sendMail(Pair.of(title,content));
+        sendMail(Pair.of(title, content));
     }
 
     public long getMapReduceWaitTime() {
