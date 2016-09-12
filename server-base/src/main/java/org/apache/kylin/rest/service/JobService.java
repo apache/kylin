@@ -48,7 +48,9 @@ import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,6 +200,10 @@ public class JobService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, //
             CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException, JobException {
+
+        if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
+            throw new BadRequestException("Broken cube " + cube.getName() + " can't be built");
+        }
 
         checkCubeDescSignature(cube);
         checkNoRunningJob(cube);

@@ -67,7 +67,7 @@
             </td>
             <td>
                 <span class="label"
-                      ng-class="{'label-success': cube.status=='READY', 'label-default': cube.status=='DISABLED'}">
+                      ng-class="{'label-success': cube.status=='READY', 'label-default': cube.status=='DISABLED', 'label-warning': cube.status=='DESCBROKEN'}">
                     {{ cube.status}}
                 </span>
             </td>
@@ -89,18 +89,18 @@
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu">
-                        <li ng-if="cube.status=='DISABLED' && userService.hasRole('ROLE_ADMIN') ">
+                        <li ng-if="cube.status!='READY' && userService.hasRole('ROLE_ADMIN') ">
                             <a ng-click="dropCube(cube)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
-                        <li ng-if="cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
+                        <li ng-if="cube.status!='READY' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
                             <a ng-click="cubeEdit(cube);">Edit</a></li>
-                      <li ng-if="cube.streaming && cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"></li>
-                        <li><a ng-click="startJobSubmit(cube);">Build</a></li>
-                        <li><a ng-click="startRefresh(cube)">Refresh</a></li>
-                        <li><a ng-click="startMerge(cube)">Merge</a></li>
-                        <li ng-if="cube.status!='DISABLED'"><a ng-click="disable(cube)">Disable</a></li>
+                        <li ng-if="cube.streaming && cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"></li>
+                        <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startJobSubmit(cube);">Build</a></li>
+                        <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startRefresh(cube)">Refresh</a></li>
+                        <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startMerge(cube)">Merge</a></li>
+                        <li ng-if="cube.status=='READY'"><a ng-click="disable(cube)">Disable</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="enable(cube)">Enable</a></li>
                         <li ng-if="cube.status=='DISABLED'"><a ng-click="purge(cube)">Purge</a></li>
-                        <li><a ng-click="cloneCube(cube)">Clone</a></li>
+                        <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="cloneCube(cube)">Clone</a></li>
 
                     </ul>
                 </div>
@@ -114,8 +114,8 @@
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu">
-                        <li ng-if="cube.status=='DISABLED'"><a href="cubes/edit/{{cube.name}}/descriptionjson">Edit CubeDesc</a></li>
-                      <li ng-if="cube.status=='DISABLED'"><a href="cubes/view/{{cube.name}}/instancejson">View Cube</a></li>
+                        <li ng-if="cube.status!='READY'"><a href="cubes/edit/{{cube.name}}/descriptionjson">Edit CubeDesc</a></li>
+                        <li ng-if="cube.status!='READY'"><a href="cubes/view/{{cube.name}}/instancejson">View Cube</a></li>
                     </ul>
                 </div>
             </td>

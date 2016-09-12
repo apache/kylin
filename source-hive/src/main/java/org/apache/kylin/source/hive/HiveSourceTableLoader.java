@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
@@ -36,8 +37,10 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 /**
@@ -51,27 +54,25 @@ public class HiveSourceTableLoader {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveSourceTableLoader.class);
 
-    public static final String OUTPUT_SURFIX = "json";
-    public static final String TABLE_FOLDER_NAME = "table";
-    public static final String TABLE_EXD_FOLDER_NAME = "table_exd";
-
     public static Set<String> reloadHiveTables(String[] hiveTables, KylinConfig config) throws IOException {
 
-        Map<String, Set<String>> db2tables = Maps.newHashMap();
-        for (String table : hiveTables) {
-            String[] parts = HadoopUtil.parseHiveTableName(table);
-            Set<String> set = db2tables.get(parts[0]);
-            if (set == null) {
-                set = Sets.newHashSet();
-                db2tables.put(parts[0], set);
-            }
-            set.add(parts[1]);
+        SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
+        for (String fullTableName : hiveTables) {
+            String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
+            db2tables.put(parts[0], parts[1]);
+        }
+
+        HiveClient hiveClient = new HiveClient();
+        SchemaChecker checker = new SchemaChecker(hiveClient, MetadataManager.getInstance(config), CubeManager.getInstance(config));
+        for (Map.Entry<String, String> entry : db2tables.entries()) {
+            SchemaChecker.CheckResult result = checker.allowReload(entry.getKey(), entry.getValue());
+            result.raiseExceptionWhenInvalid();
         }
 
         // extract from hive
         Set<String> loadedTables = Sets.newHashSet();
         for (String database : db2tables.keySet()) {
-            List<String> loaded = extractHiveTables(database, db2tables.get(database), config);
+            List<String> loaded = extractHiveTables(database, db2tables.get(database), hiveClient);
             loadedTables.addAll(loaded);
         }
 
@@ -84,13 +85,12 @@ public class HiveSourceTableLoader {
         metaMgr.removeTableExd(hiveTable);
     }
 
-    private static List<String> extractHiveTables(String database, Set<String> tables, KylinConfig config) throws IOException {
+    private static List<String> extractHiveTables(String database, Set<String> tables, HiveClient hiveClient) throws IOException {
 
         List<String> loadedTables = Lists.newArrayList();
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         for (String tableName : tables) {
             Table table = null;
-            HiveClient hiveClient = new HiveClient();
             List<FieldSchema> partitionFields = null;
             List<FieldSchema> fields = null;
             try {
@@ -167,5 +167,4 @@ public class HiveSourceTableLoader {
 
         return loadedTables;
     }
-
 }

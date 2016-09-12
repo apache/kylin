@@ -4307,7 +4307,7 @@ fieldset[disabled] .btn-vk.active {
 .alert-info,
 .label-danger,
 .label-info,
-.label-waring,
+.label-warning,
 .label-primary,
 .label-success,
 .modal-primary .modal-body,
@@ -4349,7 +4349,7 @@ fieldset[disabled] .btn-vk.active {
 .bg-yellow,
 .callout.callout-warning,
 .alert-warning,
-.label-waring,
+.label-warning,
 .modal-warning .modal-body {
   background-color: #f39c12 !important;
 }

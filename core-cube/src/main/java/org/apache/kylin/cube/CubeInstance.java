@@ -35,17 +35,17 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
+import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.realization.SQLDigest;
-import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
@@ -147,6 +147,13 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     public boolean isReady() {
         return getStatus() == RealizationStatusEnum.READY;
+    }
+
+    // if cube is not online and has no data or any building job, we allow its descriptor to be
+    // in a temporary broken state, so that user can edit and fix it. Broken state is often due to
+    // schema changes at source.
+    public boolean allowBrokenDescriptor() {
+        return (getStatus() == RealizationStatusEnum.DISABLED  || getStatus() == RealizationStatusEnum.DESCBROKEN) && segments.isEmpty();
     }
 
     public String getResourcePath() {

@@ -51,6 +51,5 @@ public class CubeServiceTest extends ServiceTestBase {
         List<CubeInstance> cubes = cubeService.listAllCubes(null, null, null);
         Assert.assertNotNull(cubes);
         CubeInstance cube = cubes.get(0);
-        cubeService.isCubeDescFreeEditable(cube.getDescriptor());
     }
 }

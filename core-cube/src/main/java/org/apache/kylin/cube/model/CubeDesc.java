@@ -18,6 +18,10 @@
 
 package org.apache.kylin.cube.model;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -29,9 +33,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -64,9 +68,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -526,18 +530,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.errors.clear();
         this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
 
-        if (this.modelName == null || this.modelName.length() == 0) {
-            this.addError("The cubeDesc '" + this.getName() + "' doesn't have data model specified.");
-        }
+        checkArgument(StringUtils.isNotBlank(name), "CubeDesc name is blank");
+        checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc(%s) has blank modelName", name);
+
+        this.model = MetadataManager.getInstance(config).getDataModelDesc(modelName);
+        checkNotNull(this.model, "DateModelDesc(%s) not found", modelName);
 
         // check if aggregation group is valid
         validate();
-
-        this.model = MetadataManager.getInstance(config).getDataModelDesc(this.modelName);
-
-        if (this.model == null) {
-            this.addError("No data model found with name '" + modelName + "'.");
-        }
 
         for (DimensionDesc dim : dimensions) {
             dim.init(this, tables);
@@ -559,9 +559,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived(true);
-        if (rowkey.getRowKeyColumns().length != dimCols.size()) {
-            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "). ");
-        }
+        checkState(rowkey.getRowKeyColumns().length == dimCols.size(),
+                "RowKey columns count (%d) doesn't match dimensions columns count (%d)",
+                rowkey.getRowKeyColumns().length, dimCols.size());
 
         initDictionaryDesc();
     }
@@ -954,25 +954,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.autoMergeTimeRanges = autoMergeTimeRanges;
     }
 
-    /**
-     * Add error info and thrown exception out
-     *
-     * @param message
-     */
     public void addError(String message) {
-        addError(message, false);
-    }
-
-    /**
-     * @param message error message
-     * @param silent  if throw exception
-     */
-    public void addError(String message, boolean silent) {
-        if (!silent) {
-            throw new IllegalStateException(message);
-        } else {
-            this.errors.add(message);
-        }
+        this.errors.add(message);
     }
 
     public List<String> getError() {
