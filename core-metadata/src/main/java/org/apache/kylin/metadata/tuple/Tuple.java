@@ -117,6 +117,10 @@ public class Tuple implements ITuple {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
         } else if ("integer".equals(dataType) && fieldValue instanceof Number) {
             fieldValue = ((Number) fieldValue).intValue();
+        } else if ("smallint".equals(dataType) && fieldValue instanceof Number) {
+            fieldValue = ((Number) fieldValue).shortValue();
+        } else if ("tinyint".equals(dataType)) {
+            fieldValue = ((Number) fieldValue).byteValue();
         } else if ("float".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).floatValue();
         } else if ("date".equals(dataType) && fieldValue instanceof Long) {
@@ -185,11 +189,11 @@ public class Tuple implements ITuple {
             return Long.valueOf(DateFormat.stringToMillis(strValue));
         } else if ("tinyint".equals(dataTypeName)) {
             return Byte.valueOf(strValue);
-        } else if ("short".equals(dataTypeName) || "smallint".equals(dataTypeName)) {
+        } else if ("smallint".equals(dataTypeName)) {
             return Short.valueOf(strValue);
         } else if ("integer".equals(dataTypeName)) {
             return Integer.valueOf(strValue);
-        } else if ("long".equals(dataTypeName) || "bigint".equals(dataTypeName)) {
+        } else if ("bigint".equals(dataTypeName)) {
             return Long.valueOf(strValue);
         } else if ("double".equals(dataTypeName)) {
             return Double.valueOf(strValue);
