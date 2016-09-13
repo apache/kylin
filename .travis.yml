@@ -1,5 +1,4 @@
 # Configuration file for Travis continuous integration.
-# See https://travis-ci.org/apache/calcite
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -20,13 +19,13 @@ language: java
 
 jdk:
   - oraclejdk7
+  - oraclejdk8
 
-#notification:
-#  email:
-#    recipients:
-#      - XXX@apache.org
-#    on_success: always
-#    on_failure: always
+notification:
+  email:
+    recipients:
+      - dev@kylin.apache.org
+    on_failure: always
 
 #branches:
 #  only:
