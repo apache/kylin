@@ -274,10 +274,9 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
         if (sum.isSum() == false)
             return false;
-        
+
         if (sum.getParameter() == null || sum.getParameter().getColRefs() == null || sum.getParameter().getColRefs().size() == 0)
             return false;
-
 
         TblColRef sumCol = sum.getParameter().getColRefs().get(0);
         return sumCol.equals(topnNumCol);

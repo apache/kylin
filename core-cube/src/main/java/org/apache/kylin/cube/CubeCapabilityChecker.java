@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
@@ -39,6 +40,7 @@ import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluenc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -163,6 +165,7 @@ public class CubeCapabilityChecker {
     // custom measure types can cover unmatched dimensions or measures
     private static void tryCustomMeasureTypes(Collection<TblColRef> unmatchedDimensions, Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result) {
         CubeDesc cubeDesc = cube.getDescriptor();
+        List<String> influencingMeasures = Lists.newArrayList();
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
             //            if (unmatchedDimensions.isEmpty() && unmatchedAggregations.isEmpty())
             //                break;
@@ -172,9 +175,13 @@ public class CubeCapabilityChecker {
                 continue;
 
             CapabilityInfluence inf = measureType.influenceCapabilityCheck(unmatchedDimensions, unmatchedAggregations, digest, measure);
-            if (inf != null)
+            if (inf != null) {
                 result.influences.add(inf);
+                influencingMeasures.add(measure.getName() + "@" + measureType.getClass());
+            }
         }
+        if (influencingMeasures.size() != 0)
+            logger.info("Cube {} CapabilityInfluences: {}", cube.getCanonicalName(), StringUtils.join(influencingMeasures, ","));
     }
 
 }
