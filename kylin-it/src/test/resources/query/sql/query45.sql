@@ -18,6 +18,6 @@
 
 
 
-select seller_id, sum(price) from test_kylin_fact
+select seller_id, sum(price) as s from test_kylin_fact
   where lstg_format_name='FP-GTC' 
   group by seller_id limit 20
