@@ -213,7 +213,7 @@ public class CacheService extends BasicService {
                 removeAllOLAPDataSources();
                 break;
             default:
-                throw new RuntimeException("invalid cacheType:" + cacheType);
+                logger.error("invalid cacheType:" + cacheType);
             }
         } catch (IOException e) {
             throw new RuntimeException("error " + log, e);
