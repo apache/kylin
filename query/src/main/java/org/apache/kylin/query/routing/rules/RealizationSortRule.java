@@ -23,12 +23,22 @@ import java.util.List;
 
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.RoutingRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
 public class RealizationSortRule extends RoutingRule {
+    private static final Logger logger = LoggerFactory.getLogger(RealizationSortRule.class);
+
     @Override
     public void apply(List<Candidate> candidates) {
+        StringBuilder sb = new StringBuilder();
+        for (Candidate candidate : candidates) {
+            sb.append(candidate.getRealization().getCanonicalName() + " priority " + candidate.getPriority() + " cost " + candidate.getCapability().cost + ". ");
+        }
+        logger.info(sb.toString());
+
         Collections.sort(candidates);
     }
 }

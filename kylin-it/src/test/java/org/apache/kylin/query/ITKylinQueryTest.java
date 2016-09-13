@@ -29,7 +29,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
-import org.apache.kylin.gridtable.GTScanTimeoutException;
 import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
@@ -141,9 +140,13 @@ public class ITKylinQueryTest extends KylinTestBase {
     //don't try to ignore this test, try to clean your "temp" folder
     @Test
     public void testTempQuery() throws Exception {
-        PRINT_RESULT = true;
-        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/temp", null, true);
-        PRINT_RESULT = false;
+        try {
+            PRINT_RESULT = true;
+            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/temp", null, true);
+        } finally {
+            PRINT_RESULT = false;
+        }
+
     }
 
     @Ignore
