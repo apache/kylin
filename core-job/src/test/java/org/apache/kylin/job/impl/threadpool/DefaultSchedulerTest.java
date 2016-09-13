@@ -29,6 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.kylin.job.DiscardedTestExecutable;
 import org.apache.kylin.job.BaseTestExecutable;
 import org.apache.kylin.job.ErrorTestExecutable;
 import org.apache.kylin.job.FailedTestExecutable;
@@ -81,6 +82,21 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
         Assert.assertEquals(ExecutableState.ERROR, jobService.getOutput(task2.getId()).getState());
     }
+
+    @Test
+    public void testSucceedAndDiscarded() throws Exception {
+        DefaultChainedExecutable job = new DefaultChainedExecutable();
+        BaseTestExecutable task1 = new SucceedTestExecutable();
+        BaseTestExecutable task2 = new DiscardedTestExecutable();
+        job.addTask(task1);
+        job.addTask(task2);
+        jobService.addJob(job);
+        waitForJobFinish(job.getId());
+        Assert.assertEquals(ExecutableState.DISCARDED, jobService.getOutput(job.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
+        Assert.assertEquals(ExecutableState.DISCARDED, jobService.getOutput(task2.getId()).getState());
+    }
+
 
     @Test
     public void testSucceedAndError() throws Exception {

@@ -16,44 +16,26 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job.execution;
+package org.apache.kylin.job;
 
-import com.google.common.base.Preconditions;
+import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecuteResult;
 
 /**
  */
-public final class ExecuteResult {
+public class DiscardedTestExecutable extends BaseTestExecutable {
 
-    public static enum State {
-        SUCCEED, FAILED, ERROR, DISCARDED, STOPPED
+    public DiscardedTestExecutable() {
+        super();
     }
 
-    private final State state;
-    private final String output;
-
-    public ExecuteResult(State state) {
-        this(state, "");
-    }
-
-    public ExecuteResult(State state, String output) {
-        Preconditions.checkArgument(state != null, "state cannot be null");
-        this.state = state;
-        this.output = output;
-    }
-
-    public State state() {
-        return state;
-    }
-
-    public boolean succeed() {
-        return state == State.SUCCEED;
-    }
-
-    public boolean discarded() {
-        return state == State.DISCARDED;
-    }
-
-    public String output() {
-        return output;
+    @Override
+    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+        }
+        return new ExecuteResult(ExecuteResult.State.DISCARDED, "discarded");
     }
 }

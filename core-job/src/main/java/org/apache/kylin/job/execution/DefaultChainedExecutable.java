@@ -119,6 +119,8 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             } else {
                 jobService.updateJobOutput(getId(), ExecutableState.READY, null, null);
             }
+        } else if (result.discarded()) {
+            jobService.updateJobOutput(getId(), ExecutableState.DISCARDED, null, result.output());
         } else {
             setEndTime(System.currentTimeMillis());
             jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());

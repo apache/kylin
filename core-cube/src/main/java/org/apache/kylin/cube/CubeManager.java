@@ -322,16 +322,13 @@ public class CubeManager implements IRealizationProvider {
             Iterator<CubeSegment> iterator = newSegs.iterator();
             while (iterator.hasNext()) {
                 CubeSegment currentSeg = iterator.next();
-                boolean found = false;
                 for (CubeSegment toRemoveSeg : update.getToRemoveSegs()) {
                     if (currentSeg.getUuid().equals(toRemoveSeg.getUuid())) {
+                        logger.info("Remove segment " + currentSeg.toString());
+                        toRemoveResources.add(currentSeg.getStatisticsResourcePath());
                         iterator.remove();
-                        toRemoveResources.add(toRemoveSeg.getStatisticsResourcePath());
-                        found = true;
+                        break;
                     }
-                }
-                if (found == false) {
-                    logger.error("Segment '" + currentSeg.getName() + "' doesn't exist for remove.");
                 }
             }
 
@@ -339,16 +336,11 @@ public class CubeManager implements IRealizationProvider {
 
         if (update.getToUpdateSegs() != null) {
             for (CubeSegment segment : update.getToUpdateSegs()) {
-                boolean found = false;
                 for (int i = 0; i < newSegs.size(); i++) {
                     if (newSegs.get(i).getUuid().equals(segment.getUuid())) {
                         newSegs.set(i, segment);
-                        found = true;
                         break;
                     }
-                }
-                if (found == false) {
-                    logger.error("Segment '" + segment.getName() + "' doesn't exist for update.");
                 }
             }
         }
