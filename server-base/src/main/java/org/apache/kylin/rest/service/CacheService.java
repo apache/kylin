@@ -37,6 +37,7 @@ import org.apache.kylin.common.restclient.Broadcaster;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.metadata.MetadataManager;
@@ -204,6 +205,7 @@ public class CacheService extends BasicService {
                 CubeManager.clearCache();
                 HybridManager.clearCache();
                 RealizationRegistry.clearCache();
+                Cuboid.clearCache();
                 ProjectManager.clearCache();
                 KafkaConfigManager.clearCache();
                 StreamingManager.clearCache();
