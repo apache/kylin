@@ -106,7 +106,8 @@
     }
   } ],
   "override_kylin_properties": {
-    "kylin.cube.algorithm": "inmem"
+    "kylin.cube.algorithm": "inmem",
+    "kylin.cube.building.segment.max": "3"
   },
   "notify_list" : [ ],
   "status_need_notify" : [ ],
