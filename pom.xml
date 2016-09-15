@@ -350,6 +350,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-yarn-common</artifactId>
+                <version>${hadoop2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-yarn-api</artifactId>
                 <version>${hadoop2.version}</version>
             </dependency>
