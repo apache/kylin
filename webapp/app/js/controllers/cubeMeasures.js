@@ -30,17 +30,6 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   };
   $scope.initUpdateMeasureStatus();
 
-<<<<<<< 5bc3830dbf3f6da0daebd05df8a24b735e40dd98
-=======
-  $scope.initUpdateMeasureStatus = function(){
-    $scope.updateMeasureStatus = {
-      isEdit:false,
-      editIndex:-1
-    }
-  };
-  $scope.initUpdateMeasureStatus();
-
->>>>>>> KYLIN-1786 extended column UI update
   $scope.addNewMeasure = function (measure, index) {
     if(measure&&index>=0){
       $scope.updateMeasureStatus.isEdit = true;
