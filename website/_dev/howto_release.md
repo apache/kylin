@@ -1,6 +1,6 @@
 ---
 layout: dev
-title:  How to make a Release
+title:  How to Make Release
 categories: development
 permalink: /development/howto_release.html
 ---
@@ -148,7 +148,7 @@ If any of the steps fail, clean up (see below), fix the problem, and start again
 $ read -s GPG_PASSPHRASE
 
 # Make sure that there are no junk files in the sandbox
-$ git clean -xn
+$ git clean -xf
 $ mvn clean
 
 # Do a dry run of the release:prepare step, which sets version numbers.
