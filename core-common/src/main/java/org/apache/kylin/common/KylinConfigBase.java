@@ -570,10 +570,6 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptionalIntArray("kylin.query.metrics.percentiles.intervals", dft);
     }
 
-    public int getHBaseKeyValueSize() {
-        return Integer.parseInt(this.getOptional("kylin.hbase.client.keyvalue.maxsize", "10485760"));
-    }
-
     public String getDefaultIGTStorage() {
         return getOptional("kylin.query.storage.default.gtstorage", "org.apache.kylin.storage.hbase.cube.v2.CubeHBaseEndpointRPC");
     }

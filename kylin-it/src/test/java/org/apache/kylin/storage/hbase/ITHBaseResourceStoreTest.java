@@ -57,12 +57,12 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
         String path = "/cube/_test_large_cell.json";
         String largeContent = "THIS_IS_A_LARGE_CELL";
         StringEntity content = new StringEntity(largeContent);
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        int origSize = config.getHBaseKeyValueSize();
+        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
+        int origSize = Integer.parseInt(hconf.get("hbase.client.keyvalue.maxsize", "10485760"));
         ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
 
         try {
-            config.setProperty("kylin.hbase.client.keyvalue.maxsize", String.valueOf(largeContent.length() - 1));
+            hconf.set("hbase.client.keyvalue.maxsize", String.valueOf(largeContent.length() - 1));
 
             store.deleteResource(path);
 
@@ -72,7 +72,7 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
             assertEquals(content, t);
 
             Path redirectPath = ((HBaseResourceStore) store).bigCellHDFSPath(path);
-            Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
+
             FileSystem fileSystem = FileSystem.get(hconf);
             assertTrue(fileSystem.exists(redirectPath));
 
@@ -82,7 +82,7 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
 
             store.deleteResource(path);
         } finally {
-            config.setProperty("kylin.hbase.client.keyvalue.maxsize", "" + origSize);
+            hconf.set("hbase.client.keyvalue.maxsize", "" + origSize);
             store.deleteResource(path);
         }
     }
