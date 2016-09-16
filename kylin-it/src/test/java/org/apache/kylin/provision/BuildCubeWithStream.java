@@ -33,6 +33,7 @@ import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -218,6 +219,7 @@ public class BuildCubeWithStream {
 
     public void after(){
         kafkaServer.stop();
+        DefaultScheduler.destroyInstance();
     }
 
     protected void waitForJob(String jobId) {

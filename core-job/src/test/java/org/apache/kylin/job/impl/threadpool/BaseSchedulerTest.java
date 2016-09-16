@@ -55,6 +55,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
 
     @After
     public void after() throws Exception {
+        DefaultScheduler.destroyInstance();
         cleanupTestMetadata();
     }
 

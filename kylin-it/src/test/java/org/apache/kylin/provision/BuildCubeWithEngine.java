@@ -79,6 +79,7 @@ public class BuildCubeWithEngine {
             BuildCubeWithEngine buildCubeWithEngine = new BuildCubeWithEngine();
             buildCubeWithEngine.before();
             buildCubeWithEngine.build();
+            buildCubeWithEngine.after();
             logger.info("Build is done");
             afterClass();
             logger.info("Going to exit");
@@ -146,6 +147,11 @@ public class BuildCubeWithEngine {
             }
         }
 
+    }
+
+
+    public void after(){
+        DefaultScheduler.destroyInstance();
     }
 
     public static void afterClass() {
