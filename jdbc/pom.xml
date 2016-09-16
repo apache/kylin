@@ -22,7 +22,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kylin-jdbc</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:JDBC</name>
+    <name>Apache Kylin - JDBC Driver</name>
     <description>Kylin JDBC Driver on Calcite Avatica</description>
 
     <parent>

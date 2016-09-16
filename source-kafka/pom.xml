@@ -23,7 +23,7 @@
 
     <artifactId>kylin-source-kafka</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Source-Kafka</name>
+    <name>Apache Kylin - Kafka Source</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

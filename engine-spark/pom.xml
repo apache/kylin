@@ -29,7 +29,7 @@
 
     <artifactId>kylin-engine-spark</artifactId>
 
-    <name>Kylin:Spark</name>
+    <name>Apache Kylin - Spark Engine</name>
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

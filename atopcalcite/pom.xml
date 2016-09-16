@@ -23,7 +23,7 @@
 
     <artifactId>atopcalcite</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:AtopCalcite</name>
+    <name>Apache Kylin - Calcite Overrides</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

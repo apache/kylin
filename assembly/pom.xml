@@ -28,7 +28,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-assembly</artifactId>
-    <name>Kylin:Assembly</name>
+    <name>Apache Kylin - Assembly</name>
 
     <dependencies>
         <dependency>

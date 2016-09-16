@@ -23,7 +23,7 @@
 
     <artifactId>kylin-engine-streaming</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Engine-Streaming</name>
+    <name>Apache Kylin - Streaming Engine</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

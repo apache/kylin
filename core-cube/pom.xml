@@ -23,7 +23,7 @@
 
     <artifactId>kylin-core-cube</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Core-Cube</name>
+    <name>Apache Kylin - Core Cube</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

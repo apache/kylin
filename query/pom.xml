@@ -23,7 +23,7 @@
     <!-- The basics. -->
     <artifactId>kylin-query</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Query</name>
+    <name>Apache Kylin - Query</name>
     <description>kylin query engine based on Calcite</description>
 
     <parent>

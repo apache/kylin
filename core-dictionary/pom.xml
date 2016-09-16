@@ -23,7 +23,7 @@
 
     <artifactId>kylin-core-dictionary</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Core-Dictionary</name>
+    <name>Apache Kylin - Core Dictionary</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

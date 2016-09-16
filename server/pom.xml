@@ -23,7 +23,7 @@
 
     <artifactId>kylin-server</artifactId>
     <packaging>war</packaging>
-    <name>Kylin:RESTServer</name>
+    <name>Apache Kylin - REST Server</name>
     <description>Kylin REST Service and RPC Server.</description>
 
     <parent>

@@ -23,7 +23,7 @@
 
     <artifactId>kylin-core-job</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Core-Job</name>
+    <name>Apache Kylin - Core Job</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

@@ -33,7 +33,7 @@
     <packaging>pom</packaging>
     <version>1.5.4-SNAPSHOT</version>
 
-    <name>Kylin:HadoopOLAPEngine</name>
+    <name>Apache Kylin</name>
     <url>http://kylin.apache.org</url>
     <inceptionYear>2014</inceptionYear>
 

@@ -29,7 +29,7 @@
     </parent>
 
     <artifactId>kylin-tomcat-ext</artifactId>
-    <name>Kylin:Tomcat-Ext</name>
+    <name>Apache Kylin - Tomcat Extension</name>
 
     <dependencies>
         <dependency>

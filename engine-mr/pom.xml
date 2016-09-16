@@ -23,7 +23,7 @@
 
     <artifactId>kylin-engine-mr</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Engine-MR</name>
+    <name>Apache Kylin - MapReduce Engine</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

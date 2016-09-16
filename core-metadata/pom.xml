@@ -23,7 +23,7 @@
 
     <artifactId>kylin-core-metadata</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Core-Metadata</name>
+    <name>Apache Kylin - Core Metadata</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

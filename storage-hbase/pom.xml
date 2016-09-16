@@ -23,7 +23,7 @@
 
     <artifactId>kylin-storage-hbase</artifactId>
     <packaging>jar</packaging>
-    <name>Kylin:Storage-HBase</name>
+    <name>Apache Kylin - HBase Storage</name>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
