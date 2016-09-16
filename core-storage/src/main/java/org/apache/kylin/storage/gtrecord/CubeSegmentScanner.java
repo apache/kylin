@@ -61,6 +61,7 @@ public class CubeSegmentScanner implements IGTScanner {
         //is working on its own copy
         byte[] serialize = TupleFilterSerializer.serialize(originalfilter, StringCodeSystem.INSTANCE);
         TupleFilter filter = TupleFilterSerializer.deserialize(serialize, StringCodeSystem.INSTANCE);
+        
         // translate FunctionTupleFilter to IN clause
         ITupleFilterTransformer translator = new BuiltInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
         filter = translator.transform(filter);

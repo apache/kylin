@@ -181,6 +181,12 @@ public class ITKylinQueryTest extends KylinTestBase {
         batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/tableau_probing");
     }
 
+    //h2 cannot run these queries
+    @Test
+    public void testH2Uncapable() throws Exception {
+        batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_h2_uncapable");
+    }
+
     @Test
     public void testCommonQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql", null, true);

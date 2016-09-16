@@ -61,6 +61,7 @@ import org.apache.kylin.metadata.filter.DynamicTupleFilter;
 import org.apache.kylin.metadata.filter.ExtractTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.filter.UnsupportedTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -141,7 +142,8 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
                 filter = Functions.getFunctionTupleFilter(op.getName());
                 break;
             default:
-                throw new UnsupportedOperationException(op.getName());
+                filter = new UnsupportedTupleFilter(FilterOperatorEnum.UNSUPPORTED);
+                break;
             }
 
             for (RexNode operand : call.operands) {

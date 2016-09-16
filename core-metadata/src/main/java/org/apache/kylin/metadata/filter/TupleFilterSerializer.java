@@ -188,6 +188,9 @@ public class TupleFilterSerializer {
         case FUNCTION:
             filter = new BuiltInFunctionTupleFilter(null);
             break;
+        case UNSUPPORTED:
+            filter = new UnsupportedTupleFilter(op);
+            break;
         case EVAL_FUNC:
             filter = new EvaluatableFunctionTupleFilter(null);
             break;
