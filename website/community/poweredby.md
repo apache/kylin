@@ -29,5 +29,5 @@ __Companies & Organizations__
 	* Apache Kylin is used for analysis Baidu Map's huge amounts of data about users, channels and etc, it performs quite fast with its own pre-calculation and index technologies along with the cubes.
 * [NetEase](http://www.163.com/)  (_NASDAQ: NTES_)
 	* Apache Kylin has been introduced as an OLAP engine for the data platform at NetEase, powering data analysis for various products & business with great performance.
-
-    
+* [glispa](https://www.glispa.com/)  
+	* glispa is using Apache Kylin as an OLAP component within its data management platform. It enabled us to meet latency requirements for real time analytics over big amounts of data. That helps our data scientists and analysts make sense of the DMP's incomprehensible data in a quick ad-hoc manner.
