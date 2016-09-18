@@ -22,12 +22,12 @@ __Binary Package for running with HBase 0.98/0.99 (includes HDP 2.2, CDH 5.2/5.3
 __Binary Package for running with HBase 1.x (includes HDP 2.3/2.4, EMR 5.0)__
 
 * [apache-kylin-1.5.4-HBase1.x-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-HBase1.x-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-HBase1.x-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-HBase1.x-bin.tar.gz.md5)\]
-* Git commit [f36405d83356231cc3246065a6d5b3cb6500e6b1](https://github.com/apache/kylin/commit/f36405d83356231cc3246065a6d5b3cb6500e6b1) 
+* Git commit [67898bd90623a4792424856a5f000ffb33c52910](https://github.com/apache/kylin/commit/67898bd90623a4792424856a5f000ffb33c52910) 
 
 __Binary Package for running with CDH 5.7/5.8__
 
 * [apache-kylin-1.5.4-cdh5.7-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-cdh5.7-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-cdh5.7-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-cdh5.7-bin.tar.gz.md5)\]
-* Git commit [e805b54109ca7337b91764086aa87130dec72c50](https://github.com/apache/kylin/commit/e805b54109ca7337b91764086aa87130dec72c50) 
+* Git commit [483f1b6cd3006225190e013100623765b5ef9c11](https://github.com/apache/kylin/commit/483f1b6cd3006225190e013100623765b5ef9c11) 
 
 __Build Binary Package__
 To build binary package from any version even latest development branch, please refer to [how to package](/development/howto_package.html)
