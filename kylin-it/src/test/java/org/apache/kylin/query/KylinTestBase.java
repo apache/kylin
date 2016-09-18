@@ -586,7 +586,7 @@ public class KylinTestBase {
         //setup cube conn
         File olapTmp = OLAPSchemaFactory.createTempOLAPJson(ProjectInstance.DEFAULT_PROJECT_NAME, config);
         Properties props = new Properties();
-        props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "10001");
+        props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, "15001");
         cubeConnection = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath(), props);
 
         //setup h2
