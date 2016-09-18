@@ -18,6 +18,14 @@
 
 package org.apache.kylin.provision;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.UUID;
+
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.requests.MetadataResponse;
@@ -33,7 +41,6 @@ import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.engine.streaming.StreamingManager;
 import org.apache.kylin.job.DeployUtil;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
@@ -47,14 +54,6 @@ import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.TimeZone;
-import java.util.UUID;
 
 /**
  *  for streaming cubing case "test_streaming_table"
@@ -73,6 +72,7 @@ public class BuildCubeWithStream {
 
     public void before() throws Exception {
         //deployEnv();
+        DeployUtil.overrideJobJarLocations();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
@@ -100,7 +100,7 @@ public class BuildCubeWithStream {
         startEmbeddedKafka(topicName, brokerConfig);
     }
 
-    private void startEmbeddedKafka(String topicName, BrokerConfig brokerConfig){
+    private void startEmbeddedKafka(String topicName, BrokerConfig brokerConfig) {
         //Start mock Kakfa
         String zkConnectionStr = "sandbox:2181";
         ZkConnection zkConnection = new ZkConnection(zkConnectionStr);
@@ -112,9 +112,8 @@ public class BuildCubeWithStream {
         kafkaServer.waitTopicUntilReady(topicName);
 
         MetadataResponse.TopicMetadata topicMetadata = kafkaServer.fetchTopicMeta(topicName);
-        Assert.assertEquals(topicName,topicMetadata.topic());
+        Assert.assertEquals(topicName, topicMetadata.topic());
     }
-
 
     private void generateStreamData(long startTime, long endTime, int numberOfRecords) throws IOException {
         Kafka10DataLoader dataLoader = new Kafka10DataLoader(kafkaConfig);
@@ -217,7 +216,7 @@ public class BuildCubeWithStream {
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
-    public void after(){
+    public void after() {
         kafkaServer.stop();
         DefaultScheduler.destroyInstance();
     }
@@ -259,8 +258,8 @@ public class BuildCubeWithStream {
     protected int cleanupOldStorage() throws Exception {
         String[] args = { "--delete", "true" };
 
-//        KapStorageCleanupCLI cli = new KapStorageCleanupCLI();
-//        cli.execute(args);
+        //        KapStorageCleanupCLI cli = new KapStorageCleanupCLI();
+        //        cli.execute(args);
         return 0;
     }
 
