@@ -23,11 +23,5 @@ then
     exit -1
 fi
 
-IFS=$'\n'
-result=
-for i in `cat ${KYLIN_HOME}/conf/kylin.properties | grep -w "^$1" | grep -v '^#' | awk -F= '{ n = index($0,"="); print substr($0,n+1)}' | cut -c 1-`
-do
-   :
-   result=$i
-done
+result=`cat ${KYLIN_HOME}/conf/kylin.properties | grep -w "^$1" | grep -v '^#' | awk -F= '{ n = index($0,"="); print substr($0,n+1)}' | cut -c 1- |tail -1`
 echo $result
