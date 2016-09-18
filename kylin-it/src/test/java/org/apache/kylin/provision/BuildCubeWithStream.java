@@ -72,7 +72,7 @@ public class BuildCubeWithStream {
     private MockKafka kafkaServer;
 
     public void before() throws Exception {
-        deployEnv();
+        //deployEnv();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
