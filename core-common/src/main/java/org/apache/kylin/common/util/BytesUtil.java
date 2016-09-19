@@ -25,6 +25,13 @@ public class BytesUtil {
 
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
+    public static void writeByte(byte num, byte[] bytes, int offset, int size) {
+        for (int i = offset + size - 1; i >= offset; i--) {
+            bytes[i] = num;
+            num >>>= 8;
+        }
+    }
+
     public static void writeShort(short num, byte[] bytes, int offset, int size) {
         for (int i = offset + size - 1; i >= offset; i--) {
             bytes[i] = (byte) num;
@@ -39,31 +46,6 @@ public class BytesUtil {
             num |= (short) bytes[i] & 0xFF;
         }
         return num;
-    }
-
-    public static void writeLong(long num, byte[] bytes, int offset, int size) {
-        for (int i = offset + size - 1; i >= offset; i--) {
-            bytes[i] = (byte) num;
-            num >>>= 8;
-        }
-    }
-
-    public static long readLong(byte[] bytes, int offset, int size) {
-        long integer = 0;
-        for (int i = offset, n = offset + size; i < n; i++) {
-            integer <<= 8;
-            integer |= (long) bytes[i] & 0xFF;
-        }
-        return integer;
-    }
-
-    public static long readLong(ByteBuffer buffer, int size) {
-        long integer = 0;
-        for (int i = 0; i < size; i++) {
-            integer <<= 8;
-            integer |= (long) buffer.get() & 0xFF;
-        }
-        return integer;
     }
 
     public static void writeUnsigned(int num, byte[] bytes, int offset, int size) {
@@ -82,15 +64,69 @@ public class BytesUtil {
         return integer;
     }
 
-    public static void writeSigned(int num, byte[] bytes, int offset, int size) {
-        writeUnsigned(num, bytes, offset, size);
+    public static void writeUnsigned(int num, int size, ByteBuffer out) {
+        int mask = 0xff << ((size - 1) * 8);
+        for (int i = size; i > 0; i--) {
+            int v = (num & mask) >> (i - 1) * 8;
+            out.put((byte) v);
+            mask = mask >> 8;
+        }
     }
 
-    public static int readSigned(byte[] bytes, int offset, int size) {
-        int integer = (bytes[offset] & 0x80) == 0 ? 0 : -1;
+    public static int readUnsigned(ByteBuffer in, int size) {
+        int integer = 0;
+        for (int i = 0; i < size; i++) {
+            integer = integer << 8;
+            integer |= (in.get() & 0xff);
+        }
+
+        return integer;
+    }
+
+    public static void writeSignedLong(long num, byte[] bytes, int offset, int size) {
+        writeLong(num, bytes, offset, size);
+    }
+
+    public static long readSignedLong(byte[] bytes, int offset, int size) {
+        long integer = (bytes[offset] & 0x80) == 0 ? 0 : -1;
         for (int i = offset, n = offset + size; i < n; i++) {
             integer <<= 8;
             integer |= (int) bytes[i] & 0xFF;
+        }
+        return integer;
+    }
+
+    public static void writeLong(long num, byte[] bytes, int offset, int size) {
+        for (int i = offset + size - 1; i >= offset; i--) {
+            bytes[i] = (byte) num;
+            num >>>= 8;
+        }
+    }
+
+    public static long readLong(byte[] bytes, int offset, int size) {
+        long integer = 0;
+        for (int i = offset, n = offset + size; i < n; i++) {
+            integer <<= 8;
+            integer |= (long) bytes[i] & 0xFF;
+        }
+        return integer;
+    }
+
+    public static void writeLong(long num, ByteBuffer out) {
+        for (int i = 0; i < 8; i++) {
+            out.put((byte) num);
+            num >>>= 8;
+        }
+    }
+
+    public static long readLong(ByteBuffer in) {
+        long integer = 0;
+        int mask = 0xff;
+        int shift = 0;
+        for (int i = 0; i < 8; i++) {
+            integer |= (in.get() << shift) & mask;
+            mask = mask << 8;
+            shift += 8;
         }
         return integer;
     }
@@ -202,44 +238,6 @@ public class BytesUtil {
             return -119 - value;
         }
         return -111 - value;
-    }
-
-    public static void writeUnsigned(int num, int size, ByteBuffer out) {
-        int mask = 0xff << ((size - 1) * 8);
-        for (int i = size; i > 0; i--) {
-            int v = (num & mask) >> (i - 1) * 8;
-            out.put((byte) v);
-            mask = mask >> 8;
-        }
-    }
-
-    public static int readUnsigned(ByteBuffer in, int size) {
-        int integer = 0;
-        for (int i = 0; i < size; i++) {
-            integer = integer << 8;
-            integer |= (in.get() & 0xff);
-        }
-
-        return integer;
-    }
-
-    public static void writeLong(long num, ByteBuffer out) {
-        for (int i = 0; i < 8; i++) {
-            out.put((byte) num);
-            num >>>= 8;
-        }
-    }
-
-    public static long readLong(ByteBuffer in) {
-        long integer = 0;
-        int mask = 0xff;
-        int shift = 0;
-        for (int i = 0; i < 8; i++) {
-            integer |= (in.get() << shift) & mask;
-            mask = mask << 8;
-            shift += 8;
-        }
-        return integer;
     }
 
     public static void writeUTFString(String str, ByteBuffer out) {

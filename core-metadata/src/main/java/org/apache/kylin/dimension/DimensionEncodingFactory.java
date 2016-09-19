@@ -75,6 +75,8 @@ public abstract class DimensionEncodingFactory {
             // built-in encodings, note dictionary is a special case
             map.put(FixedLenDimEnc.ENCODING_NAME, new FixedLenDimEnc.Factory());
             map.put(IntegerDimEnc.ENCODING_NAME, new IntegerDimEnc.Factory());
+            map.put(SlimLongDimEnc.ENCODING_NAME, new SlimLongDimEnc.Factory());
+            map.put(FixedLenHexDimEnc.ENCODING_NAME, new FixedLenHexDimEnc.Factory());
             map.put(DateDimEnc.ENCODING_NAME, new DateDimEnc.Factory());
             map.put(TimeDimEnc.ENCODING_NAME, new TimeDimEnc.Factory());
 

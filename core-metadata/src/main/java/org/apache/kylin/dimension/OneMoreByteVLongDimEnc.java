@@ -30,15 +30,24 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VLongDimEnc extends DimensionEncoding {
+/**
+ * not being used yet, prepared for future
+ */
+public class OneMoreByteVLongDimEnc extends DimensionEncoding {
     private static final long serialVersionUID = 1L;
 
-    private static Logger logger = LoggerFactory.getLogger(VLongDimEnc.class);
+    private static Logger logger = LoggerFactory.getLogger(OneMoreByteVLongDimEnc.class);
 
-    private static final long[] CAP = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, Long.MAX_VALUE };
-    private static final long[] TAIL = { 0, 0x80L, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, Long.MAX_VALUE };
-
-    public static final String ENCODING_NAME = "vlong";
+    private static final long[] CAP = { 0, 0x7fL, 0x7fffL, 0x7fffffL, 0x7fffffffL, 0x7fffffffffL, 0x7fffffffffffL, 0x7fffffffffffffL, 0x7fffffffffffffffL };
+    private static final long[] MASK = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, 0xffffffffffffffffL };
+    private static final long[] TAIL = { 0, 0x80L, 0x8000L, 0x800000L, 0x80000000L, 0x8000000000L, 0x800000000000L, 0x80000000000000L, 0x8000000000000000L };
+    static {
+        for (int i = 1; i < TAIL.length; ++i) {
+            long head = ~MASK[i];
+            TAIL[i] = head | TAIL[i];
+        }
+    }
+    public static final String ENCODING_NAME = "one_more_byte_vlong";
 
     public static class Factory extends DimensionEncodingFactory {
         @Override
@@ -48,7 +57,7 @@ public class VLongDimEnc extends DimensionEncoding {
 
         @Override
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
-            return new VLongDimEnc(Integer.parseInt(args[0]));
+            return new OneMoreByteVLongDimEnc(Integer.parseInt(args[0]));
         }
     };
 
@@ -60,15 +69,15 @@ public class VLongDimEnc extends DimensionEncoding {
     transient private int avoidVerbose = 0;
 
     //no-arg constructor is required for Externalizable
-    public VLongDimEnc() {
+    public OneMoreByteVLongDimEnc() {
     }
 
-    public VLongDimEnc(int len) {
+    public OneMoreByteVLongDimEnc(int len) {
         if (len <= 0 || len >= CAP.length)
             throw new IllegalArgumentException();
 
         this.fixedLen = len;
-        this.byteLen = (fixedLen + 1) / 2 + 1;//one additional byte to indicate null
+        this.byteLen = fixedLen + 1;//one additional byte to indicate null
     }
 
     @Override
@@ -93,13 +102,14 @@ public class VLongDimEnc extends DimensionEncoding {
         }
 
         long integer = Long.parseLong(valueStr);
-        if (integer > CAP[fixedLen]) {
+        if (integer > CAP[fixedLen] || integer < TAIL[fixedLen]) {
             if (avoidVerbose++ % 10000 == 0) {
                 logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueStr + ", will truncate, hit times:" + avoidVerbose);
             }
         }
 
-        BytesUtil.writeLong(integer, output, outputOffset, fixedLen);
+        BytesUtil.writeByte(integer >= 0 ? (byte) 1 : (byte) 0, output, outputOffset, 1);
+        BytesUtil.writeSignedLong(integer, output, outputOffset + 1, fixedLen);
     }
 
     @Override
@@ -108,23 +118,23 @@ public class VLongDimEnc extends DimensionEncoding {
             return null;
         }
 
-        long integer = BytesUtil.readLong(bytes, offset, len);
+        long integer = BytesUtil.readSignedLong(bytes, offset + 1, len - 1);
         return String.valueOf(integer);
     }
 
     @Override
     public DataTypeSerializer<Object> asDataTypeSerializer() {
-        return new IntegerSerializer();
+        return new VLongSerializer();
     }
 
-    public class IntegerSerializer extends DataTypeSerializer<Object> {
+    public class VLongSerializer extends DataTypeSerializer<Object> {
         // be thread-safe and avoid repeated obj creation
         private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
 
         private byte[] currentBuf() {
             byte[] buf = current.get();
             if (buf == null) {
-                buf = new byte[fixedLen];
+                buf = new byte[byteLen];
                 current.set(buf);
             }
             return buf;
@@ -147,17 +157,17 @@ public class VLongDimEnc extends DimensionEncoding {
 
         @Override
         public int peekLength(ByteBuffer in) {
-            return fixedLen;
+            return byteLen;
         }
 
         @Override
         public int maxLength() {
-            return fixedLen;
+            return byteLen;
         }
 
         @Override
         public int getStorageBytesEstimate() {
-            return fixedLen;
+            return byteLen;
         }
 
         @Override
@@ -183,7 +193,7 @@ public class VLongDimEnc extends DimensionEncoding {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        VLongDimEnc that = (VLongDimEnc) o;
+        OneMoreByteVLongDimEnc that = (OneMoreByteVLongDimEnc) o;
 
         return fixedLen == that.fixedLen;
 

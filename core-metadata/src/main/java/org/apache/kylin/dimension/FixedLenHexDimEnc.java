@@ -29,18 +29,75 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 /**
  * used to store hex values like "1A2BFF"
+ * <p>
+ * <p>
+ * limitations: (take FixedLenHexDimEnc(2) as example: )
+ * <p>
+ * 1. "FFFF" will become null encode and decode
+ * 2. "AB" will become "AB00"
  * 
- * FixedLenHexDimEnc does not support expressing NULL values, nulls will become "FFFFFF" after encode and decode
+ * <p>
+ * Due to these limitations hex representation of hash values(with no padding, better with even characters) is more suitable
  */
 public class FixedLenHexDimEnc extends DimensionEncoding {
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(FixedLenHexDimEnc.class);
 
+    public static byte[] dict = new byte[256];
+    public static byte[] revdict = new byte[16];
+
+    static {
+        for (int i = 0; i < dict.length; i++) {
+            dict[i] = -1;
+        }
+        dict['0'] = 0;
+        dict['1'] = 1;
+        dict['2'] = 2;
+        dict['3'] = 3;
+        dict['4'] = 4;
+        dict['5'] = 5;
+        dict['6'] = 6;
+        dict['7'] = 7;
+        dict['8'] = 8;
+        dict['9'] = 9;
+        dict['A'] = 10;
+        dict['B'] = 11;
+        dict['C'] = 12;
+        dict['D'] = 13;
+        dict['E'] = 14;
+        dict['F'] = 15;
+        dict['a'] = 10;
+        dict['b'] = 11;
+        dict['c'] = 12;
+        dict['d'] = 13;
+        dict['e'] = 14;
+        dict['f'] = 15;
+
+        revdict[0] = '0';
+        revdict[1] = '1';
+        revdict[2] = '2';
+        revdict[3] = '3';
+        revdict[4] = '4';
+        revdict[5] = '5';
+        revdict[6] = '6';
+        revdict[7] = '7';
+        revdict[8] = '8';
+        revdict[9] = '9';
+        revdict[10] = 'A';
+        revdict[11] = 'B';
+        revdict[12] = 'C';
+        revdict[13] = 'D';
+        revdict[14] = 'E';
+        revdict[15] = 'F';
+    }
+
     // row key fixed length place holder
-    public static final byte ROWKEY_PLACE_HOLDER_BYTE = 9;
+    public static final byte ROWKEY_PLACE_HOLDER_BYTE = 0;
 
     public static final String ENCODING_NAME = "fixed_length_hex";
 
@@ -54,22 +111,26 @@ public class FixedLenHexDimEnc extends DimensionEncoding {
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
             return new FixedLenHexDimEnc(Integer.parseInt(args[0]));
         }
-    };
+    }
 
     // ============================================================================
 
-    private int fixedLen;
+    private int hexLength;
     private int bytelen;
 
     transient private int avoidVerbose = 0;
+    transient private int avoidVerbose2 = 0;
 
     //no-arg constructor is required for Externalizable
     public FixedLenHexDimEnc() {
     }
 
     public FixedLenHexDimEnc(int len) {
-        this.fixedLen = len;
-        this.bytelen = (fixedLen + 1) / 2;
+        if (len < 1) {
+            throw new IllegalArgumentException("len has to be positive: " + len);
+        }
+        this.hexLength = len;
+        this.bytelen = (hexLength + 1) / 2;
     }
 
     @Override
@@ -81,51 +142,78 @@ public class FixedLenHexDimEnc extends DimensionEncoding {
 
         FixedLenHexDimEnc that = (FixedLenHexDimEnc) o;
 
-        return fixedLen == that.fixedLen;
-
+        return hexLength == that.hexLength;
     }
 
     @Override
     public int hashCode() {
-        return fixedLen;
+        return hexLength;
     }
 
     @Override
     public int getLengthOfEncoding() {
-        return fixedLen;
+        return bytelen;
     }
 
     @Override
     public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
         if (value == null) {
-            Arrays.fill(output, outputOffset, outputOffset + fixedLen, NULL);
+            Arrays.fill(output, outputOffset, outputOffset + bytelen, NULL);
             return;
         }
 
-        if (valueLen > fixedLen) {
+        int endOffset = outputOffset + bytelen;
+
+        if (valueLen > hexLength) {
             if (avoidVerbose++ % 10000 == 0) {
-                logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueLen + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
+                logger.warn("Expect at most " + hexLength + " bytes, but got " + valueLen + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
             }
         }
 
-        int n = Math.min(valueLen, fixedLen);
-        System.arraycopy(value, 0, output, outputOffset, n);
-
-        if (n < fixedLen) {
-            Arrays.fill(output, outputOffset + n, outputOffset + fixedLen, ROWKEY_PLACE_HOLDER_BYTE);
+        if (valueLen >= hexLength && isF(value, 0, hexLength)) {
+            if (avoidVerbose2++ % 10000 == 0) {
+                logger.warn("All 'F' value: " + Bytes.toString(value, 0, valueLen) + "will become null after encode/decode. times:" + avoidVerbose);
+            }
         }
+
+        int n = Math.min(valueLen, hexLength);
+        for (int i = 0; i < n; i += 2) {
+            byte temp = 0;
+            byte iCode = dict[value[i]];
+            temp |= (iCode << 4);
+
+            int j = i + 1;
+            if (j < n) {
+                byte jCode = dict[value[j]];
+                temp |= jCode;
+            }
+
+            output[outputOffset++] = temp;
+        }
+
+        Arrays.fill(output, outputOffset, endOffset, ROWKEY_PLACE_HOLDER_BYTE);
     }
 
     @Override
     public String decode(byte[] bytes, int offset, int len) {
+        Preconditions.checkArgument(len == bytelen, "len " + len + " not equals " + bytelen);
+
         if (isNull(bytes, offset, len)) {
             return null;
         }
 
-        while (len > 0 && bytes[offset + len - 1] == ROWKEY_PLACE_HOLDER_BYTE)
-            len--;
+        byte[] ret = new byte[hexLength];
+        for (int i = 0; i < ret.length; i += 2) {
+            byte temp = bytes[i / 2];
+            ret[i] = revdict[(temp & 0xF0) >>> 4];
 
-        return Bytes.toString(bytes, offset, len);
+            int j = i + 1;
+            if (j < hexLength) {
+                ret[j] = revdict[temp & 0x0F];
+            }
+        }
+
+        return Bytes.toString(ret, 0, ret.length);
     }
 
     @Override
@@ -140,7 +228,7 @@ public class FixedLenHexDimEnc extends DimensionEncoding {
         private byte[] currentBuf() {
             byte[] buf = current.get();
             if (buf == null) {
-                buf = new byte[fixedLen];
+                buf = new byte[bytelen];
                 current.set(buf);
             }
             return buf;
@@ -163,17 +251,17 @@ public class FixedLenHexDimEnc extends DimensionEncoding {
 
         @Override
         public int peekLength(ByteBuffer in) {
-            return fixedLen;
+            return bytelen;
         }
 
         @Override
         public int maxLength() {
-            return fixedLen;
+            return bytelen;
         }
 
         @Override
         public int getStorageBytesEstimate() {
-            return fixedLen;
+            return bytelen;
         }
 
         @Override
@@ -184,12 +272,21 @@ public class FixedLenHexDimEnc extends DimensionEncoding {
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeShort(fixedLen);
+        out.writeShort(hexLength);
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        fixedLen = in.readShort();
+        hexLength = in.readShort();
+    }
+
+    private boolean isF(byte[] value, int offset, int length) {
+        for (int i = offset; i < length + offset; ++i) {
+            if (value[i] != 'F') {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
