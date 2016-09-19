@@ -32,20 +32,20 @@ then
 fi
 
 # works for kafka 9+
-kafka_dependency=`find -L $kafka_home -name 'kafka-clients-[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
-if [ -z "$kafka_dependency" ]
+kafka_client=`find -L "$(dirname $kafka_home)" -name 'kafka-clients-[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+if [ -z "$kafka_client" ]
 then
 # works for kafka 8
-    kafka_dependency=`find -L $kafka_home -name 'kafka_[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
-    if [ -z "$kafka_dependency" ]
+    kafka_broker=`find -L "$(dirname $kafka_home)" -name 'kafka_[a-z0-9A-Z\.-]*.jar' ! -name '*doc*' ! -name '*test*' ! -name '*sources*' ''-printf '%p:' | sed 's/:$//'`
+    if [ -z "$kafka_broker" ]
     then
         echo "kafka client lib not found"
         exit 1
     else
-        echo "kafka dependency: $kafka_dependency"
+        echo "kafka dependency: $kafka_broker"
         export kafka_dependency
     fi
 else
-    echo "kafka dependency: $kafka_dependency"
+    echo "kafka dependency: $kafka_client"
     export kafka_dependency
 fi
