@@ -71,8 +71,7 @@ public class BuildCubeWithStream {
     private MockKafka kafkaServer;
 
     public void before() throws Exception {
-        //deployEnv();
-        DeployUtil.overrideJobJarLocations();
+        deployEnv();
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
@@ -198,8 +197,8 @@ public class BuildCubeWithStream {
 
     protected void deployEnv() throws IOException {
         DeployUtil.overrideJobJarLocations();
-        DeployUtil.initCliWorkDir();
-        DeployUtil.deployMetadata();
+        //DeployUtil.initCliWorkDir();
+        //DeployUtil.deployMetadata();
     }
 
     public static void beforeClass() throws Exception {
