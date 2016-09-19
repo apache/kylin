@@ -18,14 +18,15 @@
 package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
 import org.apache.commons.lang3.StringUtils;
-import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -103,7 +104,8 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 }
             }
 
-            return new StreamingMessage(result, 0, t, Collections.<String, Object>emptyMap());
+            logger.info("Streaming Message: " + result.toString());
+            return new StreamingMessage(result, 0, t, Collections.<String, Object> emptyMap());
         } catch (IOException e) {
             logger.error("error", e);
             throw new RuntimeException(e);
