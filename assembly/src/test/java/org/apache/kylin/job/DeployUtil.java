@@ -187,6 +187,7 @@ public class DeployUtil {
         File tmpFile = File.createTempFile(factTableName, "csv");
         FileOutputStream out = new FileOutputStream(tmpFile);
 
+        InputStream tempIn = null;
         try {
             if (store.exists(factTablePath)) {
                 InputStream oldContent = store.getResource(factTablePath).inputStream;
@@ -194,13 +195,15 @@ public class DeployUtil {
             }
             IOUtils.copy(in, out);
             IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(out);
 
             store.deleteResource(factTablePath);
-            in = new FileInputStream(tmpFile);
-            store.putResource(factTablePath, in, System.currentTimeMillis());
+            tempIn = new FileInputStream(tmpFile);
+            store.putResource(factTablePath, tempIn, System.currentTimeMillis());
         } finally {
             IOUtils.closeQuietly(out);
             IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(tempIn);
         }
 
     }
