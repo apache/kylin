@@ -25,7 +25,7 @@ if [ -n is_aws ] && [ -d "/usr/lib/oozie/lib" ]; then
     export HBASE_ENV_INIT="true"
 fi
 
-arr=(`echo $hbase_classpath | cut -d ":"  --output-delimiter=" " -f 1-`)
+arr=(`echo $hbase_classpath | cut -d ":" -f 1- | sed 's/:/ /g'`)
 hbase_common_path=
 for data in ${arr[@]}
 do

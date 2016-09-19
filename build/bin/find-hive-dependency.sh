@@ -38,7 +38,7 @@ else
 fi
 
 hive_classpath=`echo $hive_env | grep 'env:CLASSPATH' | awk -F '=' '{print $2}'`
-arr=(`echo $hive_classpath | cut -d ":"  --output-delimiter=" " -f 1-`)
+arr=(`echo $hive_classpath | cut -d ":" -f 1- | sed 's/:/ /g'`)
 hive_conf_path=
 hive_exec_path=
 
