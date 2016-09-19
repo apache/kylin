@@ -14,9 +14,9 @@ Kylin need run in a Hadoop node, to get better stability, we suggest you to depl
 * HBase: 0.98 - 0.99, 1.x
 * JDK: 1.7+
 
-_Tested with Hortonworks HDP 2.2 and Cloudera Quickstart VM 5.1_
+_Tested with Hortonworks HDP 2.2 and Cloudera Quickstart VM 5.1. Windows and MacOS have known issues._
 
-To make things easier we strongly recommend you try Kylin with an all-in-one sandbox VM, like [HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/). In the following tutorial we'll go with **Hortonworks Sandbox 2.1** and **Cloudera QuickStart VM 5.1**. 
+To make things easier we strongly recommend you try Kylin with an all-in-one sandbox VM, like [HDP sandbox](http://hortonworks.com/products/hortonworks-sandbox/), and give it 10 GB memory. In the following tutorial we'll go with **Hortonworks Sandbox 2.1** and **Cloudera QuickStart VM 5.1**. 
 
 To avoid permission issue in the sandbox, you can use its `root` account. The password for **Hortonworks Sandbox 2.1** is `hadoop` , for **Cloudera QuickStart VM 5.1** is `cloudera`.
 
