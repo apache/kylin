@@ -137,21 +137,15 @@ public class BuildCubeWithStream {
 
         int numberOfRecrods1 = 10000;
         generateStreamData(date1, date2, numberOfRecrods1);
-        ExecutableState result = buildSegment(cubeName, 0, Long.MAX_VALUE);
-        Assert.assertTrue(result == ExecutableState.SUCCEED);
-        long date3 = f.parse("2013-04-01").getTime();
-        int numberOfRecords2 = 5000;
-        generateStreamData(date2, date3, numberOfRecords2);
-        result = buildSegment(cubeName, 0, Long.MAX_VALUE);
-        Assert.assertTrue(result == ExecutableState.SUCCEED);
+        buildSegment(cubeName, 0, Long.MAX_VALUE);
 
-        //empty build
-        result = buildSegment(cubeName, 0, Long.MAX_VALUE);
-        Assert.assertTrue(result == ExecutableState.DISCARDED);
+        long date3 = f.parse("2013-04-01").getTime();
+        int numberOfRecrods2 = 5000;
+        generateStreamData(date2, date3, numberOfRecrods2);
+        buildSegment(cubeName, 0, Long.MAX_VALUE);
 
         //merge
-        result = mergeSegment(cubeName, 0, 15000);
-        Assert.assertTrue(result == ExecutableState.SUCCEED);
+        mergeSegment(cubeName, 0, 15000);
 
         List<CubeSegment> segments = cubeManager.getCube(cubeName).getSegments();
         Assert.assertTrue(segments.size() == 1);
@@ -165,16 +159,16 @@ public class BuildCubeWithStream {
 
     }
 
-    private ExecutableState mergeSegment(String cubeName, long startOffset, long endOffset) throws Exception {
+    private String mergeSegment(String cubeName, long startOffset, long endOffset) throws Exception {
         CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), 0, 0, startOffset, endOffset, false);
         DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
-        return job.getStatus();
+        return job.getId();
     }
 
     private String refreshSegment(String cubeName, long startOffset, long endOffset, HashMap<String, String> partitionOffsetMap) throws Exception {
-        CubeSegment segment = cubeManager.refreshSegment(cubeManager.getCube(cubeName), 0, 0, startOffset, endOffset);
+        CubeSegment segment = cubeManager.refreshSegment(cubeManager.getCube(cubeName), 0, 0, startOffset, endOffset, false);
         segment.setAdditionalInfo(partitionOffsetMap);
         CubeInstance cubeInstance = cubeManager.getCube(cubeName);
         CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
@@ -187,12 +181,12 @@ public class BuildCubeWithStream {
         return job.getId();
     }
 
-    private ExecutableState buildSegment(String cubeName, long startOffset, long endOffset) throws Exception {
-        CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), 0, 0, startOffset, endOffset);
+    private String buildSegment(String cubeName, long startOffset, long endOffset) throws Exception {
+        CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), 0, 0, startOffset, endOffset, false);
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());
-        return job.getStatus();
+        return job.getId();
     }
 
     protected void deployEnv() throws IOException {
@@ -222,7 +216,7 @@ public class BuildCubeWithStream {
     protected void waitForJob(String jobId) {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);
-            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR || job.getStatus() == ExecutableState.DISCARDED) {
+            if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR) {
                 break;
             } else {
                 try {
