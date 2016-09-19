@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.kafka.common.protocol.SecurityProtocol;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.source.kafka.StreamingParser;
@@ -56,7 +55,7 @@ public final class KafkaUtils {
             if (partitionMetadata.errorCode() != 0) {
                 logger.warn("PartitionMetadata errorCode: " + partitionMetadata.errorCode());
             }
-            return new Broker(partitionMetadata.leader(), SecurityProtocol.PLAINTEXT);
+            return partitionMetadata.leader();
         } else {
             return null;
         }

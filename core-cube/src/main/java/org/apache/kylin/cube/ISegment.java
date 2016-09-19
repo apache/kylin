@@ -16,7 +16,10 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.metadata.model;
+package org.apache.kylin.cube;
+
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 
 public interface ISegment {
 

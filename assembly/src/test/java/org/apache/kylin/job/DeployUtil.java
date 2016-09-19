@@ -143,12 +143,14 @@ public class DeployUtil {
         deployHiveTables();
     }
 
-    public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords, String cubeName, StreamDataLoader streamDataLoader) throws IOException {
+    public static void prepareTestDataForStreamingCube(long startTime, long endTime, String cubeName, StreamDataLoader streamDataLoader) throws IOException {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime, cubeInstance.getFactTable());
+        List<String> data = StreamingTableDataGenerator.generate(10000, startTime, endTime, cubeInstance.getFactTable());
+        List<String> data2 = StreamingTableDataGenerator.generate(10, endTime, endTime + 300000, cubeInstance.getFactTable());
         TableDesc tableDesc = cubeInstance.getFactTableDesc();
         //load into kafka
         streamDataLoader.loadIntoKafka(data);
+        streamDataLoader.loadIntoKafka(data2);
         logger.info("Write {} messages into {}", data.size(), streamDataLoader.toString());
 
         //csv data for H2 use
@@ -163,7 +165,7 @@ public class DeployUtil {
             sb.append(StringUtils.join(rowColumns, ","));
             sb.append(System.getProperty("line.separator"));
         }
-        appendFactTableData(sb.toString(), cubeInstance.getFactTable());
+        overrideFactTableData(sb.toString(), cubeInstance.getFactTable());
     }
 
     public static void overrideFactTableData(String factTableContent, String factTableName) throws IOException {
@@ -177,33 +179,6 @@ public class DeployUtil {
         in.close();
     }
 
-    public static void appendFactTableData(String factTableContent, String factTableName) throws IOException {
-        // Write to resource store
-        ResourceStore store = ResourceStore.getStore(config());
-
-        InputStream in = new ByteArrayInputStream(factTableContent.getBytes("UTF-8"));
-        String factTablePath = "/data/" + factTableName + ".csv";
-
-        File tmpFile = File.createTempFile(factTableName, "csv");
-        FileOutputStream out = new FileOutputStream(tmpFile);
-
-        try {
-            if (store.exists(factTablePath)) {
-                InputStream oldContent = store.getResource(factTablePath).inputStream;
-                IOUtils.copy(oldContent, out);
-            }
-            IOUtils.copy(in, out);
-            IOUtils.closeQuietly(in);
-
-            store.deleteResource(factTablePath);
-            in = new FileInputStream(tmpFile);
-            store.putResource(factTablePath, in, System.currentTimeMillis());
-        } finally {
-            IOUtils.closeQuietly(out);
-            IOUtils.closeQuietly(in);
-        }
-
-    }
 
     private static void deployHiveTables() throws Exception {
 
