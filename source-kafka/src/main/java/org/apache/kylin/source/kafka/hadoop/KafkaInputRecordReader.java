@@ -105,11 +105,6 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
             value = new BytesWritable();
         }
 
-        if (watermark >= latestOffset) {
-            log.info("Reach the end offset, stop reading.");
-            return false;
-        }
-
         if (messages == null) {
             log.info("{} fetching offset {} ", topic + ":" + split.getBrokers() + ":" + partition, watermark);
             TopicPartition topicPartition = new TopicPartition(topic, partition);
@@ -124,6 +119,10 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
 
         if (iterator.hasNext()) {
             ConsumerRecord<String, String> message = iterator.next();
+            if (message.offset() >= latestOffset) {
+                log.info("Reach the end offset, stop reading.");
+                return false;
+            }
             key.set(message.offset());
             byte[] valuebytes = Bytes.toBytes(message.value());
             value.set(valuebytes, 0, valuebytes.length);
