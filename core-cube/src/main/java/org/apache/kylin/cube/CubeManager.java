@@ -937,14 +937,6 @@ public class CubeManager implements IRealizationProvider {
                 factDictCols.add(col);
             }
         }
-
-        // add partition column in all case
-        if (cubeDesc.getModel().getPartitionDesc() != null) {
-            TblColRef partitionCol = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
-            if (factDictCols.contains(partitionCol) == false) {
-                factDictCols.add(partitionCol);
-            }
-        }
         return factDictCols;
     }
 }
