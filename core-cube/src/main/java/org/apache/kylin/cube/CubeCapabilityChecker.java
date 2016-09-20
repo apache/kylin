@@ -25,14 +25,18 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -73,7 +77,21 @@ public class CubeCapabilityChecker {
 
         // try dimension-as-measure
         if (!unmatchedAggregations.isEmpty()) {
-            tryDimensionAsMeasures(unmatchedAggregations, digest, cube, result);
+            if (cube.getDescriptor().getFactTable().equals(digest.factTable)) {
+                tryDimensionAsMeasures(unmatchedAggregations, digest, cube, result, cube.getDescriptor().listDimensionColumnsIncludingDerived());
+            } else {
+                //deal with query on lookup table, like https://issues.apache.org/jira/browse/KYLIN-2030
+                if (cube.getSegments().get(0).getSnapshots().containsKey(digest.factTable)) {
+                    TableDesc tableDesc = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(digest.factTable);
+                    Set<TblColRef> dimCols = Sets.newHashSet();
+                    for (ColumnDesc columnDesc : tableDesc.getColumns()) {
+                        dimCols.add(columnDesc.getRef());
+                    }
+                    tryDimensionAsMeasures(unmatchedAggregations, digest, cube, result, dimCols);
+                } else {
+                    logger.info("Skip tryDimensionAsMeasures because current cube {} does not touch lookup table {} at all", cube.getName(), digest.factTable);
+                }
+            }
         }
 
         if (!unmatchedDimensions.isEmpty()) {
@@ -129,7 +147,7 @@ public class CubeCapabilityChecker {
         return result;
     }
 
-    private static void tryDimensionAsMeasures(Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result) {
+    private static void tryDimensionAsMeasures(Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result, Set<TblColRef> dimCols) {
         CubeDesc cubeDesc = cube.getDescriptor();
         Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
 
@@ -154,7 +172,7 @@ public class CubeCapabilityChecker {
                 continue;
             }
             List<TblColRef> neededCols = parameterDesc.getColRefs();
-            if (neededCols.size() > 0 && cubeDesc.listDimensionColumnsIncludingDerived().containsAll(neededCols) && FunctionDesc.BUILT_IN_AGGREGATIONS.contains(functionDesc.getExpression())) {
+            if (neededCols.size() > 0 && dimCols.containsAll(neededCols) && FunctionDesc.BUILT_IN_AGGREGATIONS.contains(functionDesc.getExpression())) {
                 result.influences.add(new CapabilityResult.DimensionAsMeasure(functionDesc));
                 it.remove();
                 continue;
