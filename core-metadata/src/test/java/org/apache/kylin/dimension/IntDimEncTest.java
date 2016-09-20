@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,29 +25,33 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SlimLongDimEncTest {
+/**
+ * Deprecated. use VLongDimEnc instead
+ * @deprecated
+ */
+public class IntDimEncTest {
 
     @Test
     public void testConstructor() {
         try {
-            new SlimLongDimEnc(0);
+            new IntDimEnc(0);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             // expect
         }
         try {
-            new SlimLongDimEnc(9);
+            new IntDimEnc(9);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             // expect
         }
-        new SlimLongDimEnc(8);
+        new IntDimEnc(8);
     }
 
     @Test
     public void testNull() {
         for (int i = 1; i < 9; i++) {
-            SlimLongDimEnc enc = new SlimLongDimEnc(i);
+            IntDimEnc enc = new IntDimEnc(i);
 
             byte[] buf = new byte[enc.getLengthOfEncoding()];
             enc.encode(null, 0, buf, 0);
@@ -66,49 +70,28 @@ public class SlimLongDimEncTest {
 
     @Test
     public void testEncodeDecode() {
-        SlimLongDimEnc enc = new SlimLongDimEnc(2);
+        IntDimEnc enc = new IntDimEnc(2);
         testEncodeDecode(enc, 0);
         testEncodeDecode(enc, 100);
         testEncodeDecode(enc, 10000);
-        testEncodeDecode(enc, 32767);
-        testEncodeDecode(enc, -100);
-        testEncodeDecode(enc, -10000);
-        testEncodeDecode(enc, -32767);
+        testEncodeDecode(enc, 65534);
         try {
-            testEncodeDecode(enc, 32768);
+            testEncodeDecode(enc, 65535);
             Assert.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<32768> but was:<null>", e.getMessage());
+            Assert.assertEquals("expected:<65535> but was:<null>", e.getMessage());
         }
         try {
-            testEncodeDecode(enc, -32768);
+            testEncodeDecode(enc, 65536);
             Assert.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<-32768> but was:<null>", e.getMessage());
+            Assert.assertEquals("expected:<[65536]> but was:<[0]>", e.getMessage());
         }
     }
 
-    @Test
-    public void testEncodeDecode2() {
-        SlimLongDimEnc enc = new SlimLongDimEnc(8);
-        testEncodeDecode(enc, 0);
-        testEncodeDecode(enc, 100);
-        testEncodeDecode(enc, 10000);
-        testEncodeDecode(enc, Long.MAX_VALUE);
-        testEncodeDecode(enc, -100);
-        testEncodeDecode(enc, -10000);
-        testEncodeDecode(enc, -Long.MAX_VALUE);
-        try {
-            testEncodeDecode(enc, Long.MIN_VALUE);
-            Assert.fail();
-        } catch (Throwable e) {
-            Assert.assertEquals("expected:<-9223372036854775808> but was:<null>", e.getMessage());
-        }
-    }
-
-    private void testEncodeDecode(SlimLongDimEnc enc, long value) {
-        String valueStr = "" + value;
+    private void testEncodeDecode(IntDimEnc enc, long value) {
         byte[] buf = new byte[enc.getLengthOfEncoding()];
+        String valueStr = "" + value;
         byte[] bytes = Bytes.toBytes(valueStr);
         enc.encode(bytes, bytes.length, buf, 0);
         String decode = enc.decode(buf, 0, buf.length);
@@ -117,29 +100,26 @@ public class SlimLongDimEncTest {
 
     @Test
     public void testSerDes() {
-        SlimLongDimEnc enc = new SlimLongDimEnc(2);
+        IntDimEnc enc = new IntDimEnc(2);
         testSerDes(enc, 0);
         testSerDes(enc, 100);
         testSerDes(enc, 10000);
-        testSerDes(enc, 32767);
-        testSerDes(enc, -100);
-        testSerDes(enc, -10000);
-        testSerDes(enc, -32767);
+        testSerDes(enc, 65534);
         try {
-            testSerDes(enc, 32768);
+            testSerDes(enc, 65535);
             Assert.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<32768> but was:<null>", e.getMessage());
+            Assert.assertEquals("expected:<65535> but was:<null>", e.getMessage());
         }
         try {
-            testSerDes(enc, -32768);
+            testSerDes(enc, 65536);
             Assert.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<-32768> but was:<null>", e.getMessage());
+            Assert.assertEquals("expected:<[65536]> but was:<[0]>", e.getMessage());
         }
     }
 
-    private void testSerDes(SlimLongDimEnc enc, long value) {
+    private void testSerDes(IntDimEnc enc, long value) {
         DataTypeSerializer<Object> ser = enc.asDataTypeSerializer();
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         String valueStr = "" + value;

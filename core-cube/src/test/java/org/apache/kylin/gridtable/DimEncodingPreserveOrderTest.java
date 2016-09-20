@@ -27,7 +27,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenHexDimEnc;
 import org.apache.kylin.dimension.OneMoreByteVLongDimEnc;
-import org.apache.kylin.dimension.SlimLongDimEnc;
+import org.apache.kylin.dimension.IntegerDimEnc;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -52,7 +52,7 @@ public class DimEncodingPreserveOrderTest {
 
     @Test
     public void testVLongDimEncPreserveOrder() {
-        SlimLongDimEnc enc = new SlimLongDimEnc(2);
+        IntegerDimEnc enc = new IntegerDimEnc(2);
         List<ByteArray> encodedValues = Lists.newArrayList();
         encodedValues.add(encode(enc, -32767L));
         encodedValues.add(encode(enc, -10000L));
@@ -68,7 +68,7 @@ public class DimEncodingPreserveOrderTest {
 
     @Test
     public void testVLongDimEncPreserveOrder2() {
-        SlimLongDimEnc enc = new SlimLongDimEnc(8);
+        IntegerDimEnc enc = new IntegerDimEnc(8);
         List<ByteArray> encodedValues = Lists.newArrayList();
         encodedValues.add(encode(enc, -Long.MAX_VALUE));
         encodedValues.add(encode(enc, -10000L));

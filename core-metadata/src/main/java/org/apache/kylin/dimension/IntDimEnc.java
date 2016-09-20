@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *  
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,24 +31,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * replacement for IntegerDimEnc, the diff is VLongDimEnc supports negative values
+ * deprecated use IntegerDimEnc instead
+ * @deprecated
  */
-public class SlimLongDimEnc extends DimensionEncoding {
+public class IntDimEnc extends DimensionEncoding {
     private static final long serialVersionUID = 1L;
 
-    private static Logger logger = LoggerFactory.getLogger(SlimLongDimEnc.class);
+    private static Logger logger = LoggerFactory.getLogger(IntDimEnc.class);
 
-    private static final long[] CAP = { 0, 0x7fL, 0x7fffL, 0x7fffffL, 0x7fffffffL, 0x7fffffffffL, 0x7fffffffffffL, 0x7fffffffffffffL, 0x7fffffffffffffffL };
-    private static final long[] MASK = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, 0xffffffffffffffffL };
-    private static final long[] TAIL = { 0, 0x80L, 0x8000L, 0x800000L, 0x80000000L, 0x8000000000L, 0x800000000000L, 0x80000000000000L, 0x8000000000000000L };
-    static {
-        for (int i = 1; i < TAIL.length; ++i) {
-            long head = ~MASK[i];
-            TAIL[i] = head | TAIL[i];
-        }
-    }
+    private static final long[] CAP = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, Long.MAX_VALUE };
 
-    public static final String ENCODING_NAME = "slimlong";
+    public static final String ENCODING_NAME = "int";
 
     public static class Factory extends DimensionEncodingFactory {
         @Override
@@ -58,7 +51,7 @@ public class SlimLongDimEnc extends DimensionEncoding {
 
         @Override
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
-            return new SlimLongDimEnc(Integer.parseInt(args[0]));
+            return new IntDimEnc(Integer.parseInt(args[0]));
         }
     };
 
@@ -67,13 +60,12 @@ public class SlimLongDimEnc extends DimensionEncoding {
     private int fixedLen;
 
     transient private int avoidVerbose = 0;
-    transient private int avoidVerbose2 = 0;
 
     //no-arg constructor is required for Externalizable
-    public SlimLongDimEnc() {
+    public IntDimEnc() {
     }
 
-    public SlimLongDimEnc(int len) {
+    public IntDimEnc(int len) {
         if (len <= 0 || len >= CAP.length)
             throw new IllegalArgumentException();
 
@@ -102,19 +94,13 @@ public class SlimLongDimEnc extends DimensionEncoding {
         }
 
         long integer = Long.parseLong(valueStr);
-        if (integer > CAP[fixedLen] || integer < TAIL[fixedLen]) {
+        if (integer > CAP[fixedLen]) {
             if (avoidVerbose++ % 10000 == 0) {
                 logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueStr + ", will truncate, hit times:" + avoidVerbose);
             }
         }
 
-        if (integer == TAIL[fixedLen]) {
-            if (avoidVerbose2++ % 10000 == 0) {
-                logger.warn("Value " + valueStr + " does not fit into " + fixedLen + " bytes ");
-            }
-        }
-
-        BytesUtil.writeLong(integer + CAP[fixedLen], output, outputOffset, fixedLen);//apply an offset to preserve binary order, overflow is okay
+        BytesUtil.writeLong(integer, output, outputOffset, fixedLen);
     }
 
     @Override
@@ -123,15 +109,7 @@ public class SlimLongDimEnc extends DimensionEncoding {
             return null;
         }
 
-        long integer = BytesUtil.readLong(bytes, offset, len) - CAP[fixedLen];
-
-        //only take useful bytes
-        integer = integer & MASK[fixedLen];
-        boolean positive = (integer & ((0x80) << ((fixedLen - 1) << 3))) == 0;
-        if (!positive) {
-            integer |= (~MASK[fixedLen]);
-        }
-
+        long integer = BytesUtil.readLong(bytes, offset, len);
         return String.valueOf(integer);
     }
 
@@ -206,7 +184,7 @@ public class SlimLongDimEnc extends DimensionEncoding {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        SlimLongDimEnc that = (SlimLongDimEnc) o;
+        IntDimEnc that = (IntDimEnc) o;
 
         return fixedLen == that.fixedLen;
 

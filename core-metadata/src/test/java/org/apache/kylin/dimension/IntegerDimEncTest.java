@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,9 +25,6 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * Deprecated. use VLongDimEnc instead
- */
 public class IntegerDimEncTest {
 
     @Test
@@ -73,24 +70,45 @@ public class IntegerDimEncTest {
         testEncodeDecode(enc, 0);
         testEncodeDecode(enc, 100);
         testEncodeDecode(enc, 10000);
-        testEncodeDecode(enc, 65534);
+        testEncodeDecode(enc, 32767);
+        testEncodeDecode(enc, -100);
+        testEncodeDecode(enc, -10000);
+        testEncodeDecode(enc, -32767);
         try {
-            testEncodeDecode(enc, 65535);
+            testEncodeDecode(enc, 32768);
             Assert.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<65535> but was:<null>", e.getMessage());
+            Assert.assertEquals("expected:<32768> but was:<null>", e.getMessage());
         }
         try {
-            testEncodeDecode(enc, 65536);
+            testEncodeDecode(enc, -32768);
             Assert.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<[65536]> but was:<[0]>", e.getMessage());
+            Assert.assertEquals("expected:<-32768> but was:<null>", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testEncodeDecode2() {
+        IntegerDimEnc enc = new IntegerDimEnc(8);
+        testEncodeDecode(enc, 0);
+        testEncodeDecode(enc, 100);
+        testEncodeDecode(enc, 10000);
+        testEncodeDecode(enc, Long.MAX_VALUE);
+        testEncodeDecode(enc, -100);
+        testEncodeDecode(enc, -10000);
+        testEncodeDecode(enc, -Long.MAX_VALUE);
+        try {
+            testEncodeDecode(enc, Long.MIN_VALUE);
+            Assert.fail();
+        } catch (Throwable e) {
+            Assert.assertEquals("expected:<-9223372036854775808> but was:<null>", e.getMessage());
         }
     }
 
     private void testEncodeDecode(IntegerDimEnc enc, long value) {
-        byte[] buf = new byte[enc.getLengthOfEncoding()];
         String valueStr = "" + value;
+        byte[] buf = new byte[enc.getLengthOfEncoding()];
         byte[] bytes = Bytes.toBytes(valueStr);
         enc.encode(bytes, bytes.length, buf, 0);
         String decode = enc.decode(buf, 0, buf.length);
@@ -103,18 +121,21 @@ public class IntegerDimEncTest {
         testSerDes(enc, 0);
         testSerDes(enc, 100);
         testSerDes(enc, 10000);
-        testSerDes(enc, 65534);
+        testSerDes(enc, 32767);
+        testSerDes(enc, -100);
+        testSerDes(enc, -10000);
+        testSerDes(enc, -32767);
         try {
-            testSerDes(enc, 65535);
+            testSerDes(enc, 32768);
             Assert.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<65535> but was:<null>", e.getMessage());
+            Assert.assertEquals("expected:<32768> but was:<null>", e.getMessage());
         }
         try {
-            testSerDes(enc, 65536);
+            testSerDes(enc, -32768);
             Assert.fail();
         } catch (Throwable e) {
-            Assert.assertEquals("expected:<[65536]> but was:<[0]>", e.getMessage());
+            Assert.assertEquals("expected:<-32768> but was:<null>", e.getMessage());
         }
     }
 
