@@ -26,6 +26,7 @@ import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.dimension.TimeDimEnc;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -37,8 +38,8 @@ import com.google.common.base.Preconditions;
 
 /**
  * @author yangli9
+ * 
  */
-@SuppressWarnings("deprecation")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class RowKeyColDesc {
 
@@ -74,9 +75,15 @@ public class RowKeyColDesc {
         if (!DimensionEncodingFactory.isVaildEncoding(this.encodingName))
             throw new IllegalArgumentException("Not supported row key col encoding: '" + this.encoding + "'");
 
-        // convert date/time encoding to dictionary, because encoding does not remember date pattern and cannot format string correctly at query time
-        if (DateDimEnc.ENCODING_NAME.equals(encodingName) || TimeDimEnc.ENCODING_NAME.equals(encodingName)) {
-            throw new IllegalStateException("Encoding '" + DateDimEnc.ENCODING_NAME + "' and '" + TimeDimEnc.ENCODING_NAME + "' are deprecated, please use dictionary encoding instead");
+        // convert date/time dictionary to DimensionEncoding implicitly, date/time dictionary is deprecated
+        if (DictionaryDimEnc.ENCODING_NAME.equals(encodingName)) {
+            DataType type = colRef.getType();
+            if (type.isDate()) {
+                encoding = encodingName = DateDimEnc.ENCODING_NAME;
+            }
+            if (type.isTime() || type.isTimestamp() || type.isDatetime()) {
+                encoding = encodingName = TimeDimEnc.ENCODING_NAME;
+            }
         }
     }
 

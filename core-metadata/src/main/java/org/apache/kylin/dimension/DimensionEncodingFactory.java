@@ -77,6 +77,8 @@ public abstract class DimensionEncodingFactory {
             map.put(IntegerDimEnc.ENCODING_NAME, new IntegerDimEnc.Factory());
             map.put(SlimLongDimEnc.ENCODING_NAME, new SlimLongDimEnc.Factory());
             map.put(FixedLenHexDimEnc.ENCODING_NAME, new FixedLenHexDimEnc.Factory());
+            map.put(DateDimEnc.ENCODING_NAME, new DateDimEnc.Factory());
+            map.put(TimeDimEnc.ENCODING_NAME, new TimeDimEnc.Factory());
 
             // custom encodings
             String[] clsNames = KylinConfig.getInstanceFromEnv().getCubeDimensionCustomEncodingFactories();
