@@ -82,13 +82,13 @@ public class RowKeyColDesc {
             if (type.isDate()) {
                 encoding = encodingName = DateDimEnc.ENCODING_NAME;
             }
-            if (type.isTime() || type.isTimestamp() || type.isDatetime()) {
+            if (type.isTimeFamily()) {
                 encoding = encodingName = TimeDimEnc.ENCODING_NAME;
             }
         }
         if (DateDimEnc.ENCODING_NAME.equals(encodingName) && type.isDate() == false)
             throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply date encoding");
-        if (TimeDimEnc.ENCODING_NAME.equals(encodingName) && type.isTime() == false)
+        if (TimeDimEnc.ENCODING_NAME.equals(encodingName) && type.isTimeFamily() == false)
             throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply time encoding");
     }
 

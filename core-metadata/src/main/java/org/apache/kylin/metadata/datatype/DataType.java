@@ -212,6 +212,10 @@ public class DataType implements Serializable {
         return DATETIME_FAMILY.contains(name);
     }
 
+    public boolean isTimeFamily() {
+        return DATETIME_FAMILY.contains(name) && !isDate();
+    }
+    
     public boolean isDate() {
         return name.equals("date");
     }

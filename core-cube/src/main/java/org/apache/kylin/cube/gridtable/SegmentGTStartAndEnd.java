@@ -65,7 +65,7 @@ public class SegmentGTStartAndEnd {
         DataType partitionColType = info.getColumnType(index);
         if (partitionColType.isDate()) {
             value = DateFormat.formatToDateStr(ts);
-        } else if (partitionColType.isDatetime() || partitionColType.isTimestamp()) {
+        } else if (partitionColType.isTimeFamily()) {
             value = DateFormat.formatToTimeWithoutMilliStr(ts);
         } else if (partitionColType.isStringFamily()) {
             String partitionDateFormat = segment.getModel().getPartitionDesc().getPartitionDateFormat();
