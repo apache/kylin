@@ -265,7 +265,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         implementor.visitChild(this, getInput());
 
         // only rewrite the innermost aggregation
-        if (!this.afterAggregate && RewriteImplementor.needRewrite(this.context)) {
+        if (!this.afterAggregate) {
             // rewrite the aggCalls
             this.rewriteAggCalls = new ArrayList<AggregateCall>(aggCalls.size());
             for (int i = 0; i < this.aggCalls.size(); i++) {
@@ -354,11 +354,15 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         }
     }
 
+    private boolean noPrecaculatedFieldsAvailable() {
+        return !this.context.hasPrecalculatedFields() || !RewriteImplementor.needRewrite(this.context);
+    }
+
     private AggregateCall rewriteAggregateCall(AggregateCall aggCall, FunctionDesc func) {
 
         //if it's not a cube, then the "needRewriteField func" should not resort to any rewrite fields, 
         // which do not exist at all
-        if (!this.context.hasPrecalculatedFields() && func.needRewriteField()) {
+        if (noPrecaculatedFieldsAvailable() && func.needRewriteField()) {
             logger.info(func + "skip rewriteAggregateCall because no pre-aggregated field available");
             return aggCall;
         }
