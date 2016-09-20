@@ -20,23 +20,25 @@ package org.apache.kylin.dimension;
 
 /**
  * This encoding is meant to be IDENTICAL to TimeStrDictionary for 100% backward compatibility.
+ * 
+ * @deprecated for now, please use dictionary 
  */
 public class TimeDimEnc extends AbstractDateDimEnc {
     private static final long serialVersionUID = 1L;
 
     public static final String ENCODING_NAME = "time";
 
-    public static class Factory extends DimensionEncodingFactory {
-        @Override
-        public String getSupportedEncodingName() {
-            return ENCODING_NAME;
-        }
-
-        @Override
-        public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
-            return new TimeDimEnc();
-        }
-    };
+//    public static class Factory extends DimensionEncodingFactory {
+//        @Override
+//        public String getSupportedEncodingName() {
+//            return ENCODING_NAME;
+//        }
+//
+//        @Override
+//        public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
+//            return new TimeDimEnc();
+//        }
+//    };
 
     public TimeDimEnc() {
         super(4, new IMillisCodec() {
