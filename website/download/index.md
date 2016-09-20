@@ -4,6 +4,8 @@ title: Download
 permalink: /download/index.html
 ---
 
+__Note: Versions 1.5.4 has a few known issues ([KYLIN-2010](https://issues.apache.org/jira/browse/KYLIN-2010) and [KYLIN-2032](https://issues.apache.org/jira/browse/KYLIN-2032)) that may impact some users. We are working on a fix release 1.5.4.1.__
+
 __Latest Source Code Release__  
 
 * [apache-kylin-1.5.4-src.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-src.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-src.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4/apache-kylin-1.5.4-src.tar.gz.md5)\]
