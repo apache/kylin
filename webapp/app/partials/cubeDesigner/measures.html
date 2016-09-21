@@ -260,7 +260,7 @@
                                       <select ng-if="state.mode=='edit'" style="width:180px;"
                                               chosen ng-model="groupby_column.encoding"
                                               ng-change="refreshGroupBy(convertedColumns,$index,groupby_column)"
-                                              ng-options="dt as dt for dt in store.supportedEncoding">
+                                              ng-options="dt.value as dt.name for dt in getEncodings(groupby_column.name)">
                                         <option value=""></option>
                                       </select>
                                       <span ng-if="state.mode=='view'">{{groupby_column.encoding}}</span>
