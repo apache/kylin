@@ -40,10 +40,49 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     supportedEncoding:[]
   }
   CubeService.getValidEncodings({}, function (encodings) {
-    $scope.store.supportedEncoding = encodings;
+    for(var i =0;i<encodings.length;i++){
+      var value = encodings[i];
+      var name = value;
+      if(value=="int"){
+        name = "int (deprecated)";
+      }
+      $scope.store.supportedEncoding.push({
+        "name":name,
+        "value":value
+      });
+    }
   },function(e){
     $scope.store.supportedEncoding = $scope.cubeConfig.encodings;
   })
+
+  $scope.getEncodings =function (name){
+    var type = TableModel.columnNameTypeMap[name];
+    var encodings = $scope.store.supportedEncoding;
+    if(!type){
+      return encodings;
+    }
+    var filterEncodings = [];
+    for(var i = 0;i<encodings.length;i++){
+      var encodingValue = encodings[i].value;
+      if(encodingValue == "fixed_length_hex" ){
+        if(type.indexOf("varchar")!==-1){
+          filterEncodings.push(encodings[i]);
+        }
+      }else if(encodingValue == "date"){
+        if(type=="date"){
+          filterEncodings.push(encodings[i]);
+        }
+      }else if(encodingValue == "time"){
+        if(type=="time"||type=="datetime"||type=="timestamp"){
+          filterEncodings.push(encodings[i]);
+        }
+      }else{
+        filterEncodings.push(encodings[i]);
+      }
+    }
+
+    return filterEncodings;
+  }
 
   $scope.getColumnsByTable = function (tableName) {
     var temp = [];

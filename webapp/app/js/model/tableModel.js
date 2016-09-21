@@ -25,6 +25,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
     var loading = false;
    //for tables in cubeDesigner
     this.selectProjectTables = [];
+    this.columnNameTypeMap = {};
 
     this.initTables = function(){
         this.selectProjectTables = [];
@@ -81,6 +82,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
                         column.cardinality = null;
                     }
                     column.id = parseInt(column.id);
+                  _this.columnNameTypeMap[column.name] = column.datatype;
                 });
                 tableMap[table.database].push(table);
             });

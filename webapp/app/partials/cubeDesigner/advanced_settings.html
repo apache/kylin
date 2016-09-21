@@ -229,11 +229,12 @@
 
                       <span ng-if="state.mode=='view'">{{rowkey_column.column}}</span>
                     </td>
+
                     <td>
                       <select ng-if="state.mode=='edit'" style="width:180px;"
                               chosen ng-model="rowkey_column.encoding"
                               ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
-                              ng-options="dt as dt for dt in store.supportedEncoding">
+                              ng-options="dt.value as dt.name for dt in getEncodings(rowkey_column.column)">
                         <option value=""></option>
                       </select>
                       <span ng-if="state.mode=='view'">{{rowkey_column.encoding}}</span>
