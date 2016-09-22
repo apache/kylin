@@ -89,8 +89,8 @@ public class RestClient {
         }
     }
 
-    public void wipeCache(String type, String action, String name) throws IOException {
-        String url = baseUrl + "/cache/" + type + "/" + name + "/" + action;
+    public void wipeCache(String entity, String event, String cacheKey) throws IOException {
+        String url = baseUrl + "/cache/" + entity + "/" + cacheKey + "/" + event;
         HttpPut request = new HttpPut(url);
 
         try {

@@ -20,8 +20,7 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 
-import org.apache.kylin.common.restclient.Broadcaster;
-import org.apache.kylin.common.restclient.Broadcaster.EVENT;
+import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.rest.service.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +39,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping(value = "/cache")
 public class CacheController extends BasicController {
+    
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 
     @Autowired
@@ -48,32 +49,16 @@ public class CacheController extends BasicController {
     /**
      * Wipe system cache
      *
-     * @param type  {@link Broadcaster.TYPE}
-     * @param event {@link Broadcaster.EVENT}
-     * @param name
+     * @param entity  {@link Broadcaster.TYPE}
+     * @param event {@link Broadcaster.Event}
+     * @param cacheKey
      * @return if the action success
      * @throws IOException
      */
-    @RequestMapping(value = "/{type}/{name}/{event}", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT })
     @ResponseBody
-    public void wipeCache(@PathVariable String type, @PathVariable String event, @PathVariable String name) throws IOException {
-
-        Broadcaster.TYPE wipeType = Broadcaster.TYPE.getType(type);
-        EVENT wipeEvent = Broadcaster.EVENT.getEvent(event);
-
-        logger.info("wipe cache type: " + wipeType + " event:" + wipeEvent + " name:" + name);
-
-        switch (wipeEvent) {
-        case CREATE:
-        case UPDATE:
-            cacheService.rebuildCache(wipeType, name);
-            break;
-        case DROP:
-            cacheService.removeCache(wipeType, name);
-            break;
-        default:
-            throw new RuntimeException("invalid type:" + wipeEvent);
-        }
+    public void wipeCache(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
+        cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
     }
 
     public void setCacheService(CacheService cacheService) {

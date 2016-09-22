@@ -49,7 +49,6 @@ public abstract class AbstractKylinTestCase {
         cleanupCache();
         System.clearProperty(KylinConfig.KYLIN_CONF);
         KylinConfig.destroyInstance();
-
     }
 
     private static void cleanupCache() {

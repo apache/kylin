@@ -16,27 +16,35 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.restclient;
-
-import java.util.concurrent.ConcurrentSkipListMap;
+package org.apache.kylin.metadata.cachesync;
 
 import org.apache.kylin.common.KylinConfig;
 
 /**
  */
-public class CaseInsensitiveStringCache<V> extends SingleValueCache<String, V> {
+public abstract class AbstractCache<K, V> {
 
-    public CaseInsensitiveStringCache(KylinConfig config, Broadcaster.TYPE syncType) {
-        super(config, syncType, new ConcurrentSkipListMap<String, V>(String.CASE_INSENSITIVE_ORDER));
+    protected final KylinConfig config;
+    protected final String syncEntity;
+
+    protected AbstractCache(KylinConfig config, String syncEntity) {
+        this.config = config;
+        this.syncEntity = syncEntity;
     }
 
-    @Override
-    public void put(String key, V value) {
-        super.put(key, value);
+    public Broadcaster getBroadcaster() {
+        return Broadcaster.getInstance(config);
     }
 
-    @Override
-    public void putLocal(String key, V value) {
-        super.putLocal(key, value);
-    }
+    public abstract void put(K key, V value);
+
+    public abstract void putLocal(K key, V value);
+
+    public abstract void remove(K key);
+
+    public abstract void removeLocal(K key);
+
+    public abstract void clear();
+
+    public abstract int size();
 }

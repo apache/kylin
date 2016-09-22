@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.restclient;
+package org.apache.kylin.metadata.cachesync;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,16 +30,16 @@ import org.apache.kylin.common.KylinConfig;
 /**
  * @author xjiang
  */
-public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
+public abstract class SingleValueCache<K, V> extends AbstractCache<K, V> {
 
     private final ConcurrentMap<K, V> innerCache;
 
-    public SingleValueCache(KylinConfig config, Broadcaster.TYPE syncType) {
-        this(config, syncType, new ConcurrentHashMap<K, V>());
+    public SingleValueCache(KylinConfig config, String syncEntity) {
+        this(config, syncEntity, new ConcurrentHashMap<K, V>());
     }
 
-    public SingleValueCache(KylinConfig config, Broadcaster.TYPE syncType, ConcurrentMap<K, V> innerCache) {
-        super(config, syncType);
+    public SingleValueCache(KylinConfig config, String syncEntity, ConcurrentMap<K, V> innerCache) {
+        super(config, syncEntity);
         this.innerCache = innerCache;
     }
 
@@ -49,9 +49,9 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
         innerCache.put(key, value);
 
         if (!exists) {
-            getBroadcaster().queue(syncType.getType(), Broadcaster.EVENT.CREATE.getType(), key.toString());
+            getBroadcaster().queue(syncEntity, Broadcaster.Event.CREATE.getType(), key.toString());
         } else {
-            getBroadcaster().queue(syncType.getType(), Broadcaster.EVENT.UPDATE.getType(), key.toString());
+            getBroadcaster().queue(syncEntity, Broadcaster.Event.UPDATE.getType(), key.toString());
         }
     }
 
@@ -65,7 +65,7 @@ public abstract class SingleValueCache<K, V> extends AbstractRestCache<K, V> {
         innerCache.remove(key);
 
         if (exists) {
-            getBroadcaster().queue(syncType.getType(), Broadcaster.EVENT.DROP.getType(), key.toString());
+            getBroadcaster().queue(syncEntity, Broadcaster.Event.DROP.getType(), key.toString());
         }
     }
 

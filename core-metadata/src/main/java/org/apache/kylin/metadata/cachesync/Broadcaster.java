@@ -16,11 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.common.restclient;
+package org.apache.kylin.metadata.cachesync;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -30,12 +32,15 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.DaemonThreadFactory;
+import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Broadcast kylin event out
@@ -43,6 +48,10 @@ import com.google.common.collect.Lists;
 public class Broadcaster {
 
     private static final Logger logger = LoggerFactory.getLogger(Broadcaster.class);
+
+    public static final String SYNC_ALL = "all"; // the special entity to indicate clear all
+    public static final String SYNC_PRJ_SCHEMA = "project_schema"; // the special entity to indicate project schema has change, e.g. table/model/cube_desc update
+    public static final String SYNC_PRJ_DATA = "project_data"; // the special entity to indicate project data has change, e.g. cube/raw_table update
 
     // static cached instances
     private static final ConcurrentHashMap<KylinConfig, Broadcaster> CACHE = new ConcurrentHashMap<KylinConfig, Broadcaster>();
@@ -74,11 +83,15 @@ public class Broadcaster {
 
     // ============================================================================
 
-    private BlockingDeque<BroadcastEvent> broadcastEvents = new LinkedBlockingDeque<>();
+    private KylinConfig config;
 
+    private BlockingDeque<BroadcastEvent> broadcastEvents = new LinkedBlockingDeque<>();
+    private Map<String, List<Listener>> listenerMap = Maps.newConcurrentMap();
     private AtomicLong counter = new AtomicLong();
 
     private Broadcaster(final KylinConfig config) {
+        this.config = config;
+
         final String[] nodes = config.getRestServers();
         if (nodes == null || nodes.length < 1) {
             logger.warn("There is no available rest server; check the 'kylin.rest.servers' config");
@@ -98,13 +111,13 @@ public class Broadcaster {
                 while (true) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
-                        logger.info("new broadcast event:" + broadcastEvent);
+                        logger.info("Announcing new broadcast event:" + broadcastEvent);
                         for (final RestClient restClient : restClients) {
                             wipingCachePool.execute(new Runnable() {
                                 @Override
                                 public void run() {
                                     try {
-                                        restClient.wipeCache(broadcastEvent.getType(), broadcastEvent.getAction(), broadcastEvent.getName());
+                                        restClient.wipeCache(broadcastEvent.getEntity(), broadcastEvent.getEvent(), broadcastEvent.getCacheKey());
                                     } catch (IOException e) {
                                         logger.warn("Thread failed during wipe cache at " + broadcastEvent);
                                     }
@@ -119,19 +132,91 @@ public class Broadcaster {
         });
     }
 
+    public void registerListener(Listener listener, String... entities) {
+        // ignore re-registration
+        List<Listener> all = listenerMap.get(SYNC_ALL);
+        if (all != null && all.contains(listener)) {
+            return;
+        }
+
+        for (String entity : entities) {
+            if (!StringUtils.isBlank(entity))
+                addListener(entity, listener);
+        }
+        addListener(SYNC_ALL, listener);
+        addListener(SYNC_PRJ_SCHEMA, listener);
+        addListener(SYNC_PRJ_DATA, listener);
+    }
+
+    synchronized private void addListener(String entity, Listener listener) {
+        List<Listener> list = listenerMap.get(entity);
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+        list.add(listener);
+        listenerMap.put(entity, list);
+    }
+
+    public void notifyClearAll() throws IOException {
+        notifyListener(SYNC_ALL, Event.UPDATE, SYNC_ALL);
+    }
+
+    public void notifyProjectSchemaUpdate(String project) throws IOException {
+        notifyListener(SYNC_PRJ_SCHEMA, Event.UPDATE, project);
+    }
+
+    public void notifyProjectDataUpdate(String project) throws IOException {
+        notifyListener(SYNC_PRJ_DATA, Event.UPDATE, project);
+    }
+
+    public synchronized void notifyListener(String entity, Event event, String cacheKey) throws IOException {
+        List<Listener> list = listenerMap.get(entity);
+        if (list == null)
+            return;
+        
+        logger.debug("Broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey + ", listeners=" + list);
+        
+        // prevents concurrent modification exception
+        list = Lists.newArrayList(list);
+        switch (entity) {
+        case SYNC_ALL:
+            for (Listener l : list) {
+                l.onClearAll(this);
+            }
+            clearCache(); // clear broadcaster too in the end
+            break;
+        case SYNC_PRJ_SCHEMA:
+            ProjectManager.getInstance(config).clearL2Cache();
+            for (Listener l : list) {
+                l.onProjectSchemaChange(this, cacheKey);
+            }
+            break;
+        case SYNC_PRJ_DATA:
+            ProjectManager.getInstance(config).clearL2Cache(); // cube's first becoming ready leads to schema change too
+            for (Listener l : list) {
+                l.onProjectDataChange(this, cacheKey);
+            }
+            break;
+        default:
+            for (Listener l : list) {
+                l.onEntityChange(this, entity, event, cacheKey);
+            }
+            break;
+        }
+        
+        logger.debug("Done broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey);
+    }
+
     /**
-     * Broadcast the cubedesc event out
-     * 
-     * @param action
-     *            event action
+     * Broadcast an event out
      */
-    public void queue(String type, String action, String key) {
+    public void queue(String entity, String event, String key) {
         if (broadcastEvents == null)
             return;
 
         try {
             counter.incrementAndGet();
-            broadcastEvents.putFirst(new BroadcastEvent(type, action, key));
+            broadcastEvents.putFirst(new BroadcastEvent(entity, event, key));
         } catch (Exception e) {
             counter.decrementAndGet();
             logger.error("error putting BroadcastEvent", e);
@@ -142,12 +227,12 @@ public class Broadcaster {
         return counter.getAndSet(0);
     }
 
-    public enum EVENT {
+    public enum Event {
 
         CREATE("create"), UPDATE("update"), DROP("drop");
         private String text;
 
-        EVENT(String text) {
+        Event(String text) {
             this.text = text;
         }
 
@@ -155,8 +240,8 @@ public class Broadcaster {
             return text;
         }
 
-        public static EVENT getEvent(String event) {
-            for (EVENT one : values()) {
+        public static Event getEvent(String event) {
+            for (Event one : values()) {
                 if (one.getType().equalsIgnoreCase(event)) {
                     return one;
                 }
@@ -166,76 +251,51 @@ public class Broadcaster {
         }
     }
 
-    public enum TYPE {
-        ALL("all"), //
-        PROJECT("project"), //
-        CUBE("cube"), //
-        CUBE_DESC("cube_desc"), //
-        STREAMING("streaming"), //
-        KAFKA("kafka"), //
-        INVERTED_INDEX("inverted_index"), //
-        INVERTED_INDEX_DESC("ii_desc"), // 
-        TABLE("table"), //
-        DATA_MODEL("data_model"), //
-        EXTERNAL_FILTER("external_filter"), //
-        HYBRID("hybrid");
-        
-        private String text;
-
-        TYPE(String text) {
-            this.text = text;
+    abstract public static class Listener {
+        public void onClearAll(Broadcaster broadcaster) throws IOException {
         }
 
-        public String getType() {
-            return text;
+        public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
         }
 
-        /**
-         * @param type
-         * @return
-         */
-        public static TYPE getType(String type) {
-            for (TYPE one : values()) {
-                if (one.getType().equalsIgnoreCase(type)) {
-                    return one;
-                }
-            }
+        public void onProjectDataChange(Broadcaster broadcaster, String project) throws IOException {
+        }
 
-            return null;
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
         }
     }
 
     public static class BroadcastEvent {
-        private String type;
-        private String action;
-        private String name;
+        private String entity;
+        private String event;
+        private String cacheKey;
 
-        public BroadcastEvent(String type, String action, String name) {
+        public BroadcastEvent(String entity, String event, String cacheKey) {
             super();
-            this.type = type;
-            this.action = action;
-            this.name = name;
+            this.entity = entity;
+            this.event = event;
+            this.cacheKey = cacheKey;
         }
 
-        public String getType() {
-            return type;
+        public String getEntity() {
+            return entity;
         }
 
-        public String getAction() {
-            return action;
+        public String getEvent() {
+            return event;
         }
 
-        public String getName() {
-            return name;
+        public String getCacheKey() {
+            return cacheKey;
         }
 
         @Override
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + ((action == null) ? 0 : action.hashCode());
-            result = prime * result + ((name == null) ? 0 : name.hashCode());
-            result = prime * result + ((type == null) ? 0 : type.hashCode());
+            result = prime * result + ((event == null) ? 0 : event.hashCode());
+            result = prime * result + ((cacheKey == null) ? 0 : cacheKey.hashCode());
+            result = prime * result + ((entity == null) ? 0 : entity.hashCode());
             return result;
         }
 
@@ -251,13 +311,13 @@ public class Broadcaster {
                 return false;
             }
             BroadcastEvent other = (BroadcastEvent) obj;
-            if (!StringUtils.equals(action, other.action)) {
+            if (!StringUtils.equals(event, other.event)) {
                 return false;
             }
-            if (!StringUtils.equals(name, other.name)) {
+            if (!StringUtils.equals(cacheKey, other.cacheKey)) {
                 return false;
             }
-            if (!StringUtils.equals(type, other.type)) {
+            if (!StringUtils.equals(entity, other.entity)) {
                 return false;
             }
             return true;
@@ -265,7 +325,7 @@ public class Broadcaster {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("type", type).add("name", name).add("action", action).toString();
+            return Objects.toStringHelper(this).add("type", entity).add("name", cacheKey).add("action", event).toString();
         }
 
     }
