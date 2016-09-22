@@ -94,6 +94,7 @@ public class SortedIteratorMergerWithLimit<E extends Cloneable> extends SortedIt
                 PeekingImpl<E> first = heap.poll();
                 E current = first.next();
                 try {
+                    //clone is protected on Object, have to use reflection to call the overwritten clone method in subclasses
                     current = (E) current.getClass().getMethod("clone").invoke(current);
                 } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                     throw new RuntimeException(e);

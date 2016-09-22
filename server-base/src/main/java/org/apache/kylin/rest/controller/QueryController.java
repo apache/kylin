@@ -205,7 +205,7 @@ public class QueryController extends BasicController {
                 checkQueryAuth(sqlResponse);
 
             } catch (Throwable e) { // calcite may throw AssertError
-                //logger.error("Exception when execute sql", e);
+                logger.error("Exception when execute sql", e);
                 String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
 
                 sqlResponse = new SQLResponse(null, null, 0, true, errMsg);

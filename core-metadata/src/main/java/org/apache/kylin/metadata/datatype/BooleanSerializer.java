@@ -25,7 +25,7 @@ import org.apache.commons.lang.BooleanUtils;
 
 public class BooleanSerializer extends DataTypeSerializer<LongMutable> {
 
-    final String[] TRUE_VALUE_SET = { "true", "t", "on", "yes" };
+    public final static String[] TRUE_VALUE_SET = { "true", "t", "on", "yes" };
 
     // be thread-safe and avoid repeated obj creation
     private ThreadLocal<LongMutable> current = new ThreadLocal<LongMutable>();
