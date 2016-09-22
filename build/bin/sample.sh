@@ -48,12 +48,12 @@ if [ -z "$default_engine_type" ]; then
     default_engine_type=2
     default_storage_type=2
 fi
-export default_engine_type
-export default_storage_type
 
 mkdir -p ${KYLIN_HOME}/sample_cube/metadata
 cp -rf ${KYLIN_HOME}/sample_cube/template/* ${KYLIN_HOME}/sample_cube/metadata
-envsubst < ${KYLIN_HOME}/sample_cube/template/cube_desc/kylin_sales_cube_desc.json > ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube_desc.json
+
+sed -i "s/%default_storage_type%/${default_storage_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube_desc.json
+sed -i "s/%default_engine_type%/${default_engine_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube_desc.json
 
 cd ${KYLIN_HOME}
 hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
