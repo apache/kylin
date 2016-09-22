@@ -30,16 +30,16 @@ import org.apache.kylin.metadata.model.MeasureDesc;
  * 
  */
 @SuppressWarnings({ "rawtypes" })
-public class MeasureDecoder {
+public class MeasureCodec {
 
-    int nMeasures;
-    DataTypeSerializer[] serializers;
+    private int nMeasures;
+    private DataTypeSerializer[] serializers;
 
-    public MeasureDecoder(Collection<MeasureDesc> measureDescs) {
+    public MeasureCodec(Collection<MeasureDesc> measureDescs) {
         this((MeasureDesc[]) measureDescs.toArray(new MeasureDesc[measureDescs.size()]));
     }
 
-    public MeasureDecoder(MeasureDesc... measureDescs) {
+    public MeasureCodec(MeasureDesc... measureDescs) {
         String[] dataTypes = new String[measureDescs.length];
         for (int i = 0; i < dataTypes.length; i++) {
             dataTypes[i] = measureDescs[i].getFunction().getReturnType();
@@ -47,11 +47,11 @@ public class MeasureDecoder {
         init(dataTypes);
     }
 
-    public MeasureDecoder(DataType... dataTypes) {
+    public MeasureCodec(DataType... dataTypes) {
         init(dataTypes);
     }
 
-    public MeasureDecoder(String... dataTypes) {
+    public MeasureCodec(String... dataTypes) {
         init(dataTypes);
     }
 
@@ -72,8 +72,12 @@ public class MeasureDecoder {
         }
     }
 
-    public DataTypeSerializer getSerializer(int idx) {
-        return serializers[idx];
+    public void encode(int idx, Object o, ByteBuffer buf) {
+        serializers[idx].serialize(o, buf);
+    }
+
+    public int getMeasuresCount() {
+        return nMeasures;
     }
 
     public int[] getPeekLength(ByteBuffer buf) {

@@ -31,7 +31,7 @@ import org.apache.kylin.engine.mr.ByteArrayWritable;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
 
     private static final Logger logger = LoggerFactory.getLogger(InMemCuboidReducer.class);
 
-    private BufferedMeasureEncoder codec;
+    private BufferedMeasureCodec codec;
     private MeasureAggregators aggs;
 
     private int counter;
@@ -63,7 +63,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
         CubeDesc cubeDesc = cube.getDescriptor();
 
         List<MeasureDesc> measuresDescs = cubeDesc.getMeasures();
-        codec = new BufferedMeasureEncoder(measuresDescs);
+        codec = new BufferedMeasureCodec(measuresDescs);
         aggs = new MeasureAggregators(measuresDescs);
         input = new Object[measuresDescs.size()];
         result = new Object[measuresDescs.size()];

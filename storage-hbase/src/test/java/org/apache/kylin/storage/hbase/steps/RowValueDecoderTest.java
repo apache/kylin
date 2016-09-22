@@ -29,7 +29,7 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -56,7 +56,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         HBaseColumnDesc hbaseCol = cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0];
 
-        BufferedMeasureEncoder codec = new BufferedMeasureEncoder(hbaseCol.getMeasures());
+        BufferedMeasureCodec codec = new BufferedMeasureCodec(hbaseCol.getMeasures());
         BigDecimal sum = new BigDecimal("333.1234567");
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");
@@ -86,7 +86,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         HBaseColumnDesc hbaseCol = cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0];
 
-        BufferedMeasureEncoder codec = new BufferedMeasureEncoder(hbaseCol.getMeasures());
+        BufferedMeasureCodec codec = new BufferedMeasureCodec(hbaseCol.getMeasures());
         BigDecimal sum = new BigDecimal("11111111111111111111333.1234567");
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");

@@ -81,7 +81,7 @@ import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.engine.spark.cube.BufferedCuboidWriter;
 import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
 import org.apache.kylin.engine.spark.util.IteratorUtils;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -424,7 +424,7 @@ public class SparkCubing extends AbstractApplication {
             @Override
             public Iterable<Tuple2<byte[], byte[]>> call(final Iterator<Tuple2<byte[], byte[]>> tuple2Iterator) throws Exception {
                 return new Iterable<Tuple2<byte[], byte[]>>() {
-                    final BufferedMeasureEncoder codec = new BufferedMeasureEncoder(dataTypes);
+                    final BufferedMeasureCodec codec = new BufferedMeasureCodec(dataTypes);
                     final Object[] input = new Object[measureSize];
                     final Object[] result = new Object[measureSize];
 

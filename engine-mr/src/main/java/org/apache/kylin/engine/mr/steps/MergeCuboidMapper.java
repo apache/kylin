@@ -47,7 +47,7 @@ import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -85,7 +85,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     private Map<TblColRef, Dictionary<String>> oldDicts;
     private Map<TblColRef, Dictionary<String>> newDicts;
     private List<MeasureDesc> measureDescs;
-    private BufferedMeasureEncoder codec;
+    private BufferedMeasureCodec codec;
     private Object[] measureObjs;
     private Text outputValue;
 
@@ -115,7 +115,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         rowKeyEncoderProvider = new RowKeyEncoderProvider(mergedCubeSegment);
 
         measureDescs = cubeDesc.getMeasures();
-        codec = new BufferedMeasureEncoder(measureDescs);
+        codec = new BufferedMeasureCodec(measureDescs);
         measureObjs = new Object[measureDescs.size()];
         outputValue = new Text();
 

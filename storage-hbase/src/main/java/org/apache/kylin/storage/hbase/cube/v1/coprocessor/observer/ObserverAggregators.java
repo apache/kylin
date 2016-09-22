@@ -29,7 +29,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
@@ -241,7 +241,7 @@ public class ObserverAggregators {
         final String[] dataTypes;
         final int nMeasures;
 
-        final BufferedMeasureEncoder measureCodec;
+        final BufferedMeasureCodec measureCodec;
         final Object[] measureValues;
 
         public HCol(byte[] bFamily, byte[] bQualifier, String[] funcNames, String[] dataTypes) {
@@ -252,7 +252,7 @@ public class ObserverAggregators {
             this.nMeasures = funcNames.length;
             assert funcNames.length == dataTypes.length;
 
-            this.measureCodec = new BufferedMeasureEncoder(dataTypes);
+            this.measureCodec = new BufferedMeasureCodec(dataTypes);
             this.measureValues = new Object[nMeasures];
         }
 

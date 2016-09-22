@@ -42,7 +42,7 @@ import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -76,7 +76,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     protected byte[][] keyBytesBuf;
     protected BytesSplitter bytesSplitter;
     protected AbstractRowKeyEncoder rowKeyEncoder;
-    protected BufferedMeasureEncoder measureCodec;
+    protected BufferedMeasureCodec measureCodec;
     private int errorRecordCounter;
     protected Text outputKey = new Text();
     protected Text outputValue = new Text();
@@ -108,7 +108,7 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
         bytesSplitter = new BytesSplitter(200, 16384);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
 
-        measureCodec = new BufferedMeasureEncoder(cubeDesc.getMeasures());
+        measureCodec = new BufferedMeasureCodec(cubeDesc.getMeasures());
         measures = new Object[cubeDesc.getMeasures().size()];
 
         int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;

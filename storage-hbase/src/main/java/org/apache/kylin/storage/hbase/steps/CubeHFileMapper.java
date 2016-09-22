@@ -33,7 +33,7 @@ import org.apache.kylin.cube.model.HBaseColumnFamilyDesc;
 import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.measure.MeasureDecoder;
+import org.apache.kylin.measure.MeasureCodec;
 
 import com.google.common.collect.Lists;
 
@@ -48,7 +48,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
     String cubeName;
     CubeDesc cubeDesc;
 
-    MeasureDecoder inputCodec;
+    MeasureCodec inputCodec;
     Object[] inputMeasures;
     List<KeyValueCreator> keyValueCreators;
 
@@ -62,7 +62,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
         CubeManager cubeMgr = CubeManager.getInstance(config);
         cubeDesc = cubeMgr.getCube(cubeName).getDescriptor();
 
-        inputCodec = new MeasureDecoder(cubeDesc.getMeasures());
+        inputCodec = new MeasureCodec(cubeDesc.getMeasures());
         inputMeasures = new Object[cubeDesc.getMeasures().size()];
         keyValueCreators = Lists.newArrayList();
 

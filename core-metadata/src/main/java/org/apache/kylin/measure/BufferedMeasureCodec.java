@@ -31,33 +31,33 @@ import org.apache.kylin.metadata.model.MeasureDesc;
  * The problem here to solve is some measure type cannot provide accurate DataTypeSerializer.maxLength()
  */
 @SuppressWarnings({ "unchecked" })
-public class BufferedMeasureEncoder {
+public class BufferedMeasureCodec {
     public static final int DEFAULT_BUFFER_SIZE = 1024 * 1024; // 1 MB
     public static final int MAX_BUFFER_SIZE = 1 * 1024 * DEFAULT_BUFFER_SIZE; // 1 GB
 
-    final private MeasureDecoder codec;
+    final private MeasureCodec codec;
 
     private ByteBuffer buf;
     final private int[] measureSizes;
 
-    public BufferedMeasureEncoder(Collection<MeasureDesc> measureDescs) {
-        this.codec = new MeasureDecoder(measureDescs);
-        this.measureSizes = new int[codec.nMeasures];
+    public BufferedMeasureCodec(Collection<MeasureDesc> measureDescs) {
+        this.codec = new MeasureCodec(measureDescs);
+        this.measureSizes = new int[codec.getMeasuresCount()];
     }
 
-    public BufferedMeasureEncoder(MeasureDesc... measureDescs) {
-        this.codec = new MeasureDecoder(measureDescs);
-        this.measureSizes = new int[codec.nMeasures];
+    public BufferedMeasureCodec(MeasureDesc... measureDescs) {
+        this.codec = new MeasureCodec(measureDescs);
+        this.measureSizes = new int[codec.getMeasuresCount()];
     }
 
-    public BufferedMeasureEncoder(DataType... dataTypes) {
-        this.codec = new MeasureDecoder(dataTypes);
-        this.measureSizes = new int[codec.nMeasures];
+    public BufferedMeasureCodec(DataType... dataTypes) {
+        this.codec = new MeasureCodec(dataTypes);
+        this.measureSizes = new int[codec.getMeasuresCount()];
     }
 
-    public BufferedMeasureEncoder(String... dataTypes) {
-        this.codec = new MeasureDecoder(dataTypes);
-        this.measureSizes = new int[codec.nMeasures];
+    public BufferedMeasureCodec(String... dataTypes) {
+        this.codec = new MeasureCodec(dataTypes);
+        this.measureSizes = new int[codec.getMeasuresCount()];
     }
 
     /** return the buffer that contains result of last encoding */
@@ -84,13 +84,13 @@ public class BufferedMeasureEncoder {
             setBufferSize(DEFAULT_BUFFER_SIZE);
         }
 
-        assert values.length == codec.nMeasures;
+        assert values.length == codec.getMeasuresCount();
 
         while (true) {
             try {
                 buf.clear();
-                for (int i = 0, pos = 0; i < codec.nMeasures; i++) {
-                    codec.serializers[i].serialize(values[i], buf);
+                for (int i = 0, pos = 0; i < codec.getMeasuresCount(); i++) {
+                    codec.encode(i, values[i], buf);
                     measureSizes[i] = buf.position() - pos;
                     pos = buf.position();
                 }

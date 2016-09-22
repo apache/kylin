@@ -34,7 +34,7 @@ import org.apache.kylin.engine.mr.KylinMapper;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -97,7 +97,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         Iterator<Integer> it = hllcMap.keySet().iterator();
-        ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE);
+        ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
         while (it.hasNext()) {
             int key = it.next();
             HyperLogLogPlusCounter hllc = hllcMap.get(key);

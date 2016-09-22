@@ -34,7 +34,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +65,7 @@ public class ColumnCardinalityReducerTest {
             i++;
             hllc.add(Bytes.toBytes(temp));
         }
-        ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE);
+        ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
         buf.clear();
         hllc.writeRegisters(buf);
         buf.flip();

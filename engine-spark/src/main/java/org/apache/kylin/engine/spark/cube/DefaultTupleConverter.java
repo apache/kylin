@@ -29,7 +29,7 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import scala.Tuple2;
@@ -54,7 +54,7 @@ public final class DefaultTupleConverter implements TupleConverter {
 
     private ByteBuffer getValueBuf() {
         if (valueBuf.get() == null) {
-            valueBuf.set(ByteBuffer.allocate(BufferedMeasureEncoder.DEFAULT_BUFFER_SIZE));
+            valueBuf.set(ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE));
         }
         return valueBuf.get();
     }

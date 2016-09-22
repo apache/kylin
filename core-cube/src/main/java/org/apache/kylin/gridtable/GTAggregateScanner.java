@@ -40,7 +40,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -178,7 +178,7 @@ public class GTAggregateScanner implements IGTScanner {
         final List<Dump> dumps;
         final int keyLength;
         final boolean[] compareMask;
-        final BufferedMeasureEncoder measureCodec;
+        final BufferedMeasureCodec measureCodec;
 
         final Comparator<byte[]> bytesComparator = new Comparator<byte[]>() {
             @Override
@@ -212,13 +212,13 @@ public class GTAggregateScanner implements IGTScanner {
             measureCodec = createMeasureCodec();
         }
 
-        private BufferedMeasureEncoder createMeasureCodec() {
+        private BufferedMeasureCodec createMeasureCodec() {
             DataType[] types = new DataType[metrics.trueBitCount()];
             for (int i = 0; i < types.length; i++) {
                 types[i] = info.getColumnType(metrics.trueBitAt(i));
             }
 
-            BufferedMeasureEncoder result = new BufferedMeasureEncoder(types);
+            BufferedMeasureCodec result = new BufferedMeasureCodec(types);
             result.setBufferSize(info.getMaxColumnLength(metrics));
             return result;
         }

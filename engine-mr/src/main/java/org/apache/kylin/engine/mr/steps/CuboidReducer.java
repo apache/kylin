@@ -29,7 +29,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.measure.BufferedMeasureEncoder;
+import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.slf4j.Logger;
@@ -47,7 +47,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     private CubeDesc cubeDesc;
     private List<MeasureDesc> measuresDescs;
 
-    private BufferedMeasureEncoder codec;
+    private BufferedMeasureCodec codec;
     private MeasureAggregators aggs;
 
     private int counter;
@@ -71,7 +71,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         cubeDesc = CubeManager.getInstance(config).getCube(cubeName).getDescriptor();
         measuresDescs = cubeDesc.getMeasures();
 
-        codec = new BufferedMeasureEncoder(measuresDescs);
+        codec = new BufferedMeasureCodec(measuresDescs);
         aggs = new MeasureAggregators(measuresDescs);
 
         input = new Object[measuresDescs.size()];
