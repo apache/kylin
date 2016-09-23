@@ -180,6 +180,7 @@
                                     <exclude>io.netty:*</exclude>
                                     <exclude>org.apache.zookeeper:*</exclude>
                                     <exclude>net.sf.ehcache:*</exclude>
+                                    <exclude>org.apache.httpcomponents:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>
