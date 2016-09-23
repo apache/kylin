@@ -1131,6 +1131,7 @@
                                 <exclude>**/LICENSE*</exclude>
                                 <!-- Local git repo -->
                                 <exclude>.git/**</exclude>
+                                <exclude>.gitconfig</exclude>
                                 <!-- IDE files -->
                                 <exclude>.idea/**</exclude>
                                 <exclude>**/*.iml</exclude>
