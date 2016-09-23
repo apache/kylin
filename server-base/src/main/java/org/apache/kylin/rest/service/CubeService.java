@@ -273,6 +273,21 @@ public class CubeService extends BasicService {
         accessService.clean(cube, true);
     }
 
+    public boolean isCubeDescFreeEditable(CubeDesc cd) {
+        List<CubeInstance> cubes = getCubeManager().getCubesByDesc(cd.getName());
+        for (CubeInstance cube : cubes) {
+            if (cube.getSegments().size() != 0) {
+                logger.debug("cube '" + cube.getName() + " has " + cube.getSegments().size() + " segments, couldn't edit cube desc.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static String getCubeDescNameFromCube(String cubeName) {
+        return cubeName + DESC_SUFFIX;
+    }
+
     public static String getCubeNameFromDesc(String descName) {
         if (descName.toLowerCase().endsWith(DESC_SUFFIX)) {
             return descName.substring(0, descName.toLowerCase().indexOf(DESC_SUFFIX));

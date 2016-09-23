@@ -18,9 +18,6 @@
 
 package org.apache.kylin.cube;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +29,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -66,6 +65,8 @@ import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -842,37 +843,39 @@ public class CubeManager implements IRealizationProvider {
 
     private synchronized CubeInstance reloadCubeLocalAt(String path) {
         ResourceStore store = getStore();
-        CubeInstance cube;
 
+        CubeInstance cubeInstance;
         try {
-            cube = store.getResource(path, CubeInstance.class, CUBE_SERIALIZER);
-            checkNotNull(cube, "cube (at %s) not found", path);
+            cubeInstance = store.getResource(path, CubeInstance.class, CUBE_SERIALIZER);
 
-            String cubeName = cube.getName();
-            checkState(StringUtils.isNotBlank(cubeName), "cube (at %s) name must not be blank", path);
+            CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(cubeInstance.getDescName());
+            if (cubeDesc == null)
+                throw new IllegalStateException("CubeInstance desc not found '" + cubeInstance.getDescName() + "', at " + path);
 
-            CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(cube.getDescName());
-            checkNotNull(cubeDesc, "cube descriptor '%s' (for cube '%s') not found", cube.getDescName(), cubeName);
+            cubeInstance.setConfig((KylinConfigExt) cubeDesc.getConfig());
 
-            if (!cubeDesc.getError().isEmpty()) {
-                cube.setStatus(RealizationStatusEnum.DESCBROKEN);
-                logger.warn("cube descriptor {} (for cube '{}') is broken", cubeDesc.getResourcePath(), cubeName);
+            if (StringUtils.isBlank(cubeInstance.getName()))
+                throw new IllegalStateException("CubeInstance name must not be blank, at " + path);
 
-            } else if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-                cube.setStatus(RealizationStatusEnum.DISABLED);
-                logger.info("cube {} changed from DESCBROKEN to DISABLED", cubeName);
-            }
+            if (cubeInstance.getDescriptor() == null)
+                throw new IllegalStateException("CubeInstance desc not found '" + cubeInstance.getDescName() + "', at " + path);
 
-            cube.setConfig((KylinConfigExt) cubeDesc.getConfig());
-            cubeMap.putLocal(cubeName, cube);
+            final String cubeName = cubeInstance.getName();
+            cubeMap.putLocal(cubeName, cubeInstance);
 
-            for (CubeSegment segment : cube.getSegments()) {
+            for (CubeSegment segment : cubeInstance.getSegments()) {
                 usedStorageLocation.put(cubeName.toUpperCase(), segment.getStorageLocationIdentifier());
             }
 
-            logger.info("Reloaded cube {} being {} having {} segments", cubeName, cube, cube.getSegments().size());
-            return cube;
+            logger.debug("Reloaded new cube: " + cubeName + " with reference being" + cubeInstance + " having " + cubeInstance.getSegments().size() + " segments:" + StringUtils.join(Collections2.transform(cubeInstance.getSegments(), new Function<CubeSegment, String>() {
+                @Nullable
+                @Override
+                public String apply(CubeSegment input) {
+                    return input.getStorageLocationIdentifier();
+                }
+            }), ","));
 
+            return cubeInstance;
         } catch (Exception e) {
             logger.error("Error during load cube instance, skipping : " + path, e);
             return null;

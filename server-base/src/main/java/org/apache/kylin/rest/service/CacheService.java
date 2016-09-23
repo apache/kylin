@@ -189,7 +189,6 @@ public class CacheService extends BasicService {
             case TABLE:
                 getMetadataManager().reloadTableCache(cacheKey);
                 CubeDescManager.clearCache();
-                clearRealizationCache();
                 break;
             case EXTERNAL_FILTER:
                 getMetadataManager().reloadExtFilter(cacheKey);
@@ -203,7 +202,9 @@ public class CacheService extends BasicService {
                 DictionaryManager.clearCache();
                 MetadataManager.clearCache();
                 CubeDescManager.clearCache();
-                clearRealizationCache();
+                CubeManager.clearCache();
+                HybridManager.clearCache();
+                RealizationRegistry.clearCache();
                 Cuboid.clearCache();
                 ProjectManager.clearCache();
                 KafkaConfigManager.clearCache();
@@ -219,12 +220,6 @@ public class CacheService extends BasicService {
         } catch (IOException e) {
             throw new RuntimeException("error " + log, e);
         }
-    }
-
-    private void clearRealizationCache() {
-        CubeManager.clearCache();
-        HybridManager.clearCache();
-        RealizationRegistry.clearCache();
     }
 
     private void rebuildCubeCache(String cubeName) {

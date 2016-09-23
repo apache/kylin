@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +43,6 @@ import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -74,7 +74,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 
 /**
@@ -346,12 +345,8 @@ public class CubeController extends BasicController {
 
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
-            throw new BadRequestException("Cannot find cube " + cubeName);
+            throw new InternalErrorException("Cannot find cube " + cubeName);
         }
-        if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-            throw new BadRequestException("Broken cube can't be cloned");
-        }
-
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
         newCubeDesc.setName(newCubeName);
@@ -451,10 +446,17 @@ public class CubeController extends BasicController {
     @ResponseBody
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
 
+        //update cube
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
+        CubeDesc oldCubeDesc;
+        boolean isCubeDescFreeEditable;
+
         if (desc == null) {
             return cubeRequest;
         }
+
+        // Check if the cube is editable
+        isCubeDescFreeEditable = cubeService.isCubeDescFreeEditable(desc);
 
         String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
         try {
@@ -473,14 +475,14 @@ public class CubeController extends BasicController {
                 return cubeRequest;
             }
 
-            if (cube.getSegments().size() != 0 && !cube.getDescriptor().consistentWith(desc)) {
-                String error = "CubeDesc " + desc.getName() + " is inconsistent with existing. Try purge that cube first or avoid updating key cube desc fields.";
-                updateRequest(cubeRequest, false, error);
+            oldCubeDesc = cube.getDescriptor();
+            if (isCubeDescFreeEditable || oldCubeDesc.consistentWith(desc)) {
+                desc = cubeService.updateCubeAndDesc(cube, desc, projectName, true);
+            } else {
+                logger.warn("Won't update the cube desc due to inconsistency");
+                updateRequest(cubeRequest, false, "CubeDesc " + desc.getName() + " is inconsistent with existing. Try purge that cube first or avoid updating key cube desc fields.");
                 return cubeRequest;
             }
-
-            desc = cubeService.updateCubeAndDesc(cube, desc, projectName, true);
-
         } catch (AccessDeniedException accessDeniedException) {
             throw new ForbiddenException("You don't have right to update this cube.");
         } catch (Exception e) {
@@ -489,7 +491,8 @@ public class CubeController extends BasicController {
         }
 
         if (!desc.getError().isEmpty()) {
-            updateRequest(cubeRequest, false, Joiner.on("\n").join(desc.getError()));
+            logger.warn("Cube " + desc.getName() + " fail to update because " + desc.getError());
+            updateRequest(cubeRequest, false, omitMessage(desc.getError()));
             return cubeRequest;
         }
 
@@ -594,6 +597,19 @@ public class CubeController extends BasicController {
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
         return desc;
+    }
+
+    /**
+     * @return
+     */
+    private String omitMessage(List<String> errors) {
+        StringBuffer buffer = new StringBuffer();
+        for (Iterator<String> iterator = errors.iterator(); iterator.hasNext();) {
+            String string = (String) iterator.next();
+            buffer.append(string);
+            buffer.append("\n");
+        }
+        return buffer.toString();
     }
 
     private void updateRequest(CubeRequest request, boolean success, String message) {
