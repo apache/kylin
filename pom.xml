@@ -96,7 +96,7 @@
         <extendedset.version>1.3.4</extendedset.version>
         <kryo.version>4.0.0</kryo.version>
         <ehcache.version>2.10.2.2.21</ehcache.version>
-        <apache-httpclient.version>4.5.2</apache-httpclient.version>
+        <apache-httpclient.version>4.2.5</apache-httpclient.version>
         <roaring.version>0.6.18</roaring.version>
         <cglib.version>3.2.4</cglib.version>
         <supercsv.version>2.4.0</supercsv.version>

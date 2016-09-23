@@ -23,15 +23,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.util.JsonUtil;
 
@@ -45,7 +44,7 @@ public class RestClient {
     protected String baseUrl;
     protected String userName;
     protected String password;
-    protected CloseableHttpClient client;
+    protected DefaultHttpClient client;
 
     protected static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
 
@@ -79,13 +78,13 @@ public class RestClient {
         this.password = password;
         this.baseUrl = "http://" + host + ":" + port + "/kylin/api";
 
-        client = HttpClients.createDefault();
+        client = new DefaultHttpClient();
 
         if (userName != null && password != null) {
             CredentialsProvider provider = new BasicCredentialsProvider();
             UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(userName, password);
             provider.setCredentials(AuthScope.ANY, credentials);
-            client = HttpClients.custom().setDefaultCredentialsProvider(provider).build();
+            client.setCredentialsProvider(provider);
         }
     }
 
@@ -94,12 +93,11 @@ public class RestClient {
         HttpPut request = new HttpPut(url);
 
         try {
-            CloseableHttpResponse response = client.execute(request);
+            HttpResponse response = client.execute(request);
             String msg = EntityUtils.toString(response.getEntity());
 
             if (response.getStatusLine().getStatusCode() != 200)
                 throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with cache wipe url " + url + "\n" + msg);
-            response.close();
         } catch (Exception ex) {
             throw new IOException(ex);
         } finally {
@@ -111,14 +109,13 @@ public class RestClient {
         String url = baseUrl + "/admin/config";
         HttpGet request = new HttpGet(url);
         try {
-            CloseableHttpResponse response = client.execute(request);
+            HttpResponse response = client.execute(request);
             String msg = EntityUtils.toString(response.getEntity());
             Map<String, String> map = JsonUtil.readValueAsMap(msg);
             msg = map.get("config");
 
             if (response.getStatusLine().getStatusCode() != 200)
                 throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with cache wipe url " + url + "\n" + msg);
-            response.close();
             return msg;
         } finally {
             request.releaseConnection();

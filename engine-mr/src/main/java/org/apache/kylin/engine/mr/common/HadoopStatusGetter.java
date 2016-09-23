@@ -34,19 +34,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.server.resourcemanager.rmapp.RMAppState;
-import org.apache.http.auth.AuthSchemeProvider;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthSchemeRegistry;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
-import org.apache.http.client.config.AuthSchemes;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.config.Lookup;
-import org.apache.http.config.RegistryBuilder;
+import org.apache.http.client.params.AuthPolicy;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -88,9 +84,12 @@ public class HadoopStatusGetter {
         System.setProperty("java.security.krb5.conf", krb5ConfigPath);
         System.setProperty("sun.security.krb5.debug", "true");
         System.setProperty("javax.security.auth.useSubjectCredsOnly", "false");
-        Lookup<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider> create().register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory(skipPortAtKerberosDatabaseLookup)).build();
-        CloseableHttpClient client = HttpClients.custom().setDefaultAuthSchemeRegistry(authSchemeRegistry).build();
-        HttpClientContext context = HttpClientContext.create();
+        
+        DefaultHttpClient client = new DefaultHttpClient();
+        AuthSchemeRegistry authSchemeRegistry = new AuthSchemeRegistry();
+        authSchemeRegistry.register(AuthPolicy.SPNEGO, new SPNegoSchemeFactory(skipPortAtKerberosDatabaseLookup));
+        client.setAuthSchemes(authSchemeRegistry);
+        
         BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         Credentials useJaasCreds = new Credentials() {
             public String getPassword() {
@@ -101,9 +100,9 @@ public class HadoopStatusGetter {
                 return null;
             }
         };
-
         credentialsProvider.setCredentials(new AuthScope(null, -1, null), useJaasCreds);
-        context.setCredentialsProvider(credentialsProvider);
+        client.setCredentialsProvider(credentialsProvider);
+        
         String response = null;
         while (response == null) {
             if (url.startsWith("https://")) {
@@ -116,7 +115,7 @@ public class HadoopStatusGetter {
             HttpGet httpget = new HttpGet(url);
             httpget.addHeader("accept", "application/json");
             try {
-                CloseableHttpResponse httpResponse = client.execute(httpget, context);
+                HttpResponse httpResponse = client.execute(httpget);
                 String redirect = null;
                 org.apache.http.Header h = httpResponse.getFirstHeader("Location");
                 if (h != null) {
