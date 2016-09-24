@@ -74,6 +74,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         if (!isDiscarded()) {
             if (result.succeed()) {
                 executableManager.updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
+            } else if (result.discarded()) {
+                executableManager.updateJobOutput(getId(), ExecutableState.DISCARDED, null, result.output());
             } else {
                 executableManager.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
             }
