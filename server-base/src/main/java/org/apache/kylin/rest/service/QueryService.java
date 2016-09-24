@@ -337,7 +337,6 @@ public class QueryService extends BasicService {
             conn = dataSource.getConnection();
             DatabaseMetaData metaData = conn.getMetaData();
 
-            logger.debug("getting table metas");
             JDBCTableMeta = metaData.getTables(null, null, null, null);
 
             tableMetas = new LinkedList<TableMeta>();
@@ -355,7 +354,6 @@ public class QueryService extends BasicService {
                 }
             }
 
-            logger.debug("getting column metas");
             columnMeta = metaData.getColumns(null, null, null, null);
 
             while (columnMeta.next()) {
@@ -369,7 +367,7 @@ public class QueryService extends BasicService {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                 }
             }
-            logger.debug("done column metas");
+            
         } finally {
             close(columnMeta, null, conn);
             if (JDBCTableMeta != null) {

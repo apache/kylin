@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +76,13 @@ public class RealizationRegistry {
         logger.info("Initializing RealizationRegistry with metadata url " + config);
         this.config = config;
         init();
+
+        Broadcaster.getInstance(config).registerListener(new Broadcaster.Listener() {
+            @Override
+            public void onClearAll(Broadcaster broadcaster) throws IOException {
+                clearCache();
+            }
+        }, "");
     }
 
     private void init() {

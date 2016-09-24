@@ -47,13 +47,16 @@ public class CacheController extends BasicController {
     private CacheService cacheService;
 
     /**
-     * Wipe system cache
-     *
-     * @param entity  {@link Broadcaster.TYPE}
-     * @param event {@link Broadcaster.Event}
-     * @param cacheKey
-     * @return if the action success
-     * @throws IOException
+     * Announce wipe cache to all cluster nodes
+     */
+    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT })
+    @ResponseBody
+    public void announceWipeCache(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
+        cacheService.annouceWipeCache(entity, event, cacheKey);
+    }
+
+    /**
+     * Wipe cache on this node
      */
     @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT })
     @ResponseBody

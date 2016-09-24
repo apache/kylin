@@ -112,7 +112,7 @@ public class Broadcaster {
                 while (true) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
-                        logger.info("Announcing new broadcast event:" + broadcastEvent);
+                        logger.info("Announcing new broadcast event: " + broadcastEvent);
                         for (final RestClient restClient : restClients) {
                             wipingCachePool.execute(new Runnable() {
                                 @Override
@@ -326,7 +326,7 @@ public class Broadcaster {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("type", entity).add("name", cacheKey).add("action", event).toString();
+            return Objects.toStringHelper(this).add("entity", entity).add("event", event).add("cacheKey", cacheKey).toString();
         }
 
     }

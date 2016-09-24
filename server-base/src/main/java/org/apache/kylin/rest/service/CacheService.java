@@ -59,15 +59,23 @@ public class CacheService extends BasicService {
 
     @Autowired
     private CacheManager cacheManager;
-    
+
     private Broadcaster.Listener cacheSyncListener = new Broadcaster.Listener() {
+        @Override
+        public void onClearAll(Broadcaster broadcaster) throws IOException {
+            removeAllOLAPDataSources();
+            cleanAllDataCache();
+        }
+
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
             removeOLAPDataSource(project);
+            cleanDataCache(project);
         }
 
         @Override
         public void onProjectDataChange(Broadcaster broadcaster, String project) throws IOException {
+            removeOLAPDataSource(project); // data availability (cube enabled/disabled) affects exposed schema to SQL
             cleanDataCache(project);
         }
 
@@ -84,7 +92,7 @@ public class CacheService extends BasicService {
                             logger.error("Error in updateOnNewSegmentReady()", ex);
                         }
                     }
-                }.run();
+                }.start();
             }
         }
     };
@@ -94,12 +102,17 @@ public class CacheService extends BasicService {
         this.cubeService = cubeService;
     }
 
+    public void annouceWipeCache(String entity, String event, String cacheKey) {
+        Broadcaster broadcaster = Broadcaster.getInstance(getConfig());
+        broadcaster.queue(entity, event, cacheKey);
+    }
+
     public void notifyMetadataChange(String entity, Event event, String cacheKey) throws IOException {
         Broadcaster broadcaster = Broadcaster.getInstance(getConfig());
-        
+
         // broadcaster can be clearCache() too, make sure listener is registered; re-registration will be ignored
         broadcaster.registerListener(cacheSyncListener, "cube");
-        
+
         broadcaster.notifyListener(entity, event, cacheKey);
     }
 

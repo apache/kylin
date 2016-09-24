@@ -48,7 +48,6 @@ public class AdminService extends BasicService {
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String getEnv() {
-        logger.debug("Get Kylin Runtime environment");
         PropertiesConfiguration tempConfig = new PropertiesConfiguration();
 
         // Add Java Env
