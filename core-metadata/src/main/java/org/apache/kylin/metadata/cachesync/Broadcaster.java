@@ -77,7 +77,8 @@ public class Broadcaster {
         }
     }
 
-    public static void clearCache() {
+    // call Broadcaster.getInstance().notifyClearAll() to clear cache
+    static void clearCache() {
         CACHE.clear();
     }
 
@@ -104,7 +105,7 @@ public class Broadcaster {
             @Override
             public void run() {
                 final List<RestClient> restClients = Lists.newArrayList();
-                for (String node : nodes) {
+                for (String node : config.getRestServers()) {
                     restClients.add(new RestClient(node));
                 }
                 final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size());
