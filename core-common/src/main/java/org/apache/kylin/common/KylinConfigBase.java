@@ -805,4 +805,8 @@ abstract public class KylinConfigBase implements Serializable {
     public String getCreateFlatHiveTableMethod() {
         return getOptional("kylin.hive.create.flat.table.method", "1");
     }
+
+    public int getMaxBuildingSegments() {
+        return Integer.parseInt(getOptional("kylin.cube.building.segment.max", "1"));
+    }
 }

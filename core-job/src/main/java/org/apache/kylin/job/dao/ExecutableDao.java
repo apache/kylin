@@ -207,6 +207,7 @@ public class ExecutableDao {
     }
 
     public void updateJobOutput(ExecutableOutputPO output) throws PersistentException {
+        logger.debug("updating job output, id: " + output.getUuid());
         try {
             final long ts = writeJobOutputResource(pathOfJobOutput(output.getUuid()), output);
             output.setLastModified(ts);
