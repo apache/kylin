@@ -263,7 +263,7 @@ public class MetadataManager {
         reloadAllSourceTableExd();
         reloadAllDataModel();
         reloadAllExternalFilter();
-        
+
         // touch lower level metadata before registering my listener
         Broadcaster.getInstance(config).registerListener(new SrcTableSyncListener(), "table");
         Broadcaster.getInstance(config).registerListener(new SrcTableExtSyncListener(), "table_ext");
@@ -283,7 +283,7 @@ public class MetadataManager {
                 srcTableMap.removeLocal(cacheKey);
             else
                 reloadSourceTable(cacheKey);
-            
+
             for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByTable(cacheKey)) {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
             }
@@ -302,7 +302,7 @@ public class MetadataManager {
                 srcTableExdMap.removeLocal(cacheKey);
             else
                 reloadSourceTableExt(cacheKey);
-            
+
             for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByTable(cacheKey)) {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
             }
@@ -328,7 +328,7 @@ public class MetadataManager {
                 dataModelDescMap.removeLocal(cacheKey);
             else
                 reloadDataModelDesc(cacheKey);
-            
+
             for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByModel(cacheKey)) {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
             }
@@ -549,8 +549,7 @@ public class MetadataManager {
     public DataModelDesc dropModel(DataModelDesc desc) throws IOException {
         logger.info("Dropping model '" + desc.getName() + "'");
         ResourceStore store = getStore();
-        if (desc != null)
-            store.deleteResource(desc.getResourcePath());
+        store.deleteResource(desc.getResourcePath());
         // delete model from project
         ProjectManager.getInstance(config).removeModelFromProjects(desc.getName());
         // clean model cache
