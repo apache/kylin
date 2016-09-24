@@ -235,6 +235,7 @@ public class BuildCubeWithStream2 {
 
     public void after() {
         kafkaServer.stop();
+        DefaultScheduler.destroyInstance();
     }
 
     protected void waitForJob(String jobId) {
