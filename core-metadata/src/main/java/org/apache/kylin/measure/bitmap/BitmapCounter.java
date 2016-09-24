@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+import org.apache.commons.io.IOUtils;
 import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 /**
@@ -97,8 +98,12 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
 
     public void readRegisters(ByteBuffer in) throws IOException {
         DataInputByteBuffer input = new DataInputByteBuffer();
-        input.reset(new ByteBuffer[] { in });
-        bitmap.deserialize(input);
+        try {
+            input.reset(new ByteBuffer[] { in });
+            bitmap.deserialize(input);
+        } finally {
+            IOUtils.closeQuietly(input);
+        }
     }
 
     @Override
@@ -148,6 +153,8 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
             bitmap.deserialize(input);
         } catch (IOException e) {
             throw new IllegalStateException(e);
+        } finally {
+            IOUtils.closeQuietly(input);
         }
 
         len = in.position() - mark;
