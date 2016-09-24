@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
+import kafka.cluster.BrokerEndPoint;
+import org.apache.kafka.common.protocol.SecurityProtocol;
 import org.apache.kylin.source.kafka.TopicMeta;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.slf4j.Logger;
@@ -70,13 +72,14 @@ public final class KafkaRequester {
         if (consumerCache.containsKey(key)) {
             return consumerCache.get(key);
         } else {
-            consumerCache.putIfAbsent(key, new SimpleConsumer(broker.host(), broker.port(), timeout, bufferSize, clientId));
+            BrokerEndPoint brokerEndPoint = broker.getBrokerEndPoint(SecurityProtocol.PLAINTEXT);
+            consumerCache.putIfAbsent(key, new SimpleConsumer(brokerEndPoint.host(), brokerEndPoint.port(), timeout, bufferSize, clientId));
             return consumerCache.get(key);
         }
     }
 
     private static String createKey(Broker broker, int timeout, int bufferSize, String clientId) {
-        return broker.getConnectionString() + "_" + timeout + "_" + bufferSize + "_" + clientId;
+        return broker.getBrokerEndPoint(SecurityProtocol.PLAINTEXT).connectionString() + "_" + timeout + "_" + bufferSize + "_" + clientId;
     }
 
     public static TopicMeta getKafkaTopicMeta(KafkaClusterConfig kafkaClusterConfig) {

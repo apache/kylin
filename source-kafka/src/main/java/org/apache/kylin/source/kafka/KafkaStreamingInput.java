@@ -25,6 +25,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import com.google.common.base.Function;
+import kafka.cluster.BrokerEndPoint;
+import org.apache.kafka.common.protocol.SecurityProtocol;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.StreamingBatch;
@@ -50,6 +53,8 @@ import kafka.cluster.Broker;
 import kafka.javaapi.FetchResponse;
 import kafka.javaapi.PartitionMetadata;
 import kafka.message.MessageAndOffset;
+
+import javax.annotation.Nullable;
 
 @SuppressWarnings("unused")
 public class KafkaStreamingInput implements IStreamingInput {
@@ -136,8 +141,16 @@ public class KafkaStreamingInput implements IStreamingInput {
                 if (partitionMetadata.errorCode() != 0) {
                     logger.warn("PartitionMetadata errorCode: " + partitionMetadata.errorCode());
                 }
-                replicaBrokers = partitionMetadata.replicas();
-                return partitionMetadata.leader();
+                replicaBrokers = Lists.transform(partitionMetadata.replicas(), new Function<BrokerEndPoint, Broker>() {
+                    @Nullable
+                    @Override
+                    public Broker apply(@Nullable BrokerEndPoint brokerEndPoint) {
+                        return new Broker(brokerEndPoint, SecurityProtocol.PLAINTEXT);
+                    }
+                });
+                BrokerEndPoint leaderEndpoint = partitionMetadata.leader();
+
+                return new Broker(leaderEndpoint, SecurityProtocol.PLAINTEXT);
             } else {
                 return null;
             }
