@@ -33,6 +33,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 
 public class QueryCli {
@@ -74,15 +75,9 @@ public class QueryCli {
                 }
             }
         } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (stmt != null) {
-                stmt.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
+            DBUtils.closeQuietly(rs);
+            DBUtils.closeQuietly(stmt);
+            DBUtils.closeQuietly(conn);
         }
 
     }

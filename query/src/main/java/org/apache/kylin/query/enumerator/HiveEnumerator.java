@@ -26,6 +26,7 @@ import java.sql.Statement;
 import java.util.List;
 
 import org.apache.calcite.linq4j.Enumerator;
+import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.query.relnode.OLAPContext;
 
 /**
@@ -69,22 +70,8 @@ public class HiveEnumerator implements Enumerator<Object[]> {
         } catch (SQLException e) {
             throw new IllegalStateException(url + " can't execute query " + sql, e);
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            stmt = null;
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-                conn = null;
-            }
+            DBUtils.closeQuietly(stmt);
+            DBUtils.closeQuietly(conn);
         }
     }
 

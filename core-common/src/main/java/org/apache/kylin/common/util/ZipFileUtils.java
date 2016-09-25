@@ -28,11 +28,12 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ZipFileUtils {
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ZipFileUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(ZipFileUtils.class);
 
     public static void compressZipFile(String sourceDir, String zipFilename) throws IOException {
         if (!validateZipFilename(zipFilename)) {

@@ -52,6 +52,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -535,25 +536,9 @@ public class QueryService extends BasicService {
 
     private static void close(ResultSet resultSet, Statement stat, Connection conn) {
         OLAPContext.clearParameter();
-
-        if (resultSet != null)
-            try {
-                resultSet.close();
-            } catch (SQLException e) {
-                logger.error("failed to close", e);
-            }
-        if (stat != null)
-            try {
-                stat.close();
-            } catch (SQLException e) {
-                logger.error("failed to close", e);
-            }
-        if (conn != null)
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                logger.error("failed to close", e);
-            }
+        DBUtils.closeQuietly(resultSet);
+        DBUtils.closeQuietly(stat);
+        DBUtils.closeQuietly(conn);
     }
 
 }

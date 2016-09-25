@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RawResource;
@@ -380,8 +381,7 @@ public class MetadataManager {
         try {
             attrs.putAll(JsonUtil.readValue(is, HashMap.class));
         } finally {
-            if (is != null)
-                is.close();
+            IOUtils.closeQuietly(is);
         }
 
         // parse table identity from file name

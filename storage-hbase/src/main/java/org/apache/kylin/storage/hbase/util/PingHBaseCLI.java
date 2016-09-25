@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase.util;
 
 import java.io.IOException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
@@ -73,15 +74,9 @@ public class PingHBaseCLI {
                     break;
             }
         } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
-            if (table != null) {
-                table.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
+            IOUtils.closeQuietly(scanner);
+            IOUtils.closeQuietly(table);
+            IOUtils.closeQuietly(conn);
         }
 
     }

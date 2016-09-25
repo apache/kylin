@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -79,8 +80,8 @@ public class HbaseStreamingInput {
 
             logger.info("HTable '" + tableName + "' created");
         } finally {
-            conn.close();
-            hadmin.close();
+            IOUtils.closeQuietly(conn);
+            IOUtils.closeQuietly(hadmin);
         }
     }
 

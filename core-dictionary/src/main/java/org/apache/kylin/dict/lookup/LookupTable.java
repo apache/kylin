@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -67,7 +68,7 @@ abstract public class LookupTable<T> {
                 initRow(reader.getRow(), keyIndex);
             }
         } finally {
-            reader.close();
+            IOUtils.closeQuietly(reader);
         }
     }
 

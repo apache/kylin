@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase.steps;
 
 import java.io.IOException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -103,7 +104,7 @@ public class CubeHTableUtil {
             Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
         } finally {
-            admin.close();
+            IOUtils.closeQuietly(admin);
         }
 
     }
@@ -119,7 +120,7 @@ public class CubeHTableUtil {
                 admin.deleteTable(tableName);
             }
         } finally {
-            admin.close();
+            IOUtils.closeQuietly(admin);
         }
     }
 
@@ -146,7 +147,7 @@ public class CubeHTableUtil {
             Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
         } finally {
-            admin.close();
+            IOUtils.closeQuietly(admin);
         }
     }
 

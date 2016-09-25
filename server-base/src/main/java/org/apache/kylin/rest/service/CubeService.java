@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
@@ -433,9 +434,7 @@ public class CubeService extends BasicService {
             hr.setTableSize(tableSize);
             hr.setRegionCount(regionCount);
         } finally {
-            if (null != table) {
-                table.close();
-            }
+            IOUtils.closeQuietly(table);
         }
 
         htableInfoCache.put(tableName, hr);
