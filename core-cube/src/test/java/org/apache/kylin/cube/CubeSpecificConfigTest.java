@@ -54,7 +54,7 @@ public class CubeSpecificConfigTest extends LocalFileMetadataTestCase {
     }
 
     private void verifyOverride(KylinConfig base, KylinConfig override) {
-        assertEquals("none", base.getHbaseDefaultCompressionCodec());
+        assertEquals("snappy", base.getHbaseDefaultCompressionCodec());
         assertEquals("lz4", override.getHbaseDefaultCompressionCodec());
     }
 }
