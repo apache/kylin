@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  */
@@ -52,7 +53,11 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private ByteArray[] row_hashcodes = null;
     private ByteBuffer keyBuffer;
     private static final Text EMPTY_TEXT = new Text();
+    public static final byte MARK_FOR_PARTITION_COL = (byte) 0xFE;
     public static final byte MARK_FOR_HLL = (byte) 0xFF;
+
+    private int partitionColumnIndex = -1;
+    private boolean needFetchPartitionCol = true;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -81,6 +86,26 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             for (int i = 0; i < nRowKey; i++) {
                 row_hashcodes[i] = new ByteArray();
             }
+
+            TblColRef partitionColRef = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
+            if (partitionColRef != null) {
+                partitionColumnIndex = intermediateTableDesc.getColumnIndex(partitionColRef);
+            }
+
+            // check whether need fetch the partition col values
+            if (partitionColumnIndex < 0) {
+                // if partition col not on cube, no need
+                needFetchPartitionCol = false;
+            } else {
+                for (int x : dictionaryColumnIndex) {
+                    if (x == partitionColumnIndex) {
+                        // if partition col already build dict, no need
+                        needFetchPartitionCol = false;
+                        break;
+                    }
+                }
+            }
+
         }
     }
 
@@ -108,24 +133,38 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     @Override
     public void map(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         String[] row = flatTableInputFormat.parseMapperInput(record);
+
+        keyBuffer.clear();
         try {
             for (int i = 0; i < factDictCols.size(); i++) {
                 String fieldValue = row[dictionaryColumnIndex[i]];
                 if (fieldValue == null)
                     continue;
-
-                keyBuffer.clear();
+                int offset = keyBuffer.position();
                 keyBuffer.put(Bytes.toBytes(i)[3]); // one byte is enough
                 keyBuffer.put(Bytes.toBytes(fieldValue));
-                outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
+                outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
                 context.write(outputKey, EMPTY_TEXT);
             }
         } catch (Exception ex) {
             handleErrorRecord(row, ex);
         }
 
-        if (collectStatistics && rowCount < samplingPercentage) {
-            putRowKeyToHLL(row);
+        if (collectStatistics) {
+            if (rowCount < samplingPercentage) {
+                putRowKeyToHLL(row);
+            }
+
+            if (needFetchPartitionCol == true) {
+                String fieldValue = row[partitionColumnIndex];
+                if (fieldValue != null) {
+                    int offset = keyBuffer.position();
+                    keyBuffer.put(MARK_FOR_PARTITION_COL);
+                    keyBuffer.put(Bytes.toBytes(fieldValue));
+                    outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
+                    context.write(outputKey, EMPTY_TEXT);
+                }
+            }
         }
 
         if (rowCount++ == 100)

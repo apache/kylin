@@ -65,7 +65,7 @@ public class Kafka10DataLoader extends StreamDataLoader {
         props.put("retry.backoff.ms", "1000");
         KafkaProducer producer = KafkaClient.getKafkaProducer(brokerList, props);
 
-        for (int i = 0; i < messages.size(); ++i) {
+        for (int i = 0; i < messages.size(); i++) {
             ProducerRecord<String, String> keyedMessage = new ProducerRecord<String, String>(clusterConfig.getTopic(), String.valueOf(i), messages.get(i));
             producer.send(keyedMessage);
         }

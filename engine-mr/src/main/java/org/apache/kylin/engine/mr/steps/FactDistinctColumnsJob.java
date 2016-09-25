@@ -101,7 +101,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
                 System.out.println("Found segment " + segment);
             }
             setupMapper(cube.getSegmentById(segmentID));
-            setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 1 : columnsNeedDict.size());
+            setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 2 : columnsNeedDict.size());
 
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 

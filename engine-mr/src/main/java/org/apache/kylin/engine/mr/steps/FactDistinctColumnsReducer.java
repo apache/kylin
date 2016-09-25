@@ -65,7 +65,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     private List<ByteArray> colValues;
     private TblColRef col = null;
     private boolean isStatistics = false;
-    private boolean outputTouched = false;
+    private boolean isPartitionCol = false;
     private KylinConfig cubeConfig;
     protected static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsReducer.class);
 
@@ -92,25 +92,25 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
             samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
+        } else if (collectStatistics && (taskId == numberOfTasks - 2)) {
+            // partition col
+            isStatistics = false;
+            isPartitionCol = true;
+            col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
+            colValues = Lists.newLinkedList();
         } else {
             // col
             isStatistics = false;
+            isPartitionCol = false;
             col = columnList.get(taskId);
-            colValues = Lists.newArrayList();
+            colValues = Lists.newLinkedList();
         }
     }
 
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
-        if (isStatistics == false) {
-            colValues.add(new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1)));
-            if (colValues.size() == 1000000) { //spill every 1 million
-                logger.info("spill values to disk...");
-                outputDistinctValues(col, colValues, context);
-                colValues.clear();
-            }
-        } else {
+        if (isStatistics == true) {
             // for hll
             long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
             for (Text value : values) {
@@ -129,6 +129,21 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
                 } else {
                     cuboidHLLMap.put(cuboidId, hll);
                 }
+            }
+        } else if (isPartitionCol == true) {
+            // for partition col min/max value
+            ByteArray value = new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1));
+            if (colValues.size() > 1) {
+                colValues.set(1, value);
+            } else {
+                colValues.add(value);
+            }
+        } else {
+            colValues.add(new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1)));
+            if (colValues.size() == 1000000) { //spill every 1 million
+                logger.info("spill values to disk...");
+                outputDistinctValues(col, colValues, context);
+                colValues.clear();
             }
         }
 
@@ -156,7 +171,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             }
         } finally {
             IOUtils.closeQuietly(out);
-            outputTouched = true;
         }
     }
 
@@ -164,7 +178,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     protected void cleanup(Context context) throws IOException, InterruptedException {
 
         if (isStatistics == false) {
-            if (!outputTouched || colValues.size() > 0) {
+            if (colValues.size() > 0) {
                 outputDistinctValues(col, colValues, context);
                 colValues.clear();
             }

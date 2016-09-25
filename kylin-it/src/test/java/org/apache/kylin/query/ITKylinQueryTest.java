@@ -24,6 +24,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -65,6 +66,8 @@ public class ITKylinQueryTest extends KylinTestBase {
 
         RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
         RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
+
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     @AfterClass

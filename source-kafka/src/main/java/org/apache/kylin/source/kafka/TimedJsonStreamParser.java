@@ -47,7 +47,6 @@ public final class TimedJsonStreamParser extends StreamingParser {
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
 
     private List<TblColRef> allColumns;
-    private boolean formatTs = false;//not used
     private final ObjectMapper mapper = new ObjectMapper();
     private String tsColName = "timestamp";
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
@@ -61,9 +60,6 @@ public final class TimedJsonStreamParser extends StreamingParser {
                     String[] parts = prop.split("=");
                     if (parts.length == 2) {
                         switch (parts[0]) {
-                        case "formatTs":
-                            this.formatTs = Boolean.valueOf(parts[1]);
-                            break;
                         case "tsColName":
                             this.tsColName = parts[1];
                             break;
@@ -78,7 +74,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
             }
         }
 
-        logger.info("TimedJsonStreamParser with formatTs {} tsColName {}", formatTs, tsColName);
+        logger.info("TimedJsonStreamParser with tsColName {}", tsColName);
     }
 
     @Override
@@ -105,7 +101,6 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 }
             }
 
-            logger.info("Streaming Message: " + result.toString());
             return new StreamingMessage(result, 0, t, Collections.<String, Object> emptyMap());
         } catch (IOException e) {
             logger.error("error", e);

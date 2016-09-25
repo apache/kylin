@@ -143,7 +143,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     public int getColumnIndex(TblColRef colRef) {
         Integer index = columnIndexMap.get(colRef);
         if (index == null)
-            throw new IllegalArgumentException("Column " + colRef.toString() + " wasn't found on flat table.");
+            return -1;
 
         return index.intValue();
     }

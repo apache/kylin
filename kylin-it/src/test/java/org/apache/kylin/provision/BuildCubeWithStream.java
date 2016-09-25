@@ -69,9 +69,18 @@ public class BuildCubeWithStream {
 
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
+    protected static boolean fastBuildMode = false;
 
     public void before() throws Exception {
         deployEnv();
+
+        String fastModeStr = System.getProperty("fastBuildMode");
+        if (fastModeStr != null && fastModeStr.equalsIgnoreCase("true")) {
+            fastBuildMode = true;
+            logger.info("Will use fast build mode");
+        } else {
+            logger.info("Will not use fast build mode");
+        }
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         jobService = ExecutableManager.getInstance(kylinConfig);
@@ -139,29 +148,32 @@ public class BuildCubeWithStream {
         generateStreamData(date1, date2, numberOfRecrods1);
         ExecutableState result = buildSegment(cubeName, 0, Long.MAX_VALUE);
         Assert.assertTrue(result == ExecutableState.SUCCEED);
-        long date3 = f.parse("2013-04-01").getTime();
-        int numberOfRecords2 = 5000;
-        generateStreamData(date2, date3, numberOfRecords2);
-        result = buildSegment(cubeName, 0, Long.MAX_VALUE);
-        Assert.assertTrue(result == ExecutableState.SUCCEED);
 
-        //empty build
-        result = buildSegment(cubeName, 0, Long.MAX_VALUE);
-        Assert.assertTrue(result == ExecutableState.DISCARDED);
+        if (fastBuildMode == false) {
+            long date3 = f.parse("2013-04-01").getTime();
+            int numberOfRecords2 = 5000;
+            generateStreamData(date2, date3, numberOfRecords2);
+            result = buildSegment(cubeName, 0, Long.MAX_VALUE);
+            Assert.assertTrue(result == ExecutableState.SUCCEED);
 
-        //merge
-        result = mergeSegment(cubeName, 0, 15000);
-        Assert.assertTrue(result == ExecutableState.SUCCEED);
+            //empty build
+            result = buildSegment(cubeName, 0, Long.MAX_VALUE);
+            Assert.assertTrue(result == ExecutableState.DISCARDED);
 
-        List<CubeSegment> segments = cubeManager.getCube(cubeName).getSegments();
-        Assert.assertTrue(segments.size() == 1);
+            //merge
+            result = mergeSegment(cubeName, 0, 15000);
+            Assert.assertTrue(result == ExecutableState.SUCCEED);
 
-        CubeSegment toRefreshSeg = segments.get(0);
-        HashMap<String, String> partitionOffsetMap = toRefreshSeg.getAdditionalInfo();
+            List<CubeSegment> segments = cubeManager.getCube(cubeName).getSegments();
+            Assert.assertTrue(segments.size() == 1);
 
-        refreshSegment(cubeName, toRefreshSeg.getSourceOffsetStart(), toRefreshSeg.getSourceOffsetEnd(), partitionOffsetMap);
-        segments = cubeManager.getCube(cubeName).getSegments();
-        Assert.assertTrue(segments.size() == 1);
+            CubeSegment toRefreshSeg = segments.get(0);
+            HashMap<String, String> partitionOffsetMap = toRefreshSeg.getAdditionalInfo();
+
+            refreshSegment(cubeName, toRefreshSeg.getSourceOffsetStart(), toRefreshSeg.getSourceOffsetEnd(), partitionOffsetMap);
+            segments = cubeManager.getCube(cubeName).getSegments();
+            Assert.assertTrue(segments.size() == 1);
+        }
 
     }
 
@@ -197,8 +209,8 @@ public class BuildCubeWithStream {
 
     protected void deployEnv() throws IOException {
         DeployUtil.overrideJobJarLocations();
-        //DeployUtil.initCliWorkDir();
-        //DeployUtil.deployMetadata();
+//        DeployUtil.initCliWorkDir();
+//        DeployUtil.deployMetadata();
     }
 
     public static void beforeClass() throws Exception {

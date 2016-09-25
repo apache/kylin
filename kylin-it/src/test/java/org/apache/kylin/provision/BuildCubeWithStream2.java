@@ -45,7 +45,7 @@ import static java.lang.Thread.sleep;
 public class BuildCubeWithStream2 extends BuildCubeWithStream {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildCubeWithStream2.class);
-    private static boolean generateData = true;
+    private boolean generateData = true;
 
     @Override
     public void build() throws Exception {
@@ -76,6 +76,7 @@ public class BuildCubeWithStream2 extends BuildCubeWithStream {
 
         List<FutureTask<ExecutableState>> futures = Lists.newArrayList();
         for (int i = 0; i < 5; i++) {
+            Thread.sleep(2 * 60 * 1000); // sleep 2 mintues
             FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
                 @Override
                 public ExecutableState call() {
@@ -92,7 +93,6 @@ public class BuildCubeWithStream2 extends BuildCubeWithStream {
 
             executorService.submit(futureTask);
             futures.add(futureTask);
-            Thread.sleep(2 * 60 * 1000); // sleep 2 mintues
         }
 
         generateData = false; // stop generating message to kafka

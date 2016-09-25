@@ -6,6 +6,7 @@
   "timeout": 60000,
   "bufferSize": 65536,
   "parserName": "org.apache.kylin.source.kafka.TimedJsonStreamParser",
+  "parserProperties": "tsColName=timestamp",
   "last_modified": 0,
   "clusters": [
     {

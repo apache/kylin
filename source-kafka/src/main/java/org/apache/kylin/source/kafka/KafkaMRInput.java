@@ -118,7 +118,7 @@ public class KafkaMRInput implements IMRInput {
                 }
             }
             Text text = (Text) mapperInput;
-            ByteBuffer buffer = ByteBuffer.wrap(text.getBytes(), 0, text.getLength()).slice();
+            ByteBuffer buffer = ByteBuffer.wrap(text.getBytes(), 0, text.getLength());
             StreamingMessage streamingMessage = streamingParser.parse(buffer);
             return streamingMessage.getData().toArray(new String[streamingMessage.getData().size()]);
         }

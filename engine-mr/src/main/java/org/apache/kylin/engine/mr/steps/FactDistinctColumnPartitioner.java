@@ -34,6 +34,9 @@ public class FactDistinctColumnPartitioner extends Partitioner<Text, Text> {
         if (key.getBytes()[0] == FactDistinctHiveColumnsMapper.MARK_FOR_HLL) {
             // the last reducer is for merging hll
             return numReduceTasks - 1;
+        } else if (key.getBytes()[0] == FactDistinctHiveColumnsMapper.MARK_FOR_PARTITION_COL) {
+            // the last reducer is for merging hll
+            return numReduceTasks - 2;
         } else {
             int colIndex = BytesUtil.readUnsigned(key.getBytes(), 0, 1);
             return colIndex;
