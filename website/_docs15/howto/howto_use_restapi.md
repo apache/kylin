@@ -6,7 +6,7 @@ permalink: /docs15/howto/howto_use_restapi.html
 since: v0.7.1
 ---
 
-This page lists all the RESTful APIs provided by Kylin; The base of the URL is `/kylin/api`, so don't forget to add it before a certain API's path. For example, to get all cube instances, send HTTP GET request to "/kylin/api/cubes".
+This page lists the major RESTful APIs provided by Kylin.
 
 * Query
    * [Authentication](#authentication)
@@ -35,7 +35,7 @@ This page lists all the RESTful APIs provided by Kylin; The base of the URL is `
    * [Wipe cache](#wipe-cache)
 
 ## Authentication
-`POST /user/authentication`
+`POST /kylin/api/user/authentication`
 
 #### Request Header
 Authorization data encoded by basic auth is needed in the header, such as:
@@ -79,10 +79,17 @@ If login successfully, the JSESSIONID will be saved into the cookie file; In the
 curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/rebuild
 ```
 
+Alternatively, you can provide the username/password with option "user" in each curl call; please note this has the risk of password leak in shell history:
+
+
+```
+curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "startTime": 820454400000, "endTime": 821318400000, "buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/kylin_sales/rebuild
+```
+
 ***
 
 ## Query
-`POST /query`
+`POST /kylin/api/query`
 
 #### Request Body
 * sql - `required` `string` The text of sql statement.
@@ -199,12 +206,12 @@ curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{
 #### Curl Example
 
 ```
-curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/json" -d '{ "sql":"select count(*) from TEST_KYLIN_FACT", "project":"learn_kylin" }' http://YOUR_HOST:7070/kylin/api/query
+curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/json" -d '{ "sql":"select count(*) from TEST_KYLIN_FACT", "project":"learn_kylin" }' http://localhost:7070/kylin/api/query
 ```
 
 
 ## List queryable tables
-`GET /tables_and_columns`
+`GET /kylin/api/tables_and_columns`
 
 #### Request Parameters
 * project - `required` `string` The project to load tables
@@ -282,7 +289,7 @@ curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/j
 ***
 
 ## List cubes
-`GET /cubes`
+`GET /kylin/api/cubes`
 
 #### Request Parameters
 * offset - `required` `int` Offset used by pagination
@@ -313,13 +320,13 @@ curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/j
 ```
 
 ## Get cube
-`GET /cubes/{cubeName}`
+`GET /kylin/api/cubes/{cubeName}`
 
 #### Path Variable
 * cubeName - `required` `string` Cube name to find.
 
 ## Get cube descriptor
-`GET /cube_desc/{cubeName}`
+`GET /kylin/api/cube_desc/{cubeName}`
 Get descriptor for specified cube instance.
 
 #### Path Variable
@@ -580,7 +587,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Get data model
-`GET /model/{modelName}`
+`GET /kylin/api/model/{modelName}`
 
 #### Path Variable
 * modelName - `required` `string` Data model name, by default it should be the same with cube name.
@@ -633,7 +640,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Build cube
-`PUT /cubes/{cubeName}/rebuild`
+`PUT /kylin/api/cubes/{cubeName}/rebuild`
 
 #### Path Variable
 * cubeName - `required` `string` Cube name.
@@ -706,7 +713,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Enable Cube
-`PUT /cubes/{cubeName}/enable`
+`PUT /kylin/api/cubes/{cubeName}/enable`
 
 #### Path variable
 * cubeName - `required` `string` Cube name.
@@ -760,7 +767,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Disable Cube
-`PUT /cubes/{cubeName}/disable`
+`PUT /kylin/api/cubes/{cubeName}/disable`
 
 #### Path variable
 * cubeName - `required` `string` Cube name.
@@ -769,7 +776,7 @@ Get descriptor for specified cube instance.
 (Same as "Enable Cube")
 
 ## Purge Cube
-`PUT /cubes/{cubeName}/purge`
+`PUT /kylin/api/cubes/{cubeName}/purge`
 
 #### Path variable
 * cubeName - `required` `string` Cube name.
@@ -780,7 +787,7 @@ Get descriptor for specified cube instance.
 ***
 
 ## Resume Job
-`PUT /jobs/{jobId}/resume`
+`PUT /kylin/api/jobs/{jobId}/resume`
 
 #### Path variable
 * jobId - `required` `string` Job id.
@@ -848,7 +855,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Discard Job
-`PUT /jobs/{jobId}/cancel`
+`PUT /kylin/api/jobs/{jobId}/cancel`
 
 #### Path variable
 * jobId - `required` `string` Job id.
@@ -857,7 +864,7 @@ Get descriptor for specified cube instance.
 (Same as "Resume job")
 
 ## Get Job Status
-`GET /jobs/{jobId}`
+`GET /kylin/api/jobs/{jobId}`
 
 #### Path variable
 * jobId - `required` `string` Job id.
@@ -866,7 +873,7 @@ Get descriptor for specified cube instance.
 (Same as "Resume Job")
 
 ## Get job step output
-`GET /{jobId}/steps/{stepId}/output`
+`GET /kylin/api/{jobId}/steps/{stepId}/output`
 
 #### Path Variable
 * jobId - `required` `string` Job id.
@@ -882,7 +889,7 @@ Get descriptor for specified cube instance.
 ***
 
 ## Get Hive Table
-`GET /tables/{tableName}`
+`GET /kylin/api/tables/{tableName}`
 
 #### Request Parameters
 * tableName - `required` `string` table name to find.
@@ -915,7 +922,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Get Hive Table (Extend Info)
-`GET /tables/{tableName}/exd-map`
+`GET /kylin/api/tables/{tableName}/exd-map`
 
 #### Request Parameters
 * tableName - `optional` `string` table name to find.
@@ -942,7 +949,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Get Hive Tables
-`GET /tables`
+`GET /kylin/api/tables`
 
 #### Request Parameters
 * project- `required` `string` will list all tables in the project.
@@ -996,7 +1003,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Load Hive Tables
-`POST /tables/{tables}/{project}`
+`POST /kylin/api/tables/{tables}/{project}`
 
 #### Request Parameters
 * tables - `required` `string` table names you want to load from hive, separated with comma.
@@ -1013,10 +1020,9 @@ Get descriptor for specified cube instance.
 ***
 
 ## Wipe cache
-`PUT /cache/{type}/{name}/{action}`
+`PUT /kylin/api/cache/{type}/{name}/{action}`
 
 #### Path variable
 * type - `required` `string` 'METADATA' or 'CUBE'
 * name - `required` `string` Cache key, e.g the cube name.
 * action - `required` `string` 'create', 'update' or 'drop'
-
