@@ -20,6 +20,11 @@
 <!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
         "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 <module name="Checker">
+    <module name="Header">
+        <property name="headerFile" value="dev-support/checkstyle-java-header.txt"/>
+        <property name="fileExtensions" value="java"/>
+        <property name="ignoreLines" value="9, 11, 17"/>
+    </module>
     <module name="FileTabCharacter"/>
     <module name="SuppressWarningsFilter"/>
     <module name="TreeWalker">

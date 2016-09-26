@@ -940,8 +940,8 @@
                             <id>validate</id>
                             <phase>validate</phase>
                             <configuration>
-                                <configLocation>checkstyle.xml</configLocation>
-                                <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                                <configLocation>dev-support/checkstyle.xml</configLocation>
+                                <suppressionsLocation>dev-support/checkstyle-suppressions.xml</suppressionsLocation>
                                 <encoding>UTF-8</encoding>
                                 <consoleOutput>true</consoleOutput>
                                 <failsOnError>true</failsOnError>
@@ -1109,7 +1109,7 @@
                                     <tarLongFileMode>posix</tarLongFileMode>
                                     <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                                     <appendAssemblyId>true</appendAssemblyId>
-                                    <descriptor>src/main/config/assemblies/source-assembly.xml</descriptor>
+                                    <descriptor>assembly/src/main/config/assemblies/source-assembly.xml</descriptor>
                                     <finalName>apache-kylin-${project.version}</finalName>
                                 </configuration>
                             </execution>
