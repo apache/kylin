@@ -69,7 +69,7 @@ public class HBaseResourceStore extends ResourceStore {
     final String tableNameBase;
     final String hbaseUrl;
 
-    private HConnection getConnection() throws IOException {
+    HConnection getConnection() throws IOException {
         return HBaseConnection.get(hbaseUrl);
     }
 

@@ -57,9 +57,9 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
         String path = "/cube/_test_large_cell.json";
         String largeContent = "THIS_IS_A_LARGE_CELL";
         StringEntity content = new StringEntity(largeContent);
-        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
+        HBaseResourceStore store = (HBaseResourceStore) ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+        Configuration hconf = store.getConnection().getConfiguration();
         int origSize = Integer.parseInt(hconf.get("hbase.client.keyvalue.maxsize", "10485760"));
-        ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
 
         try {
             hconf.set("hbase.client.keyvalue.maxsize", String.valueOf(largeContent.length() - 1));
