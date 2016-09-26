@@ -47,7 +47,6 @@ public class KylinConfig extends KylinConfigBase {
 
     /** Kylin properties file name */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
-    public static final String KYLIN_ACCOUNT_CONF_PROPERTIES_FILE = "kylin_account.properties";
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     // static cached instances
@@ -205,23 +204,6 @@ public class KylinConfig extends KylinConfigBase {
         return getKylinPropertiesFile(path);
     }
 
-    static File getKylinAccountPropertiesFile() {
-        String kylinConfHome = System.getProperty(KYLIN_CONF);
-        if (!StringUtils.isEmpty(kylinConfHome)) {
-            logger.info("Use KYLIN_CONF=" + kylinConfHome);
-            return getKylinAccountPropertiesFile(kylinConfHome);
-        }
-
-        logger.warn("KYLIN_CONF property was not set, will seek KYLIN_HOME env variable");
-
-        String kylinHome = getKylinHome();
-        if (StringUtils.isEmpty(kylinHome))
-            throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
-
-        String path = kylinHome + File.separator + "conf";
-        return getKylinAccountPropertiesFile(path);
-    }
-
     public static Properties getKylinProperties() {
         File propFile = getKylinPropertiesFile();
         if (propFile == null || !propFile.exists()) {
@@ -242,25 +224,6 @@ public class KylinConfig extends KylinConfigBase {
                 IOUtils.closeQuietly(ois);
                 conf.putAll(propOverride);
             }
-
-            File accountPropFile = getKylinAccountPropertiesFile();
-            if (accountPropFile.exists()) {
-                FileInputStream ois = new FileInputStream(accountPropFile);
-                Properties propAccount = new Properties();
-                propAccount.load(ois);
-                IOUtils.closeQuietly(ois);
-                conf.putAll(propAccount);
-            }
-
-            File accountPropOverrideFile = new File(accountPropFile.getParentFile(), accountPropFile.getName() + ".override");
-            if (accountPropOverrideFile.exists()) {
-                FileInputStream ois = new FileInputStream(accountPropOverrideFile);
-                Properties propAccountOverride = new Properties();
-                propAccountOverride.load(ois);
-                IOUtils.closeQuietly(ois);
-                conf.putAll(propAccountOverride);
-            }
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -280,14 +243,6 @@ public class KylinConfig extends KylinConfigBase {
         }
 
         return new File(path, KYLIN_CONF_PROPERTIES_FILE);
-    }
-
-    private static File getKylinAccountPropertiesFile(String path) {
-        if (path == null) {
-            return null;
-        }
-
-        return new File(path, KYLIN_ACCOUNT_CONF_PROPERTIES_FILE);
     }
 
     public static void setSandboxEnvIfPossible() {

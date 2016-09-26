@@ -184,9 +184,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
                         File[] confFiles = srcConfDir.listFiles();
                         if (confFiles != null) {
                             for (File confFile : confFiles) {
-                                if (!KylinConfig.KYLIN_ACCOUNT_CONF_PROPERTIES_FILE.equals(confFile.getName())) {
-                                    FileUtils.copyFileToDirectory(confFile, destConfDir);
-                                }
+                                FileUtils.copyFileToDirectory(confFile, destConfDir);
                             }
                         }
                     } catch (Exception e) {
