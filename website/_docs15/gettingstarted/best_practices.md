@@ -23,3 +23,5 @@ List of articles about Kylin best practices contributed by community. Some of th
 * [Kylin And Tableau Tutorial](https://github.com/albertoRamon/Kylin/tree/master/KylinWithTableau)
 
 * [Kylin and Qlik Integration](https://github.com/albertoRamon/Kylin/tree/master/KylinWithQlik)
+
+* [How to use Hue with Kylin](https://github.com/albertoRamon/Kylin/tree/master/KylinWithHue)
