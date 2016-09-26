@@ -18,10 +18,10 @@ List of articles about Kylin best practices contributed by community. Some of th
 
 * [Big Data MDX with Mondrian and Apache Kylin](https://www.inovex.de/fileadmin/files/Vortraege/2015/big-data-mdx-with-mondrian-and-apache-kylin-sebastien-jelsch-pcm-11-2015.pdf)
 
-* [Kylin and Mondrain Interaction](https://github.com/mustangore/kylin-mondrian-interaction)
+* [Kylin and Mondrain Interaction](https://github.com/mustangore/kylin-mondrian-interaction) (Thanks to [mustangore](https://github.com/mustangore))
 
-* [Kylin And Tableau Tutorial](https://github.com/albertoRamon/Kylin/tree/master/KylinWithTableau)
+* [Kylin And Tableau Tutorial](https://github.com/albertoRamon/Kylin/tree/master/KylinWithTableau) (Thanks to [Ramón Portolés, Alberto](https://www.linkedin.com/in/alberto-ramon-portoles-a02b523b))
 
-* [Kylin and Qlik Integration](https://github.com/albertoRamon/Kylin/tree/master/KylinWithQlik)
+* [Kylin and Qlik Integration](https://github.com/albertoRamon/Kylin/tree/master/KylinWithQlik) (Thanks to [Ramón Portolés, Alberto](https://www.linkedin.com/in/alberto-ramon-portoles-a02b523b))
 
-* [How to use Hue with Kylin](https://github.com/albertoRamon/Kylin/tree/master/KylinWithHue)
+* [How to use Hue with Kylin](https://github.com/albertoRamon/Kylin/tree/master/KylinWithHue) (Thanks to [Ramón Portolés, Alberto](https://www.linkedin.com/in/alberto-ramon-portoles-a02b523b))
