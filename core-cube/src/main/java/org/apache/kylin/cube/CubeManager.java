@@ -29,10 +29,12 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
@@ -475,6 +477,24 @@ public class CubeManager implements IRealizationProvider {
         Pair<Boolean, Boolean> pair = CubeValidator.fitInSegments(cube.getSegments(), newSegment);
         if (pair.getFirst() == false || pair.getSecond() == false)
             throw new IllegalArgumentException("The new refreshing segment " + newSegment + " does not match any existing segment in cube " + cube);
+
+        if (startOffset > 0 || endOffset > 0) {
+            CubeSegment toRefreshSeg = null;
+            for (CubeSegment cubeSegment : cube.getSegments()) {
+                if (cubeSegment.getSourceOffsetStart() == startOffset && cubeSegment.getSourceOffsetEnd() == endOffset) {
+                    toRefreshSeg = cubeSegment;
+                    break;
+                }
+            }
+
+            if (toRefreshSeg == null) {
+                throw new IllegalArgumentException("For streaming cube, only one segment can be refreshed at one time");
+            }
+
+            Map<String, String> partitionInfo = Maps.newHashMap();
+            partitionInfo.putAll(toRefreshSeg.getAdditionalInfo());
+            newSegment.setAdditionalInfo(partitionInfo);
+        }
 
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
         cubeBuilder.setToAddSegs(newSegment);

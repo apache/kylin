@@ -1,30 +1,29 @@
 {
   "uuid" : "901ed15e-7769-4c66-b7ae-fbdc971cd192",
- 
   "name" : "test_streaming_table_cube_desc",
   "description" : "",
   "dimensions" : [ {
-    "name" : "DEFAULT.STREAMING_TABLE.SITE",
+    "name" : "SITE",
     "table" : "DEFAULT.STREAMING_TABLE",
     "column" : "SITE",
     "derived" : null
   }, {
-    "name" : "DEFAULT.STREAMING_TABLE.ITM",
+    "name" : "ITM",
     "table" : "DEFAULT.STREAMING_TABLE",
     "column" : "ITM",
     "derived" : null
   }, {
-    "name" : "TIME",
+    "name" : "DAY_START",
     "table" : "DEFAULT.STREAMING_TABLE",
     "column" : "DAY_START",
     "derived" : null
   }, {
-    "name" : "TIME",
+    "name" : "HOUR_START",
     "table" : "DEFAULT.STREAMING_TABLE",
     "column" : "HOUR_START",
     "derived" : null
   }, {
-    "name" : "TIME",
+    "name" : "MINUTE_START",
     "table" : "DEFAULT.STREAMING_TABLE",
     "column" : "MINUTE_START",
     "derived" : null
@@ -68,13 +67,13 @@
   } ],
   "rowkey" : {
     "rowkey_columns" : [ {
-      "column" : "DAY_START",
+      "column" : "MINUTE_START",
       "encoding" : "dict"
     }, {
       "column" : "HOUR_START",
       "encoding" : "dict"
     }, {
-      "column" : "MINUTE_START",
+      "column" : "DAY_START",
       "encoding" : "dict"
     }, {
       "column" : "SITE",
@@ -107,7 +106,7 @@
   } ],
   "override_kylin_properties": {
     "kylin.cube.algorithm": "inmem",
-    "kylin.cube.building.segment.max": "3"
+    "kylin.cube.building.segment.max": "5"
   },
   "notify_list" : [ ],
   "status_need_notify" : [ ],

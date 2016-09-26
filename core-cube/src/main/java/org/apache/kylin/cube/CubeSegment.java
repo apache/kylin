@@ -20,7 +20,6 @@ package org.apache.kylin.cube;
 
 import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,7 +105,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
 
     @JsonProperty("additionalInfo")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private HashMap<String, String> additionalInfo = new LinkedHashMap<String, String>();
+    private Map<String, String> additionalInfo = new LinkedHashMap<String, String>();
 
     private volatile Map<Long, Short> cuboidBaseShards = Maps.newHashMap();//cuboid id ==> base(starting) shard for this cuboid
 
@@ -543,11 +542,11 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         this.indexPath = indexPath;
     }
 
-    public HashMap<String, String> getAdditionalInfo() {
+    public Map<String, String> getAdditionalInfo() {
         return additionalInfo;
     }
 
-    public void setAdditionalInfo(HashMap<String, String> additionalInfo) {
+    public void setAdditionalInfo(Map<String, String> additionalInfo) {
         this.additionalInfo = additionalInfo;
     }
 }
