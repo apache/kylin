@@ -21,7 +21,7 @@
         "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 <module name="Checker">
     <module name="Header">
-        <property name="headerFile" value="dev-support/checkstyle-java-header.txt"/>
+        <property name="headerFile" value="dev-support/checkstyle-apache-header.txt"/>
         <property name="fileExtensions" value="java"/>
         <property name="ignoreLines" value="9, 11, 17"/>
     </module>
