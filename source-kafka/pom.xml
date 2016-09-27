@@ -48,7 +48,11 @@
             <artifactId>kafka_2.10</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
         <!-- Env & Test -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>

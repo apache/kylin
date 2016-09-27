@@ -24,6 +24,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -33,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -204,6 +206,17 @@ public class BasicTest {
         for (String y : x) {
             System.out.println(y);
         }
+    }
+
+    @Test
+    @Ignore("for dev only")
+    public void test3() throws Exception {
+        FastDateFormat formatter = org.apache.kylin.common.util.DateFormat.getDateFormat("MMM dd, yyyy hh:mm:ss aa");
+        System.out.println(formatter.format(new Date()));
+
+        String timeStr = "Jul 20, 2016 9:59:17 AM";
+
+        System.out.println(formatter.parse(timeStr).getTime());
     }
 
     private static String time(long t) {

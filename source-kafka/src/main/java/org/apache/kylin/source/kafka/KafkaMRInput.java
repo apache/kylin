@@ -114,7 +114,7 @@ public class KafkaMRInput implements IMRInput {
                 try {
                     streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getParserProperties(), columns);
                 } catch (ReflectiveOperationException e) {
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException(e);
                 }
             }
             Text text = (Text) mapperInput;

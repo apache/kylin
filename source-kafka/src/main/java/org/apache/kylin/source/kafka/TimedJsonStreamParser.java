@@ -19,6 +19,7 @@
 package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -47,14 +49,18 @@ public final class TimedJsonStreamParser extends StreamingParser {
     private static final Logger logger = LoggerFactory.getLogger(TimedJsonStreamParser.class);
 
     private List<TblColRef> allColumns;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
     private String tsColName = "timestamp";
-    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(String.class));
+    private String tsParser = "org.apache.kylin.source.kafka.DefaultTimeParser";
+    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
+
+    private AbstractTimeParser streamTimeParser;
 
     public TimedJsonStreamParser(List<TblColRef> allColumns, String propertiesStr) {
         this.allColumns = allColumns;
+        String[] properties = null;
         if (!StringUtils.isEmpty(propertiesStr)) {
-            String[] properties = propertiesStr.split(";");
+            properties = propertiesStr.split(";");
             for (String prop : properties) {
                 try {
                     String[] parts = prop.split("=");
@@ -62,6 +68,9 @@ public final class TimedJsonStreamParser extends StreamingParser {
                         switch (parts[0]) {
                         case "tsColName":
                             this.tsColName = parts[1];
+                            break;
+                        case "tsParser":
+                            this.tsParser = parts[1];
                             break;
                         default:
                             break;
@@ -75,28 +84,39 @@ public final class TimedJsonStreamParser extends StreamingParser {
         }
 
         logger.info("TimedJsonStreamParser with tsColName {}", tsColName);
+
+        if (!StringUtils.isEmpty(tsParser)) {
+            try {
+                Class clazz = Class.forName(tsParser);
+                Constructor constructor = clazz.getConstructor(String[].class);
+                streamTimeParser = (AbstractTimeParser) constructor.newInstance((Object)properties);
+            } catch (Exception e) {
+                throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + propertiesStr + ".", e);
+            }
+        } else {
+            throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + propertiesStr + ".");
+        }
+        mapper = new ObjectMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper.disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
+        mapper.enable(DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY);
     }
 
     @Override
     public StreamingMessage parse(ByteBuffer buffer) {
         try {
-            Map<String, String> message = mapper.readValue(new ByteBufferBackedInputStream(buffer), mapType);
-            Map<String, String> root = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+            Map<String, Object> message = mapper.readValue(new ByteBufferBackedInputStream(buffer), mapType);
+            Map<String, Object> root = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             root.putAll(message);
-            String tsStr = root.get(tsColName);
-            long t;
-            if (StringUtils.isEmpty(tsStr)) {
-                t = 0;
-            } else {
-                t = Long.valueOf(tsStr);
-            }
+            String tsStr = String.valueOf(root.get(tsColName));
+            long t = streamTimeParser.parseTime(tsStr);
             ArrayList<String> result = Lists.newArrayList();
 
             for (TblColRef column : allColumns) {
                 String columnName = column.getName().toLowerCase();
 
                 if (populateDerivedTimeColumns(columnName, result, t) == false) {
-                    String x = root.get(columnName);
+                    String x = String.valueOf(root.get(columnName));
                     result.add(x);
                 }
             }
