@@ -173,7 +173,8 @@ public class QueryController extends BasicController {
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
 
-            String serverMode = KylinConfig.getInstanceFromEnv().getServerMode();
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            String serverMode = kylinConfig.getServerMode();
             if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
                 throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
             }
@@ -185,17 +186,23 @@ public class QueryController extends BasicController {
 
             long startTime = System.currentTimeMillis();
 
-            SQLResponse sqlResponse = searchQueryInCache(sqlRequest);
+            SQLResponse sqlResponse = null;
+            boolean queryCacheEnabled = kylinConfig.isQueryCacheEnabled() && !BackdoorToggles.getDisableCache();
+            if (queryCacheEnabled) {
+                sqlResponse = searchQueryInCache(sqlRequest);
+            }
+            
             try {
                 if (null == sqlResponse) {
                     sqlResponse = queryService.query(sqlRequest);
 
-                    long durationThreshold = KylinConfig.getInstanceFromEnv().getQueryDurationCacheThreshold();
-                    long scancountThreshold = KylinConfig.getInstanceFromEnv().getQueryScanCountCacheThreshold();
+                    long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
+                    long scancountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                     logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
                             String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()), String.valueOf(sqlResponse.getTotalScanCount()));
-                    if (!sqlResponse.getIsException() && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                    if (queryCacheEnabled && !sqlResponse.getIsException() //
+                            && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
                         cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                     }
                 } else {
@@ -211,7 +218,7 @@ public class QueryController extends BasicController {
                 sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
 
                 // for exception queries, only cache ScanOutOfLimitException
-                if (e instanceof ScanOutOfLimitException) {
+                if (queryCacheEnabled && e instanceof ScanOutOfLimitException) {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                     exceptionCache.put(new Element(sqlRequest, sqlResponse));
                 }
@@ -236,18 +243,16 @@ public class QueryController extends BasicController {
         Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
         Cache successCache = cacheManager.getCache(SUCCESS_QUERY_CACHE);
 
-        if (KylinConfig.getInstanceFromEnv().isQueryCacheEnabled() && !BackdoorToggles.getDisableCache()) {
-            if (exceptionCache.get(sqlRequest) != null) {
-                logger.info("The sqlResponse is found in EXCEPTION_QUERY_CACHE");
-                Element element = exceptionCache.get(sqlRequest);
-                response = (SQLResponse) element.getObjectValue();
-                response.setHitExceptionCache(true);
-            } else if (successCache.get(sqlRequest) != null) {
-                logger.info("The sqlResponse is found in SUCCESS_QUERY_CACHE");
-                Element element = successCache.get(sqlRequest);
-                response = (SQLResponse) element.getObjectValue();
-                response.setStorageCacheUsed(true);
-            }
+        if (exceptionCache.get(sqlRequest) != null) {
+            logger.info("The sqlResponse is found in EXCEPTION_QUERY_CACHE");
+            Element element = exceptionCache.get(sqlRequest);
+            response = (SQLResponse) element.getObjectValue();
+            response.setHitExceptionCache(true);
+        } else if (successCache.get(sqlRequest) != null) {
+            logger.info("The sqlResponse is found in SUCCESS_QUERY_CACHE");
+            Element element = successCache.get(sqlRequest);
+            response = (SQLResponse) element.getObjectValue();
+            response.setStorageCacheUsed(true);
         }
 
         return response;
