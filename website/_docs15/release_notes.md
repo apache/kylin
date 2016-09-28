@@ -21,6 +21,7 @@ This version fixes two major bugs introduced in 1.5.4; The metadata and HBase co
 
 __Bug__
 
+[KYLIN-2010] - Date dictionary return wrong SQL result
 [KYLIN-2026] - NPE occurs when build a cube without partition column
 [KYLIN-2032] - Cube build failed when partition column isn't in dimension list
 
