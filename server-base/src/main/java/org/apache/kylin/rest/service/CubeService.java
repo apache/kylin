@@ -582,15 +582,18 @@ public class CubeService extends BasicService {
     }
 
     public void updateOnNewSegmentReady(String cubeName) {
-        logger.debug("on updateOnNewSegmentReady: " + cubeName);
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String serverMode = kylinConfig.getServerMode();
-        logger.debug("server mode: " + serverMode);
         if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
-            keepCubeRetention(cubeName);
-            mergeCubeSegment(cubeName);
+            CubeInstance cube = getCubeManager().getCube(cubeName);
+            if (cube != null) {
+                CubeSegment seg = cube.getLatestBuiltSegment();
+                if (seg != null && seg.getStatus() == SegmentStatusEnum.READY) {
+                    keepCubeRetention(cubeName);
+                    mergeCubeSegment(cubeName);
+                }
+            }
         }
-
     }
 
     private void keepCubeRetention(String cubeName) {

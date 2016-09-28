@@ -293,6 +293,18 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return latest;
     }
 
+    public CubeSegment getLatestBuiltSegment() {
+        CubeSegment latest = null;
+        for (int i = segments.size() - 1; i >= 0; i--) {
+            CubeSegment seg = segments.get(i);
+            if (seg.getLastBuildTime() > 0) {
+                if (latest == null || seg.getLastBuildTime() > latest.getLastBuildTime())
+                    latest = seg;
+            }
+        }
+        return latest;
+    }
+    
     public List<CubeSegment> getSegments() {
         return segments;
     }
