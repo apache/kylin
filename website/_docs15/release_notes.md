@@ -15,6 +15,15 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v1.5.4.1 - 2016-09-28
+_Tag:_ [kylin-1.5.4.1](https://github.com/apache/kylin/tree/kylin-1.5.4.1)
+This version fixes two major bugs introduced in 1.5.4; The metadata and HBase coprocessor is compatible with 1.5.4.
+
+__Bug__
+
+[KYLIN-2026] - NPE occurs when build a cube without partition column
+[KYLIN-2032] - Cube build failed when partition column isn't in dimension list
+
 ## v1.5.4 - 2016-09-15
 _Tag:_ [kylin-1.5.4](https://github.com/apache/kylin/tree/kylin-1.5.4)
 This version includes bug fixs/enhancements as well as new features; It is backward compatiple with v1.5.3; While after upgrade, you still need update coprocessor, refer to [How to update coprocessor](/docs15/howto/howto_update_coprocessor.html).
