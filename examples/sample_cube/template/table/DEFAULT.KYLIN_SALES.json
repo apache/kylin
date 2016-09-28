@@ -40,10 +40,18 @@
     "datatype" : "bigint"
   }, {
     "id" : "10",
-    "name" : "USER_ID",
+    "name" : "BUYER_COUNTRY",
     "datatype" : "string"
   }, {
     "id" : "11",
+    "name" : "SELLER_COUNTRY",
+    "datatype" : "string"
+  }, {
+    "id" : "12",
+    "name" : "USER_ID",
+    "datatype" : "string"
+  }, {
+    "id" : "13",
     "name" : "REGION",
     "datatype" : "string"
   } ],

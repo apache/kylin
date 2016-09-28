@@ -227,7 +227,7 @@ public class JoinedFlatTable {
         
         List<JoinDesc> result = Lists.newArrayList();
         for (LookupDesc lookup : flatDesc.getDataModel().getLookups()) {
-            String table = lookup.getTableDesc().getIdentity();
+            String table = lookup.getTableRef().getTableIdentity();
             if (usedTableIdentities.contains(table)) {
                 result.add(lookup.getJoin());
             }

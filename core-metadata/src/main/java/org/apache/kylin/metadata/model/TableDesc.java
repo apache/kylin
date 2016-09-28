@@ -211,8 +211,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             return false;
         if (!Arrays.equals(columns, tableDesc.columns))
             return false;
-        //        if (tableType != null ? !tableType.equals(tableDesc.tableType) : tableDesc.tableType != null)
-        //            return false;
+        
         return getIdentity().equals(tableDesc.getIdentity());
 
     }

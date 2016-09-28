@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -28,33 +29,37 @@ public class LookupDesc {
     @JsonProperty("table")
     private String table;
 
+    @JsonProperty("alias")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String alias;
+    
     @JsonProperty("join")
     private JoinDesc join;
     
-    private TableDesc tableDesc;
+    private TableRef tableRef;
 
     public String getTable() {
         return table;
     }
 
-    public void setTable(String table) {
+    void setTable(String table) {
         this.table = table;
     }
 
+    public String getAlias() {
+        return alias;
+    }
+    
     public JoinDesc getJoin() {
         return join;
     }
 
-    public void setJoin(JoinDesc join) {
-        this.join = join;
+    public TableRef getTableRef() {
+        return tableRef;
     }
 
-    public TableDesc getTableDesc() {
-        return tableDesc;
-    }
-
-    void setTableDesc(TableDesc tableDesc) {
-        this.tableDesc = tableDesc;
+    void setTableRef(TableRef ref) {
+        this.tableRef = ref;
     }
     
     

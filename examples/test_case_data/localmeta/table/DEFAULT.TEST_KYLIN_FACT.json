@@ -38,6 +38,14 @@
     "id" : "9",
     "name" : "SELLER_ID",
     "datatype" : "bigint"
+  }, {
+    "id" : "10",
+    "name" : "BUYER_COUNTRY",
+    "datatype" : "string"
+  }, {
+    "id" : "11",
+    "name" : "SELLER_COUNTRY",
+    "datatype" : "string"
   } ],
   "database" : "DEFAULT",
   "last_modified" : 0

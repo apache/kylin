@@ -38,6 +38,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 @SuppressWarnings("serial")
@@ -80,9 +81,11 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
 
-    private TableDesc factTableDesc;
-
-    private List<TableDesc> lookupTableDescs = Lists.newArrayList();
+    // computed attributes
+    private TableRef factTableRef;
+    private List<TableRef> lookupTableRefs = Lists.newArrayList();
+    private Map<String, TableRef> aliasMap = Maps.newHashMap(); // a table has exactly one alias
+    private Map<String, TableRef> tableNameMap = Maps.newHashMap(); // a table maybe referenced by multiple names
 
     /**
      * Error messages during resolving json metadata
@@ -129,12 +132,21 @@ public class DataModelDesc extends RootPersistentEntity {
         return factTable;
     }
 
-    public TableDesc getFactTableDesc() {
-        return factTableDesc;
+    public TableRef getFactTableRef() {
+        return factTableRef;
     }
 
+    public List<TableRef> getLookupTableRefs() {
+        return lookupTableRefs;
+    }
+    
+    @Deprecated
     public List<TableDesc> getLookupTableDescs() {
-        return lookupTableDescs;
+        List<TableDesc> result = Lists.newArrayList();
+        for (TableRef table : getLookupTableRefs()) {
+            result.add(table.getTableDesc());
+        }
+        return result;
     }
 
     public void setFactTable(String factTable) {
@@ -202,57 +214,101 @@ public class DataModelDesc extends RootPersistentEntity {
         return candidate;
     }
 
-    // TODO let this replace CubeDesc.buildColumnNameAbbreviation()
-    public ColumnDesc findColumn(String column) {
-        ColumnDesc colDesc = null;
+    public TblColRef findColumn(String table, String column) {
+        TableRef tableRef = findTable(table);
+        TblColRef result = tableRef.getColumn(column);
+        if (result == null)
+            throw new IllegalArgumentException("Column not found by " + table + "." + column);
+        return result;
+    }
+    
+    public TblColRef findColumn(String column) {
+        TblColRef result = null;
 
         int cut = column.lastIndexOf('.');
         if (cut > 0) {
             // table specified
-            String table = column.substring(0, cut);
-            TableDesc tableDesc = findTable(table);
-            colDesc = tableDesc.findColumnByName(column.substring(cut + 1));
+            result = findColumn(column.substring(0, cut), column.substring(cut + 1));
         } else {
             // table not specified, try each table
-            colDesc = factTableDesc.findColumnByName(column);
-            if (colDesc == null) {
-                for (TableDesc tableDesc : lookupTableDescs) {
-                    colDesc = tableDesc.findColumnByName(column);
-                    if (colDesc != null)
+            result = factTableRef.getColumn(column);
+            if (result == null) {
+                for (TableRef tableRef : lookupTableRefs) {
+                    result = tableRef.getColumn(column);
+                    if (result != null)
                         break;
                 }
             }
         }
 
-        if (colDesc == null)
+        if (result == null)
             throw new IllegalArgumentException("Column not found by " + column);
 
-        return colDesc;
+        return result;
     }
 
-    public TableDesc findTable(String table) {
-        if (factTableDesc.getName().equalsIgnoreCase(table) || factTableDesc.getIdentity().equalsIgnoreCase(table))
-            return factTableDesc;
-
-        for (TableDesc desc : lookupTableDescs) {
-            if (desc.getName().equalsIgnoreCase(table) || desc.getIdentity().equalsIgnoreCase(table))
-                return desc;
+    public TableRef findTable(String table) {
+        TableRef result = tableNameMap.get(table);
+        if (result == null) {
+            throw new IllegalArgumentException("Table not found by " + table);
         }
-
-        throw new IllegalArgumentException("Table not found by " + table);
+        return result;
     }
 
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.config = config;
-        this.factTable = this.factTable.toUpperCase();
-        this.factTableDesc = tables.get(this.factTable.toUpperCase());
-        if (factTableDesc == null) {
-            throw new IllegalStateException("Fact table does not exist:" + this.factTable);
-        }
-
+        
+        initTableAlias(tables);
         initJoinColumns(tables);
         ModelDimensionDesc.capicalizeStrings(dimensions);
         initPartitionDesc(tables);
+    }
+
+    private void initTableAlias(Map<String, TableDesc> tables) {
+        factTable = factTable.toUpperCase();
+        
+        if (tables.containsKey(factTable) == false)
+            throw new IllegalStateException("Fact table does not exist:" + factTable);
+        
+        factTableRef = new TableRef(this, "FACT", tables.get(factTable));
+        addAlias(factTableRef);
+        
+        for (LookupDesc lookup : lookups) {
+            lookup.setTable(lookup.getTable().toUpperCase());
+            
+            if (tables.containsKey(lookup.getTable()) == false)
+                throw new IllegalStateException("Lookup table does not exist:" + lookup.getTable());
+            
+            TableDesc tableDesc = tables.get(lookup.getTable());
+            String alias = lookup.getAlias();
+            if (alias == null)
+                alias = tableDesc.getName();
+            TableRef ref = new TableRef(this, alias, tableDesc);
+            lookup.setTableRef(ref);
+            lookupTableRefs.add(ref);
+            addAlias(ref);
+        }
+
+        tableNameMap.putAll(aliasMap);
+    }
+
+    private void addAlias(TableRef ref) {
+        String alias = ref.getAlias();
+        if (aliasMap.containsKey(alias))
+            throw new IllegalStateException("Alias '" + alias + "' ref to multiple tables: " + ref.getTableIdentity() + ", " + aliasMap.get(alias).getTableIdentity());
+        aliasMap.put(alias, ref);
+        
+        TableDesc table = ref.getTableDesc();
+        addTableName(table.getName(), ref);
+        addTableName(table.getIdentity(), ref);
+    }
+
+    private void addTableName(String name, TableRef ref) {
+        if (tableNameMap.containsKey(name)) {
+            tableNameMap.put(name, null); // conflict name
+        } else {
+            tableNameMap.put(name, ref);
+        }
     }
 
     private void initPartitionDesc(Map<String, TableDesc> tables) {
@@ -261,18 +317,8 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     private void initJoinColumns(Map<String, TableDesc> tables) {
-        // join columns may or may not present in cube;
-        // here we don't modify 'allColumns' and 'dimensionColumns';
-        // initDimensionColumns() will do the update
         for (LookupDesc lookup : this.lookups) {
-            lookup.setTable(lookup.getTable().toUpperCase());
-            TableDesc dimTable = tables.get(lookup.getTable());
-            if (dimTable == null) {
-                throw new IllegalStateException("Table " + lookup.getTable() + " does not exist for " + this);
-            }
-            lookup.setTableDesc(dimTable);
-            this.lookupTableDescs.add(dimTable);
-
+            TableRef dimTable = lookup.getTableRef();
             JoinDesc join = lookup.getJoin();
             if (join == null)
                 continue;
@@ -284,13 +330,11 @@ public class DataModelDesc extends RootPersistentEntity {
             String[] pks = join.getPrimaryKey();
             TblColRef[] pkCols = new TblColRef[pks.length];
             for (int i = 0; i < pks.length; i++) {
-                ColumnDesc col = dimTable.findColumnByName(pks[i]);
+                TblColRef col = dimTable.getColumn(pks[i]);
                 if (col == null) {
-                    throw new IllegalStateException("Can't find column " + pks[i] + " in table " + dimTable.getIdentity());
+                    throw new IllegalStateException("Can't find column " + pks[i] + " in table " + dimTable.getTableIdentity());
                 }
-                TblColRef colRef = new TblColRef(col);
-                pks[i] = colRef.getName();
-                pkCols[i] = colRef;
+                pkCols[i] = col;
             }
             join.setPrimaryKeyColumns(pkCols);
 
@@ -298,13 +342,11 @@ public class DataModelDesc extends RootPersistentEntity {
             String[] fks = join.getForeignKey();
             TblColRef[] fkCols = new TblColRef[fks.length];
             for (int i = 0; i < fks.length; i++) {
-                ColumnDesc col = factTableDesc.findColumnByName(fks[i]);
+                TblColRef col = factTableRef.getColumn(fks[i]);
                 if (col == null) {
                     throw new IllegalStateException("Can't find column " + fks[i] + " in table " + this.getFactTable());
                 }
-                TblColRef colRef = new TblColRef(col);
-                fks[i] = colRef.getName();
-                fkCols[i] = colRef;
+                fkCols[i] = col;
             }
             join.setForeignKeyColumns(fkCols);
 
@@ -314,7 +356,7 @@ public class DataModelDesc extends RootPersistentEntity {
             }
             for (int i = 0; i < fkCols.length; i++) {
                 if (!fkCols[i].getDatatype().equals(pkCols[i].getDatatype())) {
-                    logger.warn("Primary key " + lookup.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with Foreign key " + this.getFactTable() + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
+                    logger.warn("PK " + lookup.getTable() + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with FK " + this.getFactTable() + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
                 }
             }
 

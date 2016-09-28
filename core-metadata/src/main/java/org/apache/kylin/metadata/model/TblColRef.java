@@ -63,9 +63,15 @@ public class TblColRef implements Serializable {
 
     // ============================================================================
 
+    private TableRef table;
     private ColumnDesc column;
 
     TblColRef(ColumnDesc column) {
+        this.column = column;
+    }
+    
+    TblColRef(TableRef table, ColumnDesc column) {
+        this.table = table;
         this.column = column;
     }
 

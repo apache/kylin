@@ -19,14 +19,10 @@
 package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.metadata.model.ISourceAware;
-import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.service.CubeService;
-import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
