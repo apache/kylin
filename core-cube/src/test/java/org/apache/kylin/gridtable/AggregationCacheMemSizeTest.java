@@ -17,197 +17,195 @@
 
 package org.apache.kylin.gridtable;
 
-import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.Random;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
+import com.google.common.base.Stopwatch;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.basic.BigDecimalSumAggregator;
 import org.apache.kylin.measure.basic.DoubleSumAggregator;
 import org.apache.kylin.measure.basic.LongSumAggregator;
+import org.apache.kylin.measure.bitmap.BitmapAggregator;
+import org.apache.kylin.measure.bitmap.BitmapCounter;
 import org.apache.kylin.measure.hllc.HLLCAggregator;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
+import org.github.jamm.MemoryMeter;
 import org.junit.Test;
 
+import java.math.BigDecimal;
+import java.util.*;
+
 public class AggregationCacheMemSizeTest {
+    private static final MemoryMeter meter = new MemoryMeter();
+    private static final BitmapCounter[] bitmaps = new BitmapCounter[5];
+    private static final Random random = new Random();
 
-    public static final int NUM_OF_OBJS = 1000000 / 2;
+    // consider bitmaps with variant cardinality
+    static {
+        for (int i = 0; i < bitmaps.length; i++) {
+            bitmaps[i] = new BitmapCounter();
+        }
 
-    interface CreateAnObject {
-        Object create();
-    }
+        final int totalBits = 1_000_000;
 
-    @Test
-    public void testHLLCAggregatorSize() throws InterruptedException {
-        int est = estimateObjectSize(new CreateAnObject() {
-            @Override
-            public Object create() {
-                HLLCAggregator aggr = new HLLCAggregator(10);
-                aggr.aggregate(new HyperLogLogPlusCounter(10));
-                return aggr;
+        // case 0: sparse, low-cardinality bitmap
+        for (int i = 0; i < 100; i++) {
+            bitmaps[0].add(random.nextInt(totalBits));
+        }
+
+        // case 1: 20% full bitmap
+        for (int i = 0; i < totalBits; i++) {
+            if (random.nextInt(100) < 20) {
+                bitmaps[1].add(i);
             }
-        });
-        System.out.println("HLLC: " + est);
-    }
+        }
 
-    @Test
-    public void testBigDecimalAggregatorSize() throws InterruptedException {
-        int est = estimateObjectSize(new CreateAnObject() {
-            @Override
-            public Object create() {
-                return newBigDecimalAggr();
+        // case 2: half full bitmap
+        for (int i = 0; i < totalBits; i++) {
+            if (random.nextInt(100) < 50) {
+                bitmaps[2].add(i);
             }
+        }
 
-        });
-        System.out.println("BigDecimal: " + est);
-    }
-
-    private BigDecimalSumAggregator newBigDecimalAggr() {
-        BigDecimalSumAggregator aggr = new BigDecimalSumAggregator();
-        aggr.aggregate(new BigDecimal("12345678901234567890.123456789"));
-        return aggr;
-    }
-
-    @Test
-    public void testLongAggregatorSize() throws InterruptedException {
-        int est = estimateObjectSize(new CreateAnObject() {
-            @Override
-            public Object create() {
-                return newLongAggr();
+        // case 3: 80% full bitmap
+        for (int i = 0; i < totalBits; i++) {
+            if (random.nextInt(100) < 80) {
+                bitmaps[3].add(i);
             }
-        });
-        System.out.println("Long: " + est);
-    }
+        }
 
-    private LongSumAggregator newLongAggr() {
-        LongSumAggregator aggr = new LongSumAggregator();
-        aggr.aggregate(new LongMutable(10));
-        return aggr;
-    }
-
-    @Test
-    public void testDoubleAggregatorSize() throws InterruptedException {
-        int est = estimateObjectSize(new CreateAnObject() {
-            @Override
-            public Object create() {
-                return newDoubleAggr();
+        // case 4: dense, high-cardinality bitmap
+        for (int i = 0; i < totalBits; i++) {
+            if (random.nextInt(totalBits) < 100) {
+                continue;
             }
-        });
-        System.out.println("Double: " + est);
+            bitmaps[4].add(i);
+        }
     }
 
-    private DoubleSumAggregator newDoubleAggr() {
-        DoubleSumAggregator aggr = new DoubleSumAggregator();
-        aggr.aggregate(new DoubleMutable(10));
-        return aggr;
+    enum Settings {
+        WITHOUT_MEM_HUNGRY,     // only test basic aggrs
+        WITH_HLLC,              // basic aggrs + hllc
+        WITH_LOW_CARD_BITMAP,   // basic aggrs + bitmap
+        WITH_HIGH_CARD_BITMAP   // basic aggrs + bitmap
+    }
+
+    private MeasureAggregator<?>[] createNoMemHungryAggrs() {
+        LongSumAggregator longSum = new LongSumAggregator();
+        longSum.aggregate(new LongMutable(10));
+
+        DoubleSumAggregator doubleSum = new DoubleSumAggregator();
+        doubleSum.aggregate(new DoubleMutable(10));
+
+        BigDecimalSumAggregator decimalSum = new BigDecimalSumAggregator();
+        decimalSum.aggregate(new BigDecimal("12345678901234567890.123456789"));
+
+        return new MeasureAggregator[] { longSum, doubleSum, decimalSum };
+    }
+
+    private HLLCAggregator createHLLCAggr() {
+        HLLCAggregator hllcAggregator = new HLLCAggregator(14);
+        hllcAggregator.aggregate(new HyperLogLogPlusCounter(14));
+        return hllcAggregator;
+    }
+
+    private BitmapAggregator createBitmapAggr(boolean lowCardinality) {
+        BitmapCounter counter = new BitmapCounter();
+        counter.merge(lowCardinality ? bitmaps[0] : bitmaps[3]);
+
+        BitmapAggregator result = new BitmapAggregator();
+        result.aggregate(counter);
+        return result;
+    }
+
+    private MeasureAggregator<?>[] createAggrs(Settings settings) {
+        List<MeasureAggregator<?>> aggregators = new ArrayList<>();
+        aggregators.addAll(Arrays.asList(createNoMemHungryAggrs()));
+
+        switch (settings) {
+            case WITHOUT_MEM_HUNGRY:
+                break;
+            case WITH_HLLC:
+                aggregators.add(createHLLCAggr());
+                break;
+            case WITH_LOW_CARD_BITMAP:
+                aggregators.add(createBitmapAggr(true));
+                break;
+            case WITH_HIGH_CARD_BITMAP:
+                aggregators.add(createBitmapAggr(false));
+                break;
+        }
+
+        return aggregators.toArray(new MeasureAggregator[aggregators.size()]);
     }
 
     @Test
-    public void testByteArraySize() throws InterruptedException {
-        int est = estimateObjectSize(new CreateAnObject() {
-            @Override
-            public Object create() {
-                return new byte[10];
-            }
-        });
-        System.out.println("byte[10]: " + est);
+    public void testEstimateBitmapMemSize() {
+        BitmapAggregator[] bitmapAggrs = new BitmapAggregator[bitmaps.length];
+        for (int i = 0; i < bitmapAggrs.length; i++) {
+            bitmapAggrs[i] = new BitmapAggregator();
+            bitmapAggrs[i].aggregate(bitmaps[i]);
+        }
+
+        System.out.printf("%-15s %-10s %-10s\n", "cardinality", "estimate", "actual");
+        for (BitmapAggregator aggr : bitmapAggrs) {
+            System.out.printf("%-15d %-10d %-10d\n",
+                    aggr.getState().getCount(), aggr.getMemBytesEstimate(), meter.measureDeep(aggr));
+        }
     }
 
     @Test
-    public void testAggregatorArraySize() throws InterruptedException {
-        int est = estimateObjectSize(new CreateAnObject() {
-            @Override
-            public Object create() {
-                return new MeasureAggregator[7];
-            }
-        });
-        System.out.println("MeasureAggregator[7]: " + est);
+    public void testEstimateMemSize() throws InterruptedException {
+        int scale = Integer.parseInt(System.getProperty("scale", "1"));
+        scale = Math.max(1, Math.min(10, scale));
+
+        testSetting(Settings.WITHOUT_MEM_HUNGRY, scale * 100000);
+        testSetting(Settings.WITH_HLLC, scale * 5000);
+        testSetting(Settings.WITH_LOW_CARD_BITMAP, scale * 10000);
+        testSetting(Settings.WITH_HIGH_CARD_BITMAP, scale * 1000);
     }
 
-    @Test
-    public void testTreeMapSize() throws InterruptedException {
-        final SortedMap<byte[], Object> map = new TreeMap<byte[], Object>(new Comparator<byte[]>() {
+    private void testSetting(Settings settings, int inputCount) {
+        SortedMap<byte[], Object> map = new TreeMap<>(new Comparator<byte[]>() {
             @Override
             public int compare(byte[] o1, byte[] o2) {
                 return Bytes.compareTo(o1, o2);
             }
         });
-        final Random rand = new Random();
-        int est = estimateObjectSize(new CreateAnObject() {
-            @Override
-            public Object create() {
-                byte[] key = new byte[10];
-                rand.nextBytes(key);
-                map.put(key, null);
-                return null;
+
+        final int reportInterval = inputCount / 10;
+        final Stopwatch stopwatch = new Stopwatch();
+        long estimateMillis = 0;
+        long actualMillis = 0;
+
+        System.out.println("Settings: " + settings);
+        System.out.printf("%15s %15s %15s %15s %15s\n",
+                "Size", "Estimate(bytes)", "Actual(bytes)", "Estimate(ms)", "Actual(ms)");
+
+        for (int i = 0; i < inputCount; i++) {
+            byte[] key = new byte[10];
+            random.nextBytes(key);
+            MeasureAggregator[] values = createAggrs(settings);
+            map.put(key, values);
+
+            if ((i+1) % reportInterval == 0) {
+                stopwatch.start();
+                long estimateBytes = GTAggregateScanner.estimateSizeOfAggrCache(key, values, map.size());
+                estimateMillis += stopwatch.elapsedMillis();
+                stopwatch.reset();
+
+                stopwatch.start();
+                long actualBytes = meter.measureDeep(map);
+                actualMillis += stopwatch.elapsedMillis();
+                stopwatch.reset();
+
+                System.out.printf("%,15d %,15d %,15d %,15d %,15d\n",
+                        map.size(), estimateBytes, actualBytes, estimateMillis, actualMillis);
             }
-        });
-        System.out.println("TreeMap entry: " + (est - 20)); // -20 is to exclude byte[10]
-    }
-
-    @Test
-    public void testAggregationCacheSize() throws InterruptedException {
-        final SortedMap<byte[], Object> map = new TreeMap<byte[], Object>(new Comparator<byte[]>() {
-            @Override
-            public int compare(byte[] o1, byte[] o2) {
-                return Bytes.compareTo(o1, o2);
-            }
-        });
-        final Random rand = new Random();
-
-        long bytesBefore = memLeft();
-        byte[] key = null;
-        MeasureAggregator<?>[] aggrs = null;
-        for (int i = 0; i < NUM_OF_OBJS; i++) {
-            key = new byte[10];
-            rand.nextBytes(key);
-            aggrs = new MeasureAggregator[4];
-            aggrs[0] = newBigDecimalAggr();
-            aggrs[1] = newLongAggr();
-            aggrs[2] = newDoubleAggr();
-            aggrs[3] = newDoubleAggr();
-            map.put(key, aggrs);
         }
+        System.out.println("---------------------------------------\n");
 
-        long bytesAfter = memLeft();
-
-        long mapActualSize = bytesBefore - bytesAfter;
-        long mapExpectSize = GTAggregateScanner.estimateSizeOfAggrCache(key, aggrs, map.size());
-        System.out.println("Actual cache size: " + mapActualSize);
-        System.out.println("Expect cache size: " + mapExpectSize);
+        map = null;
+        System.gc();
     }
-
-    private int estimateObjectSize(CreateAnObject factory) throws InterruptedException {
-        Object[] hold = new Object[NUM_OF_OBJS];
-        long bytesBefore = memLeft();
-
-        for (int i = 0; i < hold.length; i++) {
-            hold[i] = factory.create();
-        }
-
-        long bytesAfter = memLeft();
-        return (int) ((bytesBefore - bytesAfter) / hold.length);
-    }
-
-    private long memLeft() throws InterruptedException {
-        Runtime.getRuntime().gc();
-        Thread.sleep(500);
-        return getSystemAvailBytes();
-    }
-
-    private long getSystemAvailBytes() {
-        Runtime runtime = Runtime.getRuntime();
-        long totalMemory = runtime.totalMemory(); // current heap allocated to the VM process
-        long freeMemory = runtime.freeMemory(); // out of the current heap, how much is free
-        long maxMemory = runtime.maxMemory(); // Max heap VM can use e.g. Xmx setting
-        long usedMemory = totalMemory - freeMemory; // how much of the current heap the VM is using
-        long availableMemory = maxMemory - usedMemory; // available memory i.e. Maximum heap size minus the current amount used
-        return availableMemory;
-    }
-
 }

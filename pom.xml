@@ -72,6 +72,7 @@
         <dbunit.version>2.5.2</dbunit.version>
         <h2.version>1.4.192</h2.version>
         <jetty.version>9.3.10.v20160621</jetty.version>
+        <jamm.version>0.3.1</jamm.version>
 
         <!-- Commons -->
         <commons-lang.version>2.6</commons-lang.version>
@@ -122,6 +123,8 @@
             org/apache/kylin/**/tools/**:**/*CLI.java
         </sonar.jacoco.excludes>
 
+        <!-- JVM Args for Testing -->
+        <argLine>-Xms1G -Xmx2G -XX:MaxPermSize=512M</argLine>
     </properties>
 
     <licenses>
@@ -635,6 +638,11 @@
                 <artifactId>kryo-shaded</artifactId>
                 <version>${kryo.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.github.jbellis</groupId>
+                <artifactId>jamm</artifactId>
+                <version>${jamm.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.curator</groupId>
@@ -869,6 +877,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.10</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -1046,6 +1055,30 @@
 
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-jamm</id>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <phase>generate-test-resources</phase>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>com.github.jbellis</groupId>
+                                            <artifactId>jamm</artifactId>
+                                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                                            <destFileName>jamm.jar</destFileName>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19.1</version>
                         <configuration>
@@ -1067,7 +1100,7 @@
                                     <value>kylin-log4j.properties</value>
                                 </property>
                             </systemProperties>
-                            <argLine>-Xms1G -Xmx2G -XX:MaxPermSize=512M</argLine>
+                            <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar ${argLine}</argLine>
                         </configuration>
                     </plugin>
 
