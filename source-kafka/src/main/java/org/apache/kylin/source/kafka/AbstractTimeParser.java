@@ -18,11 +18,13 @@
 
 package org.apache.kylin.source.kafka;
 
+import java.util.Map;
+
 /**
  */
 public abstract class AbstractTimeParser {
 
-    public AbstractTimeParser(String[] properties) {
+    public AbstractTimeParser(Map<String, String> properties) {
     }
 
     /**

@@ -21,6 +21,7 @@ package org.apache.kylin.source.kafka.diagnose;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -28,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -289,8 +291,10 @@ public class KafkaInputAnalyzer extends AbstractApplication {
         String task = optionsHelper.getOptionValue(OPTION_TASK);
         String tsColName = optionsHelper.getOptionValue(OPTION_TSCOLNAME);
 
+        Map<String, String> properties = Maps.newHashMap();
+        properties.put(StreamingParser.PROPERTY_TS_COLUMN_NAME, tsColName);
         kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig(streaming);
-        parser = new TimedJsonStreamParser(Lists.<TblColRef> newArrayList(), "formatTs=true;tsColName=" + tsColName);
+        parser = new TimedJsonStreamParser(Lists.<TblColRef> newArrayList(), properties);
 
         if ("disorder".equalsIgnoreCase(task)) {
             analyzeDisorder();

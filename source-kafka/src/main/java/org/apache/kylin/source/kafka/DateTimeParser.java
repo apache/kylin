@@ -18,51 +18,29 @@
 
 package org.apache.kylin.source.kafka;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
-import org.apache.kylin.common.util.DateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.ParseException;
+import java.util.Map;
 
 /**
  */
 public class DateTimeParser extends AbstractTimeParser {
 
     private static final Logger logger = LoggerFactory.getLogger(DateTimeParser.class);
-    private String tsPattern = DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS;
+    private String tsPattern  = null;
 
     private FastDateFormat formatter = null;
 
     //call by reflection
-    public DateTimeParser(String[] properties) {
+    public DateTimeParser(Map<String, String> properties) {
         super(properties);
-        for (String prop : properties) {
-            try {
-                String[] parts = prop.split("=");
-                if (parts.length == 2) {
-                    switch (parts[0]) {
-                    case "tsPattern":
-                        this.tsPattern = parts[1];
-                        break;
-                    default:
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Failed to parse property " + prop);
-                //ignore
-            }
-        }
+        tsPattern = properties.get(StreamingParser.PROPERTY_TS_PATTERN);
 
-        if (!StringUtils.isEmpty(tsPattern)) {
-            try {
-                formatter = org.apache.kylin.common.util.DateFormat.getDateFormat(tsPattern);
-            } catch (Throwable e) {
-                throw new IllegalStateException("Invalid tsPattern: '" + tsPattern + "'.");
-            }
-        } else {
+        try {
+            formatter = org.apache.kylin.common.util.DateFormat.getDateFormat(tsPattern);
+        } catch (Throwable e) {
             throw new IllegalStateException("Invalid tsPattern: '" + tsPattern + "'.");
         }
     }
@@ -77,8 +55,8 @@ public class DateTimeParser extends AbstractTimeParser {
 
         try {
             return formatter.parse(timeStr).getTime();
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Invalid value : pattern: '" + tsPattern + "', value: '" + timeStr + "'" , e);
+        } catch (Throwable e) {
+            throw new IllegalArgumentException("Invalid value: pattern: '" + tsPattern + "', value: '" + timeStr + "'", e);
         }
     }
 }

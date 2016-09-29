@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.source.kafka;
 
@@ -42,7 +42,17 @@ import com.fasterxml.jackson.databind.type.SimpleType;
 import com.google.common.collect.Lists;
 
 /**
- * each json message with a "timestamp" field
+ * An utility class which parses a JSON streaming message to a list of strings (represent a row in table).
+ *
+ * Each message should have a property whose value represents the message's timestamp, default the column name is "timestamp"
+ * but can be customized by StreamingParser#PROPERTY_TS_PARSER.
+ *
+ * By default it will parse the timestamp col value as Unix time. If the format isn't Unix time, need specify the time parser
+ * with property StreamingParser#PROPERTY_TS_PARSER.
+ *
+ * It also support embedded JSON format; Use a separator (customized by StreamingParser#EMBEDDED_PROPERTY_SEPARATOR) to concat
+ * the property names.
+ *
  */
 public final class TimedJsonStreamParser extends StreamingParser {
 
@@ -50,51 +60,34 @@ public final class TimedJsonStreamParser extends StreamingParser {
 
     private List<TblColRef> allColumns;
     private final ObjectMapper mapper;
-    private String tsColName = "timestamp";
-    private String tsParser = "org.apache.kylin.source.kafka.DefaultTimeParser";
+    private String tsColName = null;
+    private String tsParser = null;
+    private String separator = null;
+
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
 
     private AbstractTimeParser streamTimeParser;
 
-    public TimedJsonStreamParser(List<TblColRef> allColumns, String propertiesStr) {
+    public TimedJsonStreamParser(List<TblColRef> allColumns, Map<String, String> properties) {
         this.allColumns = allColumns;
-        String[] properties = null;
-        if (!StringUtils.isEmpty(propertiesStr)) {
-            properties = propertiesStr.split(";");
-            for (String prop : properties) {
-                try {
-                    String[] parts = prop.split("=");
-                    if (parts.length == 2) {
-                        switch (parts[0]) {
-                        case "tsColName":
-                            this.tsColName = parts[1];
-                            break;
-                        case "tsParser":
-                            this.tsParser = parts[1];
-                            break;
-                        default:
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.error("Failed to parse property " + prop);
-                    //ignore
-                }
-            }
+        if (properties == null) {
+            properties = StreamingParser.defaultProperties;
         }
 
-        logger.info("TimedJsonStreamParser with tsColName {}", tsColName);
+        tsColName = properties.get(PROPERTY_TS_COLUMN_NAME);
+        tsParser = properties.get(PROPERTY_TS_PARSER);
+        separator = properties.get(EMBEDDED_PROPERTY_SEPARATOR);
 
         if (!StringUtils.isEmpty(tsParser)) {
             try {
                 Class clazz = Class.forName(tsParser);
-                Constructor constructor = clazz.getConstructor(String[].class);
-                streamTimeParser = (AbstractTimeParser) constructor.newInstance((Object)properties);
+                Constructor constructor = clazz.getConstructor(Map.class);
+                streamTimeParser = (AbstractTimeParser) constructor.newInstance(properties);
             } catch (Exception e) {
-                throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + propertiesStr + ".", e);
+                throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + properties + ".", e);
             }
         } else {
-            throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + propertiesStr + ".");
+            throw new IllegalStateException("Invalid StreamingConfig, tsParser " + tsParser + ", parserProperties " + properties + ".");
         }
         mapper = new ObjectMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -108,7 +101,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
             Map<String, Object> message = mapper.readValue(new ByteBufferBackedInputStream(buffer), mapType);
             Map<String, Object> root = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             root.putAll(message);
-            String tsStr = String.valueOf(root.get(tsColName));
+            String tsStr = objToString(root.get(tsColName));
             long t = streamTimeParser.parseTime(tsStr);
             ArrayList<String> result = Lists.newArrayList();
 
@@ -116,8 +109,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 String columnName = column.getName().toLowerCase();
 
                 if (populateDerivedTimeColumns(columnName, result, t) == false) {
-                    String x = String.valueOf(root.get(columnName));
-                    result.add(x);
+                    result.add(getValueByKey(columnName, root));
                 }
             }
 
@@ -131,6 +123,37 @@ public final class TimedJsonStreamParser extends StreamingParser {
     @Override
     public boolean filter(StreamingMessage streamingMessage) {
         return true;
+    }
+
+    protected String getValueByKey(String key, Map<String, Object> root) throws IOException {
+        if (root.containsKey(key)) {
+            return objToString(root.get(key));
+        }
+
+        if (key.contains(separator)) {
+            String[] names = key.toLowerCase().split(separator);
+            Map<String, Object> tempMap = null;
+            for (int i = 0; i < names.length - 1; i++) {
+                Object o = root.get(names[i]);
+                if (o instanceof Map) {
+                    tempMap = (Map<String, Object>) o;
+                } else {
+                    throw new IOException("Property '" + names[i] + "' is not embedded format");
+                }
+            }
+            Object finalObject = tempMap.get(names[names.length - 1]);
+            return objToString(finalObject);
+
+        }
+
+        return StringUtils.EMPTY;
+    }
+
+    static String objToString(Object value) {
+        if (value == null)
+            return StringUtils.EMPTY;
+
+        return String.valueOf(value);
     }
 
 }

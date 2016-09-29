@@ -84,7 +84,7 @@ public class BuildCubeWithEngine {
             afterClass();
             logger.info("Going to exit");
             System.exit(0);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("error", e);
             System.exit(1);
         }

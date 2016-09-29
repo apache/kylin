@@ -20,11 +20,13 @@ package org.apache.kylin.source.kafka;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Map;
+
 /**
  */
 public class DefaultTimeParser extends AbstractTimeParser {
 
-    public DefaultTimeParser(String[] properties) {
+    public DefaultTimeParser(Map<String, String> properties) {
         super(properties);
     }
 

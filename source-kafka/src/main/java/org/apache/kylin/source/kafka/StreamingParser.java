@@ -20,8 +20,10 @@ package org.apache.kylin.source.kafka;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.DateFormat;
@@ -30,12 +32,21 @@ import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * By convention stream parsers should have a constructor with (List<TblColRef> allColumns, String propertiesStr) as params
+ * By convention stream parsers should have a constructor with (List<TblColRef> allColumns, Map properties) as params
  */
 public abstract class StreamingParser {
 
+    private static final Logger logger = LoggerFactory.getLogger(StreamingParser.class);
+    public static final String PROPERTY_TS_COLUMN_NAME = "tsColName";
+    public static final String PROPERTY_TS_PARSER = "tsParser";
+    public static final String PROPERTY_TS_PATTERN = "tsPattern";
+    public static final String EMBEDDED_PROPERTY_SEPARATOR = "separator";
+
+    public static final Map<String, String> defaultProperties = Maps.newHashMap();
     public static final Set derivedTimeColumns = Sets.newHashSet();
     static {
         derivedTimeColumns.add("minute_start");
@@ -45,6 +56,10 @@ public abstract class StreamingParser {
         derivedTimeColumns.add("month_start");
         derivedTimeColumns.add("quarter_start");
         derivedTimeColumns.add("year_start");
+        defaultProperties.put(PROPERTY_TS_COLUMN_NAME, "timestamp");
+        defaultProperties.put(PROPERTY_TS_PARSER, "org.apache.kylin.source.kafka.DefaultTimeParser");
+        defaultProperties.put(PROPERTY_TS_PATTERN, DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+        defaultProperties.put(EMBEDDED_PROPERTY_SEPARATOR, "_");
     }
 
     /**
@@ -57,12 +72,32 @@ public abstract class StreamingParser {
 
     public static StreamingParser getStreamingParser(String parserName, String parserProperties, List<TblColRef> columns) throws ReflectiveOperationException {
         if (!StringUtils.isEmpty(parserName)) {
+            logger.info("Construct StreamingParse {} with properties {}", parserName, parserProperties);
             Class clazz = Class.forName(parserName);
-            Constructor constructor = clazz.getConstructor(List.class, String.class);
-            return (StreamingParser) constructor.newInstance(columns, parserProperties);
+            Map<String, String> properties = parseProperties(parserProperties);
+            Constructor constructor = clazz.getConstructor(List.class, Map.class);
+            return (StreamingParser) constructor.newInstance(columns, properties);
         } else {
             throw new IllegalStateException("invalid StreamingConfig, parserName " + parserName + ", parserProperties " + parserProperties + ".");
         }
+    }
+
+    public static Map<String, String> parseProperties(String propertiesStr) {
+
+        Map<String, String> result = Maps.newHashMap(defaultProperties);
+        if (!StringUtils.isEmpty(propertiesStr)) {
+            String[] properties = propertiesStr.split(";");
+            for (String prop : properties) {
+                String[] parts = prop.split("=");
+                if (parts.length == 2) {
+                    result.put(parts[0], parts[1]);
+                } else {
+                    logger.warn("Ignored invalid property expression '" + prop + "'");
+                }
+            }
+        }
+
+        return result;
     }
 
     /**

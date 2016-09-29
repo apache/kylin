@@ -234,6 +234,8 @@ public class BuildCubeWithStream {
             segments = cubeManager.getCube(cubeName).getSegments();
             Assert.assertTrue(segments.size() == 1);
         }
+
+        logger.info("Build is done");
     }
 
 
@@ -309,20 +311,22 @@ public class BuildCubeWithStream {
     }
 
     public static void main(String[] args) throws Exception {
+        BuildCubeWithStream buildCubeWithStream = null;
         try {
             beforeClass();
-
-            BuildCubeWithStream buildCubeWithStream = new BuildCubeWithStream();
+            buildCubeWithStream = new BuildCubeWithStream();
             buildCubeWithStream.before();
             buildCubeWithStream.build();
-            logger.info("Build is done");
-            buildCubeWithStream.after();
-            afterClass();
             logger.info("Going to exit");
             System.exit(0);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("error", e);
             System.exit(1);
+        } finally {
+            if (buildCubeWithStream != null) {
+                buildCubeWithStream.after();
+            }
+            afterClass();
         }
 
     }

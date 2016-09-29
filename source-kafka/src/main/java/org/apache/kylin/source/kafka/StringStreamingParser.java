@@ -21,6 +21,7 @@ package org.apache.kylin.source.kafka;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -33,7 +34,7 @@ public final class StringStreamingParser extends StreamingParser {
 
     public static final StringStreamingParser instance = new StringStreamingParser(null, null);
 
-    private StringStreamingParser(List<TblColRef> allColumns, String propertiesStr) {
+    private StringStreamingParser(List<TblColRef> allColumns, Map<String, String> properties) {
     }
 
     @Override

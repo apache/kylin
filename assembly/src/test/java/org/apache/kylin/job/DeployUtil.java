@@ -156,7 +156,7 @@ public class DeployUtil {
         for (ColumnDesc columnDesc : tableDesc.getColumns()) {
             tableColumns.add(columnDesc.getRef());
         }
-        TimedJsonStreamParser timedJsonStreamParser = new TimedJsonStreamParser(tableColumns, "formatTs=true");
+        TimedJsonStreamParser timedJsonStreamParser = new TimedJsonStreamParser(tableColumns, null);
         StringBuilder sb = new StringBuilder();
         for (String json : data) {
             List<String> rowColumns = timedJsonStreamParser.parse(ByteBuffer.wrap(json.getBytes())).getData();
