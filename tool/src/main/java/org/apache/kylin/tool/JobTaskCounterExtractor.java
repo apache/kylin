@@ -47,6 +47,8 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor {
     private String yarnUrl;
     private static final Logger logger = LoggerFactory.getLogger(JobTaskCounterExtractor.class);
 
+    private final int HTTP_RETRY = 3;
+
     public JobTaskCounterExtractor(String mrJobId) {
         this.mrJobId = mrJobId;
         this.yarnUrl = getRestCheckUrl();
@@ -87,14 +89,17 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor {
     private String getHttpResponse(String url) {
         HttpClient client = new HttpClient();
         String response = null;
-        while (response == null) {
+        int retry_times = 0;
+        while (response == null && retry_times < HTTP_RETRY) {
+            retry_times++;
+
             HttpMethod get = new GetMethod(url);
             try {
                 get.addRequestHeader("accept", "application/json");
                 client.executeMethod(get);
                 response = get.getResponseBodyAsString();
             } catch (Exception e) {
-                logger.warn("Failed to fetch http response" + e);
+                logger.warn("Failed to fetch http response. Retry={}", retry_times, e);
             } finally {
                 get.releaseConnection();
             }

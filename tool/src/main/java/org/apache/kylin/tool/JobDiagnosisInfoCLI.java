@@ -99,8 +99,8 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + jobId);
         addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + jobId);
         for (ExecutablePO task : executablePO.getTasks()) {
-            addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executablePO.getTasks());
-            addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executablePO.getTasks());
+            addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + task.getUuid());
+            addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid());
             if (includeYarnLogs) {
                 yarnLogsResources.add(task.getUuid());
             }
