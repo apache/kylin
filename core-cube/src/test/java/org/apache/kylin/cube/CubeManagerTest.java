@@ -19,6 +19,7 @@
 package org.apache.kylin.cube;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -120,6 +121,104 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         Pair<Long, Long> mergedSeg = mgr.autoMergeCubeSegments(cube);
 
         assertTrue(mergedSeg != null);
+
+    }
+
+
+    @Test
+    public void testConcurrentBuildAndMerge() throws Exception {
+        CubeManager mgr = CubeManager.getInstance(getTestConfig());
+        CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
+        getTestConfig().setMaxBuildingSegments(10);
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
+
+        // append first
+        CubeSegment seg1 = mgr.appendSegment(cube, 0, 0, 0, 1000);
+        seg1.setStatus(SegmentStatusEnum.READY);
+
+        CubeSegment seg2 = mgr.appendSegment(cube, 0, 0, 1000, 2000);
+        seg2.setStatus(SegmentStatusEnum.READY);
+
+
+        CubeSegment seg3 = mgr.mergeSegments(cube, 0, 0, 0000, 2000, true);
+        seg3.setStatus(SegmentStatusEnum.NEW);
+
+
+        CubeSegment seg4 = mgr.appendSegment(cube, 0, 0, 2000, 3000);
+        seg4.setStatus(SegmentStatusEnum.NEW);
+        seg4.setLastBuildJobID("test");
+        seg4.setStorageLocationIdentifier("test");
+
+        CubeSegment seg5 = mgr.appendSegment(cube, 0, 0, 3000, 4000);
+        seg5.setStatus(SegmentStatusEnum.READY);
+
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
+
+        mgr.updateCube(cubeBuilder);
+
+
+        mgr.promoteNewlyBuiltSegments(cube, seg4);
+
+        assertTrue(cube.getSegments().size() == 5);
+
+        assertTrue(cube.getSegmentById(seg1.getUuid()) != null && cube.getSegmentById(seg1.getUuid()).getStatus() == SegmentStatusEnum.READY);
+        assertTrue(cube.getSegmentById(seg2.getUuid()) != null && cube.getSegmentById(seg2.getUuid()).getStatus() == SegmentStatusEnum.READY);
+        assertTrue(cube.getSegmentById(seg3.getUuid()) != null && cube.getSegmentById(seg3.getUuid()).getStatus() == SegmentStatusEnum.NEW);
+        assertTrue(cube.getSegmentById(seg4.getUuid()) != null && cube.getSegmentById(seg4.getUuid()).getStatus() == SegmentStatusEnum.READY);
+        assertTrue(cube.getSegmentById(seg5.getUuid()) != null && cube.getSegmentById(seg5.getUuid()).getStatus() == SegmentStatusEnum.READY);
+
+    }
+
+
+    @Test
+    public void testConcurrentMergeAndMerge() throws Exception {
+        CubeManager mgr = CubeManager.getInstance(getTestConfig());
+        getTestConfig().setMaxBuildingSegments(10);
+        CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
+
+        // no segment at first
+        assertEquals(0, cube.getSegments().size());
+
+        // append first
+        CubeSegment seg1 = mgr.appendSegment(cube, 0, 0, 0, 1000);
+        seg1.setStatus(SegmentStatusEnum.READY);
+
+        CubeSegment seg2 = mgr.appendSegment(cube, 0, 0, 1000, 2000);
+        seg2.setStatus(SegmentStatusEnum.READY);
+
+        CubeSegment seg3 = mgr.appendSegment(cube, 0, 0, 2000, 3000);
+        seg3.setStatus(SegmentStatusEnum.READY);
+
+        CubeSegment seg4 = mgr.appendSegment(cube, 0, 0, 3000, 4000);
+        seg4.setStatus(SegmentStatusEnum.READY);
+
+
+
+        CubeSegment merge1 = mgr.mergeSegments(cube, 0, 0, 0, 2000, true);
+        merge1.setStatus(SegmentStatusEnum.NEW);
+        merge1.setLastBuildJobID("test");
+        merge1.setStorageLocationIdentifier("test");
+
+        CubeSegment merge2 = mgr.mergeSegments(cube, 0, 0, 2000, 4000, true);
+        merge2.setStatus(SegmentStatusEnum.NEW);
+        merge2.setLastBuildJobID("test");
+        merge2.setStorageLocationIdentifier("test");
+
+        CubeUpdate cubeBuilder = new CubeUpdate(cube);
+        mgr.updateCube(cubeBuilder);
+
+
+        mgr.promoteNewlyBuiltSegments(cube, merge1);
+
+        assertTrue(cube.getSegments().size() == 4);
+
+        assertTrue(cube.getSegmentById(seg1.getUuid()) == null);
+        assertTrue(cube.getSegmentById(seg2.getUuid()) == null);
+        assertTrue(cube.getSegmentById(merge1.getUuid()) != null && cube.getSegmentById(merge1.getUuid()).getStatus() == SegmentStatusEnum.READY);
+        assertTrue(cube.getSegmentById(seg3.getUuid()) != null && cube.getSegmentById(seg3.getUuid()).getStatus() == SegmentStatusEnum.READY);
+        assertTrue(cube.getSegmentById(seg4.getUuid()) != null && cube.getSegmentById(seg4.getUuid()).getStatus() == SegmentStatusEnum.READY);
+        assertTrue(cube.getSegmentById(merge2.getUuid()) != null && cube.getSegmentById(merge2.getUuid()).getStatus() == SegmentStatusEnum.NEW);
 
     }
 

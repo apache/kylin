@@ -135,7 +135,7 @@ public class CubeManager implements IRealizationProvider {
         logger.info("Initializing CubeManager with config " + config);
         this.config = config;
         this.cubeMap = new CaseInsensitiveStringCache<CubeInstance>(config, "cube");
-        
+
         // touch lower level metadata before registering my listener
         loadAllCubeInstance();
         Broadcaster.getInstance(config).registerListener(new CubeSyncListener(), "cube");
@@ -159,12 +159,12 @@ public class CubeManager implements IRealizationProvider {
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             String cubeName = cacheKey;
-            
+
             if (event == Event.DROP)
                 removeCubeLocal(cubeName);
             else
                 reloadCubeLocal(cubeName);
-            
+
             for (ProjectInstance prj : ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, cubeName)) {
                 broadcaster.notifyProjectDataUpdate(prj.getName());
             }
@@ -615,7 +615,6 @@ public class CubeManager implements IRealizationProvider {
         return max;
     }
 
-
     private long calculateStartOffsetForAppendSegment(CubeInstance cube) {
         List<CubeSegment> existing = cube.getSegments();
         if (existing.isEmpty()) {
@@ -624,7 +623,6 @@ public class CubeManager implements IRealizationProvider {
             return existing.get(existing.size() - 1).getSourceOffsetEnd();
         }
     }
-
 
     private long calculateStartDateForAppendSegment(CubeInstance cube) {
         List<CubeSegment> existing = cube.getSegments();
@@ -728,7 +726,7 @@ public class CubeManager implements IRealizationProvider {
 
         List<CubeSegment> mergingSegs = Lists.newArrayList();
         if (buildingSegs.size() > 0) {
-            
+
             for (CubeSegment building : buildingSegs) {
                 // exclude those under-merging segs
                 for (CubeSegment ready : readySegs) {
@@ -760,27 +758,22 @@ public class CubeManager implements IRealizationProvider {
         return null;
     }
 
-    public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment... newSegments) throws IOException {
-        List<CubeSegment> tobe = calculateToBeSegments(cube);
+    public void promoteNewlyBuiltSegments(CubeInstance cube, CubeSegment newSegment) throws IOException {
+        if (StringUtils.isBlank(newSegment.getStorageLocationIdentifier()))
+            throw new IllegalStateException("For cube " + cube + ", segment " + newSegment + " missing StorageLocationIdentifier");
 
-        for (CubeSegment seg : newSegments) {
-            if (tobe.contains(seg) == false)
-                throw new IllegalStateException("For cube " + cube + ", segment " + seg + " is expected but not in the tobe " + tobe);
+        if (StringUtils.isBlank(newSegment.getLastBuildJobID()))
+            throw new IllegalStateException("For cube " + cube + ", segment " + newSegment + " missing LastBuildJobID");
 
-            if (StringUtils.isBlank(seg.getStorageLocationIdentifier()))
-                throw new IllegalStateException("For cube " + cube + ", segment " + seg + " missing StorageLocationIdentifier");
+        if (isReady(newSegment) == true)
+            throw new IllegalStateException("For cube " + cube + ", segment " + newSegment + " state should be NEW but is READY");
 
-            if (StringUtils.isBlank(seg.getLastBuildJobID()))
-                throw new IllegalStateException("For cube " + cube + ", segment " + seg + " missing LastBuildJobID");
+        List<CubeSegment> tobe = calculateToBeSegments(cube, newSegment);
 
-            seg.setStatus(SegmentStatusEnum.READY);
-        }
+        if (tobe.contains(newSegment) == false)
+            throw new IllegalStateException("For cube " + cube + ", segment " + newSegment + " is expected but not in the tobe " + tobe);
 
-        for (CubeSegment seg : tobe) {
-            if (isReady(seg) == false) {
-                logger.warn("For cube " + cube + ", segment " + seg + " isn't READY yet.");
-            }
-        }
+        newSegment.setStatus(SegmentStatusEnum.READY);
 
         List<CubeSegment> toRemoveSegs = Lists.newArrayList();
         for (CubeSegment segment : cube.getSegments()) {
@@ -788,14 +781,14 @@ public class CubeManager implements IRealizationProvider {
                 toRemoveSegs.add(segment);
         }
 
-        logger.info("Promoting cube " + cube + ", new segments " + Arrays.toString(newSegments) + ", to remove segments " + toRemoveSegs);
+        logger.info("Promoting cube " + cube + ", new segment " + newSegment + ", to remove segments " + toRemoveSegs);
 
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
-        cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()])).setToUpdateSegs(newSegments).setStatus(RealizationStatusEnum.READY);
+        cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()])).setToUpdateSegs(newSegment).setStatus(RealizationStatusEnum.READY);
         updateCube(cubeBuilder);
     }
 
-    public void validateNewSegments(CubeInstance cube, CubeSegment... newSegments) {
+    public void validateNewSegments(CubeInstance cube, CubeSegment newSegments) {
         List<CubeSegment> tobe = calculateToBeSegments(cube, newSegments);
         List<CubeSegment> newList = Arrays.asList(newSegments);
         if (tobe.containsAll(newList) == false) {
@@ -809,11 +802,12 @@ public class CubeManager implements IRealizationProvider {
      * - Favors new segments over the old
      * - Favors big segments over the small
      */
-    private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment... newSegments) {
+    private List<CubeSegment> calculateToBeSegments(CubeInstance cube, CubeSegment newSegments) {
 
         List<CubeSegment> tobe = Lists.newArrayList(cube.getSegments());
-        if (newSegments != null)
-            tobe.addAll(Arrays.asList(newSegments));
+        if (newSegments != null && !tobe.contains(newSegments)) {
+            tobe.add(newSegments);
+        }
         if (tobe.size() == 0)
             return tobe;
 
@@ -849,13 +843,17 @@ public class CubeManager implements IRealizationProvider {
                     } else {
                         tobe.remove(j);
                     }
-                } else if (isNew(is)) {
-                    // otherwise, favor the new segment
-                    tobe.remove(j);
+                    continue;
                 } else {
-                    tobe.remove(i);
+                    // otherwise, favor the new segment
+                    if (isNew(is) && is.equals(newSegments)) {
+                        tobe.remove(j);
+                        continue;
+                    } else if (js.equals(newSegments)) {
+                        tobe.remove(i);
+                        continue;
+                    }
                 }
-                continue;
             }
 
             // if i, j in sequence
@@ -865,8 +863,17 @@ public class CubeManager implements IRealizationProvider {
                 continue;
             }
 
-            // seems j not fitting
-            tobe.remove(j);
+            // js can be covered by is
+            if (is.equals(newSegments)) {
+                // seems j not fitting
+                tobe.remove(j);
+                continue;
+            } else {
+                i++;
+                j++;
+                continue;
+            }
+
         }
 
         return tobe;
