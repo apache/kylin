@@ -131,3 +131,27 @@ For intellij IDEA users, you have to do a few more steps:
 	![Disable_Optimize_On_The_Fly](/images/develop/disable_import_on_the_fly.png)
 
 3. Format the code before committing the code.
+
+## Setup IDE license header template
+
+Each source file should include the following Apache License header
+{% highlight Groff markup %}
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+{% endhighlight %}
+
+The checkstyle plugin will check the header rule when packaging also. The license file locates under `dev-support/checkstyle-apache-header.txt`. To make it easy for developers, please add the header as `Copyright Profile` and set it as default for Kylin project.
+![Apache License Profile](/images/develop/intellij_apache_license.png)
