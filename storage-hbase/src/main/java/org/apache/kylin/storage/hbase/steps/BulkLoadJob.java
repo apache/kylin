@@ -42,40 +42,34 @@ public class BulkLoadJob extends AbstractHadoopJob {
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
+        options.addOption(OPTION_INPUT_PATH);
+        options.addOption(OPTION_HTABLE_NAME);
+        options.addOption(OPTION_CUBE_NAME);
+        parseOptions(options, args);
+
+        String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
+        // e.g
+        // /tmp/kylin-3f150b00-3332-41ca-9d3d-652f67f044d7/test_kylin_cube_with_slr_ready_2_segments/hfile/
+        // end with "/"
+        String input = getOptionValue(OPTION_INPUT_PATH);
+
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
+        FsShell shell = new FsShell(conf);
         try {
-
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_HTABLE_NAME);
-            options.addOption(OPTION_CUBE_NAME);
-            parseOptions(options, args);
-
-            String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
-            // e.g
-            // /tmp/kylin-3f150b00-3332-41ca-9d3d-652f67f044d7/test_kylin_cube_with_slr_ready_2_segments/hfile/
-            // end with "/"
-            String input = getOptionValue(OPTION_INPUT_PATH);
-
-            Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-            FsShell shell = new FsShell(conf);
-            try {
-                shell.run(new String[] { "-chmod", "-R", "777", input });
-            } catch (Exception e) {
-                logger.error("Couldn't change the file permissions ", e);
-                throw new IOException(e);
-            }
-
-            String[] newArgs = new String[2];
-            newArgs[0] = input;
-            newArgs[1] = tableName;
-
-            logger.debug("Start to run LoadIncrementalHFiles");
-            int ret = ToolRunner.run(new LoadIncrementalHFiles(conf), newArgs);
-            logger.debug("End to run LoadIncrementalHFiles");
-            return ret;
+            shell.run(new String[] { "-chmod", "-R", "777", input });
         } catch (Exception e) {
-            printUsage(options);
-            throw e;
+            logger.error("Couldn't change the file permissions ", e);
+            throw new IOException(e);
         }
+
+        String[] newArgs = new String[2];
+        newArgs[0] = input;
+        newArgs[1] = tableName;
+
+        logger.debug("Start to run LoadIncrementalHFiles");
+        int ret = ToolRunner.run(new LoadIncrementalHFiles(conf), newArgs);
+        logger.debug("End to run LoadIncrementalHFiles");
+        return ret;
     }
 
     public static void main(String[] args) throws Exception {

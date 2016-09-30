@@ -40,29 +40,23 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
+        options.addOption(OPTION_CUBE_NAME);
+        options.addOption(OPTION_SEGMENT_ID);
+        options.addOption(OPTION_INPUT_PATH);
+        parseOptions(options, args);
 
-        try {
-            options.addOption(OPTION_CUBE_NAME);
-            options.addOption(OPTION_SEGMENT_ID);
-            options.addOption(OPTION_INPUT_PATH);
-            parseOptions(options, args);
+        final String cubeName = getOptionValue(OPTION_CUBE_NAME);
+        final String segmentID = getOptionValue(OPTION_SEGMENT_ID);
+        final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
 
-            final String cubeName = getOptionValue(OPTION_CUBE_NAME);
-            final String segmentID = getOptionValue(OPTION_SEGMENT_ID);
-            final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
 
-            KylinConfig config = KylinConfig.getInstanceFromEnv();
-
-            DictionaryGeneratorCLI.processSegment(config, cubeName, segmentID, new DistinctColumnValuesProvider() {
-                @Override
-                public ReadableTable getDistinctValuesFor(TblColRef col) {
-                    return new DFSFileTable(factColumnsInputPath + "/" + col.getName(), -1);
-                }
-            });
-        } catch (Exception e) {
-            printUsage(options);
-            throw e;
-        }
+        DictionaryGeneratorCLI.processSegment(config, cubeName, segmentID, new DistinctColumnValuesProvider() {
+            @Override
+            public ReadableTable getDistinctValuesFor(TblColRef col) {
+                return new DFSFileTable(factColumnsInputPath + "/" + col.getName(), -1);
+            }
+        });
 
         return returnCode;
     }

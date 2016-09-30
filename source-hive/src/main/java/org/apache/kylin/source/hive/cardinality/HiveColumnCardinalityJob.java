@@ -59,61 +59,55 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
 
         Options options = new Options();
 
-        try {
-            options.addOption(OPTION_TABLE);
-            options.addOption(OPTION_OUTPUT_PATH);
+        options.addOption(OPTION_TABLE);
+        options.addOption(OPTION_OUTPUT_PATH);
 
-            parseOptions(options, args);
+        parseOptions(options, args);
 
-            // start job
-            String jobName = JOB_TITLE + getOptionsAsString();
-            logger.info("Starting: " + jobName);
-            Configuration conf = getConf();
+        // start job
+        String jobName = JOB_TITLE + getOptionsAsString();
+        logger.info("Starting: " + jobName);
+        Configuration conf = getConf();
 
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            JobEngineConfig jobEngineConfig = new JobEngineConfig(kylinConfig);
-            conf.addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        JobEngineConfig jobEngineConfig = new JobEngineConfig(kylinConfig);
+        conf.addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
 
-            job = Job.getInstance(conf, jobName);
+        job = Job.getInstance(conf, jobName);
 
-            setJobClasspath(job, kylinConfig);
+        setJobClasspath(job, kylinConfig);
 
-            String table = getOptionValue(OPTION_TABLE);
-            job.getConfiguration().set(BatchConstants.CFG_TABLE_NAME, table);
+        String table = getOptionValue(OPTION_TABLE);
+        job.getConfiguration().set(BatchConstants.CFG_TABLE_NAME, table);
 
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-            FileOutputFormat.setOutputPath(job, output);
-            job.getConfiguration().set("dfs.block.size", "67108864");
+        Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+        FileOutputFormat.setOutputPath(job, output);
+        job.getConfiguration().set("dfs.block.size", "67108864");
 
-            // Mapper
-            IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table);
-            tableInputFormat.configureJob(job);
+        // Mapper
+        IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table);
+        tableInputFormat.configureJob(job);
 
-            job.setMapperClass(ColumnCardinalityMapper.class);
-            job.setMapOutputKeyClass(IntWritable.class);
-            job.setMapOutputValueClass(BytesWritable.class);
+        job.setMapperClass(ColumnCardinalityMapper.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(BytesWritable.class);
 
-            // Reducer - only one
-            job.setReducerClass(ColumnCardinalityReducer.class);
-            job.setOutputFormatClass(TextOutputFormat.class);
-            job.setOutputKeyClass(IntWritable.class);
-            job.setOutputValueClass(LongWritable.class);
-            job.setNumReduceTasks(1);
+        // Reducer - only one
+        job.setReducerClass(ColumnCardinalityReducer.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputValueClass(LongWritable.class);
+        job.setNumReduceTasks(1);
 
-            this.deletePath(job.getConfiguration(), output);
+        this.deletePath(job.getConfiguration(), output);
 
-            logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
+        logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
 
-            TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(table);
-            attachKylinPropsAndMetadata(tableDesc, job.getConfiguration());
-            int result = waitForCompletion(job);
+        TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(table);
+        attachKylinPropsAndMetadata(tableDesc, job.getConfiguration());
+        int result = waitForCompletion(job);
 
-            return result;
-        } catch (Exception e) {
-            printUsage(options);
-            throw e;
-        }
-
+        return result;
     }
 
 }

@@ -92,23 +92,16 @@ public class CreateHTableJob extends AbstractHadoopJob {
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
 
-        try {
-            byte[][] splitKeys;
-            if (statsEnabled) {
-                final Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, kylinConfig).getCuboidSizeMap();
-                splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment, partitionFilePath.getParent());
-            } else {
-                splitKeys = getRegionSplits(conf, partitionFilePath);
-            }
-
-            CubeHTableUtil.createHTable(cubeSegment, splitKeys);
-            return 0;
-        } catch (Exception e) {
-            printUsage(options);
-            e.printStackTrace(System.err);
-            logger.error(e.getLocalizedMessage(), e);
-            return 2;
+        byte[][] splitKeys;
+        if (statsEnabled) {
+            final Map<Long, Double> cuboidSizeMap = new CubeStatsReader(cubeSegment, kylinConfig).getCuboidSizeMap();
+            splitKeys = getRegionSplitsFromCuboidStatistics(cuboidSizeMap, kylinConfig, cubeSegment, partitionFilePath.getParent());
+        } else {
+            splitKeys = getRegionSplits(conf, partitionFilePath);
         }
+
+        CubeHTableUtil.createHTable(cubeSegment, splitKeys);
+        return 0;
     }
 
     @SuppressWarnings("deprecation")
@@ -209,7 +202,7 @@ public class CreateHTableJob extends AbstractHadoopJob {
             for (int i = 0; i < nRegion; i++) {
                 innerRegionSplits.add(new HashMap<Long, Double>());
             }
-            
+
             double[] regionSizes = new double[nRegion];
             for (long cuboidId : allCuboids) {
                 double estimatedSize = cubeSizeMap.get(cuboidId);
