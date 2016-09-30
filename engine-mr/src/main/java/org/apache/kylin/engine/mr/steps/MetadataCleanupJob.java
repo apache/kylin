@@ -54,7 +54,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
 
     private KylinConfig config = null;
 
-    public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000L; // 2 days
+    public static final long TIME_THREADSHOLD = 1 * 3600 * 1000L; // 1 hour
     public static final long TIME_THREADSHOLD_FOR_JOB = 30 * 24 * 3600 * 1000L; // 30 days
 
     /*

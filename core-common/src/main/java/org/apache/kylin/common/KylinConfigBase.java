@@ -780,10 +780,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Long.parseLong(getOptional("kylin.query.hbase.hconnection.threads.alive.seconds", "60"));
     }
 
-    public long getStorageCleanupTimeThreshold() {
-        return Long.valueOf(this.getOptional("kylin.storage.cleanup.time.threshold", "172800000")); //default two days
-    }
-
     public int getAppendDictEntrySize() {
         return Integer.parseInt(getOptional("kylin.dict.append.entry.size", "10000000"));
     }
