@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HadoopUtil {
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
     private static final ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
 
@@ -45,11 +46,9 @@ public class HadoopUtil {
         if (hadoopConfig.get() == null) {
             Configuration conf = healSickConfig(new Configuration());
             // do not cache this conf, or will affect following mr jobs
-            logger.info("The conf for current mapper will be " + System.identityHashCode(conf));
             return conf;
         }
         Configuration conf = hadoopConfig.get();
-        logger.info("The conf for current mapper will be " + System.identityHashCode(conf));
         return conf;
     }
 

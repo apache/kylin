@@ -1,7 +1,10 @@
 {
   "uuid" : "0ef9b7a8-3929-4dff-b59d-2100aadc8dbf",
+  "last_modified" : 1451468470824,
   "name" : "kylin_sales_cube_desc",
+  "model_name" : "kylin_sales_model",
   "description" : null,
+  "null_string" : null,
   "dimensions" : [ {
     "name" : "CAL_DT",
     "table" : "DEFAULT.KYLIN_CAL_DT",
@@ -106,21 +109,21 @@
     },
     "dependent_measure_ref" : null
   }, {
-    "name": "TOP_SELLER",
-    "function": {
-      "expression": "TOP_N",
-      "parameter": {
-        "type": "column",
-        "value": "PRICE",
-        "next_parameter": {
-          "type": "column",
-          "value": "SELLER_ID",
-          "next_parameter": null
+    "name" : "TOP_SELLER",
+    "function" : {
+      "expression" : "TOP_N",
+      "parameter" : {
+        "type" : "column",
+        "value" : "PRICE",
+        "next_parameter" : {
+          "type" : "column",
+          "value" : "SELLER_ID",
+          "next_parameter" : null
         }
       },
-      "returntype": "topn(100)"
+      "returntype" : "topn(100)"
     },
-    "dependent_measure_ref": null
+    "dependent_measure_ref" : null
   } ],
   "rowkey" : {
     "rowkey_columns" : [ {
@@ -146,21 +149,18 @@
       "encoding" : "dict"
     } ]
   },
-  "last_modified" : 1451468470824,
-  "model_name" : "kylin_sales_model",
-  "null_string" : null,
   "hbase_mapping" : {
     "column_family" : [ {
-      "name" : "f1",
+      "name" : "F1",
       "columns" : [ {
-        "qualifier" : "m",
-        "measure_refs" : [ "GMV_SUM", "GMV_MIN", "GMV_MAX", "TRANS_CNT" ]
+        "qualifier" : "M",
+        "measure_refs" : [ "GMV_SUM", "GMV_MIN", "GMV_MAX", "TRANS_CNT", "TOP_SELLER" ]
       } ]
     }, {
-      "name" : "f2",
+      "name" : "F2",
       "columns" : [ {
-        "qualifier" : "m",
-        "measure_refs" : [ "SELLER_CNT_HLL", "SELLER_FORMAT_CNT", "TOP_SELLER" ]
+        "qualifier" : "M",
+        "measure_refs" : [ "SELLER_CNT_HLL", "SELLER_FORMAT_CNT" ]
       } ]
     } ]
   },
@@ -174,10 +174,10 @@
   } ],
   "notify_list" : null,
   "status_need_notify" : [ ],
+  "partition_date_start" : 1325376000000,
   "auto_merge_time_ranges" : null,
   "retention_range" : 0,
   "engine_type" : %default_engine_type%,
   "storage_type" : %default_storage_type%,
-  "override_kylin_properties" : { },
-  "partition_date_start" : 1325376000000
+  "override_kylin_properties" : { }
 }
