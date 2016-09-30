@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.collect.Lists;
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.kafka.common.requests.MetadataResponse;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -58,6 +59,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
+import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -177,7 +179,7 @@ public class BuildCubeWithStream {
 
         List<FutureTask<ExecutableState>> futures = Lists.newArrayList();
         for (int i = 0; i < 5; i++) {
-            Thread.sleep(5 * 60 * 1000); // wait for new messages
+            Thread.sleep(2 * 60 * 1000); // wait for new messages
             FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
                 @Override
                 public ExecutableState call() {
@@ -276,6 +278,7 @@ public class BuildCubeWithStream {
     }
 
     public static void afterClass() throws Exception {
+        cleanupOldStorage();
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
@@ -297,6 +300,12 @@ public class BuildCubeWithStream {
                 }
             }
         }
+    }
+
+    private static void cleanupOldStorage() throws Exception {
+        String[] args = { "--delete", "true" };
+        StorageCleanupJob cli = new StorageCleanupJob();
+        cli.execute(args);
     }
 
     public static void main(String[] args) throws Exception {
