@@ -67,23 +67,18 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         Options options = new Options();
 
         logger.info("jobs args: " + Arrays.toString(args));
-        try {
-            options.addOption(OPTION_DELETE);
-            parseOptions(options, args);
+        options.addOption(OPTION_DELETE);
+        parseOptions(options, args);
 
-            logger.info("options: '" + getOptionsAsString() + "'");
-            logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
-            delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
+        logger.info("options: '" + getOptionsAsString() + "'");
+        logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
+        delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
 
-            config = KylinConfig.getInstanceFromEnv();
+        config = KylinConfig.getInstanceFromEnv();
 
-            cleanup();
+        cleanup();
 
-            return 0;
-        } catch (Exception e) {
-            printUsage(options);
-            throw e;
-        }
+        return 0;
     }
 
     private ResourceStore getStore() {

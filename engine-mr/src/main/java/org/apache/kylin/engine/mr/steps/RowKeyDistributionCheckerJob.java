@@ -45,49 +45,44 @@ public class RowKeyDistributionCheckerJob extends AbstractHadoopJob {
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
-        try {
-            options.addOption(OPTION_INPUT_PATH);
-            options.addOption(OPTION_OUTPUT_PATH);
-            options.addOption(OPTION_JOB_NAME);
-            options.addOption(ROW_KEY_STATS_FILE_PATH);
+        options.addOption(OPTION_INPUT_PATH);
+        options.addOption(OPTION_OUTPUT_PATH);
+        options.addOption(OPTION_JOB_NAME);
+        options.addOption(ROW_KEY_STATS_FILE_PATH);
 
-            parseOptions(options, args);
+        parseOptions(options, args);
 
-            String statsFilePath = getOptionValue(ROW_KEY_STATS_FILE_PATH);
+        String statsFilePath = getOptionValue(ROW_KEY_STATS_FILE_PATH);
 
-            // start job
-            String jobName = getOptionValue(OPTION_JOB_NAME);
-            job = Job.getInstance(getConf(), jobName);
+        // start job
+        String jobName = getOptionValue(OPTION_JOB_NAME);
+        job = Job.getInstance(getConf(), jobName);
 
-            setJobClasspath(job, KylinConfig.getInstanceFromEnv());
+        setJobClasspath(job, KylinConfig.getInstanceFromEnv());
 
-            addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
+        addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
 
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-            FileOutputFormat.setOutputPath(job, output);
+        Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+        FileOutputFormat.setOutputPath(job, output);
 
-            // Mapper
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-            job.setMapperClass(RowKeyDistributionCheckerMapper.class);
-            job.setMapOutputKeyClass(Text.class);
-            job.setMapOutputValueClass(LongWritable.class);
+        // Mapper
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        job.setMapperClass(RowKeyDistributionCheckerMapper.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(LongWritable.class);
 
-            // Reducer - only one
-            job.setReducerClass(RowKeyDistributionCheckerReducer.class);
-            job.setOutputFormatClass(SequenceFileOutputFormat.class);
-            job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(LongWritable.class);
-            job.setNumReduceTasks(1);
+        // Reducer - only one
+        job.setReducerClass(RowKeyDistributionCheckerReducer.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(LongWritable.class);
+        job.setNumReduceTasks(1);
 
-            job.getConfiguration().set("rowKeyStatsFilePath", statsFilePath);
+        job.getConfiguration().set("rowKeyStatsFilePath", statsFilePath);
 
-            this.deletePath(job.getConfiguration(), output);
+        this.deletePath(job.getConfiguration(), output);
 
-            return waitForCompletion(job);
-        } catch (Exception e) {
-            printUsage(options);
-            throw e;
-        }
+        return waitForCompletion(job);
     }
 
     public static void main(String[] args) throws Exception {
