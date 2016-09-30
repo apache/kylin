@@ -21,12 +21,13 @@ package org.apache.kylin.source.kafka;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.TreeMap;
+import java.util.Collections;
+import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.commons.lang3.StringUtils;
@@ -43,16 +44,15 @@ import com.google.common.collect.Lists;
 
 /**
  * An utility class which parses a JSON streaming message to a list of strings (represent a row in table).
- *
+ * <p>
  * Each message should have a property whose value represents the message's timestamp, default the column name is "timestamp"
  * but can be customized by StreamingParser#PROPERTY_TS_PARSER.
- *
+ * <p>
  * By default it will parse the timestamp col value as Unix time. If the format isn't Unix time, need specify the time parser
  * with property StreamingParser#PROPERTY_TS_PARSER.
- *
+ * <p>
  * It also support embedded JSON format; Use a separator (customized by StreamingParser#EMBEDDED_PROPERTY_SEPARATOR) to concat
  * the property names.
- *
  */
 public final class TimedJsonStreamParser extends StreamingParser {
 
@@ -106,14 +106,14 @@ public final class TimedJsonStreamParser extends StreamingParser {
             ArrayList<String> result = Lists.newArrayList();
 
             for (TblColRef column : allColumns) {
-                String columnName = column.getName().toLowerCase();
-
+                String columnName = column.getName();
+                columnName = columnName.toLowerCase();
                 if (populateDerivedTimeColumns(columnName, result, t) == false) {
                     result.add(getValueByKey(columnName, root));
                 }
             }
 
-            return new StreamingMessage(result, 0, t, Collections.<String, Object> emptyMap());
+            return new StreamingMessage(result, 0, t, Collections.<String, Object>emptyMap());
         } catch (IOException e) {
             logger.error("error", e);
             throw new RuntimeException(e);
@@ -132,11 +132,12 @@ public final class TimedJsonStreamParser extends StreamingParser {
 
         if (key.contains(separator)) {
             String[] names = key.toLowerCase().split(separator);
-            Map<String, Object> tempMap = null;
+            Map<String, Object> tempMap = root;
             for (int i = 0; i < names.length - 1; i++) {
                 Object o = root.get(names[i]);
                 if (o instanceof Map) {
-                    tempMap = (Map<String, Object>) o;
+                    tempMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                    tempMap.putAll((Map<String, Object>) o);
                 } else {
                     throw new IOException("Property '" + names[i] + "' is not embedded format");
                 }
@@ -149,10 +150,11 @@ public final class TimedJsonStreamParser extends StreamingParser {
         return StringUtils.EMPTY;
     }
 
-    static String objToString(Object value) {
+    public static String objToString(Object value) {
         if (value == null)
             return StringUtils.EMPTY;
-
+        if (value.getClass().isArray())
+            return String.valueOf(Arrays.asList((Object[]) value));
         return String.valueOf(value);
     }
 
