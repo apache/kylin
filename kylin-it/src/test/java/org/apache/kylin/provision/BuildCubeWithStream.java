@@ -22,9 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -179,7 +177,7 @@ public class BuildCubeWithStream {
 
         List<FutureTask<ExecutableState>> futures = Lists.newArrayList();
         for (int i = 0; i < 5; i++) {
-            Thread.sleep(2 * 60 * 1000); // wait for new messages
+            Thread.sleep(5 * 60 * 1000); // wait for new messages
             FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
                 @Override
                 public ExecutableState call() {
