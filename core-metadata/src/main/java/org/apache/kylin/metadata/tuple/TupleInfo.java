@@ -94,9 +94,9 @@ public class TupleInfo {
             columns.add(index, col);
 
         if (dataTypeNames.size() > index)
-            dataTypeNames.set(index, col.getType().getName());
+            dataTypeNames.set(index, col.getColumnDesc().getUpgradedType().getName());
         else
-            dataTypeNames.add(index, col.getType().getName());
+            dataTypeNames.add(index, col.getColumnDesc().getUpgradedType().getName());
     }
 
     public List<String> getAllFields() {

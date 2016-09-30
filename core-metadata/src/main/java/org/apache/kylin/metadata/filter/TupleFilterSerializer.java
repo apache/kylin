@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.filter;
 
+import java.lang.reflect.InvocationTargetException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -28,6 +29,8 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Maps;
 
 /**
  * http://eli.thegreenplace.net/2011/09/29/an-interesting-tree-serialization-algorithm-from-dwarf
@@ -45,6 +48,7 @@ public class TupleFilterSerializer {
 
     private static final int BUFFER_SIZE = 65536;
     private static final Map<Integer, TupleFilter.FilterOperatorEnum> ID_OP_MAP = new HashMap<Integer, TupleFilter.FilterOperatorEnum>();
+    protected static final Map<TupleFilter.FilterOperatorEnum, Class> extendedTupleFilters = Maps.newHashMap();
 
     static {
         for (TupleFilter.FilterOperatorEnum op : TupleFilter.FilterOperatorEnum.values()) {
@@ -191,14 +195,20 @@ public class TupleFilterSerializer {
         case UNSUPPORTED:
             filter = new UnsupportedTupleFilter(op);
             break;
-        case EVAL_FUNC:
-            filter = new EvaluatableFunctionTupleFilter(null);
-            break;
         case MASSIN:
             filter = new MassInTupleFilter();
             break;
-        default:
-            throw new IllegalStateException("Error FilterOperatorEnum: " + op.getValue());
+        default: {
+            if (extendedTupleFilters.containsKey(op)) {
+                try {
+                    filter = (TupleFilter) extendedTupleFilters.get(op).getConstructor().newInstance();
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                throw new IllegalStateException("Error FilterOperatorEnum: " + op.getValue());
+            }
+        }
         }
 
         return filter;
