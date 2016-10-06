@@ -17,7 +17,8 @@
 # limitations under the License.
 #
 
-dir=$(dirname ${0})
+dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+export KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
 
 source ${dir}/check-env.sh
 job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
@@ -57,4 +58,5 @@ sed -i "s/%default_engine_type%/${default_engine_type}/g" ${KYLIN_HOME}/sample_c
 
 cd ${KYLIN_HOME}
 hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }
-echo "Sample cube is created successfully in project 'learn_kylin'; Restart Kylin server or reload the metadata from web UI to see the change."
+echo "Sample cube is created successfully in project 'learn_kylin'."
+echo "Restart Kylin server or reload the metadata from web UI to see the change."
