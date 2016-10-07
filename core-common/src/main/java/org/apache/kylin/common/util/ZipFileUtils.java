@@ -38,32 +38,41 @@ public class ZipFileUtils {
         if (!validateZipFilename(zipFilename)) {
             throw new RuntimeException("Zipfile must end with .zip");
         }
-        ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream(zipFilename));
-        compressDirectoryToZipfile(normDir(new File(sourceDir).getParent()), normDir(sourceDir), zipFile);
-        IOUtils.closeQuietly(zipFile);
+        ZipOutputStream zipFile = null;
+        try {
+            zipFile = new ZipOutputStream(new FileOutputStream(zipFilename));
+            compressDirectoryToZipfile(normDir(new File(sourceDir).getParent()), normDir(sourceDir), zipFile);
+        } finally {
+            IOUtils.closeQuietly(zipFile);
+        }
     }
 
     public static void decompressZipfileToDirectory(String zipFileName, File outputFolder) throws IOException {
+        ZipInputStream zipInputStream = null;
+        try {
+            zipInputStream = new ZipInputStream(new FileInputStream(zipFileName));
+            ZipEntry zipEntry = null;
+            while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                logger.info("decompressing " + zipEntry.getName() + " is directory:" + zipEntry.isDirectory() + " available: " + zipInputStream.available());
 
-        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFileName));
-        ZipEntry zipEntry = null;
-        while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-            logger.info("decompressing " + zipEntry.getName() + " is directory:" + zipEntry.isDirectory() + " available: " + zipInputStream.available());
-
-            File temp = new File(outputFolder, zipEntry.getName());
-            if (zipEntry.isDirectory()) {
-                temp.mkdirs();
-            } else {
-                temp.getParentFile().mkdirs();
-                temp.createNewFile();
-                temp.setLastModified(zipEntry.getTime());
-                FileOutputStream outputStream = new FileOutputStream(temp);
-                IOUtils.copy(zipInputStream, outputStream);
-                IOUtils.closeQuietly(outputStream);
+                File temp = new File(outputFolder, zipEntry.getName());
+                if (zipEntry.isDirectory()) {
+                    temp.mkdirs();
+                } else {
+                    temp.getParentFile().mkdirs();
+                    temp.createNewFile();
+                    temp.setLastModified(zipEntry.getTime());
+                    FileOutputStream outputStream = new FileOutputStream(temp);
+                    try {
+                        IOUtils.copy(zipInputStream, outputStream);
+                    } finally {
+                        IOUtils.closeQuietly(outputStream);
+                    }
+                }
             }
+        } finally {
+            IOUtils.closeQuietly(zipInputStream);
         }
-        IOUtils.closeQuietly(zipInputStream);
-
     }
 
     private static void compressDirectoryToZipfile(String rootDir, String sourceDir, ZipOutputStream out) throws IOException {
@@ -74,10 +83,12 @@ public class ZipFileUtils {
                 ZipEntry entry = new ZipEntry(normDir(StringUtils.isEmpty(rootDir) ? sourceDir : sourceDir.replace(rootDir, "")) + sourceFile.getName());
                 entry.setTime(sourceFile.lastModified());
                 out.putNextEntry(entry);
-
                 FileInputStream in = new FileInputStream(sourceDir + sourceFile.getName());
-                IOUtils.copy(in, out);
-                IOUtils.closeQuietly(in);
+                try {
+                    IOUtils.copy(in, out);
+                } finally {
+                    IOUtils.closeQuietly(in);
+                }
             }
         }
     }
