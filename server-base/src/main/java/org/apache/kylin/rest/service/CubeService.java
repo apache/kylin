@@ -612,8 +612,11 @@ public class CubeService extends BasicService {
             long tail = readySegs.get(readySegs.size() - 1).getDateRangeEnd();
             long head = tail - desc.getRetentionRange();
             for (CubeSegment seg : readySegs) {
-                if (seg.getDateRangeEnd() <= head)
-                    toRemoveSegs.add(seg);
+                if (seg.getDateRangeEnd() > 0) { // for streaming cube its initial value is 0
+                    if (seg.getDateRangeEnd() <= head) {
+                        toRemoveSegs.add(seg);
+                    }
+                }
             }
 
             if (toRemoveSegs.size() > 0) {
