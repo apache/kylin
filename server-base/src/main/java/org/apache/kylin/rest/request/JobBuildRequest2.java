@@ -18,30 +18,54 @@
 
 package org.apache.kylin.rest.request;
 
+import com.google.common.collect.Maps;
+
+import java.util.Map;
+
 public class JobBuildRequest2 {
 
-    private long startSourceOffset;
+    private long sourceOffsetStart;
 
-    private long endSourceOffset;
+    private long sourceOffsetEnd;
+
+    private Map<Integer, Long> sourcePartitionOffsetStart = Maps.newHashMap();
+
+    private Map<Integer, Long> sourcePartitionOffsetEnd = Maps.newHashMap();
 
     private String buildType;
 
     private boolean force;
 
-    public long getStartSourceOffset() {
-        return startSourceOffset;
+    public long getSourceOffsetStart() {
+        return sourceOffsetStart;
     }
 
-    public void setStartSourceOffset(long startSourceOffset) {
-        this.startSourceOffset = startSourceOffset;
+    public void setSourceOffsetStart(long sourceOffsetStart) {
+        this.sourceOffsetStart = sourceOffsetStart;
     }
 
-    public long getEndSourceOffset() {
-        return endSourceOffset;
+    public long getSourceOffsetEnd() {
+        return sourceOffsetEnd;
     }
 
-    public void setEndSourceOffset(long endSourceOffset) {
-        this.endSourceOffset = endSourceOffset;
+    public void setSourceOffsetEnd(long sourceOffsetEnd) {
+        this.sourceOffsetEnd = sourceOffsetEnd;
+    }
+
+    public Map<Integer, Long> getSourcePartitionOffsetStart() {
+        return sourcePartitionOffsetStart;
+    }
+
+    public void setSourcePartitionOffsetStart(Map<Integer, Long> sourcePartitionOffsetStart) {
+        this.sourcePartitionOffsetStart = sourcePartitionOffsetStart;
+    }
+
+    public Map<Integer, Long> getSourcePartitionOffsetEnd() {
+        return sourcePartitionOffsetEnd;
+    }
+
+    public void setSourcePartitionOffsetEnd(Map<Integer, Long> sourcePartitionOffsetEnd) {
+        this.sourcePartitionOffsetEnd = sourcePartitionOffsetEnd;
     }
 
     public String getBuildType() {

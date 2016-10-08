@@ -404,7 +404,7 @@ public class BuildCubeWithEngine {
     }
 
     private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {
-        CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), 0, endDate, 0, 0);
+        CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), 0, endDate);
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
         waitForJob(job.getId());

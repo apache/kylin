@@ -106,11 +106,11 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         assertEquals(0, cube.getSegments().size());
 
         // append first
-        CubeSegment seg1 = mgr.appendSegment(cube, 0, 1000, 0, 0);
+        CubeSegment seg1 = mgr.appendSegment(cube, 0, 1000);
         seg1.setStatus(SegmentStatusEnum.READY);
 
         // append second
-        CubeSegment seg2 = mgr.appendSegment(cube, 0, 2000, 0, 0);
+        CubeSegment seg2 = mgr.appendSegment(cube, 0, 2000);
 
         assertEquals(2, cube.getSegments().size());
         assertEquals(1000, seg2.getDateRangeStart());
@@ -164,25 +164,25 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         assertEquals(0, cube.getSegments().size());
 
         // append the first
-        CubeSegment seg1 = mgr.appendSegment(cube, 0, 1000, 0, 0);
+        CubeSegment seg1 = mgr.appendSegment(cube, 0, 1000);
         seg1.setStatus(SegmentStatusEnum.READY);
         assertEquals(1, cube.getSegments().size());
 
         // append the third
-        CubeSegment seg3 = mgr.appendSegment(cube, 2000, 3000, 0, 0);
+        CubeSegment seg3 = mgr.appendSegment(cube, 2000, 3000);
         seg3.setStatus(SegmentStatusEnum.READY);
         assertEquals(2, cube.getSegments().size());
 
         // reject overlap
         try {
-            mgr.appendSegment(cube, 1000, 2500, 0, 0);
+            mgr.appendSegment(cube, 1000, 2500);
             fail();
         } catch (IllegalStateException ex) {
             // good
         }
 
         // append the second
-        CubeSegment seg2 = mgr.appendSegment(cube, 1000, 2000, 0, 0);
+        CubeSegment seg2 = mgr.appendSegment(cube, 1000, 2000);
         seg2.setStatus(SegmentStatusEnum.READY);
         assertEquals(3, cube.getSegments().size());
     }

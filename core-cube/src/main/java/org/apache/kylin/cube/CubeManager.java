@@ -34,6 +34,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -433,26 +434,45 @@ public class CubeManager implements IRealizationProvider {
 
     // append a full build segment
     public CubeSegment appendSegment(CubeInstance cube) throws IOException {
-        return appendSegment(cube, 0, 0, 0, 0);
+        return appendSegment(cube, 0, 0, 0, 0, null, null);
     }
 
-    public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset) throws IOException {
+    public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate) throws IOException {
+        return appendSegment(cube, startDate, endDate, 0, 0, null, null);
+    }
 
+    public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) throws IOException {
         checkBuildingSegment(cube);
+
+        if (sourcePartitionOffsetStart == null) {
+            sourcePartitionOffsetStart = Maps.newHashMap();
+        }
+        if (sourcePartitionOffsetEnd == null) {
+            sourcePartitionOffsetEnd = Maps.newHashMap();
+        }
+
+        boolean isOffsetsOn = endOffset != 0;
+        if (isOffsetsOn == true) {
+            checkSourceOffsets(startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+        }
 
         if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
             // try figure out a reasonable start if missing
             if (startDate == 0 && startOffset == 0) {
-                boolean isOffsetsOn = endOffset != 0;
-                if (isOffsetsOn) {
-                    startOffset = calculateStartOffsetForAppendSegment(cube);
-                    if (startOffset == Long.MAX_VALUE) {
-                        throw new IllegalStateException("There is already one pending for building segment, please submit request later.");
+                final CubeSegment last = getLatestSegment(cube);
+                if (last != null) {
+                    if (isOffsetsOn) {
+                        if (last.getSourceOffsetEnd() == Long.MAX_VALUE) {
+                            throw new IllegalStateException("There is already one pending for building segment, please submit request later.");
+                        }
+                        startOffset = last.getSourceOffsetEnd();
+                        sourcePartitionOffsetStart = last.getSourcePartitionOffsetEnd();
+                    } else {
+                        startDate = last.getDateRangeEnd();
                     }
-                } else {
-                    startDate = calculateStartDateForAppendSegment(cube);
                 }
             }
+
         } else {
             startDate = 0;
             endDate = Long.MAX_VALUE;
@@ -461,6 +481,8 @@ public class CubeManager implements IRealizationProvider {
         }
 
         CubeSegment newSegment = newSegment(cube, startDate, endDate, startOffset, endOffset);
+        newSegment.setSourcePartitionOffsetStart(sourcePartitionOffsetStart);
+        newSegment.setSourcePartitionOffsetEnd(sourcePartitionOffsetEnd);
         validateNewSegments(cube, newSegment);
 
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
@@ -491,9 +513,8 @@ public class CubeManager implements IRealizationProvider {
                 throw new IllegalArgumentException("For streaming cube, only one segment can be refreshed at one time");
             }
 
-            Map<String, String> partitionInfo = Maps.newHashMap();
-            partitionInfo.putAll(toRefreshSeg.getAdditionalInfo());
-            newSegment.setAdditionalInfo(partitionInfo);
+            newSegment.setSourcePartitionOffsetStart(toRefreshSeg.getSourcePartitionOffsetStart());
+            newSegment.setSourcePartitionOffsetEnd(toRefreshSeg.getSourcePartitionOffsetEnd());
         }
 
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
@@ -548,6 +569,8 @@ public class CubeManager implements IRealizationProvider {
             newSegment.setDateRangeEnd(maxDateRangeEnd(mergingSegments));
             newSegment.setSourceOffsetStart(first.getSourceOffsetStart());
             newSegment.setSourceOffsetEnd(last.getSourceOffsetEnd());
+            newSegment.setSourcePartitionOffsetStart(first.getSourcePartitionOffsetStart());
+            newSegment.setSourcePartitionOffsetEnd(last.getSourcePartitionOffsetEnd());
         } else {
             newSegment.setDateRangeStart(first.getSourceOffsetStart());
             newSegment.setDateRangeEnd(last.getSourceOffsetEnd());
@@ -601,18 +624,27 @@ public class CubeManager implements IRealizationProvider {
             return Pair.newPair(result.getFirst(), result.getLast());
     }
 
-    private long minDateRangeStart(List<CubeSegment> mergingSegments) {
+    public static long minDateRangeStart(List<CubeSegment> mergingSegments) {
         long min = Long.MAX_VALUE;
         for (CubeSegment seg : mergingSegments)
             min = Math.min(min, seg.getDateRangeStart());
         return min;
     }
 
-    private long maxDateRangeEnd(List<CubeSegment> mergingSegments) {
+    public static long maxDateRangeEnd(List<CubeSegment> mergingSegments) {
         long max = Long.MIN_VALUE;
         for (CubeSegment seg : mergingSegments)
             max = Math.max(max, seg.getDateRangeEnd());
         return max;
+    }
+
+    private CubeSegment getLatestSegment(CubeInstance cube) {
+        List<CubeSegment> existing = cube.getSegments();
+        if (existing.isEmpty()) {
+            return null;
+        } else {
+            return existing.get(existing.size() - 1);
+        }
     }
 
     private long calculateStartOffsetForAppendSegment(CubeInstance cube) {
@@ -637,6 +669,45 @@ public class CubeManager implements IRealizationProvider {
         int maxBuldingSeg = cube.getConfig().getMaxBuildingSegments();
         if (cube.getBuildingSegments().size() >= maxBuldingSeg) {
             throw new IllegalStateException("There is already " + cube.getBuildingSegments().size() + " building segment; ");
+        }
+    }
+
+    private void checkSourceOffsets(long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) {
+        if (endOffset <= 0)
+            return;
+
+        if (startOffset >= endOffset) {
+            throw new IllegalArgumentException("'startOffset' need be smaller than 'endOffset'");
+        }
+
+        if (startOffset > 0) {
+            if (sourcePartitionOffsetStart == null || sourcePartitionOffsetStart.size() == 0) {
+                throw new IllegalArgumentException("When 'startOffset' is > 0, need provide each partition's start offset");
+            }
+
+            long totalOffset = 0;
+            for (Long v : sourcePartitionOffsetStart.values()) {
+                totalOffset += v;
+            }
+
+            if (totalOffset != startOffset) {
+                throw new IllegalArgumentException("Invalid 'sourcePartitionOffsetStart', doesn't match with 'startOffset'");
+            }
+        }
+
+        if (endOffset > 0 && endOffset != Long.MAX_VALUE) {
+            if (sourcePartitionOffsetEnd == null || sourcePartitionOffsetEnd.size() == 0) {
+                throw new IllegalArgumentException("When 'endOffset' is not Long.MAX_VALUE, need provide each partition's start offset");
+            }
+
+            long totalOffset = 0;
+            for (Long v : sourcePartitionOffsetEnd.values()) {
+                totalOffset += v;
+            }
+
+            if (totalOffset != endOffset) {
+                throw new IllegalArgumentException("Invalid 'sourcePartitionOffsetEnd', doesn't match with 'endOffset'");
+            }
         }
     }
 
@@ -1005,5 +1076,45 @@ public class CubeManager implements IRealizationProvider {
             }
         }
         return factDictCols;
+    }
+
+    /**
+     * Calculate the holes (gaps) in segments.
+     * @param cubeName
+     * @return
+     */
+    public List<CubeSegment> calculateHoles(String cubeName) {
+        List<CubeSegment> holes = Lists.newArrayList();
+        final CubeInstance cube = getCube(cubeName);
+        Preconditions.checkNotNull(cube);
+        final List<CubeSegment> segments = cube.getSegments();
+        logger.info("totally " + segments.size() + " cubeSegments");
+        if (segments.size() == 0) {
+            return holes;
+        }
+
+        Collections.sort(segments);
+        boolean isOffsetOn = segments.get(0).isSourceOffsetsOn();
+        for (int i = 0; i < segments.size() - 1; ++i) {
+            CubeSegment first = segments.get(i);
+            CubeSegment second = segments.get(i + 1);
+            if (first.getSourceOffsetEnd() == second.getSourceOffsetStart()) {
+                continue;
+            } else if (first.getSourceOffsetEnd() < second.getSourceOffsetStart()) {
+                CubeSegment hole = new CubeSegment();
+                if (isOffsetOn == true) {
+                    hole.setSourceOffsetStart(first.getSourceOffsetEnd());
+                    hole.setSourcePartitionOffsetStart(first.getSourcePartitionOffsetEnd());
+                    hole.setSourceOffsetEnd(second.getSourceOffsetStart());
+                    hole.setSourcePartitionOffsetEnd(second.getSourcePartitionOffsetStart());
+                } else {
+                    hole.setDateRangeStart(first.getDateRangeEnd());
+                    hole.setDateRangeEnd(second.getDateRangeStart());
+                }
+                hole.setName(CubeSegment.makeSegmentName(hole.getDateRangeStart(), hole.getDateRangeEnd(), hole.getSourceOffsetStart(), hole.getSourceOffsetEnd()));
+                holes.add(hole);
+            }
+        }
+        return holes;
     }
 }

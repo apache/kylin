@@ -24,8 +24,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
@@ -106,10 +108,10 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertEquals(0, cube.getSegments().size());
 
         // append first
-        CubeSegment seg1 = mgr.appendSegment(cube, 0, 1000, 0, 0);
+        CubeSegment seg1 = mgr.appendSegment(cube, 0, 1000, 0, 0, null, null);
         seg1.setStatus(SegmentStatusEnum.READY);
 
-        CubeSegment seg2 = mgr.appendSegment(cube, 0, 2000, 0, 0);
+        CubeSegment seg2 = mgr.appendSegment(cube, 0, 2000, 0, 0, null, null);
         seg2.setStatus(SegmentStatusEnum.READY);
 
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
@@ -133,11 +135,21 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         // no segment at first
         assertEquals(0, cube.getSegments().size());
 
+        Map m1 =  Maps.newHashMap();
+        m1.put(1, 1000l);
+        Map m2 =  Maps.newHashMap();
+        m2.put(1, 2000l);
+        Map m3 =  Maps.newHashMap();
+        m3.put(1, 3000l);
+        Map m4 =  Maps.newHashMap();
+        m4.put(1, 4000l);
+
         // append first
-        CubeSegment seg1 = mgr.appendSegment(cube, 0, 0, 0, 1000);
+        CubeSegment seg1 = mgr.appendSegment(cube, 0, 0, 0, 1000, null, m1);
         seg1.setStatus(SegmentStatusEnum.READY);
 
-        CubeSegment seg2 = mgr.appendSegment(cube, 0, 0, 1000, 2000);
+
+        CubeSegment seg2 = mgr.appendSegment(cube, 0, 0, 1000, 2000, m1, m2);
         seg2.setStatus(SegmentStatusEnum.READY);
 
 
@@ -145,12 +157,13 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         seg3.setStatus(SegmentStatusEnum.NEW);
 
 
-        CubeSegment seg4 = mgr.appendSegment(cube, 0, 0, 2000, 3000);
+        CubeSegment seg4 = mgr.appendSegment(cube, 0, 0, 2000, 3000, m2, m3);
         seg4.setStatus(SegmentStatusEnum.NEW);
         seg4.setLastBuildJobID("test");
         seg4.setStorageLocationIdentifier("test");
 
-        CubeSegment seg5 = mgr.appendSegment(cube, 0, 0, 3000, 4000);
+
+        CubeSegment seg5 = mgr.appendSegment(cube, 0, 0, 3000, 4000, m3, m4);
         seg5.setStatus(SegmentStatusEnum.READY);
 
         CubeUpdate cubeBuilder = new CubeUpdate(cube);
@@ -179,18 +192,26 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         // no segment at first
         assertEquals(0, cube.getSegments().size());
+        Map m1 =  Maps.newHashMap();
+        m1.put(1, 1000l);
+        Map m2 =  Maps.newHashMap();
+        m2.put(1, 2000l);
+        Map m3 =  Maps.newHashMap();
+        m3.put(1, 3000l);
+        Map m4 =  Maps.newHashMap();
+        m4.put(1, 4000l);
 
         // append first
-        CubeSegment seg1 = mgr.appendSegment(cube, 0, 0, 0, 1000);
+        CubeSegment seg1 = mgr.appendSegment(cube, 0, 0, 0, 1000, null, m1);
         seg1.setStatus(SegmentStatusEnum.READY);
 
-        CubeSegment seg2 = mgr.appendSegment(cube, 0, 0, 1000, 2000);
+        CubeSegment seg2 = mgr.appendSegment(cube, 0, 0, 1000, 2000, m1, m2);
         seg2.setStatus(SegmentStatusEnum.READY);
 
-        CubeSegment seg3 = mgr.appendSegment(cube, 0, 0, 2000, 3000);
+        CubeSegment seg3 = mgr.appendSegment(cube, 0, 0, 2000, 3000, m2, m3);
         seg3.setStatus(SegmentStatusEnum.READY);
 
-        CubeSegment seg4 = mgr.appendSegment(cube, 0, 0, 3000, 4000);
+        CubeSegment seg4 = mgr.appendSegment(cube, 0, 0, 3000, 4000, m3, m4);
         seg4.setStatus(SegmentStatusEnum.READY);
 
 
@@ -246,10 +267,10 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
         assertEquals(0, cube.getSegments().size());
 
         // append first
-        CubeSegment seg1 = mgr.appendSegment(cube, 0, 1000, 0, 0);
+        CubeSegment seg1 = mgr.appendSegment(cube, 0, 1000);
         seg1.setStatus(SegmentStatusEnum.READY);
 
-        CubeSegment seg3 = mgr.appendSegment(cube, 2000, 4000, 0, 0);
+        CubeSegment seg3 = mgr.appendSegment(cube, 2000, 4000);
         seg3.setStatus(SegmentStatusEnum.READY);
 
         assertEquals(2, cube.getSegments().size());
@@ -260,7 +281,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         // append a new seg which will be merged
 
-        CubeSegment seg4 = mgr.appendSegment(cube, 4000, 8000, 0, 0);
+        CubeSegment seg4 = mgr.appendSegment(cube, 4000, 8000);
         seg4.setStatus(SegmentStatusEnum.READY);
 
         assertEquals(3, cube.getSegments().size());
@@ -272,7 +293,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
         // fill the gap
 
-        CubeSegment seg2 = mgr.appendSegment(cube, 1000, 2000, 0, 0);
+        CubeSegment seg2 = mgr.appendSegment(cube, 1000, 2000);
         seg2.setStatus(SegmentStatusEnum.READY);
 
         assertEquals(4, cube.getSegments().size());

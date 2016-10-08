@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -36,7 +37,6 @@ import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.EngineFactory;
-import org.apache.kylin.engine.streaming.StreamingConfig;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
@@ -54,9 +54,6 @@ import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
-import org.apache.kylin.rest.service.KafkaConfigService;
-import org.apache.kylin.rest.service.StreamingService;
-import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,12 +81,6 @@ import com.google.common.collect.Sets;
 @RequestMapping(value = "/cubes")
 public class CubeController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(CubeController.class);
-
-    @Autowired
-    private StreamingService streamingService;
-
-    @Autowired
-    private KafkaConfigService kafkaConfigService;
 
     @Autowired
     private CubeService cubeService;
@@ -272,7 +263,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest req) {
-        return buildInternal(cubeName, req.getStartTime(), req.getEndTime(), 0, 0, req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment());
+        return buildInternal(cubeName, req.getStartTime(), req.getEndTime(), 0, 0, null, null, req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment());
     }
 
     /** Build/Rebuild a cube segment by source offset */
@@ -286,16 +277,16 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/rebuild2", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
-        return buildInternal(cubeName, 0, 0, req.getStartSourceOffset(), req.getEndSourceOffset(), req.getBuildType(), req.isForce());
+        return buildInternal(cubeName, 0, 0, req.getSourceOffsetStart(), req.getSourceOffsetEnd(), req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(),  req.getBuildType(), req.isForce());
     }
 
     private JobInstance buildInternal(String cubeName, long startTime, long endTime, //
-            long startOffset, long endOffset, String buildType, boolean force) {
+            long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd, String buildType, boolean force) {
         try {
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
             return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //
-                    CubeBuildTypeEnum.valueOf(buildType), force, submitter);
+                    sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force, submitter);
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -542,6 +533,73 @@ public class CubeController extends BasicController {
         return hbase;
     }
 
+    /**
+     * get cube segment holes
+     *
+     * @return true
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/hole", method = { RequestMethod.GET })
+    @ResponseBody
+    public List<CubeSegment> getHoles(@PathVariable String cubeName) {
+        return cubeService.getCubeManager().calculateHoles(cubeName);
+    }
+
+    /**
+     * get cube segment holes
+     *
+     * @return true
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{cubeName}/hole", method = { RequestMethod.PUT })
+    @ResponseBody
+    public List<JobInstance> fillHoles(@PathVariable String cubeName) {
+        List<JobInstance> jobs = Lists.newArrayList();
+        List<CubeSegment> holes = cubeService.getCubeManager().calculateHoles(cubeName);
+
+        if (holes.size() == 0) {
+            logger.info("No hole detected for cube '" + cubeName + "'");
+            return jobs;
+        }
+
+        boolean isOffsetOn = holes.get(0).isSourceOffsetsOn();
+        for (CubeSegment hole : holes) {
+            if (isOffsetOn == true) {
+                JobBuildRequest2 request = new JobBuildRequest2();
+                request.setBuildType(CubeBuildTypeEnum.BUILD.toString());
+                request.setSourceOffsetStart(hole.getSourceOffsetStart());
+                request.setSourcePartitionOffsetStart(hole.getSourcePartitionOffsetStart());
+                request.setSourceOffsetEnd(hole.getSourceOffsetEnd());
+                request.setSourcePartitionOffsetEnd(hole.getSourcePartitionOffsetEnd());
+                try {
+                    JobInstance job = build(cubeName, request);
+                    jobs.add(job);
+                } catch (Exception e) {
+                    // it may exceed the max allowed job number
+                    logger.info("Error to submit job for hole '" + hole.toString() + "', skip it now.", e);
+                    continue;
+                }
+            } else {
+                JobBuildRequest request = new JobBuildRequest();
+                request.setBuildType(CubeBuildTypeEnum.BUILD.toString());
+                request.setStartTime(hole.getDateRangeStart());
+                request.setEndTime(hole.getDateRangeEnd());
+
+                try {
+                    JobInstance job = build(cubeName, request);
+                    jobs.add(job);
+                } catch (Exception e) {
+                    // it may exceed the max allowed job number
+                    logger.info("Error to submit job for hole '" + hole.toString() + "', skip it now.", e);
+                    continue;
+                }
+            }
+        }
+
+        return jobs;
+
+    }
+
     private CubeDesc deserializeCubeDesc(CubeRequest cubeRequest) {
         CubeDesc desc = null;
         try {
@@ -552,42 +610,6 @@ public class CubeController extends BasicController {
             updateRequest(cubeRequest, false, e.getMessage());
         } catch (JsonMappingException e) {
             logger.error("The cube definition is not valid.", e);
-            updateRequest(cubeRequest, false, e.getMessage());
-        } catch (IOException e) {
-            logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
-        }
-        return desc;
-    }
-
-    private StreamingConfig deserializeStreamingDesc(CubeRequest cubeRequest) {
-        StreamingConfig desc = null;
-        try {
-            logger.debug("Saving StreamingConfig " + cubeRequest.getStreamingData());
-            desc = JsonUtil.readValue(cubeRequest.getStreamingData(), StreamingConfig.class);
-        } catch (JsonParseException e) {
-            logger.error("The StreamingConfig definition is not valid.", e);
-            updateRequest(cubeRequest, false, e.getMessage());
-        } catch (JsonMappingException e) {
-            logger.error("The data StreamingConfig definition is not valid.", e);
-            updateRequest(cubeRequest, false, e.getMessage());
-        } catch (IOException e) {
-            logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
-        }
-        return desc;
-    }
-
-    private KafkaConfig deserializeKafkaDesc(CubeRequest cubeRequest) {
-        KafkaConfig desc = null;
-        try {
-            logger.debug("Saving KafkaConfig " + cubeRequest.getKafkaData());
-            desc = JsonUtil.readValue(cubeRequest.getKafkaData(), KafkaConfig.class);
-        } catch (JsonParseException e) {
-            logger.error("The KafkaConfig definition is not valid.", e);
-            updateRequest(cubeRequest, false, e.getMessage());
-        } catch (JsonMappingException e) {
-            logger.error("The data KafkaConfig definition is not valid.", e);
             updateRequest(cubeRequest, false, e.getMessage());
         } catch (IOException e) {
             logger.error("Failed to deal with the request.", e);
@@ -608,14 +630,6 @@ public class CubeController extends BasicController {
 
     public void setJobService(JobService jobService) {
         this.jobService = jobService;
-    }
-
-    public void setStreamingService(StreamingService streamingService) {
-        this.streamingService = streamingService;
-    }
-
-    public void setKafkaConfigService(KafkaConfigService kafkaConfigService) {
-        this.kafkaConfigService = kafkaConfigService;
     }
 
 }

@@ -18,7 +18,6 @@
 package org.apache.kylin.source.kafka;
 
 import org.apache.kylin.source.kafka.util.KafkaClient;
-import org.apache.kylin.source.kafka.util.KafkaOffsetMapping;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kylin.cube.CubeInstance;
@@ -54,8 +53,8 @@ public class SeekOffsetStep extends AbstractExecutable {
         final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
         final CubeSegment segment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
 
-        Map<Integer, Long> startOffsets = KafkaOffsetMapping.parseOffsetStart(segment);
-        Map<Integer, Long> endOffsets = KafkaOffsetMapping.parseOffsetEnd(segment);
+        Map<Integer, Long> startOffsets = segment.getSourcePartitionOffsetStart();
+        Map<Integer, Long> endOffsets = segment.getSourcePartitionOffsetEnd();
 
         if (startOffsets.size() > 0 && endOffsets.size() > 0 && startOffsets.size() == endOffsets.size()) {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped, as the offset is provided.");
@@ -70,7 +69,7 @@ public class SeekOffsetStep extends AbstractExecutable {
             if (startOffsets.isEmpty()) {
                 // user didn't specify start offset, use the biggest offset in existing segments as start
                 for (CubeSegment seg : cube.getSegments()) {
-                    Map<Integer, Long> segEndOffset = KafkaOffsetMapping.parseOffsetEnd(seg);
+                    Map<Integer, Long> segEndOffset = seg.getSourcePartitionOffsetEnd();
                     for (PartitionInfo partition : partitionInfos) {
                         int partitionId = partition.partition();
                         if (segEndOffset.containsKey(partitionId)) {
@@ -110,8 +109,10 @@ public class SeekOffsetStep extends AbstractExecutable {
         }
 
         if (totalEndOffset > totalStartOffset) {
-            KafkaOffsetMapping.saveOffsetStart(segment, startOffsets);
-            KafkaOffsetMapping.saveOffsetEnd(segment, endOffsets);
+            segment.setSourceOffsetStart(totalStartOffset);
+            segment.setSourceOffsetEnd(totalEndOffset);
+            segment.setSourcePartitionOffsetStart(startOffsets);
+            segment.setSourcePartitionOffsetEnd(endOffsets);
             segment.setName(CubeSegment.makeSegmentName(0, 0, totalStartOffset, totalEndOffset));
             CubeUpdate cubeBuilder = new CubeUpdate(cube);
             cubeBuilder.setToUpdateSegs(segment);

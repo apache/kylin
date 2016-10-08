@@ -19,7 +19,6 @@
 package org.apache.kylin.source.kafka.hadoop;
 
 import org.apache.kylin.source.kafka.util.KafkaClient;
-import org.apache.kylin.source.kafka.util.KafkaOffsetMapping;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -132,8 +131,8 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
 
     private void setupMapper(CubeSegment cubeSeg) throws IOException {
         // set the segment's offset info to job conf
-        Map<Integer, Long> offsetStart = KafkaOffsetMapping.parseOffsetStart(cubeSeg);
-        Map<Integer, Long> offsetEnd = KafkaOffsetMapping.parseOffsetEnd(cubeSeg);
+        Map<Integer, Long> offsetStart = cubeSeg.getSourcePartitionOffsetStart();
+        Map<Integer, Long> offsetEnd = cubeSeg.getSourcePartitionOffsetEnd();
 
         Integer minPartition = Collections.min(offsetStart.keySet());
         Integer maxPartition = Collections.max(offsetStart.keySet());

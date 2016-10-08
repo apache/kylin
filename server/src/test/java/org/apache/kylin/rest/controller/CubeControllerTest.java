@@ -23,7 +23,9 @@ import java.io.StringWriter;
 import java.util.List;
 
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.service.CubeService;
@@ -60,7 +62,6 @@ public class CubeControllerTest extends ServiceTestBase {
         cubeController = new CubeController();
         cubeController.setCubeService(cubeService);
         cubeController.setJobService(jobService);
-        cubeController.setStreamingService(streamingService);
 
         cubeDescController = new CubeDescController();
         cubeDescController.setCubeService(cubeService);
@@ -162,6 +163,32 @@ public class CubeControllerTest extends ServiceTestBase {
 
         Assert.assertTrue(segNumber == newSegNumber + 1);
     }
+
+
+    @Test
+    public void testGetHoles() throws IOException {
+        String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
+        CubeDesc[] cubes = cubeDescController.getCube(cubeName);
+        Assert.assertNotNull(cubes);
+
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
+        List<CubeSegment> segments = cube.getSegments();
+
+        final long dateEnd = segments.get(segments.size() -1).getDateRangeEnd();
+
+        final long ONEDAY = 24 * 60 * 60000;
+        cubeService.getCubeManager().appendSegment(cube, dateEnd + ONEDAY, dateEnd + ONEDAY * 2);
+
+        List<CubeSegment> holes = cubeController.getHoles(cubeName);
+
+        Assert.assertTrue(holes.size() == 1);
+
+        CubeSegment hole = holes.get(0);
+
+        Assert.assertTrue(hole.getDateRangeStart() == dateEnd && hole.getDateRangeEnd() == (dateEnd + ONEDAY));
+
+    }
+
 
     @Test
     public void testGetCubes() {
