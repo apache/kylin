@@ -83,7 +83,8 @@ public class LookupStringTable extends LookupTable<String> {
     protected String[] convertRow(String[] cols) {
         for (int i = 0; i < cols.length; i++) {
             if (colIsDateTime[i]) {
-                cols[i] = String.valueOf(DateFormat.stringToMillis(cols[i]));
+                if (cols[i] != null)
+                    cols[i] = String.valueOf(DateFormat.stringToMillis(cols[i]));
             }
         }
         return cols;
