@@ -82,7 +82,7 @@ public class DiagnosisController extends BasicController {
         try {
             filePath = dgService.dumpProjectDiagnosisInfo(project);
         } catch (IOException e) {
-            throw new InternalErrorException("Failed to dump diagnosis info.", e);
+            throw new InternalErrorException("Failed to dump project diagnosis info. " + e.getMessage(), e);
         }
 
         setDownloadResponse(filePath, response);
@@ -98,7 +98,7 @@ public class DiagnosisController extends BasicController {
         try {
             filePath = dgService.dumpJobDiagnosisInfo(jobId);
         } catch (IOException e) {
-            throw new InternalErrorException("Failed to dump diagnosis info.", e);
+            throw new InternalErrorException("Failed to dump job diagnosis info. " + e.getMessage(), e);
         }
 
         setDownloadResponse(filePath, response);
@@ -114,7 +114,7 @@ public class DiagnosisController extends BasicController {
             IOUtils.copyLarge(fileInputStream, output);
             output.flush();
         } catch (IOException e) {
-            throw new InternalErrorException("Failed to dump diagnosis info.", e);
+            throw new InternalErrorException("Failed to create download for diagnosis. " + e.getMessage(), e);
         }
     }
 }
