@@ -296,16 +296,20 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     }
 
     private void translateAggregation() {
-        // now the realization is known, replace aggregations with what's defined on MeasureDesc
-        List<MeasureDesc> measures = this.context.realization.getMeasures();
-        List<FunctionDesc> newAggrs = Lists.newArrayList();
-        for (FunctionDesc aggFunc : this.aggregations) {
-            newAggrs.add(findInMeasures(aggFunc, measures));
+        if (!noPrecaculatedFieldsAvailable()) {
+            // now the realization is known, replace aggregations with what's defined on MeasureDesc
+            List<MeasureDesc> measures = this.context.realization.getMeasures();
+            List<FunctionDesc> newAggrs = Lists.newArrayList();
+            for (FunctionDesc aggFunc : this.aggregations) {
+                newAggrs.add(findInMeasures(aggFunc, measures));
+            }
+            this.aggregations.clear();
+            this.aggregations.addAll(newAggrs);
+            this.context.aggregations.clear();
+            this.context.aggregations.addAll(newAggrs);
+        } else {
+            //the realization is not contributing pre-calculated fields at all
         }
-        this.aggregations.clear();
-        this.aggregations.addAll(newAggrs);
-        this.context.aggregations.clear();
-        this.context.aggregations.addAll(newAggrs);
     }
 
     private FunctionDesc findInMeasures(FunctionDesc aggFunc, List<MeasureDesc> measures) {

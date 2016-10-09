@@ -81,7 +81,7 @@ public class CubeCapabilityChecker {
             //1. dimension as measure
 
             if (!unmatchedAggregations.isEmpty()) {
-                tryDimensionAsMeasures(unmatchedAggregations, digest, cube, result, cube.getDescriptor().listDimensionColumnsIncludingDerived());
+                tryDimensionAsMeasures(unmatchedAggregations, result, cube.getDescriptor().listDimensionColumnsIncludingDerived());
             }
         } else {
             //for non query-on-facttable 
@@ -92,10 +92,18 @@ public class CubeCapabilityChecker {
                     dimCols.add(columnDesc.getRef());
                 }
 
-                //1. dimension as measure, like max(cal_dt) or count( distinct col) from lookup
+                //1. all aggregations on lookup table can be done. For distinct count, mark them all DimensionAsMeasures
+                // so that the measure has a chance to be upgraded to DimCountDistinctMeasureType in org.apache.kylin.metadata.model.FunctionDesc#reInitMeasureType
                 if (!unmatchedAggregations.isEmpty()) {
-                    tryDimensionAsMeasures(unmatchedAggregations, digest, cube, result, dimCols);
+                    Iterator<FunctionDesc> itr = unmatchedAggregations.iterator();
+                    while (itr.hasNext()) {
+                        FunctionDesc functionDesc = itr.next();
+                        if (dimCols.containsAll(functionDesc.getParameter().getColRefs())) {
+                            itr.remove();
+                        }
+                    }
                 }
+                tryDimensionAsMeasures(Lists.newArrayList(aggrFunctions), result, dimCols);
 
                 //2. more "dimensions" contributed by snapshot
                 if (!unmatchedDimensions.isEmpty()) {
@@ -159,18 +167,11 @@ public class CubeCapabilityChecker {
         return result;
     }
 
-    private static void tryDimensionAsMeasures(Collection<FunctionDesc> unmatchedAggregations, SQLDigest digest, CubeInstance cube, CapabilityResult result, Set<TblColRef> dimCols) {
-        CubeDesc cubeDesc = cube.getDescriptor();
-        Collection<FunctionDesc> cubeFuncs = cubeDesc.listAllFunctions();
+    private static void tryDimensionAsMeasures(Collection<FunctionDesc> unmatchedAggregations, CapabilityResult result, Set<TblColRef> dimCols) {
 
         Iterator<FunctionDesc> it = unmatchedAggregations.iterator();
         while (it.hasNext()) {
             FunctionDesc functionDesc = it.next();
-
-            if (cubeFuncs.contains(functionDesc)) {
-                it.remove();
-                continue;
-            }
 
             // let calcite handle count
             if (functionDesc.isCount()) {
