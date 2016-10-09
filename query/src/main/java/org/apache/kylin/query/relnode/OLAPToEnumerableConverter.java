@@ -19,6 +19,7 @@
 package org.apache.kylin.query.relnode;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
 import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
@@ -40,13 +41,17 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
 import org.apache.kylin.query.routing.QueryRouter;
 import org.apache.kylin.query.schema.OLAPTable;
+
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -90,7 +95,11 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
                 if (null != controllerCls && !controllerCls.isEmpty()) {
                     OLAPContext.IAccessController accessController = (OLAPContext.IAccessController) ClassUtil.newInstance(controllerCls);
                     TupleFilter tupleFilter = accessController.check(context.olapAuthen, context.allColumns, context.realization);
-                    context.filter = and(context.filter, tupleFilter);
+                    if (null != tupleFilter) {
+                        context.filterColumns.addAll(collectColumns(tupleFilter));
+                        context.allColumns.addAll(collectColumns(tupleFilter));
+                        context.filter = and(context.filter, tupleFilter);
+                    }
                 }
             }
         } catch (NoRealizationFoundException e) {
@@ -126,21 +135,39 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             return f2;
         if (f2 == null)
             return f1;
-        
+
         if (f1.getOperator() == FilterOperatorEnum.AND) {
             f1.addChild(f2);
             return f1;
         }
-        
+
         if (f2.getOperator() == FilterOperatorEnum.AND) {
             f2.addChild(f1);
             return f2;
         }
-        
+
         LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
         and.addChild(f1);
         and.addChild(f2);
         return and;
+    }
+
+    private Set<TblColRef> collectColumns(TupleFilter filter) {
+        Set<TblColRef> ret = Sets.newHashSet();
+        collectColumnsRecursively(filter, ret);
+        return ret;
+    }
+
+    private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
+        if (filter == null)
+            return;
+
+        if (filter instanceof ColumnTupleFilter) {
+            collector.add(((ColumnTupleFilter) filter).getColumn());
+        }
+        for (TupleFilter child : filter.getChildren()) {
+            collectColumnsRecursively(child, collector);
+        }
     }
 
     private Result buildHiveResult(EnumerableRelImplementor enumImplementor, Prefer pref, OLAPContext context) {
