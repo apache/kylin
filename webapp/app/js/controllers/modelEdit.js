@@ -35,7 +35,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
 
     $scope.getPartitonColumns = function(tableName){
         var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
-            return column.datatype==="date"||column.datatype==="timestamp"||column.datatype==="string"||column.datatype.startsWith("varchar")||column.datatype==="bigint"||column.datatype==="int";
+            return column.datatype==="date"||column.datatype==="timestamp"||column.datatype==="string"||column.datatype.startsWith("varchar")||column.datatype==="bigint"||column.datatype==="int"||column.datatype==="integer";
         });
         return columns;
     };
@@ -79,7 +79,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
             if(dateColumn==columnName)
                return _column;
         });
-        if(column[0].datatype==="bigint"||column[0].datatype==="int"){
+        if(column[0].datatype==="bigint"||column[0].datatype==="int"||column[0].datatype==="integer"){
            $scope.isBigInt=true;
            $scope.modelsManager.selectedModel.partition_desc.partition_date_format=null;;
            $scope.partitionColumn.hasSeparateTimeColumn=false;
