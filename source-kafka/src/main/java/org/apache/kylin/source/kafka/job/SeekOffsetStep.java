@@ -14,9 +14,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
-package org.apache.kylin.source.kafka;
+ */
+package org.apache.kylin.source.kafka.job;
 
+import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;

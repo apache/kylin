@@ -43,6 +43,9 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
+import org.apache.kylin.source.kafka.job.MergeOffsetStep;
+import org.apache.kylin.source.kafka.job.SeekOffsetStep;
+import org.apache.kylin.source.kafka.job.UpdateTimeRangeStep;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
