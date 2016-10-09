@@ -31,21 +31,13 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 public class EngineFactory {
 
     private static ImplementationSwitch<IBatchCubingEngine> batchEngines;
-    private static ImplementationSwitch<IStreamingCubingEngine> streamingEngines;
     static {
         Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getJobEngines();
-        batchEngines = new ImplementationSwitch<IBatchCubingEngine>(impls, IBatchCubingEngine.class);
-
-        impls.clear();
-        streamingEngines = new ImplementationSwitch<IStreamingCubingEngine>(impls, IStreamingCubingEngine.class); // TODO
+        batchEngines = new ImplementationSwitch<>(impls, IBatchCubingEngine.class);
     }
 
     public static IBatchCubingEngine batchEngine(IEngineAware aware) {
         return batchEngines.get(aware.getEngineType());
-    }
-
-    public static IStreamingCubingEngine streamingEngine(IEngineAware aware) {
-        return streamingEngines.get(aware.getEngineType());
     }
 
     /** Mark deprecated to indicate for test purpose only */
@@ -66,10 +58,6 @@ public class EngineFactory {
     /** Merge multiple small segments into a big one. */
     public static DefaultChainedExecutable createBatchMergeJob(CubeSegment mergeSegment, String submitter) {
         return batchEngine(mergeSegment).createBatchMergeJob(mergeSegment, submitter);
-    }
-
-    public static Runnable createStreamingCubingBuilder(CubeSegment seg) {
-        return streamingEngine(seg).createStreamingCubingBuilder(seg);
     }
 
 }
