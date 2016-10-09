@@ -225,11 +225,6 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
-                <artifactId>kylin-engine-streaming</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-engine-spark</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1017,7 +1012,6 @@
         <module>core-job</module>
         <module>core-storage</module>
         <module>engine-mr</module>
-        <module>engine-streaming</module>
         <module>engine-spark</module>
         <module>source-hive</module>
         <module>source-kafka</module>

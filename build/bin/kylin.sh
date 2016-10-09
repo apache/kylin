@@ -139,67 +139,6 @@ then
         exit 1    
     fi
 
-# streaming command
-elif [ "$1" == "streaming" ]
-then
-    if [ $# -lt 4 ]
-    then
-        echo "invalid input args $@"
-        exit -1
-    fi
-    if [ "$2" == "start" ]
-    then
-        retrieveDependency
-        source ${dir}/find-kafka-dependency.sh
-        
-        # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
-        hbase ${KYLIN_EXTRA_START_OPTS} \
-        -Dlog4j.configuration=kylin-log4j.properties\
-        -Dkylin.hive.dependency=${hive_dependency} \
-        -Dkylin.kafka.dependency=${kafka_dependency} \
-        -Dkylin.hbase.dependency=${hbase_dependency} \
-        org.apache.kylin.engine.streaming.cli.StreamingCLI $@ > ${KYLIN_HOME}/logs/streaming_$3_$4.log 2>&1 & echo $! > ${KYLIN_HOME}/logs/$3_$4 &
-        echo "streaming started name: $3 id: $4"
-        exit 0
-    elif [ "$2" == "stop" ]
-    then
-        if [ ! -f "${KYLIN_HOME}/$3_$4" ]
-            then
-                echo "streaming is not running, please check"
-                exit 1
-            fi
-            pid=`cat ${KYLIN_HOME}/$3_$4`
-            if [ "$pid" = "" ]
-            then
-                echo "streaming is not running, please check"
-                exit 1
-            else
-                echo "stopping streaming:$pid"
-                kill $pid
-            fi
-            rm ${KYLIN_HOME}/$3_$4
-            exit 0
-        else
-            echo
-        fi
-
-# monitor command
-elif [ "$1" == "monitor" ]
-then
-    echo "monitor job"
-
-    retrieveDependency
-    source ${dir}/find-kafka-dependency.sh
-    
-    # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
-    hbase ${KYLIN_EXTRA_START_OPTS} \
-    -Dlog4j.configuration=kylin-log4j.properties\
-    -Dkylin.hive.dependency=${hive_dependency} \
-    -Dkylin.kafka.dependency=${kafka_dependency} \
-    -Dkylin.hbase.dependency=${hbase_dependency} \
-    org.apache.kylin.engine.streaming.cli.MonitorCLI $@ > ${KYLIN_HOME}/logs/monitor.log 2>&1
-    exit 0
-
 elif [ "$1" = "version" ]
 then
     exec hbase -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.common.KylinVersion

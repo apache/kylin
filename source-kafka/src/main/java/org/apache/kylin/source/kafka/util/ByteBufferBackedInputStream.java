@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.source.kafka;
+package org.apache.kylin.source.kafka.util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 
 /**
  */
-class ByteBufferBackedInputStream extends InputStream {
+public class ByteBufferBackedInputStream extends InputStream {
 
     private ByteBuffer buf;
 

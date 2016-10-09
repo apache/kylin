@@ -20,7 +20,8 @@ import com.fasterxml.jackson.databind.JavaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import com.fasterxml.jackson.databind.type.MapType;
@@ -31,7 +32,6 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.kafka.TimedJsonStreamParser;
-
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
