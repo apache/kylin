@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -63,7 +64,12 @@ public class UpdateTimeRangeStep extends AbstractExecutable {
         final Path outputFile = new Path(outputPath, partitionCol.getName());
 
         String minValue = null, maxValue = null, currentValue = null;
-        try (FileSystem fs = HadoopUtil.getFileSystem(outputPath); FSDataInputStream inputStream = fs.open(outputFile); BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+        FSDataInputStream inputStream = null;
+        BufferedReader bufferedReader = null;
+        try {
+            FileSystem fs = HadoopUtil.getFileSystem(outputPath);
+            inputStream = fs.open(outputFile);
+            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             minValue = currentValue = bufferedReader.readLine();
             while (currentValue != null) {
                 maxValue = currentValue;
@@ -72,6 +78,9 @@ public class UpdateTimeRangeStep extends AbstractExecutable {
         } catch (IOException e) {
             logger.error("fail to read file " + outputFile, e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
+        } finally {
+            IOUtils.closeQuietly(bufferedReader);
+            IOUtils.closeQuietly(inputStream);
         }
 
         final DataType partitionColType = partitionCol.getType();
