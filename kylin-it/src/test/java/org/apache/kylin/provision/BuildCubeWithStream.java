@@ -276,11 +276,6 @@ public class BuildCubeWithStream {
         HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
     }
 
-    public static void afterClass() throws Exception {
-        cleanupOldStorage();
-        HBaseMetadataTestCase.staticCleanupTestMetadata();
-    }
-
     public void after() {
         kafkaServer.stop();
         DefaultScheduler.destroyInstance();
@@ -301,6 +296,11 @@ public class BuildCubeWithStream {
         }
     }
 
+    public void cleanup() throws Exception {
+        cleanupOldStorage();
+        HBaseMetadataTestCase.staticCleanupTestMetadata();
+    }
+
     private static void cleanupOldStorage() throws Exception {
         String[] args = { "--delete", "true" };
         StorageCleanupJob cli = new StorageCleanupJob();
@@ -314,16 +314,15 @@ public class BuildCubeWithStream {
             buildCubeWithStream = new BuildCubeWithStream();
             buildCubeWithStream.before();
             buildCubeWithStream.build();
+            logger.info("Build is done");
+            buildCubeWithStream.cleanup();
             logger.info("Going to exit");
-            System.exit(0);
         } catch (Throwable e) {
             logger.error("error", e);
-            System.exit(1);
         } finally {
             if (buildCubeWithStream != null) {
                 buildCubeWithStream.after();
             }
-            afterClass();
         }
 
     }
