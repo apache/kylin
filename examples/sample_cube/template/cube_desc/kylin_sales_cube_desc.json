@@ -35,6 +35,16 @@
     "table" : "DEFAULT.KYLIN_SALES",
     "column" : "LSTG_FORMAT_NAME",
     "derived" : null
+  }, {
+    "name" : "USER_ID",
+    "table" : "DEFAULT.KYLIN_SALES",
+    "column" : "USER_ID",
+    "derived" : null
+  }, {
+    "name" : "REGION",
+    "table" : "DEFAULT.KYLIN_SALES",
+    "column" : "REGION",
+    "derived" : null
   } ],
   "measures" : [ {
     "name" : "GMV_SUM",
@@ -144,6 +154,12 @@
     }, {
       "column" : "LSTG_FORMAT_NAME",
       "encoding" : "fixed_length:12"
+    }, {
+      "column" : "USER_ID",
+      "encoding" : "dict"
+    }, {
+      "column" : "REGION",
+      "encoding" : "dict"
     }, {
       "column" : "LSTG_SITE_ID",
       "encoding" : "dict"
