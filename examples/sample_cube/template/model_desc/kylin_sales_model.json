@@ -24,7 +24,7 @@
     "columns" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ]
   }, {
     "table" : "DEFAULT.KYLIN_SALES",
-    "columns" : [ "LSTG_FORMAT_NAME", "SELLER_ID", "PART_DT" ]
+    "columns" : [ "LSTG_FORMAT_NAME", "SELLER_ID", "PART_DT", "USER_ID", "REGION" ]
   } ],
   "metrics": [
     "PRICE",
