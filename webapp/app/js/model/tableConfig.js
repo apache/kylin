@@ -21,7 +21,8 @@ KylinApp.constant('tableConfig', {
     {attr: 'id', name: 'ID'},
     {attr: 'name', name: 'Name'},
     {attr: 'datatype', name: 'Data Type'},
-    {attr: 'cardinality', name: 'Cardinality'}
+    {attr: 'cardinality', name: 'Cardinality'},
+    {attr: 'comment', name: 'Comment'}
   ],
   dataTypes:["tinyint","smallint","int","bigint","float","double","decimal","timestamp","date","string","varchar(256)","char","boolean","binary"]
 

@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 
@@ -51,6 +52,9 @@ public class ColumnDesc implements Serializable {
     private String name;
     @JsonProperty("datatype")
     private String datatype;
+    @JsonProperty("comment")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String comment;
 
     // parsed from data type
     private DataType type;
@@ -107,6 +111,14 @@ public class ColumnDesc implements Serializable {
 
     public void setTable(TableDesc table) {
         this.table = table;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     public DataType getType() {
@@ -195,6 +207,7 @@ public class ColumnDesc implements Serializable {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", datatype='" + datatype + '\'' +
+                ", comment='" + comment + '\'' +
                 '}';
     }
 }

@@ -20,11 +20,11 @@ DROP TABLE IF EXISTS DEFAULT.KYLIN_CAL_DT;
 
 CREATE TABLE DEFAULT.KYLIN_CAL_DT
 (
-CAL_DT date
-,YEAR_BEG_DT date
-,QTR_BEG_DT date
-,MONTH_BEG_DT date
-,WEEK_BEG_DT date
+CAL_DT date COMMENT 'Date, PK'
+,YEAR_BEG_DT date COMMENT 'YEAR Begin Date'
+,QTR_BEG_DT date COMMENT 'Quarter Begin Date'
+,MONTH_BEG_DT date COMMENT 'Month Begin Date'
+,WEEK_BEG_DT date COMMENT 'Week Begin Date'
 ,AGE_FOR_YEAR_ID smallint
 ,AGE_FOR_QTR_ID smallint
 ,AGE_FOR_MONTH_ID smallint
@@ -121,6 +121,7 @@ CAL_DT date
 ,UPD_DATE string
 ,UPD_USER string
 )
+COMMENT 'Date Dimension Table'
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE;
 
@@ -128,28 +129,28 @@ DROP TABLE IF EXISTS DEFAULT.KYLIN_CATEGORY_GROUPINGS;
 
 CREATE TABLE DEFAULT.KYLIN_CATEGORY_GROUPINGS
 (
-LEAF_CATEG_ID bigint
+LEAF_CATEG_ID bigint COMMENT 'Category ID, PK'
 ,LEAF_CATEG_NAME string
-,SITE_ID int
+,SITE_ID int COMMENT 'Site ID, PK'
 ,CATEG_BUSN_MGR string
 ,CATEG_BUSN_UNIT string
 ,REGN_CATEG string
-,USER_DEFINED_FIELD1 string
-,USER_DEFINED_FIELD3 string
+,USER_DEFINED_FIELD1 string COMMENT 'User Defined Field1'
+,USER_DEFINED_FIELD3 string COMMENT 'User Defined Field3'
 ,CRE_DATE string
-,UPD_DATE string
+,UPD_DATE string COMMENT 'Last Updated Date'
 ,CRE_USER string
-,UPD_USER string
+,UPD_USER string COMMENT 'Last Updated User'
 ,META_CATEG_ID decimal
-,META_CATEG_NAME string
+,META_CATEG_NAME string COMMENT 'Level1 Category'
 ,CATEG_LVL2_ID decimal
 ,CATEG_LVL3_ID decimal
 ,CATEG_LVL4_ID decimal
 ,CATEG_LVL5_ID decimal
 ,CATEG_LVL6_ID decimal
 ,CATEG_LVL7_ID decimal
-,CATEG_LVL2_NAME string
-,CATEG_LVL3_NAME string
+,CATEG_LVL2_NAME string COMMENT 'Level2 Category'
+,CATEG_LVL3_NAME string COMMENT 'Level3 Category'
 ,CATEG_LVL4_NAME string
 ,CATEG_LVL5_NAME string
 ,CATEG_LVL6_NAME string
@@ -165,6 +166,7 @@ LEAF_CATEG_ID bigint
 ,SRC_ID tinyint
 ,BSNS_VRTCL_NAME string
 )
+COMMENT 'Detail category inforamtion, Dimension Table'
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE;
 
@@ -173,17 +175,18 @@ DROP TABLE IF EXISTS DEFAULT.KYLIN_SALES;
 CREATE TABLE DEFAULT.KYLIN_SALES
 (
 TRANS_ID bigint
-,PART_DT date
-,LSTG_FORMAT_NAME string
-,LEAF_CATEG_ID bigint
-,LSTG_SITE_ID int
+,PART_DT date COMMENT 'Order Date'
+,LSTG_FORMAT_NAME string COMMENT 'Order Transaction Type'
+,LEAF_CATEG_ID bigint COMMENT 'Category ID'
+,LSTG_SITE_ID int COMMENT 'Site ID'
 ,SLR_SEGMENT_CD smallint
-,PRICE decimal(19,4)
-,ITEM_COUNT bigint
-,SELLER_ID bigint
-,USER_ID string
-,REGION string
+,PRICE decimal(19,4) COMMENT 'Order Price'
+,ITEM_COUNT bigint COMMENT 'Number of Purchased Goods'
+,SELLER_ID bigint COMMENT 'Seller ID'
+,USER_ID string COMMENT 'USER ID'
+,REGION string COMMENT 'REGION'
 )
+COMMENT 'Sales order table, fact table'
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE;
 

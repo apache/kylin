@@ -136,6 +136,10 @@
                     <!--{{ tableModel.selectedSrcTable.cardinality[column.name]}}-->
                     {{column.cardinality}}
                   </td>
+                  <td
+                    style="{{(tableModel.selectedSrcTable.selectedSrcColumn.id == column.id)? 'background-color:#EBF9FE':''}}">
+                    {{ column.comment}}
+                  </td>
                 </tr>
               </table>
             </div>
