@@ -836,8 +836,9 @@ public class CubeManager implements IRealizationProvider {
         if (StringUtils.isBlank(newSegment.getLastBuildJobID()))
             throw new IllegalStateException("For cube " + cube + ", segment " + newSegment + " missing LastBuildJobID");
 
-        if (isReady(newSegment) == true)
-            throw new IllegalStateException("For cube " + cube + ", segment " + newSegment + " state should be NEW but is READY");
+        if (isReady(newSegment) == true) {
+            logger.warn("For cube " + cube + ", segment " + newSegment + " state should be NEW but is READY");
+        }
 
         List<CubeSegment> tobe = calculateToBeSegments(cube, newSegment);
 
