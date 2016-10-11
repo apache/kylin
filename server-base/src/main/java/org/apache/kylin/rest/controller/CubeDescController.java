@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  */
 @Controller
 @RequestMapping(value = "/cube_desc")
-public class CubeDescController {
+public class CubeDescController extends BasicController {
 
     @Autowired
     private CubeService cubeService;

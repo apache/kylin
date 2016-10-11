@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  */
 @Controller
 @RequestMapping(value = "/user")
-public class UserController {
+public class UserController extends BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     @Autowired
