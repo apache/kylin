@@ -22,11 +22,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
@@ -45,6 +48,7 @@ import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.IGTStorage;
+import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,6 +276,26 @@ public abstract class CubeHBaseRPC implements IGTStorage {
             info.append(", No Fuzzy Key");
         }
         logger.info(info.toString());
+    }
+
+    protected int getCoprocessorTimeoutMillis() {
+        int configTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000;
+        if (configTimeout == 0) {
+            configTimeout = Integer.MAX_VALUE;
+        }
+
+        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
+        int rpcTimeout = hconf.getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
+        // final timeout should be smaller than rpc timeout
+        int upper = (int) (rpcTimeout * 0.9);
+
+        int timeout = Math.min(upper, configTimeout);
+        if (BackdoorToggles.getQueryTimeout() != -1) {
+            timeout = Math.min(upper, BackdoorToggles.getQueryTimeout());
+        }
+
+        logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, timeout);
+        return timeout;
     }
 
 }

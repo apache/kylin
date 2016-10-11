@@ -481,10 +481,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
 
-    public float getCubeVisitTimeoutTimes() {
-        return Float.parseFloat(getOptional("kylin.query.cube.visit.timeout.times", "1"));
-    }
-
     public int getBadQueryStackTraceDepth() {
         return Integer.parseInt(getOptional("kylin.query.badquery.stacktrace.depth", "10"));
     }
@@ -535,6 +531,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public double getQueryCoprocessorMemGB() {
         return Double.parseDouble(this.getOptional("kylin.query.coprocessor.mem.gb", "3.0"));
+    }
+
+    public int getQueryCoprocessorTimeoutSeconds() {
+        return Integer.parseInt(this.getOptional("kylin.query.coprocessor.timeout.seconds", "0"));
     }
 
     public boolean isQuerySecureEnabled() {
