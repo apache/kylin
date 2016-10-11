@@ -317,8 +317,10 @@ public class BuildCubeWithStream {
             logger.info("Build is done");
             buildCubeWithStream.cleanup();
             logger.info("Going to exit");
+            System.exit(0);
         } catch (Throwable e) {
             logger.error("error", e);
+            System.exit(1);
         } finally {
             if (buildCubeWithStream != null) {
                 buildCubeWithStream.after();
