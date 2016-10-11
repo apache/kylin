@@ -301,7 +301,7 @@ public class BuildCubeWithStream {
         HBaseMetadataTestCase.staticCleanupTestMetadata();
     }
 
-    private static void cleanupOldStorage() throws Exception {
+    protected void cleanupOldStorage() throws Exception {
         String[] args = { "--delete", "true" };
         StorageCleanupJob cli = new StorageCleanupJob();
         cli.execute(args);
@@ -321,10 +321,6 @@ public class BuildCubeWithStream {
         } catch (Throwable e) {
             logger.error("error", e);
             System.exit(1);
-        } finally {
-            if (buildCubeWithStream != null) {
-                buildCubeWithStream.after();
-            }
         }
 
     }
