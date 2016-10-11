@@ -128,10 +128,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         List<RawScan> rawScans = preparedHBaseScans(scanRequest.getGTScanRanges(), selectedColBlocks);
         rawScanByteString = serializeRawScans(rawScans);
         
+        int coprocessorTimeout = getCoprocessorTimeoutMillis();
+        scanRequest.setTimeout(coprocessorTimeout);
         scanRequest.clearScanRanges();//since raw scans are sent to coprocessor, we don't need to duplicate sending it
-        final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum);
-        scanRequest.setTimeout(epResultItr.getRpcTimeout());
         scanRequestByteString = serializeGTScanReq(scanRequest);
+
+        final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum, coprocessorTimeout);
         
         logger.info("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", scanRequestByteString.size(), rawScanByteString.size());
 

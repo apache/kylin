@@ -26,7 +26,7 @@ public enum StorageSideBehavior {
     SCAN_FILTER, //only scan+filter used,used for profiling filter speed.  Will not return any result
     SCAN_FILTER_AGGR, //aggregate the result.  Will return results
     SCAN_FILTER_AGGR_CHECKMEM, //default full operations. Will return results
-    SCAN_FILTER_AGGR_CHECKMEM_WITHDELAY; // on each scan operation, delay for 10s to simulate slow queries, for test use
+    SCAN_FILTER_AGGR_CHECKMEM_WITHDELAY; // on each scan operation, delay for 10ms to simulate slow queries, for test use
 
     public boolean filterToggledOn() {
         return this.ordinal() >= SCAN_FILTER.ordinal();
