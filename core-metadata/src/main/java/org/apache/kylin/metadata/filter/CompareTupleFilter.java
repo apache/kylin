@@ -75,7 +75,8 @@ public class CompareTupleFilter extends TupleFilter {
             }
             this.column = columnFilter.getColumn();
             // if value is before column, we need to reverse the operator. e.g. "1 >= c1" => "c1 <= 1"
-            if (!this.conditionValues.isEmpty() && needSwapOperator()) {
+            // children.size() > 1 means already added one conditionValue or dynamicVariable
+            if (this.children.size() > 1 && needSwapOperator()) {
                 this.operator = SWAP_OP_MAP.get(this.operator);
                 TupleFilter last = this.children.remove(this.children.size() - 1);
                 this.children.add(0, last);
