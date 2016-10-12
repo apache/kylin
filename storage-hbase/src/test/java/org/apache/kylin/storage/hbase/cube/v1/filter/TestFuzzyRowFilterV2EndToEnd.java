@@ -44,7 +44,6 @@ import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FilterList.Operator;
 import org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy;
 import org.apache.hadoop.hbase.regionserver.HRegion;
-import org.apache.hadoop.hbase.regionserver.Region;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
@@ -225,7 +224,7 @@ public class TestFuzzyRowFilterV2EndToEnd {
         scan.addFamily(cf.getBytes());
         scan.setFilter(filter);
         List<HRegion> regions = TEST_UTIL.getHBaseCluster().getRegions(table.getBytes());
-        Region first = regions.get(0);
+        HRegion first = regions.get(0);
         first.getScanner(scan);
         RegionScanner scanner = first.getScanner(scan);
         List<Cell> results = new ArrayList<Cell>();

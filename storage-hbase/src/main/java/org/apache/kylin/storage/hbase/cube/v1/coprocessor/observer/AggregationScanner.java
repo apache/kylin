@@ -25,7 +25,6 @@ import java.util.List;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
-import org.apache.hadoop.hbase.regionserver.ScannerContext;
 import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.storage.hbase.common.coprocessor.AggrKey;
@@ -117,8 +116,8 @@ public class AggregationScanner implements RegionScanner {
     }
 
     @Override
-    public boolean next(List<Cell> result, ScannerContext scannerContext) throws IOException {
-        return outerScanner.next(result, scannerContext);
+    public boolean next(List<Cell> result, int limit) throws IOException {
+        return outerScanner.next(result, limit);
     }
 
     @Override
@@ -127,8 +126,8 @@ public class AggregationScanner implements RegionScanner {
     }
 
     @Override
-    public boolean nextRaw(List<Cell> result, ScannerContext scannerContext) throws IOException {
-        return outerScanner.nextRaw(result, scannerContext);
+    public boolean nextRaw(List<Cell> result, int limit) throws IOException {
+        return outerScanner.nextRaw(result, limit);
     }
 
     @Override
@@ -159,11 +158,6 @@ public class AggregationScanner implements RegionScanner {
     @Override
     public long getMvccReadPoint() {
         return outerScanner.getMvccReadPoint();
-    }
-
-    @Override
-    public int getBatch() {
-        return outerScanner.getBatch();
     }
 
     private static class Stats {
