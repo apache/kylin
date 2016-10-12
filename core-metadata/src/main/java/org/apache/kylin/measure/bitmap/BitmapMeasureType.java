@@ -39,6 +39,7 @@ import org.apache.kylin.metadata.model.TblColRef;
  */
 public class BitmapMeasureType extends MeasureType<BitmapCounter> {
     public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
+    public static final String FUNC_INTERSECT_COUNT_DISTINCT = "INTERSECT_COUNT";
     public static final String DATATYPE_BITMAP = "bitmap";
 
     public static class Factory extends MeasureTypeFactory<BitmapCounter> {
@@ -157,6 +158,14 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
     @Override
     public Class<?> getRewriteCalciteAggrFunctionClass() {
+        return BitmapDistinctCountAggFunc.class;
+    }
+
+    @Override
+    public Class<?> getRewriteCalciteAggrFunctionClass(String callName) {
+        if (callName != null && callName.equalsIgnoreCase(FUNC_INTERSECT_COUNT_DISTINCT)) {
+            return BitmapIntersectDistinctCountAggFunc.class;
+        }
         return BitmapDistinctCountAggFunc.class;
     }
 

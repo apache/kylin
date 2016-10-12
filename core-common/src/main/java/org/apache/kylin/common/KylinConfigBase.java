@@ -765,7 +765,9 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public Map<String, String> getUDFs() {
-        return getPropertiesByPrefix("kylin.query.udf.");
+        Map<String, String> udfMap = getPropertiesByPrefix("kylin.query.udf.");
+        udfMap.put("intersect_count", "org.apache.kylin.measure.bitmap.BitmapIntersectDistinctCountAggFunc");
+        return udfMap;
     }
 
     public int getHBaseMaxConnectionThreads() {

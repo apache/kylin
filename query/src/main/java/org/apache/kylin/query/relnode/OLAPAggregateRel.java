@@ -56,6 +56,7 @@ import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -79,6 +80,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         AGGR_FUNC_MAP.put("$SUM0", "SUM");
         AGGR_FUNC_MAP.put("COUNT", "COUNT");
         AGGR_FUNC_MAP.put("COUNT_DISTINCT", "COUNT_DISTINCT");
+        AGGR_FUNC_MAP.put(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT, "COUNT_DISTINCT");
         AGGR_FUNC_MAP.put("MAX", "MAX");
         AGGR_FUNC_MAP.put("MIN", "MIN");
 
@@ -223,6 +225,15 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (int i = getGroupSet().nextSetBit(0); i >= 0; i = getGroupSet().nextSetBit(i + 1)) {
             Set<TblColRef> columns = inputColumnRowType.getSourceColumnsByIndex(i);
             this.groups.addAll(columns);
+        }
+        // Some UDAF may group data by itself, add group key into groups, prevents aggregate at cube storage server side
+        for (AggregateCall aggCall : this.rewriteAggCalls) {
+            String aggregateName = aggCall.getAggregation().getName();
+            if (aggregateName.equalsIgnoreCase(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)) {
+                int index = aggCall.getArgList().get(1);
+                TblColRef column = inputColumnRowType.getColumnByIndex(index);
+                groups.add(column);
+            }
         }
     }
 
@@ -380,16 +391,17 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         }
 
         // rebuild function
+        String callName = aggCall.getAggregation().getName();
         RelDataType fieldType = aggCall.getType();
         SqlAggFunction newAgg = aggCall.getAggregation();
         if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;
         } else if (func.getMeasureType().getRewriteCalciteAggrFunctionClass() != null) {
-            newAgg = createCustomAggFunction(func.getExpression(), fieldType, func.getMeasureType().getRewriteCalciteAggrFunctionClass());
+            newAgg = createCustomAggFunction(callName, fieldType, func.getMeasureType().getRewriteCalciteAggrFunctionClass(callName));
         }
 
         // rebuild aggregate call
-        AggregateCall newAggCall = new AggregateCall(newAgg, false, newArgList, fieldType, newAgg.getName());
+        AggregateCall newAggCall = new AggregateCall(newAgg, false, newArgList, fieldType, callName);
         return newAggCall;
     }
 

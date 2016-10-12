@@ -115,6 +115,11 @@ abstract public class MeasureType<T> {
     /** Returns a Calcite aggregation function implementation class */
     abstract public Class<?> getRewriteCalciteAggrFunctionClass();
 
+    /** Some measure may return different class depends on call name, eg. BitmapMeasureType */
+    public Class<?> getRewriteCalciteAggrFunctionClass(String callName) {
+        return getRewriteCalciteAggrFunctionClass();
+    }
+
     /* ============================================================================
      * Storage
      * ---------------------------------------------------------------------------- */

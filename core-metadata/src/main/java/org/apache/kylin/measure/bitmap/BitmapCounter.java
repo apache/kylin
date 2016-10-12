@@ -47,6 +47,12 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         bitmap.clear();
     }
 
+    public BitmapCounter clone() {
+        BitmapCounter newCounter = new BitmapCounter();
+        newCounter.bitmap = bitmap.clone();
+        return newCounter;
+    }
+
     public void add(int value) {
         bitmap.add(value);
     }
@@ -72,6 +78,10 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
 
     public void merge(BitmapCounter another) {
         this.bitmap.or(another.bitmap);
+    }
+
+    public void intersect(BitmapCounter another) {
+        this.bitmap.and(another.bitmap);
     }
 
     public long getCount() {
@@ -103,6 +113,28 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
             bitmap.deserialize(input);
         } finally {
             IOUtils.closeQuietly(input);
+        }
+    }
+
+    @Override
+    public String toString() {
+        long count = getCount();
+        if (count <= 10) {
+            return "(" + count + ")" + bitmap.toString();
+        } else {
+            StringBuilder sb = new StringBuilder();
+            sb.append("(").append(count).append("){");
+            int values = 0;
+            for (Integer v : bitmap) {
+                if (values++ < 10) {
+                    sb.append(v).append(",");
+                } else {
+                    sb.append("...");
+                    break;
+                }
+            }
+            sb.append("}");
+            return sb.toString();
         }
     }
 

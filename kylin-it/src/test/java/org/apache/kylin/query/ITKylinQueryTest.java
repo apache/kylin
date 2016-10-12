@@ -355,4 +355,10 @@ public class ITKylinQueryTest extends KylinTestBase {
         this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_window");
     }
 
+    @Test
+    public void testIntersectCountQuery() throws Exception {
+        // cannot compare coz H2 does not support intersect count yet..
+        this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_intersect_count");
+    }
+
 }
