@@ -133,7 +133,16 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                     continue;
                 }
             }
-            scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context, getGTStorage());
+            try {
+                scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context, getGTStorage());
+            } catch (IllegalArgumentException ex) {
+                // ref KYLIN-1967, real empty segment can trigger dictionary exception -- IllegalArgumentException: Value not exists!
+                if (cubeSeg.getInputRecords() == 0) {
+                    logger.warn("cube segment {} input record is 0, skip it still", cubeSeg);
+                    continue;
+                }
+                throw ex;
+            }
             scanners.add(scanner);
         }
 

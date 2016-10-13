@@ -69,6 +69,8 @@ public class CubeSegmentScanner implements IGTScanner {
         CubeScanRangePlanner scanRangePlanner;
         try {
             scanRangePlanner = new CubeScanRangePlanner(cubeSeg, cuboid, filter, dimensions, groups, metrics, context);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
