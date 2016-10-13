@@ -461,11 +461,6 @@ public class MetadataManager {
         reloadSourceTableAt(TableDesc.concatResourcePath(tableIdentity));
     }
 
-    public void reloadTableCache(String tableIdentity) throws IOException {
-        reloadSourceTableExt(tableIdentity);
-        reloadSourceTable(tableIdentity);
-    }
-
     public DataModelDesc getDataModelDesc(String name) {
         return dataModelDescMap.get(name);
     }
@@ -620,31 +615,6 @@ public class MetadataManager {
         String path = TableDesc.concatExdResourcePath(tableIdentity);
         getStore().deleteResource(path);
         srcTableExdMap.remove(tableIdentity);
-    }
-
-    public String appendDBName(String table) {
-
-        if (table.indexOf(".") > 0)
-            return table;
-
-        Map<String, TableDesc> map = getAllTablesMap();
-
-        int count = 0;
-        String result = null;
-        for (TableDesc t : map.values()) {
-            if (t.getName().equalsIgnoreCase(table)) {
-                result = t.getIdentity();
-                count++;
-            }
-        }
-
-        if (count == 1)
-            return result;
-
-        if (count > 1) {
-            logger.warn("There are more than 1 table named with '" + table + "' in different database; The program couldn't determine, randomly pick '" + result + "'");
-        }
-        return result;
     }
 
 }
