@@ -25,10 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
@@ -37,10 +34,8 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 /**
@@ -54,25 +49,27 @@ public class HiveSourceTableLoader {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveSourceTableLoader.class);
 
+    public static final String OUTPUT_SURFIX = "json";
+    public static final String TABLE_FOLDER_NAME = "table";
+    public static final String TABLE_EXD_FOLDER_NAME = "table_exd";
+
     public static Set<String> reloadHiveTables(String[] hiveTables, KylinConfig config) throws IOException {
 
-        SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
-        for (String fullTableName : hiveTables) {
-            String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
-            db2tables.put(parts[0], parts[1]);
-        }
-
-        HiveClient hiveClient = new HiveClient();
-        SchemaChecker checker = new SchemaChecker(hiveClient, MetadataManager.getInstance(config), CubeManager.getInstance(config));
-        for (Map.Entry<String, String> entry : db2tables.entries()) {
-            SchemaChecker.CheckResult result = checker.allowReload(entry.getKey(), entry.getValue());
-            result.raiseExceptionWhenInvalid();
+        Map<String, Set<String>> db2tables = Maps.newHashMap();
+        for (String table : hiveTables) {
+            String[] parts = HadoopUtil.parseHiveTableName(table);
+            Set<String> set = db2tables.get(parts[0]);
+            if (set == null) {
+                set = Sets.newHashSet();
+                db2tables.put(parts[0], set);
+            }
+            set.add(parts[1]);
         }
 
         // extract from hive
         Set<String> loadedTables = Sets.newHashSet();
         for (String database : db2tables.keySet()) {
-            List<String> loaded = extractHiveTables(database, db2tables.get(database), hiveClient);
+            List<String> loaded = extractHiveTables(database, db2tables.get(database), config);
             loadedTables.addAll(loaded);
         }
 
@@ -85,29 +82,19 @@ public class HiveSourceTableLoader {
         metaMgr.removeTableExd(hiveTable);
     }
 
-    private static List<String> extractHiveTables(String database, Set<String> tables, HiveClient hiveClient) throws IOException {
+    private static List<String> extractHiveTables(String database, Set<String> tables, KylinConfig config) throws IOException {
 
         List<String> loadedTables = Lists.newArrayList();
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         for (String tableName : tables) {
-            Table table = null;
-            List<FieldSchema> partitionFields = null;
-            List<FieldSchema> fields = null;
+            IHiveClient hiveClient = HiveClientFactory.getHiveClient();
+            HiveTableMeta hiveTableMeta;
             try {
-                table = hiveClient.getHiveTable(database, tableName);
-                partitionFields = table.getPartitionKeys();
-                fields = hiveClient.getHiveTableFields(database, tableName);
+                hiveTableMeta = hiveClient.getHiveTableMeta(database, tableName);
             } catch (Exception e) {
-                e.printStackTrace();
-                throw new IOException(e);
+                throw new RuntimeException("cannot get HiveTableMeta", e);
             }
 
-            if (fields != null && partitionFields != null && partitionFields.size() > 0) {
-                fields.addAll(partitionFields);
-            }
-
-            long tableSize = hiveClient.getFileSizeForTable(table);
-            long tableFileNum = hiveClient.getFileNumberForTable(table);
             TableDesc tableDesc = metaMgr.getTableDesc(database + "." + tableName);
             if (tableDesc == null) {
                 tableDesc = new TableDesc();
@@ -116,33 +103,32 @@ public class HiveSourceTableLoader {
                 tableDesc.setUuid(UUID.randomUUID().toString());
                 tableDesc.setLastModified(0);
             }
-            if (table.getTableType() != null) {
-                tableDesc.setTableType(table.getTableType());
+            if (hiveTableMeta.tableType != null) {
+                tableDesc.setTableType(hiveTableMeta.tableType);
             }
 
-            int columnNumber = fields.size();
+            int columnNumber = hiveTableMeta.allColumns.size();
             List<ColumnDesc> columns = new ArrayList<ColumnDesc>(columnNumber);
             for (int i = 0; i < columnNumber; i++) {
-                FieldSchema field = fields.get(i);
+                HiveTableMeta.HiveTableColumnMeta field = hiveTableMeta.allColumns.get(i);
                 ColumnDesc cdesc = new ColumnDesc();
-                cdesc.setName(field.getName().toUpperCase());
+                cdesc.setName(field.name.toUpperCase());
                 // use "double" in kylin for "float"
-                if ("float".equalsIgnoreCase(field.getType())) {
+                if ("float".equalsIgnoreCase(field.dataType)) {
                     cdesc.setDatatype("double");
                 } else {
-                    cdesc.setDatatype(field.getType());
+                    cdesc.setDatatype(field.dataType);
                 }
                 cdesc.setId(String.valueOf(i + 1));
-                cdesc.setComment(field.getComment());
                 columns.add(cdesc);
             }
             tableDesc.setColumns(columns.toArray(new ColumnDesc[columnNumber]));
 
             StringBuffer partitionColumnString = new StringBuffer();
-            for (int i = 0, n = partitionFields.size(); i < n; i++) {
+            for (int i = 0, n = hiveTableMeta.partitionColumns.size(); i < n; i++) {
                 if (i > 0)
                     partitionColumnString.append(", ");
-                partitionColumnString.append(partitionFields.get(i).getName().toUpperCase());
+                partitionColumnString.append(hiveTableMeta.partitionColumns.get(i).name.toUpperCase());
             }
 
             Map<String, String> map = metaMgr.getTableDescExd(tableDesc.getIdentity());
@@ -150,16 +136,16 @@ public class HiveSourceTableLoader {
             if (map == null) {
                 map = Maps.newHashMap();
             }
-            map.put(MetadataConstants.TABLE_EXD_TABLENAME, table.getTableName());
-            map.put(MetadataConstants.TABLE_EXD_LOCATION, table.getSd().getLocation());
-            map.put(MetadataConstants.TABLE_EXD_IF, table.getSd().getInputFormat());
-            map.put(MetadataConstants.TABLE_EXD_OF, table.getSd().getOutputFormat());
-            map.put(MetadataConstants.TABLE_EXD_OWNER, table.getOwner());
-            map.put(MetadataConstants.TABLE_EXD_LAT, String.valueOf(table.getLastAccessTime()));
+            map.put(MetadataConstants.TABLE_EXD_TABLENAME, hiveTableMeta.tableName);
+            map.put(MetadataConstants.TABLE_EXD_LOCATION, hiveTableMeta.sdLocation);
+            map.put(MetadataConstants.TABLE_EXD_IF, hiveTableMeta.sdInputFormat);
+            map.put(MetadataConstants.TABLE_EXD_OF, hiveTableMeta.sdOutputFormat);
+            map.put(MetadataConstants.TABLE_EXD_OWNER, hiveTableMeta.owner);
+            map.put(MetadataConstants.TABLE_EXD_LAT, String.valueOf(hiveTableMeta.lastAccessTime));
             map.put(MetadataConstants.TABLE_EXD_PC, partitionColumnString.toString());
-            map.put(MetadataConstants.TABLE_EXD_TFS, String.valueOf(tableSize));
-            map.put(MetadataConstants.TABLE_EXD_TNF, String.valueOf(tableFileNum));
-            map.put(MetadataConstants.TABLE_EXD_PARTITIONED, Boolean.valueOf(partitionFields != null && partitionFields.size() > 0).toString());
+            map.put(MetadataConstants.TABLE_EXD_TFS, String.valueOf(hiveTableMeta.fileSize));
+            map.put(MetadataConstants.TABLE_EXD_TNF, String.valueOf(hiveTableMeta.fileNum));
+            map.put(MetadataConstants.TABLE_EXD_PARTITIONED, Boolean.valueOf(hiveTableMeta.partitionColumns.size() > 0).toString());
 
             metaMgr.saveSourceTable(tableDesc);
             metaMgr.saveTableExd(tableDesc.getIdentity(), map);
@@ -168,4 +154,5 @@ public class HiveSourceTableLoader {
 
         return loadedTables;
     }
+
 }

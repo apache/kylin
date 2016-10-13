@@ -21,7 +21,6 @@ package org.apache.kylin.source.hive;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.common.StatsSetupConst;
@@ -35,61 +34,27 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import com.google.common.collect.Lists;
+
 /**
  * Hive meta API client for Kylin
  * @author shaoshi
  *
  */
-public class HiveClient {
+public class CLIHiveClient implements IHiveClient {
 
     protected HiveConf hiveConf = null;
     protected Driver driver = null;
     protected HiveMetaStoreClient metaStoreClient = null;
 
-    public HiveClient() {
-        hiveConf = new HiveConf(HiveClient.class);
-    }
-
-    public HiveClient(Map<String, String> configMap) {
-        this();
-        appendConfiguration(configMap);
-    }
-
-    public HiveConf getHiveConf() {
-        return hiveConf;
+    public CLIHiveClient() {
+        hiveConf = new HiveConf(CLIHiveClient.class);
     }
 
     /**
-     * Get the hive ql driver to execute ddl or dml
-     * @return
+     * only used by Deploy Util
      */
-    private Driver getDriver() {
-        if (driver == null) {
-            driver = new Driver(hiveConf);
-            SessionState.start(new CliSessionState(hiveConf));
-        }
-
-        return driver;
-    }
-
-    /**
-     * Append or overwrite the default hive client configuration; You need call this before invoke #executeHQL;
-     * @param configMap
-     */
-    public void appendConfiguration(Map<String, String> configMap) {
-        if (configMap != null && configMap.size() > 0) {
-            for (Entry<String, String> e : configMap.entrySet()) {
-                hiveConf.set(e.getKey(), e.getValue());
-            }
-        }
-    }
-
-    /**
-     * 
-     * @param hql
-     * @throws CommandNeedRetryException
-     * @throws IOException
-     */
+    @Override
     public void executeHQL(String hql) throws CommandNeedRetryException, IOException {
         CommandProcessorResponse response = getDriver().run(hql);
         int retCode = response.getResponseCode();
@@ -99,9 +64,63 @@ public class HiveClient {
         }
     }
 
+    /**
+     * only used by Deploy Util
+     */
+    @Override
     public void executeHQL(String[] hqls) throws CommandNeedRetryException, IOException {
         for (String sql : hqls)
             executeHQL(sql);
+    }
+
+    @Override
+    public HiveTableMeta getHiveTableMeta(String database, String tableName) throws Exception {
+        HiveTableMetaBuilder builder = new HiveTableMetaBuilder();
+        Table table = getMetaStoreClient().getTable(database, tableName);
+
+        List<FieldSchema> allFields = getMetaStoreClient().getFields(database, tableName);
+        List<FieldSchema> partitionFields = table.getPartitionKeys();
+        if (allFields == null) {
+            allFields = Lists.newArrayList();
+        }
+        if (partitionFields != null && partitionFields.size() > 0) {
+            allFields.addAll(partitionFields);
+        }
+        List<HiveTableMeta.HiveTableColumnMeta> allColumns = Lists.newArrayList();
+        List<HiveTableMeta.HiveTableColumnMeta> partitionColumns = Lists.newArrayList();
+        for (FieldSchema fieldSchema : allFields) {
+            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType()));
+        }
+        if (partitionFields != null && partitionFields.size() > 0) {
+            for (FieldSchema fieldSchema : partitionFields) {
+                partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType()));
+            }
+        }
+        builder.setAllColumns(allColumns);
+        builder.setPartitionColumns(partitionColumns);
+
+        builder.setSdLocation(table.getSd().getLocation());
+        builder.setFileSize(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.TOTAL_SIZE));
+        builder.setFileNum(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES));
+        builder.setIsNative(!MetaStoreUtils.isNonNativeTable(table));
+        builder.setTableName(tableName);
+        builder.setSdInputFormat(table.getSd().getInputFormat());
+        builder.setSdOutputFormat(table.getSd().getOutputFormat());
+        builder.setOwner(table.getOwner());
+        builder.setLastAccessTime(table.getLastAccessTime());
+        builder.setTableType(table.getTableType());
+
+        return builder.createHiveTableMeta();
+    }
+
+    @Override
+    public List<String> getHiveDbNames() throws Exception {
+        return getMetaStoreClient().getAllDatabases();
+    }
+
+    @Override
+    public List<String> getHiveTableNames(String database) throws Exception {
+        return getMetaStoreClient().getAllTables(database);
     }
 
     private HiveMetaStoreClient getMetaStoreClient() throws Exception {
@@ -109,35 +128,6 @@ public class HiveClient {
             metaStoreClient = new HiveMetaStoreClient(hiveConf);
         }
         return metaStoreClient;
-    }
-
-    public Table getHiveTable(String database, String tableName) throws Exception {
-        return getMetaStoreClient().getTable(database, tableName);
-    }
-
-    public List<FieldSchema> getHiveTableFields(String database, String tableName) throws Exception {
-        return getMetaStoreClient().getFields(database, tableName);
-    }
-
-    public String getHiveTableLocation(String database, String tableName) throws Exception {
-        Table t = getHiveTable(database, tableName);
-        return t.getSd().getLocation();
-    }
-
-    public long getFileSizeForTable(Table table) {
-        return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.TOTAL_SIZE);
-    }
-
-    public long getFileNumberForTable(Table table) {
-        return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES);
-    }
-
-    public List<String> getHiveDbNames() throws Exception {
-        return getMetaStoreClient().getAllDatabases();
-    }
-
-    public List<String> getHiveTableNames(String database) throws Exception {
-        return getMetaStoreClient().getAllTables(database);
     }
 
     /**
@@ -150,7 +140,7 @@ public class HiveClient {
      *          - type of stats
      * @return value of stats
      */
-    public static long getBasicStatForTable(org.apache.hadoop.hive.ql.metadata.Table table, String statType) {
+    private long getBasicStatForTable(org.apache.hadoop.hive.ql.metadata.Table table, String statType) {
         Map<String, String> params = table.getParameters();
         long result = 0;
 
@@ -164,7 +154,16 @@ public class HiveClient {
         return result;
     }
 
-    public boolean isNativeTable(String database, String tableName) throws Exception {
-        return !MetaStoreUtils.isNonNativeTable(getMetaStoreClient().getTable(database, tableName));
+    /**
+     * Get the hive ql driver to execute ddl or dml
+     * @return
+     */
+    private Driver getDriver() {
+        if (driver == null) {
+            driver = new Driver(hiveConf);
+            SessionState.start(new CliSessionState(hiveConf));
+        }
+
+        return driver;
     }
 }
