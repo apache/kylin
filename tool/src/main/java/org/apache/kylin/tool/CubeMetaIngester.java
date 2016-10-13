@@ -132,11 +132,16 @@ public class CubeMetaIngester extends AbstractApplication {
         checkAndMark(srcMetadataManager, srcHybridManager, srcCubeManager, srcCubeDescManager);
         ResourceTool.copy(srcConfig, kylinConfig, Lists.newArrayList(requiredResources));
 
+        //clear the cache
+        metadataManager.reload();
+
         for (TableDesc tableDesc : srcMetadataManager.listAllTables()) {
+            logger.info("add " + tableDesc + " to " + targetProjectName);
             projectManager.addTableDescToProject(Lists.newArrayList(tableDesc.getIdentity()).toArray(new String[0]), targetProjectName);
         }
 
         for (CubeInstance cube : srcCubeManager.listAllCubes()) {
+            logger.info("add " + cube + " to " + targetProjectName);
             projectManager.updateModelToProject(cube.getDataModelDesc().getName(), targetProjectName);
             projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), targetProjectName, null);
         }
