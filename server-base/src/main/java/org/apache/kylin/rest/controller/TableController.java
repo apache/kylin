@@ -47,7 +47,8 @@ import org.apache.kylin.rest.service.KafkaConfigService;
 import org.apache.kylin.rest.service.ModelService;
 import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.rest.service.StreamingService;
-import org.apache.kylin.source.hive.HiveClient;
+import org.apache.kylin.source.hive.HiveClientFactory;
+import org.apache.kylin.source.hive.IHiveClient;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,7 +190,7 @@ public class TableController extends BasicController {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
         TableDesc desc = cubeMgmtService.getMetadataManager().getTableDesc(tableName);
-        if(desc == null)
+        if (desc == null)
             return false;
         tableType = desc.getSourceType();
 
@@ -312,7 +313,7 @@ public class TableController extends BasicController {
     @RequestMapping(value = "/hive", method = { RequestMethod.GET })
     @ResponseBody
     private static List<String> showHiveDatabases() throws IOException {
-        HiveClient hiveClient = new HiveClient();
+        IHiveClient hiveClient = HiveClientFactory.getHiveClient();
         List<String> results = null;
 
         try {
@@ -333,7 +334,7 @@ public class TableController extends BasicController {
     @RequestMapping(value = "/hive/{database}", method = { RequestMethod.GET })
     @ResponseBody
     private static List<String> showHiveTables(@PathVariable String database) throws IOException {
-        HiveClient hiveClient = new HiveClient();
+        IHiveClient hiveClient = HiveClientFactory.getHiveClient();
         List<String> results = null;
 
         try {
