@@ -200,7 +200,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             kylinHiveDependency = kylinHiveDependency.replace(":", ",");
 
             logger.info("Hive Dependencies Before Filtered: " + kylinHiveDependency);
-            String filteredHive = filterKylinHiveDependency(kylinHiveDependency);
+            //String filteredHive = filterKylinHiveDependency(kylinHiveDependency);
+            String filteredHive = kylinHiveDependency;
             logger.info("Hive Dependencies After Filtered: " + filteredHive);
 
             StringUtil.appendWithSeparator(kylinDependency, filteredHive);
