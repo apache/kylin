@@ -20,6 +20,6 @@ package org.apache.kylin.metadata.realization;
 
 public enum RealizationStatusEnum {
 
-    DISABLED, READY, DESCBROKEN
+    DISABLED, READY, BROKEN
 
 }

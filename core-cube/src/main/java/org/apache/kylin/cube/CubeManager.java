@@ -994,12 +994,12 @@ public class CubeManager implements IRealizationProvider {
             checkNotNull(cubeDesc, "cube descriptor '%s' (for cube '%s') not found", cube.getDescName(), cubeName);
 
             if (!cubeDesc.getError().isEmpty()) {
-                cube.setStatus(RealizationStatusEnum.DESCBROKEN);
+                cube.setStatus(RealizationStatusEnum.BROKEN);
                 logger.warn("cube descriptor {} (for cube '{}') is broken", cubeDesc.getResourcePath(), cubeName);
 
-            } else if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
+            } else if (cube.getStatus() == RealizationStatusEnum.BROKEN) {
                 cube.setStatus(RealizationStatusEnum.DISABLED);
-                logger.info("cube {} changed from DESCBROKEN to DISABLED", cubeName);
+                logger.info("cube {} changed from BROKEN to DISABLED", cubeName);
             }
 
             cube.setConfig((KylinConfigExt) cubeDesc.getConfig());
