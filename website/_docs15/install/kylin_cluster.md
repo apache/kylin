@@ -1,6 +1,6 @@
 ---
 layout: docs15
-title:  "Deploy in cluster mode"
+title:  "Deploy in Cluster Mode"
 categories: install
 permalink: /docs15/install/kylin_cluster.html
 ---
