@@ -152,7 +152,14 @@ public class SchemaChecker {
         }
     }
 
-    private List<String> checkAllUsedColumns(CubeInstance cube, TableDesc table, Map<String, FieldSchema> fieldsMap) {
+    /**
+     * check whether all columns used in `cube` has compatible schema in current hive schema denoted by `fieldsMap`.
+     * @param cube cube to check, must use `table` in its model
+     * @param table kylin's table metadata
+     * @param fieldsMap current hive schema of `table`
+     * @return true if all columns used in `cube` has compatible schema with `fieldsMap`, false otherwise
+     */
+    private List<String> checkAllColumnsInCube(CubeInstance cube, TableDesc table, Map<String, FieldSchema> fieldsMap) {
         Set<ColumnDesc> usedColumns = Sets.newHashSet();
         for (TblColRef col : cube.getAllColumns()) {
             usedColumns.add(col.getColumnDesc());
@@ -170,8 +177,15 @@ public class SchemaChecker {
         return violateColumns;
     }
 
-    private boolean checkAllColumns(TableDesc table, List<FieldSchema> fields) {
-        if (table.getColumnCount() != fields.size()) {
+    /**
+     * check whether all columns in `table` are still in `fields` and have the same index as before.
+     *
+     * @param table kylin's table metadata
+     * @param fields current table metadata in hive
+     * @return true if only new columns are appended in hive, false otherwise
+     */
+    private boolean checkAllColumnsInTableDesc(TableDesc table, List<FieldSchema> fields) {
+        if (table.getColumnCount() > fields.size()) {
             return false;
         }
 
@@ -212,15 +226,16 @@ public class SchemaChecker {
             // if user reloads a fact table used by cube, then all used columns
             // must match current schema
             if (factTable.getIdentity().equals(fullTableName)) {
-                List<String> violateColumns = checkAllUsedColumns(cube, factTable, currentFieldsMap);
+                List<String> violateColumns = checkAllColumnsInCube(cube, factTable, currentFieldsMap);
                 if (!violateColumns.isEmpty()) {
                     issues.add(format("Column %s used in cube[%s] and model[%s], but changed in hive", violateColumns, cube.getName(), modelName));
                 }
             }
 
-            // if user reloads a lookup table used by cube, then nearly all changes in schema are disallowed)
+            // if user reloads a lookup table used by cube, only append column(s) are allowed, all existing columns
+            // must be the same (except compatible type changes)
             for (TableDesc lookupTable : lookupTables) {
-                if (lookupTable.getIdentity().equals(fullTableName) && !checkAllColumns(lookupTable, currentFields)) {
+                if (lookupTable.getIdentity().equals(fullTableName) && !checkAllColumnsInTableDesc(lookupTable, currentFields)) {
                     issues.add(format("Table '%s' is used as Lookup Table in cube[%s] and model[%s], but changed in hive", lookupTable.getIdentity(), cube.getName(), modelName));
                 }
             }
