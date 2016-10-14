@@ -153,7 +153,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     // in a temporary broken state, so that user can edit and fix it. Broken state is often due to
     // schema changes at source.
     public boolean allowBrokenDescriptor() {
-        return (getStatus() == RealizationStatusEnum.DISABLED  || getStatus() == RealizationStatusEnum.BROKEN) && segments.isEmpty();
+        return (getStatus() == RealizationStatusEnum.DISABLED  || getStatus() == RealizationStatusEnum.DESCBROKEN) && segments.isEmpty();
     }
 
     public String getResourcePath() {

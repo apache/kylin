@@ -339,7 +339,7 @@ public class CubeController extends BasicController {
         if (cube == null) {
             throw new BadRequestException("Cannot find cube " + cubeName);
         }
-        if (cube.getStatus() == RealizationStatusEnum.BROKEN) {
+        if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
             throw new BadRequestException("Broken cube can't be cloned");
         }
 

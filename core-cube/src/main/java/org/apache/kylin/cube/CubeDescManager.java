@@ -158,10 +158,10 @@ public class CubeDescManager {
         cubeDescMap.putLocal(ndesc.getName(), ndesc);
         Cuboid.reloadCache(name);
 
-        // if related cube is in BROKEN state before, change it back to DISABLED
+        // if related cube is in DESCBROKEN state before, change it back to DISABLED
         CubeManager cubeManager = CubeManager.getInstance(config);
         for (CubeInstance cube : cubeManager.getCubesByDesc(name)) {
-            if (cube.getStatus() == RealizationStatusEnum.BROKEN) {
+            if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
                 cubeManager.reloadCubeLocal(cube.getName());
             }
         }
