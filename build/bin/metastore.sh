@@ -24,11 +24,12 @@
 # take a look at SandboxMetastoreCLI
 
 
-dir=$(dirname ${0})
+dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
-# We should set KYLIN_HOME here for multiple tomcat instsances that are on the same node.
-# In addition, we should set a KYLIN_HOME for the global use as normal.
-export KYLIN_HOME=${dir}/../
+# set KYLIN_HOME with consideration for multiple instances that are on the same node
+KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
+export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
+dir="$KYLIN_HOME/bin"
 
 source ${dir}/check-env.sh
 
