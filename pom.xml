@@ -124,7 +124,7 @@
         </sonar.jacoco.excludes>
 
         <!-- JVM Args for Testing -->
-        <argLine>-Xms1G -Xmx2G -XX:MaxPermSize=512M</argLine>
+        <argLine>-Xms1G -Xmx2G -XX:MaxPermSize=512M -Duser.timezone=UTC</argLine>
     </properties>
 
     <licenses>
