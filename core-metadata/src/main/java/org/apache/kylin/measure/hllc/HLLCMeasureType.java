@@ -31,9 +31,11 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import com.google.common.collect.ImmutableMap;
+
 public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
 
-    public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
+    public static final String FUNC_COUNT_DISTINCT = FunctionDesc.FUNC_COUNT_DISTINCT;
     public static final String DATATYPE_HLLC = "hllc";
 
     public static class Factory extends MeasureTypeFactory<HyperLogLogPlusCounter> {
@@ -116,9 +118,11 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
         return true;
     }
 
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(FUNC_COUNT_DISTINCT, HLLDistinctCountAggFunc.class);
+    
     @Override
-    public Class<?> getRewriteCalciteAggrFunctionClass() {
-        return HLLDistinctCountAggFunc.class;
+    public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {
+        return UDAF_MAP;
     }
 
     public static boolean isCountDistinct(FunctionDesc func) {

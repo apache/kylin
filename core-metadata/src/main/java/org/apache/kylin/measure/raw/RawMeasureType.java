@@ -75,6 +75,7 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
         }
     }
 
+    @SuppressWarnings("unused")
     private final DataType dataType;
 
     public RawMeasureType(String funcName, DataType dataType) {
@@ -188,11 +189,6 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
     @Override
     public boolean needRewrite() {
         return false;
-    }
-
-    @Override
-    public Class<?> getRewriteCalciteAggrFunctionClass() {
-        return null;
     }
 
     @Override

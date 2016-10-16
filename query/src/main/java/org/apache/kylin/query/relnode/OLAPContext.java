@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -36,6 +37,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.query.schema.OLAPSchema;
 import org.apache.kylin.storage.StorageContext;
@@ -116,11 +118,12 @@ public class OLAPContext {
     // cube metadata
     public IRealization realization;
 
-    public Collection<TblColRef> allColumns = new HashSet<TblColRef>();
-    public Collection<TblColRef> groupByColumns = new ArrayList<TblColRef>();
-    public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
-    public List<FunctionDesc> aggregations = new ArrayList<FunctionDesc>();
-    public Collection<TblColRef> filterColumns = new HashSet<TblColRef>();
+    public Set<TblColRef> allColumns = new HashSet<TblColRef>();
+    public List<TblColRef> groupByColumns = new ArrayList<TblColRef>();
+    public Set<TblColRef> metricsColumns = new HashSet<TblColRef>();
+    public List<FunctionDesc> aggregations = new ArrayList<FunctionDesc>(); // storage level measure type, on top of which various sql aggr function may apply
+    public List<SQLCall> aggrSqlCalls = new ArrayList<SQLCall>(); // sql level aggregation function call
+    public Set<TblColRef> filterColumns = new HashSet<TblColRef>();
     public TupleFilter filter;
     public List<JoinDesc> joins = new LinkedList<JoinDesc>();
     private List<MeasureDesc> sortMeasures;
@@ -144,7 +147,7 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations, sortMeasures, sortOrders);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortMeasures, sortOrders);
         return sqlDigest;
     }
 

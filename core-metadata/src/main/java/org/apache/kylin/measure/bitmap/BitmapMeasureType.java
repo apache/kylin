@@ -33,12 +33,16 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Created by sunyerui on 15/12/10.
  */
 public class BitmapMeasureType extends MeasureType<BitmapCounter> {
-    public static final String FUNC_COUNT_DISTINCT = "COUNT_DISTINCT";
+    public static final String FUNC_COUNT_DISTINCT = FunctionDesc.FUNC_COUNT_DISTINCT;
     public static final String FUNC_INTERSECT_COUNT_DISTINCT = "INTERSECT_COUNT";
     public static final String DATATYPE_BITMAP = "bitmap";
 
@@ -151,24 +155,6 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
         }
     }
 
-    @Override
-    public boolean needRewrite() {
-        return true;
-    }
-
-    @Override
-    public Class<?> getRewriteCalciteAggrFunctionClass() {
-        return BitmapDistinctCountAggFunc.class;
-    }
-
-    @Override
-    public Class<?> getRewriteCalciteAggrFunctionClass(String callName) {
-        if (callName != null && callName.equalsIgnoreCase(FUNC_INTERSECT_COUNT_DISTINCT)) {
-            return BitmapIntersectDistinctCountAggFunc.class;
-        }
-        return BitmapDistinctCountAggFunc.class;
-    }
-
     // In order to keep compatibility with old version, tinyint/smallint/int column use value directly, without dictionary
     private boolean needDictionaryColumn(FunctionDesc functionDesc) {
         DataType dataType = functionDesc.getParameter().getColRefs().get(0).getType();
@@ -176,5 +162,30 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean needRewrite() {
+        return true;
+    }
+
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(//
+            FUNC_COUNT_DISTINCT, BitmapDistinctCountAggFunc.class, //
+            FUNC_INTERSECT_COUNT_DISTINCT, BitmapIntersectDistinctCountAggFunc.class);
+
+    @Override
+    public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {
+        return UDAF_MAP;
+    }
+
+    @Override
+    public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
+        for (SQLCall call : sqlDigest.aggrSqlCalls) {
+            if (FUNC_INTERSECT_COUNT_DISTINCT.equals(call.function)) {
+                TblColRef col = (TblColRef) call.args.get(1);
+                if (!sqlDigest.groupbyColumns.contains(col))
+                    sqlDigest.groupbyColumns.add(col);
+            }
+        }
     }
 }

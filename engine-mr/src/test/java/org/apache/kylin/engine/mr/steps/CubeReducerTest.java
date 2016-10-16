@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Text;
@@ -197,8 +198,8 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
         }
 
         @Override
-        public Class<?> getRewriteCalciteAggrFunctionClass() {
-            return origMeasureType.getRewriteCalciteAggrFunctionClass();
+        public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {
+            return origMeasureType.getRewriteCalciteAggrFunctions();
         }
     }
 }

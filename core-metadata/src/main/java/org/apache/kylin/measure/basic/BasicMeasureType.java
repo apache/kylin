@@ -143,10 +143,4 @@ public class BasicMeasureType extends MeasureType {
     public boolean needRewrite() {
         return !isSum();
     }
-
-    @Override
-    public Class<?> getRewriteCalciteAggrFunctionClass() {
-        return null;
-    }
-
 }

@@ -25,6 +25,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.calcite.schema.Schema;
@@ -34,12 +35,15 @@ import org.apache.calcite.util.ConversionUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.DatabaseDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Maps;
 
 /**
  */
@@ -138,9 +142,14 @@ public class OLAPSchemaFactory implements SchemaFactory {
     }
 
     private static void createOLAPSchemaFunctions(Writer out) throws IOException {
-        out.write("            \"functions\": [\n");
-        Map<String, String> udfs = KylinConfig.getInstanceFromEnv().getUDFs();
+        Map<String, String> udfs = Maps.newHashMap();
+        udfs.putAll(KylinConfig.getInstanceFromEnv().getUDFs());
+        for (Entry<String, Class<?>> entry : MeasureTypeFactory.getUDAFs().entrySet()) {
+            udfs.put(entry.getKey(), entry.getValue().getName());
+        }
+
         int index = 0;
+        out.write("            \"functions\": [\n");
         for (Map.Entry<String, String> udf : udfs.entrySet()) {
             String udfName = udf.getKey().trim().toUpperCase();
             String udfClassName = udf.getValue().trim();

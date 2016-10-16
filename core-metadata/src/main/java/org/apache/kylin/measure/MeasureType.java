@@ -102,22 +102,20 @@ abstract public class MeasureType<T> {
      * Query Rewrite
      * ---------------------------------------------------------------------------- */
 
-    // TODO support user defined Calcite aggr function
-
     /** Whether or not Calcite rel-tree needs rewrite to do last around of aggregation */
     abstract public boolean needRewrite();
 
-    /** Does the rewrite involves an extra field for the pre-calculated */
+    /** Does the rewrite involves an extra field to hold the pre-calculated */
     public boolean needRewriteField() {
         return true;
     }
 
-    /** Returns a Calcite aggregation function implementation class */
-    abstract public Class<?> getRewriteCalciteAggrFunctionClass();
-
-    /** Some measure may return different class depends on call name, eg. BitmapMeasureType */
-    public Class<?> getRewriteCalciteAggrFunctionClass(String callName) {
-        return getRewriteCalciteAggrFunctionClass();
+    /**
+     * Returns a map from UDAF to Calcite aggregation function implementation class.
+     * There can be zero or more UDAF defined on a measure type.
+     */
+    public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {
+        return null;
     }
 
     /* ============================================================================

@@ -18,13 +18,16 @@
 
 package org.apache.kylin.metadata.realization;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  */
@@ -34,29 +37,41 @@ public class SQLDigest {
         ASCENDING, DESCENDING
     }
 
+    public static class SQLCall {
+        public final String function;
+        public final List<Object> args;
+
+        public SQLCall(String function, Iterable<Object> args) {
+            this.function = function;
+            this.args = ImmutableList.copyOf(args);
+        }
+    }
+
     public String factTable;
     public TupleFilter filter;
-    public Collection<JoinDesc> joinDescs;
-    public Collection<TblColRef> allColumns;
-    public Collection<TblColRef> groupbyColumns;
-    public Collection<TblColRef> filterColumns;
-    public Collection<TblColRef> metricColumns;
-    public Collection<FunctionDesc> aggregations;
-    public Collection<MeasureDesc> sortMeasures;
-    public Collection<OrderEnum> sortOrders;
+    public List<JoinDesc> joinDescs;
+    public Set<TblColRef> allColumns;
+    public List<TblColRef> groupbyColumns;
+    public Set<TblColRef> filterColumns;
+    public Set<TblColRef> metricColumns;
+    public List<FunctionDesc> aggregations; // storage level measure type, on top of which various sql aggr function may apply
+    public List<SQLCall> aggrSqlCalls; // sql level aggregation function call
+    public List<MeasureDesc> sortMeasures;
+    public List<OrderEnum> sortOrders;
     public boolean isRawQuery;
 
-    //initialized when org.apache.kylin.query.routing.QueryRouter.selectRealization()
-    public SQLDigest(String factTable, TupleFilter filter, Collection<JoinDesc> joinDescs, Collection<TblColRef> allColumns, //
-            Collection<TblColRef> groupbyColumns, Collection<TblColRef> filterColumns, Collection<TblColRef> aggregatedColumns, Collection<FunctionDesc> aggregateFunnc, Collection<MeasureDesc> sortMeasures, Collection<OrderEnum> sortOrders) {
+    public SQLDigest(String factTable, TupleFilter filter, List<JoinDesc> joinDescs, Set<TblColRef> allColumns, //
+            List<TblColRef> groupbyColumns, Set<TblColRef> filterColumns, Set<TblColRef> metricColumns, //
+            List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, List<MeasureDesc> sortMeasures, List<OrderEnum> sortOrders) {
         this.factTable = factTable;
         this.filter = filter;
         this.joinDescs = joinDescs;
         this.allColumns = allColumns;
         this.groupbyColumns = groupbyColumns;
         this.filterColumns = filterColumns;
-        this.metricColumns = aggregatedColumns;
-        this.aggregations = aggregateFunnc;
+        this.metricColumns = metricColumns;
+        this.aggregations = aggregations;
+        this.aggrSqlCalls = aggrSqlCalls;
         this.sortMeasures = sortMeasures;
         this.sortOrders = sortOrders;
         this.isRawQuery = isRawQuery();

@@ -227,6 +227,7 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
         };
     }
 
+    @SuppressWarnings("serial")
     @Override
     public MeasureAggregator<ByteArray> newAggregator() {
         return new MeasureAggregator<ByteArray>() {
@@ -267,10 +268,5 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
     @Override
     public boolean needRewrite() {
         return false;
-    }
-
-    @Override
-    public Class<?> getRewriteCalciteAggrFunctionClass() {
-        return null;
     }
 }

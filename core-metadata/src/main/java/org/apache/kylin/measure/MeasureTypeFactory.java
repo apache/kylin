@@ -32,6 +32,7 @@ import org.apache.kylin.measure.raw.RawMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.apache.kylin.metadata.model.FunctionDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,8 +87,10 @@ abstract public class MeasureTypeFactory<T> {
 
     // ============================================================================
 
-    private static Map<String, List<MeasureTypeFactory<?>>> factories = Maps.newHashMap();
-    private static List<MeasureTypeFactory<?>> defaultFactory = Lists.newArrayListWithCapacity(2);
+    final private static Map<String, List<MeasureTypeFactory<?>>> factories = Maps.newHashMap();
+    final private static Map<String, Class<?>> udafMap = Maps.newHashMap(); // a map from UDAF to Calcite aggregation function implementation class
+    final private static Map<String, MeasureTypeFactory> udafFactories = Maps.newHashMap(); // a map from UDAF to its owner factory
+    final private static List<MeasureTypeFactory<?>> defaultFactory = Lists.newArrayListWithCapacity(2);
 
     static {
         init();
@@ -110,7 +113,8 @@ abstract public class MeasureTypeFactory<T> {
         logger.info("Checking custom measure types from kylin config");
 
         try {
-            for (String customFactory : KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().values()) {
+            Map<String, String> customMeasureTypes = KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes();
+            for (String customFactory : customMeasureTypes.values()) {
                 try {
                     logger.info("Checking custom measure types from kylin config: " + customFactory);
                     factoryInsts.add((MeasureTypeFactory<?>) Class.forName(customFactory).newInstance());
@@ -132,9 +136,10 @@ abstract public class MeasureTypeFactory<T> {
                 throw new IllegalArgumentException("Aggregation data type name '" + dataTypeName + "' must be in lower case");
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
 
-            logger.info("registering " + dataTypeName);
+            logger.info("registering " + funcName + "(" + dataTypeName + "), " + factory.getClass());
             DataType.register(dataTypeName);
             DataTypeSerializer.register(dataTypeName, serializer);
+            registerUDAF(factory);
             List<MeasureTypeFactory<?>> list = factories.get(funcName);
             if (list == null)
                 factories.put(funcName, list = Lists.newArrayListWithCapacity(2));
@@ -144,13 +149,40 @@ abstract public class MeasureTypeFactory<T> {
         defaultFactory.add(new BasicMeasureType.Factory());
     }
 
+    private static void registerUDAF(MeasureTypeFactory<?> factory) {
+        MeasureType<?> type = factory.createMeasureType(factory.getAggrFunctionName(), DataType.getType(factory.getAggrDataTypeName()));
+        Map<String, Class<?>> udafs = type.getRewriteCalciteAggrFunctions();
+        if (type.needRewrite() == false || udafs == null)
+            return;
+
+        for (String udaf : udafs.keySet()) {
+            udaf = udaf.toUpperCase();
+            if (udaf.equals(FunctionDesc.FUNC_COUNT_DISTINCT))
+                continue; // skip built-in function
+
+            if (udafFactories.containsKey(udaf))
+                throw new IllegalStateException("UDAF '" + udaf + "' was dup declared by " + udafFactories.get(udaf) + " and " + factory);
+
+            udafFactories.put(udaf, factory);
+            udafMap.put(udaf, udafs.get(udaf));
+        }
+    }
+
+    public static Map<String, Class<?>> getUDAFs() {
+        return udafMap;
+    }
+
+    public static Map<String, MeasureTypeFactory> getUDAFFactories() {
+        return udafFactories;
+    }
+
     public static MeasureType<?> create(String funcName, String dataType) {
         return create(funcName, DataType.getType(dataType));
     }
 
     public static MeasureType<?> createNoRewriteFieldsMeasureType(String funcName, DataType dataType) {
         // currently only has DimCountDistinctAgg
-        if (funcName.equalsIgnoreCase("COUNT_DISTINCT")) {
+        if (funcName.equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
             return new DimCountDistinctMeasureType.DimCountDistinctMeasureTypeFactory().createMeasureType(funcName, dataType);
         }
 
@@ -213,8 +245,8 @@ abstract public class MeasureTypeFactory<T> {
         }
 
         @Override
-        public Class getRewriteCalciteAggrFunctionClass() {
-            throw new UnsupportedOperationException();
+        public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {
+            return null;
         }
 
     }

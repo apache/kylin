@@ -288,11 +288,6 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     }
 
     @Override
-    public Class<?> getRewriteCalciteAggrFunctionClass() {
-        return null;
-    }
-
-    @Override
     public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
         for (MeasureDesc measureDesc : measureDescs) {
             FunctionDesc topnFunc = measureDesc.getFunction();

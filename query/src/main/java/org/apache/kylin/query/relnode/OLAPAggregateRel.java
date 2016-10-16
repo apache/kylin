@@ -55,14 +55,14 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.measure.bitmap.BitmapMeasureType;
+import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.base.Preconditions;
@@ -80,23 +80,28 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         AGGR_FUNC_MAP.put("$SUM0", "SUM");
         AGGR_FUNC_MAP.put("COUNT", "COUNT");
         AGGR_FUNC_MAP.put("COUNT_DISTINCT", "COUNT_DISTINCT");
-        AGGR_FUNC_MAP.put(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT, "COUNT_DISTINCT");
         AGGR_FUNC_MAP.put("MAX", "MAX");
         AGGR_FUNC_MAP.put("MIN", "MIN");
 
-        for (String customAggrFunc : KylinConfig.getInstanceFromEnv().getCubeCustomMeasureTypes().keySet()) {
-            AGGR_FUNC_MAP.put(customAggrFunc.trim().toUpperCase(), customAggrFunc.trim().toUpperCase());
+        Map<String, MeasureTypeFactory> udafFactories = MeasureTypeFactory.getUDAFFactories();
+        for (String udaf : udafFactories.keySet()) {
+            AGGR_FUNC_MAP.put(udaf, udafFactories.get(udaf).getAggrFunctionName());
         }
     }
 
-    private static String getFuncName(AggregateCall aggCall) {
-        String aggName = aggCall.getAggregation().getName();
+    private static String getSqlFuncName(AggregateCall aggCall) {
+        String sqlName = aggCall.getAggregation().getName();
         if (aggCall.isDistinct()) {
-            aggName = aggName + "_DISTINCT";
+            sqlName = sqlName + "_DISTINCT";
         }
-        String funcName = AGGR_FUNC_MAP.get(aggName);
+        return sqlName;
+    }
+
+    private static String getAggrFuncName(AggregateCall aggCall) {
+        String sqlName = getSqlFuncName(aggCall);
+        String funcName = AGGR_FUNC_MAP.get(sqlName);
         if (funcName == null) {
-            throw new IllegalStateException("Don't suppoprt aggregation " + aggName);
+            throw new IllegalStateException("Don't suppoprt aggregation " + sqlName);
         }
         return funcName;
     }
@@ -151,7 +156,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
         // only translate the innermost aggregation
         if (!this.afterAggregate) {
-            translateGroupBy();
+            this.context.groupByColumns.addAll(this.groups);
             this.context.aggregations.addAll(this.aggregations);
             this.context.afterAggregate = true;
         } else {
@@ -226,15 +231,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             Set<TblColRef> columns = inputColumnRowType.getSourceColumnsByIndex(i);
             this.groups.addAll(columns);
         }
-        // Some UDAF may group data by itself, add group key into groups, prevents aggregate at cube storage server side
-        for (AggregateCall aggCall : this.rewriteAggCalls) {
-            String aggregateName = aggCall.getAggregation().getName();
-            if (aggregateName.equalsIgnoreCase(BitmapMeasureType.FUNC_INTERSECT_COUNT_DISTINCT)) {
-                int index = aggCall.getArgList().get(1);
-                TblColRef column = inputColumnRowType.getColumnByIndex(index);
-                groups.add(column);
-            }
-        }
     }
 
     private void buildAggregations() {
@@ -254,15 +250,11 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 }
             }
             FunctionDesc aggFunc = new FunctionDesc();
-            String funcName = getFuncName(aggCall);
+            String funcName = getAggrFuncName(aggCall);
             aggFunc.setExpression(funcName);
             aggFunc.setParameter(parameter);
             this.aggregations.add(aggFunc);
         }
-    }
-
-    private void translateGroupBy() {
-        context.groupByColumns.addAll(this.groups);
     }
 
     @Override
@@ -286,6 +278,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                     aggCall = rewriteAggregateCall(aggCall, cubeFunc);
                 }
                 this.rewriteAggCalls.add(aggCall);
+                this.context.aggrSqlCalls.add(toSqlCall(aggCall));
             }
         }
 
@@ -293,6 +286,18 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         this.rowType = this.deriveRowType();
         this.columnRowType = this.buildColumnRowType();
 
+    }
+
+    private SQLCall toSqlCall(AggregateCall aggCall) {
+        ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
+
+        String function = getSqlFuncName(aggCall);
+        List<Object> args = Lists.newArrayList();
+        for (Integer index : aggCall.getArgList()) {
+            TblColRef col = inputColumnRowType.getColumnByIndexNullable(index);
+            args.add(col);
+        }
+        return new SQLCall(function, args);
     }
 
     private void translateAggregation() {
@@ -371,8 +376,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     private AggregateCall rewriteAggregateCall(AggregateCall aggCall, FunctionDesc func) {
 
-        //if it's not a cube, then the "needRewriteField func" should not resort to any rewrite fields, 
-        // which do not exist at all
+        // if it's not a cube, then the "needRewriteField func" should not resort to any rewrite fields, which do not exist at all
         if (noPrecaculatedFieldsAvailable() && func.needRewriteField()) {
             logger.info(func + "skip rewriteAggregateCall because no pre-aggregated field available");
             return aggCall;
@@ -391,16 +395,18 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         }
 
         // rebuild function
-        String callName = aggCall.getAggregation().getName();
+        String callName = getSqlFuncName(aggCall);
         RelDataType fieldType = aggCall.getType();
         SqlAggFunction newAgg = aggCall.getAggregation();
+        Map<String, Class<?>> udafMap = func.getMeasureType().getRewriteCalciteAggrFunctions();
         if (func.isCount()) {
             newAgg = SqlStdOperatorTable.SUM0;
-        } else if (func.getMeasureType().getRewriteCalciteAggrFunctionClass() != null) {
-            newAgg = createCustomAggFunction(callName, fieldType, func.getMeasureType().getRewriteCalciteAggrFunctionClass(callName));
+        } else if (udafMap != null && udafMap.containsKey(callName)) {
+            newAgg = createCustomAggFunction(callName, fieldType, udafMap.get(callName));
         }
 
         // rebuild aggregate call
+        @SuppressWarnings("deprecation")
         AggregateCall newAggCall = new AggregateCall(newAgg, false, newArgList, fieldType, callName);
         return newAggCall;
     }

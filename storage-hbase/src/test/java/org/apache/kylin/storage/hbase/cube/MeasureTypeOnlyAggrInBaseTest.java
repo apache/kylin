@@ -137,11 +137,6 @@ public class MeasureTypeOnlyAggrInBaseTest extends LocalFileMetadataTestCase {
         }
 
         @Override
-        public Class<?> getRewriteCalciteAggrFunctionClass() {
-            return null;
-        }
-
-        @Override
         public boolean onlyAggrInBaseCuboid() {
             return true;
         }
