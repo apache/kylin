@@ -248,6 +248,14 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testIntersectCountQuery() throws Exception {
+        // cannot compare coz H2 does not support intersect count yet..
+        if ("left".equalsIgnoreCase(joinType)) {
+            this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_intersect_count");
+        }
+    }
+
+    @Test
     public void testDimDistinctCountQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_dim", null, true);
     }
@@ -353,12 +361,6 @@ public class ITKylinQueryTest extends KylinTestBase {
     public void testWindowQuery() throws Exception {
         // cannot compare coz H2 does not support window function yet..
         this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_window");
-    }
-
-    @Test
-    public void testIntersectCountQuery() throws Exception {
-        // cannot compare coz H2 does not support intersect count yet..
-        this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_intersect_count");
     }
 
 }
