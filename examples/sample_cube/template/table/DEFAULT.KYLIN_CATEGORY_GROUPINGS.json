@@ -40,7 +40,7 @@
     "datatype" : "string"
   }, {
     "id" : "10",
-    "name" : "UPD_DATE",
+    "name" : "KYLIN_GROUPINGS_UPD_DATE",
     "datatype" : "string"
   }, {
     "id" : "11",
@@ -48,7 +48,7 @@
     "datatype" : "string"
   }, {
     "id" : "12",
-    "name" : "UPD_USER",
+    "name" : "KYLIN_GROUPINGS_UPD_USER",
     "datatype" : "string"
   }, {
     "id" : "13",

@@ -14,7 +14,7 @@
     "name" : "CATEGORY",
     "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
     "column" : "{FK}",
-    "derived" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "UPD_DATE", "UPD_USER" ]
+    "derived" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3" ]
   }, {
     "name" : "CATEGORY_HIERARCHY",
     "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
