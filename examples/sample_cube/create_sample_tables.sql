@@ -116,10 +116,10 @@ CAL_DT date COMMENT 'Date, PK'
 ,YTM_YN_ID tinyint
 ,YTQ_YN_ID tinyint
 ,YTW_YN_ID tinyint
-,CRE_DATE string
-,CRE_USER string
-,UPD_DATE string
-,UPD_USER string
+,KYLIN_CAL_DT_CRE_DATE string
+,KYLIN_CAL_DT_CRE_USER string
+,KYLIN_CAL_DT_UPD_DATE string
+,KYLIN_CAL_DT_UPD_USER string
 )
 COMMENT 'Date Dimension Table'
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
@@ -137,10 +137,10 @@ LEAF_CATEG_ID bigint COMMENT 'Category ID, PK'
 ,REGN_CATEG string
 ,USER_DEFINED_FIELD1 string COMMENT 'User Defined Field1'
 ,USER_DEFINED_FIELD3 string COMMENT 'User Defined Field3'
-,CRE_DATE string
-,UPD_DATE string COMMENT 'Last Updated Date'
-,CRE_USER string
-,UPD_USER string COMMENT 'Last Updated User'
+,KYLIN_GROUPINGS_CRE_DATE string
+,KYLIN_GROUPINGS_UPD_DATE string COMMENT 'Last Updated Date'
+,KYLIN_GROUPINGS_CRE_USER string
+,KYLIN_GROUPINGS_UPD_USER string COMMENT 'Last Updated User'
 ,META_CATEG_ID decimal
 ,META_CATEG_NAME string COMMENT 'Level1 Category'
 ,CATEG_LVL2_ID decimal
