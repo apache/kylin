@@ -231,34 +231,49 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         // TopN measure can (and only can) provide one numeric measure and one literal dimension
         // e.g. select seller, sum(gmv) from ... group by seller order by 2 desc limit 100
 
-        // check digest requires only one measure
-        if (digest.aggregations.size() != 1)
-            return null;
-
-        // the measure function must be SUM
-        FunctionDesc onlyFunction = digest.aggregations.iterator().next();
-        if (isTopNCompatibleSum(topN.getFunction(), onlyFunction) == false)
-            return null;
-
         List<TblColRef> literalCol = getTopNLiteralColumn(topN.getFunction());
+        for (TblColRef colRef : literalCol) {
+            if (digest.filterColumns.contains(colRef) == true) {
+                // doesn't allow filtering by topn literal column
+                return null;
+            }
+        }
+
         if (unmatchedDimensions.containsAll(literalCol) == false)
             return null;
         if (digest.groupbyColumns.containsAll(literalCol) == false)
             return null;
 
-        for (TblColRef colRef : literalCol) {
-            if (digest.filterColumns.contains(colRef) == true) {
+        // check digest requires only one measure
+        if (digest.aggregations.size() == 1) {
+
+            // the measure function must be SUM
+            FunctionDesc onlyFunction = digest.aggregations.iterator().next();
+            if (isTopNCompatibleSum(topN.getFunction(), onlyFunction) == false)
                 return null;
-            }
+
+            unmatchedDimensions.removeAll(literalCol);
+            unmatchedAggregations.remove(onlyFunction);
+            return new CapabilityInfluence() {
+                @Override
+                public double suggestCostMultiplier() {
+                    return 0.3; // make sure TopN get ahead of other matched realizations
+                }
+            };
         }
-        unmatchedDimensions.removeAll(literalCol);
-        unmatchedAggregations.remove(onlyFunction);
-        return new CapabilityInfluence() {
-            @Override
-            public double suggestCostMultiplier() {
-                return 0.3; // make sure TopN get ahead of other matched realizations
-            }
-        };
+
+        if (digest.aggregations.size() == 0 ) {
+            // directly query the UHC column without sorting
+            unmatchedDimensions.removeAll(literalCol);
+            return new CapabilityInfluence() {
+                @Override
+                public double suggestCostMultiplier() {
+                    return 2.0; // topn can answer but with a higher cost
+                }
+            };
+        }
+
+        return null;
     }
 
     private boolean isTopNCompatibleSum(FunctionDesc topN, FunctionDesc sum) {
