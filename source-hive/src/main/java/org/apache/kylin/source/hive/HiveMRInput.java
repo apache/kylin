@@ -233,7 +233,7 @@ public class HiveMRInput implements IMRInput {
         @Override
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
             GarbageCollectionStep step = new GarbageCollectionStep();
-            step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
+            step.setName(ExecutableConstants.STEP_NAME_HIVE_CLEANUP);
             step.setIntermediateTableIdentity(getIntermediateTableIdentity());
             step.setExternalDataPath(JoinedFlatTable.getTableDir(flatDesc, JobBuilderSupport.getJobWorkingDir(conf, jobFlow.getId())));
             step.setHiveViewIntermediateTableIdentities(hiveViewIntermediateTables);
