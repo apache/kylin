@@ -170,6 +170,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     private Map<TblColRef, DeriveInfo> extendedColumnToHosts = Maps.newHashMap();
 
+    @JsonProperty("partition_offset_start")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<Integer, Long> partitionOffsetStart = Maps.newHashMap();
+
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able
         return storageType != IStorageAware.ID_HBASE && storageType != IStorageAware.ID_HYBRID;
@@ -1011,6 +1015,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.partitionDateEnd = partitionDateEnd;
     }
 
+    public Map<Integer, Long> getPartitionOffsetStart() {
+        return partitionOffsetStart;
+    }
+
+    public void setPartitionOffsetStart(Map<Integer, Long> partitionOffsetStart) {
+        this.partitionOffsetStart = partitionOffsetStart;
+    }
+
     /** Get columns that have dictionary */
     public Set<TblColRef> getAllColumnsHaveDictionary() {
         Set<TblColRef> result = Sets.newLinkedHashSet();
@@ -1119,6 +1131,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setOverrideKylinProps(cubeDesc.getOverrideKylinProps());
         newCubeDesc.setConfig((KylinConfigExt) cubeDesc.getConfig());
         newCubeDesc.updateRandomUuid();
+        newCubeDesc.setPartitionOffsetStart(cubeDesc.getPartitionOffsetStart());
         return newCubeDesc;
     }
 

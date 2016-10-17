@@ -564,6 +564,12 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
 
     public void setSourcePartitionOffsetEnd(Map<Integer, Long> sourcePartitionOffsetEnd) {
         this.sourcePartitionOffsetEnd = sourcePartitionOffsetEnd;
+        long total = 0;
+        for (Long x : sourcePartitionOffsetEnd.values()) {
+            total += x;
+        }
+
+        this.sourceOffsetEnd = total;
     }
 
     public Map<Integer, Long> getSourcePartitionOffsetStart() {
@@ -572,5 +578,11 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
 
     public void setSourcePartitionOffsetStart(Map<Integer, Long> sourcePartitionOffsetStart) {
         this.sourcePartitionOffsetStart = sourcePartitionOffsetStart;
+        long total = 0;
+        for (Long x : sourcePartitionOffsetStart.values()) {
+            total += x;
+        }
+
+        this.sourceOffsetStart = total;
     }
 }

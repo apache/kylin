@@ -804,7 +804,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getMaxBuildingSegments() {
-        return Integer.parseInt(getOptional("kylin.cube.building.segment.max", "2"));
+        return Integer.parseInt(getOptional("kylin.cube.building.segment.max", "10"));
     }
 
     public void setMaxBuildingSegments(int maxBuildingSegments) {

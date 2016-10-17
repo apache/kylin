@@ -536,22 +536,22 @@ public class CubeController extends BasicController {
     /**
      * get cube segment holes
      *
-     * @return true
+     * @return a list of CubeSegment, each representing a hole
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/hole", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.GET })
     @ResponseBody
     public List<CubeSegment> getHoles(@PathVariable String cubeName) {
         return cubeService.getCubeManager().calculateHoles(cubeName);
     }
 
     /**
-     * get cube segment holes
+     * fill cube segment holes
      *
-     * @return true
+     * @return a list of JobInstances to fill the holes
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/hole", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.PUT })
     @ResponseBody
     public List<JobInstance> fillHoles(@PathVariable String cubeName) {
         List<JobInstance> jobs = Lists.newArrayList();

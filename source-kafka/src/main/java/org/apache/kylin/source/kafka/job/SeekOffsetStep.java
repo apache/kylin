@@ -61,6 +61,12 @@ public class SeekOffsetStep extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "skipped, as the offset is provided.");
         }
 
+        final Map<Integer, Long> cubeDescStart = cube.getDescriptor().getPartitionOffsetStart();
+        if (cube.getSegments().size() == 1 &&  cubeDescStart != null && cubeDescStart.size() > 0) {
+            logger.info("This is the first segment, and has initiated the start offsets, will use it");
+            startOffsets = cubeDescStart;
+        }
+
         final KafkaConfig kafakaConfig = KafkaConfigManager.getInstance(context.getConfig()).getKafkaConfig(cube.getFactTable());
         final String brokers = KafkaClient.getKafkaBrokers(kafakaConfig);
         final String topic = kafakaConfig.getTopic();
@@ -110,8 +116,6 @@ public class SeekOffsetStep extends AbstractExecutable {
         }
 
         if (totalEndOffset > totalStartOffset) {
-            segment.setSourceOffsetStart(totalStartOffset);
-            segment.setSourceOffsetEnd(totalEndOffset);
             segment.setSourcePartitionOffsetStart(startOffsets);
             segment.setSourcePartitionOffsetEnd(endOffsets);
             segment.setName(CubeSegment.makeSegmentName(0, 0, totalStartOffset, totalEndOffset));

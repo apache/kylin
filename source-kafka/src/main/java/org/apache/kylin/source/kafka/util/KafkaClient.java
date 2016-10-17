@@ -17,14 +17,19 @@
 */
 package org.apache.kylin.source.kafka.util;
 
+import com.google.common.collect.Maps;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -44,7 +49,7 @@ public class KafkaClient {
         return producer;
     }
 
-    private static Properties constructDefaultKafkaProducerProperties(String brokers, Properties properties){
+    private static Properties constructDefaultKafkaProducerProperties(String brokers, Properties properties) {
         Properties props = new Properties();
         props.put("bootstrap.servers", brokers);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
@@ -111,5 +116,20 @@ public class KafkaClient {
         return consumer.position(topicPartition);
     }
 
+    public static Map<Integer, Long> getCurrentOffsets(final CubeInstance cubeInstance) {
+        final KafkaConfig kafakaConfig = KafkaConfigManager.getInstance(cubeInstance.getConfig()).getKafkaConfig(cubeInstance.getFactTable());
 
+        final String brokers = KafkaClient.getKafkaBrokers(kafakaConfig);
+        final String topic = kafakaConfig.getTopic();
+
+        Map<Integer, Long> startOffsets = Maps.newHashMap();
+        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName(), null)) {
+            final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
+            for (PartitionInfo partitionInfo : partitionInfos) {
+                long latest = KafkaClient.getLatestOffset(consumer, topic, partitionInfo.partition());
+                startOffsets.put(partitionInfo.partition(), latest);
+            }
+        }
+        return startOffsets;
+    }
 }
