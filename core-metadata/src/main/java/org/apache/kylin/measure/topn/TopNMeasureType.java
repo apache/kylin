@@ -246,6 +246,11 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         if (digest.groupbyColumns.containsAll(literalCol) == false)
             return null;
 
+        for (TblColRef colRef : literalCol) {
+            if (digest.filterColumns.contains(colRef) == true) {
+                return null;
+            }
+        }
         unmatchedDimensions.removeAll(literalCol);
         unmatchedAggregations.remove(onlyFunction);
         return new CapabilityInfluence() {
