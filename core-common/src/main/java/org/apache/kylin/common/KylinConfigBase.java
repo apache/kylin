@@ -250,6 +250,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.job.mr.config.override.");
     }
 
+    public Map<String, String> getHiveConfigOverride() {
+        return getPropertiesByPrefix("kylin.hive.config.override.");
+    }
+
     public String getKylinSparkJobJarPath() {
         final String jobJar = getOptional("kylin.job.jar.spark");
         if (StringUtils.isNotEmpty(jobJar)) {
