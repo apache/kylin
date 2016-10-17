@@ -85,4 +85,12 @@
         <description>Set task timeout to 1 hour</description>
     </property>
 
+    <property>
+        <name>mapreduce.map.speculative</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>mapreduce.reduce.speculative</name>
+        <value>false</value>
+    </property>
 </configuration>
