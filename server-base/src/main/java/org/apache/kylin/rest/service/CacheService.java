@@ -36,7 +36,6 @@ import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
-import org.apache.kylin.rest.controller.QueryController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,8 +118,8 @@ public class CacheService extends BasicService {
     protected void cleanDataCache(String project) {
         if (cacheManager != null) {
             logger.info("cleaning cache for project" + project + " (currently remove all entries)");
-            cacheManager.getCache(QueryController.SUCCESS_QUERY_CACHE).removeAll();
-            cacheManager.getCache(QueryController.EXCEPTION_QUERY_CACHE).removeAll();
+            cacheManager.getCache(QueryService.SUCCESS_QUERY_CACHE).removeAll();
+            cacheManager.getCache(QueryService.EXCEPTION_QUERY_CACHE).removeAll();
         } else {
             logger.warn("skip cleaning cache for project " + project);
         }

@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
@@ -51,6 +52,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.cube.CubeInstance;
@@ -60,6 +62,8 @@ import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.metrics.QueryMetricsFacade;
 import org.apache.kylin.rest.model.ColumnMeta;
 import org.apache.kylin.rest.model.Query;
 import org.apache.kylin.rest.model.SelectedColumnMeta;
@@ -69,6 +73,7 @@ import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
+import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -80,7 +85,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 
 /**
  * @author xduo
@@ -90,13 +100,13 @@ public class QueryService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
-    @Autowired
-    private CacheService cacheService;
-
     public static final String USER_QUERY_FAMILY = "q";
     private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
     private static final String USER_QUERY_COLUMN = "c";
+
+    public static final String SUCCESS_QUERY_CACHE = "StorageCache";
+    public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
 
     private final Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
     private final BadQueryDetector badQueryDetector = new BadQueryDetector();
@@ -104,6 +114,17 @@ public class QueryService extends BasicService {
     private final String hbaseUrl;
     private final String tableNameBase;
     private final String userTableName;
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Autowired
+    private CacheService cacheService;
+
+    @PostConstruct
+    public void init() throws IOException {
+        Preconditions.checkNotNull(cacheManager, "cacheManager is not injected yet");
+    }
 
     public QueryService() {
         String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
@@ -292,6 +313,106 @@ public class QueryService extends BasicService {
         }
     }
 
+    public SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
+        try {
+            BackdoorToggles.setToggles(sqlRequest.getBackdoorToggles());
+
+            String sql = sqlRequest.getSql();
+            String project = sqlRequest.getProject();
+            logger.info("Using project: " + project);
+            logger.info("The original query:  " + sql);
+
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            String serverMode = kylinConfig.getServerMode();
+            if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
+                throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
+            }
+
+            if (!sql.toLowerCase().contains("select")) {
+                logger.debug("Directly return exception as not supported");
+                throw new InternalErrorException("Not Supported SQL.");
+            }
+
+            long startTime = System.currentTimeMillis();
+
+            SQLResponse sqlResponse = null;
+            boolean queryCacheEnabled = kylinConfig.isQueryCacheEnabled() && !BackdoorToggles.getDisableCache();
+            if (queryCacheEnabled) {
+                sqlResponse = searchQueryInCache(sqlRequest);
+            }
+
+            try {
+                if (null == sqlResponse) {
+                    sqlResponse = query(sqlRequest);
+
+                    long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
+                    long scancountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
+                    sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+                    logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
+                            String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()), String.valueOf(sqlResponse.getTotalScanCount()));
+                    if (queryCacheEnabled && !sqlResponse.getIsException() //
+                            && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                        cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
+                    }
+                } else {
+                    sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+                }
+
+                checkQueryAuth(sqlResponse);
+
+            } catch (Throwable e) { // calcite may throw AssertError
+                logger.error("Exception when execute sql", e);
+                String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
+
+                sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
+
+                // for exception queries, only cache ScanOutOfLimitException
+                if (queryCacheEnabled && e instanceof ScanOutOfLimitException) {
+                    Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+                    exceptionCache.put(new Element(sqlRequest, sqlResponse));
+                }
+            }
+
+            logQuery(sqlRequest, sqlResponse);
+
+            QueryMetricsFacade.updateMetrics(sqlRequest, sqlResponse);
+
+            if (sqlResponse.getIsException())
+                throw new InternalErrorException(sqlResponse.getExceptionMessage());
+
+            return sqlResponse;
+
+        } finally {
+            BackdoorToggles.cleanToggles();
+        }
+    }
+
+    public SQLResponse searchQueryInCache(SQLRequest sqlRequest) {
+        SQLResponse response = null;
+        Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
+        Cache successCache = cacheManager.getCache(SUCCESS_QUERY_CACHE);
+
+        if (exceptionCache.get(sqlRequest) != null) {
+            logger.info("The sqlResponse is found in EXCEPTION_QUERY_CACHE");
+            Element element = exceptionCache.get(sqlRequest);
+            response = (SQLResponse) element.getObjectValue();
+            response.setHitExceptionCache(true);
+        } else if (successCache.get(sqlRequest) != null) {
+            logger.info("The sqlResponse is found in SUCCESS_QUERY_CACHE");
+            Element element = successCache.get(sqlRequest);
+            response = (SQLResponse) element.getObjectValue();
+            response.setStorageCacheUsed(true);
+        }
+
+        return response;
+    }
+
+    private void checkQueryAuth(SQLResponse sqlResponse) throws AccessDeniedException {
+        if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
+            checkAuthorization(sqlResponse.getCube());
+        }
+    }
+
     private SQLResponse queryWithSqlMassage(SQLRequest sqlRequest) throws Exception {
         String userInfo = SecurityContextHolder.getContext().getAuthentication().getName();
         final Collection<? extends GrantedAuthority> grantedAuthorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
@@ -368,7 +489,7 @@ public class QueryService extends BasicService {
                     tableMap.get(colmnMeta.getTABLE_SCHEM() + "#" + colmnMeta.getTABLE_NAME()).addColumn(colmnMeta);
                 }
             }
-            
+
         } finally {
             close(columnMeta, null, conn);
             if (JDBCTableMeta != null) {
@@ -541,4 +662,7 @@ public class QueryService extends BasicService {
         DBUtils.closeQuietly(conn);
     }
 
+    public void setCacheManager(CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+    }
 }

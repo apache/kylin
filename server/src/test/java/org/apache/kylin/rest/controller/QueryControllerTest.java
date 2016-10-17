@@ -49,7 +49,7 @@ public class QueryControllerTest extends ServiceTestBase {
 
         queryController = new QueryController();
         queryController.setQueryService(queryService);
-        queryController.setCacheManager(cacheManager);
+        queryService.setCacheManager(cacheManager);
     }
 
     @Test(expected = Exception.class)
