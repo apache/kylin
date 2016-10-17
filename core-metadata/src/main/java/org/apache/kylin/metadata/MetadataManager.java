@@ -496,6 +496,16 @@ public class MetadataManager {
         return false;
     }
 
+    public List<String> getModelsUsingTable(String tableName, String projectName) throws IOException {
+        List<String> models = new ArrayList<>();
+        for (DataModelDesc modelDesc : getModels(projectName)) {
+            if (modelDesc.getAllTables().contains(tableName.toUpperCase())) {
+                models.add(modelDesc.getName());
+            }
+        }
+        return models;
+    }
+
     public boolean isTableInAnyModel(String tableName) {
         for (DataModelDesc modelDesc : getModels()) {
             if (modelDesc.getAllTables().contains(tableName.toUpperCase())) {

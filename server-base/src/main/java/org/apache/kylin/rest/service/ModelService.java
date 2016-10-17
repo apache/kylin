@@ -132,4 +132,11 @@ public class ModelService extends BasicService {
         tableName = dbTableName[0] + "." + dbTableName[1];
         return getMetadataManager().isTableInModel(tableName, projectName);
     }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#desc, 'ADMINISTRATION') or hasPermission(#desc, 'MANAGEMENT')")
+    public List<String> getModelsUsingTable(String tableName, String projectName) throws IOException {
+        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
+        tableName = dbTableName[0] + "." + dbTableName[1];
+        return getMetadataManager().getModelsUsingTable(tableName, projectName);
+    }
 }

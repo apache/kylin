@@ -197,6 +197,9 @@ public class TableController extends BasicController {
             if (!modelService.isTableInModel(tableName, project)) {
                 cubeMgmtService.removeTableFromProject(tableName, project);
                 rtn = true;
+            }else{
+                List<String> models = modelService.getModelsUsingTable(tableName, project);
+                throw new InternalErrorException("Table is already in use by models "+models);
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
