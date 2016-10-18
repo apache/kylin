@@ -61,6 +61,15 @@ The compression settings define in `kylin_job_conf.xml` and `kylin_job_conf_inme
 
 Compression settings only take effect after restarting Kylin server instance.
 
+## Allocate more memory to Kylin instance
+
+Open `bin/setenv.sh`, which has two sample settings for `KYLIN_JVM_SETTINGS` environment variable; The default setting is small (4GB at max.), you can comment it and then un-comment the next line to allocate 16GB:
+
+{% highlight Groff markup %}
+export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX:MaxPermSize=128M -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:$KYLIN_HOME/logs/kylin.gc.$$ -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=64M"
+# export KYLIN_JVM_SETTINGS="-Xms16g -Xmx16g -XX:MaxPermSize=512m -XX:NewSize=3g -XX:MaxNewSize=3g -XX:SurvivorRatio=4 -XX:+CMSClassUnloadingEnabled -XX:+CMSParallelRemarkEnabled -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:CMSInitiatingOccupancyFraction=70 -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError"
+{% endhighlight %}
+
 ## Enable LDAP or SSO authentication
 
 Check [How to Enable Security with LDAP and SSO](../howto/howto_ldap_and_sso.html)
@@ -75,6 +84,9 @@ mail.host=your-smtp-server
 mail.username=your-smtp-account
 mail.password=your-smtp-pwd
 mail.sender=your-sender-address
+kylin.job.admin.dls=adminstrator-address
 {% endhighlight %}
 
 Restart Kylin server to take effective. To disable, set `mail.enabled` back to `false`.
+
+Administrator will get notifications for all jobs. Modeler and Analyst need enter email address into the "Notification List" at the first page of cube wizard, and then will get notified for that cube.
