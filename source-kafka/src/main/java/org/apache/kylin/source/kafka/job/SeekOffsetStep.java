@@ -116,6 +116,8 @@ public class SeekOffsetStep extends AbstractExecutable {
         }
 
         if (totalEndOffset > totalStartOffset) {
+            segment.setSourceOffsetStart(totalStartOffset);
+            segment.setSourceOffsetEnd(totalEndOffset);
             segment.setSourcePartitionOffsetStart(startOffsets);
             segment.setSourcePartitionOffsetEnd(endOffsets);
             segment.setName(CubeSegment.makeSegmentName(0, 0, totalStartOffset, totalEndOffset));
