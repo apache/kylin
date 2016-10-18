@@ -58,10 +58,12 @@ import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.DataSetException;
+import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.SortedTable;
 import org.dbunit.dataset.datatype.DataType;
 import org.dbunit.dataset.datatype.DataTypeException;
+import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.ext.h2.H2Connection;
 import org.dbunit.ext.h2.H2DataTypeFactory;
 import org.junit.Assert;
@@ -357,6 +359,29 @@ public class KylinTestBase {
             // compare the result
             Assert.assertEquals(queryName, expectRowCount, kylinTable.getRowCount());
             // Assertion.assertEquals(expectRowCount, kylinTable.getRowCount());
+        }
+    }
+
+    protected void verifyResultContent(String queryFolder) throws Exception {
+        printInfo("---------- verify result content in folder: " + queryFolder);
+
+        List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
+        for (File sqlFile : sqlFiles) {
+            String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
+            String sql = getTextFromFile(sqlFile);
+
+            File expectResultFile = new File(sqlFile.getParent(), sqlFile.getName() + ".expected.xml");
+            IDataSet expect = new FlatXmlDataSetBuilder().build(expectResultFile);
+            // Get expected table named "expect". FIXME Only support default table name
+            ITable expectTable = expect.getTable("expect");   
+
+            // execute Kylin
+            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
+
+            // compare the result
+            Assertion.assertEquals(expectTable, kylinTable);
         }
     }
 
