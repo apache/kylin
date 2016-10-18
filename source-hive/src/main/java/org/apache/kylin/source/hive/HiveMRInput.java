@@ -20,6 +20,7 @@ package org.apache.kylin.source.hive;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -35,6 +36,7 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
@@ -127,7 +129,6 @@ public class HiveMRInput implements IMRInput {
         @Override
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
-
             final KylinConfig kylinConfig = CubeManager.getInstance(conf.getConfig()).getCube(cubeName).getConfig();
 
             String createFlatTableMethod = kylinConfig.getCreateFlatHiveTableMethod();
@@ -154,7 +155,8 @@ public class HiveMRInput implements IMRInput {
             StringBuilder hiveInitBuf = new StringBuilder();
             hiveInitBuf.append("USE ").append(conf.getConfig().getHiveDatabaseForIntermediateTable()).append(";\n");
             hiveInitBuf.append(JoinedFlatTable.generateHiveSetStatements(conf));
-
+            final KylinConfig kylinConfig = ((CubeSegment) flatTableDesc.getSegment()).getConfig();
+            hiveInitBuf.append(initHiveConfSql(kylinConfig.getHiveConfigOverride()));
             String rowCountOutputDir = JobBuilderSupport.getJobWorkingDir(conf, jobId) + "/row_count";
 
             RedistributeFlatHiveTableStep step = new RedistributeFlatHiveTableStep();
@@ -172,6 +174,8 @@ public class HiveMRInput implements IMRInput {
             final ShellExecutable step = new ShellExecutable();
 
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            final KylinConfig kylinConfig = ((CubeSegment) flatTableDesc.getSegment()).getConfig();
+            hiveCmdBuilder.addStatement(initHiveConfSql(kylinConfig.getHiveConfigOverride()));
             hiveCmdBuilder.addStatement(JoinedFlatTable.generateHiveSetStatements(conf));
             hiveCmdBuilder.addStatement("set hive.exec.compress.output=false;\n");
             hiveCmdBuilder.addStatement(JoinedFlatTable.generateCountDataStatement(flatTableDesc, rowCountOutputDir));
@@ -187,7 +191,7 @@ public class HiveMRInput implements IMRInput {
             step.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP);
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
 
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            KylinConfig kylinConfig = ((CubeSegment) flatDesc.getSegment()).getConfig();
             MetadataManager metadataManager = MetadataManager.getInstance(kylinConfig);
             final Set<TableDesc> lookupViewsTables = Sets.newHashSet();
 
@@ -201,6 +205,7 @@ public class HiveMRInput implements IMRInput {
             if (lookupViewsTables.size() == 0) {
                 return null;
             }
+            hiveCmdBuilder.addStatement(initHiveConfSql(kylinConfig.getHiveConfigOverride()));
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";";
             hiveCmdBuilder.addStatement(useDatabaseHql);
             hiveCmdBuilder.addStatement(JoinedFlatTable.generateHiveSetStatements(conf));
@@ -225,7 +230,8 @@ public class HiveMRInput implements IMRInput {
         public static AbstractExecutable createFlatHiveTableStep(JobEngineConfig conf, IJoinedFlatTableDesc flatTableDesc, String jobId, String cubeName, boolean redistribute, String rowCountOutputDir) {
             StringBuilder hiveInitBuf = new StringBuilder();
             hiveInitBuf.append(JoinedFlatTable.generateHiveSetStatements(conf));
-
+            final KylinConfig kylinConfig = ((CubeSegment) flatTableDesc.getSegment()).getConfig();
+            hiveInitBuf.append(initHiveConfSql(kylinConfig.getHiveConfigOverride()));
             final String useDatabaseHql = "USE " + conf.getConfig().getHiveDatabaseForIntermediateTable() + ";\n";
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatTableDesc);
             final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
@@ -258,6 +264,18 @@ public class HiveMRInput implements IMRInput {
 
         private String getIntermediateTableIdentity() {
             return conf.getConfig().getHiveDatabaseForIntermediateTable() + "." + flatDesc.getTableName();
+        }
+
+        private static String initHiveConfSql(Map<String, String> overrides) {
+            if (overrides == null || overrides.isEmpty()) {
+                return " ";
+            } else {
+                StringBuilder initSql = new StringBuilder();
+                for (Map.Entry<String, String> override: overrides.entrySet()) {
+                    initSql.append(" SET ").append(override.getKey()).append("=").append(override.getValue()).append(";\n");
+                }
+                return initSql.toString();
+            }
         }
     }
 
