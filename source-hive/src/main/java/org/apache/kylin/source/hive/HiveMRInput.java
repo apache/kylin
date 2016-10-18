@@ -272,7 +272,7 @@ public class HiveMRInput implements IMRInput {
             } else {
                 StringBuilder initSql = new StringBuilder();
                 for (Map.Entry<String, String> override: overrides.entrySet()) {
-                    initSql.append(override.getKey()).append("=").append(override.getValue()).append(";\n");
+                    initSql.append(" SET ").append(override.getKey()).append("=").append(override.getValue()).append(";\n");
                 }
                 return initSql.toString();
             }
