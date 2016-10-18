@@ -47,7 +47,6 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.cube.kv.RowConstants;
-import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanExceedThresholdException;
 import org.apache.kylin.gridtable.GTScanRequest;
@@ -56,8 +55,6 @@ import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.measure.BufferedMeasureCodec;
-import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
-import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.storage.hbase.cube.v2.CellListIterator;
 import org.apache.kylin.storage.hbase.cube.v2.CubeHBaseRPC;
@@ -65,7 +62,6 @@ import org.apache.kylin.storage.hbase.cube.v2.HBaseReadonlyStore;
 import org.apache.kylin.storage.hbase.cube.v2.RawScan;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList;
-import org.apache.kylin.storage.hbase.cube.v2.filter.MassInValueProviderFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -202,13 +198,6 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             final List<RawScan> hbaseRawScans = deserializeRawScans(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getHbaseRawScan())));
 
             appendProfileInfo(sb, "start latency: " + (this.serviceStartTime - scanReq.getStartTime()));
-
-            MassInTupleFilter.VALUE_PROVIDER_FACTORY = new MassInValueProviderFactoryImpl(new MassInValueProviderFactoryImpl.DimEncAware() {
-                @Override
-                public DimensionEncoding getDimEnc(TblColRef col) {
-                    return scanReq.getInfo().getCodeSystem().getDimEnc(col.getColumnDesc().getZeroBasedIndex());
-                }
-            });
 
             final List<InnerScannerAsIterator> cellListsForeachRawScan = Lists.newArrayList();
 

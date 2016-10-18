@@ -41,6 +41,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -92,11 +93,13 @@ public class ITMassInQueryTest extends KylinTestBase {
     }
 
     @Test
+    @Ignore
     public void testMassInQuery() throws Exception {
         compare("src/test/resources/query/sql_massin", null, true);
     }
 
     @Test
+    @Ignore
     public void testMassInWithDistinctCount() throws Exception {
         run("src/test/resources/query/sql_massin_distinct", null, true);
     }

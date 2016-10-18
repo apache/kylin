@@ -71,7 +71,14 @@ public class MassInTupleFilter extends FunctionTupleFilter {
 
     @Override
     public Collection<?> getValues() {
-        return null;
+        if (valueProvider == null) {
+            valueProvider = VALUE_PROVIDER_FACTORY.getProvider(filterTableType, filterTableResourceIdentifier, column);
+        }
+        return valueProvider.getMassInValues();
+    }
+
+    public TblColRef getColumn() {
+        return column;
     }
 
     @Override
