@@ -16,9 +16,9 @@ title: Home
               <p class="title_text">Apache Kylin™ lets you query massive data set at sub-second latency in 3 steps.</p>
               <div align="left">
                 <ol>
-                  <li>Identify a Star Schema data on Hadoop.</li>
-                  <li>Build Cube on Hadoop.</li>
-                  <li>Query data with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.</li>
+                  <li>Identify a Star Schema on Hadoop.</li>
+                  <li>Build Cube from the identified tables.</li>
+                  <li>Query with ANSI-SQL and get results in sub-second, via ODBC, JDBC or RESTful API.</li>
                 </ol>
               </div>
               <img id="diagram" src="assets/images/kylin_diagram.png">
