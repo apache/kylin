@@ -116,8 +116,7 @@ public class QueryService extends BasicService {
     private final String hbaseUrl;
     private final String userTableName;
 
-    @Autowired
-    private QueryIdGenerator queryIdGenerator;
+    private QueryIdGenerator queryIdGenerator = new QueryIdGenerator();
 
     @Autowired
     private CacheManager cacheManager;

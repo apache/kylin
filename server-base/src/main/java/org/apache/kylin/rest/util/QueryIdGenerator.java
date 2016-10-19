@@ -40,6 +40,7 @@ public class QueryIdGenerator {
             postfix[i] = base26[ThreadLocalRandom.current().nextInt(base26.length)];
         }
 
-        return String.format("%s_%s_%s", dateFormat.format(System.currentTimeMillis()), project, new String(postfix));
+        return new String(postfix);
+        //return String.format("%s_%s_%s", dateFormat.format(System.currentTimeMillis()), project, new String(postfix));
     }
 }
