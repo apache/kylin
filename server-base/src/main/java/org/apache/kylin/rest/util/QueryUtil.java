@@ -105,6 +105,10 @@ public class QueryUtil {
         String sql = sqlRequest.getSql();
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
+        
+        // KYLIN-2108, DEFAULT is hive default database, but a Calcite keyword too, needs quote
+        sql = sql.replace("DEFAULT.", "\"DEFAULT\".");
+        sql = sql.replace("default.", "\"default\".");
 
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
