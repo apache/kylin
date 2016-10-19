@@ -42,5 +42,6 @@ public class QueryIdGenerator {
 
         return new String(postfix);
         //return String.format("%s_%s_%s", dateFormat.format(System.currentTimeMillis()), project, new String(postfix));
+        //disabled testcase: org.apache.kylin.rest.util.QueryIdGeneratorTest.testIdFormat()
     }
 }

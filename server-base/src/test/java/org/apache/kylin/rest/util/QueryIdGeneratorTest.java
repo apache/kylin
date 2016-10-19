@@ -19,6 +19,7 @@
 package org.apache.kylin.rest.util;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import java.util.concurrent.Future;
 
 public class QueryIdGeneratorTest {
 
+    @Ignore
     @Test
     public void testIdFormat() {
         QueryIdGenerator generator = new QueryIdGenerator();
