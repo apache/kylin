@@ -35,6 +35,7 @@ message CubeVisitRequest {
     required int32 rowkeyPreambleSize = 3;
     repeated IntList hbaseColumnsToGT = 4;
     required string kylinProperties = 5; // kylin properties
+    optional string queryId = 6;
     message IntList {
         repeated int32 ints = 1;
     }

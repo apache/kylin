@@ -55,6 +55,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.DBUtils;
+import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
@@ -71,6 +72,7 @@ import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.util.QueryIdGenerator;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
@@ -112,8 +114,10 @@ public class QueryService extends BasicService {
     private final BadQueryDetector badQueryDetector = new BadQueryDetector();
 
     private final String hbaseUrl;
-    private final String tableNameBase;
     private final String userTableName;
+
+    @Autowired
+    private QueryIdGenerator queryIdGenerator;
 
     @Autowired
     private CacheManager cacheManager;
@@ -130,7 +134,7 @@ public class QueryService extends BasicService {
         String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
         // split TABLE@HBASE_URL
         int cut = metadataUrl.indexOf('@');
-        tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
+        String tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         userTableName = tableNameBase + USER_TABLE_NAME;
 
@@ -264,6 +268,7 @@ public class QueryService extends BasicService {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
+        stringBuilder.append("Query Id: ").append(BackdoorToggles.getQueryId()).append(newLine);
         stringBuilder.append("SQL: ").append(request.getSql()).append(newLine);
         stringBuilder.append("User: ").append(user).append(newLine);
         stringBuilder.append("Success: ").append((null == response.getExceptionMessage())).append(newLine);
@@ -314,19 +319,26 @@ public class QueryService extends BasicService {
     }
 
     public SQLResponse doQueryWithCache(SQLRequest sqlRequest) {
-        try {
-            BackdoorToggles.setToggles(sqlRequest.getBackdoorToggles());
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String serverMode = kylinConfig.getServerMode();
+        if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
+            throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
+        }
 
+        final String queryId = queryIdGenerator.nextId(sqlRequest.getProject());
+
+        Map<String, String> toggles = new HashMap<>();
+        toggles.put(BackdoorToggles.KEY_QUERY_ID, queryId);
+        if (sqlRequest.getBackdoorToggles() != null) {
+            toggles.putAll(sqlRequest.getBackdoorToggles());
+        }
+        BackdoorToggles.setToggles(toggles);
+
+        try (SetThreadName ignored = new SetThreadName("Query-%s", queryId)) {
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
             logger.info("Using project: " + project);
             logger.info("The original query:  " + sql);
-
-            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            String serverMode = kylinConfig.getServerMode();
-            if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
-                throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
-            }
 
             if (!sql.toLowerCase().contains("select")) {
                 logger.debug("Directly return exception as not supported");

@@ -65,6 +65,10 @@ public class BackdoorToggles {
             return Integer.valueOf(v);
     }
 
+    public static String getQueryId() {
+        return getString(KEY_QUERY_ID);
+    }
+
     public static Pair<Short, Short> getShardAssignment() {
         String v = getString(DEBUG_TOGGLE_SHARD_ASSIGNMENT);
         if (v == null) {
@@ -91,6 +95,8 @@ public class BackdoorToggles {
     public static void cleanToggles() {
         _backdoorToggles.remove();
     }
+
+    public final static String KEY_QUERY_ID = "QUERY_ID";
 
     /**
      * set DEBUG_TOGGLE_DISABLE_FUZZY_KEY=true to disable fuzzy key for debug/profile usage

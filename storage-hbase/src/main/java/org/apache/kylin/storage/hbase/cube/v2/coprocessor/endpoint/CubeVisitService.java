@@ -46,6 +46,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
+import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanExceedThresholdException;
@@ -174,7 +175,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         byte[] allRows;
         String debugGitTag = "";
 
-        try {
+        String queryId = request.hasQueryId() ? request.getQueryId() : "UnknownId";
+        try (SetThreadName ignored = new SetThreadName("Kylin Query-%s", queryId)) {
             this.serviceStartTime = System.currentTimeMillis();
 
             region = env.getRegion();

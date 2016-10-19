@@ -39,6 +39,7 @@
     <aop:aspectj-autoproxy/>
 
     <bean class="org.apache.kylin.rest.init.InitialTaskManager" />
+    <bean class="org.apache.kylin.rest.util.QueryIdGenerator" />
 
     <context:component-scan base-package="org.apache.kylin.rest"/>
 
