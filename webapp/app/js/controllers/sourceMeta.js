@@ -660,46 +660,70 @@ KylinApp
           return;
         }
         $scope.table.sourceValid = true;
-        var columnList = [];
-        for (var key in $scope.streaming.parseResult) {
-          var defaultType="varchar(256)";
-          var _value = $scope.streaming.parseResult[key];
-          var defaultChecked = "Y";
-          if(typeof _value ==="string"){
-            defaultType="varchar(256)";
-          }else if(typeof _value ==="number"){
-            if(_value <= 2147483647){
-              if(_value.toString().indexOf(".")!=-1){
-                defaultType="decimal";
-              }else{
-                defaultType="int";
-              }
-            }else{
-              defaultType="timestamp";
-            }
-          }
-          if(defaultType=="timestamp"){
-            defaultChecked = "N";
-          }
-          columnList.push({
-            'name': key,
-            'checked': defaultChecked,
-            'type': defaultType,
-            'fromSource':'Y'
-          });
 
+        //streaming table data change structure
+        var columnList=[]
+        function changeObjTree(obj,base){
+          base=base?base+"_":"";
+          for(var i in obj){
+            if(Object.prototype.toString.call(obj[i])=="[object Object]"){
+              changeObjTree(obj[i],base+i);
+              continue;
+            }
+            columnList.push(createNewObj(base+i,obj[i]));
+          }
         }
 
-          var timeMeasure = $scope.cubeConfig.streamingAutoGenerateMeasure;
-          for(var i = 0;i<timeMeasure.length;i++){
-            var defaultCheck = 'Y';
-            columnList.push({
-              'name': timeMeasure[i].name,
-              'checked': defaultCheck,
-              'type': timeMeasure[i].type,
-              'fromSource':'N'
-            });
+        function checkValType(val,key){
+          var defaultType;
+          if(typeof val ==="number"){
+              if(/id/i.test(key)&&val.toString().indexOf(".")==-1){
+                defaultType="int";
+              }else if(val <= 2147483647){
+                if(val.toString().indexOf(".")!=-1){
+                  defaultType="decimal";
+                }else{
+                  defaultType="int";
+                }
+              }else{
+                defaultType="timestamp";
+              }
+          }else if(typeof val ==="string"){
+              if(!isNaN((new Date(val)).getFullYear())&&typeof ((new Date(val)).getFullYear())==="number"){
+                defaultType="date";
+              }else{
+                defaultType="varchar(256)";
+              }
+          }else if(Object.prototype.toString.call(val)=="[object Array]"){
+              defaultType="varchar(256)";
+          }else if (typeof val ==="boolean"){
+              defaultType="boolean";
           }
+          return defaultType;
+        }
+
+        function createNewObj(key,val){
+          var obj={};
+          obj.name=key;
+          obj.type=checkValType(val,key);
+          obj.fromSource="Y";
+          obj.checked="Y";
+          if(Object.prototype.toString.call(val)=="[object Array]"){
+            obj.checked="N";
+          }
+          return obj;
+        }
+        changeObjTree($scope.streaming.parseResult);
+        var timeMeasure = $scope.cubeConfig.streamingAutoGenerateMeasure;
+        for(var i = 0;i<timeMeasure.length;i++){
+          var defaultCheck = 'Y';
+          columnList.push({
+            'name': timeMeasure[i].name,
+            'checked': defaultCheck,
+            'type': timeMeasure[i].type,
+            'fromSource':'N'
+          });
+        }
 
         var firstCommit = false;
         if($scope.columnList.length==0){
