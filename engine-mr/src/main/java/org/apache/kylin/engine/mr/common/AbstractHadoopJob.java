@@ -318,7 +318,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 }
                 
                 if (fs.getFileStatus(p).isDirectory()) {
-                    appendTmpDir(job, fs, p);
+                    appendTmpDir(job, fs, p, jarList, fileList);
                     continue;
                 }
 
@@ -335,18 +335,14 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    private void appendTmpDir(Job job, FileSystem fs, Path tmpDir) {
+    private void appendTmpDir(Job job, FileSystem fs, Path tmpDir, StringBuilder jarList, StringBuilder fileList) {
         try {
-            Configuration jobConf = job.getConfiguration();
             FileStatus[] fList = fs.listStatus(tmpDir);
-
-            StringBuilder jarList = new StringBuilder();
-            StringBuilder fileList = new StringBuilder();
 
             for (FileStatus file : fList) {
                 Path p = file.getPath();
                 if (fs.getFileStatus(p).isDirectory()) {
-                    appendTmpDir(job, fs, p);
+                    appendTmpDir(job, fs, p, jarList, fileList);
                     continue;
                 }
 
@@ -355,9 +351,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                     list.append(",");
                 list.append(fs.getFileStatus(p).getPath().toString());
             }
-
-            appendTmpFiles(fileList.toString(), jobConf);
-            appendTmpJars(jarList.toString(), jobConf);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
