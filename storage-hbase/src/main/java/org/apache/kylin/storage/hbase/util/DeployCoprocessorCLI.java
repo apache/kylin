@@ -69,7 +69,6 @@ public class DeployCoprocessorCLI {
     public static final String CubeObserverClassOld = "org.apache.kylin.storage.hbase.coprocessor.observer.AggregateRegionObserver";
     public static final String IIEndpointClassOld = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
     public static final String IIEndpointClass = "org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.IIEndpoint";
-    private static KylinConfig kylinConfig;
 
     private static final Logger logger = LoggerFactory.getLogger(DeployCoprocessorCLI.class);
 
@@ -79,7 +78,7 @@ public class DeployCoprocessorCLI {
             printUsageAndExit();
         }
 
-        kylinConfig = KylinConfig.getInstanceFromEnv();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         FileSystem fileSystem = FileSystem.get(hconf);
         HBaseAdmin hbaseAdmin = new HBaseAdmin(hconf);
@@ -113,7 +112,7 @@ public class DeployCoprocessorCLI {
         Path hdfsCoprocessorJar = uploadCoprocessorJar(localCoprocessorJar, fileSystem, oldJarPaths);
         logger.info("New coprocessor jar: " + hdfsCoprocessorJar);
 
-        resetCoprocessorOnHTables(hbaseAdmin, hdfsCoprocessorJar, tableNames);
+        List<String> processedTables = resetCoprocessorOnHTables(hbaseAdmin, hdfsCoprocessorJar, tableNames);
 
         // Don't remove old jars, missing coprocessor jar will fail hbase
         // removeOldJars(oldJarPaths, fileSystem);
@@ -192,6 +191,7 @@ public class DeployCoprocessorCLI {
     }
 
     public static boolean resetCoprocessor(String tableName, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
 
         //when the table has migrated from dev env to test(prod) env, the dev server
@@ -239,14 +239,14 @@ public class DeployCoprocessorCLI {
         return true;
     }
 
-    private static List<String> processedTables = Collections.synchronizedList(new ArrayList<String>());
 
-    private static void resetCoprocessorOnHTables(final HBaseAdmin hbaseAdmin, final Path hdfsCoprocessorJar, List<String> tableNames) throws IOException {
+    private static List<String> resetCoprocessorOnHTables(final HBaseAdmin hbaseAdmin, final Path hdfsCoprocessorJar, List<String> tableNames) throws IOException {
+        List<String> processedTables = Collections.synchronizedList(new ArrayList<String>());
         ExecutorService coprocessorPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
         CountDownLatch countDownLatch = new CountDownLatch(tableNames.size());
 
         for (final String tableName : tableNames) {
-            coprocessorPool.execute(new ResetCoprocessorWorker(countDownLatch, hbaseAdmin, hdfsCoprocessorJar, tableName));
+            coprocessorPool.execute(new ResetCoprocessorWorker(countDownLatch, hbaseAdmin, hdfsCoprocessorJar, tableName, processedTables));
         }
 
         try {
@@ -256,6 +256,7 @@ public class DeployCoprocessorCLI {
         }
 
         coprocessorPool.shutdown();
+        return processedTables;
     }
 
     private static class ResetCoprocessorWorker implements Runnable {
@@ -263,12 +264,14 @@ public class DeployCoprocessorCLI {
         private final HBaseAdmin hbaseAdmin;
         private final Path hdfsCoprocessorJar;
         private final String tableName;
+        private final List<String> processedTables;
 
-        public ResetCoprocessorWorker(CountDownLatch countDownLatch, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar, String tableName) {
+        public ResetCoprocessorWorker(CountDownLatch countDownLatch, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar, String tableName, List<String> processedTables) {
             this.countDownLatch = countDownLatch;
             this.hbaseAdmin = hbaseAdmin;
             this.hdfsCoprocessorJar = hdfsCoprocessorJar;
             this.tableName = tableName;
+            this.processedTables = processedTables;
         }
 
         @Override
