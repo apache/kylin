@@ -28,7 +28,7 @@
                     <span class="text-info">NO SEGMENT TO MERGE.</span>
                 </div>
                 <div ng-if="cube.segments.length >= 2" class="row">
-                    <table class="table table-striped list" ng-if="(cube.segments|filter: {status: 'NEW'}).length == 0">
+                    <table class="table table-striped list" >
                         <tbody>
                         <tr>
                             <td>PARTITION DATE COLUMN</td>
@@ -102,10 +102,6 @@
                         </tr>
                         </tbody>
                     </table>
-
-                    <div ng-if="(cube.segments|filter: {status: 'NEW'}).length > 0">
-                        <span class="text-warning">There exists a build request of this cube, the job may be running or error. If you need a new build, please wait for its complete or discard it.</span>
-                    </div>
                 </div>
                 <div ng-if="message">
                     <span class="text-warning">{{message}}</span>

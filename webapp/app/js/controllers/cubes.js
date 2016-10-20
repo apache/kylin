@@ -348,6 +348,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
       }
       if ($scope.metaModel.model.name) {
         if ($scope.metaModel.model.partition_desc.partition_date_column) {
+
           $modal.open({
             templateUrl: 'jobSubmit.html',
             controller: jobSubmitCtrl,
@@ -362,6 +363,7 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
                 return 'BUILD';
               },
               scope:function(){
+
                 return $scope;
               }
             }
@@ -543,7 +545,7 @@ var cubeCloneCtrl = function ($scope, $modalInstance, CubeService, MessageServic
 }
 
 
-var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, metaModel, buildType, SweetAlert, loadingRequest, scope, CubeList) {
+var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageService, $location, cube, metaModel, buildType, SweetAlert, loadingRequest, scope, CubeList,$filter) {
   $scope.cubeList = CubeList;
   $scope.cube = cube;
   $scope.metaModel = metaModel;
@@ -553,7 +555,13 @@ var jobSubmitCtrl = function ($scope, $modalInstance, CubeService, MessageServic
     endTime: 0
   };
   $scope.message = "";
-
+  var startTime;
+  if(cube.segments.length == 0){
+    startTime = (!!cube.detail.partition_date_start)?cube.detail.partition_date_start:0;
+  }else{
+    startTime = cube.segments[cube.segments.length-1].date_range_end;
+  }
+  $scope.jobBuildRequest.startTime=startTime;
   $scope.rebuild = function () {
 
     $scope.message = null;

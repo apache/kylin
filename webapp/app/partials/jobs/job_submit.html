@@ -25,8 +25,7 @@
             <div class="col-md-2"></div>
             <div class="col-md-8">
                 <div class="row">
-                    <table class="table table-striped list"
-                           ng-if="(cube.segments | filter: {status: 'NEW'}).length == 0">
+                    <table class="table table-striped list">
                         <tbody>
                         <tr>
                             <td>PARTITION DATE COLUMN</td>
@@ -35,18 +34,19 @@
                         <tr>
                             <td>Start Date (Include)</td>
                             <td>
-                                <!--no need convert UTC again-->
-                                <div ng-if="cube.segments.length == 0">
-                                    {{jobBuildRequest.startTime =
-                                  (!!cube.detail.partition_date_start)?cube.detail.partition_date_start:0
-                                    | reverseToGMT0 }}
-                                </div>
-                                <div ng-if="cube.segments.length > 0">
-                                    <!--no need to convert-->
-                                    <div ng-if="metaModel.model.partition_desc.partition_type=='APPEND'">
-                                        {{ jobBuildRequest.startTime = cube.segments[cube.segments.length-1].date_range_end| reverseToGMT0 }}
-                                    </div>
-                                </div>
+
+                              <div class="dropdown" style="width: 98%;">
+                                <a class="dropdown-toggle" id="dropdown1" role="button" data-toggle="dropdown" data-target="#" href="#">
+                                  <div class="input-group"><input type="text" class="form-control" date-timepicker-timezone data-ng-model="jobBuildRequest.startTime" >
+                                    <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                                  </div>
+                                </a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                                  <datetimepicker  data-ng-model="jobBuildRequest.startTime" data-datetimepicker-config="{ dropdownSelector: '#dropdown1' }"/>
+                                </ul>
+                              </div>
+
+
                             </td>
                         </tr>
                         <tr>
@@ -71,10 +71,6 @@
                         </tr>
                         </tbody>
                     </table>
-
-                    <div ng-if="(cube.segments|filter: {status: 'NEW'}).length > 0">
-                        <span class="text-warning">There exists a build request of this cube, the job may be running or error. If you need a new build, please wait for its complete or discard it.</span>
-                    </div>
                 </div>
                 <div ng-if="message">
                     <span class="text-warning">{{message}}</span>
