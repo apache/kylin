@@ -182,11 +182,7 @@ public class BooleanDimEnc extends DimensionEncoding {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-
-        BooleanDimEnc that = (BooleanDimEnc) o;
-
-        return fixedLen == that.fixedLen;
-
+        return true;
     }
 
     @Override
