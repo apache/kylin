@@ -18,13 +18,27 @@
 
 package org.apache.kylin.rest.util;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.rest.request.SQLRequest;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-public class QueryUtilTest {
+public class QueryUtilTest extends LocalFileMetadataTestCase {
+    
+    @Before
+    public void setUp() throws Exception {
+        this.createTestMetadata();
+    }
+
+    @After
+    public void after() throws Exception {
+        this.cleanupTestMetadata();
+    }
+    
     @Test
-    public void testHealInterval() {
+    public void testMassageSql() {
         {
             SQLRequest sqlRequest = new SQLRequest();
             sqlRequest.setSql("select ( date '2001-09-28' + interval floor(1.2) day) from test_kylin_fact");
@@ -37,15 +51,21 @@ public class QueryUtilTest {
             String s = QueryUtil.massageSql(sqlRequest);
             Assert.assertEquals("select ( date '2001-09-28' + interval '2' month) from test_kylin_fact group by ( date '2001-09-28' + interval '2' month)", s);
         }
-    }
-
-    @Test
-    public void testHealConcat() {
         {
             SQLRequest sqlRequest = new SQLRequest();
             sqlRequest.setSql("select concat(\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\",\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\") concat(\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\",\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\") ()");
             String s = QueryUtil.massageSql(sqlRequest);
             Assert.assertEquals("select {fn concat(\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\",\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\") } {fn concat(\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\",\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\") } ()", s);
+        }
+    }
+
+    @Test
+    public void testKeywordDefaultDirtyHack() {
+        {
+            SQLRequest sqlRequest = new SQLRequest();
+            sqlRequest.setSql("select * from DEFAULT.TEST_KYLIN_FACT");
+            String s = QueryUtil.massageSql(sqlRequest);
+            Assert.assertEquals("select * from \"DEFAULT\".TEST_KYLIN_FACT", s);
         }
     }
 }

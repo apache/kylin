@@ -75,6 +75,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.QueryIdGenerator;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
+import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hybrid.HybridInstance;
@@ -432,7 +433,7 @@ public class QueryService extends BasicService {
             userInfo += grantedAuthority.getAuthority();
         }
 
-        SQLResponse fakeResponse = QueryUtil.tableauIntercept(sqlRequest.getSql());
+        SQLResponse fakeResponse = TableauInterceptor.tableauIntercept(sqlRequest.getSql());
         if (null != fakeResponse) {
             logger.debug("Return fake response, is exception? " + fakeResponse.getIsException());
             return fakeResponse;
