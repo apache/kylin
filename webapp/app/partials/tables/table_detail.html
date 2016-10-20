@@ -153,6 +153,12 @@
 
         <!--streaming-->
         <div id="streaming" ng-show="tableModel.selectedSrcTable.source_type==1" class="tab-pane">
+            <div class="col-xs-12 pdb-12 pdt-12">
+              <div class="ofh">
+                <a class="btn btn-info floatR" ng-click="editStreamingConfig(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)"><i class="fa fa-edit"></i>Edit</a>
+              </div>
+            </div>
+
           <div  ng-include="'partials/cubeDesigner/streamingConfig.html'" ng-init="state.mode='view'"></div>
         </div>
 

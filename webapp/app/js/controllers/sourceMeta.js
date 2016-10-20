@@ -424,6 +424,35 @@ KylinApp
       }
     };
 
+    $scope.editStreamingConfig = function(tableName){
+      var modalInstance = $modal.open({
+        templateUrl: 'editStreamingSource.html',
+        controller: EditStreamingSourceCtrl,
+        backdrop : 'static',
+        resolve: {
+          tableNames: function () {
+            return $scope.tableNames;
+          },
+          projectName: function () {
+            return $scope.projectModel.selectedProject;
+          },
+          tableName: function(){
+            return tableName;
+          },
+          scope: function () {
+            return $scope;
+          }
+        }
+      });
+
+      modalInstance.result.then(function () {
+        $scope.$broadcast('StreamingConfigEdited');
+      }, function () {
+        $scope.$broadcast('StreamingConfigEdited');
+      });
+
+
+    }
 
     //streaming model
     $scope.openStreamingSourceModal = function () {
@@ -449,6 +478,78 @@ KylinApp
       });
     };
 
+    var EditStreamingSourceCtrl = function ($scope, $interpolate, $templateCache, tableName, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig,StreamingModel,StreamingService) {
+
+      $scope.state = {
+        tableName : tableName,
+        mode: "edit",
+        target:"kfkConfig"
+      }
+
+      $scope.cancel = function () {
+        $modalInstance.dismiss('cancel');
+      };
+
+      $scope.projectName = projectName;
+      $scope.streamingMeta = StreamingModel.createStreamingConfig();
+      $scope.kafkaMeta = StreamingModel.createKafkaConfig();
+      $scope.updateStreamingMeta = function(val){
+        $scope.streamingMeta = val;
+      }
+      $scope.updateKafkaMeta = function(val){
+        $scope.kafkaMeta = val;
+      }
+
+      $scope.streamingResultTmpl = function (notification) {
+        // Get the static notification template.
+        var tmpl = notification.type == 'success' ? 'streamingResultSuccess.html' : 'streamingResultError.html';
+        return $interpolate($templateCache.get(tmpl))(notification);
+      };
+
+      $scope.updateStreamingSchema = function(){
+        StreamingService.update({}, {
+          project: $scope.projectName,
+          tableData:angular.toJson(""),
+          streamingConfig: angular.toJson($scope.streamingMeta),
+          kafkaConfig: angular.toJson($scope.kafkaMeta)
+        }, function (request) {
+          if (request.successful) {
+            SweetAlert.swal('', 'Updated the streaming successfully.', 'success');
+            $scope.cancel();
+          } else {
+            var message = request.message;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            MessageService.sendMsg($scope.streamingResultTmpl({
+              'text': msg,
+              'streamingSchema': angular.toJson($scope.streamingMeta,true),
+              'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+            }), 'error', {}, true, 'top_center');
+          }
+          loadingRequest.hide();
+        }, function (e) {
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            MessageService.sendMsg($scope.streamingResultTmpl({
+              'text': msg,
+              'streamingSchema': angular.toJson($scope.streamingMeta,true),
+              'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+            }), 'error', {}, true, 'top_center');
+          } else {
+            MessageService.sendMsg($scope.streamingResultTmpl({
+              'text': msg,
+              'streamingSchema': angular.toJson($scope.streamingMeta,true),
+              'kfkSchema': angular.toJson($scope.kafkaMeta,true)
+            }), 'error', {}, true, 'top_center');
+          }
+          //end loading
+          loadingRequest.hide();
+
+        })
+      }
+
+    }
+
     var StreamingSourceCtrl = function ($scope, $location,$interpolate,$templateCache, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig,StreamingModel,StreamingService) {
 
       $scope.cubeState={
@@ -460,6 +561,7 @@ KylinApp
 
       $scope.streamingMeta = StreamingModel.createStreamingConfig();
       $scope.kafkaMeta = StreamingModel.createKafkaConfig();
+
 
 
       $scope.steps = {

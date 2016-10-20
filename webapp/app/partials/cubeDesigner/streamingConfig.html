@@ -17,6 +17,7 @@
 -->
 
 <div ng-controller="streamingConfigCtrl">
+
   <form name="form.cube_streaming_form" novalidate>
 
     <div>
@@ -145,7 +146,7 @@
                    ng-class="{'has-error':form.cube_streaming_form.timeout.$invalid && (form.cube_streaming_form.timeout.$dirty||form.cube_streaming_form.$submitted)}">
                 <input ng-if="state.mode=='edit'" name="timeout" required ng-model="kafkaMeta.timeout" type="text"
                        placeholder="Input kafkaConfig timeout"
-                       ng-maxlength=100 ng-pattern="/^\+?[1-9][0-9]*$/"
+                       ng-pattern="/^\+?[1-9][0-9]*$/"
                        class="form-control"/>
                 <small class="help-block"
                        ng-show="!form.cube_streaming_form.timeout.$error.required && form.cube_streaming_form.timeout.$invalid && (form.cube_streaming_form.timeout.$dirty||form.cube_streaming_form.$submitted)">
@@ -171,7 +172,7 @@
                    ng-class="{'has-error':form.cube_streaming_form.bufferSize.$invalid && (form.cube_streaming_form.bufferSize.$dirty||form.cube_streaming_form.$submitted)}">
                 <input ng-if="state.mode=='edit'" name="bufferSize" required ng-model="kafkaMeta.bufferSize" type="text"
                        placeholder="Input kafkaConfig bufferSize"
-                       ng-maxlength=100 ng-pattern="/^\+?[1-9][0-9]*$/"
+                       ng-pattern="/^\+?[1-9][0-9]*$/"
                        class="form-control"/>
                 <small class="help-block"
                        ng-show="!form.cube_streaming_form.bufferSize.$error.required && form.cube_streaming_form.bufferSize.$invalid && (form.cube_streaming_form.bufferSize.$dirty||form.cube_streaming_form.$submitted)">
@@ -197,7 +198,7 @@
                    ng-class="{'has-error':form.cube_streaming_form.margin.$invalid && (form.cube_streaming_form.margin.$dirty||form.cube_streaming_form.$submitted)}">
                 <input ng-if="state.mode=='edit'" name="margin" required ng-model="kafkaMeta.margin" type="text"
                        placeholder="Input kafkaConfig margin"
-                       ng-maxlength=100 ng-pattern="/^\+?[1-9][0-9]*$/"
+                       ng-pattern="/^\+?[1-9][0-9]*$/"
                        class="form-control"/>
                 <small class="help-block"
                        ng-show="!form.cube_streaming_form.margin.$error.required && form.cube_streaming_form.margin.$invalid && (form.cube_streaming_form.margin.$dirty||form.cube_streaming_form.$submitted)">
@@ -248,7 +249,7 @@
               </div>
             </div>
           </div>
-          <div class="form-group middle-popover" ng-if="state.mode=='edit'" ng-class="{'required':state.mode=='edit'}">
+          <div class="form-group middle-popover" ng-if="state.mode=='edit'&&state.target!=='kfkConfig'" ng-class="{'required':state.mode=='edit'}">
             <div class="row">
               <label class="col-xs-12 col-sm-3 control-label no-padding-right">
                 <b>Parser Timestamp Field</b>

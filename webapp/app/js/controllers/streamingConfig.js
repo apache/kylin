@@ -27,6 +27,19 @@ KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q
     $scope.kafkaMeta = StreamingModel.createKafkaConfig();
   }
 
+  if($scope.state.mode=='edit'&& $scope.state.target=='kfkConfig' && $scope.state.tableName){
+    StreamingService.getConfig({table:$scope.state.tableName}, function (configs) {
+      if(!!configs[0]&&configs[0].name.toUpperCase() == $scope.state.tableName.toUpperCase()){
+        $scope.updateStreamingMeta(configs[0]);
+        StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
+          if(!!streamings[0]&&streamings[0].name.toUpperCase() == $scope.state.tableName.toUpperCase()){
+            $scope.updateKafkaMeta(streamings[0]);
+          }
+        })
+      }
+    })
+  }
+
 
   $scope.addCluster = function () {
     $scope.kafkaMeta.clusters.push(StreamingModel.createKafkaCluster());
@@ -94,22 +107,30 @@ KylinApp.controller('streamingConfigCtrl', function ($scope,StreamingService, $q
     }
     //view model
     if($scope.state.mode == 'view' && $scope.tableModel.selectedSrcTable.source_type==1){
-      var table = $scope.tableModel.selectedSrcTable;
-      var streamingName = table.database+"."+table.name;
-      $scope.streamingMeta = {};
-      $scope.kafkaMeta = {};
-      StreamingService.getConfig({table:streamingName}, function (configs) {
-        if(!!configs[0]&&configs[0].name.toUpperCase() == streamingName.toUpperCase()){
-          $scope.streamingMeta = configs[0];
-          StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
-            if(!!streamings[0]&&streamings[0].name.toUpperCase() == streamingName.toUpperCase()){
-              $scope.kafkaMeta = streamings[0];
-            }
-          })
-        }
-      })
+      $scope.reloadMeta();
     }
 
   });
+
+  $scope.$on('StreamingConfigEdited', function (event) {
+    $scope.reloadMeta();
+  });
+
+  $scope.reloadMeta = function(){
+    var table = $scope.tableModel.selectedSrcTable;
+    var streamingName = table.database+"."+table.name;
+    $scope.streamingMeta = {};
+    $scope.kafkaMeta = {};
+    StreamingService.getConfig({table:streamingName}, function (configs) {
+      if(!!configs[0]&&configs[0].name.toUpperCase() == streamingName.toUpperCase()){
+        $scope.streamingMeta = configs[0];
+        StreamingService.getKfkConfig({kafkaConfigName:$scope.streamingMeta.name}, function (streamings) {
+          if(!!streamings[0]&&streamings[0].name.toUpperCase() == streamingName.toUpperCase()){
+            $scope.kafkaMeta = streamings[0];
+          }
+        })
+      }
+    })
+  }
 
 });

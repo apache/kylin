@@ -71,3 +71,33 @@
       </div>
     </div>
   </script>
+
+<script type="text/ng-template" id="editStreamingSource.html">
+
+  <div class="modal-header">
+    <div class="box-header">
+      <h3 class="box-title">Streaming Table And Cluster Info</h3>
+
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" ng-click="cancel()" data-widget="remove"><i class="fa fa-times"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-body streaming-source" style="height: 660px;overflow-y:auto;">
+    <div ng-include="'partials/cubeDesigner/streamingConfig.html'"></div>
+  </div>
+  <div class="modal-footer">
+    <div class="row">
+      <div class="col-xs-8">
+        <div>
+        </div>
+      </div>
+      <div class="col-xs-4">
+        <button class="btn btn-primary" ng-click="updateStreamingSchema()">
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+</script>
