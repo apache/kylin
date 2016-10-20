@@ -44,7 +44,7 @@ public class TopNCounterBasicTest {
 
     @Test
     public void testTopK() {
-        TopNCounter<String> vs = new TopNCounter<String>(3);
+        TopNCounter<String> vs = new TopNCounter<>(3);
         String[] stream = { "X", "X", "Y", "Z", "A", "B", "C", "X", "X", "A", "C", "A", "A" };
         for (String i : stream) {
             vs.offer(i);
