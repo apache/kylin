@@ -273,8 +273,10 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   $scope.measureReturnTypeUpdate = function(){
 
     if($scope.newMeasure.function.expression == 'TOP_N'){
+      if($scope.newMeasure.function.parameter.type==""||!$scope.newMeasure.function.parameter.type){
+        $scope.newMeasure.function.parameter.type= 'column';
+      }
       $scope.convertedColumns=[];
-      $scope.newMeasure.function.parameter.type= 'column';
       $scope.newMeasure.function.returntype = "topn(100)";
       return;
     }else if($scope.newMeasure.function.expression == 'EXTENDED_COLUMN'){

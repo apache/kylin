@@ -112,7 +112,7 @@
                           </div>
                       </div>
                       <!--Param Type-->
-                      <div class="form-group" ng-if="newMeasure.function.expression !== 'EXTENDED_COLUMN' && newMeasure.function.expression !== 'TOP_N'">
+                      <div class="form-group" ng-if="newMeasure.function.expression !== 'EXTENDED_COLUMN'">
                           <div class="row">
                               <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default"><b>Param Type</b></label>
                               <div class="col-xs-12 col-sm-6">
@@ -355,7 +355,10 @@
 </script>
 
 <script type="text/ng-template" id="topnTip.html">
-  <p>Will use this column for SUM and Order by</p>
+  <p>
+    Will use this column for SUM and Order by.<br/>
+    For constant value 1, will use SUM(1).
+  </p>
 </script>
 
 <script type="text/ng-template" id="hostTableTip.html">
