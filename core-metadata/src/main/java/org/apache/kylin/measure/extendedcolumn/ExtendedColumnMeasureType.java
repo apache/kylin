@@ -100,7 +100,7 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
             TblColRef extended = getExtendedColumn(extendColumnFunc);
 
             if (!sqlDigest.groupbyColumns.contains(extended)) {
-                return;
+                continue;
             }
 
             sqlDigest.aggregations.add(extendColumnFunc);
