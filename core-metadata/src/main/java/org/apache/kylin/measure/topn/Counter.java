@@ -31,6 +31,8 @@ import java.io.ObjectOutput;
 public class Counter<T> implements Externalizable {
 
     protected T item;
+
+
     protected double count;
     //    protected double error;
 
@@ -42,9 +44,14 @@ public class Counter<T> implements Externalizable {
 
     public Counter(T item) {
         this.count = 0;
-        //        this.error = 0;
         this.item = item;
     }
+
+    public Counter(T item, double count) {
+        this.item = item;
+        this.count = count;
+    }
+
 
     public T getItem() {
         return item;
@@ -54,13 +61,11 @@ public class Counter<T> implements Externalizable {
         return count;
     }
 
-    //    public double getError() {
-    //        return error;
-    //    }
-
+    public void setCount(double count) {
+        this.count = count;
+    }
     @Override
     public String toString() {
-        //        return item + ":" + count + ':' + error;
         return item + ":" + count;
     }
 

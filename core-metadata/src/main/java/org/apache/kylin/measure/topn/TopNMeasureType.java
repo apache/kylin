@@ -260,7 +260,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             };
         }
 
-        if (digest.aggregations.size() == 0 ) {
+        if (digest.aggregations.size() == 0) {
             // directly query the UHC column without sorting
             unmatchedDimensions.removeAll(literalCol);
             return new CapabilityInfluence() {
