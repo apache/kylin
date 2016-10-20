@@ -92,17 +92,17 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
     }
 
     /**
-     * Resort and keep the expected size
+     * Sort and keep the expected size;
      */
-    public void consolidate() {
-        Collections.sort(counterList, this.descending ? DESC_Comparator : ASC_Comparator);
+    public void sortAndRetain() {
+        Collections.sort(counterList, this.descending ? DESC_COMPARATOR : ASC_COMPARATOR);
         retain(capacity);
         ordered = true;
     }
 
     public List<Counter<T>> topK(int k) {
         if (ordered == false) {
-            consolidate();
+            sortAndRetain();
         }
         List<Counter<T>> topK = new ArrayList<>(k);
         Iterator<Counter<T>> iterator = counterList.iterator();
@@ -195,7 +195,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
             }
         }
 
-        this.consolidate();
+        this.sortAndRetain();
         return this;
     }
 
@@ -204,7 +204,6 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
      * @param newCapacity
      */
     public void retain(int newCapacity) {
-        assert newCapacity > 0;
         this.capacity = newCapacity;
         if (this.size() > newCapacity) {
             Counter<T> toRemoved;
@@ -248,7 +247,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
         }
     }
 
-    private static final Comparator ASC_Comparator = new Comparator<Counter>() {
+    private static final Comparator ASC_COMPARATOR = new Comparator<Counter>() {
         @Override
         public int compare(Counter o1, Counter o2) {
             return o1.getCount() > o2.getCount() ? 1 : o1.getCount() == o2.getCount() ? 0 : -1;
@@ -256,7 +255,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
 
     };
 
-    private static final Comparator DESC_Comparator = new Comparator<Counter>() {
+    private static final Comparator DESC_COMPARATOR = new Comparator<Counter>() {
         @Override
         public int compare(Counter o1, Counter o2) {
             return o1.getCount() > o2.getCount() ? -1 : o1.getCount() == o2.getCount() ? 0 : 1;

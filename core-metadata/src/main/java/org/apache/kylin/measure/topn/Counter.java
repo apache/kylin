@@ -31,10 +31,7 @@ import java.io.ObjectOutput;
 public class Counter<T> implements Externalizable {
 
     protected T item;
-
-
     protected double count;
-    //    protected double error;
 
     /**
      * For de-serialization
@@ -74,13 +71,11 @@ public class Counter<T> implements Externalizable {
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         item = (T) in.readObject();
         count = in.readDouble();
-        //error = in.readDouble();
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(item);
         out.writeDouble(count);
-        //out.writeDouble(error);
     }
 }
