@@ -206,7 +206,6 @@ public class JobService extends BasicService {
         }
 
         checkCubeDescSignature(cube);
-        checkNoRunningJob(cube);
 
         DefaultChainedExecutable job;
 
@@ -234,15 +233,6 @@ public class JobService extends BasicService {
     private void checkCubeDescSignature(CubeInstance cube) {
         if (!cube.getDescriptor().checkSignature())
             throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor());
-    }
-
-    private void checkNoRunningJob(CubeInstance cube) throws JobException {
-        final List<CubingJob> cubingJobs = listAllCubingJobs(cube.getName(), null, EnumSet.allOf(ExecutableState.class));
-        for (CubingJob job : cubingJobs) {
-            if (job.getStatus() == ExecutableState.READY || job.getStatus() == ExecutableState.RUNNING || job.getStatus() == ExecutableState.ERROR) {
-                throw new JobException("The cube " + cube.getName() + " has running job(" + job.getId() + ") please discard it and try again.");
-            }
-        }
     }
 
     public JobInstance getJobInstance(String uuid) throws IOException, JobException {
