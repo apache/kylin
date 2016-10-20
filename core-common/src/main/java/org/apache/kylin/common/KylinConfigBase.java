@@ -504,6 +504,10 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean getBadQueryPersistentEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.badquery.persistent.enable", "true"));
     }
+    
+    public String[] getQueryTransformers() {
+        return getOptionalStringArray("kylin.query.transformers", new String[0]);
+    }
 
     public int getCachedDictMaxEntrySize() {
         return Integer.parseInt(getOptional("kylin.dict.cache.max.entry", "3000"));
