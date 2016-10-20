@@ -315,13 +315,14 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 return;
 
             if (sqlDigest.aggregations.size() > 1) {
-                throw new IllegalStateException("When query with topN, only one metrics is allowed.");
+                return;
             }
 
             if (sqlDigest.aggregations.size() > 0) {
                 FunctionDesc origFunc = sqlDigest.aggregations.iterator().next();
                 if (origFunc.isSum() == false && origFunc.isCount() == false) {
-                    throw new IllegalStateException("When query with topN, only SUM function is allowed.");
+                    logger.warn("When query with topN, only SUM/Count function is allowed.");
+                    return;
                 }
                 logger.info("Rewrite function " + origFunc + " to " + topnFunc);
             }
