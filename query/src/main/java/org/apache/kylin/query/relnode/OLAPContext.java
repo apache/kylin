@@ -33,7 +33,6 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -89,7 +88,7 @@ public class OLAPContext {
     public OLAPContext(int seq) {
         this.id = seq;
         this.storageContext = new StorageContext();
-        this.sortMeasures = Lists.newArrayList();
+        this.sortColumns = Lists.newArrayList();
         this.sortOrders = Lists.newArrayList();
         Map<String, String> parameters = _localPrarameters.get();
         if (parameters != null) {
@@ -126,7 +125,7 @@ public class OLAPContext {
     public Set<TblColRef> filterColumns = new HashSet<TblColRef>();
     public TupleFilter filter;
     public List<JoinDesc> joins = new LinkedList<JoinDesc>();
-    private List<MeasureDesc> sortMeasures;
+    private List<TblColRef> sortColumns;
     private List<SQLDigest.OrderEnum> sortOrders;
 
     // rewrite info
@@ -147,7 +146,7 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortMeasures, sortOrders);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortColumns, sortOrders);
         return sqlDigest;
     }
 
@@ -170,9 +169,9 @@ public class OLAPContext {
         this.returnTupleInfo = info;
     }
 
-    public void addSort(MeasureDesc measure, SQLDigest.OrderEnum order) {
-        if (measure != null) {
-            sortMeasures.add(measure);
+    public void addSort(TblColRef col, SQLDigest.OrderEnum order) {
+        if (col != null) {
+            sortColumns.add(col);
             sortOrders.add(order);
         }
     }

@@ -91,10 +91,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
             SQLDigest.OrderEnum order = getOrderEnum(fieldCollation.getDirection());
             OLAPRel olapChild = (OLAPRel) this.getInput();
             TblColRef orderCol = olapChild.getColumnRowType().getAllColumns().get(index);
-            MeasureDesc measure = findMeasure(orderCol);
-            if (measure != null) {
-                this.context.addSort(measure, order);
-            }
+            this.context.addSort(orderCol, order);
             this.context.storageContext.markSort();
         }
 
@@ -110,6 +107,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
         }
     }
 
+    @SuppressWarnings("unused")
     private MeasureDesc findMeasure(TblColRef col) {
         for (MeasureDesc measure : this.context.realization.getMeasures()) {
             if (col.getName().equals(measure.getFunction().getRewriteFieldName())) {

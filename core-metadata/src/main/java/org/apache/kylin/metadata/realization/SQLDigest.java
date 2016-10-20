@@ -24,7 +24,6 @@ import java.util.Set;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.ImmutableList;
@@ -56,13 +55,13 @@ public class SQLDigest {
     public Set<TblColRef> metricColumns;
     public List<FunctionDesc> aggregations; // storage level measure type, on top of which various sql aggr function may apply
     public List<SQLCall> aggrSqlCalls; // sql level aggregation function call
-    public List<MeasureDesc> sortMeasures;
+    public List<TblColRef> sortColumns;
     public List<OrderEnum> sortOrders;
     public boolean isRawQuery;
 
     public SQLDigest(String factTable, TupleFilter filter, List<JoinDesc> joinDescs, Set<TblColRef> allColumns, //
             List<TblColRef> groupbyColumns, Set<TblColRef> filterColumns, Set<TblColRef> metricColumns, //
-            List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, List<MeasureDesc> sortMeasures, List<OrderEnum> sortOrders) {
+            List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, List<TblColRef> sortColumns, List<OrderEnum> sortOrders) {
         this.factTable = factTable;
         this.filter = filter;
         this.joinDescs = joinDescs;
@@ -72,7 +71,7 @@ public class SQLDigest {
         this.metricColumns = metricColumns;
         this.aggregations = aggregations;
         this.aggrSqlCalls = aggrSqlCalls;
-        this.sortMeasures = sortMeasures;
+        this.sortColumns = sortColumns;
         this.sortOrders = sortOrders;
         this.isRawQuery = isRawQuery();
     }
