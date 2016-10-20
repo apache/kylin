@@ -96,14 +96,7 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
      */
     public void consolidate() {
         Collections.sort(counterList, this.descending ? DESC_Comparator : ASC_Comparator);
-
-        if (this.size() > this.capacity) {
-            for (int x = this.size() - 1; x >= capacity; x--) {
-                Counter<T> removed = counterList.remove(x);
-                this.counterMap.remove(removed.item);
-            }
-        }
-
+        retain(capacity);
         ordered = true;
     }
 
@@ -214,9 +207,10 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
         assert newCapacity > 0;
         this.capacity = newCapacity;
         if (this.size() > newCapacity) {
-            for (int x = newCapacity; x < this.size(); x++) {
-                Counter<T> removed = counterList.remove(x);
-                this.counterMap.remove(removed.item);
+            Counter<T> toRemoved;
+            for (int i = 0, n = this.size() - newCapacity; i < n; i++) {
+                toRemoved = counterList.pollLast();
+                this.counterMap.remove(toRemoved.item);
             }
         }
 

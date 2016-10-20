@@ -84,16 +84,15 @@ public class SeekOffsetStep extends AbstractExecutable {
                         }
                     }
                 }
-
-                if (partitionInfos.size() > startOffsets.size()) {
-                    // has new partition added
-                    for (int x = startOffsets.size(); x < partitionInfos.size(); x++) {
-                        long earliest = KafkaClient.getEarliestOffset(consumer, topic, partitionInfos.get(x).partition());
-                        startOffsets.put(partitionInfos.get(x).partition(), earliest);
-                    }
-                }
-
                 logger.info("Get start offset for segment " + segment.getName() + ": " + startOffsets.toString());
+            }
+
+            if (partitionInfos.size() > startOffsets.size()) {
+                // has new partition added
+                for (int x = startOffsets.size(); x < partitionInfos.size(); x++) {
+                    long earliest = KafkaClient.getEarliestOffset(consumer, topic, partitionInfos.get(x).partition());
+                    startOffsets.put(partitionInfos.get(x).partition(), earliest);
+                }
             }
 
             if (endOffsets.isEmpty()) {
