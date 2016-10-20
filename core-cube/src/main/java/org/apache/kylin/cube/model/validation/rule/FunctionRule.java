@@ -126,12 +126,6 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
                     groupByCol = groupByCol.getNextParameter();
                 }
 
-                if (duplicatedCol.size() > 0) {
-                    context.addResult(ResultLevel.ERROR, "Couldn't use " + duplicatedCol.toString() + " in Top-N as it is already defined as dimension.");
-                    return;
-
-                }
-
             }
         }
 

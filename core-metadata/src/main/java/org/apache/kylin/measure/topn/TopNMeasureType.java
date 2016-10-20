@@ -239,8 +239,6 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
             }
         }
 
-        if (unmatchedDimensions.containsAll(literalCol) == false)
-            return null;
         if (digest.groupbyColumns.containsAll(literalCol) == false)
             return null;
 
