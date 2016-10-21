@@ -26,6 +26,7 @@ KylinApp.factory('CubeService', ['$resource', function ($resource, config) {
     cost: {method: 'PUT', params: {action: 'cost'}, isArray: false},
     rebuildLookUp: {method: 'PUT', params: {propName: 'segs', action: 'refresh_lookup'}, isArray: false},
     rebuildCube: {method: 'PUT', params: {action: 'rebuild'}, isArray: false},
+    rebuildStreamingCube: {method: 'PUT', params: {action: 'build2'}, isArray: false},
     disable: {method: 'PUT', params: {action: 'disable'}, isArray: false},
     enable: {method: 'PUT', params: {action: 'enable'}, isArray: false},
     purge: {method: 'PUT', params: {action: 'purge'}, isArray: false},
