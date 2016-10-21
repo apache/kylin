@@ -40,6 +40,7 @@ import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
+import org.apache.kylin.metadata.model.ISourceAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -54,6 +55,7 @@ import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -605,6 +607,43 @@ public class CubeController extends BasicController {
 
         return jobs;
 
+    }
+
+
+    /**
+     * Initiate the very beginning of a streaming cube. Will seek the latest offests of each partition from streaming
+     * source (kafka) and record in the cube descriptor; In the first build job, it will use these offests as the start point.
+     * @param cubeName
+     * @return
+     */
+    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT })
+    @ResponseBody
+    public GeneralResponse initStartOffsets(@PathVariable String cubeName) {
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
+
+        String msg = "";
+        if (cubeInstance == null) {
+            msg = "Cube '" + cubeName + "' not found.";
+            throw new IllegalArgumentException(msg);
+        }
+        if (cubeInstance.getSourceType() != ISourceAware.ID_STREAMING) {
+            msg = "Cube '" + cubeName + "' is not a Streaming Cube.";
+            throw new IllegalArgumentException(msg);
+        }
+
+        final GeneralResponse response = new GeneralResponse();
+        try {
+            final Map<Integer, Long> startOffsets = KafkaClient.getCurrentOffsets(cubeInstance);
+            CubeDesc desc = cubeInstance.getDescriptor();
+            desc.setPartitionOffsetStart(startOffsets);
+            cubeService.getCubeDescManager().updateCubeDesc(desc);
+            response.setProperty("result", "success");
+            response.setProperty("offsets", startOffsets.toString());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return response;
     }
 
     private CubeDesc deserializeCubeDesc(CubeRequest cubeRequest) {

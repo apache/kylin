@@ -92,42 +92,6 @@ public class CubeDescController extends BasicController {
         }
     }
 
-    /**
-     * Initiate the very beginning of a streaming cube. Will seek the latest offests of each partition from streaming
-     * source (kafka) and record in the cube descriptor; In the first build job, it will use these offests as the start point.
-     * @param cubeName
-     * @return
-     */
-    @RequestMapping(value = "/{cubeName}/initStartOffsets", method = { RequestMethod.PUT })
-    @ResponseBody
-    public GeneralResponse initStartOffsets(@PathVariable String cubeName) {
-       CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-
-        String msg = "";
-        if (cubeInstance == null) {
-            msg = "Cube '" + cubeName + "' not found.";
-            throw new IllegalArgumentException(msg);
-        }
-        if (cubeInstance.getSourceType() != ISourceAware.ID_STREAMING) {
-            msg = "Cube '" + cubeName + "' is not a Streaming Cube.";
-            throw new IllegalArgumentException(msg);
-        }
-
-        final GeneralResponse response = new GeneralResponse();
-        try {
-            final Map<Integer, Long> startOffsets = KafkaClient.getCurrentOffsets(cubeInstance);
-            CubeDesc desc = cubeInstance.getDescriptor();
-            desc.setPartitionOffsetStart(startOffsets);
-            cubeService.getCubeDescManager().updateCubeDesc(desc);
-            response.setProperty("result", "success");
-            response.setProperty("offsets", startOffsets.toString());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return response;
-    }
-
     public void setCubeService(CubeService cubeService) {
         this.cubeService = cubeService;
     }
