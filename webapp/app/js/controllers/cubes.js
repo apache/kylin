@@ -334,12 +334,42 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
       $scope.loadDetail(cube);
       // for streaming cube build tip
       if(cube.streaming){
-        $modal.open({
-          templateUrl: 'streamingBuild.html',
-          controller: streamingBuildCtrl,
-          resolve: {
+
+        SweetAlert.swal({
+          title: '',
+          text: "Are you sure to start the build?",
+          type: '',
+          showCancelButton: true,
+          confirmButtonColor: '#DD6B55',
+          confirmButtonText: "Yes",
+          closeOnConfirm: true
+        }, function(isConfirm) {
+          if(isConfirm){
+            loadingRequest.show();
+            CubeService.rebuildStreamingCube(
+              {
+                cubeId: cube.name
+              },
+              {
+                sourceOffsetStart:0,
+                sourceOffsetEnd:'9223372036854775807',
+                buildType:'BUILD'
+              }, function (job) {
+                loadingRequest.hide();
+                SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
+              },function(e){
+
+                loadingRequest.hide();
+                if(e.data&& e.data.exception){
+                  var message =e.data.exception;
+                  var msg = !!(message) ? message : 'Failed to take action.';
+                  SweetAlert.swal('Oops...', msg, 'error');
+                }else{
+                  SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                }
+            });
           }
-        });
+        })
         return;
       }
 
