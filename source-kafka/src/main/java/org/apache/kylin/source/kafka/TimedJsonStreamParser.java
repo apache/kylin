@@ -64,6 +64,9 @@ public final class TimedJsonStreamParser extends StreamingParser {
     private String tsColName = null;
     private String tsParser = null;
     private String separator = null;
+    private final Map<String, Object> root = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, Object> tempMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, String[]> nameMap = new HashMap<>();
 
     private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
 
@@ -100,15 +103,14 @@ public final class TimedJsonStreamParser extends StreamingParser {
     public StreamingMessage parse(ByteBuffer buffer) {
         try {
             Map<String, Object> message = mapper.readValue(new ByteBufferBackedInputStream(buffer), mapType);
-            Map<String, Object> root = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            root.clear();
             root.putAll(message);
             String tsStr = objToString(root.get(tsColName));
             long t = streamTimeParser.parseTime(tsStr);
             ArrayList<String> result = Lists.newArrayList();
 
             for (TblColRef column : allColumns) {
-                String columnName = column.getName();
-                columnName = columnName.toLowerCase();
+                final String columnName = column.getName().toLowerCase();
                 if (populateDerivedTimeColumns(columnName, result, t) == false) {
                     result.add(getValueByKey(columnName, root));
                 }
@@ -126,18 +128,24 @@ public final class TimedJsonStreamParser extends StreamingParser {
         return true;
     }
 
-    protected String getValueByKey(String key, Map<String, Object> root) throws IOException {
-        if (root.containsKey(key)) {
-            return objToString(root.get(key));
+    protected String getValueByKey(String key, Map<String, Object> rootMap) throws IOException {
+        if (rootMap.containsKey(key)) {
+            return objToString(rootMap.get(key));
         }
 
-        if (key.contains(separator)) {
-            String[] names = key.toLowerCase().split(separator);
-            Map<String, Object> tempMap = root;
+        String[] names = nameMap.get(key);
+        if (names == null && key.contains(separator)) {
+            names = key.toLowerCase().split(separator);
+            nameMap.put(key, names);
+        }
+
+        if (names != null && names.length > 0) {
+            tempMap.clear();
+            tempMap.putAll(rootMap);
             for (int i = 0; i < names.length - 1; i++) {
-                Object o = root.get(names[i]);
+                Object o = tempMap.get(names[i]);
                 if (o instanceof Map) {
-                    tempMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                    tempMap.clear();
                     tempMap.putAll((Map<String, Object>) o);
                 } else {
                     throw new IOException("Property '" + names[i] + "' is not embedded format");
@@ -145,7 +153,6 @@ public final class TimedJsonStreamParser extends StreamingParser {
             }
             Object finalObject = tempMap.get(names[names.length - 1]);
             return objToString(finalObject);
-
         }
 
         return StringUtils.EMPTY;

@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.kylin.source.kafka;
 
 import com.fasterxml.jackson.databind.JavaType;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -31,7 +31,6 @@ import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.source.kafka.TimedJsonStreamParser;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -41,23 +40,16 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
 
-
 import static org.junit.Assert.assertEquals;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 
-
 public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
 
     private static String[] userNeedColNames;
-
     private static final String jsonFilePath = "src/test/resources/message.json";
-
     private static ObjectMapper mapper;
-
-    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class),
-            SimpleType.construct(Object.class));
-
+    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -70,10 +62,9 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         cleanAfterClass();
     }
 
-
     @Test
     public void testNormalValue() throws Exception {
-        userNeedColNames = new String[]{"createdAt", "id", "isTruncated", "text"};
+        userNeedColNames = new String[] { "createdAt", "id", "isTruncated", "text" };
         List<TblColRef> allCol = mockupTblColRefList();
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
@@ -83,12 +74,12 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         assertEquals("Jul 20, 2016 9:59:17 AM", result.get(0));
         assertEquals("755703618762862600", result.get(1));
         assertEquals("false", result.get(2));
-        assertEquals("dejamos las tapas regionales de este #Miercoles https://t.co/kfe0kT2Fup", result.get(3));
+        assertEquals("dejamos", result.get(3));
     }
 
     @Test
     public void testEmbeddedValue() throws Exception {
-        userNeedColNames = new String[]{"user_id", "user_description", "user_isProtected"};
+        userNeedColNames = new String[] { "user_id", "user_description", "user_isProtected" };
         List<TblColRef> allCol = mockupTblColRefList();
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
@@ -96,13 +87,13 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         StreamingMessage sMsg = parser.parse(buffer);
         List<String> result = sMsg.getData();
         assertEquals("4853763947", result.get(0));
-        assertEquals("Noticias, an��lisis e informaci��n para el crecimiento de la regi��n.", result.get(1));
+        assertEquals("Noticias", result.get(1));
         assertEquals("false", result.get(2));
     }
 
     @Test
     public void testArrayValue() throws Exception {
-        userNeedColNames = new String[]{"userMentionEntities", "mediaEntities"};
+        userNeedColNames = new String[] { "userMentionEntities", "mediaEntities" };
         List<TblColRef> allCol = mockupTblColRefList();
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
@@ -117,20 +108,19 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testMapValue() throws Exception {
-        userNeedColNames = new String[]{"user"};
+        userNeedColNames = new String[] { "user" };
         List<TblColRef> allCol = mockupTblColRefList();
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
         ByteBuffer buffer = getJsonByteBuffer(msg);
         StreamingMessage sMsg = parser.parse(buffer);
         List<String> result = sMsg.getData();
-        System.out.println("result:" + result);
 
     }
 
     @Test
     public void testNullKey() throws Exception {
-        userNeedColNames = new String[]{"null", ""};
+        userNeedColNames = new String[] { "null", "" };
         List<TblColRef> allCol = mockupTblColRefList();
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
@@ -141,14 +131,12 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         assertEquals(StringUtils.EMPTY, result.get(1));
     }
 
-
     private static ByteBuffer getJsonByteBuffer(Object obj) throws IOException {
         byte[] bytes = mapper.writeValueAsBytes(obj);
         ByteBuffer buff = ByteBuffer.wrap(bytes);
         buff.position(0);
         return buff;
     }
-
 
     private static List<TblColRef> mockupTblColRefList() {
         TableDesc t = mockupTableDesc("table_a");

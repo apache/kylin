@@ -21,7 +21,6 @@ package org.apache.kylin.source.kafka;
 import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
@@ -31,7 +30,6 @@ import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,15 +45,15 @@ public abstract class StreamingParser {
     public static final String EMBEDDED_PROPERTY_SEPARATOR = "separator";
 
     public static final Map<String, String> defaultProperties = Maps.newHashMap();
-    public static final Set derivedTimeColumns = Sets.newHashSet();
+    public static final Map<String, Integer> derivedTimeColumns = Maps.newHashMap();
     static {
-        derivedTimeColumns.add("minute_start");
-        derivedTimeColumns.add("hour_start");
-        derivedTimeColumns.add("day_start");
-        derivedTimeColumns.add("week_start");
-        derivedTimeColumns.add("month_start");
-        derivedTimeColumns.add("quarter_start");
-        derivedTimeColumns.add("year_start");
+        derivedTimeColumns.put("minute_start", 1);
+        derivedTimeColumns.put("hour_start", 2);
+        derivedTimeColumns.put("day_start", 3);
+        derivedTimeColumns.put("week_start", 4);
+        derivedTimeColumns.put("month_start", 5);
+        derivedTimeColumns.put("quarter_start", 6);
+        derivedTimeColumns.put("year_start", 7);
         defaultProperties.put(PROPERTY_TS_COLUMN_NAME, "timestamp");
         defaultProperties.put(PROPERTY_TS_PARSER, "org.apache.kylin.source.kafka.DefaultTimeParser");
         defaultProperties.put(PROPERTY_TS_PATTERN, DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
@@ -108,32 +106,45 @@ public abstract class StreamingParser {
      * @return true if the columnName is a derived time column; otherwise false;
      */
     public static final boolean populateDerivedTimeColumns(String columnName, List<String> result, long t) {
-        if (derivedTimeColumns.contains(columnName) == false)
+
+        Integer derivedTimeColumn = derivedTimeColumns.get(columnName);
+        if (derivedTimeColumn == null) {
             return false;
+        }
 
         long normalized = 0;
-        if (columnName.equals("minute_start")) {
+        switch (derivedTimeColumn) {
+        case 1:
             normalized = TimeUtil.getMinuteStart(t);
             result.add(DateFormat.formatToTimeWithoutMilliStr(normalized));
-        } else if (columnName.equals("hour_start")) {
+            break;
+        case 2:
             normalized = TimeUtil.getHourStart(t);
             result.add(DateFormat.formatToTimeWithoutMilliStr(normalized));
-        } else if (columnName.equals("day_start")) {
-            //from day_start on, formatTs will output date format
+            break;
+        case 3:
             normalized = TimeUtil.getDayStart(t);
             result.add(DateFormat.formatToDateStr(normalized));
-        } else if (columnName.equals("week_start")) {
+            break;
+        case 4:
             normalized = TimeUtil.getWeekStart(t);
             result.add(DateFormat.formatToDateStr(normalized));
-        } else if (columnName.equals("month_start")) {
+            break;
+        case 5:
             normalized = TimeUtil.getMonthStart(t);
             result.add(DateFormat.formatToDateStr(normalized));
-        } else if (columnName.equals("quarter_start")) {
+            break;
+        case 6:
             normalized = TimeUtil.getQuarterStart(t);
             result.add(DateFormat.formatToDateStr(normalized));
-        } else if (columnName.equals("year_start")) {
+            break;
+        case 7:
             normalized = TimeUtil.getYearStart(t);
             result.add(DateFormat.formatToDateStr(normalized));
+            break;
+        default:
+            throw new IllegalStateException();
+
         }
 
         return true;
