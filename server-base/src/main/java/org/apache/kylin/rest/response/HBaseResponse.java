@@ -23,6 +23,7 @@ import java.io.Serializable;
 public class HBaseResponse implements Serializable {
     private static final long serialVersionUID = 7263557115683263492L;
     private String segmentName;
+    private String segmentStatus;
     private String tableName;
     private long tableSize;
     private int regionCount;
@@ -116,6 +117,14 @@ public class HBaseResponse implements Serializable {
 
     public void setSegmentName(String segmentName) {
         this.segmentName = segmentName;
+    }
+
+    public String getSegmentStatus() {
+        return segmentStatus;
+    }
+
+    public void setSegmentStatus(String segmentStatus) {
+        this.segmentStatus = segmentStatus;
     }
 
     public long getSourceOffsetStart() {

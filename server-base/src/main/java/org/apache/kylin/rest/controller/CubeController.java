@@ -528,6 +528,7 @@ public class CubeController extends BasicController {
             hr.setDateRangeStart(segment.getDateRangeStart());
             hr.setDateRangeEnd(segment.getDateRangeEnd());
             hr.setSegmentName(segment.getName());
+            hr.setSegmentStatus(segment.getStatus().toString());
             hr.setSourceCount(segment.getInputRecords());
             if (segment.isSourceOffsetsOn()) {
                 hr.setSourceOffsetStart(segment.getSourceOffsetStart());
