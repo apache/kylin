@@ -53,7 +53,7 @@ public class AggregationGroupRuleTest {
     public void testGoodBecomeBadDesc() throws IOException {
         AggregationGroupRule rule = new AggregationGroupRule() {
             @Override
-            protected int getMaxAgrGroupSize() {
+            protected int getMaxCombinations(CubeDesc cubeDesc) {
                 return 2;
             }
         };
@@ -65,7 +65,7 @@ public class AggregationGroupRuleTest {
             rule.validate(desc, vContext);
             vContext.print(System.out);
             assertTrue(vContext.getResults().length > 0);
-            assertEquals("Aggregation group 0 has too many dimensions", (vContext.getResults()[0].getMessage()));
+            assertEquals("Aggregation group 0 has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max.combination' to a bigger value.", (vContext.getResults()[0].getMessage()));
         }
     }
 
@@ -118,8 +118,8 @@ public class AggregationGroupRuleTest {
     public AggregationGroupRule getAggregationGroupRule() {
         AggregationGroupRule rule = new AggregationGroupRule() {
             @Override
-            protected int getMaxAgrGroupSize() {
-                return 20;
+            protected int getMaxCombinations(CubeDesc cubeDesc) {
+                return 4096;
             }
         };
 

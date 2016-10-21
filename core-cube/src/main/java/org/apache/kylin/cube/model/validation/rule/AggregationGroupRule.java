@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
@@ -41,16 +40,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
         inner(cube, context);
     }
 
-    private int count(String[][] input) {
-        if (input == null) {
-            return 0;
-        } else {
-            return input.length;
-        }
-    }
-
     private void inner(CubeDesc cube, ValidateContext context) {
-        int maxSize = getMaxAgrGroupSize();
 
         int index = 0;
         for (AggregationGroup agg : cube.getAggregationGroups()) {
@@ -64,6 +54,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                 continue;
             }
 
+            int combination = 1;
             Set<String> includeDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             if (agg.getIncludes() != null) {
                 for (String include : agg.getIncludes()) {
@@ -84,6 +75,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                     for (String s : ss) {
                         hierarchyDims.add(s);
                     }
+                    combination = combination * (ss.length + 1);
                 }
             }
 
@@ -93,6 +85,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                     for (String s : ss) {
                         jointDims.add(s);
                     }
+                    combination = combination * 2;
                 }
             }
 
@@ -107,15 +100,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             normalDims.removeAll(hierarchyDims);
             normalDims.removeAll(jointDims);
 
-            int normalDimSize = normalDims.size();
-            int hierarchySize = count(agg.getSelectRule().hierarchy_dims);
-            int jointSize = count(agg.getSelectRule().joint_dims);
-            int mandatorySize = mandatoryDims.size() > 0 ? 1 : 0;
-
-            if (mandatorySize + normalDimSize + hierarchySize + jointSize > maxSize) {
-                context.addResult(ResultLevel.ERROR, "Aggregation group " + index + " has too many dimensions");
-                continue;
-            }
+            combination = combination * (1 << normalDims.size());
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
                 context.addResult(ResultLevel.ERROR, "Aggregation group " + index + " mandatory dims overlap with hierarchy dims");
@@ -169,12 +154,17 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                 }
             }
 
+            if (combination > getMaxCombinations(cube)) {
+                String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max.combination' to a bigger value.";
+                context.addResult(ResultLevel.ERROR, msg);
+                continue;
+            }
+
             index++;
         }
     }
 
-    @SuppressWarnings("deprecation")
-    protected int getMaxAgrGroupSize() {
-        return KylinConfig.getInstanceFromEnv().getCubeAggrGroupMaxSize();
+    protected int getMaxCombinations(CubeDesc cubeDesc) {
+        return cubeDesc.getConfig().getCubeAggrGroupMaxCombination();
     }
 }
