@@ -277,7 +277,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/rebuild2", method = { RequestMethod.PUT })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
-        return buildInternal(cubeName, 0, 0, req.getSourceOffsetStart(), req.getSourceOffsetEnd(), req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(),  req.getBuildType(), req.isForce());
+        return buildInternal(cubeName, 0, 0, req.getSourceOffsetStart(), req.getSourceOffsetEnd(), req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(), req.isForce());
     }
 
     private JobInstance buildInternal(String cubeName, long startTime, long endTime, //
@@ -527,6 +527,12 @@ public class CubeController extends BasicController {
             hr.setTableName(tableName);
             hr.setDateRangeStart(segment.getDateRangeStart());
             hr.setDateRangeEnd(segment.getDateRangeEnd());
+            hr.setSegmentName(segment.getName());
+            hr.setSourceCount(segment.getInputRecords());
+            if (segment.isSourceOffsetsOn()) {
+                hr.setSourceOffsetStart(segment.getSourceOffsetStart());
+                hr.setSourceOffsetEnd(segment.getSourceOffsetEnd());
+            }
             hbase.add(hr);
         }
 
