@@ -44,7 +44,6 @@ import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
@@ -607,12 +606,7 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     private TblColRef initDimensionColRef(DimensionDesc dim, String colName) {
-        TableDesc table = dim.getTableDesc();
-        ColumnDesc col = table.findColumnByName(colName);
-        if (col == null)
-            throw new IllegalArgumentException("No column '" + colName + "' found in table " + table);
-
-        TblColRef ref = col.getRef();
+        TblColRef ref = model.findColumn(dim.getTable(), colName);
 
         // always use FK instead PK, FK could be shared by more than one lookup tables
         JoinDesc join = dim.getJoin();

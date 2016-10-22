@@ -36,11 +36,10 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.KeyValue.Type;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.metadata.datatype.LongMutable;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorFilter;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorProjector;
 import org.apache.kylin.storage.hbase.common.coprocessor.CoprocessorRowType;
@@ -207,7 +206,7 @@ public class AggregateRegionObserverTest {
     }
 
     private TblColRef newCol(int i, String name, TableDesc t) {
-        return ColumnDesc.mockup(t, i, name, null).getRef();
+        return TblColRef.mockup(t, i, name, null);
     }
 
     public static class MockupRegionScanner implements RegionScanner {

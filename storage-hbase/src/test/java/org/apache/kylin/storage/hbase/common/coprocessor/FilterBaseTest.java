@@ -38,7 +38,6 @@ import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.StringCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.Tuple;
@@ -71,14 +70,12 @@ public class FilterBaseTest extends LocalFileMetadataTestCase {
         List<TblColRef> groups = new ArrayList<TblColRef>();
 
         TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
-        ColumnDesc c1 = ColumnDesc.mockup(t1, 2, "CAL_DT", "string");
-        TblColRef cf1 = c1.getRef();
-        groups.add(cf1);
+        TblColRef c1 = TblColRef.mockup(t1, 2, "CAL_DT", "string");
+        groups.add(c1);
 
         TableDesc t2 = TableDesc.mockup("DEFAULT.TEST_CATEGORY_GROUPINGS");
-        ColumnDesc c2 = ColumnDesc.mockup(t2, 14, "META_CATEG_NAME", "string");
-        TblColRef cf2 = c2.getRef();
-        groups.add(cf2);
+        TblColRef c2 = TblColRef.mockup(t2, 14, "META_CATEG_NAME", "string");
+        groups.add(c2);
 
         return groups;
     }

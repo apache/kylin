@@ -17,32 +17,28 @@
  */
 package org.apache.kylin.source.kafka;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-import com.fasterxml.jackson.databind.type.MapType;
-import com.fasterxml.jackson.databind.type.SimpleType;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.StreamingMessage;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.List;
-import java.util.HashMap;
-import java.util.ArrayList;
-
-import static org.junit.Assert.assertEquals;
-
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.SimpleType;
 
 public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
 
@@ -139,28 +135,12 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
     }
 
     private static List<TblColRef> mockupTblColRefList() {
-        TableDesc t = mockupTableDesc("table_a");
+        TableDesc t = TableDesc.mockup("table_a");
         List<TblColRef> list = new ArrayList<>();
         for (int i = 0; i < userNeedColNames.length; i++) {
-            ColumnDesc c = mockupColumnDesc(t, i, userNeedColNames[i], "string");
-            list.add(c.getRef());
+            TblColRef c = TblColRef.mockup(t, i, userNeedColNames[i], "string");
+            list.add(c);
         }
         return list;
-    }
-
-    private static TableDesc mockupTableDesc(String tableName) {
-        TableDesc mockup = new TableDesc();
-        mockup.setName(tableName);
-        return mockup;
-    }
-
-    private static ColumnDesc mockupColumnDesc(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
-        ColumnDesc desc = new ColumnDesc();
-        String id = "" + oneBasedColumnIndex;
-        desc.setId(id);
-        desc.setName(name);
-        desc.setDatatype(datatype);
-        desc.init(table);
-        return desc;
     }
 }

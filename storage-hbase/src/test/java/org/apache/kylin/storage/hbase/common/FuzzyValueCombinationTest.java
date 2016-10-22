@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.translate.FuzzyValueCombination;
@@ -67,8 +66,7 @@ public class FuzzyValueCombinationTest extends LocalFileMetadataTestCase {
     }
 
     private static TblColRef col(int i, TableDesc t) {
-        ColumnDesc col = ColumnDesc.mockup(t, i, "Col" + i, "string");
-        return col.getRef();
+        return TblColRef.mockup(t, i, "Col" + i, "string");
     }
 
     @Test

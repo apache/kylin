@@ -61,7 +61,6 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -785,9 +784,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     private TblColRef initDimensionColRef(DimensionDesc dim, String colName) {
-        TableRef table = dim.getTableRef();
-        TblColRef col = table.getColumn(colName);
-        checkArgument(col != null, "No column '%s' found in table %s", colName, table);
+        TblColRef col = model.findColumn(dim.getTable(), colName);
 
         // always use FK instead PK, FK could be shared by more than one lookup tables
         JoinDesc join = dim.getJoin();

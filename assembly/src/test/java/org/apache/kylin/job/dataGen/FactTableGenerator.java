@@ -555,14 +555,13 @@ public class FactTableGenerator {
     }
 
     private LinkedList<String> createRow(TreeMap<String, String> factTableCol2LookupCol, TreeSet<String> usedCols, TreeSet<String> defaultColumns) throws Exception {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
         LinkedList<String> columnValues = new LinkedList<String>();
 
         long currentRowTime = -1;
 
-        for (ColumnDesc cDesc : MetadataManager.getInstance(config).getTableDesc(factTableName).getColumns()) {
+        for (TblColRef col : cube.getDataModelDesc().getFactTableRef().getColumns()) {
 
-            String colName = cDesc.getName();
+            String colName = col.getName();
 
             if (factTableCol2LookupCol.containsKey(colName)) {
 
@@ -572,15 +571,15 @@ public class FactTableGenerator {
                 columnValues.add(candidates.get(r.nextInt(candidates.size())));
             } else if (usedCols.contains(colName)) {
                 // if the current column is a metric or dimension column in fact table
-                columnValues.add(createCell(cDesc));
+                columnValues.add(createCell(col.getColumnDesc()));
             } else {
 
                 // otherwise this column is not useful in OLAP
-                columnValues.add(createDefaultsCell(cDesc.getTypeName()));
+                columnValues.add(createDefaultsCell(col.getColumnDesc().getTypeName()));
                 defaultColumns.add(colName);
             }
 
-            if (cDesc.getRef().equals(this.cube.getDescriptor().getModel().getPartitionDesc().getPartitionDateColumnRef())) {
+            if (col.equals(cube.getDataModelDesc().getPartitionDesc().getPartitionDateColumnRef())) {
                 currentRowTime = format.parse(columnValues.get(columnValues.size() - 1)).getTime();
             }
         }

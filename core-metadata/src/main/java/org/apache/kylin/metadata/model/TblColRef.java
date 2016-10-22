@@ -61,6 +61,17 @@ public class TblColRef implements Serializable {
         return colRef;
     }
 
+    // for test only
+    public static TblColRef mockup(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
+        ColumnDesc desc = new ColumnDesc();
+        String id = "" + oneBasedColumnIndex;
+        desc.setId(id);
+        desc.setName(name);
+        desc.setDatatype(datatype);
+        desc.init(table);
+        return new TblColRef(desc);
+    }
+    
     // ============================================================================
 
     private TableRef table;
@@ -74,19 +85,19 @@ public class TblColRef implements Serializable {
         this.table = table;
         this.column = column;
     }
-
+    
     public ColumnDesc getColumnDesc() {
         return column;
-    }
-
-    public void setColumn(ColumnDesc column) {
-        this.column = column;
     }
 
     public String getName() {
         return column.getName();
     }
 
+    public TableRef getTableRef() {
+        return table;
+    }
+    
     public String getTable() {
         if (column.getTable() == null) {
             return null;

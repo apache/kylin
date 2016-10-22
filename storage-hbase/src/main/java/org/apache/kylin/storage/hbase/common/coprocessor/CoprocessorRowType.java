@@ -36,8 +36,8 @@ import com.google.common.collect.Maps;
 /**
  * @author yangli9
  */
+@Deprecated // used by v1 HBase coprocessor
 public class CoprocessorRowType {
-
 
     //for observer
     public static CoprocessorRowType fromCuboid(CubeSegment seg, Cuboid cuboid) {

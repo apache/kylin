@@ -23,7 +23,6 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.common.util.StringSplitter;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -31,8 +30,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * @author xduo
- * 
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class PartitionDesc {
@@ -66,28 +63,12 @@ public class PartitionDesc {
     private TblColRef partitionDateColumnRef;
     private IPartitionConditionBuilder partitionConditionBuilder;
 
-    public void init(Map<String, TableDesc> tables) {
+    public void init(DataModelDesc model) {
         if (StringUtils.isEmpty(partitionDateColumn))
             return;
 
         partitionDateColumn = partitionDateColumn.toUpperCase();
-
-        String[] columns = StringSplitter.split(partitionDateColumn, ".");
-
-        if (null != columns && columns.length == 3) {
-            String tableName = columns[0].toUpperCase() + "." + columns[1].toUpperCase();
-
-            TableDesc table = tables.get(tableName);
-            ColumnDesc col = table.findColumnByName(columns[2]);
-            if (col != null) {
-                partitionDateColumnRef = new TblColRef(col);
-            } else {
-                throw new IllegalStateException("The column '" + partitionDateColumn + "' provided in 'partition_date_column' doesn't exist.");
-            }
-        } else {
-            throw new IllegalStateException("The 'partition_date_column' format is invalid: " + partitionDateColumn + ", it should be {db}.{table}.{column}.");
-        }
-
+        partitionDateColumnRef = model.findColumn(partitionDateColumn);
         partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
     }
 

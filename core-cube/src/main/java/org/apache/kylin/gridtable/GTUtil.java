@@ -31,7 +31,6 @@ import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -42,8 +41,7 @@ public class GTUtil {
     static final TableDesc MOCKUP_TABLE = TableDesc.mockup("GT_MOCKUP_TABLE");
 
     static TblColRef tblColRef(int col, String datatype) {
-        ColumnDesc desc = ColumnDesc.mockup(MOCKUP_TABLE, col + 1, "" + col, datatype);
-        return desc.getRef();
+        return TblColRef.mockup(MOCKUP_TABLE, col + 1, "" + col, datatype);
     }
 
     public static byte[] serializeGTFilter(TupleFilter gtFilter, GTInfo info) {

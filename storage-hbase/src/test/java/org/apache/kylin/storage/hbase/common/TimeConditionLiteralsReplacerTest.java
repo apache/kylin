@@ -25,7 +25,6 @@ import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.TimeConditionLiteralsReplacer;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilterSerializer;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.hbase.common.coprocessor.FilterBaseTest;
@@ -38,8 +37,7 @@ public class TimeConditionLiteralsReplacerTest extends FilterBaseTest {
     @Test
     public void basicTest() {
         TableDesc t1 = TableDesc.mockup("DEFAULT.TEST_KYLIN_FACT");
-        ColumnDesc c1 = ColumnDesc.mockup(t1, 2, "CAL_DT", "date");
-        TblColRef column = c1.getRef();
+        TblColRef column = TblColRef.mockup(t1, 2, "CAL_DT", "date");
 
         CompareTupleFilter compareFilter = new CompareTupleFilter(TupleFilter.FilterOperatorEnum.EQ);
         ColumnTupleFilter columnFilter = new ColumnTupleFilter(column);

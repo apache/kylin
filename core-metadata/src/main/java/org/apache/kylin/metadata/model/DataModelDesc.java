@@ -263,9 +263,9 @@ public class DataModelDesc extends RootPersistentEntity {
         tableNameMap.clear();
         
         initTableAlias(tables);
-        initJoinColumns(tables);
+        initJoinColumns();
         ModelDimensionDesc.capicalizeStrings(dimensions);
-        initPartitionDesc(tables);
+        initPartitionDesc();
     }
 
     private void initTableAlias(Map<String, TableDesc> tables) {
@@ -315,12 +315,12 @@ public class DataModelDesc extends RootPersistentEntity {
         }
     }
 
-    private void initPartitionDesc(Map<String, TableDesc> tables) {
+    private void initPartitionDesc() {
         if (this.partitionDesc != null)
-            this.partitionDesc.init(tables);
+            this.partitionDesc.init(this);
     }
 
-    private void initJoinColumns(Map<String, TableDesc> tables) {
+    private void initJoinColumns() {
         for (LookupDesc lookup : this.lookups) {
             TableRef dimTable = lookup.getTableRef();
             JoinDesc join = lookup.getJoin();

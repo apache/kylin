@@ -24,9 +24,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
@@ -37,6 +41,8 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
  */
 public class ColumnTupleFilter extends TupleFilter {
 
+    private static final String _QUALIFIED_ = "_QUALIFIED_";
+    
     private TblColRef columnRef;
     private Object tupleValue;
     private List<Object> values;
@@ -85,36 +91,67 @@ public class ColumnTupleFilter extends TupleFilter {
 
     @Override
     public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
-        String table = columnRef.getTable();
-        BytesUtil.writeUTFString(table, buffer);
+        TableRef tableRef = columnRef.getTableRef();
+        
+        if (tableRef == null) {
+            // un-qualified column
+            String table = columnRef.getTable();
+            BytesUtil.writeUTFString(table, buffer);
 
-        String columnId = columnRef.getColumnDesc().getId();
-        BytesUtil.writeUTFString(columnId, buffer);
+            String columnId = columnRef.getColumnDesc().getId();
+            BytesUtil.writeUTFString(columnId, buffer);
 
-        String columnName = columnRef.getName();
-        BytesUtil.writeUTFString(columnName, buffer);
+            String columnName = columnRef.getName();
+            BytesUtil.writeUTFString(columnName, buffer);
 
-        String dataType = columnRef.getDatatype();
-        BytesUtil.writeUTFString(dataType, buffer);
+            String dataType = columnRef.getDatatype();
+            BytesUtil.writeUTFString(dataType, buffer);
+        } else {
+            // qualified column (from model)
+            BytesUtil.writeUTFString(_QUALIFIED_, buffer);
+            
+            String model = tableRef.getModel().getName();
+            BytesUtil.writeUTFString(model, buffer);
+            
+            String alias = tableRef.getAlias();
+            BytesUtil.writeUTFString(alias, buffer);
+            
+            String col = columnRef.getName();
+            BytesUtil.writeUTFString(col, buffer);
+        }
     }
 
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
 
-        TableDesc table = null;
-        ColumnDesc column = new ColumnDesc();
-
         String tableName = BytesUtil.readUTFString(buffer);
-        if (tableName != null) {
-            table = new TableDesc();
-            table.setName(tableName);
+        
+        if (_QUALIFIED_.equals(tableName)) {
+            // qualified column (from model)
+            String model = BytesUtil.readUTFString(buffer);
+            String alias = BytesUtil.readUTFString(buffer);
+            String col = BytesUtil.readUTFString(buffer);
+            
+            KylinConfig config = KylinConfig.getInstanceFromEnv();
+            DataModelDesc modelDesc = MetadataManager.getInstance(config).getDataModelDesc(model);
+            this.columnRef = modelDesc.findColumn(alias, col);
+            
+        } else {
+            // un-qualified column
+            TableDesc tableDesc = null;
+
+            if (tableName != null) {
+                tableDesc = new TableDesc();
+                tableDesc.setName(tableName);
+            }
+
+            ColumnDesc column = new ColumnDesc();
+            column.setId(BytesUtil.readUTFString(buffer));
+            column.setName(BytesUtil.readUTFString(buffer));
+            column.setDatatype(BytesUtil.readUTFString(buffer));
+            column.init(tableDesc);
+
+            this.columnRef = column.getRef();
         }
-
-        column.setId(BytesUtil.readUTFString(buffer));
-        column.setName(BytesUtil.readUTFString(buffer));
-        column.setDatatype(BytesUtil.readUTFString(buffer));
-        column.init(table);
-
-        this.columnRef = column.getRef();
     }
 }

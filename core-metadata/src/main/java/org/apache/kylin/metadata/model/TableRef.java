@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -62,6 +64,10 @@ public class TableRef {
 
     public TblColRef getColumn(String name) {
         return columns.get(name);
+    }
+    
+    public Collection<TblColRef> getColumns() {
+        return Collections.unmodifiableCollection(columns.values());
     }
     
     @Override

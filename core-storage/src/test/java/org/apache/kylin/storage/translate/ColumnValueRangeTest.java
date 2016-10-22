@@ -30,7 +30,6 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.AfterClass;
@@ -121,24 +120,7 @@ public class ColumnValueRangeTest extends LocalFileMetadataTestCase {
     }
 
     public static TblColRef mockupTblColRef() {
-        TableDesc t = mockupTableDesc("table_a");
-        ColumnDesc c = mockupColumnDesc(t, 1, "col_1", "string");
-        return c.getRef();
-    }
-
-    private static TableDesc mockupTableDesc(String tableName) {
-        TableDesc mockup = new TableDesc();
-        mockup.setName(tableName);
-        return mockup;
-    }
-
-    private static ColumnDesc mockupColumnDesc(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
-        ColumnDesc desc = new ColumnDesc();
-        String id = "" + oneBasedColumnIndex;
-        desc.setId(id);
-        desc.setName(name);
-        desc.setDatatype(datatype);
-        desc.init(table);
-        return desc;
+        TableDesc t = TableDesc.mockup("table_a");
+        return TblColRef.mockup(t, 1, "col_1", "string");
     }
 }
