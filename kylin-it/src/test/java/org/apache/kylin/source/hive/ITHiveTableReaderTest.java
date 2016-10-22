@@ -38,7 +38,7 @@ public class ITHiveTableReaderTest extends HBaseMetadataTestCase {
         int rowNumber = 0;
         while (reader.next()) {
             String[] row = reader.getRow();
-            Assert.assertEquals(9, row.length);
+            Assert.assertEquals(11, row.length);
             //System.out.println(ArrayUtils.toString(row));
             rowNumber++;
         }

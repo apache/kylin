@@ -66,10 +66,7 @@ public class CubeCapabilityChecker {
         Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, cube);
 
         // try custom measure types
-        // in RAW query, unmatchedDimensions and unmatchedAggregations will null, so can't chose RAW cube well!
-        //        if (!unmatchedDimensions.isEmpty() || !unmatchedAggregations.isEmpty()) {
         tryCustomMeasureTypes(unmatchedDimensions, unmatchedAggregations, digest, cube, result);
-        //        }
 
         // try dimension-as-measure
         if (!unmatchedAggregations.isEmpty()) {
@@ -78,7 +75,7 @@ public class CubeCapabilityChecker {
             } else {
                 //deal with query on lookup table, like https://issues.apache.org/jira/browse/KYLIN-2030
                 if (cube.getSegments().get(0).getSnapshots().containsKey(digest.factTable)) {
-                    Set<TblColRef> dimCols = Sets.newHashSet(cube.getDataModelDesc().getFactTableRef().getColumns());
+                    Set<TblColRef> dimCols = Sets.newHashSet(cube.getDataModelDesc().findFirstTable(digest.factTable).getColumns());
                     tryDimensionAsMeasures(unmatchedAggregations, digest, cube, result, dimCols);
                 } else {
                     logger.info("Skip tryDimensionAsMeasures because current cube {} does not touch lookup table {} at all", cube.getName(), digest.factTable);

@@ -247,12 +247,25 @@ public class DataModelDesc extends RootPersistentEntity {
         return result;
     }
 
+    // find by unique name, that must uniquely identifies a table in the model
     public TableRef findTable(String table) {
         TableRef result = tableNameMap.get(table);
         if (result == null) {
             throw new IllegalArgumentException("Table not found by " + table);
         }
         return result;
+    }
+    
+    // find by table identity, that may match multiple tables in the model
+    public TableRef findFirstTable(String tableIdentity) {
+        if (factTableRef.getTableIdentity().equals(tableIdentity))
+            return factTableRef;
+        
+        for (TableRef lookup : lookupTableRefs) {
+            if (lookup.getTableIdentity().equals(tableIdentity))
+                return lookup;
+        }
+        throw new IllegalArgumentException("Table not found by " + tableIdentity);
     }
 
     public void init(KylinConfig config, Map<String, TableDesc> tables) {

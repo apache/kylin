@@ -14,6 +14,30 @@
       "differentiateByDateBoundary": true
     },
     {
+      "columnName": "BUYER_COUNTRY",
+      "valueSet": [
+        "CN",
+        "DE",
+        "FR",
+        "JP",
+        "UK",
+        "US",
+      ],
+      "exclusive": true
+    },
+    {
+      "columnName": "SELLER_COUNTRY",
+      "valueSet": [
+        "CN",
+        "DE",
+        "FR",
+        "JP",
+        "UK",
+        "US",
+      ],
+      "exclusive": true
+    },
+    {
       "columnName": "SELLER_ID",
       "valueSet": [
         "10000000",
