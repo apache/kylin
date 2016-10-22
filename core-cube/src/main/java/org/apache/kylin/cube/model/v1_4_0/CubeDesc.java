@@ -647,8 +647,6 @@ public class CubeDesc extends RootPersistentEntity {
             return;
         }
 
-        TableDesc factTable = getFactTableDesc();
-        List<TableDesc> lookups = getLookupTableDescs();
         for (MeasureDesc m : measures) {
             m.setName(m.getName().toUpperCase());
 
@@ -657,7 +655,7 @@ public class CubeDesc extends RootPersistentEntity {
             }
 
             FunctionDesc func = m.getFunction();
-            func.init(factTable, lookups);
+            func.init(model);
             allColumns.addAll(func.getParameter().getColRefs());
 
             //            // verify holistic count distinct as a dependent measure

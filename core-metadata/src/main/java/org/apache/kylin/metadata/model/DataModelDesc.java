@@ -258,6 +258,10 @@ public class DataModelDesc extends RootPersistentEntity {
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
         this.config = config;
         
+        lookupTableRefs.clear();
+        aliasMap.clear();
+        tableNameMap.clear();
+        
         initTableAlias(tables);
         initJoinColumns(tables);
         ModelDimensionDesc.capicalizeStrings(dimensions);

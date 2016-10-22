@@ -18,8 +18,6 @@
 
 package org.apache.kylin.cube.model;
 
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.dimension.DateDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc;
@@ -59,13 +57,11 @@ public class RowKeyColDesc {
     private int bitIndex;
     private TblColRef colRef;
 
-    public void init(int index, Map<String, TblColRef> colNameAbbr, CubeDesc cubeDesc) {
+    public void init(int index, CubeDesc cubeDesc) {
         column = column.toUpperCase();
         bitIndex = index;
-        colRef = colNameAbbr.get(column);
-        if (colRef == null) {
-            throw new IllegalArgumentException("Cannot find rowkey column " + column + " in cube " + cubeDesc);
-        }
+        colRef = cubeDesc.getModel().findColumn(column);
+        Preconditions.checkArgument(colRef != null, "Cannot find rowkey column %s in cube %s", column,  cubeDesc);
 
         Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
         Object[] encodingConf = DimensionEncoding.parseEncodingConf(this.encoding);

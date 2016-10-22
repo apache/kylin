@@ -20,8 +20,8 @@ package org.apache.kylin.cube.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -59,36 +59,52 @@ public class AggregationGroup {
     public void init(CubeDesc cubeDesc, RowKeyDesc rowKeyDesc) {
         this.cubeDesc = cubeDesc;
         this.isMandatoryOnlyValid = cubeDesc.getConfig().getCubeAggrGroupIsMandatoryOnlyValid();
-        Map<String, TblColRef> colNameAbbr = cubeDesc.buildColumnNameAbbreviation();
 
         if (this.includes == null || this.includes.length == 0 || this.selectRule == null) {
             throw new IllegalStateException("AggregationGroup incomplete");
         }
 
-        buildPartialCubeFullMask(colNameAbbr, rowKeyDesc);
-        buildMandatoryColumnMask(colNameAbbr, rowKeyDesc);
-        buildHierarchyMasks(colNameAbbr, rowKeyDesc);
-        buildJointColumnMask(colNameAbbr, rowKeyDesc);
+        columnNamesToUpperCase();
+        
+        buildPartialCubeFullMask(rowKeyDesc);
+        buildMandatoryColumnMask(rowKeyDesc);
+        buildHierarchyMasks(rowKeyDesc);
+        buildJointColumnMask(rowKeyDesc);
         buildJointDimsMask();
         buildNormalDimsMask();
         buildHierarchyDimsMask();
 
     }
 
-    private void buildPartialCubeFullMask(Map<String, TblColRef> colNameAbbr, RowKeyDesc rowKeyDesc) {
+    private void columnNamesToUpperCase() {
+        StringUtil.toUpperCaseArray(includes, includes);
+        StringUtil.toUpperCaseArray(selectRule.mandatory_dims, selectRule.mandatory_dims);
+        if (selectRule.hierarchy_dims != null) {
+            for (String[] cols : selectRule.hierarchy_dims) {
+                StringUtil.toUpperCaseArray(cols, cols);
+            }
+        }
+        if (selectRule.joint_dims != null) {
+            for (String[] cols : selectRule.joint_dims) {
+                StringUtil.toUpperCaseArray(cols, cols);
+            }
+        }
+    }
+
+    private void buildPartialCubeFullMask(RowKeyDesc rowKeyDesc) {
         Preconditions.checkState(this.includes != null);
         Preconditions.checkState(this.includes.length != 0);
 
         partialCubeFullMask = 0L;
         for (String dim : this.includes) {
-            TblColRef hColumn = colNameAbbr.get(dim);
+            TblColRef hColumn = cubeDesc.getModel().findColumn(dim);
             Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
             long bit = 1L << index;
             partialCubeFullMask |= bit;
         }
     }
 
-    private void buildJointColumnMask(Map<String, TblColRef> colNameAbbr, RowKeyDesc rowKeyDesc) {
+    private void buildJointColumnMask(RowKeyDesc rowKeyDesc) {
         joints = Lists.newArrayList();
 
         if (this.selectRule.joint_dims == null || this.selectRule.joint_dims.length == 0) {
@@ -102,7 +118,7 @@ public class AggregationGroup {
 
             long joint = 0L;
             for (int i = 0; i < joint_dims.length; i++) {
-                TblColRef hColumn = colNameAbbr.get(joint_dims[i]);
+                TblColRef hColumn = cubeDesc.getModel().findColumn(joint_dims[i]);
                 Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
                 long bit = 1L << index;
                 joint |= bit;
@@ -113,7 +129,7 @@ public class AggregationGroup {
         }
     }
 
-    private void buildMandatoryColumnMask(Map<String, TblColRef> colNameAbbr, RowKeyDesc rowKeyDesc) {
+    private void buildMandatoryColumnMask(RowKeyDesc rowKeyDesc) {
         mandatoryColumnMask = 0L;
 
         String[] mandatory_dims = this.selectRule.mandatory_dims;
@@ -122,14 +138,14 @@ public class AggregationGroup {
         }
 
         for (String dim : mandatory_dims) {
-            TblColRef hColumn = colNameAbbr.get(dim);
+            TblColRef hColumn = cubeDesc.getModel().findColumn(dim);
             Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
             mandatoryColumnMask |= 1 << index;
         }
 
     }
 
-    private void buildHierarchyMasks(Map<String, TblColRef> colNameAbbr, RowKeyDesc rowKeyDesc) {
+    private void buildHierarchyMasks(RowKeyDesc rowKeyDesc) {
         this.hierarchyMasks = new ArrayList<HierarchyMask>();
 
         if (this.selectRule.hierarchy_dims == null || this.selectRule.hierarchy_dims.length == 0) {
@@ -145,13 +161,9 @@ public class AggregationGroup {
             ArrayList<Long> allMaskList = new ArrayList<Long>();
             ArrayList<Long> dimList = new ArrayList<Long>();
             for (int i = 0; i < hierarchy_dims.length; i++) {
-                TblColRef hColumn = colNameAbbr.get(hierarchy_dims[i]);
+                TblColRef hColumn = cubeDesc.getModel().findColumn(hierarchy_dims[i]);
                 Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
                 long bit = 1L << index;
-
-                //                if ((tailMask & bit) > 0)
-                //                    continue; // ignore levels in tail, they don't participate
-                //                // aggregation group combination anyway
 
                 mask.fullMask |= bit;
                 allMaskList.add(mask.fullMask);

@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -76,16 +75,16 @@ public class RowKeyDesc {
     }
 
     public void init(CubeDesc cubeDesc) {
-
         setCubeDesc(cubeDesc);
-        Map<String, TblColRef> colNameAbbr = cubeDesc.buildColumnNameAbbreviation();
+        buildRowKey();
+        initColumnsNeedIndex();
+    }
 
-        buildRowKey(colNameAbbr);
-
+    private void initColumnsNeedIndex() {
         int[] tmp = new int[100];
         int x = 0;
         for (int i = 0, n = rowkeyColumns.length; i < n; i++) {
-            if ("true".equalsIgnoreCase(rowkeyColumns[i].getIndex()) && DictionaryDimEnc.ENCODING_NAME.equalsIgnoreCase(rowkeyColumns[i].getEncoding())) {
+            if ("true".equalsIgnoreCase(rowkeyColumns[i].getIndex()) && rowkeyColumns[i].isUsingDictionary()) {
                 tmp[x] = i;
                 x++;
             }
@@ -103,13 +102,13 @@ public class RowKeyDesc {
         return Objects.toStringHelper(this).add("RowKeyColumns", Arrays.toString(rowkeyColumns)).toString();
     }
 
-    private void buildRowKey(Map<String, TblColRef> colNameAbbr) {
-        columnMap = new HashMap<TblColRef, RowKeyColDesc>();
+    private void buildRowKey() {
+        columnMap = new HashMap<>();
         shardByColumns = new HashSet<>();
 
         for (int i = 0; i < rowkeyColumns.length; i++) {
             RowKeyColDesc rowKeyColDesc = rowkeyColumns[i];
-            rowKeyColDesc.init(rowkeyColumns.length - i - 1, colNameAbbr, cubeDesc);
+            rowKeyColDesc.init(rowkeyColumns.length - i - 1, cubeDesc);
             columnMap.put(rowKeyColDesc.getColRef(), rowKeyColDesc);
 
             if (rowKeyColDesc.isShardBy()) {

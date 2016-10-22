@@ -26,7 +26,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.SelectRule;
-import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -57,7 +56,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testGoodInit() throws Exception {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -69,7 +68,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         String[] temp = null;
         cubeDesc.getAggregationGroups().get(0).setIncludes(temp);
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -81,7 +80,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         SelectRule temp = null;
         cubeDesc.getAggregationGroups().get(0).setSelectRule(temp);
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -93,7 +92,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         String[] temp = Arrays.asList(cubeDesc.getAggregationGroups().get(0).getIncludes()).subList(0, 3).toArray(new String[3]);
         cubeDesc.getAggregationGroups().get(0).setIncludes(temp);
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -104,7 +103,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         try {
             System.setProperty("kylin.cube.aggrgroup.max.combination", "8");
-            cubeDesc.validate();
+            cubeDesc.validateAggregationGroups();
         } finally {
             System.clearProperty("kylin.cube.aggrgroup.max.combination");
         }
@@ -115,7 +114,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().mandatory_dims = new String[] { "seller_id", "META_CATEG_NAME" };
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -123,7 +122,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().mandatory_dims = new String[] { "seller_id", "lstg_format_name" };
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -134,7 +133,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { new String[] { "lstg_format_name" } };
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -145,7 +144,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { new String[] { "META_CATEG_NAME", "CATEG_LVL2_NAME" } };
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -157,7 +156,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchy_dims = new String[][] { new String[] { "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" }, new String[] { "lstg_format_name", "lstg_site_id" } };
         cubeDesc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { new String[] { "META_CATEG_NAME", "lstg_format_name" } };
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -168,7 +167,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { new String[] { "lstg_format_name", "lstg_site_id", "slr_segment_cd" }, new String[] { "lstg_format_name", "lstg_site_id", "leaf_categ_id" } };
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -179,7 +178,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchy_dims = new String[][] { new String[] { "META_CATEG_NAME" } };
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test
@@ -190,7 +189,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchy_dims = new String[][] { new String[] { "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" }, new String[] { "META_CATEG_NAME", "CATEG_LVL2_NAME" } };
 
-        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
+        cubeDesc.init(getTestConfig());
     }
 
     @Test

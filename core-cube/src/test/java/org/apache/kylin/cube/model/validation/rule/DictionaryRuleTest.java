@@ -32,7 +32,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.dict.GlobalDictionaryBuilder;
-import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,13 +41,11 @@ import org.junit.Test;
  */
 public class DictionaryRuleTest extends LocalFileMetadataTestCase {
     private static KylinConfig config;
-    private static MetadataManager metadataManager;
 
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
         config = KylinConfig.getInstanceFromEnv();
-        metadataManager = MetadataManager.getInstance(config);
     }
 
     @After
@@ -62,7 +59,7 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
 
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/").listFiles()) {
             CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
-            desc.init(config, metadataManager.getAllTablesMap());
+            desc.init(config);
             ValidateContext vContext = new ValidateContext();
             rule.validate(desc, vContext);
             vContext.print(System.out);
@@ -99,7 +96,7 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
             desc.getDictionaries().add(dictDesc);
         }
 
-        desc.init(config, metadataManager.getAllTablesMap());
+        desc.init(config);
         ValidateContext vContext = new ValidateContext();
         rule.validate(desc, vContext);
         vContext.print(System.out);

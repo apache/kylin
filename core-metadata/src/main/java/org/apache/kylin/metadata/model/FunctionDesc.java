@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.kylin.measure.MeasureType;
@@ -75,7 +74,7 @@ public class FunctionDesc {
     private MeasureType<?> measureType;
     private boolean isDimensionAsMetric = false;
 
-    public void init(TableDesc factTable, List<TableDesc> lookupTables) {
+    public void init(DataModelDesc model) {
         expression = expression.toUpperCase();
         returnDataType = DataType.getType(returnType);
 
@@ -86,28 +85,12 @@ public class FunctionDesc {
         ArrayList<TblColRef> colRefs = Lists.newArrayList();
         for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
             if (p.isColumnType()) {
-                ColumnDesc sourceColumn = findColumn(factTable, lookupTables, p.getValue());
-                TblColRef colRef = new TblColRef(sourceColumn);
+                TblColRef colRef = model.findColumn(p.getValue());
                 colRefs.add(colRef);
             }
         }
 
         parameter.setColRefs(colRefs);
-    }
-
-    private ColumnDesc findColumn(TableDesc factTable, List<TableDesc> lookups, String columnName) {
-        ColumnDesc ret = factTable.findColumnByName(columnName);
-        if (ret != null) {
-            return ret;
-        }
-
-        for (TableDesc lookup : lookups) {
-            ret = lookup.findColumnByName(columnName);
-            if (ret != null) {
-                return ret;
-            }
-        }
-        throw new IllegalStateException("Column is not found in any table from the model: " + columnName);
     }
 
     private void reInitMeasureType() {

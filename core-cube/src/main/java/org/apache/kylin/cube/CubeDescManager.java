@@ -32,7 +32,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.metadata.MetadataConstants;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
@@ -176,8 +175,9 @@ public class CubeDescManager {
             throw new IllegalArgumentException("No cube desc found at " + path);
 
         try {
-            ndesc.init(config, getMetadataManager().getAllTablesMap());
+            ndesc.init(config);
         } catch (Exception e) {
+            logger.warn("Broken cube desc " + path, e);
             ndesc.addError(e.getMessage());
         }
 
@@ -202,8 +202,9 @@ public class CubeDescManager {
             throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' already exists");
 
         try {
-            cubeDesc.init(config, getMetadataManager().getAllTablesMap());
+            cubeDesc.init(config);
         } catch (Exception e) {
+            logger.warn("Broken cube desc " + cubeDesc, e);
             cubeDesc.addError(e.getMessage());
         }
         // Check base validation
@@ -283,8 +284,9 @@ public class CubeDescManager {
         }
 
         try {
-            desc.init(config, getMetadataManager().getAllTablesMap());
+            desc.init(config);
         } catch (Exception e) {
+            logger.warn("Broken cube desc " + desc, e);
             desc.addError(e.getMessage());
             return desc;
         }
@@ -308,10 +310,6 @@ public class CubeDescManager {
         cubeDescMap.put(ndesc.getName(), desc);
 
         return ndesc;
-    }
-
-    private MetadataManager getMetadataManager() {
-        return MetadataManager.getInstance(config);
     }
 
     private ResourceStore getStore() {

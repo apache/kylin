@@ -19,13 +19,13 @@
 package org.apache.kylin.cube.model;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
-import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -47,51 +47,31 @@ public class DimensionDesc {
     @JsonProperty("derived")
     private String[] derived;
 
-    private TableDesc tableDesc;
+    private TableRef tableRef;
     private JoinDesc join;
 
     // computed
     private TblColRef[] columnRefs;
 
-    public void init(CubeDesc cubeDesc, Map<String, TableDesc> tables) {
+    public void init(CubeDesc cubeDesc) {
         if (name != null)
             name = name.toUpperCase();
 
         if (table != null)
             table = table.toUpperCase();
 
-        tableDesc = tables.get(this.getTable());
-        if (tableDesc == null)
+        DataModelDesc model = cubeDesc.getModel();
+        tableRef = model.findTable(this.getTable());
+        if (tableRef == null)
             throw new IllegalStateException("Can't find table " + table + " for dimension " + name);
 
         join = null;
-        for (LookupDesc lookup : cubeDesc.getModel().getLookups()) {
-            if (lookup.getTable().equalsIgnoreCase(this.getTable())) {
+        for (LookupDesc lookup : model.getLookups()) {
+            if (lookup.getTableRef().equals(this.tableRef)) {
                 join = lookup.getJoin();
                 break;
             }
         }
-
-        //        if (isHierarchy && this.column.length > 0) {
-        //            List<HierarchyDesc> hierarchyList = new ArrayList<HierarchyDesc>(3);
-        //            for (int i = 0, n = this.column.length; i < n; i++) {
-        //                String aColumn = this.column[i];
-        //                HierarchyDesc aHierarchy = new HierarchyDesc();
-        //                aHierarchy.setLevel(String.valueOf(i + 1));
-        //                aHierarchy.setColumn(aColumn);
-        //                hierarchyList.add(aHierarchy);
-        //            }
-        //
-        //            this.hierarchy = hierarchyList.toArray(new HierarchyDesc[hierarchyList.size()]);
-        //        }
-        //
-        //        if (hierarchy != null && hierarchy.length == 0)
-        //            hierarchy = null;
-
-        //        if (hierarchy != null) {
-        //            for (HierarchyDesc h : hierarchy)
-        //                h.setColumn(h.getColumn().toUpperCase());
-        //        }
 
         if (derived != null && derived.length == 0) {
             derived = null;
@@ -153,8 +133,8 @@ public class DimensionDesc {
         this.derived = derived;
     }
 
-    public TableDesc getTableDesc() {
-        return this.tableDesc;
+    public TableRef getTableRef() {
+        return this.tableRef;
     }
 
     @Override

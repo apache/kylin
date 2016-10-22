@@ -49,13 +49,11 @@ import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
-import org.apache.kylin.common.util.CaseInsensitiveStringMap;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
@@ -63,6 +61,7 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,7 +160,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("override_kylin_properties")
     private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
 
-    private Map<String, Map<String, TblColRef>> columnMap = new HashMap<String, Map<String, TblColRef>>();
     private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
     private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<TblColRef>();
 
@@ -233,11 +231,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public TblColRef findColumnRef(String table, String column) {
-        Map<String, TblColRef> cols = columnMap.get(table);
-        if (cols == null)
-            return null;
-        else
-            return cols.get(column);
+        return model.findColumn(table, column);
     }
 
     public DimensionDesc findDimensionByTable(String lookupTableName) {
@@ -522,15 +516,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
-    public Map<String, TblColRef> buildColumnNameAbbreviation() {
-        Map<String, TblColRef> r = new CaseInsensitiveStringMap<TblColRef>();
-        for (TblColRef col : listDimensionColumnsExcludingDerived(true)) {
-            r.put(col.getName(), col);
-        }
-        return r;
-    }
-
-    public void init(KylinConfig config, Map<String, TableDesc> tables) {
+    public void init(KylinConfig config) {
         this.errors.clear();
         this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
 
@@ -540,17 +526,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.model = MetadataManager.getInstance(config).getDataModelDesc(modelName);
         checkNotNull(this.model, "DateModelDesc(%s) not found", modelName);
 
-        // check if aggregation group is valid
-        validate();
-
         for (DimensionDesc dim : dimensions) {
-            dim.init(this, tables);
+            dim.init(this);
         }
 
         initDimensionColumns();
         initMeasureColumns();
 
         rowkey.init(this);
+        validateAggregationGroups(); // check if aggregation group is valid
         for (AggregationGroup agg : this.aggregationGroups) {
             agg.init(this, rowkey);
         }
@@ -563,14 +547,12 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived(true);
-        checkState(rowkey.getRowKeyColumns().length == dimCols.size(),
-                "RowKey columns count (%d) doesn't match dimensions columns count (%d)",
-                rowkey.getRowKeyColumns().length, dimCols.size());
+        checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%d) doesn't match dimensions columns count (%d)", rowkey.getRowKeyColumns().length, dimCols.size());
 
         initDictionaryDesc();
     }
 
-    public void validate() {
+    public void validateAggregationGroups() {
         int index = 0;
 
         for (AggregationGroup agg : getAggregationGroups()) {
@@ -706,27 +688,17 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
             // init dimension columns
             ArrayList<TblColRef> dimCols = Lists.newArrayList();
-            String colStrs = dim.getColumn();
+            String colStr = dim.getColumn();
 
-            if ((colStrs == null && dim.isDerived()) || ("{FK}".equalsIgnoreCase(colStrs))) {
+            if ((colStr == null && dim.isDerived()) || ("{FK}".equalsIgnoreCase(colStr))) {
                 // when column is omitted, special case
-
                 for (TblColRef col : join.getForeignKeyColumns()) {
                     dimCols.add(initDimensionColRef(col));
                 }
             } else {
                 // normal case
-
-                if (StringUtils.isEmpty(colStrs))
-                    throw new IllegalStateException("Dimension column must not be blank " + dim);
-
-                dimCols.add(initDimensionColRef(dim, colStrs));
-
-                //                // fill back column ref in hierarchy
-                //                if (dim.isHierarchy()) {
-                //                    for (int i = 0; i < dimCols.size(); i++)
-                //                        dim.getHierarchy()[i].setColumnRef(dimCols.get(i));
-                //                }
+                checkState(!StringUtils.isEmpty(colStr), "Dimension column must not be blank: %s", dim);
+                dimCols.add(initDimensionColRef(dim, colStr));
             }
 
             TblColRef[] dimColArray = dimCols.toArray(new TblColRef[dimCols.size()]);
@@ -759,15 +731,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                         initDerivedMap(new TblColRef[] { dimColArray[find] }, DeriveType.PK_FK, dim, new TblColRef[] { derivedCol }, null);
                     }
                 }
-                /** disable this code as we don't need fk be derived from pk
-                 for (int i = 0; i < pk.length; i++) {
-                 int find = ArrayUtils.indexOf(hostCols, pk[i]);
-                 if (find >= 0) {
-                 TblColRef derivedCol = initDimensionColRef(fk[i]);
-                 initDerivedMap(hostCols[find], DeriveType.PK_FK, dim, derivedCol);
-                 }
-                 }
-                 */
             }
         }
     }
@@ -822,39 +785,25 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     private TblColRef initDimensionColRef(DimensionDesc dim, String colName) {
-        TableDesc table = dim.getTableDesc();
-        ColumnDesc col = table.findColumnByName(colName);
-        if (col == null)
-            throw new IllegalArgumentException("No column '" + colName + "' found in table " + table);
-
-        TblColRef ref = col.getRef();
+        TableRef table = dim.getTableRef();
+        TblColRef col = table.getColumn(colName);
+        checkArgument(col != null, "No column '%s' found in table %s", colName, table);
 
         // always use FK instead PK, FK could be shared by more than one lookup tables
         JoinDesc join = dim.getJoin();
         if (join != null) {
-            int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), ref);
+            int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), col);
             if (idx >= 0) {
-                ref = join.getForeignKeyColumns()[idx];
+                col = join.getForeignKeyColumns()[idx];
             }
         }
-        return initDimensionColRef(ref);
+        return initDimensionColRef(col);
     }
 
-    private TblColRef initDimensionColRef(TblColRef ref) {
-        TblColRef existing = findColumnRef(ref.getTable(), ref.getName());
-        if (existing != null) {
-            return existing;
-        }
-
-        allColumns.add(ref);
-        dimensionColumns.add(ref);
-
-        Map<String, TblColRef> cols = columnMap.get(ref.getTable());
-        if (cols == null) {
-            columnMap.put(ref.getTable(), cols = new HashMap<String, TblColRef>());
-        }
-        cols.put(ref.getName(), ref);
-        return ref;
+    private TblColRef initDimensionColRef(TblColRef col) {
+        allColumns.add(col);
+        dimensionColumns.add(col);
+        return col;
     }
 
     private void initMeasureColumns() {
@@ -862,8 +811,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             return;
         }
 
-        TableDesc factTable = getFactTableDesc();
-        List<TableDesc> lookupTables = getLookupTableDescs();
         for (MeasureDesc m : measures) {
             m.setName(m.getName().toUpperCase());
 
@@ -872,7 +819,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
 
             FunctionDesc func = m.getFunction();
-            func.init(factTable, lookupTables);
+            func.init(model);
             allColumns.addAll(func.getParameter().getColRefs());
 
             if (ExtendedColumnMeasureType.FUNC_RAW.equalsIgnoreCase(m.getFunction().getExpression())) {
