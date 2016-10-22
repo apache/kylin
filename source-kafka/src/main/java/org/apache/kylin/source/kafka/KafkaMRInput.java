@@ -87,6 +87,11 @@ public class KafkaMRInput implements IMRInput {
             this.columns = columns;
             this.kafkaConfig = kafkaConfig;
             this.conf = conf;
+            try {
+                streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getParserProperties(), columns);
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalArgumentException(e);
+            }
         }
 
         @Override
@@ -105,13 +110,6 @@ public class KafkaMRInput implements IMRInput {
 
         @Override
         public String[] parseMapperInput(Object mapperInput) {
-            if (streamingParser == null) {
-                try {
-                    streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getParserProperties(), columns);
-                } catch (ReflectiveOperationException e) {
-                    throw new IllegalArgumentException(e);
-                }
-            }
             Text text = (Text) mapperInput;
             ByteBuffer buffer = ByteBuffer.wrap(text.getBytes(), 0, text.getLength());
             StreamingMessage streamingMessage = streamingParser.parse(buffer);

@@ -23,6 +23,7 @@ import org.apache.kylin.cube.model.validation.rule.AggregationGroupRule;
 import org.apache.kylin.cube.model.validation.rule.DictionaryRule;
 import org.apache.kylin.cube.model.validation.rule.FunctionRule;
 import org.apache.kylin.cube.model.validation.rule.RowKeyAttrRule;
+import org.apache.kylin.cube.model.validation.rule.StreamingCubeRule;
 
 /**
  * For cube metadata validator
@@ -32,7 +33,7 @@ import org.apache.kylin.cube.model.validation.rule.RowKeyAttrRule;
  */
 public class CubeMetadataValidator {
     @SuppressWarnings("unchecked")
-    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] { new FunctionRule(), new AggregationGroupRule(), new RowKeyAttrRule(), new DictionaryRule() };
+    private IValidatorRule<CubeDesc>[] rules = new IValidatorRule[] { new FunctionRule(), new AggregationGroupRule(), new RowKeyAttrRule(), new DictionaryRule(), new StreamingCubeRule() };
 
     public ValidateContext validate(CubeDesc cube) {
         ValidateContext context = new ValidateContext();

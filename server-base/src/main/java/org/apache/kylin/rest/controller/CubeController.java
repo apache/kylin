@@ -551,6 +551,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.GET })
     @ResponseBody
     public List<CubeSegment> getHoles(@PathVariable String cubeName) {
+        checkCubeName(cubeName);
         return cubeService.getCubeManager().calculateHoles(cubeName);
     }
 
@@ -563,6 +564,7 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.PUT })
     @ResponseBody
     public List<JobInstance> fillHoles(@PathVariable String cubeName) {
+        checkCubeName(cubeName);
         List<JobInstance> jobs = Lists.newArrayList();
         List<CubeSegment> holes = cubeService.getCubeManager().calculateHoles(cubeName);
 
@@ -619,15 +621,10 @@ public class CubeController extends BasicController {
     @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT })
     @ResponseBody
     public GeneralResponse initStartOffsets(@PathVariable String cubeName) {
+        checkCubeName(cubeName);
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
-
-        String msg = "";
-        if (cubeInstance == null) {
-            msg = "Cube '" + cubeName + "' not found.";
-            throw new IllegalArgumentException(msg);
-        }
         if (cubeInstance.getSourceType() != ISourceAware.ID_STREAMING) {
-            msg = "Cube '" + cubeName + "' is not a Streaming Cube.";
+            String msg = "Cube '" + cubeName + "' is not a Streaming Cube.";
             throw new IllegalArgumentException(msg);
         }
 
@@ -668,6 +665,16 @@ public class CubeController extends BasicController {
         request.setCubeDescData("");
         request.setSuccessful(success);
         request.setMessage(message);
+    }
+
+    private void checkCubeName(String cubeName) {
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
+
+        String msg = "";
+        if (cubeInstance == null) {
+            msg = "Cube '" + cubeName + "' not found.";
+            throw new IllegalArgumentException(msg);
+        }
     }
 
     public void setCubeService(CubeService cubeService) {
