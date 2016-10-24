@@ -98,6 +98,11 @@
             <div ng-repeat="table in cube.hbase">
                 <h5><b>HTable:</b> {{table.tableName}}</h5>
                 <ul>
+                    <li ng-if="cube.streaming">Segment Name: <span class="red">{{table.segmentName}}</span></li>
+                    <li ng-if="cube.streaming">Segment Status: <span class="red">{{table.segmentStatus}}</span></li>
+                    <li ng-if="cube.streaming">Source Count: <span class="red">{{table.sourceCount}}</span></li>
+                    <li ng-if="cube.streaming&&table.sourceOffsetStart>0">SourceOffsetStart: <span class="red">{{table.sourceOffsetStart|reverseToGMT0}}</span></li>
+                    <li ng-if="cube.streaming&&table.sourceOffsetEnd>0">SourceOffsetEnd: <span class="red">{{table.sourceOffsetEnd|reverseToGMT0}}</span></li>
                     <li>Region Count: <span class="red">{{table.regionCount}}</span></li>
                     <li>Size: <span class="red">{{table.tableSize | bytes}}</span></li>
                     <li>Start Time: <span class="red">{{table.dateRangeStart | reverseToGMT0}}</span></li>
