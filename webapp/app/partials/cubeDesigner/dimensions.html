@@ -245,8 +245,10 @@
                                   </tr>
                                   <tr ng-repeat="col in availableColumns[table] track by col.table + '.' + col.name" >
                                     <td >
+                                      <label class="dim-checkbox-label">
                                       <input type="checkbox" ng-model="selectedColumns[table][col.name].selected"
                                              ng-disabled="selectedColumns[table][col.name].disabled"  >
+                                      </label>
                                     </td>
                                     <td >
                                       <input type="text"  placeholder={{col.name}} ng-model="selectedColumns[table][col.name].name" ng-disabled="!selectedColumns[table][col.name].selected" style="width:90%;">
@@ -268,8 +270,10 @@
                                   </tr>
                                   <tr ng-repeat="col in availableColumns[table] track by col.table + '.' + col.name" class="row">
                                     <td class=>
+                                      <label class="dim-checkbox-label">
                                       <input type="checkbox" ng-model="selectedColumns[table][col.name].selected"
                                              ng-disabled="selectedColumns[table][col.name].disabled"  ng-change="autoChange(table,col.name)">
+                                      </label>
                                     </td>
                                     <td >
                                       <input type="text" ng-model="selectedColumns[table][col.name].name" placeholder={{table}}_derived  ng-disabled="!selectedColumns[table][col.name].selected" style="width:90%;">
