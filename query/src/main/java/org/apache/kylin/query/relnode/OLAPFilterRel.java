@@ -289,6 +289,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
+        implementor.fixSharedOlapTableScan(this);
         implementor.visitChild(getInput(), this);
 
         this.columnRowType = buildColumnRowType();

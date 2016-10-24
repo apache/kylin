@@ -287,7 +287,8 @@ public class DataModelDesc extends RootPersistentEntity {
         if (tables.containsKey(factTable) == false)
             throw new IllegalStateException("Fact table does not exist:" + factTable);
         
-        factTableRef = new TableRef(this, "FACT", tables.get(factTable));
+        TableDesc factDesc = tables.get(factTable);
+        factTableRef = new TableRef(this, factDesc.getName(), factDesc);
         addAlias(factTableRef);
         
         for (LookupDesc lookup : lookups) {

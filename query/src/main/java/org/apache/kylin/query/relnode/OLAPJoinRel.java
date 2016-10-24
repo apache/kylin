@@ -121,6 +121,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         boolean rightHasSubquery = false;
 
         // as we keep the first table as fact table, we need to visit from left to right
+        implementor.fixSharedOlapTableScan(this);
         implementor.visitChild(this.left, this);
         if (this.context != implementor.getContext() || ((OLAPRel) this.left).hasSubQuery()) {
             this.hasSubQuery = true;

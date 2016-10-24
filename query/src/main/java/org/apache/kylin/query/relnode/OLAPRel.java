@@ -29,7 +29,9 @@ import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.SingleRel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,6 +102,34 @@ public interface OLAPRel extends RelNode {
             OLAPContext context = new OLAPContext(ctxSeq++);
             ctxStack.push(context);
             OLAPContext.registerContext(context);
+        }
+
+        public void fixSharedOlapTableScan(OLAPRel parent) {
+            if (parent instanceof SingleRel) {
+                SingleRel single = (SingleRel) parent;
+                OLAPTableScan copy = copyTableScanIfNeeded(single.getInput());
+                if (copy != null)
+                    single.replaceInput(0, copy);
+            } else if (parent instanceof BiRel) {
+                BiRel bi = (BiRel) parent;
+                OLAPTableScan copyLeft = copyTableScanIfNeeded(bi.getLeft());
+                if (copyLeft != null)
+                    bi.replaceInput(0, copyLeft);
+                OLAPTableScan copyRight = copyTableScanIfNeeded(bi.getRight());
+                if (copyRight != null)
+                    bi.replaceInput(1, copyRight);
+            }
+        }
+
+        private OLAPTableScan copyTableScanIfNeeded(RelNode input) {
+            if (input instanceof OLAPTableScan) {
+                OLAPTableScan tableScan = (OLAPTableScan) input;
+                if (tableScan.getColumnRowType() != null) { // implementedOLAP() was done, meaning it is shared
+                    OLAPTableScan copy = (OLAPTableScan) tableScan.copy(tableScan.getTraitSet(), tableScan.getInputs());
+                    return copy;
+                }
+            }
+            return null;
         }
     }
 

@@ -56,11 +56,9 @@ import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
 import org.apache.kylin.measure.MeasureTypeFactory;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 import org.apache.kylin.query.schema.OLAPTable;
@@ -147,7 +145,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
-
+        implementor.fixSharedOlapTableScan(this);
         implementor.visitChild(getInput(), this);
 
         this.context = implementor.getContext();
@@ -213,11 +211,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     private TblColRef buildRewriteColumn(FunctionDesc aggFunc) {
         TblColRef colRef;
         if (aggFunc.needRewriteField()) {
-            ColumnDesc column = new ColumnDesc();
-            column.setName(aggFunc.getRewriteFieldName());
-            TableDesc table = this.context.firstTableScan.getOlapTable().getSourceTable();
-            column.setTable(table);
-            colRef = column.getRef();
+            String colName = aggFunc.getRewriteFieldName();
+            colRef = this.context.firstTableScan.makeRewriteColumn(colName);
         } else {
             throw new IllegalStateException("buildRewriteColumn on a aggrFunc that does not need rewrite " + aggFunc);
         }

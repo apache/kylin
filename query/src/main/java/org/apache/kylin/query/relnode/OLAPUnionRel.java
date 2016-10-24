@@ -71,6 +71,7 @@ public class OLAPUnionRel extends Union implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
+        implementor.fixSharedOlapTableScan(this);
         for (RelNode child : getInputs()) {
             implementor.visitChild(child, this);
         }

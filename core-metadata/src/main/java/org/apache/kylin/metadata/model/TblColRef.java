@@ -23,6 +23,8 @@ import java.io.Serializable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 
+import static com.google.common.base.Preconditions.*;
+
 /**
  */
 @SuppressWarnings("serial")
@@ -60,6 +62,24 @@ public class TblColRef implements Serializable {
         colRef.markInnerColumn(dataType);
         return colRef;
     }
+    
+    private static final DataModelDesc UNKNOWN_MODEL = new DataModelDesc();
+    
+    public static TableRef tableForUnknownModel(String tempTableAlias, TableDesc table) {
+        return new TableRef(UNKNOWN_MODEL, tempTableAlias, table);
+    }
+    
+    public static TblColRef columnForUnknownModel(TableRef table, ColumnDesc colDesc) {
+        checkArgument(table.getModel() == UNKNOWN_MODEL);
+        return new TblColRef(table, colDesc);
+    }
+    
+    public static void fixUnknownModel(DataModelDesc model, String alias, TblColRef col) {
+        checkArgument(col.table.getModel() == UNKNOWN_MODEL || col.table.getModel() == model);
+        TableRef tableRef = model.findTable(alias);
+        checkArgument(tableRef.getTableDesc() == col.column.getTable());
+        col.table = tableRef;
+    }
 
     // for test only
     public static TblColRef mockup(TableDesc table, int oneBasedColumnIndex, String name, String datatype) {
@@ -82,6 +102,7 @@ public class TblColRef implements Serializable {
     }
     
     TblColRef(TableRef table, ColumnDesc column) {
+        checkArgument(table.getTableDesc() == column.getTable());
         this.table = table;
         this.column = column;
     }
@@ -143,6 +164,8 @@ public class TblColRef implements Serializable {
 
     @Override
     public int hashCode() {
+        // NOTE: tableRef MUST NOT participate in hashCode().
+        // Because fixUnknownModel() can change tableRef while TblColRef is held as set/map keys.
         final int prime = 31;
         int result = 1;
 
@@ -169,6 +192,11 @@ public class TblColRef implements Serializable {
 
     @Override
     public String toString() {
-        return (column.getTable() == null ? null : column.getTable().getIdentity()) + "." + column.getName();
+        String alias = table == null ? "UNKNOWN-MODEL" : table.getAlias();
+        if (alias.equals(column.getTable().getName())) {
+            return column.getTable().getIdentity() + "." + column.getName();
+        } else {
+            return alias + ":" + column.getTable().getIdentity() + "." + column.getName();
+        }
     }
 }

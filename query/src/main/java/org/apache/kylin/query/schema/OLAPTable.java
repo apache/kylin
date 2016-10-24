@@ -80,12 +80,6 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         SQLTYPE_MAPPING.put("time", SqlTypeName.TIME);
         SQLTYPE_MAPPING.put("timestamp", SqlTypeName.TIMESTAMP);
         SQLTYPE_MAPPING.put("any", SqlTypeName.ANY);
-
-        // try {
-        // Class.forName("org.apache.hive.jdbc.HiveDriver");
-        // } catch (ClassNotFoundException e) {
-        // e.printStackTrace();
-        // }
     }
 
     private final OLAPSchema olapSchema;

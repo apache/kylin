@@ -58,6 +58,8 @@ public class ColumnDesc implements Serializable {
     public ColumnDesc() { // default constructor for Jackson
     }
 
+    /** Use TableRef.getColumn() instead */
+    @Deprecated
     public TblColRef getRef() {
         if (ref == null) {
             ref = new TblColRef(this);

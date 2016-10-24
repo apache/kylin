@@ -26,10 +26,10 @@ import com.google.common.collect.Maps;
 
 public class TableRef {
 
-    final DataModelDesc model;
-    final String alias;
-    final TableDesc table;
-    final Map<String, TblColRef> columns;
+    final private DataModelDesc model;
+    final private String alias;
+    final private TableDesc table;
+    final private Map<String, TblColRef> columns;
 
     TableRef(DataModelDesc model, String alias, TableDesc table) {
         this.model = model;
@@ -68,6 +68,13 @@ public class TableRef {
     
     public Collection<TblColRef> getColumns() {
         return Collections.unmodifiableCollection(columns.values());
+    }
+    
+    public TblColRef makeFakeColumn(String name) {
+        ColumnDesc colDesc = new ColumnDesc();
+        colDesc.setName(name);
+        colDesc.setTable(table);
+        return new TblColRef(this, colDesc);
     }
     
     @Override

@@ -58,6 +58,8 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.query.optrule.AggregateMultipleExpandRule;
 import org.apache.kylin.query.optrule.AggregateProjectReduceRule;
@@ -199,12 +201,15 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
+        Preconditions.checkState(columnRowType == null, "OLAPTableScan MUST NOT be shared by more than one prent");
+        
         // create context in case of non-join
         if (implementor.getContext() == null || !(implementor.getParentNode() instanceof OLAPJoinRel)) {
             implementor.allocateContext();
         }
         columnRowType = buildColumnRowType();
         context = implementor.getContext();
+        context.allTableScans.add(this);
 
         if (context.olapSchema == null) {
             OLAPSchema schema = olapTable.getSchema();
@@ -218,12 +223,27 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     }
 
     private ColumnRowType buildColumnRowType() {
+        String tmpAlias = Integer.toHexString(System.identityHashCode(this));
+        TableRef tableRef = TblColRef.tableForUnknownModel(tmpAlias, olapTable.getSourceTable());
+        
         List<TblColRef> columns = new ArrayList<TblColRef>();
         for (ColumnDesc sourceColumn : olapTable.getExposedColumns()) {
-            TblColRef colRef = sourceColumn.getRef();
+            TblColRef colRef = TblColRef.columnForUnknownModel(tableRef, sourceColumn);
             columns.add(colRef);
         }
         return new ColumnRowType(columns);
+    }
+    
+    public TblColRef makeRewriteColumn(String name) {
+        TableRef tableRef = columnRowType.getColumnByIndex(0).getTableRef();
+        return tableRef.makeFakeColumn(name);
+    }
+    
+    public void fixColumnRowTypeWithModel(DataModelDesc model) {
+        TableRef tableRef = model.findFirstTable(olapTable.getTableName());
+        for (TblColRef col : columnRowType.getAllColumns()) {
+            TblColRef.fixUnknownModel(model, tableRef.getAlias(), col);
+        }
     }
 
     @Override
@@ -257,17 +277,9 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         return columnRowType;
     }
 
-    /**
-     * Because OLAPTableScan is reused for the same table, we can't use
-     * this.context and have to use parent context
-     */
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
         Map<String, RelDataType> rewriteFields = this.context.rewriteFields;
-        if (implementor.getParentContext() != null) {
-            rewriteFields = implementor.getParentContext().rewriteFields;
-        }
-
         for (Map.Entry<String, RelDataType> rewriteField : rewriteFields.entrySet()) {
             String fieldName = rewriteField.getKey();
             RelDataTypeField field = rowType.getField(fieldName, true, false);

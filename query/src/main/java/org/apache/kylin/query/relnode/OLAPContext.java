@@ -108,6 +108,7 @@ public class OLAPContext {
     // query info
     public OLAPSchema olapSchema = null;
     public OLAPTableScan firstTableScan = null; // to be fact table scan except "select * from lookupTable"
+    public Set<OLAPTableScan> allTableScans = new HashSet<>();
     public TupleInfo returnTupleInfo = null;
     public boolean afterAggregate = false;
     public boolean afterSkippedFilter = false;
@@ -117,19 +118,19 @@ public class OLAPContext {
     // cube metadata
     public IRealization realization;
 
-    public Set<TblColRef> allColumns = new HashSet<TblColRef>();
-    public List<TblColRef> groupByColumns = new ArrayList<TblColRef>();
-    public Set<TblColRef> metricsColumns = new HashSet<TblColRef>();
-    public List<FunctionDesc> aggregations = new ArrayList<FunctionDesc>(); // storage level measure type, on top of which various sql aggr function may apply
-    public List<SQLCall> aggrSqlCalls = new ArrayList<SQLCall>(); // sql level aggregation function call
-    public Set<TblColRef> filterColumns = new HashSet<TblColRef>();
+    public Set<TblColRef> allColumns = new HashSet<>();
+    public List<TblColRef> groupByColumns = new ArrayList<>();
+    public Set<TblColRef> metricsColumns = new HashSet<>();
+    public List<FunctionDesc> aggregations = new ArrayList<>(); // storage level measure type, on top of which various sql aggr function may apply
+    public List<SQLCall> aggrSqlCalls = new ArrayList<>(); // sql level aggregation function call
+    public Set<TblColRef> filterColumns = new HashSet<>();
     public TupleFilter filter;
-    public List<JoinDesc> joins = new LinkedList<JoinDesc>();
+    public List<JoinDesc> joins = new LinkedList<>();
     private List<TblColRef> sortColumns;
     private List<SQLDigest.OrderEnum> sortOrders;
 
     // rewrite info
-    public Map<String, RelDataType> rewriteFields = new HashMap<String, RelDataType>();
+    public Map<String, RelDataType> rewriteFields = new HashMap<>();
 
     public int limit;
 
@@ -175,6 +176,10 @@ public class OLAPContext {
             sortOrders.add(order);
         }
     }
+    
+    // ============================================================================
+    
+    
 
     public interface IAccessController {
         /*

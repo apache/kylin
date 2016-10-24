@@ -71,6 +71,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
+        implementor.fixSharedOlapTableScan(this);
         implementor.visitChild(getInput(), this);
 
         this.columnRowType = buildColumnRowType();

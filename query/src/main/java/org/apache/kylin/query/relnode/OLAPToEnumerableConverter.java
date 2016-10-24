@@ -45,6 +45,7 @@ import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
@@ -91,16 +92,8 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
                 IRealization realization = QueryRouter.selectRealization(context);
                 context.realization = realization;
 
-                String controllerCls = KylinConfig.getInstanceFromEnv().getQueryAccessController();
-                if (null != controllerCls && !controllerCls.isEmpty()) {
-                    OLAPContext.IAccessController accessController = (OLAPContext.IAccessController) ClassUtil.newInstance(controllerCls);
-                    TupleFilter tupleFilter = accessController.check(context.olapAuthen, context.allColumns, context.realization);
-                    if (null != tupleFilter) {
-                        context.filterColumns.addAll(collectColumns(tupleFilter));
-                        context.allColumns.addAll(collectColumns(tupleFilter));
-                        context.filter = and(context.filter, tupleFilter);
-                    }
-                }
+                fixModel(context);
+                doAccessControl(context);
             }
         } catch (NoRealizationFoundException e) {
             OLAPContext ctx0 = (OLAPContext) OLAPContext.getThreadLocalContexts().toArray()[0];
@@ -128,6 +121,26 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         }
 
         return impl.visitChild(this, 0, inputAsEnum, pref);
+    }
+
+    private void fixModel(OLAPContext context) {
+        DataModelDesc model = context.realization.getDataModelDesc();
+        for (OLAPTableScan tableScan : context.allTableScans) {
+            tableScan.fixColumnRowTypeWithModel(model);
+        }
+    }
+
+    private void doAccessControl(OLAPContext context) {
+        String controllerCls = KylinConfig.getInstanceFromEnv().getQueryAccessController();
+        if (null != controllerCls && !controllerCls.isEmpty()) {
+            OLAPContext.IAccessController accessController = (OLAPContext.IAccessController) ClassUtil.newInstance(controllerCls);
+            TupleFilter tupleFilter = accessController.check(context.olapAuthen, context.allColumns, context.realization);
+            if (null != tupleFilter) {
+                context.filterColumns.addAll(collectColumns(tupleFilter));
+                context.allColumns.addAll(collectColumns(tupleFilter));
+                context.filter = and(context.filter, tupleFilter);
+            }
+        }
     }
 
     private TupleFilter and(TupleFilter f1, TupleFilter f2) {

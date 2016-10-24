@@ -72,9 +72,8 @@ public class OLAPWindowRel extends Window implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
-        for (RelNode child : getInputs()) {
-            implementor.visitChild(child, this);
-        }
+        implementor.fixSharedOlapTableScan(this);
+        implementor.visitChild(getInput(), this);
 
         this.columnRowType = buildColumnRowType();
         this.context = implementor.getContext();

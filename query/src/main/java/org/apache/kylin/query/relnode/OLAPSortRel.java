@@ -65,6 +65,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
+        implementor.fixSharedOlapTableScan(this);
         implementor.visitChild(getInput(), this);
 
         this.context = implementor.getContext();

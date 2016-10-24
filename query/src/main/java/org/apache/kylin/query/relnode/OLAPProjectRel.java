@@ -107,6 +107,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
+        implementor.fixSharedOlapTableScan(this);
         implementor.visitChild(getInput(), this);
 
         this.context = implementor.getContext();
