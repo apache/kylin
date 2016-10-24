@@ -192,11 +192,13 @@ public class TblColRef implements Serializable {
 
     @Override
     public String toString() {
-        String alias = table == null ? "UNKNOWN-MODEL" : table.getAlias();
-        if (alias.equals(column.getTable().getName())) {
-            return column.getTable().getIdentity() + "." + column.getName();
+        String alias = table == null ? "UNKNOWN_MODEL" : table.getAlias();
+        String tableName = column.getTable() == null ? "NULL" : column.getTable().getName();
+        String tableIdentity = column.getTable() == null ? "NULL" : column.getTable().getIdentity();
+        if (alias.equals(tableName)) {
+            return tableIdentity + "." + column.getName();
         } else {
-            return alias + ":" + column.getTable().getIdentity() + "." + column.getName();
+            return alias + ":" + tableIdentity + "." + column.getName();
         }
     }
 }
