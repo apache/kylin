@@ -65,7 +65,14 @@ public class ITCombinationTest extends ITKylinQueryTest {
      */
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
-        return Arrays.asList(new Object[][] { { "inner", "on", "v2", false }, { "left", "on", "v1", false }, { "left", "on", "v2", false }, { "inner", "on", "v2", true }, { "left", "on", "v2", true } });
+        return Arrays.asList(new Object[][] { //
+                { "inner", "on", "v2", true }, //
+                { "left", "on", "v1", true }, //
+                { "left", "on", "v2", true }, //
+                //{ "inner", "on", "v2", false }, // exclude view to simply model/cube selection
+                //{ "left", "on", "v1", false }, // exclude view to simply model/cube selection
+                //{ "left", "on", "v2", false }, // exclude view to simply model/cube selection
+        });
     }
 
     public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine, boolean excludeViewCubes) throws Exception {

@@ -20,12 +20,11 @@ package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -152,11 +151,6 @@ public class ColumnDesc implements Serializable {
         } else {
             this.setDatatype(normalized.toString());
         }
-    }
-
-    public boolean isSameAs(String tableName, String columnName) {
-        return StringUtils.equalsIgnoreCase(table.getIdentity(), tableName) && //
-                StringUtils.equalsIgnoreCase(name, columnName);
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.RoutingRule;
 
@@ -34,19 +35,22 @@ public class RemoveBlackoutRealizationsRule extends RoutingRule {
     public static Set<String> blackList = Sets.newHashSet();
     public static Set<String> whiteList = Sets.newHashSet();
 
+    public static boolean accept(IRealization real) {
+        if (blackList.contains(real.getCanonicalName()))
+            return false;
+        if (!whiteList.isEmpty() && !whiteList.contains(real.getCanonicalName()))
+            return false;
+        
+        return true;
+    }
+    
     @Override
     public void apply(List<Candidate> candidates) {
         for (Iterator<Candidate> iterator = candidates.iterator(); iterator.hasNext();) {
             Candidate candidate = iterator.next();
 
-            if (blackList.contains(candidate.getRealization().getCanonicalName())) {
+            if (!accept(candidate.getRealization())) {
                 iterator.remove();
-                continue;
-            }
-
-            if (!whiteList.isEmpty() && !whiteList.contains(candidate.getRealization().getCanonicalName())) {
-                iterator.remove();
-                continue;
             }
         }
     }

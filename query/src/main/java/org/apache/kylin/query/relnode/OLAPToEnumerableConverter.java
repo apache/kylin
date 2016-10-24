@@ -45,9 +45,9 @@ import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
-import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.query.routing.ModelChooser;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
 import org.apache.kylin.query.routing.QueryRouter;
 import org.apache.kylin.query.schema.OLAPTable;
@@ -89,10 +89,10 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
                     continue;
                 }
 
-                IRealization realization = QueryRouter.selectRealization(context);
+                Set<IRealization> candidates = ModelChooser.selectModel(context);
+                IRealization realization = QueryRouter.selectRealization(context, candidates);
                 context.realization = realization;
 
-                fixModel(context);
                 doAccessControl(context);
             }
         } catch (NoRealizationFoundException e) {
@@ -121,13 +121,6 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         }
 
         return impl.visitChild(this, 0, inputAsEnum, pref);
-    }
-
-    private void fixModel(OLAPContext context) {
-        DataModelDesc model = context.realization.getDataModelDesc();
-        for (OLAPTableScan tableScan : context.allTableScans) {
-            tableScan.fixColumnRowTypeWithModel(model);
-        }
     }
 
     private void doAccessControl(OLAPContext context) {

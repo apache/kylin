@@ -50,10 +50,18 @@ public class JoinDesc {
         foreignKeyColumns = tt;
     }
 
+    public boolean isInnerJoin() {
+        return "INNER".equalsIgnoreCase(type);
+    }
+    
+    public boolean isLeftJoin() {
+        return "LEFT".equalsIgnoreCase(type);
+    }
+    
     public String getType() {
         return type;
     }
-
+    
     public void setType(String type) {
         this.type = type;
     }
@@ -110,9 +118,9 @@ public class JoinDesc {
             return false;
         JoinDesc other = (JoinDesc) obj;
 
-        if (!this.columnsEqualIgnoringOrder(foreignKeyColumns, other.foreignKeyColumns))
+        if (!this.colRefsEqualIgnoringOrder(foreignKeyColumns, other.foreignKeyColumns))
             return false;
-        if (!this.columnsEqualIgnoringOrder(primaryKeyColumns, other.primaryKeyColumns))
+        if (!this.colRefsEqualIgnoringOrder(primaryKeyColumns, other.primaryKeyColumns))
             return false;
 
         if (!this.type.equalsIgnoreCase(other.getType()))
@@ -120,11 +128,39 @@ public class JoinDesc {
         return true;
     }
 
-    private boolean columnsEqualIgnoringOrder(TblColRef[] a, TblColRef[] b) {
+    private boolean colRefsEqualIgnoringOrder(TblColRef[] a, TblColRef[] b) {
         if (a.length != b.length)
             return false;
 
         return Arrays.asList(a).containsAll(Arrays.asList(b));
+    }
+
+    // equals() without alias
+    public boolean matches(JoinDesc other) {
+        if (!this.type.equalsIgnoreCase(other.getType()))
+            return false;
+        if (!this.columnsEqualIgnoringOrder(foreignKeyColumns, other.foreignKeyColumns))
+            return false;
+        if (!this.columnsEqualIgnoringOrder(primaryKeyColumns, other.primaryKeyColumns))
+            return false;
+        
+        return true;
+    }
+
+    private boolean columnsEqualIgnoringOrder(TblColRef[] a, TblColRef[] b) {
+        if (a.length != b.length)
+            return false;
+        
+        int match = 0;
+        for (int i = 0; i < a.length; i++) {
+            for (int j = 0; j < b.length; j++) {
+                if (a[i].equals(b[j])) {
+                    match++;
+                    break;
+                }
+            }
+        }
+        return match == a.length;
     }
 
     @Override

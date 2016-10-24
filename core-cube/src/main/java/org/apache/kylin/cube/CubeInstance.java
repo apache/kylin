@@ -21,6 +21,7 @@ package org.apache.kylin.cube;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
@@ -52,9 +53,9 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeInstance extends RootPersistentEntity implements IRealization, IBuildable {
-    private static final int COST_WEIGHT_MEASURE = 1;
-    private static final int COST_WEIGHT_DIMENSION = 10;
-    private static final int COST_WEIGHT_INNER_JOIN = 100;
+    public static final int COST_WEIGHT_MEASURE = 1;
+    public static final int COST_WEIGHT_DIMENSION = 10;
+    public static final int COST_WEIGHT_INNER_JOIN = 100;
 
     public static CubeInstance create(String cubeName, CubeDesc cubeDesc) {
         CubeInstance cubeInstance = new CubeInstance();
@@ -374,7 +375,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
         for (LookupDesc lookupDesc : this.getDescriptor().getModel().getLookups()) {
             // more tables, more cost
-            if ("inner".equals(lookupDesc.getJoin().getType())) {
+            if (lookupDesc.getJoin().isInnerJoin()) {
                 // inner join cost is bigger than left join, as it will filter some records
                 calculatedCost += COST_WEIGHT_INNER_JOIN;
             }
@@ -389,8 +390,8 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     @Override
-    public List<TblColRef> getAllColumns() {
-        return Lists.newArrayList(getDescriptor().listAllColumns());
+    public Set<TblColRef> getAllColumns() {
+        return getDescriptor().listAllColumns();
     }
 
     @Override

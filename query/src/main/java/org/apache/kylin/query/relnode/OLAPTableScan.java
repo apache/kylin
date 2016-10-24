@@ -84,6 +84,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     private final OLAPTable olapTable;
     private final String tableName;
     private final int[] fields;
+    private String alias;
     private ColumnRowType columnRowType;
     private OLAPContext context;
 
@@ -222,9 +223,13 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         }
     }
 
+    public String getAlias() {
+        return alias;
+    }
+    
     private ColumnRowType buildColumnRowType() {
-        String tmpAlias = Integer.toHexString(System.identityHashCode(this));
-        TableRef tableRef = TblColRef.tableForUnknownModel(tmpAlias, olapTable.getSourceTable());
+        this.alias = Integer.toHexString(System.identityHashCode(this));
+        TableRef tableRef = TblColRef.tableForUnknownModel(this.alias, olapTable.getSourceTable());
         
         List<TblColRef> columns = new ArrayList<TblColRef>();
         for (ColumnDesc sourceColumn : olapTable.getExposedColumns()) {
@@ -239,11 +244,12 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         return tableRef.makeFakeColumn(name);
     }
     
-    public void fixColumnRowTypeWithModel(DataModelDesc model) {
-        TableRef tableRef = model.findFirstTable(olapTable.getTableName());
+    public void fixColumnRowTypeWithModel(DataModelDesc model, Map<String, String> aliasMap) {
+        String newAlias = aliasMap.get(this.alias);
         for (TblColRef col : columnRowType.getAllColumns()) {
-            TblColRef.fixUnknownModel(model, tableRef.getAlias(), col);
+            TblColRef.fixUnknownModel(model, newAlias, col);
         }
+        this.alias = newAlias;
     }
 
     @Override

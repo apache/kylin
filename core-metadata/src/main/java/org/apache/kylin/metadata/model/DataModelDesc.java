@@ -86,6 +86,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private List<TableRef> lookupTableRefs = Lists.newArrayList();
     private Map<String, TableRef> aliasMap = Maps.newHashMap(); // a table has exactly one alias
     private Map<String, TableRef> tableNameMap = Maps.newHashMap(); // a table maybe referenced by multiple names
+    private Map<String, List<JoinDesc>> joinsMap = Maps.newHashMap();
 
     /**
      * Error messages during resolving json metadata
@@ -274,6 +275,7 @@ public class DataModelDesc extends RootPersistentEntity {
         lookupTableRefs.clear();
         aliasMap.clear();
         tableNameMap.clear();
+        joinsMap.clear();
         
         initTableAlias(tables);
         initJoinColumns();
@@ -378,10 +380,19 @@ public class DataModelDesc extends RootPersistentEntity {
                 }
             }
 
+            List<JoinDesc> list = joinsMap.get(factTableRef.getTableIdentity());
+            if (list == null)
+                joinsMap.put(factTableRef.getTableIdentity(), list = Lists.newArrayListWithCapacity(4));
+            list.add(join);
         }
     }
+    
+    public Map<String, List<JoinDesc>> getJoinsMap() {
+        return joinsMap;
+    }
 
-    /** * Add error info and thrown exception out
+    /**
+     * Add error info and thrown exception out
      *
      * @param message
      */

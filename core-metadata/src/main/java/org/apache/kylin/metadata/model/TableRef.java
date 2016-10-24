@@ -86,9 +86,9 @@ public class TableRef {
 
         TableRef t = (TableRef) o;
 
-        if (!model.equals(t.model))
+        if ((model == null ? t.model == null : model.getName().equals(t.model.getName())) == false)
             return false;
-        if (!alias.equals(t.alias))
+        if ((alias == null ? t.alias == null : alias.equals(t.alias)) == false)
             return false;
         if (!table.getIdentity().equals(t.table.getIdentity()))
             return false;

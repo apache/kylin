@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -66,7 +67,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
     private volatile IRealization[] realizations = null;
     private List<TblColRef> allDimensions = null;
-    private List<TblColRef> allColumns = null;
+    private Set<TblColRef> allColumns = null;
     private List<MeasureDesc> allMeasures = null;
     private long dateRangeStart;
     private long dateRangeEnd;
@@ -136,7 +137,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             }
 
             allDimensions = Lists.newArrayList(dimensions);
-            allColumns = Lists.newArrayList(columns);
+            allColumns = columns;
             allMeasures = Lists.newArrayList(measures);
 
             Collections.sort(realizationList, new Comparator<IRealization>() {
@@ -203,7 +204,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     }
 
     @Override
-    public List<TblColRef> getAllColumns() {
+    public Set<TblColRef> getAllColumns() {
         init();
         return allColumns;
     }

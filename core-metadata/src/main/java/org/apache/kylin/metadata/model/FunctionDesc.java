@@ -19,7 +19,6 @@
 package org.apache.kylin.metadata.model;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -236,23 +235,6 @@ public class FunctionDesc {
     public void setReturnType(String returnType) {
         this.returnType = returnType;
         this.returnDataType = DataType.getType(returnType);
-    }
-
-    public TblColRef selectTblColRef(Collection<TblColRef> metricColumns, String factTableName) {
-        if (this.isCount())
-            return null; // count is not about any column but the whole row
-
-        ParameterDesc parameter = this.getParameter();
-        if (parameter == null)
-            return null;
-
-        String columnName = parameter.getValue();
-        for (TblColRef col : metricColumns) {
-            if (col.isSameAs(factTableName, columnName)) {
-                return col;
-            }
-        }
-        return null;
     }
 
     public HashMap<String, String> getConfiguration() {

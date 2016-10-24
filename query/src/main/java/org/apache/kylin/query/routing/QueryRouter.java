@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
 import org.apache.kylin.metadata.realization.CapabilityResult.DimensionAsMeasure;
@@ -42,13 +41,10 @@ public class QueryRouter {
 
     private static final Logger logger = LoggerFactory.getLogger(QueryRouter.class);
 
-    public static IRealization selectRealization(OLAPContext olapContext) throws NoRealizationFoundException {
+    public static IRealization selectRealization(OLAPContext olapContext, Set<IRealization> realizations) throws NoRealizationFoundException {
 
-        ProjectManager prjMgr = ProjectManager.getInstance(olapContext.olapSchema.getConfig());
-        logger.info("The project manager's reference is " + prjMgr);
         String factTableName = olapContext.firstTableScan.getTableName();
         String projectName = olapContext.olapSchema.getProjectName();
-        Set<IRealization> realizations = prjMgr.getRealizationsByTable(projectName, factTableName);
         SQLDigest sqlDigest = olapContext.getSQLDigest();
 
         List<Candidate> candidates = Lists.newArrayListWithCapacity(realizations.size());

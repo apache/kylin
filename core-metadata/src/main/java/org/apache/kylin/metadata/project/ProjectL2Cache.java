@@ -233,7 +233,7 @@ class ProjectL2Cache {
 
         MetadataManager metaMgr = mgr.getMetadataManager();
 
-        List<TblColRef> allColumns = realization.getAllColumns();
+        Set<TblColRef> allColumns = realization.getAllColumns();
         if (allColumns == null || allColumns.isEmpty()) {
             logger.error("Realization '" + realization.getCanonicalName() + "' does not report any columns");
             return false;

@@ -64,6 +64,9 @@ public class TblColRef implements Serializable {
     }
     
     private static final DataModelDesc UNKNOWN_MODEL = new DataModelDesc();
+    static {
+        UNKNOWN_MODEL.setName("UNKNOWN_MODEL");
+    }
     
     public static TableRef tableForUnknownModel(String tempTableAlias, TableDesc table) {
         return new TableRef(UNKNOWN_MODEL, tempTableAlias, table);
@@ -119,6 +122,10 @@ public class TblColRef implements Serializable {
         return table;
     }
     
+    public String getTableAlias() {
+        return table.getAlias();
+    }
+    
     public String getTable() {
         if (column.getTable() == null) {
             return null;
@@ -152,17 +159,6 @@ public class TblColRef implements Serializable {
         return InnerDataTypeEnum.DERIVED.getDataType().equals(getDatatype());
     }
 
-    /**
-     *
-     * @param tableName full name : db.table
-     * @param columnName columnname
-     * @return
-     */
-    public boolean isSameAs(String tableName, String columnName) {
-        return column.isSameAs(tableName, columnName);
-    }
-
-    @Override
     public int hashCode() {
         // NOTE: tableRef MUST NOT participate in hashCode().
         // Because fixUnknownModel() can change tableRef while TblColRef is held as set/map keys.
@@ -187,6 +183,8 @@ public class TblColRef implements Serializable {
             return false;
         if (!StringUtils.equals(column.getName(), other.column.getName()))
             return false;
+//        if ((table == null ? other.table == null : table.equals(other.table)) == false)
+//            return false;
         return true;
     }
 
@@ -201,4 +199,5 @@ public class TblColRef implements Serializable {
             return alias + ":" + tableIdentity + "." + column.getName();
         }
     }
+
 }
