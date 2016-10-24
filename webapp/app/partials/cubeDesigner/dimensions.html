@@ -186,52 +186,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!--Hierarchy Dimension-->
-                    <div class="form-group" ng-if="dimType.indexOf('hierarchy') >= 0">
-                        <div class="row">
-                            <div class="col-sm-6 col-sm-offset-3">
-                                <div ui-sortable="{containment: 'parent', placeholder: 'hierarchy-item-placeholder', forcePlaceholderSize: true, opacity: 0.8}"
-                                     ng-model="newDimension.column" class="hierarchy-container">
-                                    <div ng-repeat="hierarchyIndex in [] | range: newDimension.column.length" class="hierarchy-item">
-                                        <div class="row">
-                                            <div class="col-xs-2">
-                                                <span class="badge">{{$index + 1}}</span>
-                                            </div>
-                                            <div class="col-xs-8">
-                                                <select chosen style="width: 100%"
-                                                        data-placeholder="Dimension Hierarchy Column"
-                                                        ng-model="newDimension.column[$index]"
-                                                        ng-options="columns.name as columns.name for columns in getDimColumnsByTable(newDimension.table)" >
-                                                    <option value="">-- Select Column --</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-xs-2">
-                                                <button type="button" class="pull-right btn btn-xs btn-danger" style="cursor: pointer " tooltip="Delete"
-                                                        ng-click="newDimension.column.splice($index, 1);">
-                                                    <i class="fa fa-trash-o"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="space-8"></div>
-
-                                <div class="row">
-                                    <div class="col-xs-4">
-                                        <button class="btn btn-xs btn-info"
-                                                ng-click="newDimension.column.push('');">
-                                            <i class="fa fa-plus"></i> New Hierarchy</button>
-                                    </div>
-                                    <div class="col-xs-8">
-                                        <p class="help-block">Drag level into the order you prefer.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!--Derived Dimension-->
                     <div ng-if="dimType.indexOf('derived') >= 0">
                         <div class="form-group">
@@ -251,30 +205,8 @@
                                             <div class="space-4"></div>
                                         </div>
                                     </div>
-                                    <button class="btn btn-xs btn-info" ng-click="newDimension.derived.push('');">
+                                    <button class="btn btn-xs btn-info" ng-click="addNewDimension(newDimension);">
                                         <i class="fa fa-plus"></i> New Derived</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!--Tips-->
-                <div class="col-xs-4">
-                    <div class="box box-solid">
-                        <div class="box-header">
-                            <h4 class="box-title">Tips</h4>
-                        </div>
-                        <div class="box-body">
-                            <div class="row">
-                                <div class="col-xs-12">
-                                    <ol class="text-info">
-                                        <li>Type in any input box for auto suggestion</li>
-                                        <li>Pick up Fact Table from Star Schema Tables first</li>
-                                        <li>Data Type should match with Hive Table's Data Type</li>
-                                        <li>Join Type have to be same as will be used in query</li>
-                                        <li>Using Derived for One-One relationship between columns, like ID and Name</li>
-                                    </ol>
                                 </div>
                             </div>
                         </div>
@@ -291,31 +223,71 @@
 
 
     <script type="text/ng-template" id="autoGenDimension.html">
-        <div class="modal-header">
-            <h4 class="box-title lighter">Auto Generate Dimensions <small>This is a helper for you to batch generate dimensions.</small></h4>
+        <div class="modal-header large-popover">
+            <h4 class="box-title lighter">Auto Generate Dimensions <small>This is a helper for you to batch generate dimensions.</small><i kylinpopover placement="right" title="Auto Generate Rules" template="AutoDimensionsTip.html" class="fa fa-info-circle"></i></h4>
         </div>
         <div class="modal-body">
             <div class="row">
-                <div class="col-xs-8">
+                <div class="col-xs-12">
                     <div class="box box-solid">
                         <div class="box-header"><h4>Columns</h4></div>
                         <div class="box-body">
-                            <ul class="list-unstyled columns-region">
-                                <li ng-repeat="table in availableTables track by $index">
-                                    <h5 class="table-name-underline">
-                                        <b>{{table}}</b>{{$index == 0 ? ' [Fact Table]' : ' [Lookup Table]'}}
-                                    </h5>
-                                    <ul class="list-unstyled">
-                                        <li ng-repeat="col in availableColumns[table] track by col.table + '.' + col.name">
-                                            <label>
-                                                <input type="checkbox" ng-model="selectedColumns[table][col.name].selected"
-                                                       ng-disabled="selectedColumns[table][col.name].disabled">
-                                                {{col.name}}
-                                            </label>
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
+                          <ul class="list-unstyled columns-region">
+                            <accordion close-others=false>
+                              <!--FactTable-->
+                              <div ng-repeat="table in availableTables track by $index" ng-if="$index == 0" accordion-group class="panel-default " heading="{{table}}{{dataKylin.cube.cubeDSFactTable}}" is-open=true>
+                                <table class="table table-striped table-hover ng-scope">
+                                  <tr >
+                                    <td class="col-xs-1"></td>
+                                    <td class="col-xs-4"><label>Name</label></td>
+                                    <td class="col-xs-3"><label>Columns</label></td>
+                                    <td colspan="2" class="col-xs-4"></td>
+                                  </tr>
+                                  <tr ng-repeat="col in availableColumns[table] track by col.table + '.' + col.name" >
+                                    <td >
+                                      <input type="checkbox" ng-model="selectedColumns[table][col.name].selected"
+                                             ng-disabled="selectedColumns[table][col.name].disabled"  >
+                                    </td>
+                                    <td >
+                                      <input type="text"  placeholder={{col.name}} ng-model="selectedColumns[table][col.name].name" ng-disabled="!selectedColumns[table][col.name].selected" style="width:90%;">
+                                    </td>
+                                    <td>
+                                      {{col.name}}
+                                    </td>
+                                  </tr>
+                                </table>
+                              </div>
+                              <!--LookUp Table-->
+                              <div ng-repeat="table in availableTables track by $index" ng-if="$index > 0" accordion-group class="panel-default" heading="{{table}}{{dataKylin.cube.cubeDSLookupTable}}">
+                                <table class="table table-striped table-hover ng-scope">
+                                  <tr class="row" >
+                                    <td class="col-xs-1"></td>
+                                    <td class="col-xs-4"><label>Name</label></td>
+                                    <td class="col-xs-3"><label>Columns</label></td>
+                                    <td colspan="2" class="col-xs-4"></td>
+                                  </tr>
+                                  <tr ng-repeat="col in availableColumns[table] track by col.table + '.' + col.name" class="row">
+                                    <td class=>
+                                      <input type="checkbox" ng-model="selectedColumns[table][col.name].selected"
+                                             ng-disabled="selectedColumns[table][col.name].disabled"  ng-change="autoChange(table,col.name)">
+                                    </td>
+                                    <td >
+                                      <input type="text" ng-model="selectedColumns[table][col.name].name" placeholder={{table}}_derived  ng-disabled="!selectedColumns[table][col.name].selected" style="width:90%;">
+                                    </td>
+                                    <td >
+                                      {{col.name}}
+                                    </td>
+                                    <td  >
+                                      <label> <input type="radio" ng-model="selectedColumns[table][col.name].normal" value="true" ng-disabled="!selectedColumns[table][col.name].selected"> Normal </label>
+                                    </td>
+                                    <td >
+                                      <label> <input type="radio" ng-model="selectedColumns[table][col.name].normal" value="false" ng-disabled="!selectedColumns[table][col.name].selected"> Derived </label>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </div>
+                            </accordion>
+                          </ul>
                         </div>
                     </div>
                 </div>
@@ -324,27 +296,30 @@
                 <div class="col-xs-4">
                     <div class="box box-solid">
                         <div class="box-header">
-                            <h4 class="box-title">Auto Generate Rules</h4>
+                            <h4 class="box-title"></h4>
                         </div>
                         <div class="box-body">
-                            <div class="row">
-                                <div class="col-xs-12">
-                                    <ol class="text-info">
-                                        <li>Column is disabled once there is already a dimension referred this column.</li>
-                                        <li>In fact table: one normal dimension will be auto generated per column.</li>
-                                        <li>In lookup table: one derived dimension will be auto generated for all the selected columns.</li>
-                                    </ol>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary" ng-disabled="" ng-click="ok()">OK</button>
+            <button class="btn btn-primary" ng-disabled="" ng-click="checkAutoDimension()?ok():''">OK</button>
             <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </script>
     </ng-form>
 </div>
+<script type="text/ng-template" id="AutoDimensionsTip.html">
+  <div class="row">
+    <div class="col-xs-12">
+      <ol class="text-info">
+        <li>Column is disabled once there is already a dimension referred this column.</li>
+        <li>In fact table: one normal dimension will be auto generated per column.</li>
+        <li>In lookup table: one derived dimension will be auto generated for all the selected columns.</li>
+      </ol>
+    </div>
+  </div>
+</script>
