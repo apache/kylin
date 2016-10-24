@@ -18,12 +18,12 @@
 
 package org.apache.kylin.metadata.model;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.Serializable;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.metadata.datatype.DataType;
-
-import static com.google.common.base.Preconditions.*;
 
 /**
  */
