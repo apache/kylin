@@ -96,7 +96,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
                 cols2[k].isLookup = true;
 
                 // Default not selected and not disabled.
-                lookupSelectAvailable[cols2[k].name] = {name:cols2[k].table+"_derived",selected: false, disabled: false};
+                lookupSelectAvailable[cols2[k].name] = {name:cols2[k].name,selected: false, disabled: false};
             }
 
             $scope.availableColumns[lookups[j].table] = cols2;
@@ -302,7 +302,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
             if(dim.table==$scope.metaModel.model.fact_table){
                $scope.selectedColumns[dim.table][colName] = {name:colName,selected: false, disabled: false};
             }else{
-               $scope.selectedColumns[dim.table][colName] = {name:dim.table+"_derived",selected: false, disabled: false};
+               $scope.selectedColumns[dim.table][colName] = {name:colName,selected: false, disabled: false};
             }
         });
     };
@@ -400,7 +400,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
              if(table==$scope.metaModel.model.fact_table){
                  $scope.selectedColumns[table][name].name=name;
              }else{
-                 $scope.selectedColumns[table][name].name=table+"_derived";
+                 $scope.selectedColumns[table][name].name=name;
              }
         }else{
              if($scope.metaModel.model.fact_table!=table){
