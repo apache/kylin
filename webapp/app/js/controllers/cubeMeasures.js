@@ -54,17 +54,24 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
         var _name=configuration.slice(14);
         var item=$scope.newMeasure.function.configuration[configuration];
         var _isFixedLength = item.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
-        var _isIntLength = item.substring(0,3) === "int"?"true":"false";//fixed_length:12
+        var _isIntegerLength = item.substring(0,7) === "integer"?"true":"false";
+        var _isIntLength = item.substring(0,3) === "int"?"true":"false";
         var _encoding = item;
         var _valueLength = 0 ;
         if(_isFixedLength !=="false"){
           _valueLength = item.substring(13,item.length);
           _encoding = "fixed_length";
         }
-        if(_isIntLength!="false"){
+        if(_isIntLength!="false" && _isIntegerLength=="false" ){
           _valueLength = item.substring(4,item.length);
           _encoding = "int";
         }
+
+        if(_isIntegerLength!="false" ){
+          _valueLength = item.substring(8,item.length);
+          _encoding = "integer";
+        }
+
         $scope.GroupBy = {
           name:_name,
           encoding:_encoding,
@@ -172,8 +179,9 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           if(item.encoding!=="dict" && item.encoding!=="date"&& item.encoding!=="time"){
             if(item.encoding=="fixed_length" && item.valueLength){
               encoding = "fixed_length:"+item.valueLength;
-            }
-            else if(item.encoding=="int" && item.valueLength){
+            }else if(item.encoding=="integer" && item.valueLength){
+              encoding = "integer:"+item.valueLength;
+            }else if(item.encoding=="int" && item.valueLength){
               encoding = "int:"+item.valueLength;
             }else{
               encoding = item.encoding;

@@ -27,16 +27,22 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
     //var _isDictionaries = item.encoding === "dict"?"true":"false";
     var _isFixedLength = item.encoding.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
-    var _isIntLength = item.encoding.substring(0,3) === "int"?"true":"false";//fixed_length:12
+    var _isIntegerLength = item.encoding.substring(0,7) === "integer"?"true":"false";
+    var _isIntLength = item.encoding.substring(0,3) === "int"?"true":"false";
     var _encoding = item.encoding;
     var _valueLength ;
     if(_isFixedLength !=="false"){
       _valueLength = item.encoding.substring(13,item.encoding.length);
       _encoding = "fixed_length";
     }
-    if(_isIntLength!="false"){
+    if(_isIntLength!="false" && _isIntegerLength=="false" ){
       _valueLength = item.encoding.substring(4,item.encoding.length);
       _encoding = "int";
+    }
+
+    if(_isIntegerLength!="false" ){
+      _valueLength = item.encoding.substring(8,item.encoding.length);
+      _encoding = "integer";
     }
 
     var rowkeyObj = {
@@ -66,6 +72,8 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       }
       else if(item.encoding=="int" && item.valueLength){
         encoding = "int:"+item.valueLength;
+      }else if(item.encoding=="integer" && item.valueLength){
+        encoding = "integer:"+item.valueLength;
       }else{
         encoding = item.encoding;
       }
