@@ -229,7 +229,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     $scope.nextPara = {
       "type":"column",
       "value":"",
-      "next_parameter":{}
+      "next_parameter": null
     }
     if($scope.newMeasure){
       $scope.newMeasure.function.parameter.next_parameter = null;
