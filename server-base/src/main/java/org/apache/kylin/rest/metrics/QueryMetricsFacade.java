@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.metrics;
 
+import org.apache.hadoop.metrics2.MetricsException;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.request.SQLRequest;
@@ -38,28 +39,28 @@ public class QueryMetricsFacade {
 
     private static boolean enabled = false;
     private static ConcurrentHashMap<String, QueryMetrics> metricsMap = new ConcurrentHashMap<String, QueryMetrics>();
-    
+
     public static void init() {
         enabled = KylinConfig.getInstanceFromEnv().getQueryMetricsEnabled();
         if (!enabled)
             return;
-        
+
         DefaultMetricsSystem.initialize("Kylin");
     }
 
     public static void updateMetrics(SQLRequest sqlRequest, SQLResponse sqlResponse) {
         if (!enabled)
             return;
-        
+
         String projectName = sqlRequest.getProject();
         String cubeName = sqlResponse.getCube();
 
-        update(getQueryMetrics("Server_Total", metricsMap), sqlResponse);
+        update(getQueryMetrics("Server_Total"), sqlResponse);
 
-        update(getQueryMetrics(projectName, metricsMap), sqlResponse);
+        update(getQueryMetrics(projectName), sqlResponse);
 
         String cubeMetricName = projectName + ",sub=" + cubeName;
-        update(getQueryMetrics(cubeMetricName, metricsMap), sqlResponse);
+        update(getQueryMetrics(cubeMetricName), sqlResponse);
     }
 
     private static void update(QueryMetrics queryMetrics, SQLResponse sqlResponse) {
@@ -93,16 +94,29 @@ public class QueryMetricsFacade {
         }
     }
 
-    private static QueryMetrics getQueryMetrics(String name, ConcurrentHashMap<String, QueryMetrics> metricsMap) {
+    private static QueryMetrics getQueryMetrics(String name) {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         int[] intervals = config.getQueryMetricsPercentilesIntervals();
 
-        if (metricsMap.containsKey(name)) {
-            return metricsMap.get(name);
-        } else {
-            QueryMetrics queryMetrics = new QueryMetrics(intervals).registerWith(name);
-            metricsMap.put(name, queryMetrics);
+        QueryMetrics queryMetrics = metricsMap.get(name);
+        if (queryMetrics != null) {
             return queryMetrics;
         }
+
+        synchronized (QueryMetricsFacade.class) {
+            queryMetrics = metricsMap.get(name);
+            if (queryMetrics != null) {
+                return queryMetrics;
+            }
+
+            try {
+                queryMetrics = new QueryMetrics(intervals).registerWith(name);
+                metricsMap.put(name, queryMetrics);
+                return queryMetrics;
+            } catch (MetricsException e) {
+                logger.warn(name + " register error: ", e);
+            }
+        }
+        return queryMetrics;
     }
 }
