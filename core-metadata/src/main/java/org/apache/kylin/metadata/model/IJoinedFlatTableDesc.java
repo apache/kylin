@@ -37,4 +37,6 @@ public interface IJoinedFlatTableDesc {
     long getSourceOffsetEnd();
     
     TblColRef getDistributedBy();
+
+    ISegment getSegment();
 }
