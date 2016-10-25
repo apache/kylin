@@ -51,6 +51,9 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.source.ISource;
+import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.SourcePartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -206,11 +209,12 @@ public class JobService extends BasicService {
         }
 
         checkCubeDescSignature(cube);
-
         DefaultChainedExecutable job;
-
         if (buildType == CubeBuildTypeEnum.BUILD) {
-            CubeSegment newSeg = getCubeManager().appendSegment(cube, startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+            ISource source = SourceFactory.tableSource(cube);
+            SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+            sourcePartition = source.parsePartitionBeforeBuild(cube, sourcePartition);
+            CubeSegment newSeg = getCubeManager().appendSegment(cube, sourcePartition);
             job = EngineFactory.createBatchCubingJob(newSeg, submitter);
         } else if (buildType == CubeBuildTypeEnum.MERGE) {
             CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
@@ -364,15 +368,11 @@ public class JobService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance cancelJob(JobInstance job) throws IOException, JobException {
-        //        CubeInstance cube = this.getCubeManager().getCube(job.getRelatedCube());
-        //        for (BuildCubeJob cubeJob: listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING))) {
-        //            getExecutableManager().stopJob(cubeJob.getId());
-        //        }
         CubeInstance cubeInstance = getCubeManager().getCube(job.getRelatedCube());
         final String segmentIds = job.getRelatedSegment();
         for (String segmentId : StringUtils.split(segmentIds)) {
             final CubeSegment segment = cubeInstance.getSegmentById(segmentId);
-            if (segment != null && segment.getStatus() == SegmentStatusEnum.NEW) {
+            if (segment != null && (segment.getStatus() == SegmentStatusEnum.NEW || segment.getDateRangeEnd() == 0)) {
                 // Remove this segments
                 CubeUpdate cubeBuilder = new CubeUpdate(cubeInstance);
                 cubeBuilder.setToRemoveSegs(segment);

@@ -23,9 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -36,6 +33,10 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
+import org.apache.kylin.source.kafka.util.KafkaClient;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 /**
  * Convert Kafka topic to Hadoop InputFormat
@@ -45,16 +46,16 @@ public class KafkaInputFormat extends InputFormat<LongWritable, BytesWritable> {
 
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {
-        Configuration conf = context.getConfiguration();
+        final Configuration conf = context.getConfiguration();
 
-        String brokers = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_BROKERS);
-        String inputTopic = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_TOPIC);
-        String consumerGroup = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_CONSUMER_GROUP);
-        Integer partitionMin = Integer.valueOf(conf.get(KafkaFlatTableJob.CONFIG_KAFKA_PARITION_MIN));
-        Integer partitionMax = Integer.valueOf(conf.get(KafkaFlatTableJob.CONFIG_KAFKA_PARITION_MAX));
+        final String brokers = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_BROKERS);
+        final String inputTopic = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_TOPIC);
+        final String consumerGroup = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_CONSUMER_GROUP);
+        final Integer partitionMin = Integer.valueOf(conf.get(KafkaFlatTableJob.CONFIG_KAFKA_PARITION_MIN));
+        final Integer partitionMax = Integer.valueOf(conf.get(KafkaFlatTableJob.CONFIG_KAFKA_PARITION_MAX));
 
-        Map<Integer, Long> startOffsetMap = Maps.newHashMap();
-        Map<Integer, Long> endOffsetMap = Maps.newHashMap();
+        final Map<Integer, Long> startOffsetMap = Maps.newHashMap();
+        final Map<Integer, Long> endOffsetMap = Maps.newHashMap();
         for (int i = partitionMin; i <= partitionMax; i++) {
             String start = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_PARITION_START + i);
             String end = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_PARITION_END + i);
@@ -64,23 +65,19 @@ public class KafkaInputFormat extends InputFormat<LongWritable, BytesWritable> {
             }
         }
 
-        List<InputSplit> splits = new ArrayList<InputSplit>();
+        final List<InputSplit> splits = new ArrayList<InputSplit>();
         try (KafkaConsumer<String, String> consumer = KafkaClient.getKafkaConsumer(brokers, consumerGroup, null)) {
-            List<PartitionInfo> partitionInfos = consumer.partitionsFor(inputTopic);
+            final List<PartitionInfo> partitionInfos = consumer.partitionsFor(inputTopic);
             Preconditions.checkArgument(partitionInfos.size() == startOffsetMap.size(), "partition number mismatch with server side");
             for (int i = 0; i < partitionInfos.size(); i++) {
-                PartitionInfo partition = partitionInfos.get(i);
+                final PartitionInfo partition = partitionInfos.get(i);
                 int partitionId = partition.partition();
                 if (startOffsetMap.containsKey(partitionId) == false) {
                     throw new IllegalStateException("Partition '" + partitionId + "' not exists.");
                 }
 
-                if (endOffsetMap.get(partitionId) >  startOffsetMap.get(partitionId)) {
-                    InputSplit split = new KafkaInputSplit(
-                            brokers, inputTopic,
-                            partitionId,
-                            startOffsetMap.get(partitionId), endOffsetMap.get(partitionId)
-                    );
+                if (endOffsetMap.get(partitionId) > startOffsetMap.get(partitionId)) {
+                    InputSplit split = new KafkaInputSplit(brokers, inputTopic, partitionId, startOffsetMap.get(partitionId), endOffsetMap.get(partitionId));
                     splits.add(split);
                 }
             }
@@ -89,9 +86,7 @@ public class KafkaInputFormat extends InputFormat<LongWritable, BytesWritable> {
     }
 
     @Override
-    public RecordReader<LongWritable, BytesWritable> createRecordReader(
-            InputSplit arg0, TaskAttemptContext arg1) throws IOException,
-            InterruptedException {
+    public RecordReader<LongWritable, BytesWritable> createRecordReader(InputSplit arg0, TaskAttemptContext arg1) throws IOException, InterruptedException {
         return new KafkaInputRecordReader();
     }
 

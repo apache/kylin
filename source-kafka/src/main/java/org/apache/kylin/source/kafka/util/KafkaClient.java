@@ -59,7 +59,7 @@ public class KafkaClient {
         props.put("retries", 0);
         props.put("batch.size", 16384);
         props.put("linger.ms", 50);
-        props.put("timeout.ms", "30000");
+        props.put("request.timeout.ms", "30000");
         if (properties != null) {
             for (Map.Entry entry : properties.entrySet()) {
                 props.put(entry.getKey(), entry.getValue());
@@ -75,12 +75,12 @@ public class KafkaClient {
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("group.id", consumerGroup);
         props.put("session.timeout.ms", "30000");
-        props.put("enable.auto.commit", "false");
         if (properties != null) {
             for (Map.Entry entry : properties.entrySet()) {
                 props.put(entry.getKey(), entry.getValue());
             }
         }
+        props.put("enable.auto.commit", "false");
         return props;
     }
 
@@ -126,7 +126,25 @@ public class KafkaClient {
         try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName(), null)) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
             for (PartitionInfo partitionInfo : partitionInfos) {
-                long latest = KafkaClient.getLatestOffset(consumer, topic, partitionInfo.partition());
+                long latest = getLatestOffset(consumer, topic, partitionInfo.partition());
+                startOffsets.put(partitionInfo.partition(), latest);
+            }
+        }
+        return startOffsets;
+    }
+
+
+    public static Map<Integer, Long> getEarliestOffsets(final CubeInstance cubeInstance) {
+        final KafkaConfig kafakaConfig = KafkaConfigManager.getInstance(cubeInstance.getConfig()).getKafkaConfig(cubeInstance.getFactTable());
+
+        final String brokers = KafkaClient.getKafkaBrokers(kafakaConfig);
+        final String topic = kafakaConfig.getTopic();
+
+        Map<Integer, Long> startOffsets = Maps.newHashMap();
+        try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cubeInstance.getName(), null)) {
+            final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
+            for (PartitionInfo partitionInfo : partitionInfos) {
+                long latest = getEarliestOffset(consumer, topic, partitionInfo.partition());
                 startOffsets.put(partitionInfo.partition(), latest);
             }
         }

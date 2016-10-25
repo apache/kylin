@@ -31,7 +31,7 @@ public class SourceFactory {
     private static ImplementationSwitch<ISource> sources;
     static {
         Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getSourceEngines();
-        sources = new ImplementationSwitch<ISource>(impls, ISource.class);
+        sources = new ImplementationSwitch<>(impls, ISource.class);
     }
 
     public static ISource tableSource(ISourceAware aware) {

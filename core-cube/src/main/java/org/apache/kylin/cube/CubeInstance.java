@@ -446,6 +446,15 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return this.getDescriptor().getAutoMergeTimeRanges() != null && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
     }
 
+    public CubeSegment getLastSegment() {
+        List<CubeSegment> existing = getSegments();
+        if (existing.isEmpty()) {
+            return null;
+        } else {
+            return existing.get(existing.size() - 1);
+        }
+    }
+
     @Override
     public int getSourceType() {
         return getFactTableDesc().getSourceType();

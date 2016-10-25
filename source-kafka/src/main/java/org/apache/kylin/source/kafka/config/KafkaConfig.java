@@ -61,6 +61,7 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("parserName")
     private String parserName;
 
+    @Deprecated
     @JsonProperty("margin")
     private long margin;
 
@@ -120,10 +121,12 @@ public class KafkaConfig extends RootPersistentEntity {
         this.name = name;
     }
 
+    @Deprecated
     public long getMargin() {
         return margin;
     }
 
+    @Deprecated
     public void setMargin(long margin) {
         this.margin = margin;
     }
