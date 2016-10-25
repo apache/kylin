@@ -18,13 +18,18 @@
 
 package org.apache.kylin.source.hive;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
+import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput;
+import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.ReadableTable;
 
-import java.util.List;
+import com.google.common.collect.Lists;
+import org.apache.kylin.source.SourcePartition;
 
 //used by reflection
 public class HiveSource implements ISource {
@@ -47,6 +52,29 @@ public class HiveSource implements ISource {
     @Override
     public List<String> getMRDependentResources(TableDesc table) {
         return Lists.newArrayList();
+    }
+
+    @Override
+    public SourcePartition parsePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition) {
+        SourcePartition result = SourcePartition.getCopyOf(srcPartition);
+        CubeInstance cube = (CubeInstance) buildable;
+        if (cube.getDescriptor().getModel().getPartitionDesc().isPartitioned() == true) {
+            // normal partitioned cube
+            if (result.getStartDate() == 0) {
+                final CubeSegment last = cube.getLastSegment();
+                if (last != null) {
+                    result.setStartDate(last.getDateRangeEnd());
+                }
+            }
+        } else {
+            // full build
+            result.setStartDate(0);
+            result.setEndDate(Long.MAX_VALUE);
+        }
+
+        result.setStartOffset(0);
+        result.setEndOffset(0);
+        return result;
     }
 
 }

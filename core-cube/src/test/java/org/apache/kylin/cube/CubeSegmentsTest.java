@@ -110,7 +110,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         seg1.setStatus(SegmentStatusEnum.READY);
 
         // append second
-        CubeSegment seg2 = mgr.appendSegment(cube, 0, 2000);
+        CubeSegment seg2 = mgr.appendSegment(cube, 1000, 2000);
 
         assertEquals(2, cube.getSegments().size());
         assertEquals(1000, seg2.getDateRangeStart());

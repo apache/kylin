@@ -19,8 +19,12 @@ package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -30,26 +34,33 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JoinedFlatTable;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
+import org.apache.kylin.job.exception.ExecuteException;
+import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableContext;
+import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.source.kafka.hadoop.KafkaFlatTableJob;
 import org.apache.kylin.source.kafka.job.MergeOffsetStep;
-import org.apache.kylin.source.kafka.job.SeekOffsetStep;
-import org.apache.kylin.source.kafka.job.UpdateTimeRangeStep;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KafkaMRInput implements IMRInput {
 
@@ -57,7 +68,7 @@ public class KafkaMRInput implements IMRInput {
 
     @Override
     public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-        this.cubeSegment = (CubeSegment) flatDesc.getSegment();
+        this.cubeSegment = (CubeSegment)flatDesc.getSegment();
         return new BatchCubingInputSide(cubeSegment);
     }
 
@@ -65,8 +76,14 @@ public class KafkaMRInput implements IMRInput {
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
         KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
         KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(table.getIdentity());
-        TableRef tableRef = cubeSegment.getCubeInstance().getDataModelDesc().findTable(table.getIdentity());
-        List<TblColRef> columns = Lists.newArrayList(tableRef.getColumns());
+        List<TblColRef> columns = Lists.transform(Arrays.asList(table.getColumns()), new Function<ColumnDesc, TblColRef>() {
+            @Nullable
+            @Override
+            public TblColRef apply(ColumnDesc input) {
+                return input.getRef();
+            }
+        });
+
         return new KafkaTableInputFormat(cubeSegment, columns, kafkaConfig, null);
     }
 
@@ -77,15 +94,11 @@ public class KafkaMRInput implements IMRInput {
 
     public static class KafkaTableInputFormat implements IMRTableInputFormat {
         private final CubeSegment cubeSegment;
-        private List<TblColRef> columns;
         private StreamingParser streamingParser;
-        private KafkaConfig kafkaConfig;
         private final JobEngineConfig conf;
 
         public KafkaTableInputFormat(CubeSegment cubeSegment, List<TblColRef> columns, KafkaConfig kafkaConfig, JobEngineConfig conf) {
             this.cubeSegment = cubeSegment;
-            this.columns = columns;
-            this.kafkaConfig = kafkaConfig;
             this.conf = conf;
             try {
                 streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getParserProperties(), columns);
@@ -131,19 +144,7 @@ public class KafkaMRInput implements IMRInput {
 
         @Override
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
-            jobFlow.addTask(createUpdateSegmentOffsetStep(jobFlow.getId()));
             jobFlow.addTask(createSaveKafkaDataStep(jobFlow.getId()));
-        }
-
-        public SeekOffsetStep createUpdateSegmentOffsetStep(String jobId) {
-            final SeekOffsetStep result = new SeekOffsetStep();
-            result.setName("Seek and update offset step");
-
-            CubingExecutableUtil.setCubeName(seg.getRealization().getName(), result.getParams());
-            CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
-            CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
-
-            return result;
         }
 
         private MapReduceExecutable createSaveKafkaDataStep(String jobId) {
@@ -167,14 +168,10 @@ public class KafkaMRInput implements IMRInput {
 
         @Override
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow) {
-            final UpdateTimeRangeStep result = new UpdateTimeRangeStep();
-            result.setName("Update Segment Time Range");
-            CubingExecutableUtil.setCubeName(seg.getRealization().getName(), result.getParams());
-            CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
-            CubingExecutableUtil.setCubingJobId(jobFlow.getId(), result.getParams());
-            JobBuilderSupport jobBuilderSupport = new JobBuilderSupport(seg, "SYSTEM");
-            result.getParams().put(BatchConstants.CFG_OUTPUT_PATH, jobBuilderSupport.getFactDistinctColumnsPath(jobFlow.getId()));
-            jobFlow.addTask(result);
+            GarbageCollectionStep step = new GarbageCollectionStep();
+            step.setName(ExecutableConstants.STEP_NAME_KAFKA_CLEANUP);
+            step.setDataPath(outputPath);
+            jobFlow.addTask(step);
 
         }
 
@@ -211,4 +208,37 @@ public class KafkaMRInput implements IMRInput {
         }
     }
 
+    static class GarbageCollectionStep extends AbstractExecutable {
+        private static final Logger logger = LoggerFactory.getLogger(GarbageCollectionStep.class);
+
+        @Override
+        protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+            StringBuffer output = new StringBuffer();
+            try {
+                rmdirOnHDFS(getDataPath());
+            } catch (IOException e) {
+                logger.error("job:" + getId() + " execute finished with exception", e);
+                return new ExecuteResult(ExecuteResult.State.ERROR, e.getMessage());
+            }
+
+            return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
+        }
+
+        private void rmdirOnHDFS(String path) throws IOException {
+            Path externalDataPath = new Path(path);
+            FileSystem fs = FileSystem.get(externalDataPath.toUri(), HadoopUtil.getCurrentConfiguration());
+            if (fs.exists(externalDataPath)) {
+                fs.delete(externalDataPath, true);
+            }
+        }
+
+        public void setDataPath(String externalDataPath) {
+            setParam("dataPath", externalDataPath);
+        }
+
+        private String getDataPath() {
+            return getParam("dataPath");
+        }
+
+    }
 }
