@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.UUID;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -48,7 +49,6 @@ public class KafkaSampleProducer {
     @SuppressWarnings("static-access")
     private static final Option OPTION_TOPIC = OptionBuilder.withArgName("topic").hasArg().isRequired(true).withDescription("Kafka topic").create("topic");
     private static final Option OPTION_BROKER = OptionBuilder.withArgName("broker").hasArg().isRequired(true).withDescription("Kafka broker").create("broker");
-    private static final Option OPTION_DELAY = OptionBuilder.withArgName("delay").hasArg().isRequired(false).withDescription("Simulated message delay in mili-seconds, default 0").create("delay");
     private static final Option OPTION_INTERVAL = OptionBuilder.withArgName("interval").hasArg().isRequired(false).withDescription("Simulated message interval in mili-seconds, default 1000").create("interval");
 
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -60,21 +60,14 @@ public class KafkaSampleProducer {
         String topic, broker;
         options.addOption(OPTION_TOPIC);
         options.addOption(OPTION_BROKER);
-        options.addOption(OPTION_DELAY);
-        options.addOption(OPTION_INTERVAL);
         optionsHelper.parseOptions(options, args);
 
         logger.info("options: '" + optionsHelper.getOptionsAsString() + "'");
 
         topic = optionsHelper.getOptionValue(OPTION_TOPIC);
         broker = optionsHelper.getOptionValue(OPTION_BROKER);
-        long delay = 0;
-        String delayString = optionsHelper.getOptionValue(OPTION_DELAY);
-        if (delayString != null) {
-            delay = Long.parseLong(delayString);
-        }
 
-        long interval = 1000;
+        long interval = 10;
         String intervalString = optionsHelper.getOptionValue(OPTION_INTERVAL);
         if (intervalString != null) {
             interval = Long.parseLong(intervalString);
@@ -101,6 +94,10 @@ public class KafkaSampleProducer {
         devices.add("Andriod");
         devices.add("Other");
 
+        List<String> genders = new ArrayList();
+        genders.add("Male");
+        genders.add("Female");
+
         Properties props = new Properties();
         props.put("bootstrap.servers", broker);
         props.put("acks", "all");
@@ -117,15 +114,23 @@ public class KafkaSampleProducer {
         Random rnd = new Random();
         Map<String, Object> record = new HashMap();
         while (alive == true) {
-            record.put("order_time", (new Date().getTime() - delay));
+            //add normal record
+            record.put("order_time", (new Date().getTime()));
             record.put("country", countries.get(rnd.nextInt(countries.size())));
             record.put("category", category.get(rnd.nextInt(category.size())));
             record.put("device", devices.get(rnd.nextInt(devices.size())));
             record.put("qty", rnd.nextInt(10));
             record.put("currency", "USD");
             record.put("amount", rnd.nextDouble() * 100);
-            ProducerRecord<String, String> data = new ProducerRecord<String, String>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
-            System.out.println("Sending 1 message");
+            //add embedded record
+            Map<String, Object> user = new HashMap();
+            user.put("id", UUID.randomUUID().toString());
+            user.put("gender", genders.get(rnd.nextInt(2)));
+            user.put("age", rnd.nextInt(20) + 10);
+            record.put("user", user);
+            //send message
+            ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
+            System.out.println("Sending 1 message: " + record.toString());
             producer.send(data);
             Thread.sleep(interval);
         }
