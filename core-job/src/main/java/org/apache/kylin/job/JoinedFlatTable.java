@@ -128,15 +128,17 @@ public class JoinedFlatTable {
             sql.append(tableAlias + "." + col.getName() + "\n");
         }
         appendJoinStatement(flatDesc, sql, tableAliasMap);
-        appendWhereStatement(flatDesc, sql, tableAliasMap);
-        if (redistribute == true) {
-            String redistributeCol = null;
-            TblColRef distDcol = flatDesc.getDistributedBy();
-            if (distDcol != null) {
-                String tblAlias = tableAliasMap.get(distDcol.getTable());
-                redistributeCol = tblAlias + "." + distDcol.getName();
+        if (flatDesc.getSegment() != null) {
+            appendWhereStatement(flatDesc, sql, tableAliasMap);
+            if (redistribute == true) {
+                String redistributeCol = null;
+                TblColRef distDcol = flatDesc.getDistributedBy();
+                if (distDcol != null) {
+                    String tblAlias = tableAliasMap.get(distDcol.getTable());
+                    redistributeCol = tblAlias + "." + distDcol.getName();
+                }
+                appendDistributeStatement(sql, redistributeCol);
             }
-            appendDistributeStatement(sql, redistributeCol);
         }
         return sql.toString();
     }

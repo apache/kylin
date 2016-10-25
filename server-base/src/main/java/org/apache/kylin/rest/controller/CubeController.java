@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
@@ -35,13 +34,13 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.JoinedFlatTable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -74,6 +73,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -144,10 +144,15 @@ public class CubeController extends BasicController {
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
-        CubeSegment cubeSegment = cube.getSegment(segmentName, SegmentStatusEnum.READY);
-        IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cubeSegment);
-        String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc, false);
+        IJoinedFlatTableDesc flatTableDesc = null;
+        CubeSegment segment = cube.getSegment(segmentName, null);
+        if (segment != null) {
+            flatTableDesc = EngineFactory.getJoinedFlatTableDesc(segment);
+        } else {
+            flatTableDesc = new CubeJoinedFlatTableDesc(cube.getDescriptor());
+        }
 
+        String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc, false);
         GeneralResponse repsonse = new GeneralResponse();
         repsonse.setProperty("sql", sql);
 
@@ -610,7 +615,6 @@ public class CubeController extends BasicController {
         return jobs;
 
     }
-
 
     /**
      * Initiate the very beginning of a streaming cube. Will seek the latest offests of each partition from streaming
