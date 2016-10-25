@@ -195,8 +195,8 @@ TRANS_ID bigint
 ,PRICE decimal(19,4) COMMENT 'Order Price'
 ,ITEM_COUNT bigint COMMENT 'Number of Purchased Goods'
 ,SELLER_ID bigint COMMENT 'Seller ID'
-,BUYER_COUNTRY string 'Buyer Country'
-,SELLER_COUNTRY string 'Seller Country'
+,BUYER_COUNTRY string COMMENT 'Buyer Country'
+,SELLER_COUNTRY string COMMENT 'Seller Country'
 ,USER_ID string COMMENT 'System User ID'
 ,REGION string COMMENT 'System User Region'
 )
