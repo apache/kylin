@@ -24,15 +24,17 @@ class HiveTableMeta {
     static class HiveTableColumnMeta {
         String name;
         String dataType;
+        String comment;
 
-        public HiveTableColumnMeta(String name, String dataType) {
+        public HiveTableColumnMeta(String name, String dataType, String comment) {
             this.name = name;
             this.dataType = dataType;
+            this.comment = comment;
         }
 
         @Override
         public String toString() {
-            return "HiveTableColumnMeta{" + "name='" + name + '\'' + ", dataType='" + dataType + '\'' + '}';
+            return "HiveTableColumnMeta{" + "name='" + name + '\'' + ", dataType='" + dataType + '\'' + ", comment='" + comment + '\'' + '}';
         }
     }
 
