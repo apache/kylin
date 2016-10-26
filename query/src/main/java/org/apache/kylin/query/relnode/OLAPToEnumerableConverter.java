@@ -48,10 +48,10 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.ModelChooser;
-import org.apache.kylin.query.routing.NoRealizationFoundException;
 import org.apache.kylin.query.routing.QueryRouter;
 import org.apache.kylin.query.schema.OLAPTable;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -79,30 +79,23 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         OLAPRel.OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
         olapImplementor.visitChild(getInput(), this);
 
-        // find cube from olap context and apply cell level security
-        try {
-            for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
-                // Context has no table scan is created by OLAPJoinRel which looks like
-                //     (sub-query) as A join (sub-query) as B
-                // No realization needed for such context.
-                if (context.firstTableScan == null) {
-                    continue;
-                }
-
-                Set<IRealization> candidates = ModelChooser.selectModel(context);
-                IRealization realization = QueryRouter.selectRealization(context, candidates);
-                context.realization = realization;
-
-                doAccessControl(context);
+        // identify model
+        List<OLAPContext> contexts = listContextsHavingScan();
+        Set<IRealization> candidates = ModelChooser.selectModel(contexts);
+        
+        // identify realization for each context
+        for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
+            
+            // Context has no table scan is created by OLAPJoinRel which looks like
+            //     (sub-query) as A join (sub-query) as B
+            // No realization needed for such context.
+            if (context.firstTableScan == null) {
+                continue;
             }
-        } catch (NoRealizationFoundException e) {
-            OLAPContext ctx0 = (OLAPContext) OLAPContext.getThreadLocalContexts().toArray()[0];
-            if (ctx0 != null && ctx0.olapSchema.hasStarSchemaUrl()) {
-                // generate hive result
-                return buildHiveResult(enumImplementor, pref, ctx0);
-            } else {
-                throw e;
-            }
+
+            IRealization realization = QueryRouter.selectRealization(context, candidates);
+            context.realization = realization;
+            doAccessControl(context);
         }
 
         // rewrite query if necessary
@@ -121,6 +114,17 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         }
 
         return impl.visitChild(this, 0, inputAsEnum, pref);
+    }
+
+    private List<OLAPContext> listContextsHavingScan() {
+        int size = OLAPContext.getThreadLocalContexts().size();
+        List<OLAPContext> result = Lists.newArrayListWithCapacity(size);
+        for (int i = 0; i < size; i++) {
+            OLAPContext ctx = OLAPContext.getThreadLocalContextById(i);
+            if (ctx.firstTableScan != null)
+                result.add(ctx);
+        }
+        return result;
     }
 
     private void doAccessControl(OLAPContext context) {
@@ -176,6 +180,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         }
     }
 
+    @SuppressWarnings("unused")
     private Result buildHiveResult(EnumerableRelImplementor enumImplementor, Prefer pref, OLAPContext context) {
         RelDataType hiveRowType = getRowType();
 

@@ -54,6 +54,7 @@ import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
@@ -159,8 +160,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("override_kylin_properties")
     private LinkedHashMap<String, String> overrideKylinProps = new LinkedHashMap<String, String>();
 
-    private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<TblColRef>();
-    private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<TblColRef>();
+    private LinkedHashSet<TblColRef> allColumns = new LinkedHashSet<>();
+    private LinkedHashSet<ColumnDesc> allColumnDescs = new LinkedHashSet<>();
+    private LinkedHashSet<TblColRef> dimensionColumns = new LinkedHashSet<>();
 
     private Map<TblColRef, DeriveInfo> derivedToHostMap = Maps.newHashMap();
     private Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedMap = Maps.newHashMap();
@@ -190,6 +192,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
      */
     public Set<TblColRef> listAllColumns() {
         return allColumns;
+    }
+    
+    public Set<ColumnDesc> listAllColumnDescs() {
+        return allColumnDescs;
     }
 
     /**
@@ -549,6 +555,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%d) doesn't match dimensions columns count (%d)", rowkey.getRowKeyColumns().length, dimCols.size());
 
         initDictionaryDesc();
+        
+        for (TblColRef col : allColumns) {
+            allColumnDescs.add(col.getColumnDesc());
+        }
     }
 
     public void validateAggregationGroups() {

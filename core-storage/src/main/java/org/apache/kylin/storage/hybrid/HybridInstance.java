@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -68,6 +69,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
     private volatile IRealization[] realizations = null;
     private List<TblColRef> allDimensions = null;
     private Set<TblColRef> allColumns = null;
+    private Set<ColumnDesc> allColumnDescs = null;
     private List<MeasureDesc> allMeasures = null;
     private long dateRangeStart;
     private long dateRangeEnd;
@@ -138,6 +140,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
             allDimensions = Lists.newArrayList(dimensions);
             allColumns = columns;
+            allColumnDescs = asColumnDescs(allColumns);
             allMeasures = Lists.newArrayList(measures);
 
             Collections.sort(realizationList, new Comparator<IRealization>() {
@@ -164,6 +167,14 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
 
             this.realizations = realizationList.toArray(new IRealization[realizationList.size()]);
         }
+    }
+
+    private Set<ColumnDesc> asColumnDescs(Set<TblColRef> columns) {
+        LinkedHashSet<ColumnDesc> result = new LinkedHashSet<>();
+        for (TblColRef col : columns) {
+            result.add(col.getColumnDesc());
+        }
+        return result;
     }
 
     @Override
@@ -209,6 +220,12 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         return allColumns;
     }
 
+    @Override
+    public Set<ColumnDesc> getAllColumnDescs() {
+        init();
+        return allColumnDescs;
+    }
+    
     @Override
     public List<MeasureDesc> getMeasures() {
         init();

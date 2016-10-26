@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.realization;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -43,6 +44,8 @@ public interface IRealization extends IStorageAware {
     public String getFactTable();
 
     public Set<TblColRef> getAllColumns();
+    
+    public Set<ColumnDesc> getAllColumnDescs();
 
     public List<TblColRef> getAllDimensions();
 

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -60,7 +61,9 @@ public class RowTypeTest extends LocalFileMetadataTestCase {
         byte[] bytes = CoprocessorRowType.serialize(rowType);
         CoprocessorRowType copy = CoprocessorRowType.deserialize(bytes);
 
-        assertTrue(Arrays.equals(rowType.columns, copy.columns));
         assertTrue(Arrays.equals(rowType.columnSizes, copy.columnSizes));
+        for (int i = 0; i < rowType.columns.length; i++) {
+            assertEquals(rowType.columns[i].getColumnDesc(), copy.columns[i].getColumnDesc());
+        }
     }
 }

@@ -26,10 +26,12 @@ import java.util.TreeMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.LookupDesc;
 import org.apache.kylin.metadata.model.TableRef;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
@@ -42,55 +44,68 @@ import com.google.common.collect.Sets;
 
 public class ModelChooser {
 
-    public static Set<IRealization> selectModel(OLAPContext context) {
-        Map<DataModelDesc, Set<IRealization>> modelMap = makeOrderedModelMap(context);
-        OLAPTableScan firstTable = context.firstTableScan;
-        List<JoinDesc> joins = context.joins;
+    // select a model that satisfies all the contexts
+    public static Set<IRealization> selectModel(List<OLAPContext> contexts) {
+        Map<DataModelDesc, Set<IRealization>> modelMap = makeOrderedModelMap(contexts);
 
         for (DataModelDesc model : modelMap.keySet()) {
-            Map<String, String> aliasMap = matches(model, firstTable, joins);
+            Map<String, String> aliasMap = matches(model, contexts);
             if (aliasMap != null) {
-                fixModel(context, model, aliasMap);
+                for (OLAPContext ctx : contexts)
+                    fixModel(ctx, model, aliasMap);
                 return modelMap.get(model);
             }
         }
-        
-        throw new NoRealizationFoundException("No model found by first table " + firstTable.getOlapTable().getTableName() + " and joins " + joins);
+
+        throw new NoRealizationFoundException("No model found for" + toErrorMsg(contexts));
     }
 
-    private static Map<String, String> matches(DataModelDesc model, OLAPTableScan firstTable, List<JoinDesc> joins) {
-        Map<String, String> result = Maps.newHashMap();
-        
-        // no join special case
-        if (joins.isEmpty()) {
-            TableRef tableRef = model.findFirstTable(firstTable.getOlapTable().getTableName());
-            if (tableRef == null)
-                return null;
-            result.put(firstTable.getAlias(), tableRef.getAlias());
-            return result;
+    private static String toErrorMsg(List<OLAPContext> contexts) {
+        StringBuilder buf = new StringBuilder();
+        for (OLAPContext ctx : contexts) {
+            buf.append(", ").append(ctx.firstTableScan);
+            for (JoinDesc join : ctx.joins)
+                buf.append(", ").append(join);
         }
-        
+        return buf.toString();
+    }
+
+    private static Map<String, String> matches(DataModelDesc model, List<OLAPContext> contexts) {
+        Map<String, String> result = Maps.newHashMap();
+
         // the greedy match is not perfect but works for the moment
         Map<String, List<JoinDesc>> modelJoinsMap = model.getJoinsMap();
-        for (JoinDesc queryJoin : joins) {
-            String fkTable = queryJoin.getForeignKeyColumns()[0].getTable();
-            List<JoinDesc> modelJoins = modelJoinsMap.get(fkTable);
-            if (modelJoins == null)
-                return null;
-            
-            JoinDesc matchJoin = null;
-            for (JoinDesc modelJoin : modelJoins) {
-                if (modelJoin.matches(queryJoin)) {
-                    matchJoin = modelJoin;
-                    break;
+        for (OLAPContext ctx : contexts) {
+            for (JoinDesc queryJoin : ctx.joins) {
+                String fkTable = queryJoin.getForeignKeyColumns()[0].getTable();
+                List<JoinDesc> modelJoins = modelJoinsMap.get(fkTable);
+                if (modelJoins == null)
+                    return null;
+
+                JoinDesc matchJoin = null;
+                for (JoinDesc modelJoin : modelJoins) {
+                    if (modelJoin.matches(queryJoin)) {
+                        matchJoin = modelJoin;
+                        break;
+                    }
                 }
+                if (matchJoin == null)
+                    return null;
+
+                matchesAdd(queryJoin.getForeignKeyColumns()[0].getTableAlias(), matchJoin.getForeignKeyColumns()[0].getTableAlias(), result);
+                matchesAdd(queryJoin.getPrimaryKeyColumns()[0].getTableAlias(), matchJoin.getPrimaryKeyColumns()[0].getTableAlias(), result);
             }
-            if (matchJoin == null)
-                return null;
             
-            matchesAdd(queryJoin.getForeignKeyColumns()[0].getTableAlias(), matchJoin.getForeignKeyColumns()[0].getTableAlias(), result);
-            matchesAdd(queryJoin.getPrimaryKeyColumns()[0].getTableAlias(), matchJoin.getPrimaryKeyColumns()[0].getTableAlias(), result);
+            OLAPTableScan firstTable = ctx.firstTableScan;
+            String firstTableAlias = firstTable.getAlias();
+            if (result.containsKey(firstTableAlias) == false) {
+                TableRef tableRef = model.findFirstTable(firstTable.getOlapTable().getTableName());
+                if (tableRef == null)
+                    return null;
+                matchesAdd(firstTableAlias, tableRef.getAlias(), result);
+            }
         }
+        
         return result;
     }
 
@@ -99,10 +114,12 @@ public class ModelChooser {
         Preconditions.checkState(existingTarget == null || existingTarget.equals(targetAlias));
     }
 
-    private static Map<DataModelDesc, Set<IRealization>> makeOrderedModelMap(OLAPContext context) {
-        KylinConfig kylinConfig = context.olapSchema.getConfig();
-        String projectName = context.olapSchema.getProjectName();
-        String factTableName = context.firstTableScan.getOlapTable().getTableName();
+    private static Map<DataModelDesc, Set<IRealization>> makeOrderedModelMap(List<OLAPContext> contexts) {
+        // the first context, which is the top most context, contains all columns from all contexts
+        OLAPContext first = contexts.get(0);
+        KylinConfig kylinConfig = first.olapSchema.getConfig();
+        String projectName = first.olapSchema.getProjectName();
+        String factTableName = first.firstTableScan.getOlapTable().getTableName();
         Set<IRealization> realizations = ProjectManager.getInstance(kylinConfig).getRealizationsByTable(projectName, factTableName);
 
         final Map<DataModelDesc, Set<IRealization>> models = Maps.newHashMap();
@@ -110,7 +127,7 @@ public class ModelChooser {
         for (IRealization real : realizations) {
             if (real.isReady() == false)
                 continue;
-            if (real.getAllColumns().containsAll(context.allColumns) == false)
+            if (containsAll(real.getAllColumnDescs(), first.allColumns) == false)
                 continue;
             if (RemoveBlackoutRealizationsRule.accept(real) == false)
                 continue;
@@ -143,20 +160,28 @@ public class ModelChooser {
         return result;
     }
 
+    private static boolean containsAll(Set<ColumnDesc> allColumnDescs, Set<TblColRef> allColumns) {
+        for (TblColRef col : allColumns) {
+            if (allColumnDescs.contains(col.getColumnDesc()) == false)
+                return false;
+        }
+        return true;
+    }
+
     private static void fixModel(OLAPContext context, DataModelDesc model, Map<String, String> aliasMap) {
         for (OLAPTableScan tableScan : context.allTableScans) {
             tableScan.fixColumnRowTypeWithModel(model, aliasMap);
         }
     }
-    
+
     private static class RealizationCost implements Comparable<RealizationCost> {
         final public int priority;
         final public int cost;
-        
+
         public RealizationCost(IRealization real) {
             // ref Candidate.PRIORITIES
             this.priority = Candidate.PRIORITIES.get(real.getType());
-            
+
             // ref CubeInstance.getCost()
             int c = real.getAllDimensions().size() * CubeInstance.COST_WEIGHT_DIMENSION + real.getMeasures().size() * CubeInstance.COST_WEIGHT_MEASURE;
             for (LookupDesc lookup : real.getDataModelDesc().getLookups()) {
@@ -165,7 +190,7 @@ public class ModelChooser {
             }
             this.cost = c;
         }
-        
+
         @Override
         public int compareTo(RealizationCost o) {
             int comp = this.priority - o.priority;

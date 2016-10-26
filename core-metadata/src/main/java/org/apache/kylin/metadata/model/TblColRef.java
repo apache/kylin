@@ -183,8 +183,8 @@ public class TblColRef implements Serializable {
             return false;
         if (!StringUtils.equals(column.getName(), other.column.getName()))
             return false;
-//        if ((table == null ? other.table == null : table.equals(other.table)) == false)
-//            return false;
+        if ((table == null ? other.table == null : table.equals(other.table)) == false)
+            return false;
         return true;
     }
 

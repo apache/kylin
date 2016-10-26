@@ -154,7 +154,7 @@ public class JoinDesc {
         int match = 0;
         for (int i = 0; i < a.length; i++) {
             for (int j = 0; j < b.length; j++) {
-                if (a[i].equals(b[j])) {
+                if (a[i].getColumnDesc().equals(b[j].getColumnDesc())) {
                     match++;
                     break;
                 }

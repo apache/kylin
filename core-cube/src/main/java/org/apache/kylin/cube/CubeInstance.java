@@ -28,6 +28,7 @@ import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.LookupDesc;
@@ -394,6 +395,11 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return getDescriptor().listAllColumns();
     }
 
+    @Override
+    public Set<ColumnDesc> getAllColumnDescs() {
+        return getDescriptor().listAllColumnDescs();
+    }
+    
     @Override
     public long getDateRangeStart() {
         List<CubeSegment> readySegs = getSegments(SegmentStatusEnum.READY);
