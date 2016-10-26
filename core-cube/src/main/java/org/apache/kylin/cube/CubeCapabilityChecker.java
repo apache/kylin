@@ -25,22 +25,18 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.basic.BasicMeasureType;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.filter.UDF.MassInTupleFilter;
-import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
-import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
+import org.apache.kylin.metadata.realization.SQLDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,11 +82,8 @@ public class CubeCapabilityChecker {
         } else {
             //for non query-on-facttable 
             if (cube.getSegments().get(0).getSnapshots().containsKey(digest.factTable)) {
-                TableDesc tableDesc = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getTableDesc(digest.factTable);
-                Set<TblColRef> dimCols = Sets.newHashSet();
-                for (ColumnDesc columnDesc : tableDesc.getColumns()) {
-                    dimCols.add(columnDesc.getRef());
-                }
+
+                Set<TblColRef> dimCols = Sets.newHashSet(cube.getDataModelDesc().findFirstTable(digest.factTable).getColumns());
 
                 //1. all aggregations on lookup table can be done. For distinct count, mark them all DimensionAsMeasures
                 // so that the measure has a chance to be upgraded to DimCountDistinctMeasureType in org.apache.kylin.metadata.model.FunctionDesc#reInitMeasureType

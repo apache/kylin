@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
 /**
  * Column Metadata from Source. All name should be uppercase.
@@ -203,11 +202,6 @@ public class ColumnDesc implements Serializable {
 
     @Override
     public String toString() {
-        return "ColumnDesc{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", datatype='" + datatype + '\'' +
-                ", comment='" + comment + '\'' +
-                '}';
+        return "ColumnDesc{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", datatype='" + datatype + '\'' + ", comment='" + comment + '\'' + '}';
     }
 }
