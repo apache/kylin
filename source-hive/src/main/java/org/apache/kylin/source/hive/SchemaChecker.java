@@ -27,8 +27,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -46,7 +44,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class SchemaChecker {
-    private final HiveClient hiveClient;
+    private final IHiveClient hiveClient;
     private final MetadataManager metadataManager;
     private final CubeManager cubeManager;
 
@@ -87,23 +85,16 @@ public class SchemaChecker {
         }
     }
 
-    SchemaChecker(HiveClient hiveClient, MetadataManager metadataManager, CubeManager cubeManager) {
+    SchemaChecker(IHiveClient hiveClient, MetadataManager metadataManager, CubeManager cubeManager) {
         this.hiveClient = checkNotNull(hiveClient, "hiveClient is null");
         this.metadataManager = checkNotNull(metadataManager, "metadataManager is null");
         this.cubeManager = checkNotNull(cubeManager, "cubeManager is null");
     }
 
-    private List<FieldSchema> fetchSchema(String dbName, String tblName) throws Exception {
-        List<FieldSchema> fields = Lists.newArrayList();
-        fields.addAll(hiveClient.getHiveTableFields(dbName, tblName));
-
-        Table table = hiveClient.getHiveTable(dbName, tblName);
-        List<FieldSchema> partitionFields = table.getPartitionKeys();
-        if (partitionFields != null) {
-            fields.addAll(partitionFields);
-        }
-
-        return fields;
+    private List<HiveTableMeta.HiveTableColumnMeta> fetchSchema(String dbName, String tblName) throws Exception {
+        List<HiveTableMeta.HiveTableColumnMeta> columnMetas = Lists.newArrayList();
+        columnMetas.addAll(hiveClient.getHiveTableMeta(dbName, tblName).allColumns);
+        return columnMetas;
     }
 
     private List<CubeInstance> findCubeByTable(final String fullTableName) {
@@ -128,12 +119,12 @@ public class SchemaChecker {
         return ImmutableList.copyOf(relatedCubes);
     }
 
-    private boolean isColumnCompatible(ColumnDesc column, FieldSchema field) {
-        if (!column.getName().equalsIgnoreCase(field.getName())) {
+    private boolean isColumnCompatible(ColumnDesc column, HiveTableMeta.HiveTableColumnMeta field) {
+        if (!column.getName().equalsIgnoreCase(field.name)) {
             return false;
         }
 
-        String typeStr = field.getType();
+        String typeStr = field.dataType;
         // kylin uses double internally for float, see HiveSourceTableLoader.java
         // TODO should this normalization to be in DataType class ?
         if ("float".equalsIgnoreCase(typeStr)) {
@@ -159,7 +150,7 @@ public class SchemaChecker {
      * @param fieldsMap current hive schema of `table`
      * @return true if all columns used in `cube` has compatible schema with `fieldsMap`, false otherwise
      */
-    private List<String> checkAllColumnsInCube(CubeInstance cube, TableDesc table, Map<String, FieldSchema> fieldsMap) {
+    private List<String> checkAllColumnsInCube(CubeInstance cube, TableDesc table, Map<String, HiveTableMeta.HiveTableColumnMeta> fieldsMap) {
         Set<ColumnDesc> usedColumns = Sets.newHashSet();
         for (TblColRef col : cube.getAllColumns()) {
             usedColumns.add(col.getColumnDesc());
@@ -168,7 +159,7 @@ public class SchemaChecker {
         List<String> violateColumns = Lists.newArrayList();
         for (ColumnDesc column : table.getColumns()) {
             if (usedColumns.contains(column)) {
-                FieldSchema field = fieldsMap.get(column.getName());
+                HiveTableMeta.HiveTableColumnMeta field = fieldsMap.get(column.getName());
                 if (field == null || !isColumnCompatible(column, field)) {
                     violateColumns.add(column.getName());
                 }
@@ -184,7 +175,7 @@ public class SchemaChecker {
      * @param fields current table metadata in hive
      * @return true if only new columns are appended in hive, false otherwise
      */
-    private boolean checkAllColumnsInTableDesc(TableDesc table, List<FieldSchema> fields) {
+    private boolean checkAllColumnsInTableDesc(TableDesc table, List<HiveTableMeta.HiveTableColumnMeta> fields) {
         if (table.getColumnCount() > fields.size()) {
             return false;
         }
@@ -206,15 +197,15 @@ public class SchemaChecker {
             return CheckResult.validOnFirstLoad(fullTableName);
         }
 
-        List<FieldSchema> currentFields;
-        Map<String, FieldSchema> currentFieldsMap = Maps.newHashMap();
+        List<HiveTableMeta.HiveTableColumnMeta> currentFields;
+        Map<String, HiveTableMeta.HiveTableColumnMeta> currentFieldsMap = Maps.newHashMap();
         try {
             currentFields = fetchSchema(dbName, tblName);
         } catch (Exception e) {
             return CheckResult.invalidOnFetchSchema(fullTableName, e);
         }
-        for (FieldSchema field : currentFields) {
-            currentFieldsMap.put(field.getName().toUpperCase(), field);
+        for (HiveTableMeta.HiveTableColumnMeta field : currentFields) {
+            currentFieldsMap.put(field.name.toUpperCase(), field);
         }
 
         List<String> issues = Lists.newArrayList();

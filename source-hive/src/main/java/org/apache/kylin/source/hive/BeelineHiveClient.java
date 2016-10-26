@@ -207,7 +207,7 @@ public class BeelineHiveClient implements IHiveClient {
 
         BeelineHiveClient loader = new BeelineHiveClient("-n root --hiveconf hive.security.authorization.sqlstd.confwhitelist.append='mapreduce.job.*|dfs.*' -u 'jdbc:hive2://sandbox:10000'");
         //BeelineHiveClient loader = new BeelineHiveClient(StringUtils.join(args, " "));
-        HiveTableMeta hiveTableMeta = loader.getHiveTableMeta("default", "test001");
+        HiveTableMeta hiveTableMeta = loader.getHiveTableMeta("default", "test_kylin_fact_part");
         System.out.println(hiveTableMeta);
         loader.close();
     }
