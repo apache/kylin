@@ -49,6 +49,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import javax.annotation.concurrent.GuardedBy;
+
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegment {
 
@@ -115,7 +117,8 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> additionalInfo = new LinkedHashMap<String, String>();
 
-    private volatile Map<Long, Short> cuboidBaseShards = Maps.newHashMap();//cuboid id ==> base(starting) shard for this cuboid
+    @GuardedBy("this")
+    private Map<Long, Short> cuboidBaseShards = Maps.newHashMap(); // cuboid id ==> base(starting) shard for this cuboid
 
     public CubeDesc getCubeDesc() {
         return getCubeInstance().getDescriptor();
@@ -516,7 +519,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         this.totalShards = totalShards;
     }
 
-    public short getCuboidBaseShard(Long cuboidId) {
+    public synchronized short getCuboidBaseShard(Long cuboidId) {
         if (totalShards > 0) {
             //shard squashed case
 
