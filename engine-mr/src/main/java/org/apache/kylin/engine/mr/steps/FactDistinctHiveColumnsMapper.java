@@ -141,7 +141,17 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                 if (fieldValue == null)
                     continue;
                 int offset = keyBuffer.position();
-                keyBuffer.put(Bytes.toBytes(i)[3]); // one byte is enough
+
+                int reducerIndex;
+                if (uhcIndex[i] == 0) {
+                    //for the normal dictionary column
+                    reducerIndex = columnIndexToReducerBeginId.get(i);
+                } else {
+                    //for the uhc
+                    reducerIndex = columnIndexToReducerBeginId.get(i) + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
+                }
+
+                keyBuffer.put(Bytes.toBytes(reducerIndex)[3]);
                 keyBuffer.put(Bytes.toBytes(fieldValue));
                 outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
                 context.write(outputKey, EMPTY_TEXT);

@@ -374,6 +374,11 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.job.allow.empty.segment", "true"));
     }
 
+    //UHC: ultra high cardinality columns, contain the ShardByColumns and the GlobalDictionaryColumns
+    public int getUHCReducerCount() {
+        return Integer.parseInt(getOptional("kylin.job.uhc.reducer.count", "3"));
+    }
+
     public String getOverrideHiveTableLocation(String table) {
         return getOptional("hive.table.location." + table.toUpperCase());
     }

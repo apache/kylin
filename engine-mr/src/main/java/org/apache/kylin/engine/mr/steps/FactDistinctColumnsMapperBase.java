@@ -20,7 +20,9 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -58,6 +60,10 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     protected CubeJoinedFlatTableEnrich intermediateTableDesc;
     protected int[] dictionaryColumnIndex;
 
+    protected int uhcReducerCount;
+    protected int[] uhcIndex;
+    protected Map<Integer, Integer> columnIndexToReducerBeginId = new HashMap<>();
+
     @Override
     protected void setup(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
@@ -73,7 +79,7 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
 
         flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
 
-        intermediateTableDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(cubeSeg),  cubeDesc);
+        intermediateTableDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(cubeSeg), cubeDesc);
         dictionaryColumnIndex = new int[factDictCols.size()];
         for (int i = 0; i < factDictCols.size(); i++) {
             TblColRef colRef = factDictCols.get(i);
@@ -81,6 +87,15 @@ public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
             dictionaryColumnIndex[i] = columnIndexOnFlatTbl;
         }
 
+        uhcIndex = CubeManager.getInstance(config).getUHCIndex(cubeDesc);
+        uhcReducerCount = cube.getConfig().getUHCReducerCount();
+        int count = 0;
+        for (int i = 0; i < uhcIndex.length; i++) {
+            columnIndexToReducerBeginId.put(i, count * (uhcReducerCount - 1) + i);
+            if (uhcIndex[i] == 1) {
+                count++;
+            }
+        }
     }
 
     protected void handleErrorRecord(String[] record, Exception ex) throws IOException {

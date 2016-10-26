@@ -78,11 +78,27 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             CubeInstance cube = cubeMgr.getCube(cubeName);
             List<TblColRef> columnsNeedDict = cubeMgr.getAllDictColumnsOnFact(cube.getDescriptor());
 
+            int reducerCount = columnsNeedDict.size();
+            int uhcReducerCount = cube.getConfig().getUHCReducerCount();
+
+            int[] uhcIndex = cubeMgr.getUHCIndex(cube.getDescriptor());
+            for(int index : uhcIndex) {
+                if(index == 1) {
+                    reducerCount += uhcReducerCount - 1;
+                }
+            }
+
+            if (reducerCount > 255) {
+                throw new IOException("The max reducer number for FactDistinctColumnsJob is 255, please decrease the 'kylin.job.global.dictionary.column.reducer.count' ");
+            }
+
+
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_ENABLED, statistics_enabled);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_OUTPUT, statistics_output);
             job.getConfiguration().set(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT, statistics_sampling_percent);
+
             logger.info("Starting: " + job.getJobName());
 
             setJobClasspath(job, cube.getConfig());
@@ -98,7 +114,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
                 logger.info("Found segment: " + segment);
             }
             setupMapper(cube.getSegmentById(segmentID));
-            setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 2 : columnsNeedDict.size());
+            setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? reducerCount + 2 : reducerCount);
 
             attachKylinPropsAndMetadata(cube, job.getConfiguration());
 

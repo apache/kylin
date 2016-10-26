@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,6 +68,10 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     private boolean isStatistics = false;
     private boolean isPartitionCol = false;
     private KylinConfig cubeConfig;
+    private int uhcReducerCount;
+    private Map<Integer, Integer> ReducerIdToColumnIndex = new HashMap<>();
+    private int taskId;
+
     protected static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsReducer.class);
 
     @Override
@@ -83,7 +88,10 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
 
         boolean collectStatistics = Boolean.parseBoolean(conf.get(BatchConstants.CFG_STATISTICS_ENABLED));
         int numberOfTasks = context.getNumReduceTasks();
-        int taskId = context.getTaskAttemptID().getTaskID().getId();
+        taskId = context.getTaskAttemptID().getTaskID().getId();
+
+        uhcReducerCount = cube.getConfig().getUHCReducerCount();
+        initReducerIdToColumnIndex(config);
 
         if (collectStatistics && (taskId == numberOfTasks - 1)) {
             // hll
@@ -102,8 +110,22 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             // col
             isStatistics = false;
             isPartitionCol = false;
-            col = columnList.get(taskId);
+            col = columnList.get(ReducerIdToColumnIndex.get(taskId));
             colValues = Lists.newLinkedList();
+        }
+    }
+
+    private void initReducerIdToColumnIndex(KylinConfig config) throws IOException {
+        int[] uhcIndex = CubeManager.getInstance(config).getUHCIndex(cubeDesc);
+        int count = 0;
+        for (int i = 0; i < uhcIndex.length; i++) {
+            ReducerIdToColumnIndex.put(count * (uhcReducerCount - 1) + i, i);
+            if (uhcIndex[i] == 1) {
+                for (int j = 1; j < uhcReducerCount; j++) {
+                    ReducerIdToColumnIndex.put(count * (uhcReducerCount - 1) + j + i, i);
+                }
+                count++;
+            }
         }
     }
 
@@ -153,10 +175,16 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
         final Configuration conf = context.getConfiguration();
         final FileSystem fs = FileSystem.get(conf);
         final String outputPath = conf.get(BatchConstants.CFG_OUTPUT_PATH);
-        final Path outputFile = new Path(outputPath, col.getName());
+        final Path colDir = new Path(outputPath, col.getName());
+        final String fileName = col.getName() + "-" + taskId % uhcReducerCount;
+        final Path outputFile = new Path(colDir, fileName);
 
         FSDataOutputStream out = null;
         try {
+            if (!fs.exists(colDir)) {
+                fs.mkdirs(colDir);
+            }
+
             if (fs.exists(outputFile)) {
                 out = fs.append(outputFile);
                 logger.info("append file " + outputFile);

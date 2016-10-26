@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -43,6 +44,7 @@ import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DictionaryDesc;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
@@ -1048,5 +1050,38 @@ public class CubeManager implements IRealizationProvider {
             }
         }
         return holes;
+    }
+
+    private final String GLOBAL_DICTIONNARY_CLASS = "org.apache.kylin.dict.GlobalDictionaryBuilder";
+
+    //UHC (ultra high cardinality column): contain the ShardByColumns and the GlobalDictionaryColumns
+    public int[] getUHCIndex(CubeDesc cubeDesc) throws IOException {
+        List<TblColRef> factDictCols = getAllDictColumnsOnFact(cubeDesc);
+        int[] uhcIndex = new int[factDictCols.size()];
+
+        //add GlobalDictionaryColumns
+        List<DictionaryDesc> dictionaryDescList = cubeDesc.getDictionaries();
+        if (dictionaryDescList != null) {
+            for (DictionaryDesc dictionaryDesc : dictionaryDescList) {
+                if (dictionaryDesc.getBuilderClass() != null && dictionaryDesc.getBuilderClass().equalsIgnoreCase(GLOBAL_DICTIONNARY_CLASS)) {
+                    for (int i = 0; i < factDictCols.size(); i++) {
+                        if (factDictCols.get(i).equals(dictionaryDesc.getColumnRef())) {
+                            uhcIndex[i] = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        //add ShardByColumns
+        Set<TblColRef> shardByColumns = cubeDesc.getShardByColumns();
+        for (int i = 0; i < factDictCols.size(); i++) {
+            if (shardByColumns.contains(factDictCols.get(i))) {
+                uhcIndex[i] = 1;
+            }
+        }
+
+        return uhcIndex;
     }
 }

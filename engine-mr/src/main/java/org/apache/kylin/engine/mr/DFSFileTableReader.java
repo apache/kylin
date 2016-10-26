@@ -23,10 +23,14 @@ import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -53,7 +57,7 @@ public class DFSFileTableReader implements TableReader {
 
     private String filePath;
     private String delim;
-    private RowReader reader;
+    private List<RowReader> readerList;
 
     private String curLine;
     private String[] curColumns;
@@ -68,17 +72,33 @@ public class DFSFileTableReader implements TableReader {
         this.filePath = filePath;
         this.delim = delim;
         this.expectedColumnNumber = expectedColumnNumber;
+        this.readerList = new ArrayList<RowReader>();
 
         FileSystem fs = HadoopUtil.getFileSystem(filePath);
 
-        try {
-            this.reader = new SeqRowReader(HadoopUtil.getCurrentConfiguration(), fs, filePath);
+        ArrayList<FileStatus> allFiles = new ArrayList<>();
+        FileStatus status = fs.getFileStatus(new Path(filePath));
+        if (status.isFile()) {
+            allFiles.add(status);
+        } else {
+            FileStatus[] listStatus = fs.listStatus(new Path(filePath));
+            allFiles.addAll(Arrays.asList(listStatus));
+        }
 
+        try {
+            for (FileStatus f : allFiles) {
+                RowReader rowReader = new SeqRowReader(HadoopUtil.getCurrentConfiguration(), fs, f.getPath().toString());
+                this.readerList.add(rowReader);
+            }
         } catch (IOException e) {
             if (isExceptionSayingNotSeqFile(e) == false)
                 throw e;
 
-            this.reader = new CsvRowReader(fs, filePath);
+            this.readerList = new ArrayList<RowReader>();
+            for (FileStatus f : allFiles) {
+                RowReader rowReader = new CsvRowReader(fs, f.getPath().toString());
+                this.readerList.add(rowReader);
+            }
         }
     }
 
@@ -94,9 +114,20 @@ public class DFSFileTableReader implements TableReader {
 
     @Override
     public boolean next() throws IOException {
-        curLine = reader.nextLine();
-        curColumns = null;
-        return curLine != null;
+        int curReaderIndex = -1;
+        RowReader curReader;
+
+        while (++curReaderIndex < readerList.size()) {
+            curReader = readerList.get(curReaderIndex);
+            curLine = curReader.nextLine();
+            curColumns = null;
+
+            if (curLine != null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public String getLine() {
@@ -145,9 +176,15 @@ public class DFSFileTableReader implements TableReader {
     }
 
     @Override
-    public void close() throws IOException {
-        if (reader != null)
-            reader.close();
+    public void close() {
+        for (RowReader reader : readerList) {
+            try {
+                if (reader != null)
+                    reader.close();
+            } catch (IOException e) {
+                logger.warn("close file failed:", e);
+            }
+        }
     }
 
     private String autoDetectDelim(String line) {

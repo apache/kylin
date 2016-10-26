@@ -81,4 +81,9 @@ public interface BatchConstants {
     String MAPREDUCE_COUNTER_GROUP_NAME = "Cube Builder";
     int NORMAL_RECORD_LOG_THRESHOLD = 100000;
     int ERROR_RECORD_LOG_THRESHOLD = 100;
+
+    /**
+     * dictionaries builder class
+     */
+    String GLOBAL_DICTIONNARY_CLASS = "org.apache.kylin.dict.GlobalDictionaryBuilder";
 }
