@@ -55,4 +55,8 @@ Here are a couple of screenshots in this test, we may compose it as a step-by-st
 
 ![Streaming Twitter Sample](/images/blog/streaming-twitter.png)
 
-In short, this is a more robust Near Real Time Streaming OLAP solution (compared with the previous version). Nextly, the Apache Kylin team will move toward a Real Time engine. 
+In short, this is a more robust Near Real Time Streaming OLAP solution compared with the previous version. 
+
+Now you can download a 1.6.0-SNAPSHOT build from Kylin's download page, and then follow this [tutorial](/docs16/tutorial/cube_streaming.html) to build a sample streaming cube.
+
+

@@ -29,6 +29,7 @@ Tutorial
 4. [Web Interface](tutorial/web.html)
 5. [SQL reference: by Apache Calcite](http://calcite.apache.org/docs/reference.html)
 6. [Build Cube with Streaming Data (experimental)](tutorial/cube_streaming.html)
+7. [Build Cube with Streaming Data (new scalable solution)](/docs16/tutorial/cube_streaming.html)
 
 
 Connectivity and APIs

@@ -24,12 +24,6 @@ bin/kafka-server-start.sh config/server.properties &
 
 Download the Kylin v1.6 from download page, expand the tar ball in /root/ folder.
 
-{% highlight Groff markup %}
-
-
-{% endhighlight %}
-
-
 ## Create sample Kafka topic and populate data
 
 Create a sample topic "kylindemo", with 3 partitions:
