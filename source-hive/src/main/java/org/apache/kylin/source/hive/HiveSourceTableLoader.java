@@ -120,6 +120,7 @@ public class HiveSourceTableLoader {
                     cdesc.setDatatype(field.dataType);
                 }
                 cdesc.setId(String.valueOf(i + 1));
+                cdesc.setComment(field.comment);
                 columns.add(cdesc);
             }
             tableDesc.setColumns(columns.toArray(new ColumnDesc[columnNumber]));

@@ -89,11 +89,11 @@ public class CLIHiveClient implements IHiveClient {
         List<HiveTableMeta.HiveTableColumnMeta> allColumns = Lists.newArrayList();
         List<HiveTableMeta.HiveTableColumnMeta> partitionColumns = Lists.newArrayList();
         for (FieldSchema fieldSchema : allFields) {
-            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType()));
+            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType(), fieldSchema.getComment()));
         }
         if (partitionFields != null && partitionFields.size() > 0) {
             for (FieldSchema fieldSchema : partitionFields) {
-                partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType()));
+                partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType(), fieldSchema.getComment()));
             }
         }
         builder.setAllColumns(allColumns);
