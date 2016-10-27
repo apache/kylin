@@ -145,13 +145,6 @@ public class JobEngineConfig {
     }
 
     /**
-     * @return the jobStepTimeout
-     */
-    public long getJobStepTimeout() {
-        return config.getJobStepTimeout();
-    }
-
-    /**
      * @return the asyncJobCheckInterval
      */
     public int getAsyncJobCheckInterval() {

@@ -81,7 +81,7 @@
 
     <property>
         <name>mapreduce.task.timeout</name>
-        <value>3600000</value>
+        <value>7200000</value>
         <description>Set task timeout to 1 hour</description>
     </property>
 
