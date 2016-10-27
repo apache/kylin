@@ -178,7 +178,7 @@ public class Tuple implements ITuple {
         if (strValue == null)
             return null;
 
-        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string"))
+        if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string") && !dataTypeName.startsWith("varchar"))
             return null;
 
         // TODO use data type enum instead of string comparison
