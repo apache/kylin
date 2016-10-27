@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -40,19 +39,9 @@ import com.google.common.base.Preconditions;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
 
-    private static final int DICT_MAX_CARDINALITY = getDictionaryMaxCardinality();
-
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
     private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd", "yyyyMMdd" };
-
-    private static int getDictionaryMaxCardinality() {
-        try {
-            return KylinConfig.getInstanceFromEnv().getDictionaryMaxCardinality();
-        } catch (Throwable e) {
-            return 30000000; // some test case does not have KylinConfig setup properly
-        }
-    }
 
     public static Dictionary<String> buildDictionary(DataType dataType, IDictionaryValueEnumerator valueEnumerator) throws IOException {
         Preconditions.checkNotNull(dataType, "dataType cannot be null");
@@ -92,9 +81,6 @@ public class DictionaryGenerator {
         logger.debug("Dictionary cardinality: " + dict.getSize());
         logger.debug("Dictionary builder class: " + builder.getClass().getName());
         logger.debug("Dictionary class: " + dict.getClass().getName());
-        if (dict instanceof TrieDictionary && dict.getSize() > DICT_MAX_CARDINALITY) {
-            throw new IllegalArgumentException("Too high cardinality is not suitable for dictionary -- cardinality: " + dict.getSize());
-        }
         return dict;
     }
 

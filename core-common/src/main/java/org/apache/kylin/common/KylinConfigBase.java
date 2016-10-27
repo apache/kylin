@@ -448,10 +448,6 @@ abstract public class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.cube.measure.customMeasureType.");
     }
 
-    public int getDictionaryMaxCardinality() {
-        return Integer.parseInt(getOptional("kylin.dictionary.max.cardinality", "30000000"));
-    }
-
     public int getTableSnapshotMaxMB() {
         return Integer.parseInt(getOptional("kylin.table.snapshot.max_mb", "300"));
     }
