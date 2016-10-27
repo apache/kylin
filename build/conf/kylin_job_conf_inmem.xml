@@ -81,8 +81,8 @@
 
     <property>
         <name>mapred.task.timeout</name>
-        <value>3600000</value>
-        <description>Set task timeout to 1 hour</description>
+        <value>7200000</value>
+        <description>Set task timeout to 2 hour</description>
     </property>
 
     <!--Additional config for in-mem cubing, giving mapper more memory -->

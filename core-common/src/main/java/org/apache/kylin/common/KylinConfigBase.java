@@ -407,10 +407,6 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptionalStringArray("kylin.job.admin.dls", null);
     }
 
-    public long getJobStepTimeout() {
-        return Long.parseLong(getOptional("kylin.job.step.timeout", String.valueOf(2 * 60 * 60)));
-    }
-
     public double getJobCuboidSizeRatio() {
         return Double.parseDouble(getOptional("kylin.job.cuboid.size.ratio", "0.25"));
     }
