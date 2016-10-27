@@ -149,8 +149,7 @@ public class BuildCubeWithEngine {
 
     }
 
-
-    public void after(){
+    public void after() {
         DefaultScheduler.destroyInstance();
     }
 
@@ -167,11 +166,11 @@ public class BuildCubeWithEngine {
         KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(0.0f);
     }
 
-    protected void waitForJob(String jobId) {
+    protected ExecutableState waitForJob(String jobId) {
         while (true) {
             AbstractExecutable job = jobService.getJob(jobId);
             if (job.getStatus() == ExecutableState.SUCCEED || job.getStatus() == ExecutableState.ERROR) {
-                break;
+                return job.getStatus();
             } else {
                 try {
                     Thread.sleep(5000);
@@ -200,17 +199,17 @@ public class BuildCubeWithEngine {
     private void runTestAndAssertSucceed(String[] testCase) throws Exception {
         ExecutorService executorService = Executors.newFixedThreadPool(testCase.length);
         final CountDownLatch countDownLatch = new CountDownLatch(testCase.length);
-        List<Future<List<String>>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
+        List<Future<Boolean>> tasks = Lists.newArrayListWithExpectedSize(testCase.length);
         for (int i = 0; i < testCase.length; i++) {
             tasks.add(executorService.submit(new TestCallable(testCase[i], countDownLatch)));
         }
         countDownLatch.await();
         try {
             for (int i = 0; i < tasks.size(); ++i) {
-                Future<List<String>> task = tasks.get(i);
-                final List<String> jobIds = task.get();
-                for (String jobId : jobIds) {
-                    assertJobSucceed(jobId);
+                Future<Boolean> task = tasks.get(i);
+                final Boolean result = task.get();
+                if (result == false) {
+                    throw new RuntimeException("The test '" + testCase[i] + "' is failed.");
                 }
             }
         } catch (Exception ex) {
@@ -219,13 +218,7 @@ public class BuildCubeWithEngine {
         }
     }
 
-    private void assertJobSucceed(String jobId) {
-        if (jobService.getOutput(jobId).getState() != ExecutableState.SUCCEED) {
-            throw new RuntimeException("The job '" + jobId + "' is failed.");
-        }
-    }
-
-    private class TestCallable implements Callable<List<String>> {
+    private class TestCallable implements Callable<Boolean> {
 
         private final String methodName;
         private final CountDownLatch countDownLatch;
@@ -237,11 +230,11 @@ public class BuildCubeWithEngine {
 
         @SuppressWarnings("unchecked")
         @Override
-        public List<String> call() throws Exception {
+        public Boolean call() throws Exception {
             try {
                 final Method method = BuildCubeWithEngine.class.getDeclaredMethod(methodName);
                 method.setAccessible(true);
-                return (List<String>) method.invoke(BuildCubeWithEngine.this);
+                return (Boolean) method.invoke(BuildCubeWithEngine.this);
             } catch (Exception e) {
                 logger.error(e.getMessage());
                 throw e;
@@ -251,9 +244,13 @@ public class BuildCubeWithEngine {
         }
     }
 
+    private void assertJobSuccess() {
+
+    }
+
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testInnerJoinCubeWithSlr() throws Exception {
+    private boolean testInnerJoinCubeWithSlr() throws Exception {
         final String cubeName = "test_kylin_cube_with_slr_empty";
         clearSegment(cubeName);
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
@@ -264,17 +261,18 @@ public class BuildCubeWithEngine {
         List<String> result = Lists.newArrayList();
 
         if (fastBuildMode) {
-            result.add(buildSegment(cubeName, date1, date3));
+            return buildSegment(cubeName, date1, date3);
         } else {
-            result.add(buildSegment(cubeName, date1, date2));
-            result.add(buildSegment(cubeName, date2, date3));//empty segment
+            if (buildSegment(cubeName, date1, date2) == true) {
+                return buildSegment(cubeName, date2, date3);//empty segment
+            }
         }
-        return result;
+        return false;
     }
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testInnerJoinCubeWithoutSlr() throws Exception {
+    private Boolean testInnerJoinCubeWithoutSlr() throws Exception {
 
         final String cubeName = "test_kylin_cube_without_slr_empty";
         clearSegment(cubeName);
@@ -287,20 +285,23 @@ public class BuildCubeWithEngine {
         List<String> result = Lists.newArrayList();
 
         if (fastBuildMode) {
-            result.add(buildSegment(cubeName, date1, date4));
+            return buildSegment(cubeName, date1, date4);
         } else {
-            result.add(buildSegment(cubeName, date1, date2));
-            result.add(buildSegment(cubeName, date2, date3));
-            result.add(buildSegment(cubeName, date3, date4));
-            result.add(mergeSegment(cubeName, date1, date3));//don't merge all segments
+            if (buildSegment(cubeName, date1, date2) == true) {
+                if (buildSegment(cubeName, date2, date3) == true) {
+                    if (buildSegment(cubeName, date3, date4) == true) {
+                        return mergeSegment(cubeName, date1, date3);//don't merge all segments
+                    }
+                }
+            }
         }
-        return result;
+        return false;
 
     }
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testLeftJoinCubeWithoutSlr() throws Exception {
+    private boolean testLeftJoinCubeWithoutSlr() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         List<String> result = Lists.newArrayList();
@@ -313,21 +314,24 @@ public class BuildCubeWithEngine {
         long date4 = f.parse("2023-01-01").getTime();
 
         if (fastBuildMode) {
-            result.add(buildSegment(cubeName, date1, date4));
+            return buildSegment(cubeName, date1, date4);
         } else {
-            result.add(buildSegment(cubeName, date1, date2));
-            result.add(buildSegment(cubeName, date2, date3));
-            result.add(buildSegment(cubeName, date3, date4));//empty segment
-            result.add(mergeSegment(cubeName, date1, date3));//don't merge all segments
+            if (buildSegment(cubeName, date1, date2) == true) {
+                if (buildSegment(cubeName, date2, date3) == true) {
+                    if (buildSegment(cubeName, date3, date4) == true) { //empty segment
+                        return mergeSegment(cubeName, date1, date3);//don't merge all segments
+                    }
+                }
+            }
         }
 
-        return result;
+        return false;
 
     }
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testLeftJoinCubeWithView() throws Exception {
+    private boolean testLeftJoinCubeWithView() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         List<String> result = Lists.newArrayList();
@@ -337,15 +341,13 @@ public class BuildCubeWithEngine {
         long date1 = cubeManager.getCube(cubeName).getDescriptor().getPartitionDateStart();
         long date4 = f.parse("2023-01-01").getTime();
 
-        result.add(buildSegment(cubeName, date1, date4));
-
-        return result;
+        return buildSegment(cubeName, date1, date4);
 
     }
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testInnerJoinCubeWithView() throws Exception {
+    private boolean testInnerJoinCubeWithView() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         f.setTimeZone(TimeZone.getTimeZone("GMT"));
         List<String> result = Lists.newArrayList();
@@ -355,15 +357,13 @@ public class BuildCubeWithEngine {
         long date1 = cubeManager.getCube(cubeName).getDescriptor().getPartitionDateStart();
         long date4 = f.parse("2023-01-01").getTime();
 
-        result.add(buildSegment(cubeName, date1, date4));
-
-        return result;
+        return buildSegment(cubeName, date1, date4);
 
     }
 
     @SuppressWarnings("unused")
     // called by reflection
-    private List<String> testLeftJoinCubeWithSlr() throws Exception {
+    private boolean testLeftJoinCubeWithSlr() throws Exception {
         String cubeName = "test_kylin_cube_with_slr_left_join_empty";
         clearSegment(cubeName);
 
@@ -376,14 +376,17 @@ public class BuildCubeWithEngine {
 
         List<String> result = Lists.newArrayList();
         if (fastBuildMode) {
-            result.add(buildSegment(cubeName, date1, date4));
+            return buildSegment(cubeName, date1, date4);
         } else {
-            result.add(buildSegment(cubeName, date1, date2));
-            result.add(buildSegment(cubeName, date2, date3));
-            result.add(buildSegment(cubeName, date3, date4));
-            result.add(mergeSegment(cubeName, date1, date3));//don't merge all segments
+            if (buildSegment(cubeName, date1, date2) == true) {
+                if (buildSegment(cubeName, date2, date3) == true) {
+                    if (buildSegment(cubeName, date3, date4) == true) {
+                        return mergeSegment(cubeName, date1, date3);//don't merge all segments
+                    }
+                }
+            }
         }
-        return result;
+        return false;
 
     }
 
@@ -395,24 +398,24 @@ public class BuildCubeWithEngine {
         cubeManager.updateCube(cubeBuilder);
     }
 
-    private String mergeSegment(String cubeName, long startDate, long endDate) throws Exception {
+    private Boolean mergeSegment(String cubeName, long startDate, long endDate) throws Exception {
         CubeSegment segment = cubeManager.mergeSegments(cubeManager.getCube(cubeName), startDate, endDate, 0, 0, true);
         DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(segment, "TEST");
         jobService.addJob(job);
-        waitForJob(job.getId());
-        return job.getId();
+        ExecutableState state = waitForJob(job.getId());
+        return Boolean.valueOf(ExecutableState.SUCCEED == state);
     }
 
-    private String buildSegment(String cubeName, long startDate, long endDate) throws Exception {
+    private Boolean buildSegment(String cubeName, long startDate, long endDate) throws Exception {
         CubeSegment segment = cubeManager.appendSegment(cubeManager.getCube(cubeName), 0, endDate);
         DefaultChainedExecutable job = EngineFactory.createBatchCubingJob(segment, "TEST");
         jobService.addJob(job);
-        waitForJob(job.getId());
+        ExecutableState state = waitForJob(job.getId());
         //        if (segment.getCubeDesc().getEngineType() == IEngineAware.ID_MR_V1
         //                || segment.getCubeDesc().getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
         //            checkHFilesInHBase(segment);
         //        }
-        return job.getId();
+        return Boolean.valueOf(ExecutableState.SUCCEED == state);
     }
 
     @SuppressWarnings("unused")
