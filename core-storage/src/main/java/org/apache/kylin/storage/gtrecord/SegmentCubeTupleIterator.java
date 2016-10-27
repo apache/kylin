@@ -37,8 +37,6 @@ import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
 public class SegmentCubeTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(SegmentCubeTupleIterator.class);
@@ -97,8 +95,6 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
             return false;
         }
         GTRecord curRecord = gtItr.next();
-
-        Preconditions.checkNotNull(cubeTupleConverter);
 
         // translate into tuple
         advMeasureFillers = cubeTupleConverter.translateResult(curRecord, tuple);
