@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.enumerator;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
@@ -77,10 +78,9 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
     }
 
     private Object[] convertCurrentRow(ITuple tuple) {
-        // make sure the tuple layout is correct
-        //assert tuple.getAllFields().equals(olapContext.returnTupleInfo.getAllFields());
-
-        current = tuple.getAllValues();
+        // give calcite a new array every time, see details in KYLIN-2134
+        Object[] values = tuple.getAllValues();
+        current = Arrays.copyOf(values, values.length);
         return current;
     }
 
