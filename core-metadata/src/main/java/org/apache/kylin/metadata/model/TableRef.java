@@ -70,10 +70,18 @@ public class TableRef {
         return Collections.unmodifiableCollection(columns.values());
     }
     
+    // for test only
+    @Deprecated
     public TblColRef makeFakeColumn(String name) {
         ColumnDesc colDesc = new ColumnDesc();
         colDesc.setName(name);
         colDesc.setTable(table);
+        return new TblColRef(this, colDesc);
+    }
+    
+    // for test only
+    @Deprecated
+    public TblColRef makeFakeColumn(ColumnDesc colDesc) {
         return new TblColRef(this, colDesc);
     }
     
