@@ -176,7 +176,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         String debugGitTag = "";
 
         String queryId = request.hasQueryId() ? request.getQueryId() : "UnknownId";
-        try (SetThreadName ignored = new SetThreadName("Kylin Query-%s", queryId)) {
+        try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
             this.serviceStartTime = System.currentTimeMillis();
 
             region = env.getRegion();

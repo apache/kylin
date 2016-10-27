@@ -39,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
@@ -72,7 +73,6 @@ import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.util.QueryIdGenerator;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.rest.util.TableauInterceptor;
@@ -116,8 +116,6 @@ public class QueryService extends BasicService {
 
     private final String hbaseUrl;
     private final String userTableName;
-
-    private QueryIdGenerator queryIdGenerator = new QueryIdGenerator();
 
     @Autowired
     private CacheManager cacheManager;
@@ -325,7 +323,7 @@ public class QueryService extends BasicService {
             throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
         }
 
-        final String queryId = queryIdGenerator.nextId(sqlRequest.getProject());
+        final String queryId = UUID.randomUUID().toString();
 
         Map<String, String> toggles = new HashMap<>();
         toggles.put(BackdoorToggles.KEY_QUERY_ID, queryId);
@@ -334,7 +332,7 @@ public class QueryService extends BasicService {
         }
         BackdoorToggles.setToggles(toggles);
 
-        try (SetThreadName ignored = new SetThreadName("Query-%s", queryId)) {
+        try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
             logger.info("Using project: " + project);
