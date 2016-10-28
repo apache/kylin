@@ -103,7 +103,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         dimensionsD.addAll(groupsD);
         dimensionsD.addAll(otherDimsD);
         Cuboid cuboid = Cuboid.identifyCuboid(cubeDesc, dimensionsD, metrics);
-        logger.info("Cuboid identified: cube={}, cuboidId={}", cubeInstance.getName(), cuboid.getId());
+        logger.info("Cuboid identified: cube={}, cuboidId={}, groupsD={}, otherDimsD={}", cubeInstance.getName(), cuboid.getId(), groupsD, otherDimsD);
         context.setCuboid(cuboid);
 
         // isExactAggregation? meaning: tuples returned from storage requires no further aggregation in query engine
