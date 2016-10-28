@@ -91,7 +91,7 @@ public class CubeStatsReader {
             reader = new SequenceFile.Reader(hadoopConf, seqInput);
 
             int percentage = 100;
-            int mapperNumber = 0;;
+            int mapperNumber = 0;
             double mapperOverlapRatio = 0;
             Map<Long, HyperLogLogPlusCounter> counterMap = Maps.newHashMap();
 
