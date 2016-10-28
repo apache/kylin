@@ -104,10 +104,19 @@ public class SaveStatisticsStep extends AbstractExecutable {
             } else if ("random".equalsIgnoreCase(algPref)) { // for testing
                 alg = new Random().nextBoolean() ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
             } else { // the default
-                double threshold = kylinConf.getCubeAlgorithmAutoThreshold();
-                double mapperOverlapRatio = new CubeStatsReader(seg, kylinConf).getMapperOverlapRatioOfFirstBuild();
-                logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is " + threshold);
-                alg = mapperOverlapRatio < threshold ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
+                CubeStatsReader cubeStats = new CubeStatsReader(seg, kylinConf);
+                int mapperNumber = cubeStats.getMapperNumberOfFirstBuild();
+                int mapperNumLimit = kylinConf.getCubeAlgorithmAutoMapperLimit();
+                double mapperOverlapRatio = cubeStats.getMapperOverlapRatioOfFirstBuild();
+                double overlapThreshold = kylinConf.getCubeAlgorithmAutoThreshold();
+                logger.info("mapperNumber for " + seg + " is " + mapperNumber + " and threshold is " + mapperNumLimit);
+                logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is " + overlapThreshold);
+ 
+                // in-mem cubing is good when
+                // 1) the cluster has enough mapper slots to run in parallel
+                // 2) the mapper overlap ratio is small, meaning the shuffle of in-mem MR has advantage
+                alg = (mapperNumber <= mapperNumLimit && mapperOverlapRatio <= overlapThreshold)//
+                        ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
             }
 
         }
