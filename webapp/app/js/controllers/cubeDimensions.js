@@ -74,11 +74,12 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
             cols[i].isLookup = false;
 
             // Default not selected and not disabled.
-            factSelectAvailable[cols[i].name] = {name:cols[i].name ,selected: false, disabled: false};
+            factSelectAvailable[cols[i].name] = {name:cols[i].name ,selected: false};
 
         }
 
         $scope.availableColumns[factTable] = cols;
+        factSelectAvailable.all=false;
         $scope.selectedColumns[factTable] = factSelectAvailable;
         $scope.availableTables.push(factTable);
 
@@ -96,10 +97,11 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
                 cols2[k].isLookup = true;
 
                 // Default not selected and not disabled.
-                lookupSelectAvailable[cols2[k].name] = {name:cols2[k].name,selected: false, disabled: false};
+                lookupSelectAvailable[cols2[k].name] = {name:cols2[k].name,selected: false};
             }
 
             $scope.availableColumns[lookups[j].table] = cols2;
+            lookupSelectAvailable.all=false;
             $scope.selectedColumns[lookups[j].table] = lookupSelectAvailable;
             if($scope.availableTables.indexOf(lookups[j].table)==-1){
                 $scope.availableTables.push(lookups[j].table);
@@ -111,14 +113,22 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
     $scope.initColumnStatus = function () {
         angular.forEach($scope.cubeMetaFrame.dimensions, function (dim) {
             var cols = dimCols(dim);
-
             angular.forEach(cols, function (colName) {
               if(dim.derived){
-                 $scope.selectedColumns[dim.table][colName] = {name:dim.name, selected: true, disabled: true,normal:"false"};
+                 $scope.selectedColumns[dim.table][colName] = {name:dim.name, selected: true, normal:"false"};
               }else{
-                 $scope.selectedColumns[dim.table][colName] = {name:dim.name, selected: true, disabled: true,normal:"true"};
+                 $scope.selectedColumns[dim.table][colName] = {name:dim.name, selected: true, normal:"true"};
               }
-           });
+            });
+        });
+        angular.forEach($scope.selectedColumns,function(value,table){
+              var all=true;
+              angular.forEach(value,function(col){
+                   if(col.selected==false&&typeof col=="object"){
+                        all=false;
+                   }
+             });
+             $scope.selectedColumns[table].all=all;
         });
     };
 
@@ -300,9 +310,9 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
         var cols = dimCols(dim);
         angular.forEach(cols, function (colName) {
             if(dim.table==$scope.metaModel.model.fact_table){
-               $scope.selectedColumns[dim.table][colName] = {name:colName,selected: false, disabled: false};
+               $scope.selectedColumns[dim.table][colName] = {name:colName,selected: false};
             }else{
-               $scope.selectedColumns[dim.table][colName] = {name:colName,selected: false, disabled: false};
+               $scope.selectedColumns[dim.table][colName] = {name:colName,selected: false};
             }
         });
     };
@@ -395,25 +405,77 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
     };
 
     $scope.autoChange= function(table,name){
-        if($scope.selectedColumns[table][name].selected==false){
-             $scope.selectedColumns[table][name].normal=null;
-             if(table==$scope.metaModel.model.fact_table){
-                 $scope.selectedColumns[table][name].name=name;
-             }else{
-                 $scope.selectedColumns[table][name].name=name;
-             }
-        }else{
-             if($scope.metaModel.model.fact_table!=table){
-                 $scope.selectedColumns[table][name].normal="false";
-             }
-        }
+         if($scope.metaModel.model.fact_table==table){
+               if($scope.selectedColumns[table][name].selected==false){
+                    $scope.selectedColumns[table].all=false;
+               }else{
+                    var all=true;
+                    angular.forEach($scope.selectedColumns[table],function(col){
+                          if(col.selected==false&&typeof col=="object"){
+                                 all=false;
+                          }
+                    });
+                    $scope.selectedColumns[table].all=all;
+               }
+         }
+         else{
+              if($scope.selectedColumns[table][name].selected==false){
+                   $scope.selectedColumns[table].all=false;
+                   $scope.selectedColumns[table][name].normal=null;
+                   $scope.selectedColumns[table][name].name=name;
+              }else{
+                   var all=true;
+                   angular.forEach($scope.selectedColumns[table],function(col){
+                       if(col.selected==false&&typeof col=="object"){
+                       all=false;
+                       }
+                   });
+                   $scope.selectedColumns[table].all=all;
+                   if($scope.metaModel.model.fact_table!=table){
+                       $scope.selectedColumns[table][name].normal="false";
+                   }
+              }
+         }
+    }
+    $scope.autoChangeAll= function(table){
+         if($scope.metaModel.model.fact_table==table){
+              if($scope.selectedColumns[table].all==true){
+                   angular.forEach($scope.selectedColumns[table],function(col){
+                        if(typeof col==="object"){
+                           col.selected=true;
+                        }
+                   })
+              }else{
+                   angular.forEach($scope.selectedColumns[table],function(col){
+                        if(typeof col==="object"){
+                           col.selected=false;
+                        }
+                   })
+              }
+         }else{
+              if($scope.selectedColumns[table].all==true){
+                   angular.forEach($scope.selectedColumns[table],function(col){
+                        if(col.selected==false&&typeof col==="object"){
+                           col.selected=true;
+                           $scope.autoChange(table,col.name);
+                        }
 
+                   })
+              }else{
+                    angular.forEach($scope.selectedColumns[table],function(col){
+                        if(typeof col==="object"){
+                          col.selected=false;
+                          $scope.autoChange(table,col.name);
+                        }
+                    })
+              }
+         }
     }
     $scope.checkAutoDimension=function(){
         var nameNull=false;
         angular.forEach($scope.selectedColumns, function (value, table) {
              angular.forEach(value, function (status, colName) {
-                  if (status.selected) {
+                  if (status.selected&&typeof status=="object") {
                       if(status.name==""){
                            SweetAlert.swal('', "The name is requested.", 'warning');
                            nameNull=true;
@@ -442,8 +504,10 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
         var selectedCols = $scope.getSelectedCols();
         angular.forEach($scope.selectedColumns, function (value, table) {
             angular.forEach(value, function (status, colName) {
-                 status.selected=false;
-                 status.normal=null;
+                if(typeof status=="object"){
+                    status.selected=false;
+                    status.normal=null;
+                }
             });
         });
     };
