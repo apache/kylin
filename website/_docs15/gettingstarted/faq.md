@@ -10,21 +10,43 @@ since: v0.6.x
 
   * Kylin need many dependent jars (hadoop/hive/hcat/hbase/kafka) on classpath to work, but Kylin doesn't ship them. It will seek these jars from your local machine by running commands like `hbase classpath`, `hive -e set` etc. The founded jars' path will be appended to the environment variable *HBASE_CLASSPATH* (Kylin uses `hbase` shell command to start up, which will read this). But in some Hadoop distribution (like EMR 5.0), the `hbase` shell doesn't keep the origin `HBASE_CLASSPATH` value, that causes the "NoClassDefFoundError".
 
-  * To fix this, find the hbase shell script (in hbase/bin folder), and search *HBASE_CLASSPATH*, check whether it overwrite the value like :
+  To fix this, find the hbase shell script (in hbase/bin or hbase/conf folder), and search *HBASE_CLASSPATH*, check whether it overwrite the value like :
 
-  {% highlight Groff markup %}
+```
   export HBASE_CLASSPATH=$HADOOP_CONF:$HADOOP_HOME/*:$HADOOP_HOME/lib/*:$ZOOKEEPER_HOME/*:$ZOOKEEPER_HOME/lib/*
-  {% endhighlight %}
+```
 
-  * If true, change it to keep the origin value like:
+  If true, change it to keep the origin value like:
 
-   {% highlight Groff markup %}
+```
   export HBASE_CLASSPATH=$HADOOP_CONF:$HADOOP_HOME/*:$HADOOP_HOME/lib/*:$ZOOKEEPER_HOME/*:$ZOOKEEPER_HOME/lib/*:$HBASE_CLASSPATH
-  {% endhighlight %}
+```
+
+  * For EMR5.0, need change the hbase-env.sh
+
+```
+ sudo vi /usr/lib/hbase/conf/hbase-env.sh
+```
+
+ in around line 30 it was :
+
+```
+export HBASE_CLASSPATH=/etc/hadoop/conf
+```
+
+change to :
+
+```
+export HBASE_CLASSPATH=/etc/hadoop/conf:$HBASE_CLASSPATH
+```
+
+then restart Kylin.
 
 #### 2. Get "java.lang.IllegalArgumentException: Too high cardinality is not suitable for dictionary -- cardinality: 5220674" in "Build Dimension Dictionary" step
 
-  * Kylin uses "Dictionary" encoding to encode/decode the dimension values (check [this blog](/blog/2015/08/13/kylin-dictionary/)); Usually a dimension's cardinality is less than millions, so the "Dict" encoding is good to use. As dictionary need be persisted and loaded into memory, if a dimension's cardinality is very high, the memory footprint will be tremendous, so Kylin add a check on this. If you see this error, suggest to identify the UHC dimension first and then re-evaluate the design (whether need to make that as dimension?). If must keep it, you can by-pass this error with couple ways: 1) change to use other encoding (like `fixed_length`, `integer`) 2) or set a bigger value for `kylin.dictionary.max.cardinality` in `conf/kylin.properties`.
+  * Kylin uses "Dictionary" encoding to encode/decode the dimension values (check [this blog](/blog/2015/08/13/kylin-dictionary/)); Usually a dimension's cardinality is less than millions, so the "Dict" encoding is good to use. As dictionary need be persisted and loaded into memory, if a dimension's cardinality is very high, the memory footprint will be tremendous, so Kylin add a check on this. If you see this error, suggest to identify the UHC dimension first and then re-evaluate the design (whether need to make that as dimension?). If must keep it, you can by-pass this error with couple ways: 
+    * change to use other encoding (like `fixed_length`, `integer`) 
+    * or set a bigger value for `kylin.dictionary.max.cardinality` in `conf/kylin.properties`.
 
 #### 3. Build cube failed due to "error check status"
 
