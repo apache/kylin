@@ -124,4 +124,17 @@ public class StringUtil {
         return result;
     }
 
+    public static void appendWithSeparator(StringBuilder src, String append) {
+        if (src == null) {
+            throw new IllegalArgumentException();
+        }
+        if (src.length() > 0 && src.toString().endsWith(",") == false) {
+            src.append(",");
+        }
+
+        if (StringUtils.isBlank(append) == false) {
+            src.append(append);
+        }
+    }
+
 }

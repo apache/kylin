@@ -61,6 +61,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.StringSplitter;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.HadoopUtil;
@@ -202,24 +203,23 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             String filteredHive = filterKylinHiveDependency(kylinHiveDependency);
             logger.info("Hive Dependencies After Filtered: " + filteredHive);
 
-            if (kylinDependency.length() > 0)
-                kylinDependency.append(",");
-            kylinDependency.append(filteredHive);
+            StringUtil.appendWithSeparator(kylinDependency, filteredHive);
         } else {
 
             logger.info("No hive dependency jars set in the environment, will find them from jvm:");
 
             try {
                 String hiveExecJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hadoop.hive.ql.Driver"));
-                kylinDependency.append(hiveExecJarPath).append(",");
+
+                StringUtil.appendWithSeparator(kylinDependency, hiveExecJarPath);
                 logger.info("hive-exec jar file: " + hiveExecJarPath);
 
                 String hiveHCatJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hive.hcatalog.mapreduce.HCatInputFormat"));
-                kylinDependency.append(hiveHCatJarPath).append(",");
+                StringUtil.appendWithSeparator(kylinDependency, hiveHCatJarPath);
                 logger.info("hive-catalog jar file: " + hiveHCatJarPath);
 
                 String hiveMetaStoreJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hadoop.hive.metastore.api.Table"));
-                kylinDependency.append(hiveMetaStoreJarPath).append(",");
+                StringUtil.appendWithSeparator(kylinDependency, hiveMetaStoreJarPath);
                 logger.info("hive-metastore jar file: " + hiveMetaStoreJarPath);
             } catch (ClassNotFoundException e) {
                 logger.error("Cannot found hive dependency jars: " + e);
@@ -229,19 +229,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         // for kafka dependencies
         if (kylinKafkaDependency != null) {
             kylinKafkaDependency = kylinKafkaDependency.replace(":", ",");
-
             logger.info("Kafka Dependencies Before Filtered: " + kylinKafkaDependency);
-
-            if (kylinDependency.length() > 0)
-                kylinDependency.append(",");
-            kylinDependency.append(kylinKafkaDependency);
+            StringUtil.appendWithSeparator(kylinDependency, kylinKafkaDependency);
         } else {
-
             logger.info("No Kafka dependency jars set in the environment, will find them from jvm:");
-
             try {
                 String kafkaClientJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.kafka.clients.consumer.KafkaConsumer"));
-                kylinDependency.append(kafkaClientJarPath).append(",");
+                StringUtil.appendWithSeparator(kylinDependency, kafkaClientJarPath);
                 logger.info("kafka jar file: " + kafkaClientJarPath);
 
             } catch (ClassNotFoundException e) {
@@ -251,12 +245,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
         // for KylinJobMRLibDir
         String mrLibDir = kylinConf.getKylinJobMRLibDir();
-        if (!StringUtils.isBlank(mrLibDir)) {
-            if (kylinDependency.length() > 0) {
-                kylinDependency.append(",");
-            }
-            kylinDependency.append(mrLibDir);
-        }
+        StringUtil.appendWithSeparator(kylinDependency, mrLibDir);
 
         setJobTmpJarsAndFiles(job, kylinDependency.toString());
 
