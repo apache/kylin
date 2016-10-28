@@ -73,7 +73,8 @@ public class CubeStatsReader {
 
     final CubeSegment seg;
     final int samplingPercentage;
-    final double mapperOverlapRatioOfFirstBuild; // only makes sense for the first build, is meaningless after merge
+    final int mapperNumberOfFirstBuild; // becomes meaningless after merge
+    final double mapperOverlapRatioOfFirstBuild; // becomes meaningless after merge
     final Map<Long, HyperLogLogPlusCounter> cuboidRowEstimatesHLL;
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
@@ -90,6 +91,7 @@ public class CubeStatsReader {
             reader = new SequenceFile.Reader(hadoopConf, seqInput);
 
             int percentage = 100;
+            int mapperNumber = 0;
             double mapperOverlapRatio = 0;
             Map<Long, HyperLogLogPlusCounter> counterMap = Maps.newHashMap();
 
@@ -100,7 +102,9 @@ public class CubeStatsReader {
                     percentage = Bytes.toInt(value.getBytes());
                 } else if (key.get() == -1) {
                     mapperOverlapRatio = Bytes.toDouble(value.getBytes());
-                } else {
+                } else if (key.get() == -2) {
+                    mapperNumber = Bytes.toInt(value.getBytes());
+                } else if (key.get() > 0) {
                     HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(kylinConfig.getCubeStatsHLLPrecision());
                     ByteArray byteArray = new ByteArray(value.getBytes());
                     hll.readRegisters(byteArray.asBuffer());
@@ -110,6 +114,7 @@ public class CubeStatsReader {
 
             this.seg = cubeSegment;
             this.samplingPercentage = percentage;
+            this.mapperNumberOfFirstBuild = mapperNumber;
             this.mapperOverlapRatioOfFirstBuild = mapperOverlapRatio;
             this.cuboidRowEstimatesHLL = counterMap;
 
@@ -141,6 +146,10 @@ public class CubeStatsReader {
         return getCuboidSizeMapFromRowCount(seg, getCuboidRowEstimatesHLL());
     }
 
+    public int getMapperNumberOfFirstBuild() {
+        return mapperNumberOfFirstBuild;
+    }
+    
     public double getMapperOverlapRatioOfFirstBuild() {
         return mapperOverlapRatioOfFirstBuild;
     }

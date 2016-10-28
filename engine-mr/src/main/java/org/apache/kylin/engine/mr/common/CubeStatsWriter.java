@@ -35,15 +35,15 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 
-public class CuboidStatsUtil {
+public class CubeStatsWriter {
 
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
             Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage) throws IOException {
-        writeCuboidStatistics(conf, outputPath, cuboidHLLMap, samplingPercentage, 0);
+        writeCuboidStatistics(conf, outputPath, cuboidHLLMap, samplingPercentage, 0, 0);
     }
 
     public static void writeCuboidStatistics(Configuration conf, Path outputPath, //
-            Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage, double mapperOverlapRatio) throws IOException {
+            Map<Long, HyperLogLogPlusCounter> cuboidHLLMap, int samplingPercentage, int mapperNumber, double mapperOverlapRatio) throws IOException {
         Path seqFilePath = new Path(outputPath, BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
 
         List<Long> allCuboids = new ArrayList<Long>();
@@ -55,6 +55,9 @@ public class CuboidStatsUtil {
         try {
             // mapper overlap ratio at key -1
             writer.append(new LongWritable(-1), new BytesWritable(Bytes.toBytes(mapperOverlapRatio)));
+            
+            // mapper number at key -2
+            writer.append(new LongWritable(-2), new BytesWritable(Bytes.toBytes(mapperNumber)));
 
             // sampling percentage at key 0
             writer.append(new LongWritable(0L), new BytesWritable(Bytes.toBytes(samplingPercentage)));

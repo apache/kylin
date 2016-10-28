@@ -41,7 +41,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
-import org.apache.kylin.engine.mr.common.CuboidStatsUtil;
+import org.apache.kylin.engine.mr.common.CubeStatsWriter;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -189,10 +189,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
                 grandTotal += hll.getCountEstimate();
             }
             double mapperOverlapRatio = grandTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grandTotal;
+            
+            int mapperNumber = baseCuboidRowCountInMappers.size();
 
             writeMapperAndCuboidStatistics(context); // for human check
-            CuboidStatsUtil.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), //
-                    cuboidHLLMap, samplingPercentage, mapperOverlapRatio); // for CreateHTableJob
+            CubeStatsWriter.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), //
+                    cuboidHLLMap, samplingPercentage, mapperNumber, mapperOverlapRatio);
         }
     }
 
@@ -214,6 +216,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
             writeLine(out, msg);
 
             writeLine(out, "The following statistics are collected based on sampling data.");
+            writeLine(out, "Number of Mappers: " + baseCuboidRowCountInMappers.size());
             for (int i = 0; i < baseCuboidRowCountInMappers.size(); i++) {
                 if (baseCuboidRowCountInMappers.get(i) > 0) {
                     msg = "Base Cuboid in Mapper " + i + " row count: \t " + baseCuboidRowCountInMappers.get(i);
