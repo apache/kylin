@@ -49,6 +49,22 @@ public class StringUtil {
         return (String[]) whatsLeft.toArray(new String[whatsLeft.size()]);
     }
 
+    /**
+     * Returns a substring by removing the specified suffix. If the given string
+     * does not ends with the suffix, the string is returned without change.
+     * 
+     * @param str
+     * @param suffix
+     * @return
+     */
+    public static String trimSuffix(String str, String suffix) {
+        if (str.endsWith(suffix)) {
+            return str.substring(0, str.length() - suffix.length());
+        } else {
+            return str;
+        }
+    }
+
     public static String join(Iterable<String> parts, String separator) {
         StringBuilder buf = new StringBuilder();
         for (String p : parts) {
