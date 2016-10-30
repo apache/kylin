@@ -42,14 +42,12 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import javax.annotation.concurrent.GuardedBy;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegment {
@@ -117,8 +115,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> additionalInfo = new LinkedHashMap<String, String>();
 
-    @GuardedBy("this")
-    private Map<Long, Short> cuboidBaseShards = Maps.newHashMap(); // cuboid id ==> base(starting) shard for this cuboid
+    private Map<Long, Short> cuboidBaseShards = Maps.newConcurrentMap(); // cuboid id ==> base(starting) shard for this cuboid
 
     public CubeDesc getCubeDesc() {
         return getCubeInstance().getDescriptor();
@@ -505,12 +502,9 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
 
     public int getTotalShards(long cuboidId) {
         if (totalShards > 0) {
-            //shard squashed case
-            //logger.info("total shards for {} is {}", cuboidId, totalShards);
             return totalShards;
         } else {
             int ret = getCuboidShardNum(cuboidId);
-            //logger.info("total shards for {} is {}", cuboidId, ret);
             return ret;
         }
     }
@@ -519,22 +513,17 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         this.totalShards = totalShards;
     }
 
-    public synchronized short getCuboidBaseShard(Long cuboidId) {
-        if (totalShards > 0) {
-            //shard squashed case
-
-            Short ret = cuboidBaseShards.get(cuboidId);
-            if (ret == null) {
-                ret = ShardingHash.getShard(cuboidId, totalShards);
-                cuboidBaseShards.put(cuboidId, ret);
-            }
-
-            //logger.info("base for cuboid {} is {}", cuboidId, ret);
-            return ret;
-        } else {
-            //logger.info("base for cuboid {} is {}", cuboidId, 0);
+    public short getCuboidBaseShard(Long cuboidId) {
+        if (totalShards == 0)
             return 0;
+
+        Short ret = cuboidBaseShards.get(cuboidId);
+        if (ret == null) {
+            ret = ShardingHash.getShard(cuboidId, totalShards);
+            cuboidBaseShards.put(cuboidId, ret);
         }
+
+        return ret;
     }
 
     public List<Long> getBlackoutCuboids() {
