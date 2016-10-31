@@ -96,8 +96,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
 
-    private static final String KYLIN_HIVE_DEPENDENCY_JARS = "[^,]*hive-exec[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-metastore[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[0-9.-]+[^,]*?\\.jar";
-
     protected static void runJob(Tool job, String[] args) {
         try {
             int exitCode = ToolRunner.run(job, args);
@@ -200,8 +198,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             kylinHiveDependency = kylinHiveDependency.replace(":", ",");
 
             logger.info("Hive Dependencies Before Filtered: " + kylinHiveDependency);
-            //String filteredHive = filterKylinHiveDependency(kylinHiveDependency);
-            String filteredHive = kylinHiveDependency;
+            String filteredHive = filterKylinHiveDependency(kylinHiveDependency, kylinConf);
             logger.info("Hive Dependencies After Filtered: " + filteredHive);
 
             StringUtil.appendWithSeparator(kylinDependency, filteredHive);
@@ -259,13 +256,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    private String filterKylinHiveDependency(String kylinHiveDependency) {
+    private String filterKylinHiveDependency(String kylinHiveDependency, KylinConfig config) {
         if (StringUtils.isBlank(kylinHiveDependency))
             return "";
 
         StringBuilder jarList = new StringBuilder();
 
-        Pattern hivePattern = Pattern.compile(KYLIN_HIVE_DEPENDENCY_JARS);
+        Pattern hivePattern = Pattern.compile(config.getHiveDependencyFilterList());
         Matcher matcher = hivePattern.matcher(kylinHiveDependency);
 
         while (matcher.find()) {

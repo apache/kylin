@@ -22,9 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.SortedSet;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -504,7 +504,7 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean getBadQueryPersistentEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.query.badquery.persistent.enable", "true"));
     }
-    
+
     public String[] getQueryTransformers() {
         return getOptionalStringArray("kylin.query.transformers", new String[0]);
     }
@@ -631,6 +631,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getHiveDatabaseForIntermediateTable() {
         return this.getOptional("kylin.job.hive.database.for.intermediatetable", "default");
+    }
+
+    public String getHiveDependencyFilterList() {
+        return this.getOptional("kylin.job.dependency.filterlist", "[^,]*hive-exec[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-metastore[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[0-9.-]+[^,]*?\\.jar");
     }
 
     public String getKylinOwner() {
