@@ -80,7 +80,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName(BatchConstants.ARG_JOB_NAME).hasArg().isRequired(true).withDescription("Job name. For example, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)").create(BatchConstants.ARG_JOB_NAME);
     protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg().isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create(BatchConstants.ARG_CUBE_NAME);
     protected static final Option OPTION_CUBING_JOB_ID = OptionBuilder.withArgName(BatchConstants.ARG_CUBING_JOB_ID).hasArg().isRequired(false).withDescription("ID of cubing job executable").create(BatchConstants.ARG_CUBING_JOB_ID);
-//    @Deprecated
+    //    @Deprecated
     protected static final Option OPTION_SEGMENT_NAME = OptionBuilder.withArgName(BatchConstants.ARG_SEGMENT_NAME).hasArg().isRequired(true).withDescription("Cube segment name").create(BatchConstants.ARG_SEGMENT_NAME);
     protected static final Option OPTION_SEGMENT_ID = OptionBuilder.withArgName(BatchConstants.ARG_SEGMENT_ID).hasArg().isRequired(true).withDescription("Cube segment id").create(BatchConstants.ARG_SEGMENT_ID);
     protected static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_INPUT).hasArg().isRequired(true).withDescription("Input path").create(BatchConstants.ARG_INPUT);
@@ -95,8 +95,6 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected static final Option OPTION_STATISTICS_SAMPLING_PERCENT = OptionBuilder.withArgName(BatchConstants.ARG_STATS_SAMPLING_PERCENT).hasArg().isRequired(false).withDescription("Statistics sampling percentage").create(BatchConstants.ARG_STATS_SAMPLING_PERCENT);
 
     private static final String MAP_REDUCE_CLASSPATH = "mapreduce.application.classpath";
-
-    private static final String KYLIN_HIVE_DEPENDENCY_JARS = "[^,]*hive-exec[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-metastore[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[0-9.-]+[^,]*?\\.jar";
 
     protected static void runJob(Tool job, String[] args) {
         try {
@@ -200,8 +198,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             kylinHiveDependency = kylinHiveDependency.replace(":", ",");
 
             logger.info("Hive Dependencies Before Filtered: " + kylinHiveDependency);
-            //String filteredHive = filterKylinHiveDependency(kylinHiveDependency);
-            String filteredHive = kylinHiveDependency;
+            String filteredHive = filterKylinHiveDependency(kylinHiveDependency, kylinConf);
             logger.info("Hive Dependencies After Filtered: " + filteredHive);
 
             StringUtil.appendWithSeparator(kylinDependency, filteredHive);
@@ -266,13 +263,13 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    private String filterKylinHiveDependency(String kylinHiveDependency) {
+    private String filterKylinHiveDependency(String kylinHiveDependency, KylinConfig config) {
         if (StringUtils.isBlank(kylinHiveDependency))
             return "";
 
         StringBuilder jarList = new StringBuilder();
 
-        Pattern hivePattern = Pattern.compile(KYLIN_HIVE_DEPENDENCY_JARS);
+        Pattern hivePattern = Pattern.compile(config.getHiveDependencyFilterList());
         Matcher matcher = hivePattern.matcher(kylinHiveDependency);
 
         while (matcher.find()) {
