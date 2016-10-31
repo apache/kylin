@@ -49,11 +49,11 @@ public class ResourceTool {
 
         String include = System.getProperty("include");
         if (include != null) {
-            includes = include.split("\\s*,\\s*");
+            setIncludes(include.split("\\s*,\\s*"));
         }
         String exclude = System.getProperty("exclude");
         if (exclude != null) {
-            excludes = exclude.split("\\s*,\\s*");
+            setExcludes(exclude.split("\\s*,\\s*"));
         }
 
         String cmd = args[0];
@@ -84,26 +84,46 @@ public class ResourceTool {
         }
     }
 
-    public static void cat(KylinConfig config, String path) throws IOException {
+    public static String[] getIncludes() {
+        return includes;
+    }
+
+    public static void setIncludes(String[] arg) {
+        includes = arg;
+    }
+
+    public static String[] getExcludes() {
+        return excludes;
+    }
+
+    public static void setExcludes(String[] arg) {
+        excludes = arg;
+    }
+
+    public static String cat(KylinConfig config, String path) throws IOException {
         ResourceStore store = ResourceStore.getStore(config);
         InputStream is = store.getResource(path).inputStream;
         BufferedReader br = null;
+        StringBuffer sb = new StringBuffer();
         String line;
         try {
             br = new BufferedReader(new InputStreamReader(is));
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
+                sb.append(line).append('\n');
             }
         } finally {
             IOUtils.closeQuietly(is);
             IOUtils.closeQuietly(br);
         }
+        return sb.toString();
     }
 
-    public static void list(KylinConfig config, String path) throws IOException {
+    public static NavigableSet<String> list(KylinConfig config, String path) throws IOException {
         ResourceStore store = ResourceStore.getStore(config);
         NavigableSet<String> result = store.listResources(path);
         System.out.println("" + result);
+        return result;
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, String path) throws IOException {
