@@ -80,7 +80,7 @@ public class HiveCmdBuilder {
 
                 logger.info("The statements to execute in beeline: \n" + hqlBuf);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("THe SQL to execute in beeline: \n" + IOUtils.toString(new FileReader(tmpHql)));
+                    logger.debug("The SQL to execute in beeline: \n" + IOUtils.toString(new FileReader(tmpHql)));
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
