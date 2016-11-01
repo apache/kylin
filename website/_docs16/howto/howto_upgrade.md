@@ -153,5 +153,5 @@ Here is the command to create hybrid model:
 
 ```
 export KYLIN_HOME="<path_of_1_5_0_installation>"
-$KYLIN_HOME/bin/kylin.sh org.apache.kylin.storage.hbase.util.ExtendCubeToHybridCLI <project_name> <cube_name>
+$KYLIN_HOME/bin/kylin.sh org.apache.kylin.tool.ExtendCubeToHybridCLI <project_name> <cube_name>
 ```
