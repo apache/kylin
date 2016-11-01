@@ -149,15 +149,22 @@
                                       ng-init="newMeasure.function.parameter.value = 1"><b>&nbsp;&nbsp;1</b></span>
                                 <!--!COUNT_DISTINCT-->
                                 <select class="form-control" chosen
-                                        ng-if="newMeasure.function.parameter.type == 'column' && newMeasure.function.expression !== 'EXTENDED_COLUMN'"
-                                        ng-model="newMeasure.function.parameter.value"
+                                        ng-if="newMeasure.function.parameter.type == 'column' && (newMeasure.function.expression == 'COUNT_DISTINCT'||newMeasure.function.expression == 'RAW')"
+                                        ng-model="newMeasure.function.parameter.value" required
                                         ng-change="measureReturnTypeUpdate();"
-                                        ng-options="column as column for column in getCommonMetricColumns()" >
+                                        ng-options="column as column for column in getAllModelDimMeasureColumns(newMeasure)" >
+                                  <option value="">-- Select a Column --</option>
+                                </select>
+                                <select class="form-control" chosen
+                                        ng-if="newMeasure.function.parameter.type == 'column' && newMeasure.function.expression !== 'EXTENDED_COLUMN' && newMeasure.function.expression !== 'COUNT_DISTINCT' && newMeasure.function.expression !== 'RAW'"
+                                        ng-model="newMeasure.function.parameter.value" required
+                                        ng-change="measureReturnTypeUpdate();"
+                                        ng-options="column as column for column in getCommonMetricColumns(newMeasure)" >
                                   <option value="">-- Select a Column --</option>
                                 </select>
                                 <select class="form-control" chosen
                                         ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'"
-                                        ng-model="newMeasure.function.parameter.value"
+                                        ng-model="newMeasure.function.parameter.value" required
                                         ng-change="measureReturnTypeUpdate();"
                                         ng-options="column as column for column in getExtendedHostColumn()" >
                                   <option value="">-- Select a Column --</option>
@@ -165,44 +172,6 @@
                               </div>
                           </div>
                       </div>
-                      <!--Return Type-->
-                      <div class="form-group middle-popover">
-                          <div class="row">
-                              <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
-                                <b ng-if="newMeasure.function.expression !== 'EXTENDED_COLUMN'">Return Type</b>
-                                <b ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'">Maximum length of extended column</b>  <i ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'" title="Maximum Length" class="fa fa-info-circle" kylinpopover placement="right" template="extendedTypeTip.html"></i>
-                              </label>
-                              <div class="col-xs-12 col-sm-6">
-                                  <select class="form-control"
-                                      ng-if="newMeasure.function.expression == 'COUNT_DISTINCT'"
-                                      ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:cubeConfig.dftSelections.distinctDataType.value"
-                                      chosen ng-model="newMeasure.function.returntype" required
-                                      ng-options="ddt.value as ddt.name for ddt in cubeConfig.distinctDataTypes">
-                                      <option value=""></option>
-                                  </select>
-                                <select class="form-control"
-                                        ng-if="newMeasure.function.expression == 'TOP_N'"
-                                        ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:cubeConfig.dftSelections.topN.value"
-                                        chosen ng-model="newMeasure.function.returntype" required
-                                        ng-options="ddt.value as ddt.name for ddt in cubeConfig.topNTypes">
-                                  <option value=""></option>
-                                </select>
-
-                                <input extended-column-return
-                                  ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'"
-                                  type="text" placeholder="Kylin won’t save more than this number of bytes" class="form-control"
-                                       tooltip-trigger="focus"
-                                       ng-init="newMeasure.function.returntype=newMeasure.function.returntype?newMeasure.function.returntype:'extendedcolumn(100)'"
-                                       ng-model="newMeasure.function.returntype" required />
-
-                                  <span class="font-color-default"
-                                        ng-if="newMeasure.function.expression != 'COUNT_DISTINCT' && newMeasure.function.expression != 'TOP_N' && newMeasure.function.expression != 'EXTENDED_COLUMN' "
-                                       ><b>&nbsp;&nbsp;{{newMeasure.function.returntype | uppercase}}</b>
-                                  </span>
-                              </div>
-                          </div>
-                      </div>
-
 
                       <div class="form-group middle-popover" ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'">
                         <div class="row">
@@ -212,12 +181,51 @@
                           <div class="col-xs-12 col-sm-6">
                             <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
                                     ng-model="nextPara.value"
-                                    ng-options="column as column for column in getCommonMetricColumns()" >
-                              <option value=""></option>
+                                    ng-options="column as column for column in getAllModelDimColumns()" >
+                              <option value="">-- Select a Column --</option>
                             </select>
                           </div>
                         </div>
                       </div>
+
+                      <!--Return Type-->
+                      <div class="form-group middle-popover">
+                        <div class="row">
+                          <label class="col-xs-12 col-sm-3 control-label no-padding-right font-color-default">
+                            <b ng-if="newMeasure.function.expression !== 'EXTENDED_COLUMN'">Return Type</b>
+                            <b ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'">Maximum length of extended column</b>  <i ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'" title="Maximum Length" class="fa fa-info-circle" kylinpopover placement="right" template="extendedTypeTip.html"></i>
+                          </label>
+                          <div class="col-xs-12 col-sm-6">
+                            <select class="form-control"
+                                    ng-if="newMeasure.function.expression == 'COUNT_DISTINCT'"
+                                    ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:cubeConfig.dftSelections.distinctDataType.value"
+                                    chosen ng-model="newMeasure.function.returntype" required
+                                    ng-options="ddt.value as ddt.name for ddt in cubeConfig.distinctDataTypes">
+                              <option value=""></option>
+                            </select>
+                            <select class="form-control"
+                                    ng-if="newMeasure.function.expression == 'TOP_N'"
+                                    ng-init="newMeasure.function.returntype = (!!newMeasure.function.returntype)?newMeasure.function.returntype:cubeConfig.dftSelections.topN.value"
+                                    chosen ng-model="newMeasure.function.returntype" required
+                                    ng-options="ddt.value as ddt.name for ddt in cubeConfig.topNTypes">
+                              <option value=""></option>
+                            </select>
+
+                            <input extended-column-return
+                                   ng-if="newMeasure.function.expression == 'EXTENDED_COLUMN'"
+                                   type="text" placeholder="Kylin won’t save more than this number of bytes" class="form-control"
+                                   tooltip-trigger="focus"
+                                   ng-init="newMeasure.function.returntype=newMeasure.function.returntype?newMeasure.function.returntype:'extendedcolumn(100)'"
+                                   ng-model="newMeasure.function.returntype" required />
+
+                                        <span class="font-color-default"
+                                              ng-if="newMeasure.function.expression != 'COUNT_DISTINCT' && newMeasure.function.expression != 'TOP_N' && newMeasure.function.expression != 'EXTENDED_COLUMN' "
+                                        ><b>&nbsp;&nbsp;{{newMeasure.function.returntype | uppercase}}</b>
+                                        </span>
+                          </div>
+                        </div>
+                      </div>
+
                       <!--Group by Column-->
                       <div class="form-group" ng-if="newMeasure.function.expression == 'TOP_N'" >
                         <div class="row">
@@ -251,7 +259,7 @@
                                     <td>
                                       <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
                                               ng-model="groupby_column.name"
-                                              ng-options="column as column for column in getGroupByColumns()" style="width:200px;">
+                                              ng-options="column as column for column in getAllModelDimColumns()" style="width:200px;">
                                         <option value="">--Select A Column--</option>
                                       </select>
                                     </td>
