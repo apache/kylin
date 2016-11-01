@@ -95,7 +95,7 @@ then
 elif [ "$1" == "clean" ]
 then
 
-    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.engine.mr.steps.MetadataCleanupJob "${@:2}"
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.MetadataCleanupJob  "${@:2}"
 
 else
     echo "usage: metastore.sh backup"

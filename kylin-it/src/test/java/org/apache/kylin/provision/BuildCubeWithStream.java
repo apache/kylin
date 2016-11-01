@@ -37,7 +37,7 @@ import org.apache.kylin.job.streaming.KafkaDataLoader;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
-import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
+import org.apache.kylin.tool.StorageCleanupJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

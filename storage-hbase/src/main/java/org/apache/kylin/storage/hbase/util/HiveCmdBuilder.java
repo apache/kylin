@@ -34,6 +34,7 @@ import com.google.common.collect.Lists;
 /**
  * Created by dongli on 2/29/16.
  */
+@Deprecated
 public class HiveCmdBuilder {
     private static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
 

@@ -28,7 +28,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.storage.hbase.util.StorageCleanupJob;
+import org.apache.kylin.tool.StorageCleanupJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
