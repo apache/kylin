@@ -260,16 +260,21 @@ public class StorageCleanupJob extends AbstractApplication {
         List<String> allHiveTablesNeedToBeDeleted = new ArrayList<String>();
         List<String> workingJobList = new ArrayList<String>();
 
+        StringBuilder sb = new StringBuilder();
         for (String jobId : allJobs) {
             // only remove FINISHED and DISCARDED job intermediate table
             final ExecutableState state = executableManager.getOutput(jobId).getState();
             if (!state.isFinalState()) {
                 workingJobList.add(jobId);
-                logger.info("Skip intermediate hive table with job id " + jobId + " with job status " + state);
+                sb.append(jobId).append("(").append(state).append("), ");
             }
         }
+        logger.info("Working jobIDs: " + workingJobList);
 
         while ((line = reader.readLine()) != null) {
+
+            logger.info("Checking table " + line);
+
             if (!line.startsWith(preFix))
                 continue;
 
@@ -288,12 +293,15 @@ public class StorageCleanupJob extends AbstractApplication {
                 if (UUId_PATTERN.matcher(uuid).matches()) {
                     //Check whether it's a hive table in use
                     if (isTableInUse(uuid, workingJobList)) {
+                        logger.info("Skip because not isTableInUse");
                         isNeedDel = false;
                     }
                 } else {
+                    logger.info("Skip because not match pattern");
                     isNeedDel = false;
                 }
             } else {
+                logger.info("Skip because length not qualified");
                 isNeedDel = false;
             }
 
