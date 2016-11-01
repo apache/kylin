@@ -87,7 +87,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
 
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
-        String jobId = optionsHelper.getOptionValue(OPTION_JOB_ID);
+        String kylinJobId = optionsHelper.getOptionValue(OPTION_JOB_ID);
         boolean includeCube = optionsHelper.hasOption(OPTION_INCLUDE_CUBE) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CUBE)) : true;
         boolean includeYarnLogs = optionsHelper.hasOption(OPTION_INCLUDE_YARN_LOGS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_YARN_LOGS)) : true;
         boolean includeClient = optionsHelper.hasOption(OPTION_INCLUDE_CLIENT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_CLIENT)) : true;
@@ -95,14 +95,14 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
 
         // dump job output
         logger.info("Start to dump job output");
-        ExecutablePO executablePO = executableDao.getJob(jobId);
-        addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + jobId);
-        addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + jobId);
-        for (ExecutablePO task : executablePO.getTasks()) {
-            addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + task.getUuid());
-            addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + task.getUuid());
+        ExecutablePO executablePO = executableDao.getJob(kylinJobId);
+        addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + kylinJobId);
+        addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + kylinJobId);
+        for (ExecutablePO kylinTask : executablePO.getTasks()) {
+            addRequired(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + kylinTask.getUuid());
+            addRequired(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + kylinTask.getUuid());
             if (includeYarnLogs) {
-                yarnLogsResources.add(task.getUuid());
+                yarnLogsResources.add(kylinTask.getUuid());
             }
         }
         extractResources(exportDir);
@@ -121,14 +121,14 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
             }
         }
 
-        // dump yarn logs
+        // dump mr job info
         if (includeYarnLogs) {
-            logger.info("Start to dump yarn job logs: " + jobId);
-            File yarnLogDir = new File(exportDir, "yarn");
-            FileUtils.forceMkdir(yarnLogDir);
+            logger.info("Start to dump mr job info: " + kylinJobId);
+            File yarnDir = new File(exportDir, "yarn");
+            FileUtils.forceMkdir(yarnDir);
             for (String stepId : yarnLogsResources) {
-                extractTaskCounter(stepId, new File(new File(yarnLogDir, stepId), "Counters"));
-                extractYarnLog(stepId, new File(yarnLogDir, stepId), true);
+                extractJobInfo(stepId, new File(yarnDir, stepId));
+                extractJobLog(stepId, new File(yarnDir, stepId), true);
             }
         }
 
@@ -171,7 +171,7 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         }
     }
 
-    private void extractYarnLog(String taskId, File destDir, boolean onlyFail) throws Exception {
+    private void extractJobLog(String taskId, File destDir, boolean onlyFail) throws Exception {
         final Map<String, String> jobInfo = executableDao.getJobOutput(taskId).getInfo();
         FileUtils.forceMkdir(destDir);
         if (jobInfo.containsKey(ExecutableConstants.MR_JOB_ID)) {
@@ -189,12 +189,13 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
         }
     }
 
-    private void extractTaskCounter(String taskId, File destDir) throws Exception {
+    private void extractJobInfo(String taskId, File destDir) throws Exception {
         final Map<String, String> jobInfo = executableDao.getJobOutput(taskId).getInfo();
         if (jobInfo.containsKey(ExecutableConstants.MR_JOB_ID)) {
             String jobId = jobInfo.get(ExecutableConstants.MR_JOB_ID);
             FileUtils.forceMkdir(destDir);
-            new JobTaskCounterExtractor(jobId).executeExtract(destDir);
+            String[] mrJobArgs = { "-destDir", destDir.getAbsolutePath(), "-compress", "false", "-submodule", "true" };
+            new MrJobInfoExtractor(jobId).execute(mrJobArgs);
         }
     }
 

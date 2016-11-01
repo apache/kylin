@@ -24,6 +24,8 @@ import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -42,16 +44,21 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JobTaskCounterExtractor extends AbstractInfoExtractor {
+public class MrJobInfoExtractor extends AbstractInfoExtractor {
     private String mrJobId;
-    private String yarnUrl;
-    private static final Logger logger = LoggerFactory.getLogger(JobTaskCounterExtractor.class);
+    private String jobUrlPrefix;
+
+    private static final Logger logger = LoggerFactory.getLogger(MrJobInfoExtractor.class);
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_INCLUDE_COUNTERS = OptionBuilder.withArgName("includeCounters").hasArg().isRequired(false).withDescription("Specify whether to include mr task counters to extract. Default false.").create("includeCounters");
 
     private final int HTTP_RETRY = 3;
 
-    public JobTaskCounterExtractor(String mrJobId) {
+    public MrJobInfoExtractor(String mrJobId) {
         this.mrJobId = mrJobId;
-        this.yarnUrl = getRestCheckUrl();
+        String historyServerUrl = getRestCheckUrl();
+        this.jobUrlPrefix = historyServerUrl + "/ws/v1/history/mapreduce/jobs/" + mrJobId;
     }
 
     private String getRestCheckUrl() {
@@ -60,12 +67,12 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor {
         Pattern pattern = Pattern.compile("(http://)(.*):.*");
         if (yarnStatusCheckUrl != null) {
             Matcher m = pattern.matcher(yarnStatusCheckUrl);
-            m.matches();
-            yarnUrl = m.group(1) + m.group(2) + ":19888";
-            return yarnUrl;
-        } else {
-            logger.info("kylin.job.yarn.app.rest.check.status.url" + " is not set read from hadoop configuration");
+            if (m.matches()) {
+                return m.group(1) + m.group(2) + ":19888";
+            }
         }
+        logger.info("kylin.job.yarn.app.rest.check.status.url" + " is not set read from hadoop configuration");
+
         Configuration conf = HadoopUtil.getCurrentConfiguration();
         String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);
         if (HAUtil.isHAEnabled(conf)) {
@@ -107,10 +114,48 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor {
         return response;
     }
 
-    protected void executeExtract(File exportDir) {
+    private void extractTaskCounter(String taskId, File exportDir, String taskUrl) throws IOException {
         try {
-            String taskUrl = yarnUrl + "/ws/v1/history/mapreduce/jobs/" + mrJobId + "/tasks/";
-            String tasksResponse = getHttpResponse(taskUrl);
+            String response = getHttpResponse(taskUrl + taskId + "/counters");
+            FileUtils.writeStringToFile(new File(exportDir, taskId + ".json"), response, Charset.defaultCharset());
+        } catch (Exception e) {
+            logger.warn("Failed to get task counters rest response" + e);
+        }
+    }
+
+    private void extractJobConf(File exportDir) throws IOException {
+        try {
+            String jobResponse = getHttpResponse(jobUrlPrefix);
+            JsonNode job = new ObjectMapper().readTree(jobResponse).path("job").get("state");
+            String state = job.textValue();
+            logger.debug(state);
+            if (!state.equals("SUCCEEDED")) {
+                String confUrl = jobUrlPrefix + "/conf/";
+                String response = getHttpResponse(confUrl);
+                FileUtils.writeStringToFile(new File(exportDir, "job_conf.json"), response, Charset.defaultCharset());
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to get job conf rest response.", e);
+        }
+    }
+
+    @Override
+    protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
+        try {
+            boolean includeTaskCounter = optionsHelper.hasOption(OPTION_INCLUDE_COUNTERS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_COUNTERS)) : false;
+            if (includeTaskCounter) {
+                extractTaskCounters(exportDir);
+            }
+            extractJobConf(exportDir);
+        } catch (Exception e) {
+            logger.warn("Failed to get mr tasks rest response.", e);
+        }
+    }
+
+    private void extractTaskCounters(File exportDir) {
+        try {
+            String tasksUrl = jobUrlPrefix + "/tasks/";
+            String tasksResponse = getHttpResponse(tasksUrl);
             JsonNode tasks = new ObjectMapper().readTree(tasksResponse).path("tasks").path("task");
 
             String maxReduceId = null;
@@ -132,24 +177,12 @@ public class JobTaskCounterExtractor extends AbstractInfoExtractor {
                     }
                 }
             }
-            extractTaskCounterFile(maxMapId, exportDir, taskUrl);
-            extractTaskCounterFile(maxReduceId, exportDir, taskUrl);
+            File counterDir = new File(exportDir, "counters");
+            FileUtils.forceMkdir(counterDir);
+            extractTaskCounter(maxMapId, counterDir, tasksUrl);
+            extractTaskCounter(maxReduceId, counterDir, tasksUrl);
         } catch (Exception e) {
             logger.warn("Failed to get mr tasks rest response" + e);
         }
-    }
-
-    private void extractTaskCounterFile(String taskId, File exportDir, String taskUrl) throws IOException {
-        try {
-            String response = getHttpResponse(taskUrl + taskId + "/counters");
-            FileUtils.writeStringToFile(new File(exportDir, taskId + ".json"), response, Charset.defaultCharset());
-        } catch (Exception e) {
-            logger.warn("Failed to get task counters rest response" + e);
-        }
-    }
-
-    @Override
-    protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
-        executeExtract(exportDir);
     }
 }
