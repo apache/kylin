@@ -173,8 +173,8 @@ public class FilterBaseTest extends LocalFileMetadataTestCase {
         return compareFilter;
     }
 
-    protected CompareTupleFilter buildCompareDynamicFilter(List<TblColRef> groups) {
-        CompareTupleFilter compareFilter = new CompareTupleFilter(FilterOperatorEnum.EQ);
+    protected CompareTupleFilter buildCompareDynamicFilter(List<TblColRef> groups, FilterOperatorEnum operator) {
+        CompareTupleFilter compareFilter = new CompareTupleFilter(operator);
         compareFilter.addChild(new ColumnTupleFilter(groups.get(0)));
         compareFilter.addChild(new DynamicTupleFilter("?0"));
         compareFilter.bindVariable("?0", "abc");

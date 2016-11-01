@@ -22,7 +22,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
@@ -38,63 +37,41 @@ import org.junit.Test;
  */
 public class FilterSerializeTest extends FilterBaseTest {
 
-    @Test
-    public void testSerialize01() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildEQCompareFilter(groups, 0);
-
+    private void assertFilterSerDe(TupleFilter filter) {
         byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
         TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
 
         compareFilter(filter, newFilter);
+    }
+
+    @Test
+    public void testSerialize01() {
+        assertFilterSerDe(buildEQCompareFilter(buildGroups(), 0));
     }
 
     @Test
     public void testSerialize02() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildEQCompareFilter(groups, 1);
-
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildEQCompareFilter(buildGroups(), 1));
     }
 
     @Test
     public void testSerialize03() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildAndFilter(groups);
-
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildAndFilter(buildGroups()));
     }
 
     @Test
     public void testSerialize04() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildOrFilter(groups);
-
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildOrFilter(buildGroups()));
     }
 
     @Test
     public void testSerialize05() {
         ColumnDesc column = new ColumnDesc();
-
         TblColRef colRef = column.getRef();
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
-        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildEQCompareFilter(groups, 0));
     }
 
     @Test
@@ -104,12 +81,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         TblColRef colRef = column.getRef();
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
-        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildEQCompareFilter(groups, 0));
     }
 
     @Test
@@ -123,12 +96,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         TblColRef colRef = column.getRef();
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
-        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildEQCompareFilter(groups, 0));
     }
 
     @Test
@@ -141,12 +110,8 @@ public class FilterSerializeTest extends FilterBaseTest {
         TblColRef colRef = column.getRef();
         List<TblColRef> groups = new ArrayList<TblColRef>();
         groups.add(colRef);
-        TupleFilter filter = buildEQCompareFilter(groups, 0);
 
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildEQCompareFilter(groups, 0));
     }
 
     @Test
@@ -159,10 +124,7 @@ public class FilterSerializeTest extends FilterBaseTest {
         logicFilter.addChild(orFilter);
         logicFilter.addChild(andFilter);
 
-        byte[] bytes = TupleFilterSerializer.serialize(logicFilter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(logicFilter, newFilter);
+        assertFilterSerDe(logicFilter);
     }
 
     @Test
@@ -175,60 +137,32 @@ public class FilterSerializeTest extends FilterBaseTest {
         logicFilter.addChild(orFilter);
         logicFilter.addChild(andFilter);
 
-        byte[] bytes = TupleFilterSerializer.serialize(logicFilter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(logicFilter, newFilter);
+        assertFilterSerDe(logicFilter);
     }
 
     @Test
     public void testSerialize12() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCaseFilter(groups);
-
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildCaseFilter(buildGroups()));
     }
 
     @Test
     public void testSerialize13() {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildCompareCaseFilter(groups, "0");
-
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildCompareCaseFilter(buildGroups(), "0"));
     }
 
     @Test
     public void testSerialize14() throws ParseException {
-        List<TblColRef> groups = buildGroups();
-        TupleFilter filter = buildINCompareFilter(groups.get(0));
-
-        long start = System.currentTimeMillis();
-        byte[] bytes = TupleFilterSerializer.serialize(filter, CS);
-        System.out.println("Size of serialized filter " + bytes.length + ", serialize time: " + (System.currentTimeMillis() - start));
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(filter, newFilter);
+        assertFilterSerDe(buildINCompareFilter(buildGroups().get(0)));
     }
 
     @Test
     public void testDynamic() {
-        final CompareTupleFilter compareDynamicFilter = buildCompareDynamicFilter(buildGroups());
-
-        byte[] bytes = TupleFilterSerializer.serialize(compareDynamicFilter, CS);
-        TupleFilter newFilter = TupleFilterSerializer.deserialize(bytes, CS);
-
-        bytes = TupleFilterSerializer.serialize(newFilter, CS);
-        TupleFilter newFilter2 = TupleFilterSerializer.deserialize(bytes, CS);
-
-        compareFilter(compareDynamicFilter, newFilter);
-        compareFilter(compareDynamicFilter, newFilter2);
-
+        assertFilterSerDe(buildCompareDynamicFilter(buildGroups(), FilterOperatorEnum.EQ));
+        assertFilterSerDe(buildCompareDynamicFilter(buildGroups(), FilterOperatorEnum.NEQ));
+        assertFilterSerDe(buildCompareDynamicFilter(buildGroups(), FilterOperatorEnum.GT));
+        assertFilterSerDe(buildCompareDynamicFilter(buildGroups(), FilterOperatorEnum.LT));
+        assertFilterSerDe(buildCompareDynamicFilter(buildGroups(), FilterOperatorEnum.GTE));
+        assertFilterSerDe(buildCompareDynamicFilter(buildGroups(), FilterOperatorEnum.LTE));
     }
 
 }
