@@ -72,6 +72,6 @@ cd -
 
 # Tear down stage
 ${KYLIN_HOME}/bin/metastore.sh clean --delete true
-${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.storage.hbase.util.StorageCleanupJob --delete true
+${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.StorageCleanupJob --delete true
 ${KYLIN_HOME}/bin/metastore.sh reset
 ${KYLIN_HOME}/bin/kylin.sh stop

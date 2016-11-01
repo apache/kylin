@@ -6,17 +6,17 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
-package org.apache.kylin.engine.mr.steps;
+package org.apache.kylin.tool;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +43,6 @@ import com.google.common.collect.Sets;
 
 /**
  */
-@Deprecated
 public class MetadataCleanupJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
@@ -55,7 +54,7 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
 
     private KylinConfig config = null;
 
-    public static final long TIME_THREADSHOLD = 1 * 3600 * 1000L; // 1 hour
+    public static final long TIME_THREADSHOLD = 2 * 24 * 3600 * 1000L; // 2 days
     public static final long TIME_THREADSHOLD_FOR_JOB = 30 * 24 * 3600 * 1000L; // 30 days
 
     /*
@@ -175,8 +174,6 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     }
 
     public static void main(String[] args) throws Exception {
-        logger.warn("org.apache.kylin.engine.mr.steps.MetadataCleanupJob is deprecated, use org.apache.kylin.tool.MetadataCleanupJob instead");
-
         int exitCode = ToolRunner.run(new MetadataCleanupJob(), args);
         System.exit(exitCode);
     }

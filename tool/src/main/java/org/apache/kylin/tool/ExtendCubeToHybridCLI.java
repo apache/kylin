@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ *  
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *  
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.storage.hbase.util;
+package org.apache.kylin.tool;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -60,9 +60,7 @@ import com.google.common.collect.Lists;
 
 /**
  * Created by dongli on 12/29/15.
- * 
  */
-@Deprecated
 public class ExtendCubeToHybridCLI {
     public static final String ACL_INFO_FAMILY = "i";
     private static final String CUBE_POSTFIX = "_old";
@@ -85,8 +83,6 @@ public class ExtendCubeToHybridCLI {
     }
 
     public static void main(String[] args) throws Exception {
-        logger.warn("org.apache.kylin.storage.hbase.util.ExtendCubeToHybridCLI is deprecated, use org.apache.kylin.tool.ExtendCubeToHybridCLI instead");
-
         if (args.length != 2 && args.length != 3) {
             System.out.println("Usage: ExtendCubeToHybridCLI project cube [partition_date]");
             return;
@@ -174,7 +170,7 @@ public class ExtendCubeToHybridCLI {
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
         newCubeDesc.setName(newCubeDescName);
         newCubeDesc.updateRandomUuid();
-        newCubeDesc.init(kylinConfig);
+        newCubeDesc.init(kylinConfig, metadataManager.getAllTablesMap());
         newCubeDesc.setPartitionDateEnd(partitionDate);
         newCubeDesc.calculateSignature();
         cubeDescManager.createCubeDesc(newCubeDesc);
