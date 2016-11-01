@@ -370,8 +370,8 @@
                      <div class="col-xs-12 col-sm-6">
                        <select class="form-control" chosen
                                ng-model="newDictionaries.builder"
+                               ng-options="item.value as item.name for item in cubeConfig.buildDictionaries"
                                required>
-                         <option value="org.apache.kylin.dict.GlobalDictionaryBuilder">Global Dictionary</option>
                          <option value="">-- Select a builder class--</option>
                        </select>
                      </div>

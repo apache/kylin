@@ -104,5 +104,8 @@ KylinApp.constant('cubeConfig', {
   rowKeyShardOptions:[
     true,false
   ],
-  statusNeedNofity:['ERROR', 'DISCARDED', 'SUCCEED']
+  statusNeedNofity:['ERROR', 'DISCARDED', 'SUCCEED'],
+  buildDictionaries:[
+    {name:"Global Dictionary", value:"org.apache.kylin.dict.GlobalDictionaryBuilder"}
+  ]
 });
