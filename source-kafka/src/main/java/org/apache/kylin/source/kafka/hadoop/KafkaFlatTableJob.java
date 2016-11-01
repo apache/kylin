@@ -18,6 +18,7 @@
 
 package org.apache.kylin.source.kafka.hadoop;
 
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
@@ -97,6 +98,8 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
                 throw new IllegalArgumentException("Invalid Kafka information, brokers " + brokers + ", topic " + topic);
             }
 
+            JobEngineConfig jobEngineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
+            job.getConfiguration().addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
             job.getConfiguration().set(CONFIG_KAFKA_BROKERS, brokers);
             job.getConfiguration().set(CONFIG_KAFKA_TOPIC, topic);
             job.getConfiguration().set(CONFIG_KAFKA_TIMEOUT, String.valueOf(kafkaConfig.getTimeout()));
