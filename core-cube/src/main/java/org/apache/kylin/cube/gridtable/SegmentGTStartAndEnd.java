@@ -24,10 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.dimension.AbstractDateDimEnc;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.ISegment;
 
 public class SegmentGTStartAndEnd {
     private ISegment segment;
@@ -67,7 +67,7 @@ public class SegmentGTStartAndEnd {
             value = DateFormat.formatToDateStr(ts);
         } else if (partitionColType.isTimeFamily()) {
             value = DateFormat.formatToTimeWithoutMilliStr(ts);
-        } else if (partitionColType.isStringFamily()) {
+        } else if (partitionColType.isStringFamily() || partitionColType.isIntegerFamily()) {//integer like 20160101
             String partitionDateFormat = segment.getModel().getPartitionDesc().getPartitionDateFormat();
             if (StringUtils.isEmpty(partitionDateFormat))
                 partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
