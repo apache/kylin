@@ -218,13 +218,9 @@ public class BuildCubeWithStream {
         Assert.assertTrue(segments.size() == succeedBuild);
 
         if (fastBuildMode == false) {
-            //empty build
-            ExecutableState result = buildSegment(cubeName, 0, Long.MAX_VALUE);
-            Assert.assertTrue(result == ExecutableState.DISCARDED);
-
             long endOffset = segments.get(segments.size() - 1).getSourceOffsetEnd();
             //merge
-            result = mergeSegment(cubeName, 0, endOffset);
+            ExecutableState result = mergeSegment(cubeName, 0, endOffset);
             Assert.assertTrue(result == ExecutableState.SUCCEED);
 
             segments = cubeManager.getCube(cubeName).getSegments();
