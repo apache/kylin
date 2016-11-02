@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -35,15 +34,14 @@ public class ClasspathScanner {
     public static void main(final String[] args) {
         ClasspathScanner scanner = new ClasspathScanner();
 
-        System.out.println("Finding " + Arrays.toString(args) + " in:");
-        System.out.println("----------------------------------------------------------------------------");
-        for (File f : scanner.rootResources) {
-            System.out.println("  - " + f.getAbsolutePath());
+        if (args.length == 0) {
+            for (File f : scanner.rootResources) {
+                System.out.println(f.getAbsolutePath());
+            }
+            System.exit(0);
         }
-        System.out.println("----------------------------------------------------------------------------");
-
-        if (args.length == 0)
-            return;
+        
+        final int[] hitCount = new int[1];
         
         scanner.scan("", new ResourceVisitor() {
             public void accept(File dir, String relativeFileName) {
@@ -56,14 +54,19 @@ public class ClasspathScanner {
 
             private void check(String base, String relativePath) {
                 boolean hit = false;
-                for (int i = 0; i < args.length && !hit; i++)
-                    hit = match(args[i], relativePath);
+                for (int i = 0; i < args.length && !hit; i++) {
+                    hit = relativePath.endsWith(args[i]) || match(args[i], relativePath);
+                }
 
                 if (hit) {
                     System.out.println(base + " - " + relativePath);
+                    hitCount[0]++;
                 }
             }
         });
+        
+        int exitCode = hitCount[0] > 0 ? 0 : 1;
+        System.exit(exitCode);
     }
 
     /**
