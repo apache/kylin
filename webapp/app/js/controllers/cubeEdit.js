@@ -293,11 +293,11 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     });
 
     var queryParam = {
-      cube_name: $routeParams.cubeName
+      cubeId: $routeParams.cubeName
     };
-    CubeService.list(queryParam, {},function(instance){
-      if (instance.length > 0) {
-        $scope.instance = instance[0];
+    CubeService.getCube(queryParam, {},function(instance){
+      if (instance) {
+        $scope.instance = instance;
         $scope.state.cubeInstance =angular.toJson($scope.instance,true);
 
       } else {
