@@ -53,6 +53,9 @@ public class CubeSegmentScanner implements IGTScanner {
 
     public CubeSegmentScanner(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
             Collection<FunctionDesc> metrics, TupleFilter originalfilter, StorageContext context, String gtStorage) {
+        
+        logger.info("Init CubeSegmentScanner for segment {}", cubeSeg.getName());
+        
         this.cuboid = cuboid;
         this.cubeSeg = cubeSeg;
 
@@ -61,7 +64,7 @@ public class CubeSegmentScanner implements IGTScanner {
         //is working on its own copy
         byte[] serialize = TupleFilterSerializer.serialize(originalfilter, StringCodeSystem.INSTANCE);
         TupleFilter filter = TupleFilterSerializer.deserialize(serialize, StringCodeSystem.INSTANCE);
-        
+
         // translate FunctionTupleFilter to IN clause
         ITupleFilterTransformer translator = new BuiltInFunctionTransformer(cubeSeg.getDimensionEncodingMap());
         filter = translator.transform(filter);
