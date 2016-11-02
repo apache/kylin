@@ -56,11 +56,11 @@
                           </td>
                           <td ng-if="state.mode=='edit'">
                               <!--Edit Button -->
-                              <button class="btn btn-xs btn-info" ng-click="addNewMeasure(measure, $index)">
+                              <button class="btn btn-xs btn-info" ng-click="addNewMeasure(measure, $index)" ng-disabled="instance.status=='READY'">
                                   <i class="fa fa-pencil"></i>
                               </button>
                               <!--Remove Button -->
-                              <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.measures, measure)">
+                              <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.measures, measure)" ng-disabled="instance.status=='READY'">
                                   <i class="fa fa-trash-o"></i>
                               </button>
                           </td>
@@ -72,7 +72,7 @@
 
   <!--Add Measures Button-->
   <div class="form-group">
-      <button class="btn btn-sm btn-info" ng-click="addNewMeasure()" ng-show="state.mode=='edit' && !newMeasure">
+      <button class="btn btn-sm btn-info" ng-click="addNewMeasure()" ng-show="state.mode=='edit' && !newMeasure" ng-disabled="instance.status=='READY'">
           <i class="fa fa-plus"></i> Measure
       </button>
   </div>
