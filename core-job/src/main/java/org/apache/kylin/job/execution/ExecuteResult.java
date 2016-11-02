@@ -49,10 +49,6 @@ public final class ExecuteResult {
         return state == State.SUCCEED;
     }
 
-    public boolean discarded() {
-        return state == State.DISCARDED;
-    }
-
     public String output() {
         return output;
     }
