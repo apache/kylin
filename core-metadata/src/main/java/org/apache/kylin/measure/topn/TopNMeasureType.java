@@ -18,6 +18,7 @@
 
 package org.apache.kylin.measure.topn;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -142,8 +143,12 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 final ByteArray key = new ByteArray(keyLength);
                 int offset = 0;
                 for (int i = 0; i < dimensionEncodings.length; i++) {
-                    byte[] valueBytes = Bytes.toBytes(values[i + 1]);
-                    dimensionEncodings[i].encode(valueBytes, valueBytes.length, key.array(), offset);
+                    if (values[i + 1] == null) {
+                        Arrays.fill(key.array(), offset, offset + dimensionEncodings[i].getLengthOfEncoding(), DimensionEncoding.NULL);
+                    } else {
+                        byte[] valueBytes = Bytes.toBytes(values[i + 1]);
+                        dimensionEncodings[i].encode(valueBytes, valueBytes.length, key.array(), offset);
+                    }
                     offset += dimensionEncodings[i].getLengthOfEncoding();
                 }
 
