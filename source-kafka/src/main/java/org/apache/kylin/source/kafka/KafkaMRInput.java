@@ -208,7 +208,7 @@ public class KafkaMRInput implements IMRInput {
         }
     }
 
-    static class GarbageCollectionStep extends AbstractExecutable {
+    public static class GarbageCollectionStep extends AbstractExecutable {
         private static final Logger logger = LoggerFactory.getLogger(GarbageCollectionStep.class);
 
         @Override
