@@ -213,7 +213,6 @@ public class KafkaMRInput implements IMRInput {
 
         @Override
         protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
-            StringBuffer output = new StringBuffer();
             try {
                 rmdirOnHDFS(getDataPath());
             } catch (IOException e) {
@@ -221,7 +220,7 @@ public class KafkaMRInput implements IMRInput {
                 return new ExecuteResult(ExecuteResult.State.ERROR, e.getMessage());
             }
 
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
+            return new ExecuteResult(ExecuteResult.State.SUCCEED, "HDFS path " + getDataPath() + " is dropped.\n");
         }
 
         private void rmdirOnHDFS(String path) throws IOException {
