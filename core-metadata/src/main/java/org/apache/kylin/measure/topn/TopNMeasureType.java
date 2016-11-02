@@ -39,8 +39,8 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
+import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
@@ -307,15 +307,16 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     @Override
     public void adjustSqlDigest(List<MeasureDesc> measureDescs, SQLDigest sqlDigest) {
+        if (sqlDigest.aggregations.size() > 1) {
+            return;
+        }
+
         for (MeasureDesc measureDesc : measureDescs) {
             FunctionDesc topnFunc = measureDesc.getFunction();
             List<TblColRef> topnLiteralCol = getTopNLiteralColumn(topnFunc);
 
-            if (sqlDigest.groupbyColumns.containsAll(topnLiteralCol) == false)
-                return;
-
-            if (sqlDigest.aggregations.size() > 1) {
-                return;
+            if (sqlDigest.groupbyColumns.containsAll(topnLiteralCol) == false) {
+                continue;
             }
 
             if (sqlDigest.aggregations.size() > 0) {
@@ -324,12 +325,18 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     logger.warn("When query with topN, only SUM/Count function is allowed.");
                     return;
                 }
+
+                if (isTopNCompatibleSum(measureDesc.getFunction(), origFunc) == false) {
+                    continue;
+                }
+
                 logger.info("Rewrite function " + origFunc + " to " + topnFunc);
             }
 
             sqlDigest.aggregations = Lists.newArrayList(topnFunc);
             sqlDigest.groupbyColumns.removeAll(topnLiteralCol);
             sqlDigest.metricColumns.addAll(topnLiteralCol);
+            break;
         }
     }
 
