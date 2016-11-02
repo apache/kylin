@@ -112,7 +112,7 @@
                         <b>Description</b>
                     </label>
                     <div class="col-xs-12 col-sm-6">
-                        <textarea ng-if="state.mode=='edit'" class="form-control box-default"
+                        <textarea ng-if="state.mode=='edit'" class="form-control box-default"  ng-disabled="instance.status=='READY'"
                             name="comment" id="comment" ng-model="cubeMetaFrame.description"></textarea>
                         <span ng-if="state.mode=='view'">{{cubeMetaFrame.description}}</span>
                     </div>

@@ -23,7 +23,7 @@
         <div class="row">
             <div class="col-xs-6" ng-if="state.mode=='edit'">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" ng-disabled="instance.status=='READY'">
                         <i class="fa fa-plus"></i> Add Dimension <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu">
@@ -32,8 +32,8 @@
                         <li><a ng-click="addDim('derived')">Derived</a></li>
                     </ul>
                 </div>
-                <button type="button" class="btn btn-default" ng-disabled="!metaModel.model.fact_table.length"
-                        ng-click="openAutoGenModal()">
+                <button type="button" class="btn btn-default" ng-disabled="!metaModel.model.fact_table.length||instance.status=='READY'"
+                        ng-click="openAutoGenModal()" >
                     <i class="fa fa-building-o"></i> Auto Generator
                 </button>
             </div>
@@ -94,11 +94,11 @@
                     </td>
                     <td ng-if="state.mode=='edit'">
                         <!--edit button-->
-                        <button class="btn btn-xs btn-info"
+                        <button class="btn btn-xs btn-info" ng-disabled="instance.status=='READY'"
                                 ng-click="editDim(dimension)"><i class="fa fa-pencil"></i>
                         </button>
                         <!-- remove button-->
-                        <button class="btn btn-xs btn-danger"
+                        <button class="btn btn-xs btn-danger" ng-disabled="instance.status=='READY'"
                                 ng-click="removeDim(dimension)"><i class="fa fa-trash-o"></i>
                         </button>
                     </td>
