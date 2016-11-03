@@ -89,6 +89,11 @@ public class Cuboid implements Comparable<Cuboid> {
     }
 
     public static boolean isValid(CubeDesc cube, long cuboidID) {
+        //base cuboid is always valid
+        if (cuboidID == getBaseCuboidId(agg.getCubeDesc())) {
+            return true;
+        }
+        
         for (AggregationGroup agg : cube.getAggregationGroups()) {
             if (isValid(agg, cuboidID)) {
                 return true;
