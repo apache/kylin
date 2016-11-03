@@ -89,16 +89,11 @@ public class Cuboid implements Comparable<Cuboid> {
     }
 
     public static boolean isValid(CubeDesc cube, long cuboidID) {
-        if (cuboidID == getBaseCuboidId(cube)) {
-            return true;
-        }
-
         for (AggregationGroup agg : cube.getAggregationGroups()) {
             if (isValid(agg, cuboidID)) {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -231,6 +226,11 @@ public class Cuboid implements Comparable<Cuboid> {
         if ((cuboidID & mandatoryColumnMask) != mandatoryColumnMask) {
             return false;
         } else {
+            //base cuboid is always valid
+            if (cuboidID == getBaseCuboidId(agg.getCubeDesc())) {
+                return true;
+            }
+
             //cuboid with only mandatory columns maybe valid
             return agg.isMandatoryOnlyValid() || (cuboidID & ~mandatoryColumnMask) != 0;
         }

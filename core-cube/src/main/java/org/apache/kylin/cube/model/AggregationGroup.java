@@ -281,4 +281,8 @@ public class AggregationGroup {
     public boolean isMandatoryOnlyValid() {
         return isMandatoryOnlyValid;
     }
+
+    public CubeDesc getCubeDesc() {
+        return cubeDesc;
+    }
 }
