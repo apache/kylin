@@ -30,4 +30,4 @@ do
    :
    result=$i
 done
-echo $result
+echo "$result"
