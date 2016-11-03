@@ -118,7 +118,13 @@ public class CubeCodeSystem implements IGTCodeSystem {
             if (dictEnc.getRoundingFlag() != roundingFlag) {
                 serializer = dictEnc.copy(roundingFlag).asDataTypeSerializer();
             }
-            serializer.serialize(value, buf);
+            try {
+                serializer.serialize(value, buf);
+            } catch (IllegalArgumentException ex) {
+                IllegalArgumentException rewordEx = new IllegalArgumentException("Column " + col + " value '" + value + "' met dictionary error: " + ex.getMessage());
+                rewordEx.setStackTrace(ex.getStackTrace());
+                throw rewordEx;
+            }
         } else {
             if (value instanceof String) {
                 // for dimensions; measures are converted by MeasureIngestor before reaching this point
