@@ -51,6 +51,7 @@ public class SQLDigest {
     public List<JoinDesc> joinDescs;
     public Set<TblColRef> allColumns;
     public List<TblColRef> groupbyColumns;
+    public Set<TblColRef> subqueryJoinParticipants;
     public Set<TblColRef> filterColumns;
     public Set<TblColRef> metricColumns;
     public List<FunctionDesc> aggregations; // storage level measure type, on top of which various sql aggr function may apply
@@ -60,13 +61,14 @@ public class SQLDigest {
     public boolean isRawQuery;
 
     public SQLDigest(String factTable, TupleFilter filter, List<JoinDesc> joinDescs, Set<TblColRef> allColumns, //
-            List<TblColRef> groupbyColumns, Set<TblColRef> filterColumns, Set<TblColRef> metricColumns, //
+            List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, Set<TblColRef> filterColumns, Set<TblColRef> metricColumns, //
             List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, List<TblColRef> sortColumns, List<OrderEnum> sortOrders) {
         this.factTable = factTable;
         this.filter = filter;
         this.joinDescs = joinDescs;
         this.allColumns = allColumns;
         this.groupbyColumns = groupbyColumns;
+        this.subqueryJoinParticipants = subqueryJoinParticipants;
         this.filterColumns = filterColumns;
         this.metricColumns = metricColumns;
         this.aggregations = aggregations;
@@ -80,6 +82,15 @@ public class SQLDigest {
         return this.groupbyColumns.isEmpty() && // select a group by a -> not raw
                 this.aggregations.isEmpty(); // has aggr -> not raw
         //the reason to choose aggregations rather than metricColumns is because the former is set earlier at implOLAP
+    }
+
+    public void includeSubqueryJoinParticipants() {
+        if (this.isRawQuery) {
+            this.allColumns.addAll(this.subqueryJoinParticipants);
+        } else {
+            this.groupbyColumns.addAll(this.subqueryJoinParticipants);
+            this.allColumns.addAll(this.subqueryJoinParticipants);
+        }
     }
 
     @Override

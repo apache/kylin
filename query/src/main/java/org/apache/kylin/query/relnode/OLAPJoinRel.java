@@ -48,9 +48,9 @@ import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
-import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
@@ -167,8 +167,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
             for (Map.Entry<TblColRef, TblColRef> columnPair : joinCol.entrySet()) {
                 TblColRef fromCol = (rightHasSubquery ? columnPair.getKey() : columnPair.getValue());
-                this.context.groupByColumns.add(fromCol);
-                this.context.allColumns.add(fromCol);
+                this.context.subqueryJoinParticipants.add(fromCol);
             }
             joinCol.clear();
         }

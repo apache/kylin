@@ -120,6 +120,7 @@ public class OLAPContext {
 
     public Set<TblColRef> allColumns = new HashSet<>();
     public List<TblColRef> groupByColumns = new ArrayList<>();
+    public Set<TblColRef> subqueryJoinParticipants = new HashSet<TblColRef>();//subqueryJoinParticipants will be added to groupByColumns(only when other group by co-exists) and allColumns
     public Set<TblColRef> metricsColumns = new HashSet<>();
     public List<FunctionDesc> aggregations = new ArrayList<>(); // storage level measure type, on top of which various sql aggr function may apply
     public List<SQLCall> aggrSqlCalls = new ArrayList<>(); // sql level aggregation function call
@@ -147,7 +148,7 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortColumns, sortOrders);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, subqueryJoinParticipants, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortColumns, sortOrders);
         return sqlDigest;
     }
 
@@ -176,10 +177,8 @@ public class OLAPContext {
             sortOrders.add(order);
         }
     }
-    
+
     // ============================================================================
-    
-    
 
     public interface IAccessController {
         /*
