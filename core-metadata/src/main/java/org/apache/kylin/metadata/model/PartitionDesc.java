@@ -77,7 +77,7 @@ public class PartitionDesc {
             return false;
         
         DataType type = partitionDateColumnRef.getType();
-        return type.isInt();
+        return (type.isInt() || type.isBigInt()) && DateFormat.isDatePattern(partitionDateFormat);
     }
 
     public boolean partitionColumnIsTimeMillis() {
@@ -85,7 +85,7 @@ public class PartitionDesc {
             return false;
         
         DataType type = partitionDateColumnRef.getType();
-        return type.isBigInt();
+        return type.isBigInt() && !DateFormat.isDatePattern(partitionDateFormat);
     }
 
     public boolean isPartitioned() {

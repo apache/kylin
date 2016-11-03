@@ -138,4 +138,8 @@ public class DateFormat {
         }
         return false;
     }
+
+    public static boolean isDatePattern(String ptn) {
+        return COMPACT_DATE_PATTERN.equals(ptn) || DEFAULT_DATE_PATTERN.equals(ptn);
+    }
 }
