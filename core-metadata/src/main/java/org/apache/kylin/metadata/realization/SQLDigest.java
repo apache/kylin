@@ -39,6 +39,7 @@ public class SQLDigest {
     public Collection<JoinDesc> joinDescs;
     public Collection<TblColRef> allColumns;
     public Collection<TblColRef> groupbyColumns;
+    public Collection<TblColRef> subqueryJoinParticipants;
     public Collection<TblColRef> filterColumns;
     public Collection<TblColRef> metricColumns;
     public Collection<FunctionDesc> aggregations;
@@ -48,12 +49,13 @@ public class SQLDigest {
 
     //initialized when org.apache.kylin.query.routing.QueryRouter.selectRealization()
     public SQLDigest(String factTable, TupleFilter filter, Collection<JoinDesc> joinDescs, Collection<TblColRef> allColumns, //
-            Collection<TblColRef> groupbyColumns, Collection<TblColRef> filterColumns, Collection<TblColRef> aggregatedColumns, Collection<FunctionDesc> aggregateFunnc, Collection<MeasureDesc> sortMeasures, Collection<OrderEnum> sortOrders) {
+            Collection<TblColRef> groupbyColumns, Collection<TblColRef> subqueryJoinParticipants, Collection<TblColRef> filterColumns, Collection<TblColRef> aggregatedColumns, Collection<FunctionDesc> aggregateFunnc, Collection<MeasureDesc> sortMeasures, Collection<OrderEnum> sortOrders) {
         this.factTable = factTable;
         this.filter = filter;
         this.joinDescs = joinDescs;
         this.allColumns = allColumns;
         this.groupbyColumns = groupbyColumns;
+        this.subqueryJoinParticipants = subqueryJoinParticipants;
         this.filterColumns = filterColumns;
         this.metricColumns = aggregatedColumns;
         this.aggregations = aggregateFunnc;

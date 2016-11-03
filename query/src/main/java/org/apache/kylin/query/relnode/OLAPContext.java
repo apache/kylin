@@ -118,6 +118,7 @@ public class OLAPContext {
 
     public Collection<TblColRef> allColumns = new HashSet<TblColRef>();
     public Collection<TblColRef> groupByColumns = new ArrayList<TblColRef>();
+    public Collection<TblColRef> subqueryJoinParticipants = new HashSet<TblColRef>();//subqueryJoinParticipants will be added to groupByColumns(only when other group by co-exists) and allColumns
     public Collection<TblColRef> metricsColumns = new HashSet<TblColRef>();
     public List<FunctionDesc> aggregations = new ArrayList<FunctionDesc>();
     public Collection<TblColRef> filterColumns = new HashSet<TblColRef>();
@@ -144,7 +145,7 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, filterColumns, metricsColumns, aggregations, sortMeasures, sortOrders);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, subqueryJoinParticipants, filterColumns, metricsColumns, aggregations, sortMeasures, sortOrders);
         return sqlDigest;
     }
 
