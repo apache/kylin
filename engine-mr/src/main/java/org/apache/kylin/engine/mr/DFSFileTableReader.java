@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -178,12 +179,7 @@ public class DFSFileTableReader implements TableReader {
     @Override
     public void close() {
         for (RowReader reader : readerList) {
-            try {
-                if (reader != null)
-                    reader.close();
-            } catch (IOException e) {
-                logger.warn("close file failed:", e);
-            }
+            IOUtils.closeQuietly(reader);
         }
     }
 

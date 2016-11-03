@@ -89,7 +89,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             }
 
             if (reducerCount > 255) {
-                throw new IOException("The max reducer number for FactDistinctColumnsJob is 255, please decrease the 'kylin.job.global.dictionary.column.reducer.count' ");
+                throw new IllegalArgumentException("The max reducer number for FactDistinctColumnsJob is 255, but now it is " + reducerCount + ", decrease 'kylin.job.uhc.reducer.count'");
             }
 
 
