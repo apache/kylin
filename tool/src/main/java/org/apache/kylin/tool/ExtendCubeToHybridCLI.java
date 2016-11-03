@@ -170,7 +170,7 @@ public class ExtendCubeToHybridCLI {
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
         newCubeDesc.setName(newCubeDescName);
         newCubeDesc.updateRandomUuid();
-        newCubeDesc.init(kylinConfig, metadataManager.getAllTablesMap());
+        newCubeDesc.init(kylinConfig);
         newCubeDesc.setPartitionDateEnd(partitionDate);
         newCubeDesc.calculateSignature();
         cubeDescManager.createCubeDesc(newCubeDesc);
