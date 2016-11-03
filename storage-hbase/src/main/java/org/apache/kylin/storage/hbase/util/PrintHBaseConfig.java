@@ -33,7 +33,7 @@ public class PrintHBaseConfig {
         MyConfig config = new MyConfig(HBaseConfiguration.create());
         
         if (args.length == 0) {
-            for (Map.Entry<Object,Object> item: config.getProps().entrySet()) {
+            for (Map.Entry<Object, Object> item : config.getProps().entrySet()) {
                 System.out.println(item.getKey() + "=" + item.getValue());
             }
             System.exit(0);
