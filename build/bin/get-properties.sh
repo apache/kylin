@@ -24,4 +24,4 @@ then
 fi
 
 result=`cat ${KYLIN_HOME}/conf/kylin.properties | grep -w "^$1" | grep -v '^#' | awk -F= '{ n = index($0,"="); print substr($0,n+1)}' | cut -c 1- |tail -1`
-echo $result
+echo "$result"
