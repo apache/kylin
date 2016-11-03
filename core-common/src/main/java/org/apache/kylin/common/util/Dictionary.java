@@ -159,7 +159,7 @@ abstract public class Dictionary<T> implements Serializable {
         else {
             int id = getIdFromValueBytesImpl(value, offset, len, roundingFlag);
             if (id < 0)
-                throw new IllegalArgumentException("Value not exists!");
+                throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
             return id;
         }
     }
