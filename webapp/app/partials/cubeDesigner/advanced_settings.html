@@ -100,7 +100,7 @@
                     </td>
                     <td class="col-xs-9">
                       <table class="table">
-                        <tr class="row" ng-repeat="hierarchyDims in aggregation_group.select_rule.hierarchy_dims track by $index">
+                        <tr class="row" ng-repeat="hierarchyDims in aggregation_group.select_rule.hierarchy_dims">
                           <td class="col-xs-10">
                             <ui-select
                               close-on-select="false"
@@ -140,7 +140,7 @@
                     </td>
                     <td class="col-xs-9">
                       <table class="table">
-                        <tr class="row" ng-repeat="jointDims in aggregation_group.select_rule.joint_dims track by $index">
+                        <tr class="row" ng-repeat="jointDims in aggregation_group.select_rule.joint_dims">
                           <td class="col-xs-10">
                             <!-- Dimensions -->
                             <ui-select
