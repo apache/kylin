@@ -70,6 +70,15 @@ public class SQLDigest {
         //the reason to choose aggregations rather than metricColumns is because the former is set earlier at implOLAP
     }
 
+    public void includeSubqueryJoinParticipants() {
+        if (this.isRawQuery) {
+            this.allColumns.addAll(this.subqueryJoinParticipants);
+        } else {
+            this.groupbyColumns.addAll(this.subqueryJoinParticipants);
+            this.allColumns.addAll(this.subqueryJoinParticipants);
+        }
+    }
+
     @Override
     public String toString() {
         return "fact table " + this.factTable + "," + //

@@ -75,12 +75,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
 
         //deal with participant columns in subquery join
-        if (sqlDigest.isRawQuery) {
-            sqlDigest.allColumns.addAll(sqlDigest.subqueryJoinParticipants);
-        } else {
-            sqlDigest.groupbyColumns.addAll(sqlDigest.subqueryJoinParticipants);
-            sqlDigest.allColumns.addAll(sqlDigest.subqueryJoinParticipants);
-        }
+        sqlDigest.includeSubqueryJoinParticipants();
 
         //cope with queries with no aggregations
         RawQueryLastHacker.hackNoAggregations(sqlDigest, cubeDesc);
