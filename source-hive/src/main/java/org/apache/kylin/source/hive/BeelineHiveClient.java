@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.apache.kylin.common.util.DBUtils;
 
 public class BeelineHiveClient implements IHiveClient {
 
@@ -86,6 +87,7 @@ public class BeelineHiveClient implements IHiveClient {
         while (schemas.next()) {
             ret.add(String.valueOf(schemas.getObject(1)));
         }
+        DBUtils.closeQuietly(schemas);
         return ret;
     }
 
@@ -95,6 +97,7 @@ public class BeelineHiveClient implements IHiveClient {
         while (tables.next()) {
             ret.add(String.valueOf(tables.getObject(3)));
         }
+        DBUtils.closeQuietly(tables);
         return ret;
     }
 
@@ -118,11 +121,11 @@ public class BeelineHiveClient implements IHiveClient {
             allColumns.add(new HiveTableMeta.HiveTableColumnMeta(columns.getString(4), columns.getString(6), columns.getString(12)));
         }
         builder.setAllColumns(allColumns);
-
+        DBUtils.closeQuietly(columns);
         stmt.execute("use " + database);
         ResultSet resultSet = stmt.executeQuery("describe formatted " + tableName);
         extractHiveTableMeta(resultSet, builder);
-
+        DBUtils.closeQuietly(resultSet);
         return builder.createHiveTableMeta();
     }
 
@@ -187,20 +190,8 @@ public class BeelineHiveClient implements IHiveClient {
     }
 
     public void close() {
-        if (this.stmt != null) {
-            try {
-                this.stmt.close();
-            } catch (SQLException e) {
-                //
-            }
-        }
-        if (this.cnct != null) {
-            try {
-                this.cnct.close();
-            } catch (SQLException e) {
-                //
-            }
-        }
+        DBUtils.closeQuietly(stmt);
+        DBUtils.closeQuietly(cnct);
     }
 
     public static void main(String[] args) throws SQLException {
