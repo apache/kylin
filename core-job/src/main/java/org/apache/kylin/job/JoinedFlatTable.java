@@ -39,7 +39,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  *
@@ -47,8 +46,8 @@ import com.google.common.collect.Sets;
 
 public class JoinedFlatTable {
 
-    public static String getTableDir(IJoinedFlatTableDesc intermediateTableDesc, String storageDfsDir) {
-        return storageDfsDir + "/" + intermediateTableDesc.getTableName();
+    public static String getTableDir(IJoinedFlatTableDesc flatDesc, String storageDfsDir) {
+        return storageDfsDir + "/" + flatDesc.getTableName();
     }
 
     public static String generateHiveSetStatements(JobEngineConfig engineConfig) {
@@ -101,16 +100,16 @@ public class JoinedFlatTable {
         return ddl.toString();
     }
 
-    public static String generateDropTableStatement(IJoinedFlatTableDesc intermediateTableDesc) {
+    public static String generateDropTableStatement(IJoinedFlatTableDesc flatDesc) {
         StringBuilder ddl = new StringBuilder();
-        ddl.append("DROP TABLE IF EXISTS " + intermediateTableDesc.getTableName() + ";").append("\n");
+        ddl.append("DROP TABLE IF EXISTS " + flatDesc.getTableName() + ";").append("\n");
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(IJoinedFlatTableDesc intermediateTableDesc, JobEngineConfig engineConfig, boolean redistribute) {
+    public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc, JobEngineConfig engineConfig, boolean redistribute) {
         StringBuilder sql = new StringBuilder();
         sql.append(generateHiveSetStatements(engineConfig));
-        sql.append("INSERT OVERWRITE TABLE " + intermediateTableDesc.getTableName() + " " + generateSelectDataStatement(intermediateTableDesc, redistribute) + ";").append("\n");
+        sql.append("INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc, redistribute) + ";").append("\n");
         return sql.toString();
     }
 
@@ -222,19 +221,10 @@ public class JoinedFlatTable {
     }
 
     private static List<JoinDesc> getUsedJoinsSet(IJoinedFlatTableDesc flatDesc) {
-        Set<String> usedTableIdentities = Sets.newHashSet();
-        for (TblColRef col : flatDesc.getAllColumns()) {
-            usedTableIdentities.add(col.getTable());
-        }
-        
         List<JoinDesc> result = Lists.newArrayList();
         for (LookupDesc lookup : flatDesc.getDataModel().getLookups()) {
-            String table = lookup.getTableDesc().getIdentity();
-            if (usedTableIdentities.contains(table)) {
-                result.add(lookup.getJoin());
-            }
+            result.add(lookup.getJoin());
         }
-        
         return result;
     }
 
@@ -287,20 +277,20 @@ public class JoinedFlatTable {
         return hiveDataType.toLowerCase();
     }
 
-    public static String generateSelectRowCountStatement(IJoinedFlatTableDesc intermediateTableDesc, String outputDir) {
+    public static String generateSelectRowCountStatement(IJoinedFlatTableDesc flatDesc, String outputDir) {
         StringBuilder sql = new StringBuilder();
         sql.append("set hive.exec.compress.output=false;\n");
-        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + intermediateTableDesc.getTableName() + ";\n");
+        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + flatDesc.getTableName() + ";\n");
         return sql.toString();
     }
 
-    public static String generateRedistributeFlatTableStatement(IJoinedFlatTableDesc intermediateTableDesc) {
-        final String tableName = intermediateTableDesc.getTableName();
+    public static String generateRedistributeFlatTableStatement(IJoinedFlatTableDesc flatDesc) {
+        final String tableName = flatDesc.getTableName();
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT OVERWRITE TABLE " + tableName + " SELECT * FROM " + tableName);
 
         String redistributeCol = null;
-        TblColRef distDcol = intermediateTableDesc.getDistributedBy();
+        TblColRef distDcol = flatDesc.getDistributedBy();
         if (distDcol != null) {
             redistributeCol = colName(distDcol.getCanonicalName());
         }

@@ -273,7 +273,7 @@ public class HiveMRInput implements IMRInput {
             FileSystem fs = FileSystem.get(file.toUri(), HadoopUtil.getCurrentConfiguration());
             InputStream in = fs.open(file);
             try {
-                String content = IOUtils.toString(in);
+                String content = IOUtils.toString(in, "UTF-8");
                 return Long.valueOf(content.trim()); // strip the '\n' character
 
             } finally {
@@ -407,34 +407,12 @@ public class HiveMRInput implements IMRInput {
             return output.toString();
         }
 
-        private void mkdirOnHDFS(String path) throws IOException {
-            Path externalDataPath = new Path(path);
-            FileSystem fs = FileSystem.get(externalDataPath.toUri(), HadoopUtil.getCurrentConfiguration());
-            if (!fs.exists(externalDataPath)) {
-                fs.mkdirs(externalDataPath);
-            }
-        }
-
         private void rmdirOnHDFS(String path) throws IOException {
             Path externalDataPath = new Path(path);
             FileSystem fs = FileSystem.get(externalDataPath.toUri(), HadoopUtil.getCurrentConfiguration());
             if (fs.exists(externalDataPath)) {
                 fs.delete(externalDataPath, true);
             }
-        }
-
-        private String cleanUpHiveViewIntermediateTable(KylinConfig config) throws IOException {
-            StringBuffer output = new StringBuffer();
-            final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-            hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
-            if (getHiveViewIntermediateTableIdentities() != null && !getHiveViewIntermediateTableIdentities().isEmpty()) {
-                for (String hiveTableName : getHiveViewIntermediateTableIdentities().split(";")) {
-                    hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTableName + ";");
-                }
-            }
-            config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
-            output.append("hive view intermediate tables: " + getHiveViewIntermediateTableIdentities() + " is dropped. \n");
-            return output.toString();
         }
 
         public void setIntermediateTableIdentity(String tableIdentity) {
@@ -457,9 +435,6 @@ public class HiveMRInput implements IMRInput {
             setParam("oldHiveViewIntermediateTables", tableIdentities);
         }
 
-        private String getHiveViewIntermediateTableIdentities() {
-            return getParam("oldHiveViewIntermediateTables");
-        }
     }
 
 }
