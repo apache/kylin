@@ -204,7 +204,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             StringUtil.appendWithSeparator(kylinDependency, filteredHive);
         } else {
 
-            logger.info("No hive dependency jars set in the environment, will find them from jvm:");
+            logger.info("No hive dependency jars set in the environment, will find them from classpath:");
 
             try {
                 String hiveExecJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.hadoop.hive.ql.Driver"));
@@ -227,17 +227,17 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         // for kafka dependencies
         if (kylinKafkaDependency != null) {
             kylinKafkaDependency = kylinKafkaDependency.replace(":", ",");
-            logger.info("Kafka Dependencies Before Filtered: " + kylinKafkaDependency);
+            logger.info("Kafka Dependencies: " + kylinKafkaDependency);
             StringUtil.appendWithSeparator(kylinDependency, kylinKafkaDependency);
         } else {
-            logger.info("No Kafka dependency jars set in the environment, will find them from jvm:");
+            logger.info("No Kafka dependency jar set in the environment, will find them from classpath:");
             try {
                 String kafkaClientJarPath = ClassUtil.findContainingJar(Class.forName("org.apache.kafka.clients.consumer.KafkaConsumer"));
                 StringUtil.appendWithSeparator(kylinDependency, kafkaClientJarPath);
                 logger.info("kafka jar file: " + kafkaClientJarPath);
 
             } catch (ClassNotFoundException e) {
-                logger.error("Cannot found kafka dependency jars: " + e);
+                logger.warn("Not found kafka client jar from classpath, it is optional for normal build: " + e);
             }
         }
 

@@ -107,6 +107,14 @@ public class KafkaSource implements ISource {
             totalEndOffset += v;
         }
 
+        if (totalStartOffset > totalEndOffset) {
+            throw new IllegalArgumentException("Illegal offset: start: " + totalStartOffset + ", end: " + totalEndOffset);
+        }
+
+        if (totalStartOffset == totalEndOffset) {
+            throw new IllegalArgumentException("No new message comes, startOffset = endOffset:" + totalStartOffset);
+        }
+
         result.setStartOffset(totalStartOffset);
         result.setEndOffset(totalEndOffset);
 
