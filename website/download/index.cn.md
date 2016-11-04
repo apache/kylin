@@ -18,10 +18,11 @@ title: 下载
 
 ## 1.6.0-SNAPSHOT (scalable streaming)
 * 在这个版本中Kylin对以Kafka做数据源有了更好的支持，请参考博客[New NRT Streaming in Apache Kylin](/blog/2016/10/18/new-nrt-streaming/).
-* 二进制包下载 (2016-10-26更新):
-	* for HBase 0.98 - [apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz.md5)\]
-	* for HBase 1.x - [apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz.md5)\]
-	* for CDH 5.7/5.8 - [apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz.md5)\]
+* [Release Notes (draft)](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12316121&version=12333366)
+* 二进制包下载 (2016-11-04更新):
+	* for HBase 0.98 - [apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz.md5)\]
+	* for HBase 1.x - [apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz.md5)\]
+	* for CDH 5.7/5.8 - [apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz.md5)\]
 
 
 ## 以前的版本  
