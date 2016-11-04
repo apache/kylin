@@ -55,7 +55,7 @@ public class HadoopStatusGetter {
     private final String mrJobId;
     private final String yarnUrl;
 
-    protected static final Logger logger = LoggerFactory.getLogger(HadoopStatusChecker.class);
+    protected static final Logger logger = LoggerFactory.getLogger(HadoopStatusGetter.class);
 
     public HadoopStatusGetter(String yarnUrl, String mrJobId) {
         this.yarnUrl = yarnUrl;
