@@ -20,7 +20,6 @@ package org.apache.kylin.source.hive;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
 
