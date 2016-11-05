@@ -17,13 +17,8 @@
 # limitations under the License.
 #
 
-# We should set KYLIN_HOME here for multiple tomcat instances that are on the same node.
-# In addition, we should set a KYLIN_HOME for the global use as normal.
-KYLIN_HOME=`dirname $0`/..
-export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
-dir="$KYLIN_HOME/bin"
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
-source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
 
 tomcat_root=${dir}/../tomcat

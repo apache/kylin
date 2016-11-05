@@ -17,13 +17,25 @@
 # limitations under the License.
 #
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+# source me
 
-if [ $# != 1 ]
+if [[ "$dir" == "" ]]
 then
-    echo 'invalid input'
-    exit -1
+	dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+	
+	# set KYLIN_HOME with consideration for multiple instances that are on the same node
+	KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
+	export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
+	dir="$KYLIN_HOME/bin"
+	
+	function quit {
+		echo "$@"
+		exit 1
+	}
+	
+	function verbose {
+		if [[ -n "$verbose" ]]; then
+			echo "$@"
+		fi
+	}
 fi
-
-result=`cat ${KYLIN_HOME}/conf/kylin.properties | grep -w "^$1" | grep -v '^#' | awk -F= '{ n = index($0,"="); print substr($0,n+1)}' | cut -c 1- |tail -1`
-echo "$result"

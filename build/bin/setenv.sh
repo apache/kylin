@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+# source me
+
 # (if your're deploying KYLIN on a powerful server and want to replace the default conservative settings)
 # uncomment following to for it to take effect
 export KYLIN_JVM_SETTINGS="-Xms1024M -Xmx4096M -Xss1024K -XX:MaxPermSize=128M -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:$KYLIN_HOME/logs/kylin.gc.$$ -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=64M"
@@ -35,21 +37,21 @@ then
     echo "KYLIN_JVM_SETTINGS is ${KYLIN_JVM_SETTINGS}"
     KYLIN_EXTRA_START_OPTS="${KYLIN_JVM_SETTINGS} ${KYLIN_EXTRA_START_OPTS}"
 else
-    echo "KYLIN_JVM_SETTINGS is not set, using default jvm settings: ${KYLIN_JVM_SETTINGS}"
+    verbose "KYLIN_JVM_SETTINGS is not set, using default jvm settings: ${KYLIN_JVM_SETTINGS}"
 fi
 
 if [ ! -z "${KYLIN_DEBUG_SETTINGS}" ]
 then
-    echo "KYLIN_DEBUG_SETTINGS is ${KYLIN_DEBUG_SETTINGS}"
+    verbose "KYLIN_DEBUG_SETTINGS is ${KYLIN_DEBUG_SETTINGS}"
     KYLIN_EXTRA_START_OPTS="${KYLIN_DEBUG_SETTINGS} ${KYLIN_EXTRA_START_OPTS}"
 else
-    echo "KYLIN_DEBUG_SETTINGS is not set, will not enable remote debuging"
+    verbose "KYLIN_DEBUG_SETTINGS is not set, will not enable remote debuging"
 fi
 
 if [ ! -z "${KYLIN_LD_LIBRARY_SETTINGS}" ]
 then
-    echo "KYLIN_LD_LIBRARY_SETTINGS is ${KYLIN_LD_LIBRARY_SETTINGS}"
+    verbose "KYLIN_LD_LIBRARY_SETTINGS is ${KYLIN_LD_LIBRARY_SETTINGS}"
     KYLIN_EXTRA_START_OPTS="${KYLIN_LD_LIBRARY_SETTINGS} ${KYLIN_EXTRA_START_OPTS}"
 else
-    echo "KYLIN_LD_LIBRARY_SETTINGS is not set, Usually it's okay unless you want to specify your own native path"
+    verbose "KYLIN_LD_LIBRARY_SETTINGS is not set, it is okay unless you want to specify your own native path"
 fi

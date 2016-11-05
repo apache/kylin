@@ -17,12 +17,10 @@
 # limitations under the License.
 #
 
-dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+# set verbose=true to print more logs during start up
+verbose=${verbose:-""}
 
-# set KYLIN_HOME with consideration for multiple instances that are on the same node
-KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
-export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
-dir="$KYLIN_HOME/bin"
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
@@ -34,8 +32,8 @@ function retrieveDependency() {
     source ${dir}/find-hbase-dependency.sh
 
     #retrive $KYLIN_EXTRA_START_OPTS
-    if [ -f "${dir}/setenv.sh" ]
-        then source ${dir}/setenv.sh
+    if [ -f "${dir}/setenv.sh" ]; then
+        source ${dir}/setenv.sh
     fi
 
     export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
@@ -76,10 +74,9 @@ then
     spring_profile=`sh ${dir}/get-properties.sh kylin.security.profile`
     if [ -z "$spring_profile" ]
     then
-        echo 'please set kylin.security.profile in kylin.properties, options are: testing, ldap, saml.'
-        exit 1
+        quit 'please set kylin.security.profile in kylin.properties, options are: testing, ldap, saml.'
     else
-        echo "kylin.security.profile is set to $spring_profile"
+        verbose "kylin.security.profile is set to $spring_profile"
     fi
 
     retrieveDependency
@@ -90,15 +87,13 @@ then
     if [ -z "$KYLIN_REST_ADDRESS" ]
     then
         kylin_rest_address=`hostname -f`":"`grep "<Connector port=" ${tomcat_root}/conf/server.xml |grep protocol=\"HTTP/1.1\" | cut -d '=' -f 2 | cut -d \" -f 2`
-        echo "KYLIN_REST_ADDRESS not found, will use ${kylin_rest_address}"
     else
-        echo "KYLIN_REST_ADDRESS is set to: $KYLIN_REST_ADDRESS"
         kylin_rest_address=$KYLIN_REST_ADDRESS
     fi
+    verbose "kylin.rest.address is set to ${kylin_rest_address}"
 
     #debug if encounter NoClassDefError
-    echo "hbase classpath is:"
-    hbase classpath
+    verbose "kylin classpath is: $(hbase classpath)"
 
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     hbase ${KYLIN_EXTRA_START_OPTS} \
@@ -116,9 +111,11 @@ then
     -Dkylin.rest.address=${kylin_rest_address} \
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
-    echo "A new Kylin instance is started by $USER, stop it using \"kylin.sh stop\""
-    echo "Please visit http://<ip>:7070/kylin"
-    echo "You can check the log at ${KYLIN_HOME}/logs/kylin.log"
+    
+    echo ""
+    echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
+    echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
+    echo "Web UI is at http://<hostname>:7070/kylin"
     exit 0
 
 # stop command
@@ -129,18 +126,16 @@ then
         PID=`cat $KYLIN_HOME/pid`
         if ps -p $PID > /dev/null
         then
-           echo "stopping Kylin:$PID"
+           echo "Stopping Kylin: $PID"
            kill $PID
            rm ${KYLIN_HOME}/pid
            exit 0
         else
-           echo "Kylin is not running, please check"
-           exit 1
+           quit "Kylin is not running"
         fi
         
     else
-        echo "Kylin is not running, please check"
-        exit 1    
+        quit "Kylin is not running"
     fi
 
 elif [ "$1" = "version" ]
@@ -167,6 +162,5 @@ then
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=kylin-log4j.properties "$@"
 
 else
-    echo "usage: kylin.sh start or kylin.sh stop"
-    exit 1
+    quit "Usage: 'kylin.sh start' or 'kylin.sh stop'"
 fi
