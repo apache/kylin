@@ -18,9 +18,11 @@
 #
 
 # set verbose=true to print more logs during start up
-verbose=${verbose:-""}
 
-source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh $@
+if [ "$verbose" = true ]; then
+    shift
+fi
 
 source ${dir}/check-env.sh
 mkdir -p ${KYLIN_HOME}/logs
@@ -162,5 +164,5 @@ then
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=kylin-log4j.properties "$@"
 
 else
-    quit "Usage: 'kylin.sh start' or 'kylin.sh stop'"
+    quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop'"
 fi

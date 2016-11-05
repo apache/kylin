@@ -19,6 +19,20 @@
 
 # source me
 
+verbose=${verbose:-""}
+
+while getopts ":v" opt; do
+    case $opt in
+        v)
+            echo "Turn on verbose mode." >&2
+            verbose=true
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            ;;
+    esac
+done
+
 if [[ "$dir" == "" ]]
 then
 	dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
