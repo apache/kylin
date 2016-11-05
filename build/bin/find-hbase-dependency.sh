@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+
 hbase_classpath=`hbase classpath`
 
 # special handling for Amazon EMR, to prevent re-init of hbase-setenv
@@ -38,10 +40,9 @@ done
 
 if [ -z "$hbase_common_path" ]
 then
-    echo "hbase-common lib not found"
-    exit 1
+    quit "hbase-common lib not found"
 fi
 
 hbase_dependency=${hbase_common_path}
-echo "hbase dependency: $hbase_dependency"
+verbose "hbase dependency: $hbase_dependency"
 export hbase_dependency

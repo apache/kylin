@@ -24,12 +24,7 @@
 # take a look at SandboxMetastoreCLI
 
 
-dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-
-# set KYLIN_HOME with consideration for multiple instances that are on the same node
-KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
-export KYLIN_HOME=`cd "$KYLIN_HOME"; pwd`
-dir="$KYLIN_HOME/bin"
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 source ${dir}/check-env.sh
 

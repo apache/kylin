@@ -17,24 +17,18 @@
 # limitations under the License.
 #
 
-if [ -z "$KYLIN_HOME" ]
-then
-    echo 'please make sure KYLIN_HOME has been set'
-    exit 1
-else
-    echo "KYLIN_HOME is set to ${KYLIN_HOME}"
-fi
-
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.client`
 hive_env=
 
+echo Retrieving hive dependency...
 if [ "${client_mode}" == "beeline" ]
 then
     beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.beeline.params`
-    hive_env=`beeline ${beeline_params} --outputformat=dsv -e set | grep 'env:CLASSPATH'`
+    hive_env=`beeline ${beeline_params} --outputformat=dsv -e set 2>&1 | grep 'env:CLASSPATH' `
 else
-    hive_env=`hive -e set | grep 'env:CLASSPATH'`
+    hive_env=`hive -e set 2>&1 | grep 'env:CLASSPATH'`
 fi
 
 hive_classpath=`echo $hive_env | grep 'env:CLASSPATH' | awk -F '=' '{print $2}'`
@@ -44,7 +38,7 @@ hive_exec_path=
 
 if [ -n "$HIVE_CONF" ]
 then
-    echo "HIVE_CONF is set to: $HIVE_CONF, use it to locate hive configurations."
+    verbose "HIVE_CONF is set to: $HIVE_CONF, use it to locate hive configurations."
     hive_conf_path=$HIVE_CONF
 fi
 
@@ -69,14 +63,13 @@ done
 
 if [ -z "$hive_conf_path" ]
 then
-    echo "Couldn't find hive configuration directory. Please set HIVE_CONF to the path which contains hive-site.xml."
-    exit 1
+    quit "Couldn't find hive configuration directory. Please set HIVE_CONF to the path which contains hive-site.xml."
 fi
 
 # in some versions of hive hcatalog is not in hive's classpath, find it separately
 if [ -z "$HCAT_HOME" ]
 then
-    echo "HCAT_HOME not found, try to find hcatalog path from hadoop home"
+    verbose "HCAT_HOME not found, try to find hcatalog path from hadoop home"
     hadoop_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
     hive_home=`echo $hive_exec_path | awk -F '/lib/' '{print $1}'`
     is_aws=`uname -r | grep amzn`
@@ -90,11 +83,10 @@ then
       # special handling for Amazon EMR
       hcatalog_home=/usr/lib/hive-hcatalog
     else 
-      echo "Couldn't locate hcatalog installation, please make sure it is installed and set HCAT_HOME to the path."
-      exit 1
+      quit "Couldn't locate hcatalog installation, please make sure it is installed and set HCAT_HOME to the path."
     fi
 else
-    echo "HCAT_HOME is set to: $HCAT_HOME, use it to find hcatalog path:"
+    verbose "HCAT_HOME is set to: $HCAT_HOME, use it to find hcatalog path:"
     hcatalog_home=${HCAT_HOME}
 fi
 
@@ -102,12 +94,11 @@ hcatalog=`find -L ${hcatalog_home} -name "hive-hcatalog-core[0-9\.-]*.jar" 2>&1 
 
 if [ -z "$hcatalog" ]
 then
-    echo "hcatalog lib not found"
-    exit 1
+    quit "hcatalog lib not found"
 fi
 
 
 hive_lib=`find -L "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
 hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}
-echo "hive dependency: $hive_dependency"
+verbose "hive dependency: $hive_dependency"
 export hive_dependency

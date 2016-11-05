@@ -17,8 +17,7 @@
 # limitations under the License.
 #
 
-dir=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-export KYLIN_HOME=${KYLIN_HOME:-"${dir}/../"}
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
 source ${dir}/check-env.sh
 job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`

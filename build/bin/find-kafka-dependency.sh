@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+
 kafka_home=
 
 if [ -n "$KAFKA_HOME" ]
