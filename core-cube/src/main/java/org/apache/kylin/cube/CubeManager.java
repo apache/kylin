@@ -924,8 +924,10 @@ public class CubeManager implements IRealizationProvider {
 
             if (!cubeDesc.getError().isEmpty()) {
                 cube.setStatus(RealizationStatusEnum.DESCBROKEN);
-                logger.warn("cube descriptor {} (for cube '{}') is broken", cubeDesc.getResourcePath(), cubeName);
-
+                logger.error("cube descriptor {} (for cube '{}') is broken", cubeDesc.getResourcePath(), cubeName);
+                for (String error : cubeDesc.getError()) {
+                    logger.error("Error: {}", error);
+                }
             } else if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
                 cube.setStatus(RealizationStatusEnum.DISABLED);
                 logger.info("cube {} changed from DESCBROKEN to DISABLED", cubeName);
