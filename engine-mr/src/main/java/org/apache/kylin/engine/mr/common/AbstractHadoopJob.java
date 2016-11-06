@@ -295,9 +295,9 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                     continue;
                 }
                 FileSystem fs;
-                if (hdfs.exists(p)) {
+                if (exists(hdfs, p)) {
                     fs = hdfs;
-                } else if (localfs.exists(p)) {
+                } else if (exists(localfs, p)) {
                     fs = localfs;
                 } else {
                     logger.warn("The directory of kylin dependency '" + fileName + "' does not exist, skip");
@@ -386,6 +386,15 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return classpath;
     }
 
+    private static boolean exists(FileSystem fs, Path p) throws IOException {
+        try {
+            return fs.exists(p);
+        } catch (IllegalArgumentException ex) {
+            // can happen when FS mismatch
+            return false;
+        }
+    }
+
     public static int addInputDirs(String input, Job job) throws IOException {
         int folderNum = addInputDirs(StringSplitter.split(input, ","), job);
         logger.info("Number of added folders:" + folderNum);
@@ -401,7 +410,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 FileSystem fs = FileSystem.get(job.getConfiguration());
                 Path path = new Path(inp);
 
-                if (!fs.exists(path)) {
+                if (!exists(fs, path)) {
                     logger.warn("Path not exist:" + path.toString());
                     continue;
                 }
