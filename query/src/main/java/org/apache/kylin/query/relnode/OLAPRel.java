@@ -104,23 +104,30 @@ public interface OLAPRel extends RelNode {
             OLAPContext.registerContext(context);
         }
 
-        public void fixSharedOlapTableScan(OLAPRel parent) {
-            if (parent instanceof SingleRel) {
-                SingleRel single = (SingleRel) parent;
-                OLAPTableScan copy = copyTableScanIfNeeded(single.getInput());
-                if (copy != null)
-                    single.replaceInput(0, copy);
-            } else if (parent instanceof BiRel) {
-                BiRel bi = (BiRel) parent;
-                OLAPTableScan copyLeft = copyTableScanIfNeeded(bi.getLeft());
-                if (copyLeft != null)
-                    bi.replaceInput(0, copyLeft);
-                OLAPTableScan copyRight = copyTableScanIfNeeded(bi.getRight());
-                if (copyRight != null)
-                    bi.replaceInput(1, copyRight);
-            }
+        public void fixSharedOlapTableScan(SingleRel parent) {
+            OLAPTableScan copy = copyTableScanIfNeeded(parent.getInput());
+            if (copy != null)
+                parent.replaceInput(0, copy);
         }
 
+        public void fixSharedOlapTableScanOnTheLeft(BiRel parent) {
+            OLAPTableScan copy = copyTableScanIfNeeded(parent.getLeft());
+            if (copy != null)
+                parent.replaceInput(0, copy);
+        }
+        
+        public void fixSharedOlapTableScanOnTheRight(BiRel parent) {
+            OLAPTableScan copy = copyTableScanIfNeeded(parent.getRight());
+            if (copy != null)
+                parent.replaceInput(1, copy);
+        }
+        
+        public void fixSharedOlapTableScanAt(RelNode parent, int ordinalInParent) {
+            OLAPTableScan copy = copyTableScanIfNeeded(parent.getInputs().get(ordinalInParent));
+            if (copy != null)
+                parent.replaceInput(ordinalInParent, copy);
+        }
+        
         private OLAPTableScan copyTableScanIfNeeded(RelNode input) {
             if (input instanceof OLAPTableScan) {
                 OLAPTableScan tableScan = (OLAPTableScan) input;

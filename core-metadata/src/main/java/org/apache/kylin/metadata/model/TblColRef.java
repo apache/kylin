@@ -123,7 +123,7 @@ public class TblColRef implements Serializable {
     }
     
     public String getTableAlias() {
-        return table.getAlias();
+        return table != null ? table.getAlias() : "UNKNOWN_ALIAS";
     }
     
     public String getTable() {

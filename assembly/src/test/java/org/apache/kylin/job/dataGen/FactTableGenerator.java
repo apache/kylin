@@ -243,7 +243,7 @@ public class FactTableGenerator {
 
             JoinDesc join = dim.getJoin();
             if (join != null) {
-                String lookupTable = dim.getTable();
+                String lookupTable = dim.getTableRef().getTableIdentity();
                 for (String column : join.getPrimaryKey()) {
                     if (!lookupTableKeys.containsKey(lookupTable)) {
                         lookupTableKeys.put(lookupTable, new LinkedList<String>());
@@ -301,7 +301,7 @@ public class FactTableGenerator {
                 String[] pks = jDesc.getPrimaryKey();
                 int num = fks.length;
                 for (int i = 0; i < num; ++i) {
-                    String value = dim.getTable() + "/" + pks[i];
+                    String value = dim.getTableRef().getTableIdentity() + "/" + pks[i];
 
                     lookupCol2factTableCol.put(value, fks[i]);
 

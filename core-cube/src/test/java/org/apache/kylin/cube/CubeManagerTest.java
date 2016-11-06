@@ -19,7 +19,6 @@
 package org.apache.kylin.cube;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 
-import com.google.common.collect.Maps;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.JsonUtil;
@@ -40,6 +38,8 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.Maps;
 
 /**
  * @author yangli9

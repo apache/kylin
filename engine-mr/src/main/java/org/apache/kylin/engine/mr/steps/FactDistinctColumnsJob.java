@@ -90,15 +90,12 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             CubeSegment segment = cube.getSegmentById(segmentID);
             if (segment == null) {
                 logger.error("Failed to find {} in cube {}", segmentID, cube);
-                System.out.println("Failed to find {} in cube {} " + segmentID + "," + cube);
                 for (CubeSegment s : cube.getSegments()) {
                     logger.error(s.getName() + " with status " + s.getStatus());
-                    System.out.println(s.getName() + " with status " + s.getStatus());
                 }
                 throw new IllegalStateException();
             } else {
                 logger.info("Found segment: " + segment);
-                System.out.println("Found segment " + segment);
             }
             setupMapper(cube.getSegmentById(segmentID));
             setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? columnsNeedDict.size() + 2 : columnsNeedDict.size());

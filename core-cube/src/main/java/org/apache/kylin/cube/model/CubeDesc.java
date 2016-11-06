@@ -242,7 +242,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public DimensionDesc findDimensionByTable(String lookupTableName) {
         lookupTableName = lookupTableName.toUpperCase();
         for (DimensionDesc dim : dimensions)
-            if (dim.getTable() != null && dim.getTable().equals(lookupTableName))
+            if (dim.getTableRef() != null && dim.getTableRef().getTableIdentity().equals(lookupTableName))
                 return dim;
         return null;
     }

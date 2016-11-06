@@ -662,7 +662,7 @@ public class CubeManager implements IRealizationProvider {
 
     public LookupStringTable getLookupTable(CubeSegment cubeSegment, DimensionDesc dim) {
 
-        String tableName = dim.getTable();
+        String tableName = dim.getTableRef().getTableIdentity();
         String[] pkCols = dim.getJoin().getPrimaryKey();
         String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
         if (snapshotResPath == null)

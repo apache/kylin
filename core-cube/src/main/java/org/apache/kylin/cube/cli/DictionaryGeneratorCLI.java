@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.cli;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
@@ -29,6 +30,8 @@ import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 public class DictionaryGeneratorCLI {
 
@@ -50,16 +53,20 @@ public class DictionaryGeneratorCLI {
             cubeMgr.buildDictionary(cubeSeg, col, factTableValueProvider);
         }
 
+        // snapshot
+        Set<String> toSnapshot = Sets.newHashSet();
         for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
-            // build snapshot
-            if (dim.getTable() != null && !dim.getTable().equalsIgnoreCase(cubeSeg.getCubeDesc().getFactTable())) {
-                // CubeSegment seg = cube.getTheOnlySegment();
-                logger.info("Building snapshot of " + dim.getTable());
-                cubeMgr.buildSnapshotTable(cubeSeg, dim.getTable());
-                logger.info("Checking snapshot of " + dim.getTable());
-                cubeMgr.getLookupTable(cubeSeg, dim); // load the table for sanity check
-            }
+            if (dim.getTableRef() == null)
+                continue;
+            
+            String lookupTable = dim.getTableRef().getTableIdentity();
+            toSnapshot.add(lookupTable);
+        }
+        toSnapshot.remove(cubeSeg.getCubeDesc().getFactTable());
+        
+        for (String tableIdentity : toSnapshot) {
+            logger.info("Building snapshot of " + tableIdentity);
+            cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity);
         }
     }
-
 }
