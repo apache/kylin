@@ -19,7 +19,7 @@
 'use strict';
 
 KylinApp
-    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService,SweetAlert) {
+    .controller('QueryCtrl', function ($scope, storage, $base64, $q, $location, $anchorScroll, $routeParams, QueryService, $modal, MessageService, $domUtilityService, $timeout, TableService, SweetAlert, VdmUtil) {
         $scope.mainPanel = 'query';
         $scope.rowsPerPage = 50000;
         $scope.base64 = $base64;
@@ -207,7 +207,14 @@ KylinApp
                 } else {
                     oneQuery.result.data = data;
                 }
-
+                angular.forEach(oneQuery.result.data,function(row,index){
+                    angular.forEach(row,function(column,value){
+                        var float =VdmUtil.SCToFloat(column);
+                        if (float!=""){
+                            oneQuery.result.data[index][value]=parseFloat(float);
+                        }
+                    });
+                });
                 $scope.curQuery.result.isResponsePartial = result.partial;
             }
 

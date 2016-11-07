@@ -63,6 +63,26 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
         if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
 
       return fmt;
+    },
+
+    SCToFloat:function(data){
+      var resultValue = "";
+      if (data.indexOf('E') != -1){
+        var regExp = new RegExp('^((\\d+.?\\d+)[Ee]{1}(\\d+))$', 'ig');
+        var result = regExp.exec(data);
+        var power = "";
+        if (result != null){
+          resultValue = result[2];
+          power = result[3];
+        }
+        if (resultValue != ""){
+          if (power != ""){
+            var powVer = Math.pow(10, power);
+            resultValue = (resultValue * powVer).toFixed(2);
+          }
+        }
+      }
+      return resultValue;
     }
   }
 });
