@@ -68,9 +68,13 @@ public class HiveCmdBuilderTest {
         hiveCmdBuilder.addStatement("SHOW\n TABLES;");
 
         String cmd = hiveCmdBuilder.build();
-        assertTrue(cmd.startsWith("beeline -u jdbc_url -f") && cmd.contains(";rm -f"));
+        assertTrue(cmd.startsWith("beeline -u jdbc_url -f"));
 
         String hqlFile = cmd.substring(cmd.lastIndexOf("-f ") + 3).trim();
+        if (hqlFile.endsWith(";")) {
+            hqlFile = hqlFile.substring(0, hqlFile.length() - 1);
+        }
+
         String hqlStatement = FileUtils.readFileToString(new File(hqlFile), Charset.defaultCharset());
         assertEquals("USE default;" + lineSeparator + "DROP TABLE test;" + lineSeparator + "SHOW\n TABLES;" + lineSeparator, hqlStatement);
 

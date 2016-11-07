@@ -98,14 +98,14 @@ public class JoinedFlatTable {
         return ddl.toString();
     }
 
-    public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc, JobEngineConfig engineConfig, boolean redistribute) {
+    public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc, JobEngineConfig engineConfig) {
         StringBuilder sql = new StringBuilder();
         sql.append(generateHiveSetStatements(engineConfig));
-        sql.append("INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc, redistribute) + ";").append("\n");
+        sql.append("INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + ";").append("\n");
         return sql.toString();
     }
 
-    public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc, boolean redistribute) {
+    public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + "\n");
         for (int i = 0; i < flatDesc.getAllColumns().size(); i++) {
@@ -117,10 +117,6 @@ public class JoinedFlatTable {
         }
         appendJoinStatement(flatDesc, sql);
         appendWhereStatement(flatDesc, sql);
-        if (redistribute == true) {
-            TblColRef distCol = flatDesc.getDistributedBy();
-            appendDistributeStatement(sql, distCol);
-        }
         return sql.toString();
     }
 
