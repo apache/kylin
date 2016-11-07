@@ -82,55 +82,54 @@ public class StorageCleanupJob extends AbstractApplication {
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         // get all kylin hbase tables
-        HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
-        String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
-        HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
-        List<String> allTablesNeedToBeDropped = new ArrayList<String>();
-        for (HTableDescriptor desc : tableDescriptors) {
-            String host = desc.getValue(IRealizationConstants.HTableTag);
-            if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
-                //only take care htables that belongs to self, and created more than 2 days
-                allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
-            }
-        }
-
-        // remove every segment htable from drop list
-        for (CubeInstance cube : cubeMgr.listAllCubes()) {
-            for (CubeSegment seg : cube.getSegments()) {
-                String tablename = seg.getStorageLocationIdentifier();
-                if (allTablesNeedToBeDropped.contains(tablename)) {
-                    allTablesNeedToBeDropped.remove(tablename);
-                    logger.info("Exclude table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
+        try (HBaseAdmin hbaseAdmin = new HBaseAdmin(conf)) {
+            String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
+            HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
+            List<String> allTablesNeedToBeDropped = new ArrayList<String>();
+            for (HTableDescriptor desc : tableDescriptors) {
+                String host = desc.getValue(IRealizationConstants.HTableTag);
+                if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
+                    //only take care htables that belongs to self, and created more than 2 days
+                    allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
                 }
             }
-        }
 
-        if (delete == true) {
-            // drop tables
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            for (String htableName : allTablesNeedToBeDropped) {
-                FutureTask futureTask = new FutureTask(new DeleteHTableRunnable(hbaseAdmin, htableName));
-                executorService.execute(futureTask);
-                try {
-                    futureTask.get(deleteTimeout, TimeUnit.MINUTES);
-                } catch (TimeoutException e) {
-                    logger.warn("It fails to delete htable " + htableName + ", for it cost more than " + deleteTimeout + " minutes!");
-                    futureTask.cancel(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    futureTask.cancel(true);
+            // remove every segment htable from drop list
+            for (CubeInstance cube : cubeMgr.listAllCubes()) {
+                for (CubeSegment seg : cube.getSegments()) {
+                    String tablename = seg.getStorageLocationIdentifier();
+                    if (allTablesNeedToBeDropped.contains(tablename)) {
+                        allTablesNeedToBeDropped.remove(tablename);
+                        logger.info("Exclude table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
+                    }
                 }
             }
-            executorService.shutdown();
-        } else {
-            System.out.println("--------------- Tables To Be Dropped ---------------");
-            for (String htableName : allTablesNeedToBeDropped) {
-                System.out.println(htableName);
-            }
-            System.out.println("----------------------------------------------------");
-        }
 
-        hbaseAdmin.close();
+            if (delete == true) {
+                // drop tables
+                ExecutorService executorService = Executors.newSingleThreadExecutor();
+                for (String htableName : allTablesNeedToBeDropped) {
+                    FutureTask futureTask = new FutureTask(new DeleteHTableRunnable(hbaseAdmin, htableName));
+                    executorService.execute(futureTask);
+                    try {
+                        futureTask.get(deleteTimeout, TimeUnit.MINUTES);
+                    } catch (TimeoutException e) {
+                        logger.warn("It fails to delete htable " + htableName + ", for it cost more than " + deleteTimeout + " minutes!");
+                        futureTask.cancel(true);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        futureTask.cancel(true);
+                    }
+                }
+                executorService.shutdown();
+            } else {
+                System.out.println("--------------- Tables To Be Dropped ---------------");
+                for (String htableName : allTablesNeedToBeDropped) {
+                    System.out.println(htableName);
+                }
+                System.out.println("----------------------------------------------------");
+            }
+        }
     }
 
     @Override
