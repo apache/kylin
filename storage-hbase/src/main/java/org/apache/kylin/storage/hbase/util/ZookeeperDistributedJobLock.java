@@ -37,7 +37,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.lock.DistributedJobLock;
-import org.apache.kylin.job.lock.DoWatchLock;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;

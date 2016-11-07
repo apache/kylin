@@ -21,9 +21,14 @@ package org.apache.kylin.job.lock;
 import java.util.concurrent.ExecutorService;
 
 public interface DistributedJobLock extends JobLock {
-    boolean lockWithName(String cubeName, String serverName);
+    
+    boolean lockWithName(String name, String serverName);
 
     void unlockWithName(String name);
 
     void watchLock(ExecutorService pool, DoWatchLock doWatch);
+    
+    public interface DoWatchLock {
+        void doWatch(String path, String data);
+    }
 }

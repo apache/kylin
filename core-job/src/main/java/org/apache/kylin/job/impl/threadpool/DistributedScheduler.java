@@ -46,7 +46,6 @@ import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.job.lock.DistributedJobLock;
-import org.apache.kylin.job.lock.DoWatchLock;
 import org.apache.kylin.job.lock.JobLock;
 import org.apache.kylin.job.manager.ExecutableManager;
 import org.slf4j.Logger;
@@ -209,7 +208,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     }
 
     //when the segment lock released but the segment related job still running, resume the job.
-    private class DoWatchImpl implements DoWatchLock {
+    private class DoWatchImpl implements org.apache.kylin.job.lock.DistributedJobLock.DoWatchLock {
         private String serverName;
 
         public DoWatchImpl(String serverName) {
