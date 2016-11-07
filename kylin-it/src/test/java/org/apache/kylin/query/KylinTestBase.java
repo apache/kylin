@@ -491,7 +491,10 @@ public class KylinTestBase {
             ITable h2Table = executeQuery(h2Conn, queryName, sql, needSort);
 
             try {
+                //compare before junit
                 // compare the result
+                System.out.println("h2 Table rows count:"+h2Table.getRowCount());
+                System.out.println("kylin Table rows count:"+kylinTable.getRowCount());
                 Assertion.assertEquals(h2Table, kylinTable);
             } catch (Throwable t) {
                 printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());

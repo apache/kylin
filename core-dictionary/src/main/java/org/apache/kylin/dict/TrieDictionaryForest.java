@@ -19,6 +19,7 @@ package org.apache.kylin.dict;
 
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
@@ -32,7 +33,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -89,13 +89,13 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     public int getMinId() {
-        if (trees.isEmpty()) return -1;
+        if (trees.isEmpty()) return baseId;
         return trees.get(0).getMinId() + baseId;
     }
 
     @Override
     public int getMaxId() {
-        if (trees.isEmpty()) return -1;
+        if (trees.isEmpty()) return baseId - 1;
         int index = trees.size() - 1;
         int id = accuOffset.get(index) + trees.get(index).getMaxId() + baseId;
         return id;
@@ -127,42 +127,70 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
     }
 
 
-    //id = tree_inner_offset + accumulate_offset + baseId
     @Override
-    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag)
+    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
+
+        int result = _getIdFromValueBytesImpl(value, offset, len, roundingFlag);
+        //logger.info("{} => {}, rounding {}", bytesConvert.convertFromBytes(value, offset, len), result, roundingFlag);
+        return result;
+    }
+
+    //id = tree_inner_offset + accumulate_offset + baseId
+    protected int _getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag)
             throws IllegalArgumentException {
 
         //long startTime = System.currentTimeMillis();
         ByteArray search = new ByteArray(value, offset, len);
         //copyTime.addAndGet(System.currentTimeMillis() - startTime);
         int index = findIndexByValue(search);
-        //int index = findIndexByValue(value);
-        //binarySearchTime.addAndGet(System.currentTimeMillis() - startTime);
         if (index < 0) {
-            //System.out.println("value divide:"+valueDivide.size()+" "+valueDivide);
-            throw new IllegalArgumentException("Tree Not Found. index < 0.Value:" + new String(Arrays.copyOfRange(value, offset, len)));
+            if (roundingFlag > 0) {
+                return getMinId(); //searching value smaller than the smallest value in dict
+            } else {
+                throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
+            }
+        }
+        int id;
+        if (roundingFlag > 0) {
+            T curTreeMax = trees.get(index).getValueFromId(trees.get(index).getMaxId());
+            byte[] b1 = bytesConvert.convertToBytes(curTreeMax);
+            ByteArray ba1 = new ByteArray(b1, 0, b1.length);
+            //ByteArray ba2 = new ByteArray(value, 0, value.length);
+            if (search.compareTo(ba1) > 0)
+                index++;
+            if (index >= trees.size())
+                throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
         }
         TrieDictionary<T> tree = trees.get(index);
-        //getValueIndexTime.addAndGet(System.currentTimeMillis() - startTime);
-        //startTime = System.currentTimeMillis();
-        int id = tree.getIdFromValueBytes(value, offset, len, roundingFlag);
+        id = tree.getIdFromValueBytes(value, offset, len, roundingFlag);
         id = id + accuOffset.get(index);
         id += baseId;
-        //getValueTime.addAndGet(System.currentTimeMillis() - startTime);
+        if (id < 0) {
+            throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
+        }
+        //System.out.println("getIdFromValue  value:"+bytesConvert.convertFromBytes(value,offset,len)+" id:"+id);
         return id;
     }
 
     //id --> value
+    private boolean printstr = false;
+
     @Override
     protected T getValueFromIdImpl(int id) throws IllegalArgumentException {
         //System.out.println("here");
         byte[] data = getValueBytesFromIdImpl(id);
         if (data != null) {
+            if (!printstr) {
+                System.out.println("getValueFromIdImpl id:" + id + " value:" + bytesConvert.convertFromBytes(data, 0, data.length));
+                printstr = true;
+            }
             return bytesConvert.convertFromBytes(data, 0, data.length);
         } else {
             return null;
         }
     }
+
+    private boolean isPrintstr2 = false;
 
     @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset)
@@ -174,6 +202,10 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         //getValueIndexTime2.addAndGet(System.currentTimeMillis() - startTime);
         //startTime = System.currentTimeMillis();
         int size = tree.getValueBytesFromIdImpl(treeInnerOffset, returnValue, offset);
+        if (!isPrintstr2) {
+            isPrintstr2 = true;
+            System.out.println("getValueBytesFromIdImpl id:" + id + " value:" + bytesConvert.convertFromBytes(returnValue, offset, size));
+        }
         //getValueTime2.addAndGet(System.currentTimeMillis() - startTime);
         return size;
     }
@@ -200,17 +232,36 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     public void dump(PrintStream out) {
+        out.println("TrieDictionaryForest");
+        out.println("baseId:" + baseId);
+        StringBuilder sb = new StringBuilder();
+        sb.append("value divide:");
+        for (ByteArray ba : valueDivide)
+            sb.append(bytesConvert.convertFromBytes(ba.array(), 0, ba.length()) + " ");
+        sb.append("\noffset divide:");
+        for (Integer offset : accuOffset)
+            sb.append(offset + " ");
+        out.println(sb.toString());
         for (int i = 0; i < trees.size(); i++) {
-            System.out.println("----tree " + i + "--------");
+            out.println("----tree " + i + "--------");
             trees.get(i).dump(out);
         }
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
+        System.out.println("write dict");
         writeHead(out);
         writeBody(out);
     }
+
+    /*private int compare(T value1,T value2){
+        byte[] b1 = bytesConvert.convertToBytes(value1);
+        byte[] b2 = bytesConvert.convertToBytes(value2);
+        ByteArray ba1 = new ByteArray(b1,0,b1.length);
+        ByteArray ba2 = new ByteArray(b2,0,b2.length);
+        return ba1.compareTo(ba2);
+    }*/
 
     private void writeHead(DataOutput out) throws IOException {
         ByteArrayOutputStream byteBuf = new ByteArrayOutputStream();
@@ -248,6 +299,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     public void readFields(DataInput in) throws IOException {
+        System.out.println("read dict");
         try {
             int headSize = in.readInt();
             this.baseId = in.readInt();
@@ -284,6 +336,21 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         }
 
     }
+
+    /*@Override
+    public boolean equals(Object o) {
+        if ((o instanceof TrieDictionaryForest) == false) {
+            logger.info("Equals return false because it's not TrieDictionaryForest");
+            return false;
+        }
+        TrieDictionaryForest that = (TrieDictionaryForest) o;
+        if(this.trees.size() != that.getTrees().size())
+            return false;
+        for(int i=0;i<trees.size();i++){
+            if(!trees.get(i).equals(that.getTrees().get(i))) return false;
+        }
+        return true;
+    }*/
 
     @Override
     public boolean contains(Dictionary other) {

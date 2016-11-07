@@ -196,7 +196,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public Set<TblColRef> listAllColumns() {
         return allColumns;
     }
-    
+
     public Set<ColumnDesc> listAllColumnDescs() {
         return allColumnDescs;
     }
@@ -209,7 +209,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     /**
-     * @return dimension columns excluding derived 
+     * @return dimension columns excluding derived
      */
     public List<TblColRef> listDimensionColumnsExcludingDerived(boolean alsoExcludeExtendedCol) {
         List<TblColRef> result = new ArrayList<TblColRef>();
@@ -473,8 +473,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     /**
      * this method is to prevent malicious metadata change by checking the saved signature
      * with the calculated signature.
-     * 
+     * <p>
      * if you're comparing two cube descs, prefer to use consistentWith()
+     *
      * @return
      */
     public boolean checkSignature() {
@@ -558,7 +559,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%d) doesn't match dimensions columns count (%d)", rowkey.getRowKeyColumns().length, dimCols.size());
 
         initDictionaryDesc();
-        
+
         for (TblColRef col : allColumns) {
             allColumnDescs.add(col.getColumnDesc());
         }
@@ -609,7 +610,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 }
                 Collections.sort(notIncluded);
                 logger.error("Aggregation group " + index + " Include dimensions not containing all the used dimensions");
-                throw new IllegalStateException("Aggregation group " + index + " 'includes' dimensions not include all the dimensions:" +  notIncluded.toString());
+                throw new IllegalStateException("Aggregation group " + index + " 'includes' dimensions not include all the dimensions:" + notIncluded.toString());
             }
 
             Set<String> normalDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
@@ -754,7 +755,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     int find = ArrayUtils.indexOf(dimColArray, fk[i]);
                     if (find >= 0) {
                         TblColRef derivedCol = initDimensionColRef(pk[i]);
-                        initDerivedMap(new TblColRef[] { dimColArray[find] }, DeriveType.PK_FK, dim, new TblColRef[] { derivedCol }, null);
+                        initDerivedMap(new TblColRef[]{dimColArray[find]}, DeriveType.PK_FK, dim, new TblColRef[]{derivedCol}, null);
                     }
                 }
             }
@@ -775,7 +776,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 extra[i] = "";
             }
         }
-        return new String[][] { cols, extra };
+        return new String[][]{cols, extra};
     }
 
     private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
@@ -994,7 +995,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.partitionOffsetStart = partitionOffsetStart;
     }
 
-    /** Get columns that have dictionary */
+    /**
+     * Get columns that have dictionary
+     */
     public Set<TblColRef> getAllColumnsHaveDictionary() {
         Set<TblColRef> result = Sets.newLinkedHashSet();
 
@@ -1023,7 +1026,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return result;
     }
 
-    /** Get columns that need dictionary built on it. Note a column could reuse dictionary of another column. */
+    /**
+     * Get columns that need dictionary built on it. Note a column could reuse dictionary of another column.
+     */
     public Set<TblColRef> getAllColumnsNeedDictionaryBuilt() {
         Set<TblColRef> result = getAllColumnsHaveDictionary();
 
@@ -1040,7 +1045,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return result;
     }
 
-    /** A column may reuse dictionary of another column, find the dict column, return same col if there's no reuse column*/
+    /**
+     * A column may reuse dictionary of another column, find the dict column, return same col if there's no reuse column
+     */
     public TblColRef getDictionaryReuseColumn(TblColRef col) {
         if (dictionaries == null) {
             return col;
@@ -1053,7 +1060,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return col;
     }
 
-    /** Get a column which can be used in distributing the source table */
+    /**
+     * Get a column which can be used in distributing the source table
+     */
     public TblColRef getDistributedByColumn() {
         Set<TblColRef> shardBy = getShardByColumns();
         if (shardBy != null && shardBy.size() > 0) {
@@ -1107,9 +1116,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
 
-    private Collection ensureOrder(Collection c){
+    private Collection ensureOrder(Collection c) {
         TreeSet set = new TreeSet();
-        for(Object o : c)
+        for (Object o : c)
             set.add(o.toString());
         //System.out.println("set:"+set);
         return set;

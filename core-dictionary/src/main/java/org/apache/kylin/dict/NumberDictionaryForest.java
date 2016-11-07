@@ -275,4 +275,10 @@ public class NumberDictionaryForest<T> extends Dictionary<T> {
     public BytesConverter<T> getConverter() {
         return converter;
     }
+
+    public int getTreeSize(){
+        return this.dict.getTrees().size();
+    }
+
+
 }

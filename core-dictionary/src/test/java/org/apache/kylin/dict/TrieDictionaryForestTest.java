@@ -20,6 +20,7 @@
 package org.apache.kylin.dict;
 
 
+import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -88,9 +89,26 @@ public class TrieDictionaryForestTest {
         System.out.println("test ok");
     }
 
-    public void duplicateDataTest() {
-        //todo
+    @Test
+    public void testNullValue(){
+        //encounter null value when building dictionary
+        ArrayList<String> strs = new ArrayList<String>();
+        strs.add(null);
+        strs.add("abc");
+        System.out.println(strs);
+        int maxTreeSize = 0;
+        TrieDictionaryForestBuilder<String> builder = newDictBuilder(strs, 0, maxTreeSize);
+        TrieDictionaryForest<String> dict = builder.build();
+        dict.dump(System.out);
+        //null value query
+        int id = dict.getIdFromValue(null,0);
+        System.out.println(id);
+        id = dict.getIdFromValue(null,1);
+        System.out.println(id);
+        id = dict.getIdFromValue(null,-1);
+        System.out.println(id);
     }
+
 
     @Test
     public void testBigDataSet() {
@@ -245,6 +263,274 @@ public class TrieDictionaryForestTest {
     }
 
 
+    @Test
+    public void roundingFlagTest(){
+        ArrayList<String> testData = new ArrayList<>();
+        testData.add("b");
+        testData.add("bdd");
+        testData.add("ccc");
+        int baseId = 10;
+        TrieDictionaryForestBuilder<String> b = TrieDictionaryForestTest.newDictBuilder(testData,baseId, 0);
+        TrieDictionaryForest<String> dict = b.build();
+
+        //left
+        String smallerStr = "a";
+        int id;
+        try{
+            id = dict.getIdFromValue(smallerStr,0);
+            fail("should throw IllegalArgumentException,but id is:"+id);
+        }catch (IllegalArgumentException e){
+            //correct
+        }
+        try{
+            id = dict.getIdFromValue(smallerStr,-1);
+            fail("should throw IllegalArgumentException,but id is:"+id);
+        }catch (IllegalArgumentException e){
+            //correct
+        }
+        id = dict.getIdFromValue(smallerStr,1);
+        assertEquals(baseId,id);
+
+        //middle
+        String middleStr = "bd";
+        try{
+            id = dict.getIdFromValue(middleStr,0);
+            fail("should throw IllegalArgumentException,but id is:"+id);
+        }catch (IllegalArgumentException e){
+            //correct
+        }
+        id = dict.getIdFromValue(middleStr,-1);
+        assertEquals(baseId,id);
+        id = dict.getIdFromValue(middleStr,1);
+        assertEquals(baseId+1,id);
+
+        //right
+        String rightStr = "e";
+        try{
+            id = dict.getIdFromValue(rightStr,0);
+            fail("should throw IllegalArgumentException,but id is:"+id);
+        }catch (IllegalArgumentException e){
+            //correct
+        }
+        id = dict.getIdFromValue(rightStr,-1);
+        assertEquals(baseId+2,id);
+        try{
+            id = dict.getIdFromValue(rightStr,1);
+            fail("should throw IllegalArgumentException,but id is:"+id);
+        }catch (IllegalArgumentException e){
+            //correct
+        }
+    }
+
+    @Test
+    public void stringDictRoundFlagTest(){
+        TreeSet<String> set = new TreeSet<>(new ByteComparator<>(new StringBytesConverter()));
+        Iterator<String> it = new RandomStrings(10*10000).iterator();
+        int size = 0;
+        while(it.hasNext()){
+            BytesConverter converter = new StringBytesConverter();
+            String str = it.next();
+            set.add(str);
+            size += converter.convertToBytes(str).length;
+        }
+        int treeNum = 5;
+        TrieDictionaryForestBuilder<String> builder = newDictBuilder(set.iterator(),0,size / treeNum);
+        TrieDictionaryForest<String> dict = builder.build();
+        //dict.dump(System.out);
+
+        //test roundingFlag > 0
+        Iterator<String> it2 = new RandomStrings(100*10000).iterator();
+        while(it2.hasNext()){
+            String query = it2.next();
+            //System.out.println("query:"+query);
+            try {
+                int id = dict.getIdFromValue(query, 1);
+                assertEquals(set.ceiling(query),dict.getValueFromId(id));
+            }catch(IllegalArgumentException e){
+                assertNull(set.ceiling(query));
+            }
+        }
+
+        //test roundingFlag < 0
+        Iterator<String> it3 = new RandomStrings(100*10000).iterator();
+        while(it3.hasNext()){
+            String query = it3.next();
+            try {
+                int id = dict.getIdFromValue(query, -1);
+                assertEquals(set.floor(query),dict.getValueFromId(id));
+            }catch(IllegalArgumentException e){
+                assertNull(set.floor(query));
+            }
+        }
+
+    }
+
+    @Test
+    public void longDictRoundingFlagTest(){
+        TreeSet<String> set = new TreeSet<>(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                try{
+                    Long l1 = Long.parseLong(o1);
+                    Long l2 = Long.parseLong(o2);
+                    return l1.compareTo(l2);
+                }catch(NumberFormatException e){
+                    e.printStackTrace();
+                    return 0;
+                }
+            }
+        });
+        int num = 10 * 10000;
+        int k = -48481;
+        int size = 0;
+        StringBytesConverter converter = new StringBytesConverter();
+        for(int i=0;i<num;i++)
+        {
+            String value = k+"";
+            set.add(value);
+            k += 1;
+            String basic = "-9999999999999952517";
+            size += converter.convertToBytes(basic).length;
+        }
+        System.out.println("tree num:"+size);
+        int treeNum = 5;
+        //TrieDictionaryForestBuilder<String> builder = newDictBuilder(set.iterator(),0,size / treeNum);
+        //TrieDictionaryForest<String> dict = builder.build();
+        NumberDictionaryForestBuilder<String> builder = new NumberDictionaryForestBuilder<String>(new StringBytesConverter(),0);
+        builder.setMaxTrieSize(size / treeNum);
+        Iterator<String> it = set.iterator();
+        while(it.hasNext())
+            builder.addValue(it.next());
+        NumberDictionaryForest<String> dict = builder.build();
+        System.out.println(dict.getTreeSize());
+
+        int testTimes = 100 * 10000;
+        Random rand = new Random(System.currentTimeMillis());
+        //test roundingFlag > 0
+        for(int i=0;i<testTimes;i++)
+        {
+            String query = rand.nextInt(2*num)+"";
+            try {
+                int id = dict.getIdFromValue(query, 1);
+                assertEquals(set.ceiling(query),dict.getValueFromId(id));
+            }catch(IllegalArgumentException e){
+                assertNull(set.ceiling(query));
+            }
+        }
+
+
+        //test roundingFlag < 0
+        for(int i=0;i<testTimes;i++)
+        {
+            String query = rand.nextInt(2*num)+"";
+            try {
+                int id = dict.getIdFromValue(query, -1);
+                assertEquals(set.floor(query),dict.getValueFromId(id));
+            }catch(IllegalArgumentException e){
+                assertNull(set.floor(query));
+            }
+        }
+    }
+
+    /*
+    can not pass cases like 1.7695564055819624E-4
+     */
+    @Ignore
+    @Test
+    public void doubleDictRoundingFlagTest(){
+        TreeSet<String> set = new TreeSet<>(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                try{
+                    Double d1 = Double.parseDouble(o1);
+                    Double d2 = Double.parseDouble(o2);
+                    return d1.compareTo(d2);
+                }catch(NumberFormatException e){
+                    e.printStackTrace();
+                    return 0;
+                }
+            }
+        });
+        int num = 1000000;
+        double k = -0.0;
+        int size = 0;
+        StringBytesConverter converter = new StringBytesConverter();
+        for(int i=0;i<num;i++)
+        {
+            String value = k+"";
+            set.add(value);
+            k += 1.55;
+            String basic = "-9999999999999952517";
+            size += converter.convertToBytes(basic).length;
+        }
+        int treeNum = 5;
+        //TrieDictionaryForestBuilder<String> builder = newDictBuilder(set.iterator(),0,size / treeNum);
+        //TrieDictionaryForest<String> dict = builder.build();
+        NumberDictionaryForestBuilder<String> builder = new NumberDictionaryForestBuilder<String>(new StringBytesConverter(),0);
+        builder.setMaxTrieSize(size / treeNum);
+        Iterator<String> it = set.iterator();
+        while(it.hasNext()){
+            String str = it.next();
+            if(str.contains("E")){
+                set.remove(str);
+            }
+            else{
+                builder.addValue(str);
+            }
+        }
+
+        NumberDictionaryForest<String> dict = builder.build();
+        System.out.println("tree size:"+dict.getTreeSize());
+        System.out.println("--------------dict-----------------");
+        dict.dump(System.out);
+        System.out.println("--------------set-------------------");
+        System.out.println(set);
+
+        //test special value
+        String query1 = "183.82499999999996";
+        int id1 = dict.getIdFromValue(query1,1);
+        String actualValue = dict.getValueFromId(id1);
+        //System.out.println("id:"+id1+"  value:"+actualValue);
+        //System.out.println(set.ceiling(query1));
+
+        //dict.dump(System.out);
+        int testTimes = 1000000;
+        double queryBasic = -145.355;
+        //test roundingFlag > 0
+        for(int i=0;i<testTimes;i++)
+        {
+            String query = queryBasic+"";
+            //System.out.println("query:"+query);
+            queryBasic += 1.51;
+            if(query.contains("E"))
+                continue;
+            try {
+                int id = dict.getIdFromValue(query, 1);
+                assertEquals(set.ceiling(query),dict.getValueFromId(id));
+            }catch(IllegalArgumentException e){
+                assertNull(set.ceiling(query));
+            }
+        }
+
+
+        //test roundingFlag < 0
+        queryBasic = -551.3588;
+        for(int i=0;i<testTimes;i++)
+        {
+            String query = queryBasic+"";
+            queryBasic += 1.0;
+            if(query.contains("E"))
+                continue;
+            try {
+                int id = dict.getIdFromValue(query, -1);
+                assertEquals(set.floor(query),dict.getValueFromId(id));
+            }catch(IllegalArgumentException e){
+                assertNull(set.floor(query));
+            }
+        }
+    }
+
+
     private static TrieDictionaryForest<String> testSerialize(TrieDictionaryForest<String> dict) {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -277,34 +563,53 @@ public class TrieDictionaryForestTest {
 
     }*/
 
-    //benchmark
-    @Deprecated
-    public void memoryUsageBenchmarkTest() throws Exception {
-        //create data
-        ArrayList<String> testData = getTestData((int) (Integer.MAX_VALUE * 0.8 / 640));
-        int testTimes = 1;
-        System.out.println("start memory:" + Runtime.getRuntime().maxMemory());
-        System.out.println("start memory:" + Runtime.getRuntime().totalMemory());
-        for (int i = 0; i < testTimes; i++) {
-            long start = MemoryBudgetController.gcAndGetSystemAvailMB();
-            TrieDictionaryBuilder<String> b = new TrieDictionaryBuilder<>(new StringBytesConverter());
-            for (String str : testData)
-                b.addValue(str);
-            long end = MemoryBudgetController.gcAndGetSystemAvailMB();
-            System.out.println("object trie memory usage:" + (end - start) + "MB");
-            System.out.println("start memory:" + Runtime.getRuntime().maxMemory());
-            System.out.println("start memory:" + Runtime.getRuntime().totalMemory());
-            /*System.out.println(b == null);
-            startMemUse = getSystemCurUsedMemory();
-            TrieDictionary<String> dict = b.build(0);
-            memUse = getSystemCurUsedMemory();
-            System.out.println("array trie memory usage:"+(memUse-startMemUse)/(1024*1024)+"MB");
-            System.out.println(b == null );
-            System.out.println(dict == null);*/
+    /*
+    add value to the Dictionary until encouter OOM error
+     */
+    @Ignore
+    @Test
+    public void memoryUsageBenchmarkOldDictTest() throws Exception {
+        System.out.println("max memory:"+Runtime.getRuntime().maxMemory());
+        System.gc();
+        Thread.currentThread().sleep(1000);
+        NumberDictionaryBuilder<String> b = new NumberDictionaryBuilder<>(new StringBytesConverter());
+        int k = 0;
+        while(true){
+            b.addValue(k+"");
+            if(k%100000 == 0)
+                System.out.println(k);
+            k++;
         }
-
-
+        //memroy:1908932608  entry:17500000
     }
+
+    @Ignore
+    @Test
+    public void memoryUsageBenchmarkNewDictForestTest() throws Exception {
+        System.out.println("max memory:"+Runtime.getRuntime().maxMemory());
+        System.gc();
+        Thread.currentThread().sleep(3000);
+        NumberDictionaryForestBuilder<String> b = new NumberDictionaryForestBuilder<>(new StringBytesConverter(),0,0);
+        int k = 0;
+        while(true){
+            b.addValue(k+"");
+            if(k%100000 == 0)
+                System.out.println(k);
+            k++;
+        }
+        /*
+        memory:1908932608(1800MB)
+        maxTrieSize:500M  entry:17500000
+        maxTrieSize:180M  entry:47100000
+        maxTrieSize:100M  entry:83800000
+        maxTrieSize:50M  entry:128400000
+        maxTrieSize:25M  entry:148100000
+        maxTrieSize:0M  entry: 5000000
+
+        5-8
+         */
+    }
+
 
     @Deprecated
     private long getSystemCurUsedMemory() throws Exception {
@@ -559,18 +864,26 @@ public class TrieDictionaryForestTest {
         return result;
     }
 
-    private static TrieDictionaryForestBuilder<String> newDictBuilder(Iterable<String> strs, int baseId) {
+    public static TrieDictionaryForestBuilder<String> newDictBuilder(Iterable<String> strs, int baseId) {
         TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), baseId);
         for (String s : strs)
             b.addValue(s);
         return b;
     }
 
-    private static TrieDictionaryForestBuilder<String> newDictBuilder(Iterable<String> strs, int baseId, int treeSize) {
+    public static TrieDictionaryForestBuilder<String> newDictBuilder(Iterable<String> strs, int baseId, int treeSize) {
         TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), baseId);
-        TrieDictionaryForestBuilder.MaxTrieTreeSize = treeSize;
+        b.setMaxTrieTreeSize(treeSize);
         for (String s : strs)
             b.addValue(s);
+        return b;
+    }
+
+    public static TrieDictionaryForestBuilder<String> newDictBuilder(Iterator<String> strs, int baseId, int treeSize) {
+        TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), baseId);
+        b.setMaxTrieTreeSize(treeSize);
+        while(strs.hasNext())
+            b.addValue(strs.next());
         return b;
     }
 

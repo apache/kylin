@@ -41,6 +41,7 @@ import java.util.List;
 
 /**
  */
+
 abstract public class FactDistinctColumnsMapperBase2<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, SelfDefineSortableKey, Text> {
 
     protected String cubeName;

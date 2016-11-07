@@ -327,7 +327,6 @@ public class DictionaryManager {
             if (columnValueEnumerator != null)
                 columnValueEnumerator.close();
         }
-
         return trySaveNewDict(dictionary, dictInfo);
     }
 
@@ -419,7 +418,7 @@ public class DictionaryManager {
 
         logger.info("DictionaryManager(" + System.identityHashCode(this) + ") loading DictionaryInfo(loadDictObj:" + loadDictObj + ") at " + resourcePath);
         DictionaryInfo info = store.getResource(resourcePath, DictionaryInfo.class, loadDictObj ? DictionaryInfoSerializer.FULL_SERIALIZER : DictionaryInfoSerializer.INFO_SERIALIZER);
-
+        //info.dictionaryObject.dump(System.out);
         //        if (loadDictObj)
         //            logger.debug("Loaded dictionary at " + resourcePath);
 

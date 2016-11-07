@@ -41,9 +41,16 @@ public class NumberDictionaryForestBuilder<T> {
         this.bytesConverter = bytesConverter;
     }
 
+    public NumberDictionaryForestBuilder(BytesConverter<T> bytesConverter, int baseId, int maxTrieSizeMB) {
+        this.trieBuilder = new TrieDictionaryForestBuilder<T>(bytesConverter, baseId, maxTrieSizeMB);
+        this.bytesConverter = bytesConverter;
+    }
+
     public void addValue(T value) {
         addValue(bytesConverter.convertToBytes(value));
     }
+
+
 
     public void addValue(byte[] value) {
         codec.encodeNumber(value, 0, value.length);
@@ -51,8 +58,13 @@ public class NumberDictionaryForestBuilder<T> {
         this.trieBuilder.addValue(copy);
     }
 
+    //TODO:ensure ordered
     public NumberDictionaryForest<T> build() {
         TrieDictionaryForest<T> forest = trieBuilder.build();
         return new NumberDictionaryForest<T>(forest, bytesConverter);
+    }
+
+    public void setMaxTrieSize(int size){
+        this.trieBuilder.setMaxTrieTreeSize(size);
     }
 }

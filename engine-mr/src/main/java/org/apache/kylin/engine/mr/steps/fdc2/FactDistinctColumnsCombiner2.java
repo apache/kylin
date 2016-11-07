@@ -26,7 +26,7 @@ import java.io.IOException;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsCombiner2 extends KylinReducer<SelfDefineSortableKey, Text, Text, Text> {
+public class FactDistinctColumnsCombiner2 extends KylinReducer<SelfDefineSortableKey, Text, SelfDefineSortableKey, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -36,9 +36,10 @@ public class FactDistinctColumnsCombiner2 extends KylinReducer<SelfDefineSortabl
     @Override
     public void doReduce(SelfDefineSortableKey key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
+
         // for hll, each key only has one output, no need to do local combine;
         // for normal col, values are empty text
-        context.write(key.getText(), values.iterator().next());
+        context.write(key, values.iterator().next());
     }
 
 }

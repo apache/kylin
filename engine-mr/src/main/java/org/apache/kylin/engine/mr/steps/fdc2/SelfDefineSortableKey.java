@@ -95,7 +95,8 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
 
     @Override
     public void readFields(DataInput dataInput) throws IOException {
-        dataInput.readByte();
+        this.typeId = dataInput.readByte();
+        this.text = new Text();
         text.readFields(dataInput);
     }
 

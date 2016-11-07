@@ -25,8 +25,10 @@ import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.dict.TrieDictionaryForest;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.junit.After;
@@ -105,6 +107,13 @@ public class LookupTableTest extends LocalFileMetadataTestCase {
 
             Assert.assertEquals(millis("2012-01-01"), i);
         }
+    }
+
+    @Test
+    public void testGetClassName(){
+        String name = TrieDictionaryForest.class.getName();
+        System.out.println(name);
+
     }
 
     private String millis(String dateStr) {
