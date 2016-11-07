@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-KylinApp.service('GraphService', function (GraphBuilder) {
+KylinApp.service('GraphService', function (GraphBuilder, VdmUtil) {
 
   this.buildGraph = function (query) {
     var graphData = null;
@@ -27,6 +27,14 @@ KylinApp.service('GraphService', function (GraphBuilder) {
       metricsList = metricsList.concat(query.graph.state.metrics);
       angular.forEach(metricsList, function (metrics, index) {
         var aggregatedData = {};
+        angular.forEach(query.result.results,function(row,index){
+          angular.forEach(row,function(column,value){
+            var float = VdmUtil.SCToFloat(column);
+              if (float!=""){
+                query.result.results[index][value]=float;
+              }
+          });
+        });
         angular.forEach(query.result.results, function (data, index) {
           aggregatedData[data[dimension.index]] = (!!aggregatedData[data[dimension.index]] ? aggregatedData[data[dimension.index]] : 0)
           + parseFloat(data[metrics.index].replace(/[^\d\.\-]/g, ""));
