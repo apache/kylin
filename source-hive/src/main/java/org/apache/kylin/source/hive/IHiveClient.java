@@ -33,4 +33,6 @@ public interface IHiveClient {
     List<String> getHiveDbNames() throws Exception;
 
     List<String> getHiveTableNames(String database) throws Exception;
+
+    long getHiveTableRows(String database, String tableName) throws Exception;
 }

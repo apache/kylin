@@ -629,6 +629,11 @@ abstract public class KylinConfigBase implements Serializable {
         return this.getOptional("kylin.job.hive.database.for.intermediatetable", "default");
     }
 
+
+    public boolean isHiveRedistributeEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.job.hive.intermediatetable.redistribute.enabled", "true"));
+    }
+
     public String getHiveDependencyFilterList() {
         return this.getOptional("kylin.job.dependency.filterlist", "[^,]*hive-exec[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-metastore[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[0-9.-]+[^,]*?\\.jar");
     }
@@ -807,6 +812,7 @@ abstract public class KylinConfigBase implements Serializable {
         setProperty("kylin.dict.append.cache.size", String.valueOf(cacheSize));
     }
 
+    @Deprecated
     public String getCreateFlatHiveTableMethod() {
         return getOptional("kylin.hive.create.flat.table.method", "1");
     }

@@ -57,12 +57,13 @@
         </description>
     </property>
 
+    <!--
     <property>
         <name>mapreduce.output.fileoutputformat.compress.type</name>
         <value>BLOCK</value>
         <description>The compression type to use for job outputs</description>
     </property>
-
+    -->
     <property>
         <name>mapreduce.job.max.split.locations</name>
         <value>2000</value>

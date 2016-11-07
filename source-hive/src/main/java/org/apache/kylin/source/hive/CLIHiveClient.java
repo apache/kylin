@@ -123,6 +123,12 @@ public class CLIHiveClient implements IHiveClient {
         return getMetaStoreClient().getAllTables(database);
     }
 
+    @Override
+    public long getHiveTableRows(String database, String tableName) throws Exception {
+        Table table = getMetaStoreClient().getTable(database, tableName);
+        return getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.ROW_COUNT);
+    }
+
     private HiveMetaStoreClient getMetaStoreClient() throws Exception {
         if (metaStoreClient == null) {
             metaStoreClient = new HiveMetaStoreClient(hiveConf);

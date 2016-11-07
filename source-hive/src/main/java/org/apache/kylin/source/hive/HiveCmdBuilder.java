@@ -75,8 +75,7 @@ public class HiveCmdBuilder {
                 buf.append(kylinConfig.getHiveBeelineParams());
                 buf.append(" -f ");
                 buf.append(tmpHql.getAbsolutePath());
-                buf.append(";rm -f ");
-                buf.append(tmpHql.getAbsolutePath());
+                buf.append(";");
 
                 logger.info("The statements to execute in beeline: \n" + hqlBuf);
                 if (logger.isDebugEnabled()) {

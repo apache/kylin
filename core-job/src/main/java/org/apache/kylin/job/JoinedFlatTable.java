@@ -218,13 +218,6 @@ public class JoinedFlatTable {
         return hiveDataType.toLowerCase();
     }
 
-    public static String generateSelectRowCountStatement(IJoinedFlatTableDesc flatDesc, String outputDir) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("set hive.exec.compress.output=false;\n");
-        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + flatDesc.getTableName() + ";\n");
-        return sql.toString();
-    }
-
     public static String generateRedistributeFlatTableStatement(IJoinedFlatTableDesc flatDesc) {
         final String tableName = flatDesc.getTableName();
         StringBuilder sql = new StringBuilder();

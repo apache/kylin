@@ -60,13 +60,13 @@
         <value>org.apache.hadoop.io.compress.SnappyCodec</value>
         <description></description>
     </property>
-    -->
     <property>
         <name>mapreduce.output.fileoutputformat.compress.type</name>
         <value>BLOCK</value>
         <description>The compression type to use for job outputs</description>
     </property>
 
+    -->
     <property>
         <name>mapreduce.job.split.metainfo.maxsize</name>
         <value>-1</value>

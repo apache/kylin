@@ -45,16 +45,23 @@
         <value>org.apache.hadoop.io.compress.SnappyCodec</value>
         <description></description>
     </property>
+
+    <property>
+        <name>hive.execution.engine</name>
+        <value>mr</value>
+        <description></description>
+    </property>
+
     <!--
     <property>
         <name>mapreduce.output.fileoutputformat.compress.codec</name>
         <value>org.apache.hadoop.io.compress.SnappyCodec</value>
         <description></description>
     </property>
-    -->
     <property>
         <name>hive.merge.size.per.task</name>
         <value>32000000</value>
         <description>Size for the merged file</description>
     </property>
+    -->
 </configuration>

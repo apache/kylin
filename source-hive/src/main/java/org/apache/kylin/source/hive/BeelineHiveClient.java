@@ -29,10 +29,10 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
+import org.apache.kylin.common.util.DBUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.DBUtils;
 
 public class BeelineHiveClient implements IHiveClient {
 
@@ -99,6 +99,21 @@ public class BeelineHiveClient implements IHiveClient {
         }
         DBUtils.closeQuietly(tables);
         return ret;
+    }
+
+    @Override
+    public long getHiveTableRows(String database, String tableName) throws Exception {
+        ResultSet resultSet = null;
+        long count = 0;
+        try {
+            resultSet = stmt.executeQuery("select count(*) from " + database + "." + tableName);
+            if (resultSet.next()) {
+                count = resultSet.getLong(1);
+            }
+        } finally {
+            DBUtils.closeQuietly(resultSet);
+        }
+        return count;
     }
 
     @Override
