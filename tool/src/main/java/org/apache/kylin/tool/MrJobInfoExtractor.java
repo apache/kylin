@@ -127,13 +127,9 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
         try {
             String jobResponse = getHttpResponse(jobUrlPrefix);
             JsonNode job = new ObjectMapper().readTree(jobResponse).path("job").get("state");
-            String state = job.textValue();
-            logger.debug(state);
-            if (!state.equals("SUCCEEDED")) {
-                String confUrl = jobUrlPrefix + "/conf/";
-                String response = getHttpResponse(confUrl);
-                FileUtils.writeStringToFile(new File(exportDir, "job_conf.json"), response, Charset.defaultCharset());
-            }
+            String confUrl = jobUrlPrefix + "/conf/";
+            String response = getHttpResponse(confUrl);
+            FileUtils.writeStringToFile(new File(exportDir, "job_conf.json"), response, Charset.defaultCharset());
         } catch (Exception e) {
             logger.warn("Failed to get job conf rest response.", e);
         }
