@@ -106,6 +106,7 @@
                   <div class="col-xs-12 col-sm-6">
                     <!--retention range is store in CubeInstance, will convert to cubeMetaFrame for front end-->
                     <input type="text" retention-format class="form-control ng-scope ng-pristine ng-valid"
+                           placeholder="how many days cube retention" ng-model="cubeMetaFrame.retention_range"
                            ng-if="state.mode=='edit'">
                     <span ng-if="state.mode=='view'">{{cubeMetaFrame.retention_range | millisecondsToDay}}</span>
                   </div>
