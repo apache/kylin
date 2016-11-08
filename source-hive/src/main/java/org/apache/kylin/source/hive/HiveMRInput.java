@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -330,10 +331,22 @@ public class HiveMRInput implements IMRInput {
             KylinConfig config = getCubeSpecificConfig();
 
             try {
-
                 computeRowCount(config.getCliCommandExecutor());
+                Path rowCountFile = null;
+                Path rowCountFolder = new Path(getRowCountOutputDir());
+                FileSystem fs = FileSystem.get(rowCountFolder.toUri(), HadoopUtil.getCurrentConfiguration());
+                for (FileStatus stat : fs.listStatus(rowCountFolder)) {
+                    if (stat.isDirectory() == false && stat.getPath().getName().startsWith("0000")) {
+                        rowCountFile = stat.getPath();
+                        logger.debug("Finding file " + rowCountFile);
+                        break;
+                    }
+                }
 
-                Path rowCountFile = new Path(getRowCountOutputDir(), "000000_0");
+                if (rowCountFile == null) {
+                    return new ExecuteResult(ExecuteResult.State.ERROR, "No row count file found in '" + getRowCountOutputDir() + "'");
+                }
+
                 long rowCount = readRowCountFromFile(rowCountFile);
                 if (!config.isEmptySegmentAllowed() && rowCount == 0) {
                     stepLogger.log("Detect upstream hive table is empty, " + "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
