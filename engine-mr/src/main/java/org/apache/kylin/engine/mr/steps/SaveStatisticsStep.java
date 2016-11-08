@@ -122,7 +122,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
         }
         logger.info("The cube algorithm for " + seg + " is " + alg);
 
-        CubingJob cubingJob = (CubingJob) executableManager.getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
+        CubingJob cubingJob = (CubingJob) getManager().getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
         cubingJob.setAlgorithm(alg);
     }
 

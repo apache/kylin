@@ -277,7 +277,7 @@ public class CubingJob extends DefaultChainedExecutable {
         }
 
         for (AbstractExecutable child : tasks) {
-            Output output = executableManager.getOutput(child.getId());
+            Output output = getManager().getOutput(child.getId());
             String value = output.getExtra().get(key);
             if (value != null)
                 return value;

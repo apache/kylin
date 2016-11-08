@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.manager.ExecutableManager;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

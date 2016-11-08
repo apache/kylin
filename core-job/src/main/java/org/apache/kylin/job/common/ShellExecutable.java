@@ -52,7 +52,7 @@ public class ShellExecutable extends AbstractExecutable {
             logger.info("executing:" + getCmd());
             final ShellExecutableLogger logger = new ShellExecutableLogger();
             final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd(), logger);
-            executableManager.addJobInfo(getId(), logger.getInfo());
+            getManager().addJobInfo(getId(), logger.getInfo());
             return new ExecuteResult(result.getFirst() == 0 ? ExecuteResult.State.SUCCEED : ExecuteResult.State.FAILED, result.getSecond());
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
