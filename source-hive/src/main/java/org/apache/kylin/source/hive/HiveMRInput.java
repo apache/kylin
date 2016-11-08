@@ -282,9 +282,13 @@ public class HiveMRInput implements IMRInput {
             try {
                 long rowCount = computeRowCount(database, tableName);
                 logger.debug("Row count of table '" + intermediateTable + "' is " + rowCount);
-                if (!config.isEmptySegmentAllowed() && rowCount == 0) {
-                    stepLogger.log("Detect upstream hive table is empty, " + "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
-                    return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
+                if (rowCount == 0) {
+                    if (!config.isEmptySegmentAllowed()) {
+                        stepLogger.log("Detect upstream hive table is empty, " + "fail the job because \"kylin.job.allow.empty.segment\" = \"false\"");
+                        return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
+                    } else {
+                        return new ExecuteResult(ExecuteResult.State.SUCCEED, "Row count is 0, no need to redistribute");
+                    }
                 }
 
                 int mapperInputRows = config.getHadoopJobMapperInputRows();
