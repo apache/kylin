@@ -21,7 +21,6 @@ package org.apache.kylin.job.execution;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.exception.ExecuteException;
 
 import com.google.common.collect.Lists;
