@@ -86,7 +86,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit3() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 Include dims not containing all the used dims");
+        thrown.expectMessage("Aggregation group 0 'includes' dimensions not include all the dimensions:[SELLER_ID, META_CATEG_NAME, LSTG_FORMAT_NAME, LSTG_SITE_ID, SLR_SEGMENT_CD]");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         String[] temp = Arrays.asList(cubeDesc.getAggregationGroups().get(0).getIncludes()).subList(0, 3).toArray(new String[3]);
@@ -128,7 +128,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit7() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 require at least 2 dims in a joint");
+        thrown.expectMessage("Aggregation group 0 require at least 2 dimensions in a joint");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { new String[] { "lstg_format_name" } };
@@ -139,7 +139,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit8() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 hierarchy dims overlap with joint dims");
+        thrown.expectMessage("Aggregation group 0 hierarchy dimensions overlap with joint dimensions: [CATEG_LVL2_NAME, META_CATEG_NAME]");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { new String[] { "META_CATEG_NAME", "CATEG_LVL2_NAME" } };
@@ -150,7 +150,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit9() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 hierarchy dims overlap with joint dims");
+        thrown.expectMessage("Aggregation group 0 hierarchy dimensions overlap with joint dimensions: [lstg_format_name, META_CATEG_NAME]");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchy_dims = new String[][] { new String[] { "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" }, new String[] { "lstg_format_name", "lstg_site_id" } };
@@ -162,7 +162,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit10() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 a dim exist in more than one joint");
+        thrown.expectMessage("Aggregation group 0 a dimension exist in more than one joint: [lstg_format_name, lstg_site_id]");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { new String[] { "lstg_format_name", "lstg_site_id", "slr_segment_cd" }, new String[] { "lstg_format_name", "lstg_site_id", "leaf_categ_id" } };
@@ -173,7 +173,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit11() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 require at least 2 dims in a hierarchy");
+        thrown.expectMessage("Aggregation group 0 require at least 2 dimensions in a hierarchy.");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchy_dims = new String[][] { new String[] { "META_CATEG_NAME" } };
@@ -184,7 +184,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit12() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 a dim exist in more than one hierarchy");
+        thrown.expectMessage("Aggregation group 0 a dimension exist in more than one hierarchy: [CATEG_LVL2_NAME, META_CATEG_NAME]");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         cubeDesc.getAggregationGroups().get(0).getSelectRule().hierarchy_dims = new String[][] { new String[] { "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" }, new String[] { "META_CATEG_NAME", "CATEG_LVL2_NAME" } };
