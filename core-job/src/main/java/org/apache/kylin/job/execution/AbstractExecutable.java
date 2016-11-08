@@ -248,14 +248,13 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected final void notifyUserStatusChange(ExecutableContext context, ExecutableState state) {
         try {
-            final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            List<String> users = getAllNofifyUsers(kylinConfig);
+            List<String> users = getAllNofifyUsers(config);
             if (users.isEmpty()) {
                 logger.warn("no need to send email, user list is empty");
                 return;
             }
             final Pair<String, String> email = formatNotifications(context, state);
-            doSendMail(kylinConfig, users, email);
+            doSendMail(config, users, email);
         } catch (Exception e) {
             logger.error("error send email", e);
         }
@@ -287,13 +286,12 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected void sendMail(Pair<String, String> email) {
         try {
-            final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            List<String> users = getAllNofifyUsers(kylinConfig);
+            List<String> users = getAllNofifyUsers(config);
             if (users.isEmpty()) {
                 logger.warn("no need to send email, user list is empty");
                 return;
             }
-            doSendMail(kylinConfig, users, email);
+            doSendMail(config, users, email);
         } catch (Exception e) {
             logger.error("error send email", e);
         }
@@ -378,7 +376,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     }
 
     protected boolean needRetry() {
-        return this.retry <= KylinConfig.getInstanceFromEnv().getJobRetry();
+        return this.retry <= config.getJobRetry();
     }
 
     @Override

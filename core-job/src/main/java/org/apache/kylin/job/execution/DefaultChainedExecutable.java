@@ -33,8 +33,6 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     private final List<AbstractExecutable> subTasks = Lists.newArrayList();
 
-    protected final ExecutableManager jobService = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
-
     public DefaultChainedExecutable() {
         super();
     }
@@ -65,9 +63,9 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         info.put(START_TIME, Long.toString(System.currentTimeMillis()));
         final long startTime = getStartTime();
         if (startTime > 0) {
-            jobService.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+            getManager().updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
         } else {
-            jobService.updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
+            getManager().updateJobOutput(getId(), ExecutableState.RUNNING, info, null);
         }
     }
 
@@ -79,6 +77,8 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
 
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
+        ExecutableManager mgr = getManager();
+        
         if (isDiscarded()) {
             setEndTime(System.currentTimeMillis());
             notifyUserStatusChange(executableContext, ExecutableState.DISCARDED);
@@ -105,22 +105,22 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             }
             if (allSucceed) {
                 setEndTime(System.currentTimeMillis());
-                jobService.updateJobOutput(getId(), ExecutableState.SUCCEED, null, null);
+                mgr.updateJobOutput(getId(), ExecutableState.SUCCEED, null, null);
                 notifyUserStatusChange(executableContext, ExecutableState.SUCCEED);
             } else if (hasError) {
                 setEndTime(System.currentTimeMillis());
-                jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
+                mgr.updateJobOutput(getId(), ExecutableState.ERROR, null, null);
                 notifyUserStatusChange(executableContext, ExecutableState.ERROR);
             } else if (hasRunning) {
-                jobService.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
+                mgr.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
             } else if (hasDiscarded) {
-                jobService.updateJobOutput(getId(), ExecutableState.DISCARDED, null, null);
+                mgr.updateJobOutput(getId(), ExecutableState.DISCARDED, null, null);
             } else {
-                jobService.updateJobOutput(getId(), ExecutableState.READY, null, null);
+                mgr.updateJobOutput(getId(), ExecutableState.READY, null, null);
             }
         } else {
             setEndTime(System.currentTimeMillis());
-            jobService.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
+            mgr.updateJobOutput(getId(), ExecutableState.ERROR, null, result.output());
             notifyUserStatusChange(executableContext, ExecutableState.ERROR);
         }
     }
