@@ -130,14 +130,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
                     cuboidHLLMap.put(cuboidId, hll);
                 }
             }
-        } else if (isPartitionCol == true) {
-            // for partition col min/max value
-            ByteArray value = new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1));
-            if (colValues.size() > 1) {
-                colValues.set(1, value);
-            } else {
-                colValues.add(value);
-            }
         } else {
             colValues.add(new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1)));
             if (colValues.size() == 1000000) { //spill every 1 million

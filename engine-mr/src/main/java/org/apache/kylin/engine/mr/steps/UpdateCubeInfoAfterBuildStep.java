@@ -89,27 +89,8 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final String outputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
         final Path outputFile = new Path(outputPath, partitionCol.getName());
 
-        String minValue = null, maxValue = null, currentValue = null;
-        FSDataInputStream inputStream = null;
-        BufferedReader bufferedReader = null;
-        try {
-            FileSystem fs = HadoopUtil.getFileSystem(outputPath);
-            inputStream = fs.open(outputFile);
-            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            minValue = currentValue = bufferedReader.readLine();
-            while (currentValue != null) {
-                maxValue = currentValue;
-                currentValue = bufferedReader.readLine();
-            }
-        } catch (IOException e) {
-            throw e;
-        } finally {
-            IOUtils.closeQuietly(bufferedReader);
-            IOUtils.closeQuietly(inputStream);
-        }
-
         final DataType partitionColType = partitionCol.getType();
-        FastDateFormat dateFormat;
+        final FastDateFormat dateFormat;
         if (partitionColType.isDate()) {
             dateFormat = DateFormat.getDateFormat(DateFormat.DEFAULT_DATE_PATTERN);
         } else if (partitionColType.isDatetime() || partitionColType.isTimestamp()) {
@@ -124,14 +105,30 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             throw new IllegalStateException("Type " + partitionColType + " is not valid partition column type");
         }
 
+        long minValue = Long.MAX_VALUE, maxValue = Long.MIN_VALUE;
+        String currentValue;
+        FSDataInputStream inputStream = null;
+        BufferedReader bufferedReader = null;
         try {
-            long startTime = dateFormat.parse(minValue).getTime();
-            long endTime = dateFormat.parse(maxValue).getTime();
-            segment.setDateRangeStart(startTime);
-            segment.setDateRangeEnd(endTime);
+            FileSystem fs = HadoopUtil.getFileSystem(outputPath);
+            inputStream = fs.open(outputFile);
+            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            currentValue = bufferedReader.readLine();
+            while (currentValue != null) {
+                long time = dateFormat.parse(currentValue).getTime();
+                minValue = Math.min(time, minValue);
+                maxValue = Math.max(time, maxValue);
+                currentValue = bufferedReader.readLine();
+            }
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            throw new IOException(e);
+        } finally {
+            IOUtils.closeQuietly(bufferedReader);
+            IOUtils.closeQuietly(inputStream);
         }
+
+        segment.setDateRangeStart(minValue);
+        segment.setDateRangeEnd(maxValue);
     }
 
 }
