@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,6 +40,7 @@ import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Iterables;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -50,6 +52,7 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -587,8 +590,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
 
             if (!includeDims.containsAll(mandatoryDims) || !includeDims.containsAll(hierarchyDims) || !includeDims.containsAll(jointDims)) {
-                logger.error("Aggregation group " + index + " Include dims not containing all the used dims");
-                throw new IllegalStateException("Aggregation group " + index + " Include dims not containing all the used dims");
+                List<String> notIncluded = Lists.newArrayList();
+                final Iterable<String> all = Iterables.unmodifiableIterable(Iterables.concat(mandatoryDims, hierarchyDims, jointDims));
+                for (String dim : all) {
+                    if (includeDims.contains(dim) == false) {
+                        notIncluded.add(dim);
+                    }
+                }
+                logger.error("Aggregation group " + index + " Include dimensions not containing all the used dimensions");
+                throw new IllegalStateException("Aggregation group " + index + " 'includes' dimensions not include all the dimensions:" + notIncluded.toString());
             }
 
             Set<String> normalDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
@@ -607,33 +617,36 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
-                logger.warn("Aggregation group " + index + " mandatory dims overlap with hierarchy dims");
+                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with hierarchy dimensions: " + CollectionUtils.intersection(mandatoryDims, hierarchyDims));
             }
             if (CollectionUtils.containsAny(mandatoryDims, jointDims)) {
-                logger.warn("Aggregation group " + index + " mandatory dims overlap with joint dims");
+                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with joint dimensions: " + CollectionUtils.intersection(mandatoryDims, jointDims));
             }
 
             if (CollectionUtils.containsAny(hierarchyDims, jointDims)) {
-                logger.error("Aggregation group " + index + " hierarchy dims overlap with joint dims");
-                throw new IllegalStateException("Aggregation group " + index + " hierarchy dims overlap with joint dims");
+                logger.error("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions");
+                throw new IllegalStateException("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions: " + CollectionUtils.intersection(hierarchyDims, jointDims));
             }
 
             if (hasSingle(hierarchyDimsList)) {
-                logger.error("Aggregation group " + index + " require at least 2 dims in a hierarchy");
-                throw new IllegalStateException("Aggregation group " + index + " require at least 2 dims in a hierarchy");
+                logger.error("Aggregation group " + index + " require at least 2 dimensions in a hierarchy");
+                throw new IllegalStateException("Aggregation group " + index + " require at least 2 dimensions in a hierarchy.");
             }
             if (hasSingle(jointDimsList)) {
-                logger.error("Aggregation group " + index + " require at least 2 dims in a joint");
-                throw new IllegalStateException("Aggregation group " + index + " require at least 2 dims in a joint");
+                logger.error("Aggregation group " + index + " require at least 2 dimensions in a joint");
+                throw new IllegalStateException("Aggregation group " + index + " require at least 2 dimensions in a joint");
             }
 
-            if (hasOverlap(hierarchyDimsList, hierarchyDims)) {
-                logger.error("Aggregation group " + index + " a dim exist in more than one hierarchy");
-                throw new IllegalStateException("Aggregation group " + index + " a dim exist in more than one hierarchy");
+            Pair<Boolean, Set<String>> overlap = hasOverlap(hierarchyDimsList, hierarchyDims);
+            if (overlap.getFirst() == true) {
+                logger.error("Aggregation group " + index + " a dimension exist in more than one hierarchy: " + overlap.getSecond());
+                throw new IllegalStateException("Aggregation group " + index + " a dimension exist in more than one hierarchy: " + overlap.getSecond());
             }
-            if (hasOverlap(jointDimsList, jointDims)) {
-                logger.error("Aggregation group " + index + " a dim exist in more than one joint");
-                throw new IllegalStateException("Aggregation group " + index + " a dim exist in more than one joint");
+
+            overlap = hasOverlap(jointDimsList, jointDims);
+            if (overlap.getFirst() == true) {
+                logger.error("Aggregation group " + index + " a dimension exist in more than one joint: " + overlap.getSecond());
+                throw new IllegalStateException("Aggregation group " + index + " a dimension exist in more than one joint: " + overlap.getSecond());
             }
 
             index++;
@@ -664,21 +677,24 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     private boolean hasSingle(ArrayList<Set<String>> dimsList) {
         boolean hasSingle = false;
         for (Set<String> dims : dimsList) {
-            if (dims.size() < 2)
+            if (dims.size() < 2) {
                 hasSingle = true;
+                break;
+            }
         }
         return hasSingle;
     }
 
-    private boolean hasOverlap(ArrayList<Set<String>> dimsList, Set<String> Dims) {
-        boolean hasOverlap = false;
-        int dimSize = 0;
+    private Pair<Boolean, Set<String>> hasOverlap(ArrayList<Set<String>> dimsList, Set<String> Dims) {
+        Set<String> existing = new HashSet<>();
+        Set<String> overlap = new HashSet<>();
         for (Set<String> dims : dimsList) {
-            dimSize += dims.size();
+            if (CollectionUtils.containsAny(existing, dims)) {
+                overlap.addAll(CollectionUtils.intersection(existing, dims));
+            }
+            existing.addAll(dims);
         }
-        if (dimSize != Dims.size())
-            hasOverlap = true;
-        return hasOverlap;
+        return new Pair<>(overlap.size() > 0, overlap);
     }
 
     private void initDimensionColumns() {
