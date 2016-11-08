@@ -123,7 +123,7 @@ public class CubingJob extends DefaultChainedExecutable {
     @Override
     protected Pair<String, String> formatNotifications(ExecutableContext context, ExecutableState state) {
         CubeInstance cubeInstance = CubeManager.getInstance(context.getConfig()).getCube(CubingExecutableUtil.getCubeName(this.getParams()));
-        final Output output = jobService.getOutput(getId());
+        final Output output = getManager().getOutput(getId());
         String logMsg;
         state = output.getState();
         if (state != ExecutableState.ERROR && !cubeInstance.getDescriptor().getStatusNeedNotify().contains(state.toString())) {
