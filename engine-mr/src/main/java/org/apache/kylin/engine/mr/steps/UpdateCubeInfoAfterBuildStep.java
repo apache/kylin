@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -82,23 +83,8 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
     private void updateTimeRange(CubeSegment segment) throws IOException {
         final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
-        final String factDistinctPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
-        final ReadableTable readableTable = new DFSFileTable(factDistinctPath + "/" + partitionCol.getName(), -1);
-        final ReadableTable.TableReader tableReader = readableTable.getReader();
-        String minValue = null, maxValue = null;
-        try {
-            while (tableReader.next()) {
-                if (minValue == null) {
-                    minValue = tableReader.getRow()[0];
-                }
-                maxValue = tableReader.getRow()[0];
-            }
-        } finally {
-            IOUtils.closeQuietly(tableReader);
-        }
-
         final DataType partitionColType = partitionCol.getType();
-        FastDateFormat dateFormat;
+        final FastDateFormat dateFormat;
         if (partitionColType.isDate()) {
             dateFormat = DateFormat.getDateFormat(DateFormat.DEFAULT_DATE_PATTERN);
         } else if (partitionColType.isDatetime() || partitionColType.isTimestamp()) {
@@ -113,14 +99,24 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             throw new IllegalStateException("Type " + partitionColType + " is not valid partition column type");
         }
 
+        final String factDistinctPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
+        final ReadableTable readableTable = new DFSFileTable(factDistinctPath + "/" + partitionCol.getName(), -1);
+        final ReadableTable.TableReader tableReader = readableTable.getReader();
+        long minValue = Long.MAX_VALUE, maxValue = Long.MIN_VALUE;
         try {
-            long startTime = dateFormat.parse(minValue).getTime();
-            long endTime = dateFormat.parse(maxValue).getTime();
-            segment.setDateRangeStart(startTime);
-            segment.setDateRangeEnd(endTime);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
+            while (tableReader.next()) {
+                long time = dateFormat.parse(tableReader.getRow()[0]).getTime();
+                minValue = Math.min(minValue, time);
+                maxValue = Math.max(maxValue, time);
+            }
+        } catch (ParseException e) {
+            throw new IOException(e);
+        } finally {
+            IOUtils.closeQuietly(tableReader);
         }
+
+        segment.setDateRangeStart(minValue);
+        segment.setDateRangeEnd(maxValue);
     }
 
 }
