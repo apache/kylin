@@ -18,12 +18,10 @@
 
 package org.apache.kylin.job;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.job.impl.threadpool.DefaultContext;
 
 public class ContextTestExecutable extends AbstractExecutable {
     public ContextTestExecutable() {
@@ -33,19 +31,14 @@ public class ContextTestExecutable extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
 
-        DefaultContext defaultContext = (DefaultContext) context;
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
         }
-        if (getHashCode(defaultContext.getConfig()) == getHashCode(KylinConfig.getInstanceFromEnv())) {
+        if (context.getConfig() == BaseTestDistributedScheduler.kylinConfig1) {
             return new ExecuteResult(ExecuteResult.State.SUCCEED, "succeed");
         } else {
             return new ExecuteResult(ExecuteResult.State.ERROR, "error");
         }
-    }
-
-    private int getHashCode(KylinConfig config) {
-        return System.identityHashCode(config);
     }
 }

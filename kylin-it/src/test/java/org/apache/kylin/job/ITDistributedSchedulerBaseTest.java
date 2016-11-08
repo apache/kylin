@@ -42,16 +42,16 @@ public class ITDistributedSchedulerBaseTest extends BaseTestDistributedScheduler
         job.addTask(task1);
         job.addTask(task2);
         job.addTask(task3);
-        jobService.addJob(job);
+        execMgr.addJob(job);
 
         Assert.assertEquals(serverName1, getServerName(segmentId1));
 
         waitForJobFinish(job.getId());
 
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task2.getId()).getState());
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task3.getId()).getState());
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task2.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task3.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
 
         Assert.assertEquals(null, getServerName(segmentId1));
     }
@@ -66,11 +66,11 @@ public class ITDistributedSchedulerBaseTest extends BaseTestDistributedScheduler
         ContextTestExecutable task1 = new ContextTestExecutable();
         task1.setParam(SEGMENT_ID, segmentId2);
         job.addTask(task1);
-        jobService.addJob(job);
+        execMgr.addJob(job);
 
         waitForJobFinish(job.getId());
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
 
         if (!lock(jobLock, segmentId2, serverName2)) {
             throw new JobException("fail to get the lock");
@@ -81,10 +81,10 @@ public class ITDistributedSchedulerBaseTest extends BaseTestDistributedScheduler
         ContextTestExecutable task2 = new ContextTestExecutable();
         task2.setParam(SEGMENT_ID, segmentId2);
         job2.addTask(task2);
-        jobService.addJob(job2);
+        execMgr.addJob(job2);
 
         waitForJobFinish(job2.getId());
-        Assert.assertEquals(ExecutableState.ERROR, jobService.getOutput(task2.getId()).getState());
-        Assert.assertEquals(ExecutableState.ERROR, jobService.getOutput(job2.getId()).getState());
+        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(task2.getId()).getState());
+        Assert.assertEquals(ExecutableState.ERROR, execMgr.getOutput(job2.getId()).getState());
     }
 }

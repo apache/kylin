@@ -43,7 +43,7 @@ public class ITDistributedSchedulerTakeOverTest extends BaseTestDistributedSched
         job.addTask(task1);
         job.addTask(task2);
         job.addTask(task3);
-        jobService.addJob(job);
+        execMgr.addJob(job);
 
         waitForJobStatus(job.getId(), ExecutableState.RUNNING, 500);
 
@@ -52,9 +52,9 @@ public class ITDistributedSchedulerTakeOverTest extends BaseTestDistributedSched
 
         waitForJobFinish(job.getId());
 
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task1.getId()).getState());
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task2.getId()).getState());
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(task3.getId()).getState());
-        Assert.assertEquals(ExecutableState.SUCCEED, jobService.getOutput(job.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task2.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task3.getId()).getState());
+        Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
     }
 }

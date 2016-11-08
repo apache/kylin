@@ -24,7 +24,7 @@ import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -52,11 +52,19 @@ import com.google.common.collect.Iterables;
 public class ZookeeperDistributedJobLock implements DistributedJobLock {
     private static Logger logger = LoggerFactory.getLogger(ZookeeperDistributedJobLock.class);
 
-    private static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
-    private static CuratorFramework zkClient;
-    private static PathChildrenCache childrenCache;
+    public static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
 
-    static {
+    final private KylinConfig config;
+    final CuratorFramework zkClient;
+    final PathChildrenCache childrenCache;
+
+    public ZookeeperDistributedJobLock() {
+        this(KylinConfig.getInstanceFromEnv());
+    }
+
+    public ZookeeperDistributedJobLock(KylinConfig config) {
+        this.config = config;
+
         String zkConnectString = getZKConnectString();
         logger.info("zk connection string:" + zkConnectString);
         if (StringUtils.isEmpty(zkConnectString)) {
@@ -71,12 +79,7 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    childrenCache.close();
-                    zkClient.close();
-                } catch (Exception e) {
-                    logger.error("error occurred to close PathChildrenCache", e);
-                }
+                close();
             }
         }));
     }
@@ -200,7 +203,7 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
         final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        return org.apache.commons.lang3.StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
+        return StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
             @Nullable
             @Override
             public String apply(String input) {
@@ -210,11 +213,11 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
     }
 
     private String getLockPath(String pathName) {
-        return ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/" + pathName;
+        return ZOOKEEPER_LOCK_PATH + "/" + config.getMetadataUrlPrefix() + "/" + pathName;
     }
 
-    private static String getWatchPath() {
-        return ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
+    private String getWatchPath() {
+        return ZOOKEEPER_LOCK_PATH + "/" + config.getMetadataUrlPrefix();
     }
 
     @Override
@@ -225,5 +228,14 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
     @Override
     public void unlock() {
 
+    }
+    
+    public void close() {
+        try {
+            childrenCache.close();
+            zkClient.close();
+        } catch (Exception e) {
+            logger.error("error occurred to close PathChildrenCache", e);
+        }
     }
 }

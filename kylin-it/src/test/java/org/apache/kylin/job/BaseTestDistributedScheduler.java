@@ -18,9 +18,13 @@
 
 package org.apache.kylin.job;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import org.apache.commons.lang.StringUtils;
+import java.io.File;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -29,12 +33,12 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.execution.AbstractExecutable;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DistributedScheduler;
-import org.apache.kylin.job.manager.ExecutableManager;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock;
 import org.junit.AfterClass;
@@ -42,14 +46,11 @@ import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.File;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.util.Arrays;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 
-public class BaseTestDistributedScheduler {
-    static ExecutableManager jobService;
+public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
+    static ExecutableManager execMgr;
     static ZookeeperDistributedJobLock jobLock;
     static DistributedScheduler scheduler1;
     static DistributedScheduler scheduler2;
@@ -62,46 +63,44 @@ public class BaseTestDistributedScheduler {
     static final String segmentId2 = "segmentId2";
     static final String serverName1 = "serverName1";
     static final String serverName2 = "serverName2";
-    static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
     static final String confSrcPath = "../examples/test_case_data/sandbox/kylin.properties";
-    static final String confDstPath = "../examples/kylin.properties";
-    static final String SANDBOX_TEST_DATA = "../examples/test_case_data/sandbox";
+    static final String confDstPath1 = "target/kylin_metadata_dist_lock_test1/kylin.properties";
+    static final String confDstPath2 = "target/kylin_metadata_dist_lock_test2/kylin.properties";
 
     private static final Logger logger = LoggerFactory.getLogger(BaseTestDistributedScheduler.class);
 
-    static {
-        try {
-            ClassUtil.addClasspath(new File(SANDBOX_TEST_DATA).getAbsolutePath());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     @BeforeClass
     public static void setup() throws Exception {
-        staticCreateTestMetadata(SANDBOX_TEST_DATA);
+        staticCreateTestMetadata();
         System.setProperty("kylin.job.controller.lock", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock");
 
+        new File(confDstPath1).getParentFile().mkdirs();
+        new File(confDstPath2).getParentFile().mkdirs();
+        KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
+        String backup = srcConfig.getMetadataUrl();
+        srcConfig.setProperty("kylin.metadata.url", "kylin_metadata_dist_lock_test@hbase");
+        srcConfig.writeProperties(new File(confDstPath1));
+        srcConfig.writeProperties(new File(confDstPath2));
+        srcConfig.setProperty("kylin.metadata.url", backup);
+        kylinConfig1 = KylinConfig.createInstanceFromUri(new File(confDstPath1).getAbsolutePath());
+        kylinConfig2 = KylinConfig.createInstanceFromUri(new File(confDstPath2).getAbsolutePath());
+        
         initZk();
 
-        kylinConfig1 = KylinConfig.getInstanceFromEnv();
-        jobService = ExecutableManager.getInstance(kylinConfig1);
-        for (String jobId : jobService.getAllJobIds()) {
-            jobService.deleteJob(jobId);
+        if (jobLock == null)
+            jobLock = new ZookeeperDistributedJobLock(kylinConfig1);
+
+        execMgr = ExecutableManager.getInstance(kylinConfig1);
+        for (String jobId : execMgr.getAllJobIds()) {
+            execMgr.deleteJob(jobId);
         }
 
-        jobLock = new ZookeeperDistributedJobLock();
         scheduler1 = DistributedScheduler.getInstance(kylinConfig1);
         scheduler1.setServerName(serverName1);
         scheduler1.init(new JobEngineConfig(kylinConfig1), jobLock);
         if (!scheduler1.hasStarted()) {
             throw new RuntimeException("scheduler1 not started");
         }
-
-        String absoluteConfSrcPath = new File(confSrcPath).getAbsolutePath();
-        String absoluteConfDstPath = new File(confDstPath).getAbsolutePath();
-        copyFile(absoluteConfSrcPath, absoluteConfDstPath);
-        kylinConfig2 = KylinConfig.createInstanceFromUri(absoluteConfDstPath);
 
         scheduler2 = DistributedScheduler.getInstance(kylinConfig2);
         scheduler2.setServerName(serverName2);
@@ -115,22 +114,30 @@ public class BaseTestDistributedScheduler {
 
     @AfterClass
     public static void after() throws Exception {
-        System.clearProperty(KylinConfig.KYLIN_CONF);
+        if (scheduler1 != null) {
+            scheduler1.shutdown();
+            scheduler1 = null;
+        }
+        if (scheduler2 != null) {
+            scheduler2.shutdown();
+            scheduler2 = null;
+        }
+        if (jobLock != null) {
+            jobLock.close();
+            jobLock = null;
+        }
+        if (zkClient != null) {
+            zkClient.close();
+            zkClient = null;
+        }
+        
         System.clearProperty("kylin.job.controller.lock");
-
-        deleteFile(confDstPath);
-    }
-
-    private static void staticCreateTestMetadata(String kylinConfigFolder) {
-        KylinConfig.destroyInstance();
-
-        if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
-            System.setProperty(KylinConfig.KYLIN_CONF, kylinConfigFolder);
+        staticCleanupTestMetadata();
     }
 
     void waitForJobFinish(String jobId) {
         while (true) {
-            AbstractExecutable job = jobService.getJob(jobId);
+            AbstractExecutable job = execMgr.getJob(jobId);
             final ExecutableState status = job.getStatus();
             if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR || status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED) {
                 break;
@@ -146,7 +153,7 @@ public class BaseTestDistributedScheduler {
 
     void waitForJobStatus(String jobId, ExecutableState state, long interval) {
         while (true) {
-            AbstractExecutable job = jobService.getJob(jobId);
+            AbstractExecutable job = execMgr.getJob(jobId);
             if (state == job.getStatus()) {
                 break;
             } else {
@@ -177,7 +184,7 @@ public class BaseTestDistributedScheduler {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
         final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        return org.apache.commons.lang3.StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
+        return StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
             @Nullable
             @Override
             public String apply(String input) {
@@ -203,24 +210,6 @@ public class BaseTestDistributedScheduler {
     }
 
     private String getLockPath(String pathName) {
-        return ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/" + pathName;
-    }
-
-    private static void copyFile(String srcPath, String dstPath) {
-        try {
-            File srcFile = new File(srcPath);
-            File dstFile = new File(dstPath);
-            Files.copy(srcFile.toPath(), dstFile.toPath());
-        } catch (Exception e) {
-            logger.error("copy the file failed", e);
-        }
-    }
-
-    private static void deleteFile(String path) {
-        try {
-            Files.delete(new File(path).toPath());
-        } catch (Exception e) {
-            logger.error("delete the file failed", e);
-        }
+        return ZookeeperDistributedJobLock.ZOOKEEPER_LOCK_PATH + "/" + kylinConfig1.getMetadataUrlPrefix() + "/" + pathName;
     }
 }

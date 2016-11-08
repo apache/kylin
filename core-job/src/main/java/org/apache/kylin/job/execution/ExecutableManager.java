@@ -65,6 +65,10 @@ public class ExecutableManager {
         return r;
     }
 
+    public static void clearCache() {
+        CACHE.clear();
+    }
+
     private ExecutableManager(KylinConfig config) {
         logger.info("Using metadata url: " + config);
         this.config = config;

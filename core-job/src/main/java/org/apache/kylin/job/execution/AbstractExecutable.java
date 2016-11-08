@@ -66,6 +66,10 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         this.config = config;
     }
     
+    protected KylinConfig getConfig() {
+        return config;
+    }
+    
     protected ExecutableManager getManager() {
         return ExecutableManager.getInstance(config);
     }
