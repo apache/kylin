@@ -133,18 +133,22 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
     protected void cleanup(Context context) throws IOException, InterruptedException {
         logger.info("Totally handled " + counter + " records!");
 
-        while (!future.isDone()) {
-            if (queue.offer(Collections.<String> emptyList(), 1, TimeUnit.SECONDS)) {
-                break;
-            }
-        }
-
         try {
-            future.get();
-        } catch (Exception e) {
-            throw new IOException("Failed to build cube in mapper " + context.getTaskAttemptID().getTaskID().getId(), e);
+            while (!future.isDone()) {
+                if (queue.offer(Collections.<String> emptyList(), 1, TimeUnit.SECONDS)) {
+                    break;
+                }
+            }
+    
+            try {
+                future.get();
+            } catch (Exception e) {
+                throw new IOException("Failed to build cube in mapper " + context.getTaskAttemptID().getTaskID().getId(), e);
+            }
+            queue.clear();
+        } catch (Throwable ex) {
+            logger.error("", ex);
         }
-        queue.clear();
     }
 
 }

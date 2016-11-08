@@ -62,9 +62,13 @@ public class RangeKeyDistributionMapper extends KylinMapper<Text, Text, Text, Lo
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        if (lastKey != null) {
-            outputValue.set(bytesRead);
-            context.write(lastKey, outputValue);
+        try {
+            if (lastKey != null) {
+                outputValue.set(bytesRead);
+                context.write(lastKey, outputValue);
+            }
+        } catch (Throwable ex) {
+            ex.printStackTrace();
         }
     }
 
