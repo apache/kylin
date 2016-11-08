@@ -69,24 +69,27 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        List<Integer> keys = new ArrayList<Integer>();
-        Iterator<Integer> it = hllcMap.keySet().iterator();
-        while (it.hasNext()) {
-            keys.add(it.next());
+        try {
+            List<Integer> keys = new ArrayList<Integer>();
+            Iterator<Integer> it = hllcMap.keySet().iterator();
+            while (it.hasNext()) {
+                keys.add(it.next());
+            }
+            Collections.sort(keys);
+            it = keys.iterator();
+            while (it.hasNext()) {
+                int key = it.next();
+                HyperLogLogPlusCounter hllc = hllcMap.get(key);
+                ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
+                buf.clear();
+                hllc.writeRegisters(buf);
+                buf.flip();
+                context.write(new IntWritable(key), new LongWritable(hllc.getCountEstimate()));
+                // context.write(new Text("ErrorRate_" + key), new
+                // LongWritable((long)hllc.getErrorRate()));
+            }
+        } catch (Throwable ex) {
+            ex.printStackTrace();
         }
-        Collections.sort(keys);
-        it = keys.iterator();
-        while (it.hasNext()) {
-            int key = it.next();
-            HyperLogLogPlusCounter hllc = hllcMap.get(key);
-            ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
-            buf.clear();
-            hllc.writeRegisters(buf);
-            buf.flip();
-            context.write(new IntWritable(key), new LongWritable(hllc.getCountEstimate()));
-            // context.write(new Text("ErrorRate_" + key), new
-            // LongWritable((long)hllc.getErrorRate()));
-        }
-
     }
 }

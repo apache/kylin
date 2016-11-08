@@ -77,10 +77,14 @@ public class RowKeyDistributionCheckerMapper extends KylinMapper<Text, Text, Tex
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        LongWritable outputValue = new LongWritable();
-        for (Entry<Text, Long> kv : resultMap.entrySet()) {
-            outputValue.set(kv.getValue());
-            context.write(kv.getKey(), outputValue);
+        try {
+            LongWritable outputValue = new LongWritable();
+            for (Entry<Text, Long> kv : resultMap.entrySet()) {
+                outputValue.set(kv.getValue());
+                context.write(kv.getKey(), outputValue);
+            }
+        } catch (Throwable ex) {
+            ex.printStackTrace();
         }
     }
 
