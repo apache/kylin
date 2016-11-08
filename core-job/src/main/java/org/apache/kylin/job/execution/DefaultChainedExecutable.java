@@ -21,6 +21,7 @@ package org.apache.kylin.job.execution;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.exception.ExecuteException;
 
 import com.google.common.collect.Lists;
@@ -36,6 +37,13 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
         super();
     }
 
+    protected void initConfig(KylinConfig config) {
+        super.initConfig(config);
+        for (AbstractExecutable sub : subTasks) {
+            sub.initConfig(config);
+        }
+    }
+    
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         List<? extends Executable> executables = getTasks();

@@ -61,7 +61,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         setId(UUID.randomUUID().toString());
     }
     
-    void initConfig(KylinConfig config) {
+    protected void initConfig(KylinConfig config) {
         Preconditions.checkState(this.config == null || this.config == config);
         this.config = config;
     }
@@ -201,7 +201,8 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public final ExecutableState getStatus() {
-        return getManager().getOutput(this.getId()).getState();
+        ExecutableManager manager = getManager();
+        return manager.getOutput(this.getId()).getState();
     }
 
     @Override
