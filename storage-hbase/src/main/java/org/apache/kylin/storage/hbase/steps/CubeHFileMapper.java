@@ -74,7 +74,7 @@ public class CubeHFileMapper extends KylinMapper<Text, Text, ImmutableBytesWrita
     }
 
     @Override
-    public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+    public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
         outputKey.set(key.getBytes(), 0, key.getLength());
         KeyValue outputValue;
 

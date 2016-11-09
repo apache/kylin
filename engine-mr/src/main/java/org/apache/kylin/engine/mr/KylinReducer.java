@@ -18,13 +18,62 @@
 
 package org.apache.kylin.engine.mr;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
-public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
+abstract public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
+    private static final Logger logger = LoggerFactory.getLogger(KylinReducer.class);
+    
     protected void bindCurrentConfiguration(Configuration conf) {
         HadoopUtil.setCurrentConfiguration(conf);
+    }
+
+    @Override
+    final public void reduce(KEYIN key, Iterable<VALUEIN> values, Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+        try {
+            doReduce(key, values, context);
+        } catch (IOException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (InterruptedException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (RuntimeException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (Error ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        }
+    }
+    
+    abstract protected void doReduce(KEYIN key, Iterable<VALUEIN> values, Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException;
+    
+    @Override
+    final protected void cleanup(Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+        try {
+            doCleanup(context);
+        } catch (IOException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (InterruptedException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (RuntimeException ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        } catch (Error ex) { // KYLIN-2170
+            logger.error("", ex);
+            throw ex;
+        }
+    }
+
+    protected void doCleanup(Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
     }
 }

@@ -25,6 +25,7 @@ import org.apache.kylin.common.util.BytesUtil;
 /**
  */
 public class FactDistinctColumnPartitioner extends Partitioner<Text, Text> {
+
     @Override
     public int getPartition(Text key, Text value, int numReduceTasks) {
         if (key.getBytes()[0] == FactDistinctHiveColumnsMapper.MARK_FOR_HLL) {

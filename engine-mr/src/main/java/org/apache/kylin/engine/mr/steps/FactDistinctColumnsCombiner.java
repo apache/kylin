@@ -34,7 +34,7 @@ public class FactDistinctColumnsCombiner extends KylinReducer<Text, Text, Text, 
     }
 
     @Override
-    public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    public void doReduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
         // for hll, each key only has one output, no need to do local combine;
         // for normal col, values are empty text

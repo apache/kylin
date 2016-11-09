@@ -130,7 +130,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     }
 
     @Override
-    public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    public void doReduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
         if (isStatistics == true) {
             // for hll
@@ -195,29 +195,25 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     }
 
     @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        try {
-            if (isStatistics == false) {
-                if (colValues.size() > 0) {
-                    outputDistinctValues(col, colValues, context);
-                    colValues.clear();
-                }
-            } else {
-                //output the hll info;
-                long grandTotal = 0;
-                for (HyperLogLogPlusCounter hll : cuboidHLLMap.values()) {
-                    grandTotal += hll.getCountEstimate();
-                }
-                double mapperOverlapRatio = grandTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grandTotal;
-    
-                int mapperNumber = baseCuboidRowCountInMappers.size();
-    
-                writeMapperAndCuboidStatistics(context); // for human check
-                CubeStatsWriter.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), //
-                        cuboidHLLMap, samplingPercentage, mapperNumber, mapperOverlapRatio);
+    protected void doCleanup(Context context) throws IOException, InterruptedException {
+        if (isStatistics == false) {
+            if (colValues.size() > 0) {
+                outputDistinctValues(col, colValues, context);
+                colValues.clear();
             }
-        } catch (Throwable ex) {
-            logger.error("", ex);
+        } else {
+            //output the hll info;
+            long grandTotal = 0;
+            for (HyperLogLogPlusCounter hll : cuboidHLLMap.values()) {
+                grandTotal += hll.getCountEstimate();
+            }
+            double mapperOverlapRatio = grandTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grandTotal;
+
+            int mapperNumber = baseCuboidRowCountInMappers.size();
+
+            writeMapperAndCuboidStatistics(context); // for human check
+            CubeStatsWriter.writeCuboidStatistics(context.getConfiguration(), new Path(statisticsOutput), //
+                    cuboidHLLMap, samplingPercentage, mapperNumber, mapperOverlapRatio);
         }
     }
 
