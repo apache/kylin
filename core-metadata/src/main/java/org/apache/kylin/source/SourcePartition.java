@@ -18,7 +18,10 @@
 
 package org.apache.kylin.source;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import com.google.common.base.Objects;
 
 /**
  */
@@ -90,14 +93,23 @@ public class SourcePartition {
         this.sourcePartitionOffsetEnd = sourcePartitionOffsetEnd;
     }
 
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("startDate", startDate).add("endDate", endDate).add("startOffset", startOffset).add("endOffset", endOffset).add("sourcePartitionOffsetStart", sourcePartitionOffsetStart.toString()).add("sourcePartitionOffsetEnd", sourcePartitionOffsetEnd.toString()).toString();
+    }
+
     public static SourcePartition getCopyOf(SourcePartition origin) {
         SourcePartition copy = new SourcePartition();
         copy.setStartDate(origin.getStartDate());
         copy.setEndDate(origin.getEndDate());
         copy.setStartOffset(origin.getStartOffset());
         copy.setEndOffset(origin.getEndOffset());
-        copy.setSourcePartitionOffsetStart(origin.getSourcePartitionOffsetStart());
-        copy.setSourcePartitionOffsetEnd(origin.getSourcePartitionOffsetEnd());
+        if (origin.getSourcePartitionOffsetStart() != null) {
+            copy.setSourcePartitionOffsetStart(new HashMap<>(origin.getSourcePartitionOffsetStart()));
+        }
+        if (origin.getSourcePartitionOffsetEnd() != null) {
+            copy.setSourcePartitionOffsetEnd(new HashMap<>(origin.getSourcePartitionOffsetEnd()));
+        }
         return copy;
     }
 }
