@@ -106,7 +106,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     }
 
     @Override
-    public void map(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
+    public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         String[] row = flatTableInputFormat.parseMapperInput(record);
         try {
             for (int i = 0; i < factDictCols.size(); i++) {
@@ -157,27 +157,23 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     }
 
     @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        try {
-            if (collectStatistics) {
-                ByteBuffer hllBuf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
-                // output each cuboid's hll to reducer, key is 0 - cuboidId
-                HyperLogLogPlusCounter hll;
-                for (int i = 0; i < cuboidIds.length; i++) {
-                    hll = allCuboidsHLL[i];
-    
-                    keyBuffer.clear();
-                    keyBuffer.put(MARK_FOR_HLL); // one byte
-                    keyBuffer.putLong(cuboidIds[i]);
-                    outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
-                    hllBuf.clear();
-                    hll.writeRegisters(hllBuf);
-                    outputValue.set(hllBuf.array(), 0, hllBuf.position());
-                    context.write(outputKey, outputValue);
-                }
+    protected void doCleanup(Context context) throws IOException, InterruptedException {
+        if (collectStatistics) {
+            ByteBuffer hllBuf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
+            // output each cuboid's hll to reducer, key is 0 - cuboidId
+            HyperLogLogPlusCounter hll;
+            for (int i = 0; i < cuboidIds.length; i++) {
+                hll = allCuboidsHLL[i];
+
+                keyBuffer.clear();
+                keyBuffer.put(MARK_FOR_HLL); // one byte
+                keyBuffer.putLong(cuboidIds[i]);
+                outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
+                hllBuf.clear();
+                hll.writeRegisters(hllBuf);
+                outputValue.set(hllBuf.array(), 0, hllBuf.position());
+                context.write(outputKey, outputValue);
             }
-        } catch (Throwable ex) {
-            ex.printStackTrace();
         }
     }
 }

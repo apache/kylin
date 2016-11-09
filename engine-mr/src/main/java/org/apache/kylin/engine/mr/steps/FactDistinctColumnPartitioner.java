@@ -26,6 +26,7 @@ import org.apache.kylin.common.util.BytesUtil;
 /**
  */
 public class FactDistinctColumnPartitioner extends Partitioner<Text, Text> {
+    @SuppressWarnings("unused")
     private Configuration conf;
 
     @Override

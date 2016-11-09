@@ -113,7 +113,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
     }
 
     @Override
-    public void map(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
+    public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         // put each row to the queue
         String[] row = flatTableInputFormat.parseMapperInput(record);
         List<String> rowAsList = Arrays.asList(row);
@@ -130,25 +130,21 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
     }
 
     @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
+    protected void doCleanup(Context context) throws IOException, InterruptedException {
         logger.info("Totally handled " + counter + " records!");
 
-        try {
-            while (!future.isDone()) {
-                if (queue.offer(Collections.<String> emptyList(), 1, TimeUnit.SECONDS)) {
-                    break;
-                }
+        while (!future.isDone()) {
+            if (queue.offer(Collections.<String> emptyList(), 1, TimeUnit.SECONDS)) {
+                break;
             }
-    
-            try {
-                future.get();
-            } catch (Exception e) {
-                throw new IOException("Failed to build cube in mapper " + context.getTaskAttemptID().getTaskID().getId(), e);
-            }
-            queue.clear();
-        } catch (Throwable ex) {
-            logger.error("", ex);
         }
+
+        try {
+            future.get();
+        } catch (Exception e) {
+            throw new IOException("Failed to build cube in mapper " + context.getTaskAttemptID().getTaskID().getId(), e);
+        }
+        queue.clear();
     }
 
 }

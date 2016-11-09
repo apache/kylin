@@ -73,7 +73,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
     }
 
     @Override
-    public void reduce(ByteArrayWritable key, Iterable<ByteArrayWritable> values, Context context) throws IOException, InterruptedException {
+    public void doReduce(ByteArrayWritable key, Iterable<ByteArrayWritable> values, Context context) throws IOException, InterruptedException {
 
         aggs.reset();
 

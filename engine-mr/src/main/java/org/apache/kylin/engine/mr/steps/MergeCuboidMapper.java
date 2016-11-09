@@ -169,7 +169,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     }
 
     @Override
-    public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+    public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
         long cuboidID = rowKeySplitter.split(key.getBytes());
         Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidID);
         RowKeyEncoder rowkeyEncoder = rowKeyEncoderProvider.getRowkeyEncoder(cuboid);
