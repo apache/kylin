@@ -39,13 +39,9 @@ public class KafkaFlatTableMapper extends KylinMapper<LongWritable, BytesWritabl
     }
 
     @Override
-    public void map(LongWritable key, BytesWritable value, Context context) throws IOException {
-        try {
-            outKey.set(Bytes.toBytes(key.get()));
-            outValue.set(value.getBytes(), 0, value.getLength());
-            context.write(outKey, outValue);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    public void doMap(LongWritable key, BytesWritable value, Context context) throws IOException, InterruptedException {
+        outKey.set(Bytes.toBytes(key.get()));
+        outValue.set(value.getBytes(), 0, value.getLength());
+        context.write(outKey, outValue);
     }
 }

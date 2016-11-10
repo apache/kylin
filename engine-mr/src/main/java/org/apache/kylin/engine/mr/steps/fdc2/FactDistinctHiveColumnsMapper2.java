@@ -131,7 +131,7 @@ public class FactDistinctHiveColumnsMapper2<KEYIN> extends FactDistinctColumnsMa
     }
 
     @Override
-    public void map(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
+    public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         String[] row = flatTableInputFormat.parseMapperInput(record);
 
         keyBuffer.clear();
@@ -208,7 +208,7 @@ public class FactDistinctHiveColumnsMapper2<KEYIN> extends FactDistinctColumnsMa
     }
 
     @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
+    protected void doCleanup(Context context) throws IOException, InterruptedException {
         if (collectStatistics) {
             ByteBuffer hllBuf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
             // output each cuboid's hll to reducer, key is 0 - cuboidId
