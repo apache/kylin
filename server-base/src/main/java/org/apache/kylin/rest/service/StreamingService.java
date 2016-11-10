@@ -26,15 +26,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Component;
 
 @Component("streamingMgmtService")
 public class StreamingService extends BasicService {
-
-    @Autowired
-    private AccessService accessService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<StreamingConfig> listAllStreamingConfigs(final String table) throws IOException {

@@ -87,7 +87,6 @@ import com.google.common.collect.Sets;
 @Component("jobService")
 public class JobService extends BasicService implements InitializingBean {
 
-    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(JobService.class);
 
     private JobLock jobLock;

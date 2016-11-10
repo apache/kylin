@@ -25,15 +25,11 @@ import java.util.List;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Component;
 
 @Component("kafkaMgmtService")
 public class KafkaConfigService extends BasicService {
-
-    @Autowired
-    private AccessService accessService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<KafkaConfig> listAllKafkaConfigs(final String kafkaConfigName) throws IOException {

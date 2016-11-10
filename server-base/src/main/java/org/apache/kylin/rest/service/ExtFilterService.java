@@ -26,16 +26,13 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 @Component("extFilterService")
 public class ExtFilterService extends BasicService {
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(ExtFilterService.class);
-
-    @Autowired
-    private AccessService accessService;
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void saveExternalFilter(ExternalFilterDesc desc) throws IOException {
