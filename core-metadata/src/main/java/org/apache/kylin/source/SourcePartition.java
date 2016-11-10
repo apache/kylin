@@ -104,8 +104,12 @@ public class SourcePartition {
         copy.setEndDate(origin.getEndDate());
         copy.setStartOffset(origin.getStartOffset());
         copy.setEndOffset(origin.getEndOffset());
-        copy.setSourcePartitionOffsetStart(new HashMap<>(origin.getSourcePartitionOffsetStart()));
-        copy.setSourcePartitionOffsetEnd(new HashMap<>(origin.getSourcePartitionOffsetEnd()));
+        if (origin.getSourcePartitionOffsetStart() != null) {
+            copy.setSourcePartitionOffsetStart(new HashMap<>(origin.getSourcePartitionOffsetStart()));
+        }
+        if (origin.getSourcePartitionOffsetEnd() != null) {
+            copy.setSourcePartitionOffsetEnd(new HashMap<>(origin.getSourcePartitionOffsetEnd()));
+        }
         return copy;
     }
 }
