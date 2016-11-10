@@ -94,7 +94,7 @@
 
     <property>
         <name>mapreduce.map.java.opts</name>
-        <value>-Xmx2700m -XX:OnOutOfMemoryError="kill -9 %p"</value>
+        <value>-Xmx2700m -XX:OnOutOfMemoryError='kill -9 %p'</value>
         <description></description>
     </property>
 
