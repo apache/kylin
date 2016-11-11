@@ -270,25 +270,47 @@ public class JobService extends BasicService implements InitializingBean {
 
         checkCubeDescSignature(cube);
         DefaultChainedExecutable job;
-        if (buildType == CubeBuildTypeEnum.BUILD) {
-            ISource source = SourceFactory.tableSource(cube);
-            SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
-            sourcePartition = source.parsePartitionBeforeBuild(cube, sourcePartition);
-            CubeSegment newSeg = getCubeManager().appendSegment(cube, sourcePartition);
-            lockSegment(newSeg.getUuid());
-            job = EngineFactory.createBatchCubingJob(newSeg, submitter);
-        } else if (buildType == CubeBuildTypeEnum.MERGE) {
-            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
-            lockSegment(newSeg.getUuid());
-            job = EngineFactory.createBatchMergeJob(newSeg, submitter);
-        } else if (buildType == CubeBuildTypeEnum.REFRESH) {
-            CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
-            lockSegment(refreshSeg.getUuid());
-            job = EngineFactory.createBatchCubingJob(refreshSeg, submitter);
-        } else {
-            throw new JobException("invalid build type:" + buildType);
+
+        CubeSegment newSeg = null;
+        try {
+            if (buildType == CubeBuildTypeEnum.BUILD) {
+                ISource source = SourceFactory.tableSource(cube);
+                SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+                sourcePartition = source.parsePartitionBeforeBuild(cube, sourcePartition);
+                newSeg = getCubeManager().appendSegment(cube, sourcePartition);
+                lockSegment(newSeg.getUuid());
+                job = EngineFactory.createBatchCubingJob(newSeg, submitter);
+            } else if (buildType == CubeBuildTypeEnum.MERGE) {
+                newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
+                lockSegment(newSeg.getUuid());
+                job = EngineFactory.createBatchMergeJob(newSeg, submitter);
+            } else if (buildType == CubeBuildTypeEnum.REFRESH) {
+                newSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
+                lockSegment(newSeg.getUuid());
+                job = EngineFactory.createBatchCubingJob(newSeg, submitter);
+            } else {
+                throw new JobException("invalid build type:" + buildType);
+            }
+
+            getExecutableManager().addJob(job);
+
+        } catch (Exception e) {
+            if (newSeg != null) {
+                logger.error("Job submission might failed for NEW segment {}, will clean the NEW segment from cube", newSeg.getName());
+                try {
+                    // Remove this segments
+                    CubeUpdate cubeBuilder = new CubeUpdate(cube);
+                    cubeBuilder.setToRemoveSegs(newSeg);
+                    getCubeManager().updateCube(cubeBuilder);
+                } catch (Exception ee) {
+                    // swallow the exception
+                    logger.error("Clean New segment failed, ignoring it", e);
+                }
+            }
+            throw e;
+
         }
-        getExecutableManager().addJob(job);
+
         JobInstance jobInstance = getSingleJobInstance(job);
 
         accessService.init(jobInstance, null);
