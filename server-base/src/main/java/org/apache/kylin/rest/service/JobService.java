@@ -95,9 +95,8 @@ public class JobService extends BasicService {
     public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
-        long currentTimeMillis = calendar.getTimeInMillis();
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
-        return listCubeJobInstance(cubeName, projectName, statusList, timeStartInMillis, currentTimeMillis);
+        return listCubeJobInstance(cubeName, projectName, statusList, timeStartInMillis, Long.MAX_VALUE);
     }
 
     @Deprecated
