@@ -30,6 +30,7 @@ import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -37,14 +38,13 @@ import com.google.common.collect.Maps;
  */
 public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
-    private String tableName;
-    private final CubeDesc cubeDesc;
-    private final CubeSegment cubeSegment;
+    protected final String tableName;
+    protected final CubeDesc cubeDesc;
+    protected final CubeSegment cubeSegment;
 
-    private int columnCount;
-
+    private int columnCount = 0;
     private List<TblColRef> columnList = Lists.newArrayList();
-    private Map<TblColRef, Integer> columnIndexMap;
+    private Map<TblColRef, Integer> columnIndexMap = Maps.newHashMap();;
 
     public CubeJoinedFlatTableDesc(CubeDesc cubeDesc) {
         this(cubeDesc, null);
@@ -57,23 +57,34 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     private CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment /* can be null */) {
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
-        this.columnIndexMap = Maps.newHashMap();
-        parseCubeDesc();
+        this.tableName = makeTableName(cubeDesc, cubeSegment);
+        initParseCubeDesc();
     }
 
-    // check what columns from hive tables are required, and index them
-    private void parseCubeDesc() {
+    protected String makeTableName(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         if (cubeSegment == null) {
-            this.tableName = "kylin_intermediate_" + cubeDesc.getName();
+            return "kylin_intermediate_" + cubeDesc.getName();
         } else {
-            this.tableName = "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getUuid().replaceAll("-", "_");
+            return "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getUuid().replaceAll("-", "_");
         }
+    }
+    
+    protected final void initAddColumn(TblColRef col) {
+        if (columnIndexMap.containsKey(col))
+            return;
 
-        int columnIndex = 0;
+        int columnIndex = columnIndexMap.size();
+        columnIndexMap.put(col, columnIndex);
+        columnList.add(col);
+        columnCount = columnIndexMap.size();
+        
+        Preconditions.checkState(columnIndexMap.size() == columnList.size());
+    }
+    
+    // check what columns from hive tables are required, and index them
+    protected void initParseCubeDesc() {
         for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived(false)) {
-            columnIndexMap.put(col, columnIndex);
-            columnList.add(col);
-            columnIndex++;
+            initAddColumn(col);
         }
 
         List<MeasureDesc> measures = cubeDesc.getMeasures();
@@ -84,11 +95,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
             if (colRefs != null) {
                 for (int j = 0; j < colRefs.size(); j++) {
                     TblColRef c = colRefs.get(j);
-                    if (columnList.indexOf(c) < 0) {
-                        columnIndexMap.put(c, columnIndex);
-                        columnList.add(c);
-                        columnIndex++;
-                    }
+                    initAddColumn(c);
                 }
             }
         }
@@ -96,23 +103,13 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         if (cubeDesc.getDictionaries() != null) {
             for (DictionaryDesc dictDesc : cubeDesc.getDictionaries()) {
                 TblColRef c = dictDesc.getColumnRef();
-                if (columnList.indexOf(c) < 0) {
-                    columnIndexMap.put(c, columnIndex);
-                    columnList.add(c);
-                    columnIndex++;
-                }
+                initAddColumn(c);
                 if (dictDesc.getResuseColumnRef() != null) {
                     c = dictDesc.getResuseColumnRef();
-                    if (columnList.indexOf(c) < 0) {
-                        columnIndexMap.put(c, columnIndex);
-                        columnList.add(c);
-                        columnIndex++;
-                    }
+                    initAddColumn(c);
                 }
             }
         }
-
-        columnCount = columnIndex;
     }
 
     // sanity check the input record (in bytes) matches what's expected
