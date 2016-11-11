@@ -266,7 +266,7 @@ public class ExecutableManager {
         if (job instanceof DefaultChainedExecutable) {
             List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
             for (AbstractExecutable task : tasks) {
-                if (task.getStatus() == ExecutableState.ERROR) {
+                if (task.getStatus() == ExecutableState.ERROR || task.getStatus() == ExecutableState.STOPPED) {
                     updateJobOutput(task.getId(), ExecutableState.READY, null, null);
                     break;
                 }
@@ -290,6 +290,15 @@ public class ExecutableManager {
             }
         }
         updateJobOutput(jobId, ExecutableState.DISCARDED, null, null);
+    }
+
+    public void pauseJob(String jobId) {
+        AbstractExecutable job = getJob(jobId);
+        if (job == null) {
+            return;
+        }
+
+        updateJobOutput(jobId, ExecutableState.STOPPED, null, null);
     }
 
     public void updateJobOutput(String jobId, ExecutableState newStatus, Map<String, String> info, String output) {

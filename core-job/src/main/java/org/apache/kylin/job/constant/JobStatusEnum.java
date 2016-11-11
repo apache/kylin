@@ -20,7 +20,7 @@ package org.apache.kylin.job.constant;
 
 public enum JobStatusEnum {
 
-    NEW(0), PENDING(1), RUNNING(2), FINISHED(4), ERROR(8), DISCARDED(16);
+    NEW(0), PENDING(1), RUNNING(2), FINISHED(4), ERROR(8), DISCARDED(16), STOPPED(32);
 
     private final int code;
 

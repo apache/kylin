@@ -380,6 +380,11 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         return status == ExecutableState.DISCARDED;
     }
 
+    protected final boolean isPaused() {
+        final ExecutableState status = getOutput().getState();
+        return status == ExecutableState.STOPPED;
+    }
+
     protected boolean needRetry() {
         return this.retry <= config.getJobRetry();
     }

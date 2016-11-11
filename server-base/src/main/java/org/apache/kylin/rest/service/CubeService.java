@@ -534,7 +534,7 @@ public class CubeService extends BasicService {
         final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
             final ExecutableState status = cubingJob.getStatus();
-            if (status != ExecutableState.SUCCEED && status != ExecutableState.STOPPED && status != ExecutableState.DISCARDED) {
+            if (status != ExecutableState.SUCCEED && status != ExecutableState.DISCARDED) {
                 getExecutableManager().discardJob(cubingJob.getId());
             }
         }

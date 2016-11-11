@@ -257,6 +257,8 @@ public class JobService extends BasicService implements InitializingBean {
             return ExecutableState.READY;
         case RUNNING:
             return ExecutableState.RUNNING;
+        case STOPPED:
+            return ExecutableState.STOPPED;
         default:
             throw new RuntimeException("illegal status:" + status);
         }
@@ -425,6 +427,7 @@ public class JobService extends BasicService implements InitializingBean {
         case SUCCEED:
             return JobStatusEnum.FINISHED;
         case STOPPED:
+            return JobStatusEnum.STOPPED;
         default:
             throw new RuntimeException("invalid state:" + state);
         }
@@ -443,6 +446,7 @@ public class JobService extends BasicService implements InitializingBean {
         case SUCCEED:
             return JobStepStatusEnum.FINISHED;
         case STOPPED:
+            return JobStepStatusEnum.STOPPED;
         default:
             throw new RuntimeException("invalid state:" + state);
         }
@@ -474,6 +478,17 @@ public class JobService extends BasicService implements InitializingBean {
             }
         }
         getExecutableManager().discardJob(job.getId());
+
+        //release the segment lock when discarded the job but the job hasn't scheduled
+        releaseSegmentLock(job.getRelatedSegment());
+
+        return job;
+    }
+
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
+    public JobInstance pauseJob(JobInstance job) throws IOException, JobException {
+        getExecutableManager().pauseJob(job.getId());
 
         //release the segment lock when discarded the job but the job hasn't scheduled
         releaseSegmentLock(job.getRelatedSegment());

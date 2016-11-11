@@ -153,6 +153,28 @@ public class JobController extends BasicController {
 
     }
 
+
+
+    /**
+     * Pause a job
+     *
+     * @return
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{jobId}/pause", method = { RequestMethod.PUT })
+    @ResponseBody
+    public JobInstance pause(@PathVariable String jobId) {
+
+        try {
+            final JobInstance jobInstance = jobService.getJobInstance(jobId);
+            return jobService.pauseJob(jobInstance);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e);
+        }
+
+    }
+
     public void setJobService(JobService jobService) {
         this.jobService = jobService;
     }

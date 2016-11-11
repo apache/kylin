@@ -109,7 +109,7 @@ public class ExecutableManagerTest extends LocalFileMetadataTestCase {
     public void testInvalidStateTransfer() {
         SucceedTestExecutable job = new SucceedTestExecutable();
         service.addJob(job);
-        service.updateJobOutput(job.getId(), ExecutableState.RUNNING, null, null);
+        service.updateJobOutput(job.getId(), ExecutableState.ERROR, null, null);
         service.updateJobOutput(job.getId(), ExecutableState.STOPPED, null, null);
     }
 

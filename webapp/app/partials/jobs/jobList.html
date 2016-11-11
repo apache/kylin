@@ -114,6 +114,11 @@
                              type="info">{{job.progress | number:2}}%
                 </progressbar>
               </div>
+              <div ng-switch-when="STOPPED" tooltip="STOPPED">
+                <progressbar class="progress-striped" value="job.progress"
+                             type="pending">{{job.progress | number:2}}%
+                </progressbar>
+              </div>
               <div ng-switch-when="DISCARDED" tooltip="DISCARDED">
                 <progressbar class="progress-striped" value="job.progress" type="inverse">
                   {{job.progress | number:2}}%
@@ -130,7 +135,10 @@
                 Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
               </button>
               <ul class="dropdown-menu" role="menu">
-                <li ng-if="job.job_status=='ERROR'"><a ng-click="resume(job)">Resume</a></li>
+                <li ng-if="job.job_status=='ERROR' || job.job_status=='STOPPED'"><a ng-click="resume(job)">Resume</a></li>
+                <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING'">
+                  <a ng-click="pause(job)">Pause</a>
+                </li>
                 <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING' || job.job_status=='ERROR'">
                   <a ng-click="cancel(job)">Discard</a>
                 </li>

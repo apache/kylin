@@ -81,7 +81,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                     return;
                 }
 
-                int nRunning = 0, nReady = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
+                int nRunning = 0, nReady = 0, nStopped = 0, nOthers = 0, nError = 0, nDiscarded = 0, nSUCCEED = 0;
                 for (final String id : executableManager.getAllJobIds()) {
                     if (runningJobs.containsKey(id)) {
                         // logger.debug("Job id:" + id + " is already running");
@@ -97,6 +97,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                             nError++;
                         } else if (output.getState() == ExecutableState.SUCCEED) {
                             nSUCCEED++;
+                        } else if (output.getState() == ExecutableState.STOPPED) {
+                            nStopped++;
                         } else {
                             nOthers++;
                         }
@@ -115,7 +117,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         logger.warn(jobDesc + " fail to schedule", ex);
                     }
                 }
-                logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError + " error, " + nDiscarded + " discarded, " + nOthers + " others");
+                logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, " + nStopped + " stopped, " + nReady + " ready, " + nSUCCEED + " already succeed, " + nError + " error, " + nDiscarded + " discarded, " + nOthers + " others");
             } catch (Exception e) {
                 logger.warn("Job Fetcher caught a exception " + e);
             }

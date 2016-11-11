@@ -21,6 +21,7 @@ KylinApp.constant('jobConfig', {
     {name: 'NEW', value: 0},
     {name: 'PENDING', value: 1},
     {name: 'RUNNING', value: 2},
+    {name: 'STOPPED', value: 32},
     {name: 'FINISHED', value: 4},
     {name: 'ERROR', value: 8},
     {name: 'DISCARDED', value: 16}

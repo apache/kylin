@@ -69,7 +69,7 @@ KylinApp
             });
 
           $scope.cubeName=$scope.cubeName == ""?null:$scope.cubeName;
-          
+
             var jobRequest = {
                 cubeName: $scope.cubeName,
                 projectName: $scope.state.projectName,
@@ -178,6 +178,42 @@ KylinApp
               }
             });
         }
+
+      $scope.pause = function (job) {
+        SweetAlert.swal({
+          title: '',
+          text: 'Are you sure to pause the job?',
+          type: '',
+          showCancelButton: true,
+          confirmButtonColor: '#DD6B55',
+          confirmButtonText: "Yes",
+          closeOnConfirm: true
+        }, function(isConfirm) {
+          if(isConfirm) {
+            loadingRequest.show();
+            JobService.pause({jobId: job.uuid}, {}, function (job) {
+              loadingRequest.hide();
+              $scope.safeApply(function() {
+                JobList.jobs[job.uuid] = job;
+                if (angular.isDefined($scope.state.selectedJob)) {
+                  $scope.state.selectedJob = JobList.jobs[ $scope.state.selectedJob.uuid];
+                }
+
+              });
+              SweetAlert.swal('Success!', 'Job has been paused successfully!', 'success');
+            },function(e){
+              loadingRequest.hide();
+              if(e.data&& e.data.exception){
+                var message =e.data.exception;
+                var msg = !!(message) ? message : 'Failed to take action.';
+                SweetAlert.swal('Oops...', msg, 'error');
+              }else{
+                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+              }
+            });
+          }
+        });
+      }
 
       $scope.diagnosisJob =function(job) {
         if (!job){

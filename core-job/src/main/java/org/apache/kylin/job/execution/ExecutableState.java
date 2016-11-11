@@ -63,6 +63,13 @@ public enum ExecutableState {
 
         VALID_STATE_TRANSFER.put(ExecutableState.ERROR, ExecutableState.DISCARDED);
         VALID_STATE_TRANSFER.put(ExecutableState.ERROR, ExecutableState.READY);
+
+
+        VALID_STATE_TRANSFER.put(ExecutableState.READY, ExecutableState.STOPPED);
+        VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.STOPPED);
+
+
+
     }
 
     public boolean isFinalState() {
