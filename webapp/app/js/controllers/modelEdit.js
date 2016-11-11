@@ -85,7 +85,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     var data_type = column[0].datatype;
     if(data_type ==="bigint" ||data_type ==="int" ||data_type ==="integer"){
       $scope.isFormatVisible = false;
-      $scope.modelsManager.selectedModel.partition_desc.partition_date_format=null;
+      $scope.modelsManager.selectedModel.partition_desc.partition_date_format='yyyyMMdd';
       $scope.partitionColumn.hasSeparateTimeColumn=false;
       $scope.modelsManager.selectedModel.partition_desc.partition_time_column=null;
       $scope.modelsManager.selectedModel.partition_desc.partition_time_format=null;
