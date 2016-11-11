@@ -209,19 +209,38 @@ public class JobService extends BasicService {
 
         DefaultChainedExecutable job;
 
-        if (buildType == CubeBuildTypeEnum.BUILD) {
-            CubeSegment newSeg = getCubeManager().appendSegment(cube, startDate, endDate, startOffset, endOffset);
-            job = EngineFactory.createBatchCubingJob(newSeg, submitter);
-        } else if (buildType == CubeBuildTypeEnum.MERGE) {
-            CubeSegment newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
-            job = EngineFactory.createBatchMergeJob(newSeg, submitter);
-        } else if (buildType == CubeBuildTypeEnum.REFRESH) {
-            CubeSegment refreshSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
-            job = EngineFactory.createBatchCubingJob(refreshSeg, submitter);
-        } else {
-            throw new JobException("invalid build type:" + buildType);
+        CubeSegment newSeg = null;
+        try {
+            if (buildType == CubeBuildTypeEnum.BUILD) {
+                newSeg = getCubeManager().appendSegment(cube, startDate, endDate, startOffset, endOffset);
+                job = EngineFactory.createBatchCubingJob(newSeg, submitter);
+            } else if (buildType == CubeBuildTypeEnum.MERGE) {
+                newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
+                job = EngineFactory.createBatchMergeJob(newSeg, submitter);
+            } else if (buildType == CubeBuildTypeEnum.REFRESH) {
+                newSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
+                job = EngineFactory.createBatchCubingJob(newSeg, submitter);
+            } else {
+                throw new JobException("invalid build type:" + buildType);
+            }
+            getExecutableManager().addJob(job);
+
+        } catch (Exception e) {
+            if (newSeg != null) {
+                logger.error("Job submission might failed for NEW segment {}, will clean the NEW segment from cube", newSeg.getName());
+                try {
+                    // Remove this segments
+                    CubeUpdate cubeBuilder = new CubeUpdate(cube);
+                    cubeBuilder.setToRemoveSegs(newSeg);
+                    getCubeManager().updateCube(cubeBuilder);
+                } catch (Exception ee) {
+                    // swallow the exception
+                    logger.error("Clean New segment failed, ignoring it", e);
+                }
+            }
+            throw e;
         }
-        getExecutableManager().addJob(job);
+
         JobInstance jobInstance = getSingleJobInstance(job);
 
         accessService.init(jobInstance, null);
