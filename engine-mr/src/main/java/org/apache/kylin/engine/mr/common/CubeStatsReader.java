@@ -55,7 +55,6 @@ import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,7 +148,7 @@ public class CubeStatsReader {
     public int getMapperNumberOfFirstBuild() {
         return mapperNumberOfFirstBuild;
     }
-    
+
     public double getMapperOverlapRatioOfFirstBuild() {
         return mapperOverlapRatioOfFirstBuild;
     }
@@ -243,6 +242,7 @@ public class CubeStatsReader {
         out.println("Total estimated size(MB): " + SumHelper.sumDouble(cuboidSizes.values()));
         out.println("Sampling percentage:  " + samplingPercentage);
         out.println("Mapper overlap ratio: " + mapperOverlapRatioOfFirstBuild);
+        out.println("Mapper number: " + mapperNumberOfFirstBuild);
         printKVInfo(out);
         printCuboidInfoTreeEntry(cuboidRows, cuboidSizes, out);
         out.println("----------------------------------------------------------------------------");
@@ -302,11 +302,15 @@ public class CubeStatsReader {
         System.out.println("CubeStatsReader is used to read cube statistic saved in metadata store");
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         CubeInstance cube = CubeManager.getInstance(config).getCube(args[0]);
-        List<CubeSegment> segments = cube.getSegments(SegmentStatusEnum.READY);
+        List<CubeSegment> segments = cube.getSegments();
 
         PrintWriter out = new PrintWriter(System.out);
         for (CubeSegment seg : segments) {
-            new CubeStatsReader(seg, config).print(out);
+            try {
+                new CubeStatsReader(seg, config).print(out);
+            } catch (Exception e) {
+                logger.info("CubeStatsReader for Segment {} failed, skip it.", seg.getName());
+            }
         }
         out.flush();
     }
