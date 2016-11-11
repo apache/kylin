@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-abstract public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
+public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
     private static final Logger logger = LoggerFactory.getLogger(KylinReducer.class);
     
     protected void bindCurrentConfiguration(Configuration conf) {
@@ -53,7 +53,9 @@ abstract public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Red
         }
     }
     
-    abstract protected void doReduce(KEYIN key, Iterable<VALUEIN> values, Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException;
+    protected void doReduce(KEYIN key, Iterable<VALUEIN> values, Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+        super.reduce(key, values, context);
+    }
     
     @Override
     final protected void cleanup(Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
