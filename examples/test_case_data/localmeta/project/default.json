@@ -41,6 +41,11 @@
       "name": "test_kylin_cube_with_view_inner_join_empty",
       "type": "CUBE",
       "realization": "test_kylin_cube_with_view_inner_join_empty"
+    },
+    {
+      "name": "ssb",
+      "type": "CUBE",
+      "realization": "ssb"
     }
   ],
   "tables": [
@@ -59,5 +64,8 @@
     "test_kylin_left_join_model_desc",
     "test_kylin_left_join_view_model_desc",
     "test_streaming_table_model_desc"
-  ]
+  ],
+  "overrideKylinProps" :{
+    "kylin.storage.hbase.owner-tag": "kylin@kylin.apache.org"
+  }
 }

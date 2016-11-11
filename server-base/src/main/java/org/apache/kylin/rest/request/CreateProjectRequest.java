@@ -18,11 +18,14 @@
 
 package org.apache.kylin.rest.request;
 
+import java.util.LinkedHashMap;
+
 /**
  */
 public class CreateProjectRequest {
     private String name;
     private String description;
+    private LinkedHashMap<String, String> overrideKylinProps;
 
     public CreateProjectRequest() {
     }
@@ -41,6 +44,14 @@ public class CreateProjectRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public LinkedHashMap<String, String> getOverrideKylinProps() {
+        return overrideKylinProps;
+    }
+
+    public void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
+        this.overrideKylinProps = overrideKylinProps;
     }
 
 }

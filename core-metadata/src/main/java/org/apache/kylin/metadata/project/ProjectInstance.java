@@ -19,12 +19,14 @@
 package org.apache.kylin.metadata.project;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
@@ -78,6 +80,10 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("ext_filters")
     private Set<String> extFilters = new TreeSet<String>();
 
+    @JsonProperty("overrideKylinProps")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private LinkedHashMap<String, String> overrideKylinProps;
+
     public String getResourcePath() {
         return concatResourcePath(name);
     }
@@ -93,7 +99,7 @@ public class ProjectInstance extends RootPersistentEntity {
         return project.toUpperCase();
     }
 
-    public static ProjectInstance create(String name, String owner, String description, List<RealizationEntry> realizationEntries, List<String> models) {
+    public static ProjectInstance create(String name, String owner, String description, LinkedHashMap<String, String> overrideProps, List<RealizationEntry> realizationEntries, List<String> models) {
         ProjectInstance projectInstance = new ProjectInstance();
 
         projectInstance.updateRandomUuid();
@@ -102,6 +108,11 @@ public class ProjectInstance extends RootPersistentEntity {
         projectInstance.setDescription(description);
         projectInstance.setStatus(ProjectStatusEnum.ENABLED);
         projectInstance.setCreateTimeUTC(System.currentTimeMillis());
+        if (overrideProps != null) {
+            projectInstance.setOverrideKylinProps(overrideProps);
+        } else {
+            projectInstance.setOverrideKylinProps(new LinkedHashMap<String, String>());
+        }
         if (realizationEntries != null)
             projectInstance.setRealizationEntries(realizationEntries);
         else
@@ -285,6 +296,14 @@ public class ProjectInstance extends RootPersistentEntity {
         }
     }
 
+    public LinkedHashMap<String, String> getOverrideKylinProps() {
+        return overrideKylinProps;
+    }
+
+    public void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
+        this.overrideKylinProps = overrideKylinProps;
+    }
+
     public void init() {
         if (name == null)
             name = ProjectInstance.DEFAULT_PROJECT_NAME;
@@ -295,6 +314,10 @@ public class ProjectInstance extends RootPersistentEntity {
 
         if (tables == null)
             tables = new TreeSet<String>();
+
+        if (overrideKylinProps == null) {
+            overrideKylinProps = new LinkedHashMap<>();
+        }
 
         if (StringUtils.isBlank(this.name))
             throw new IllegalStateException("Project name must not be blank");

@@ -18,12 +18,15 @@
 
 package org.apache.kylin.rest.request;
 
+import java.util.LinkedHashMap;
+
 /**
  */
 public class UpdateProjectRequest {
     private String formerProjectName;
     private String newProjectName;
     private String newDescription;
+    private LinkedHashMap<String, String> overrideKylinProps;
 
     public UpdateProjectRequest() {
     }
@@ -51,5 +54,13 @@ public class UpdateProjectRequest {
 
     public void setNewProjectName(String newProjectName) {
         this.newProjectName = newProjectName;
+    }
+
+    public LinkedHashMap<String, String> getOverrideKylinProps() {
+        return overrideKylinProps;
+    }
+
+    public void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
+        this.overrideKylinProps = overrideKylinProps;
     }
 }

@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -53,13 +54,15 @@ public class ProjectService extends BasicService {
     public ProjectInstance createProject(CreateProjectRequest projectRequest) throws IOException {
         String projectName = projectRequest.getName();
         String description = projectRequest.getDescription();
+        LinkedHashMap<String, String> overrideProps = projectRequest.getOverrideKylinProps();
+
         ProjectInstance currentProject = getProjectManager().getProject(projectName);
 
         if (currentProject != null) {
             throw new InternalErrorException("The project named " + projectName + " already exists");
         }
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description);
+        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description, overrideProps);
         accessService.init(createdProject, AclPermission.ADMINISTRATION);
         logger.debug("New project created.");
 
@@ -71,18 +74,18 @@ public class ProjectService extends BasicService {
         String formerProjectName = projectRequest.getFormerProjectName();
         String newProjectName = projectRequest.getNewProjectName();
         String newDescription = projectRequest.getNewDescription();
+        LinkedHashMap<String, String> overrideProps = projectRequest.getOverrideKylinProps();
 
         if (currentProject == null) {
             throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
         }
 
-        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription);
+        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription, overrideProps);
 
         logger.debug("Project updated.");
 
         return updatedProject;
     }
-
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<ProjectInstance> listProjects(final Integer limit, final Integer offset) {

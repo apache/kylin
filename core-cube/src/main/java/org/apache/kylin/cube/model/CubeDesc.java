@@ -529,7 +529,16 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         // note CubeDesc.name == CubeInstance.name
         List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
-        logger.info("CubeDesc '" + name + "' is owned by " + ownerPrj);
+
+        // cube inherit the project override props
+        if (ownerPrj.size() == 1) {
+            Map<String, String> prjOverrideProps = ownerPrj.get(0).getOverrideKylinProps();
+            for (Entry<String, String> entry : prjOverrideProps.entrySet()) {
+                if (!overrideKylinProps.containsKey(entry.getKey())) {
+                    overrideKylinProps.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
 
         this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
 
