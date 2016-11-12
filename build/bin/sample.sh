@@ -19,7 +19,7 @@
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
-source ${dir}/check-env.sh
+source ${dir}/check-env.sh "if-not-yet"
 job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
 
 echo "Going to create sample tables in hive..."
