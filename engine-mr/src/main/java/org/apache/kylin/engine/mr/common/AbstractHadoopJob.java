@@ -237,7 +237,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 logger.info("kafka jar file: " + kafkaClientJarPath);
 
             } catch (ClassNotFoundException e) {
-                logger.error("Cannot found kafka dependency jars: " + e);
+                logger.debug("Cannot found kafka dependency jars: " + e);
             }
         }
 

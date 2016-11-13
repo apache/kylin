@@ -1,7 +1,7 @@
 {
   "uuid" : "0ef9b7a8-3929-4dff-b59d-2100aadc8dbf",
   "last_modified" : 1451468470824,
-  "name" : "kylin_sales_cube_desc",
+  "name" : "kylin_sales_cube",
   "model_name" : "kylin_sales_model",
   "description" : null,
   "null_string" : null,
