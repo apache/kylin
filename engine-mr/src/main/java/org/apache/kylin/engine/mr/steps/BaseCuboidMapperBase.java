@@ -195,8 +195,6 @@ public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VAL
     }
 
     protected void outputKV(Context context) throws IOException, InterruptedException {
-        intermediateTableDesc.sanityCheck(bytesSplitter);
-
         byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
         outputKey.set(rowKey, 0, rowKey.length);
 

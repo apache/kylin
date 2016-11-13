@@ -20,7 +20,6 @@ package org.apache.kylin.cube.model;
 
 import java.util.List;
 
-import org.apache.kylin.common.util.BytesSplitter;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -79,16 +78,6 @@ public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc {
                 }
             }
         }
-    }
-
-    // sanity check the input record (in bytes) matches what's expected
-    public void sanityCheck(BytesSplitter bytesSplitter) {
-        int columnCount = flatDesc.getAllColumns().size();
-        if (columnCount != bytesSplitter.getBufferSize()) {
-            throw new IllegalArgumentException("Expect " + columnCount + " columns, but see " + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
-        }
-
-        // TODO: check data types here
     }
 
     public CubeDesc getCubeDesc() {
