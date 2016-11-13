@@ -204,7 +204,7 @@ abstract public class ResourceStore {
      */
     final public void putResource(String resPath, InputStream content, long ts) throws IOException {
         resPath = norm(resPath);
-        logger.debug("Directly saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
+        logger.trace("Directly saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
         putResourceImpl(resPath, content, ts);
     }
 
@@ -255,7 +255,7 @@ abstract public class ResourceStore {
      * delete a resource, does nothing on a folder
      */
     final public void deleteResource(String resPath) throws IOException {
-        logger.debug("Deleting resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
+        logger.trace("Deleting resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
         deleteResourceImpl(norm(resPath));
     }
 
