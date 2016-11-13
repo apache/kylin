@@ -237,7 +237,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
                 logger.info("kafka jar file: " + kafkaClientJarPath);
 
             } catch (ClassNotFoundException e) {
-                logger.warn("Not found kafka client jar from classpath, it is optional for normal build: " + e);
+                logger.debug("Not found kafka client jar from classpath, it is optional for normal build: " + e);
             }
         }
 
