@@ -120,7 +120,7 @@
       "encoding" : "dict"
     }, {
       "column" : "leaf_categ_id",
-      "encoding" : "fixed_length:18"
+      "encoding" : "dict"
     }, {
       "column" : "meta_categ_name",
       "encoding" : "dict"
