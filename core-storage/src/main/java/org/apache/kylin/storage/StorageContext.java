@@ -135,6 +135,7 @@ public class StorageContext {
                     tempPushDownLimit, pushDownLimitMax);
         } else {
             this.finalPushDownLimit = tempPushDownLimit;
+            logger.info("Enable limit: " + tempPushDownLimit);
         }
     }
 
