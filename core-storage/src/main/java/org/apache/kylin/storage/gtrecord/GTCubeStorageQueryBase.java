@@ -34,7 +34,9 @@ import org.apache.kylin.cube.RawQueryLastHacker;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -120,7 +122,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         //set whether to aggr at storage
         context.setNeedStorageAggregation(isNeedStorageAggregation(cuboid, groupsD, singleValuesD));
         // set limit push down
-        enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filter, sqlDigest.aggregations, context);
+        enableStorageLimitIfPossible(cubeInstance.getDescriptor(), cuboid, groups, derivedPostAggregation, groupsD, filter, sqlDigest.aggregations, context);
         context.setFinalPushDownLimit(cubeInstance);
         // set cautious threshold to prevent out of memory
         setThresholdIfNecessary(dimensionsD, metrics, context);
@@ -412,8 +414,24 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
-    private void enableStorageLimitIfPossible(Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter, Collection<FunctionDesc> functionDescs, StorageContext context) {
+    private void enableStorageLimitIfPossible(CubeDesc cubeDesc, Cuboid cuboid, Collection<TblColRef> groups, Set<TblColRef> derivedPostAggregation, Collection<TblColRef> groupsD, TupleFilter filter, Collection<FunctionDesc> functionDescs, StorageContext context) {
         boolean possible = true;
+
+        for (TblColRef col : cuboid.getColumns()) {
+            RowKeyColDesc rowKeyDesc = cubeDesc.getRowkey().getColDesc(col);
+            if (rowKeyDesc != null) {
+                String encodingName = rowKeyDesc.getEncodingName();
+
+                //for numbers, if it's fixed_length encoding, order is no longer preserved
+                if (encodingName != null && encodingName.startsWith(FixedLenDimEnc.ENCODING_NAME) && //
+                        (col.getType().isNumberFamily() || col.getType().isIntegerFamily())) {
+                    possible = false;
+                    logger.info("Storage limit push down is impossible because integer/number is encoded as fixedlength");
+                }
+            } else {
+                logger.warn("RowKeyColDesc for {} does not exist", col);
+            }
+        }
 
         boolean goodFilter = filter == null || TupleFilter.isEvaluableRecursively(filter);
         if (!goodFilter) {
