@@ -23,6 +23,7 @@ import org.apache.kylin.dimension.DateDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
+import org.apache.kylin.dimension.FixedLenDimEnc;
 import org.apache.kylin.dimension.TimeDimEnc;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -61,7 +62,7 @@ public class RowKeyColDesc {
         column = column.toUpperCase();
         bitIndex = index;
         colRef = cubeDesc.getModel().findColumn(column);
-        Preconditions.checkArgument(colRef != null, "Cannot find rowkey column %s in cube %s", column,  cubeDesc);
+        Preconditions.checkArgument(colRef != null, "Cannot find rowkey column %s in cube %s", column, cubeDesc);
 
         Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
         Object[] encodingConf = DimensionEncoding.parseEncodingConf(this.encoding);
@@ -86,6 +87,8 @@ public class RowKeyColDesc {
             throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply date encoding");
         if (TimeDimEnc.ENCODING_NAME.equals(encodingName) && type.isTimeFamily() == false)
             throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply time encoding");
+        if (encodingName.startsWith(FixedLenDimEnc.ENCODING_NAME) && (type.isIntegerFamily() || type.isNumberFamily()))
+            throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply fixed_length encoding");
     }
 
     public String getEncoding() {
