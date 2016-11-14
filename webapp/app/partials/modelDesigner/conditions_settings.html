@@ -60,14 +60,15 @@
           </div>
 
           <!--Date Format-->
-          <div class="form-group"  ng-if="(state.mode=='edit'&&isFormatVisible==true) || (state.mode=='view')">
+          <div class="form-group"  ng-if="(state.mode=='edit') || (state.mode=='view')">
             <div class="row">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Date Format</b></label>
               <div class="col-xs-12 col-sm-6">
                 <select style="width: 100%" chosen
                         ng-required="modelsManager.selectedModel.partition_desc.partition_date_format"
                         ng-model="modelsManager.selectedModel.partition_desc.partition_date_format"
-                        ng-if="state.mode=='edit'&&isFormatVisible==true"
+                        ng-if="state.mode=='edit'"
+                        ng-disabled="isFormatEditable!==true"
                         data-placement=""
                         ng-options="ddt as ddt for ddt in cubeConfig.partitionDateFormatOpt">
                   <option value="">--Select Date Format--</option>
@@ -78,7 +79,7 @@
           </div>
 
           <!--Date Format-->
-          <div class="form-group middle-popover" ng-if="isFormatVisible==true">
+          <div class="form-group middle-popover" ng-if="isFormatEditable==true">
             <div class="row">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Has a separate "time of the day" column ?</b>  <i kylinpopover placement="right" title="Separate Time Column" template="separateTimeColumnTip.html" class="fa fa-info-circle"></i></label>
               <div class="col-xs-12 col-sm-6">
