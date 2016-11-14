@@ -31,7 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * replacement for IntegerDimEnc, the diff is VLongDimEnc supports negative values
+ * replacement for IntDimEnc, the diff is IntegerDimEnc supports negative values
+ * for IntegerDimEnc(N), the supported range is [-2^(8N-1),2^(8N-1)]
  */
 public class IntegerDimEnc extends DimensionEncoding {
     private static final long serialVersionUID = 1L;
