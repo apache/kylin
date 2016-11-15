@@ -33,6 +33,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
@@ -61,6 +62,7 @@ public class RowKeyDecoderTest extends LocalFileMetadataTestCase {
         assertEquals("[" + millis("2012-12-15") + ", 11848, Health & Beauty, Fragrances, Women, FP-GTC, 0, 15]", values.toString());
     }
 
+    @Ignore
     @Test
     public void testDecodeWithSlr() throws Exception {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");

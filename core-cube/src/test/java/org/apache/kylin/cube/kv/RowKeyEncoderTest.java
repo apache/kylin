@@ -32,6 +32,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.MetadataManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
@@ -76,6 +77,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         assertArrayEquals(new byte[] { 11, 55, -13, 13, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
     }
 
+    @Ignore
     @Test
     public void testEncodeWithSlr() throws Exception {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
@@ -111,6 +113,7 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         assertArrayEquals(new byte[] { 11, 55, -13, 49, 49, 56, 52, 56, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 22, 34, 121, 70, 80, 45, 71, 84, 67, 9, 9, 9, 9, 9, 9, 0, 10, 5 }, rest);
     }
 
+    @Ignore
     @Test
     public void testEncodeWithSlr2() throws Exception {
         CubeInstance cube = CubeManager.getInstance(getTestConfig()).getCube("TEST_KYLIN_CUBE_WITH_SLR_READY");
