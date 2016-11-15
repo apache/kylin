@@ -29,16 +29,14 @@ import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
-import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
-import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.storage.hybrid.HybridManager;
 
@@ -124,8 +122,7 @@ public abstract class BasicService {
                 if (null == projectName || null == getProjectManager().getProject(projectName)) {
                     return true;
                 } else {
-                    ProjectInstance project = getProjectManager().getProject(projectName);
-                    return project.containsRealization(RealizationType.CUBE, CubingExecutableUtil.getCubeName(executable.getParams()));
+                    return projectName.equals(executable.getParams().get("projectName"));
                 }
             }
         }, new Predicate<CubingJob>() {
