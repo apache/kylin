@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -39,8 +38,8 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,9 +116,9 @@ public class HiveColumnCardinalityUpdateJob extends AbstractHadoopJob {
         if (scardi.length() > 0) {
             scardi = scardi.substring(0, scardi.length() - 1);
             MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-            Map<String, String> tableExd = metaMgr.getTableDescExd(tableName);
-            tableExd.put(MetadataConstants.TABLE_EXD_CARDINALITY, scardi);
-            metaMgr.saveTableExd(tableName.toUpperCase(), tableExd);
+            TableExtDesc tableExt = metaMgr.getTableExt(tableName);
+            tableExt.setCardinality(scardi);
+            metaMgr.saveTableExt(tableExt);
         } else {
             throw new IllegalArgumentException("No cardinality data is collected for table " + tableName);
         }

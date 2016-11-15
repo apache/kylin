@@ -455,7 +455,12 @@ public class JobService extends BasicService implements InitializingBean {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance cancelJob(JobInstance job) throws IOException, JobException {
+        if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())) {
+            getExecutableManager().discardJob(job.getId());
+            return job;
+        }
         CubeInstance cubeInstance = getCubeManager().getCube(job.getRelatedCube());
+        // might not a cube job
         final String segmentIds = job.getRelatedSegment();
         for (String segmentId : StringUtils.split(segmentIds)) {
             final CubeSegment segment = cubeInstance.getSegmentById(segmentId);

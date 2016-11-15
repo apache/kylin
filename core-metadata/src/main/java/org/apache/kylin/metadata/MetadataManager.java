@@ -18,27 +18,19 @@
 
 package org.apache.kylin.metadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
-import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
-import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
@@ -46,13 +38,13 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Serves (and caches) metadata for Kylin instance.
@@ -67,6 +59,7 @@ public class MetadataManager {
     private static final Logger logger = LoggerFactory.getLogger(MetadataManager.class);
 
     public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
+    public static final Serializer<TableExtDesc> TABLE_EXT_SERIALIZER = new JsonSerializer<TableExtDesc>(TableExtDesc.class);
     public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
     public static final Serializer<ExternalFilterDesc> EXTERNAL_FILTER_DESC_SERIALIZER = new JsonSerializer<ExternalFilterDesc>(ExternalFilterDesc.class);
 
@@ -108,7 +101,7 @@ public class MetadataManager {
     // table name ==> SourceTable
     private CaseInsensitiveStringCache<TableDesc> srcTableMap;
     // name => value
-    private CaseInsensitiveStringCache<Map<String, String>> srcTableExdMap;
+    private CaseInsensitiveStringCache<TableExtDesc> srcTableExdMap;
     // name => DataModelDesc
     private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap;
     // name => External Filter Desc
@@ -155,7 +148,7 @@ public class MetadataManager {
         return Collections.unmodifiableMap(srcTableMap.getMap());
     }
 
-    public Map<String, Map<String, String>> listAllTableExdMap() {
+    public Map<String, TableExtDesc> listAllTableExdMap() {
         return srcTableExdMap.getMap();
     }
 
@@ -199,21 +192,41 @@ public class MetadataManager {
      * @param tableName
      * @return
      */
-    public Map<String, String> getTableDescExd(String tableName) {
-        String tableIdentity = tableName;
-        Map<String, String> result = new HashMap<String, String>();
-        if (srcTableExdMap.containsKey(tableIdentity)) {
-            Map<String, String> tmp = srcTableExdMap.get(tableIdentity);
-            Iterator<Entry<String, String>> it = tmp.entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<String, String> entry = it.next();
-                result.put(entry.getKey(), entry.getValue());
-            }
-            result.put(MetadataConstants.TABLE_EXD_STATUS_KEY, "true");
-        } else {
-            result.put(MetadataConstants.TABLE_EXD_STATUS_KEY, "false");
+    public TableExtDesc getTableExt(String tableName) throws IOException {
+        if (tableName.indexOf(".") < 0)
+            tableName = "DEFAULT." + tableName;
+
+        TableExtDesc result = srcTableExdMap.get(tableName.toUpperCase());
+
+        // create new
+        if (null == result) {
+            result = new TableExtDesc();
+            result.setName(tableName);
+            result.setUuid(UUID.randomUUID().toString());
+            result.setLastModified(0);
+            result.init();
+            saveTableExt(result);
         }
         return result;
+    }
+
+    public void saveTableExt(TableExtDesc tableExt) throws IOException {
+        if (tableExt.getUuid() == null || tableExt.getName() == null) {
+            throw new IllegalArgumentException();
+        }
+
+        tableExt.init();
+
+        String path = tableExt.getResourcePath();
+        getStore().putResource(path, tableExt, TABLE_EXT_SERIALIZER);
+
+        srcTableExdMap.put(tableExt.getName(), tableExt);
+    }
+
+    public void removeTableExt(String tableName) throws IOException {
+        String path = TableExtDesc.concatResourcePath(tableName);
+        getStore().deleteResource(path);
+        srcTableExdMap.remove(tableName);
     }
 
     public void saveSourceTable(TableDesc srcTable) throws IOException {
@@ -261,7 +274,7 @@ public class MetadataManager {
         this.extFilterMap = new CaseInsensitiveStringCache<>(config, "external_filter");
 
         reloadAllSourceTable();
-        reloadAllSourceTableExd();
+        reloadAllTableExt();
         reloadAllDataModel();
         reloadAllExternalFilter();
 
@@ -351,48 +364,38 @@ public class MetadataManager {
         }
     }
 
-    private void reloadAllSourceTableExd() throws IOException {
+    private void reloadAllTableExt() throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Reloading SourceTable exd info from folder " + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
+        logger.debug("Reloading Table_exd info from folder " + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
 
         srcTableExdMap.clear();
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
-            reloadSourceTableExdAt(path);
+            reloadTableExtAt(path);
         }
 
         logger.debug("Loaded " + srcTableExdMap.size() + " SourceTable EXD(s)");
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, String> reloadSourceTableExdAt(String path) throws IOException {
-        Map<String, String> attrs = Maps.newHashMap();
-
+    private TableExtDesc reloadTableExtAt(String path) throws IOException {
         ResourceStore store = getStore();
-        RawResource res = store.getResource(path);
-        if (res == null) {
-            logger.warn("Failed to get table exd info from " + path);
+        TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
+        if (t == null) {
             return null;
         }
+        t.init();
 
-        InputStream is = res.inputStream;
+        String name = t.getName();
 
-        try {
-            attrs.putAll(JsonUtil.readValue(is, HashMap.class));
-        } finally {
-            IOUtils.closeQuietly(is);
+        // remove old json
+        if (name == null) {
+            getStore().deleteResource(path);
         }
 
-        // parse table identity from file name
-        String file = path;
-        if (file.indexOf("/") > -1) {
-            file = file.substring(file.lastIndexOf("/") + 1);
-        }
-        String tableIdentity = file.substring(0, file.length() - MetadataConstants.FILE_SURFIX.length()).toUpperCase();
+        srcTableExdMap.putLocal(name, t);
 
-        srcTableExdMap.putLocal(tableIdentity, attrs);
-        return attrs;
+        return t;
     }
 
     private void reloadAllExternalFilter() throws IOException {
@@ -454,7 +457,7 @@ public class MetadataManager {
     }
 
     public void reloadSourceTableExt(String tableIdentity) throws IOException {
-        reloadSourceTableExdAt(TableDesc.concatExdResourcePath(tableIdentity));
+        reloadTableExtAt(TableExtDesc.concatResourcePath(tableIdentity));
     }
 
     public void reloadSourceTable(String tableIdentity) throws IOException {
@@ -598,33 +601,4 @@ public class MetadataManager {
 
         return dataModelDesc;
     }
-
-    public void saveTableExd(String tableId, Map<String, String> tableExdProperties) throws IOException {
-        if (tableId == null) {
-            throw new IllegalArgumentException("tableId couldn't be null");
-        }
-        TableDesc srcTable = srcTableMap.get(tableId);
-        if (srcTable == null) {
-            throw new IllegalArgumentException("Couldn't find Source Table with identifier: " + tableId);
-        }
-
-        String path = TableDesc.concatExdResourcePath(tableId);
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        JsonUtil.writeValueIndent(os, tableExdProperties);
-        os.flush();
-        InputStream is = new ByteArrayInputStream(os.toByteArray());
-        getStore().putResource(path, is, System.currentTimeMillis());
-        os.close();
-        is.close();
-
-        srcTableExdMap.put(tableId, tableExdProperties);
-    }
-
-    public void removeTableExd(String tableIdentity) throws IOException {
-        String path = TableDesc.concatExdResourcePath(tableIdentity);
-        getStore().deleteResource(path);
-        srcTableExdMap.remove(tableIdentity);
-    }
-
 }

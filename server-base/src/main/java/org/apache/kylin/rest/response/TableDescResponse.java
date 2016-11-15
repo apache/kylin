@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -33,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class TableDescResponse extends TableDesc {
     @JsonProperty("exd")
-    Map<String, String> descExd = new HashMap<String, String>();
+    TableExtDesc descExd;
     @JsonProperty("cardinality")
     Map<String, Long> cardinality = new HashMap<String, Long>();
 
@@ -55,7 +56,7 @@ public class TableDescResponse extends TableDesc {
     /**
      * @return the descExd
      */
-    public Map<String, String> getDescExd() {
+    public TableExtDesc getDescExd() {
         return descExd;
     }
 
@@ -63,7 +64,7 @@ public class TableDescResponse extends TableDesc {
      * @param descExd
      *            the descExd to set
      */
-    public void setDescExd(Map<String, String> descExd) {
+    public void setDescExd(TableExtDesc descExd) {
         this.descExd = descExd;
     }
 

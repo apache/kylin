@@ -28,16 +28,15 @@ import java.util.UUID;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
@@ -80,7 +79,7 @@ public class HiveSourceTableLoader {
     public static void unLoadHiveTable(String hiveTable) throws IOException {
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         metaMgr.removeSourceTable(hiveTable);
-        metaMgr.removeTableExd(hiveTable);
+        metaMgr.removeTableExt(hiveTable);
     }
 
     private static List<String> extractHiveTables(String database, Set<String> tables, IHiveClient hiveClient) throws IOException {
@@ -132,27 +131,21 @@ public class HiveSourceTableLoader {
                 partitionColumnString.append(hiveTableMeta.partitionColumns.get(i).name.toUpperCase());
             }
 
-            Map<String, String> map = metaMgr.getTableDescExd(tableDesc.getIdentity());
+            TableExtDesc tableExtDesc = metaMgr.getTableExt(tableDesc.getIdentity());
+            tableExtDesc.setStorageLocation(hiveTableMeta.sdLocation);
+            tableExtDesc.setOwner(hiveTableMeta.owner);
+            tableExtDesc.setLastAccessTime(String.valueOf(hiveTableMeta.lastAccessTime));
+            tableExtDesc.setPartitionColumn(partitionColumnString.toString());
+            tableExtDesc.setTotalFileSize(String.valueOf(hiveTableMeta.fileSize));
+            tableExtDesc.addDataSourceProp("total_file_number", String.valueOf(hiveTableMeta.fileNum));
+            tableExtDesc.addDataSourceProp("hive_inputFormat", hiveTableMeta.sdInputFormat);
+            tableExtDesc.addDataSourceProp("hive_outputFormat", hiveTableMeta.sdOutputFormat);
 
-            if (map == null) {
-                map = Maps.newHashMap();
-            }
-            map.put(MetadataConstants.TABLE_EXD_TABLENAME, hiveTableMeta.tableName);
-            map.put(MetadataConstants.TABLE_EXD_LOCATION, hiveTableMeta.sdLocation);
-            map.put(MetadataConstants.TABLE_EXD_IF, hiveTableMeta.sdInputFormat);
-            map.put(MetadataConstants.TABLE_EXD_OF, hiveTableMeta.sdOutputFormat);
-            map.put(MetadataConstants.TABLE_EXD_OWNER, hiveTableMeta.owner);
-            map.put(MetadataConstants.TABLE_EXD_LAT, String.valueOf(hiveTableMeta.lastAccessTime));
-            map.put(MetadataConstants.TABLE_EXD_PC, partitionColumnString.toString());
-            map.put(MetadataConstants.TABLE_EXD_TFS, String.valueOf(hiveTableMeta.fileSize));
-            map.put(MetadataConstants.TABLE_EXD_TNF, String.valueOf(hiveTableMeta.fileNum));
-            map.put(MetadataConstants.TABLE_EXD_PARTITIONED, Boolean.valueOf(hiveTableMeta.partitionColumns.size() > 0).toString());
-
+            metaMgr.saveTableExt(tableExtDesc);
             metaMgr.saveSourceTable(tableDesc);
-            metaMgr.saveTableExd(tableDesc.getIdentity(), map);
+
             loadedTables.add(tableDesc.getIdentity());
         }
-
         return loadedTables;
     }
 

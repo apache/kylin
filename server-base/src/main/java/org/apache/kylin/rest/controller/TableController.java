@@ -32,11 +32,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.metadata.streaming.StreamingConfig;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CardinalityRequest;
 import org.apache.kylin.rest.request.HiveTableRequest;
@@ -91,7 +91,7 @@ public class TableController extends BasicController {
      */
     @RequestMapping(value = "", method = { RequestMethod.GET })
     @ResponseBody
-    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = true) String project) {
+    public List<TableDesc> getHiveTables(@RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = true) String project) throws IOException {
         long start = System.currentTimeMillis();
         List<TableDesc> tables = null;
         try {
@@ -120,19 +120,6 @@ public class TableController extends BasicController {
     @ResponseBody
     public TableDesc getHiveTable(@PathVariable String tableName) {
         return cubeMgmtService.getMetadataManager().getTableDesc(tableName);
-    }
-
-    /**
-     * Get available table list of the input database
-     *
-     * @return Table metadata array
-     * @throws IOException
-     */
-    @RequestMapping(value = "/{tableName}/exd-map", method = { RequestMethod.GET })
-    @ResponseBody
-    public Map<String, String> getHiveTableExd(@PathVariable String tableName) {
-        Map<String, String> tableExd = cubeMgmtService.getMetadataManager().getTableDescExd(tableName);
-        return tableExd;
     }
 
     @RequestMapping(value = "/reload", method = { RequestMethod.PUT })
@@ -198,9 +185,9 @@ public class TableController extends BasicController {
             if (!modelService.isTableInModel(tableName, project)) {
                 cubeMgmtService.removeTableFromProject(tableName, project);
                 rtn = true;
-            }else{
+            } else {
                 List<String> models = modelService.getModelsUsingTable(tableName, project);
-                throw new InternalErrorException("Table is already in use by models "+models);
+                throw new InternalErrorException("Table is already in use by models " + models);
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -254,7 +241,7 @@ public class TableController extends BasicController {
      */
     @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT })
     @ResponseBody
-    public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) {
+    public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) throws IOException {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] tables = tableNames.split(",");
         for (String table : tables) {
@@ -267,7 +254,7 @@ public class TableController extends BasicController {
      * @param tables
      * @return
      */
-    private List<TableDesc> cloneTableDesc(List<TableDesc> tables) {
+    private List<TableDesc> cloneTableDesc(List<TableDesc> tables) throws IOException {
         if (null == tables) {
             return Collections.emptyList();
         }
@@ -276,34 +263,31 @@ public class TableController extends BasicController {
         Iterator<TableDesc> it = tables.iterator();
         while (it.hasNext()) {
             TableDesc table = it.next();
-            Map<String, String> exd = cubeMgmtService.getMetadataManager().getTableDescExd(table.getIdentity());
-            if (exd == null) {
-                descs.add(table);
-            } else {
-                // Clone TableDesc
-                TableDescResponse rtableDesc = new TableDescResponse(table);
-                rtableDesc.setDescExd(exd);
-                if (exd.containsKey(MetadataConstants.TABLE_EXD_CARDINALITY)) {
-                    Map<String, Long> cardinality = new HashMap<String, Long>();
-                    String scard = exd.get(MetadataConstants.TABLE_EXD_CARDINALITY);
-                    if (!StringUtils.isEmpty(scard)) {
-                        String[] cards = StringUtils.split(scard, ",");
-                        ColumnDesc[] cdescs = rtableDesc.getColumns();
-                        for (int i = 0; i < cdescs.length; i++) {
-                            ColumnDesc columnDesc = cdescs[i];
-                            if (cards.length > i) {
-                                cardinality.put(columnDesc.getName(), Long.parseLong(cards[i]));
-                            } else {
-                                logger.error("The result cardinality is not identical with hive table metadata, cardinaly : " + scard + " column array length: " + cdescs.length);
-                                break;
-                            }
-                        }
-                        rtableDesc.setCardinality(cardinality);
+            TableExtDesc tableExtDesc = cubeMgmtService.getMetadataManager().getTableExt(table.getIdentity());
+
+            // Clone TableDesc
+            TableDescResponse rtableDesc = new TableDescResponse(table);
+            rtableDesc.setDescExd(tableExtDesc);
+
+            Map<String, Long> cardinality = new HashMap<String, Long>();
+            String scard = tableExtDesc.getCardinality();
+            if (!StringUtils.isEmpty(scard)) {
+                String[] cards = StringUtils.split(scard, ",");
+                ColumnDesc[] cdescs = rtableDesc.getColumns();
+                for (int i = 0; i < cdescs.length; i++) {
+                    ColumnDesc columnDesc = cdescs[i];
+                    if (cards.length > i) {
+                        cardinality.put(columnDesc.getName(), Long.parseLong(cards[i]));
+                    } else {
+                        logger.error("The result cardinality is not identical with hive table metadata, cardinaly : " + scard + " column array length: " + cdescs.length);
+                        break;
                     }
                 }
-                descs.add(rtableDesc);
+                rtableDesc.setCardinality(cardinality);
             }
+            descs.add(rtableDesc);
         }
+
         return descs;
     }
 

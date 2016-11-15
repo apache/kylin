@@ -46,11 +46,12 @@ import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
+import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -449,12 +450,12 @@ public class CubeService extends BasicService {
      * @param tableName
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinality(String tableName, String submitter) {
+    public void calculateCardinality(String tableName, String submitter) throws IOException {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
         TableDesc table = getMetadataManager().getTableDesc(tableName);
-        final Map<String, String> tableExd = getMetadataManager().getTableDescExd(tableName);
-        if (tableExd == null || table == null) {
+        final TableExtDesc tableExt = getMetadataManager().getTableExt(tableName);
+        if (table == null) {
             IllegalArgumentException e = new IllegalArgumentException("Cannot find table descirptor " + tableName);
             logger.error("Cannot find table descirptor " + tableName, e);
             throw e;
@@ -483,6 +484,8 @@ public class CubeService extends BasicService {
         step2.setJobParams(param);
         step2.setParam("segmentId", tableName);
         job.addTask(step2);
+        tableExt.setJodID(job.getId());
+        getMetadataManager().saveTableExt(tableExt);
 
         getExecutableManager().addJob(job);
     }
@@ -576,9 +579,11 @@ public class CubeService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws IOException {
         MetadataManager metaMgr = getMetadataManager();
+        ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
         for (String table : tables) {
-            Map<String, String> exdMap = metaMgr.getTableDescExd(table);
-            if (exdMap == null || !exdMap.containsKey(MetadataConstants.TABLE_EXD_CARDINALITY)) {
+            TableExtDesc tableExtDesc = metaMgr.getTableExt(table);
+            String jobID = tableExtDesc.getJodID();
+            if (null == jobID || ExecutableState.RUNNING != exeMgt.getOutput(jobID).getState()) {
                 calculateCardinality(table, submitter);
             }
         }
