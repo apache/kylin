@@ -127,7 +127,7 @@ public class IntegerDimEnc extends DimensionEncoding {
 
         //only take useful bytes
         integer = integer & MASK[fixedLen];
-        boolean positive = (integer & ((0x80) << ((fixedLen - 1) << 3))) == 0;
+        boolean positive = (integer & ((0x80L) << ((fixedLen - 1) << 3))) == 0;
         if (!positive) {
             integer |= (~MASK[fixedLen]);
         }

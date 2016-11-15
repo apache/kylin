@@ -19,13 +19,59 @@
 package org.apache.kylin.dimension;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class IntegerDimEncTest {
+
+    private static List<long[]> successValue;
+    private static List<long[]> failValue;
+
+    @BeforeClass
+    public static void initTestValue() {
+        successValue = new ArrayList<>();
+        successValue.add(new long[] { -127, 0, 127 });
+        successValue.add(new long[] { -32767, -127, 0, 127, 32767 });
+        successValue.add(new long[] { -8388607, -32767, -127, 0, 127, 32767, 8388607 });
+        successValue.add(new long[] { -2147483647L, -8388607, -32767, -127, 0, 127, 32767, 8388607, 2147483647L });
+        successValue.add(new long[] { -549755813887L, -2147483647L, -8388607, -32767, -127, 0, 127, 32767, 8388607, 2147483647L, 549755813887L });
+        successValue.add(new long[] { -140737488355327L, -549755813887L, -2147483647L, -8388607, -32767, -127, 0, 127, 32767, 8388607, 2147483647L, 549755813887L, 140737488355327L });
+        successValue.add(new long[] { -36028797018963967L, -140737488355327L, -549755813887L, -2147483647L, -8388607, -32767, -127, 0, 127, 32767, 8388607, 2147483647L, 549755813887L, 140737488355327L, 36028797018963967L });
+        successValue.add(new long[] { //
+                -9223372036854775807L, //
+                -36028797018963967L, //
+                -140737488355327L, //
+                -549755813887L, //
+                -2147483647L, //
+                -8388607, //
+                -32767, //
+                -127, //
+                0, //
+                127, // (2 ^ 7) - 1
+                32767, // (2 ^ 15)  - 1
+                8388607, // (2 ^ 23) - 1
+                2147483647L, // (2 ^ 31) - 1
+                549755813887L, // (2 ^ 39) - 1
+                140737488355327L, // (2 ^ 47) - 1
+                36028797018963967L, // (2 ^ 55) - 1
+                9223372036854775807L }); // (2 ^ 63) - 1
+
+        failValue = new ArrayList<>();
+        failValue.add(new long[] { -128, 128 });
+        failValue.add(new long[] { -32768, 32768 });
+        failValue.add(new long[] { -8388608, 8388608 });
+        failValue.add(new long[] { -2147483648L, 2147483648L });
+        failValue.add(new long[] { -549755813888L, 549755813888L });
+        failValue.add(new long[] { -140737488355328L, 140737488355328L });
+        failValue.add(new long[] { -36028797018963968L, 36028797018963968L });
+        failValue.add(new long[] { -9223372036854775808L });
+    }
 
     @Test
     public void testConstructor() {
@@ -66,43 +112,20 @@ public class IntegerDimEncTest {
 
     @Test
     public void testEncodeDecode() {
-        IntegerDimEnc enc = new IntegerDimEnc(2);
-        testEncodeDecode(enc, 0);
-        testEncodeDecode(enc, 100);
-        testEncodeDecode(enc, 10000);
-        testEncodeDecode(enc, 32767);
-        testEncodeDecode(enc, -100);
-        testEncodeDecode(enc, -10000);
-        testEncodeDecode(enc, -32767);
-        try {
-            testEncodeDecode(enc, 32768);
-            Assert.fail();
-        } catch (Throwable e) {
-            Assert.assertEquals("expected:<32768> but was:<null>", e.getMessage());
-        }
-        try {
-            testEncodeDecode(enc, -32768);
-            Assert.fail();
-        } catch (Throwable e) {
-            Assert.assertEquals("expected:<-32768> but was:<null>", e.getMessage());
-        }
-    }
+        for (int i = 1; i <= successValue.size(); i++) {
+            IntegerDimEnc enc = new IntegerDimEnc(i);
+            for (long value : successValue.get(i - 1)) {
+                testEncodeDecode(enc, value);
+            }
 
-    @Test
-    public void testEncodeDecode2() {
-        IntegerDimEnc enc = new IntegerDimEnc(8);
-        testEncodeDecode(enc, 0);
-        testEncodeDecode(enc, 100);
-        testEncodeDecode(enc, 10000);
-        testEncodeDecode(enc, Long.MAX_VALUE);
-        testEncodeDecode(enc, -100);
-        testEncodeDecode(enc, -10000);
-        testEncodeDecode(enc, -Long.MAX_VALUE);
-        try {
-            testEncodeDecode(enc, Long.MIN_VALUE);
-            Assert.fail();
-        } catch (Throwable e) {
-            Assert.assertEquals("expected:<-9223372036854775808> but was:<null>", e.getMessage());
+            for (long value : failValue.get(i - 1)) {
+                try {
+                    testEncodeDecode(enc, value);
+                    Assert.fail();
+                } catch (Throwable e) {
+                    Assert.assertEquals("expected:<" + value + "> but was:<null>", e.getMessage());
+                }
+            }
         }
     }
 
@@ -117,25 +140,19 @@ public class IntegerDimEncTest {
 
     @Test
     public void testSerDes() {
-        IntegerDimEnc enc = new IntegerDimEnc(2);
-        testSerDes(enc, 0);
-        testSerDes(enc, 100);
-        testSerDes(enc, 10000);
-        testSerDes(enc, 32767);
-        testSerDes(enc, -100);
-        testSerDes(enc, -10000);
-        testSerDes(enc, -32767);
-        try {
-            testSerDes(enc, 32768);
-            Assert.fail();
-        } catch (Throwable e) {
-            Assert.assertEquals("expected:<32768> but was:<null>", e.getMessage());
-        }
-        try {
-            testSerDes(enc, -32768);
-            Assert.fail();
-        } catch (Throwable e) {
-            Assert.assertEquals("expected:<-32768> but was:<null>", e.getMessage());
+        for (int i = 1; i <= successValue.size(); i++) {
+            IntegerDimEnc enc = new IntegerDimEnc(i);
+            for (long value : successValue.get(i - 1)) {
+                testSerDes(enc, value);
+            }
+            for (long value : failValue.get(i - 1)) {
+                try {
+                    testSerDes(enc, value);
+                    Assert.fail();
+                } catch (Throwable e) {
+                    Assert.assertEquals("expected:<" + value + "> but was:<null>", e.getMessage());
+                }
+            }
         }
     }
 
@@ -147,5 +164,4 @@ public class IntegerDimEncTest {
         String decode = (String) ser.deserialize(ByteBuffer.wrap(buf));
         Assert.assertEquals(valueStr, decode);
     }
-
 }
