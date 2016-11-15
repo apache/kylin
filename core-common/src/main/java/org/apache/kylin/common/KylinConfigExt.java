@@ -44,13 +44,13 @@ public class KylinConfigExt extends KylinConfig {
             throw new IllegalArgumentException();
         }
         this.base = base;
-        this.overrides = overrides;
+        this.overrides = CBC.check(overrides);
     }
 
     private KylinConfigExt(KylinConfigExt ext, Map<String, String> overrides) {
         super(ext.base.getAllProperties());
         this.base = ext.base;
-        this.overrides = overrides;
+        this.overrides = CBC.check(overrides);
     }
 
     protected String getOptional(String prop, String dft) {

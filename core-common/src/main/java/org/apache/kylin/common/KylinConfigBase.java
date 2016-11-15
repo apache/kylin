@@ -61,6 +61,9 @@ abstract public class KylinConfigBase implements Serializable {
         return kylinHome;
     }
 
+    // backward compatibility check happens when properties is loaded or updated
+    static final BackwardCompatibilityConfig CBC = new BackwardCompatibilityConfig();
+
     // ============================================================================
 
     private volatile Properties properties = new Properties();
@@ -70,7 +73,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public KylinConfigBase(Properties props) {
-        this.properties = props;
+        this.properties = CBC.check(props);
     }
 
     final protected String getOptional(String prop) {
@@ -128,11 +131,11 @@ abstract public class KylinConfigBase implements Serializable {
      */
     final public void setProperty(String key, String value) {
         logger.info("Kylin Config was updated with " + key + " : " + value);
-        properties.setProperty(key, value);
+        properties.setProperty(CBC.check(key), value);
     }
 
     final protected void reloadKylinConfig(Properties properties) {
-        this.properties = properties;
+        this.properties = CBC.check(properties);
     }
 
     // ============================================================================
