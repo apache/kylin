@@ -21,6 +21,7 @@ package org.apache.kylin.dict;
 
 
 import org.apache.kylin.common.util.MemoryBudgetController;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.*;
@@ -223,6 +224,7 @@ public class TrieDictionaryForestTest {
     }
 
     @Test
+    @Ignore
     public void categoryNamesTest() throws Exception {
         InputStream is = new FileInputStream("src/test/resources/dict/dw_category_grouping_names.dat");
         ArrayList<String> str = loadStrings(is);

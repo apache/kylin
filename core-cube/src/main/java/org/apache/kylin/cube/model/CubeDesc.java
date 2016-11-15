@@ -34,13 +34,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Iterables;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -70,12 +69,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -607,8 +607,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                         notIncluded.add(dim);
                     }
                 }
+                Collections.sort(notIncluded);
                 logger.error("Aggregation group " + index + " Include dimensions not containing all the used dimensions");
-                throw new IllegalStateException("Aggregation group " + index + " 'includes' dimensions not include all the dimensions:" + notIncluded.toString());
+                throw new IllegalStateException("Aggregation group " + index + " 'includes' dimensions not include all the dimensions:" +  notIncluded.toString());
             }
 
             Set<String> normalDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
@@ -627,15 +628,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
-                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with hierarchy dimensions: " + CollectionUtils.intersection(mandatoryDims, hierarchyDims));
+                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with hierarchy dimensions: " + ensureOrder(CollectionUtils.intersection(mandatoryDims, hierarchyDims)));
             }
             if (CollectionUtils.containsAny(mandatoryDims, jointDims)) {
-                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with joint dimensions: " + CollectionUtils.intersection(mandatoryDims, jointDims));
+                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with joint dimensions: " + ensureOrder(CollectionUtils.intersection(mandatoryDims, jointDims)));
             }
 
             if (CollectionUtils.containsAny(hierarchyDims, jointDims)) {
                 logger.error("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions");
-                throw new IllegalStateException("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions: " + CollectionUtils.intersection(hierarchyDims, jointDims));
+                throw new IllegalStateException("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions: " + ensureOrder(CollectionUtils.intersection(hierarchyDims, jointDims)));
             }
 
             if (hasSingle(hierarchyDimsList)) {
@@ -649,14 +650,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
             Pair<Boolean, Set<String>> overlap = hasOverlap(hierarchyDimsList, hierarchyDims);
             if (overlap.getFirst() == true) {
-                logger.error("Aggregation group " + index + " a dimension exist in more than one hierarchy: " + overlap.getSecond());
-                throw new IllegalStateException("Aggregation group " + index + " a dimension exist in more than one hierarchy: " + overlap.getSecond());
+                logger.error("Aggregation group " + index + " a dimension exist in more than one hierarchy: " + ensureOrder(overlap.getSecond()));
+                throw new IllegalStateException("Aggregation group " + index + " a dimension exist in more than one hierarchy: " + ensureOrder(overlap.getSecond()));
             }
 
             overlap = hasOverlap(jointDimsList, jointDims);
             if (overlap.getFirst() == true) {
-                logger.error("Aggregation group " + index + " a dimension exist in more than one joint: " + overlap.getSecond());
-                throw new IllegalStateException("Aggregation group " + index + " a dimension exist in more than one joint: " + overlap.getSecond());
+                logger.error("Aggregation group " + index + " a dimension exist in more than one joint: " + ensureOrder(overlap.getSecond()));
+                throw new IllegalStateException("Aggregation group " + index + " a dimension exist in more than one joint: " + ensureOrder(overlap.getSecond()));
             }
 
             index++;
@@ -700,7 +701,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         Set<String> overlap = new HashSet<>();
         for (Set<String> dims : dimsList) {
             if (CollectionUtils.containsAny(existing, dims)) {
-                overlap.addAll(CollectionUtils.intersection(existing, dims));
+                overlap.addAll(ensureOrder(CollectionUtils.intersection(existing, dims)));
             }
             existing.addAll(dims);
         }
@@ -1105,4 +1106,12 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return newCubeDesc;
     }
 
+
+    private Collection ensureOrder(Collection c){
+        TreeSet set = new TreeSet();
+        for(Object o : c)
+            set.add(o.toString());
+        //System.out.println("set:"+set);
+        return set;
+    }
 }
