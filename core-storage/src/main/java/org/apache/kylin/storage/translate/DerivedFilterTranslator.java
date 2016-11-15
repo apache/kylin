@@ -21,6 +21,7 @@ package org.apache.kylin.storage.translate;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.kv.RowKeyColumnOrder;
@@ -36,17 +37,18 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
  * @author yangli9
- * 
  */
 public class DerivedFilterTranslator {
-
-    private static final int IN_THRESHOLD = 5;
+    
+    private static final Logger logger = LoggerFactory.getLogger(DerivedFilterTranslator.class);
 
     public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo, CompareTupleFilter compf) {
 
@@ -83,7 +85,10 @@ public class DerivedFilterTranslator {
 
         TupleFilter translated;
         boolean loosened;
-        if (satisfyingHostRecords.size() > IN_THRESHOLD) {
+        if (satisfyingHostRecords.size() > KylinConfig.getInstanceFromEnv().getDerivedInThreshold()) {
+            logger.info("Deciding to loosen filter on derived filter as host candidates number {} exceeds threshold {}",//
+                    satisfyingHostRecords.size(), KylinConfig.getInstanceFromEnv().getDerivedInThreshold()
+            );
             translated = buildRangeFilter(hostCols, satisfyingHostRecords);
             loosened = true;
         } else {

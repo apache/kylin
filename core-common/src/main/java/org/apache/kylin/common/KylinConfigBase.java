@@ -486,6 +486,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.scan.threshold", "10000000"));
     }
 
+    public int getDerivedInThreshold() {
+        return Integer.parseInt(getOptional("kylin.query.filter.derived_in.max", "20"));
+    }
+
     public int getBadQueryStackTraceDepth() {
         return Integer.parseInt(getOptional("kylin.query.badquery.stacktrace.depth", "10"));
     }
@@ -633,7 +637,6 @@ abstract public class KylinConfigBase implements Serializable {
     public String getHiveDatabaseForIntermediateTable() {
         return this.getOptional("kylin.job.hive.database.for.intermediatetable", "default");
     }
-
 
     public boolean isHiveRedistributeEnabled() {
         return Boolean.parseBoolean(this.getOptional("kylin.job.hive.intermediatetable.redistribute.enabled", "true"));
