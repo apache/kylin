@@ -480,7 +480,10 @@ abstract public class KylinConfigBase implements Serializable {
     public float getCubeVisitTimeoutTimes() {
         return Float.parseFloat(getOptional("kylin.query.cube.visit.timeout.times", "1"));
     }
-
+    
+    public int getDerivedInThreshold() {
+        return Integer.parseInt(getOptional("kylin.query.filter.derived_in.max", "20"));
+    }
     public int getBadQueryStackTraceDepth() {
         return Integer.parseInt(getOptional("kylin.query.badquery.stacktrace.depth", "10"));
     }
