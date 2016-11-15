@@ -20,22 +20,68 @@ package org.apache.kylin.gridtable;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenHexDimEnc;
-import org.apache.kylin.dimension.OneMoreByteVLongDimEnc;
 import org.apache.kylin.dimension.IntegerDimEnc;
+import org.apache.kylin.dimension.OneMoreByteVLongDimEnc;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
 public class DimEncodingPreserveOrderTest {
+    private static List<long[]> successValue;
+    private static List<long[]> failValue;
+
+    @BeforeClass
+    public static void initTestValue() {
+        successValue = new ArrayList<>();
+        successValue.add(new long[] { -127, 0, 127 });
+        successValue.add(new long[] { -32767, -127, 0, 127, 32767 });
+        successValue.add(new long[] { -8388607, -32767, -127, 0, 127, 32767, 8388607 });
+        successValue.add(new long[] { -2147483647L, -8388607, -32767, -127, 0, 127, 32767, 8388607, 2147483647L });
+        successValue.add(new long[] { -549755813887L, -2147483647L, -8388607, -32767, -127, 0, 127, 32767, 8388607, 2147483647L, 549755813887L });
+        successValue.add(new long[] { -140737488355327L, -549755813887L, -2147483647L, -8388607, -32767, -127, 0, 127, 32767, 8388607, 2147483647L, 549755813887L, 140737488355327L });
+        successValue.add(new long[] { -36028797018963967L, -140737488355327L, -549755813887L, -2147483647L, -8388607, -32767, -127, 0, 127, 32767, 8388607, 2147483647L, 549755813887L, 140737488355327L, 36028797018963967L });
+        successValue.add(new long[] { //
+                -9223372036854775807L, //
+                -36028797018963967L, //
+                -140737488355327L, //
+                -549755813887L, //
+                -2147483647L, //
+                -8388607, //
+                -32767, //
+                -127, //
+                0, //
+                127, // (2 ^ 7) - 1
+                32767, // (2 ^ 15)  - 1
+                8388607, // (2 ^ 23) - 1
+                2147483647L, // (2 ^ 31) - 1
+                549755813887L, // (2 ^ 39) - 1
+                140737488355327L, // (2 ^ 47) - 1
+                36028797018963967L, // (2 ^ 55) - 1
+                9223372036854775807L }); // (2 ^ 63) - 1
+
+        failValue = new ArrayList<>();
+        failValue.add(new long[] { -128, 128 });
+        failValue.add(new long[] { -32768, 32768 });
+        failValue.add(new long[] { -8388608, 8388608 });
+        failValue.add(new long[] { -2147483648L, 2147483648L });
+        failValue.add(new long[] { -549755813888L, 549755813888L });
+        failValue.add(new long[] { -140737488355328L, 140737488355328L });
+        failValue.add(new long[] { -36028797018963968L, 36028797018963968L });
+        failValue.add(new long[] { -9223372036854775808L });
+    }
+
     @Test
     public void testOneMoreByteVLongDimEncPreserveOrder() {
+        // TODO: better test
         OneMoreByteVLongDimEnc enc = new OneMoreByteVLongDimEnc(2);
         List<ByteArray> encodedValues = Lists.newArrayList();
         encodedValues.add(encode(enc, -32768L));
@@ -52,34 +98,15 @@ public class DimEncodingPreserveOrderTest {
 
     @Test
     public void testVLongDimEncPreserveOrder() {
-        IntegerDimEnc enc = new IntegerDimEnc(2);
-        List<ByteArray> encodedValues = Lists.newArrayList();
-        encodedValues.add(encode(enc, -32767L));
-        encodedValues.add(encode(enc, -10000L));
-        encodedValues.add(encode(enc, -100L));
-        encodedValues.add(encode(enc, 0L));
-        encodedValues.add(encode(enc, 100L));
-        encodedValues.add(encode(enc, 10000L));
-        encodedValues.add(encode(enc, 32767L));
-        encodedValues.add(encode(enc, null));
-
-        assertTrue(Ordering.from(new DefaultGTComparator()).isOrdered(encodedValues));
-    }
-
-    @Test
-    public void testVLongDimEncPreserveOrder2() {
-        IntegerDimEnc enc = new IntegerDimEnc(8);
-        List<ByteArray> encodedValues = Lists.newArrayList();
-        encodedValues.add(encode(enc, -Long.MAX_VALUE));
-        encodedValues.add(encode(enc, -10000L));
-        encodedValues.add(encode(enc, -100L));
-        encodedValues.add(encode(enc, 0L));
-        encodedValues.add(encode(enc, 100L));
-        encodedValues.add(encode(enc, 10000L));
-        encodedValues.add(encode(enc, Long.MAX_VALUE));
-        encodedValues.add(encode(enc, null));
-
-        assertTrue(Ordering.from(new DefaultGTComparator()).isOrdered(encodedValues));
+        for (int i = 1; i <= successValue.size(); i++) {
+            IntegerDimEnc enc = new IntegerDimEnc(i);
+            List<ByteArray> encodedValues = Lists.newArrayList();
+            for (long value : successValue.get(i - 1)) {
+                encodedValues.add(encode(enc, value));
+            }
+            encodedValues.add(encode(enc, null));
+            assertTrue(Ordering.from(new DefaultGTComparator()).isOrdered(encodedValues));
+        }
     }
 
     private ByteArray encode(DimensionEncoding enc, Object value) {
