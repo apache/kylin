@@ -35,20 +35,20 @@ import com.google.common.collect.Maps;
 public class BackwardCompatibilityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(BackwardCompatibilityConfig.class);
-    static InputStream bccTestInput = null;
     
     private final Map<String, String> old2new = Maps.newConcurrentMap();
     
     public BackwardCompatibilityConfig() {
-        InputStream is;
-        if (bccTestInput == null) {
-            // normal
-            is = Thread.currentThread().getContextClassLoader().getResourceAsStream("kylin-backward-compatibility.properties");
-        } else {
-            // for test
-            is = bccTestInput;
-            bccTestInput = null;
-        }
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("kylin-backward-compatibility.properties");
+        init(is);
+    }
+    
+    // for test
+    BackwardCompatibilityConfig(InputStream is) {
+        init(is);
+    }
+    
+    private void init(InputStream is) {
         if (is == null)
             return;
         

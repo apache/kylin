@@ -36,12 +36,9 @@ import com.google.common.collect.Maps;
 public class KylinConfigTest extends LocalFileMetadataTestCase {
 
     @BeforeClass
-    static public void initBccTestInput() {
-        try {
-            BackwardCompatibilityConfig.bccTestInput = new FileInputStream(new File(LOCALMETA_TEST_DATA, "kylin-backward-compatibility.properties"));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+    static public void initBccTestInput() throws FileNotFoundException {
+        FileInputStream is = new FileInputStream(new File(LOCALMETA_TEST_DATA, "kylin-backward-compatibility.properties"));
+        KylinConfigBase.BCC = new BackwardCompatibilityConfig(is);
     }
     
     @Before
