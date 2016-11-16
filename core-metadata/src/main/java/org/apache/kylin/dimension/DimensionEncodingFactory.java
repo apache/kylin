@@ -18,30 +18,47 @@
 
 package org.apache.kylin.dimension;
 
+import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+
+import javax.annotation.Nullable;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public abstract class DimensionEncodingFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(DimensionEncodingFactory.class);
 
-    private static Map<String, DimensionEncodingFactory> factoryMap;
+    private static Map<Pair<String, Integer>, DimensionEncodingFactory> factoryMap;
 
-    /** Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs. */
-    public static DimensionEncoding create(String encodingName, String[] args) {
+    /**
+     * If a bug found in a DimEnc will cause different cube outputs,
+     * we'll have to increase the version number of DimEnc, in order
+     * to distinguish current version with prior version.
+     * <p>
+     * The default version applys to all existing legacy DimEncs
+     */
+    protected int getCurrentVersion() {
+        return 1;
+    }
+
+    /**
+     * Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs.
+     */
+    public static DimensionEncoding create(String encodingName, String[] args, int version) {
+        logger.debug("Encoding Name : {}, args : {}, version {}", encodingName, Arrays.toString(args), version);
         if (factoryMap == null)
             initFactoryMap();
 
-        DimensionEncodingFactory factory = factoryMap.get(encodingName);
+        DimensionEncodingFactory factory = factoryMap.get(Pair.newPair(encodingName, version));
         if (factory == null) {
             throw new IllegalArgumentException("Unknown dimension encoding name " + encodingName //
                     + " (note '" + DictionaryDimEnc.ENCODING_NAME + "' is not handled by factory)");
@@ -50,43 +67,76 @@ public abstract class DimensionEncodingFactory {
         return factory.createDimensionEncoding(encodingName, args);
     }
 
-    public static Set<String> getValidEncodings() {
+    public static Map<String, Integer> getValidEncodings() {
         if (factoryMap == null)
             initFactoryMap();
 
-        TreeSet<String> result = Sets.newTreeSet();
-        result.addAll(factoryMap.keySet());
-        result.add(DictionaryDimEnc.ENCODING_NAME);
+        Map<String, Integer> result = Maps.newHashMap();
+        for (Pair<String, Integer> p : factoryMap.keySet()) {
+            result.put(p.getFirst(), p.getSecond());
+        }
+        result.put(DictionaryDimEnc.ENCODING_NAME, 1);
         return result;
     }
 
-    public static boolean isVaildEncoding(String encodingName) {
+    public static boolean isValidEncoding(final String encodingName) {
         if (factoryMap == null)
             initFactoryMap();
 
         // note dictionary is a special case
-        return DictionaryDimEnc.ENCODING_NAME.equals(encodingName) || factoryMap.containsKey(encodingName);
+        return DictionaryDimEnc.ENCODING_NAME.equals(encodingName) || //
+                Iterables.any(factoryMap.keySet(), new Predicate<Pair<String, Integer>>() {
+                    @Override
+                    public boolean apply(@Nullable Pair<String, Integer> input) {
+                        return input.getFirst().equals(encodingName);
+                    }
+                });
     }
 
     private synchronized static void initFactoryMap() {
         if (factoryMap == null) {
-            Map<String, DimensionEncodingFactory> map = Maps.newConcurrentMap();
+            Map<Pair<String, Integer>, DimensionEncodingFactory> map = Maps.newConcurrentMap();
 
             // built-in encodings, note dictionary is a special case
-            map.put(FixedLenDimEnc.ENCODING_NAME, new FixedLenDimEnc.Factory());
-            map.put(IntDimEnc.ENCODING_NAME, new IntDimEnc.Factory());
-            map.put(IntegerDimEnc.ENCODING_NAME, new IntegerDimEnc.Factory());
-            map.put(FixedLenHexDimEnc.ENCODING_NAME, new FixedLenHexDimEnc.Factory());
-            map.put(DateDimEnc.ENCODING_NAME, new DateDimEnc.Factory());
-            map.put(TimeDimEnc.ENCODING_NAME, new TimeDimEnc.Factory());
-            map.put(BooleanDimEnc.ENCODING_NAME, new BooleanDimEnc.Factory());
+            {
+                FixedLenDimEnc.Factory value = new FixedLenDimEnc.Factory();
+                map.put(Pair.newPair(FixedLenDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
+            }
+            {
+                IntDimEnc.Factory value = new IntDimEnc.Factory();
+                map.put(Pair.newPair(IntDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
+            }
+            {
+                IntegerDimEnc.Factory value = new IntegerDimEnc.Factory();
+                map.put(Pair.newPair(IntegerDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
+            }
+            {
+                IntegerDimEncV2.Factory value = new IntegerDimEncV2.Factory();
+                map.put(Pair.newPair(IntegerDimEncV2.ENCODING_NAME, value.getCurrentVersion()), value);
+            }
+            {
+                FixedLenHexDimEnc.Factory value = new FixedLenHexDimEnc.Factory();
+                map.put(Pair.newPair(FixedLenHexDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
+            }
+            {
+                DateDimEnc.Factory value = new DateDimEnc.Factory();
+                map.put(Pair.newPair(DateDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
+            }
+            {
+                TimeDimEnc.Factory value = new TimeDimEnc.Factory();
+                map.put(Pair.newPair(TimeDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
+            }
+            {
+                BooleanDimEnc.Factory value = new BooleanDimEnc.Factory();
+                map.put(Pair.newPair(BooleanDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
+            }
 
             // custom encodings
             String[] clsNames = KylinConfig.getInstanceFromEnv().getCubeDimensionCustomEncodingFactories();
             for (String clsName : clsNames) {
                 try {
                     DimensionEncodingFactory factory = (DimensionEncodingFactory) ClassUtil.newInstance(clsName);
-                    map.put(factory.getSupportedEncodingName(), factory);
+                    map.put(Pair.newPair(factory.getSupportedEncodingName(), factory.getCurrentVersion()), factory);
                 } catch (Exception ex) {
                     logger.error("Failed to init dimension encoding factory " + clsName, ex);
                 }
@@ -96,9 +146,13 @@ public abstract class DimensionEncodingFactory {
         }
     }
 
-    /** Return the supported encoding name, corresponds to RowKeyColDesc.encodingName */
+    /**
+     * Return the supported encoding name, corresponds to RowKeyColDesc.encodingName
+     */
     abstract public String getSupportedEncodingName();
 
-    /** Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs */
+    /**
+     * Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs
+     */
     abstract public DimensionEncoding createDimensionEncoding(String encodingName, String[] args);
 }
