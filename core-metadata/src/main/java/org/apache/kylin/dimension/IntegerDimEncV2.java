@@ -33,15 +33,14 @@ import org.slf4j.LoggerFactory;
 /**
  * replacement for IntDimEnc, the diff is IntegerDimEnc supports negative values
  * for IntegerDimEnc(N), the supported range is (-2^(8*N-1),2^(8*N-1))
- *
+ * 
  * -2^(8*N-1) is not supported because the slot is reserved for null values.
  * -2^(8*N-1) will be encoded with warn, and its output will be null
  */
-@Deprecated//due to a fatal bug (KYLIN-2191)
-public class IntegerDimEnc extends DimensionEncoding {
+public class IntegerDimEncV2 extends DimensionEncoding {
     private static final long serialVersionUID = 1L;
 
-    private static Logger logger = LoggerFactory.getLogger(IntegerDimEnc.class);
+    private static Logger logger = LoggerFactory.getLogger(IntegerDimEncV2.class);
 
     private static final long[] CAP = { 0, 0x7fL, 0x7fffL, 0x7fffffL, 0x7fffffffL, 0x7fffffffffL, 0x7fffffffffffL, 0x7fffffffffffffL, 0x7fffffffffffffffL };
     private static final long[] MASK = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, 0xffffffffffffffffL };
@@ -62,8 +61,13 @@ public class IntegerDimEnc extends DimensionEncoding {
         }
 
         @Override
+        protected int getCurrentVersion() {
+            return 2;
+        }
+
+        @Override
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
-            return new IntegerDimEnc(Integer.parseInt(args[0]));
+            return new IntegerDimEncV2(Integer.parseInt(args[0]));
         }
     };
 
@@ -75,10 +79,10 @@ public class IntegerDimEnc extends DimensionEncoding {
     transient private int avoidVerbose2 = 0;
 
     //no-arg constructor is required for Externalizable
-    public IntegerDimEnc() {
+    public IntegerDimEncV2() {
     }
 
-    public IntegerDimEnc(int len) {
+    public IntegerDimEncV2(int len) {
         if (len <= 0 || len >= CAP.length)
             throw new IllegalArgumentException();
 
@@ -132,7 +136,7 @@ public class IntegerDimEnc extends DimensionEncoding {
 
         //only take useful bytes
         integer = integer & MASK[fixedLen];
-        boolean positive = (integer & ((0x80) << ((fixedLen - 1) << 3))) == 0;
+        boolean positive = (integer & ((0x80L) << ((fixedLen - 1) << 3))) == 0;
         if (!positive) {
             integer |= (~MASK[fixedLen]);
         }
@@ -211,7 +215,7 @@ public class IntegerDimEnc extends DimensionEncoding {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        IntegerDimEnc that = (IntegerDimEnc) o;
+        IntegerDimEncV2 that = (IntegerDimEncV2) o;
 
         return fixedLen == that.fixedLen;
 
