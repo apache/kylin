@@ -19,32 +19,17 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
-import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.job.execution.Output;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.storage.hybrid.HybridManager;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
 
 public abstract class BasicService {
 
@@ -92,61 +77,6 @@ public abstract class BasicService {
 
     public BadQueryHistoryManager getBadQueryHistoryManager() {
         return BadQueryHistoryManager.getInstance(getConfig());
-    }
-
-    protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs) {
-        return listAllCubingJobs(cubeName, projectName, statusList, -1L, -1L, allOutputs);
-    }
-
-    protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs) {
-        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis)).filter(new Predicate<AbstractExecutable>() {
-            @Override
-            public boolean apply(AbstractExecutable executable) {
-                if (executable instanceof CubingJob) {
-                    if (cubeName == null) {
-                        return true;
-                    }
-                    return CubingExecutableUtil.getCubeName(executable.getParams()).equalsIgnoreCase(cubeName);
-                } else {
-                    return false;
-                }
-            }
-        }).transform(new Function<AbstractExecutable, CubingJob>() {
-            @Override
-            public CubingJob apply(AbstractExecutable executable) {
-                return (CubingJob) executable;
-            }
-        }).filter(Predicates.and(new Predicate<CubingJob>() {
-            @Override
-            public boolean apply(CubingJob executable) {
-                if (null == projectName || null == getProjectManager().getProject(projectName)) {
-                    return true;
-                } else {
-                    return projectName.equals(executable.getParams().get("projectName"));
-                }
-            }
-        }, new Predicate<CubingJob>() {
-            @Override
-            public boolean apply(CubingJob executable) {
-                try {
-                    Output output = allOutputs.get(executable.getId());
-                    ExecutableState state = output.getState();
-                    boolean ret = statusList.contains(state);
-                    return ret;
-                } catch (Exception e) {
-                    throw e;
-                }
-            }
-        })));
-        return results;
-    }
-
-    protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
-        return listAllCubingJobs(cubeName, projectName, statusList, getExecutableManager().getAllOutputs());
-    }
-
-    protected List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName) {
-        return listAllCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), getExecutableManager().getAllOutputs());
     }
 
 }

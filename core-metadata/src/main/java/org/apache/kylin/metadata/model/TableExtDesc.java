@@ -26,8 +26,6 @@ import java.util.Map;
 
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -36,17 +34,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class TableExtDesc extends RootPersistentEntity implements ISourceAware {
-
-    private static final Logger logger = LoggerFactory.getLogger(TableExtDesc.class);
+public class TableExtDesc extends RootPersistentEntity {
 
     @JsonProperty("table_name")
     private String tableName;
     @JsonProperty("last_build_job_id")
     private String jodID;
-
-    @JsonProperty("source_type")
-    private int sourceType;
 
     @JsonProperty("columns_stats")
     private List<ColumnStats> columnStats = new ArrayList<>();
@@ -66,6 +59,8 @@ public class TableExtDesc extends RootPersistentEntity implements ISourceAware {
     private String partitionColumn;
     @JsonProperty("total_file_size")
     private String totalFileSize;
+    @JsonProperty("total_rows")
+    private String totalRows;
     @JsonProperty("data_source_properties")
     private Map<String, String> dataSourceProps = new HashMap<>();
 
@@ -134,10 +129,6 @@ public class TableExtDesc extends RootPersistentEntity implements ISourceAware {
             throw new IllegalArgumentException("The given cardinality columns don't match tables " + tableName);
 
         }
-    }
-
-    public void setSourceType(int sourceType) {
-        this.sourceType = sourceType;
     }
 
     public List<ColumnStats> getColumnStats() {
@@ -229,11 +220,6 @@ public class TableExtDesc extends RootPersistentEntity implements ISourceAware {
     @Override
     public String toString() {
         return "TableExtDesc{" + "name='" + (null == tableName ? "NULL" : tableName) + '\'' + ", columns_samples=" + (null == columnStats ? "null" : Arrays.toString(columnStats.toArray()));
-    }
-
-    @Override
-    public int getSourceType() {
-        return -1;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

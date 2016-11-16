@@ -75,6 +75,8 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -502,4 +504,61 @@ public class JobService extends BasicService implements InitializingBean {
         }
         return serverName;
     }
+    
+    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs) {
+        return listAllCubingJobs(cubeName, projectName, statusList, -1L, -1L, allOutputs);
+    }
+
+    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs) {
+        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis)).filter(new Predicate<AbstractExecutable>() {
+            @Override
+            public boolean apply(AbstractExecutable executable) {
+                if (executable instanceof CubingJob) {
+                    if (cubeName == null) {
+                        return true;
+                    }
+                    return CubingExecutableUtil.getCubeName(executable.getParams()).equalsIgnoreCase(cubeName);
+                } else {
+                    return false;
+                }
+            }
+        }).transform(new Function<AbstractExecutable, CubingJob>() {
+            @Override
+            public CubingJob apply(AbstractExecutable executable) {
+                return (CubingJob) executable;
+            }
+        }).filter(Predicates.and(new Predicate<CubingJob>() {
+            @Override
+            public boolean apply(CubingJob executable) {
+                if (null == projectName || null == getProjectManager().getProject(projectName)) {
+                    return true;
+                } else {
+                    return projectName.equals(executable.getProjectName());
+                }
+            }
+        }, new Predicate<CubingJob>() {
+            @Override
+            public boolean apply(CubingJob executable) {
+                try {
+                    Output output = allOutputs.get(executable.getId());
+                    ExecutableState state = output.getState();
+                    boolean ret = statusList.contains(state);
+                    return ret;
+                } catch (Exception e) {
+                    throw e;
+                }
+            }
+        })));
+        return results;
+    }
+
+    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
+        return listAllCubingJobs(cubeName, projectName, statusList, getExecutableManager().getAllOutputs());
+    }
+
+    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName) {
+        return listAllCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), getExecutableManager().getAllOutputs());
+    }
+
+
 }
