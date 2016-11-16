@@ -17,7 +17,6 @@
 */
 package org.apache.kylin.dict;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -35,11 +33,10 @@ import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
 
-
 /**
- * use trie forest to optimize trie dictionary
+ * Use trie forest to optimize trie dictionary
  * <p>
- * the input data must in an increase order(sort by org.apache.kylin.dict.ByteComparator)
+ * The input data should be in an increase order (sort by org.apache.kylin.dict.ByteComparator)
  * <p>
  * Created by xiefan on 16-10-26.
  */
@@ -48,34 +45,19 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     private ArrayList<TrieDictionary<T>> trees;
 
-    //private ArrayList<byte[]> valueDivide; //find tree
-
     private ArrayList<ByteArray> valueDivide;
 
-    private ArrayList<Integer> accuOffset;  //find tree
+    private ArrayList<Integer> accuOffset; //find tree
 
     private BytesConverter<T> bytesConvert;
 
     private int baseId;
 
-    /*public AtomicLong getValueIndexTime = new AtomicLong(0);
-
-    public AtomicLong getValueTime = new AtomicLong(0);
-
-    public AtomicLong binarySearchTime = new AtomicLong(0);
-
-    public AtomicLong copyTime = new AtomicLong(0);
-
-    public AtomicLong getValueIndexTime2 = new AtomicLong(0);
-
-    public AtomicLong getValueTime2 = new AtomicLong(0);*/
-
     public TrieDictionaryForest() { // default constructor for Writable interface
-
     }
 
-    public TrieDictionaryForest(ArrayList<TrieDictionary<T>> trees,
-                                ArrayList<ByteArray> valueDivide, ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+    public TrieDictionaryForest(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, //
+            ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
         this.trees = trees;
         this.valueDivide = valueDivide;
         this.accuOffset = accuOffset;
@@ -83,16 +65,17 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         this.baseId = baseId;
     }
 
-
     @Override
     public int getMinId() {
-        if (trees.isEmpty()) return baseId;
+        if (trees.isEmpty())
+            return baseId;
         return trees.get(0).getMinId() + baseId;
     }
 
     @Override
     public int getMaxId() {
-        if (trees.isEmpty()) return baseId - 1;
+        if (trees.isEmpty())
+            return baseId - 1;
         int index = trees.size() - 1;
         int id = accuOffset.get(index) + trees.get(index).getMaxId() + baseId;
         return id;
@@ -100,7 +83,8 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     public int getSizeOfId() {
-        if (trees.isEmpty()) return -1;
+        if (trees.isEmpty())
+            return -1;
         int maxOffset = accuOffset.get(accuOffset.size() - 1);
         TrieDictionary<T> lastTree = trees.get(trees.size() - 1);
         int sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1);
@@ -115,14 +99,12 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         return maxValue;
     }
 
-    //value --> id
+    // value --> id
     @Override
-    protected int getIdFromValueImpl(T value, int roundingFlag)
-            throws IllegalArgumentException {
+    protected int getIdFromValueImpl(T value, int roundingFlag) throws IllegalArgumentException {
         byte[] valueBytes = bytesConvert.convertToBytes(value);
         return getIdFromValueBytesImpl(valueBytes, 0, valueBytes.length, roundingFlag);
     }
-
 
     @Override
     protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
@@ -132,13 +114,9 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         return result;
     }
 
-    //id = tree_inner_offset + accumulate_offset + baseId
-    protected int _getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag)
-            throws IllegalArgumentException {
-
-        //long startTime = System.currentTimeMillis();
+    // id = tree_inner_offset + accumulate_offset + baseId
+    protected int _getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
         ByteArray search = new ByteArray(value, offset, len);
-        //copyTime.addAndGet(System.currentTimeMillis() - startTime);
         int index = findIndexByValue(search);
         if (index < 0) {
             if (roundingFlag > 0) {
@@ -152,7 +130,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
             T curTreeMax = trees.get(index).getValueFromId(trees.get(index).getMaxId());
             byte[] b1 = bytesConvert.convertToBytes(curTreeMax);
             ByteArray ba1 = new ByteArray(b1, 0, b1.length);
-            //ByteArray ba2 = new ByteArray(value, 0, value.length);
             if (search.compareTo(ba1) > 0)
                 index++;
             if (index >= trees.size())
@@ -162,9 +139,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         id = tree.getIdFromValueBytes(value, offset, len, roundingFlag);
         id = id + accuOffset.get(index);
         id += baseId;
-        if (id < 0) {
-            throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
-        }
         return id;
     }
 
@@ -179,9 +153,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
     }
 
     @Override
-    protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset)
-            throws IllegalArgumentException {
-        //long startTime = System.currentTimeMillis();
+    protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
         int index = findIndexById(id);
         int treeInnerOffset = getTreeInnerOffset(id, index);
         TrieDictionary<T> tree = trees.get(index);
@@ -189,19 +161,14 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         return size;
     }
 
-
     @Override
     protected byte[] getValueBytesFromIdImpl(int id) throws IllegalArgumentException {
-        int index = findIndexById(id); //lower bound
-        if (index < 0) {
-            throw new IllegalArgumentException("Tree Not Found. index < 0");
-        }
+        int index = findIndexById(id);
         int treeInnerOffset = getTreeInnerOffset(id, index);
         TrieDictionary<T> tree = trees.get(index);
         byte[] result = tree.getValueBytesFromId(treeInnerOffset);
         return result;
     }
-
 
     private int getTreeInnerOffset(int id, int index) {
         id -= baseId;
@@ -259,7 +226,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         out.write(head);
     }
 
-
     private void writeBody(DataOutput out) throws IOException {
         for (int i = 0; i < trees.size(); i++) {
             TrieDictionary<T> tree = trees.get(i);
@@ -307,21 +273,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     }
 
-    /*@Override
-    public boolean equals(Object o) {
-        if ((o instanceof TrieDictionaryForest) == false) {
-            logger.info("Equals return false because it's not TrieDictionaryForest");
-            return false;
-        }
-        TrieDictionaryForest that = (TrieDictionaryForest) o;
-        if(this.trees.size() != that.getTrees().size())
-            return false;
-        for(int i=0;i<trees.size();i++){
-            if(!trees.get(i).equals(that.getTrees().get(i))) return false;
-        }
-        return true;
-    }*/
-
     @Override
     public boolean contains(Dictionary other) {
         if (other.getSize() > this.getSize()) {
@@ -337,35 +288,59 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         return true;
     }
 
-    public List<TrieDictionary<T>> getTrees() {
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + baseId;
+        result = prime * result + ((trees == null) ? 0 : trees.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        TrieDictionaryForest other = (TrieDictionaryForest) obj;
+        if (baseId != other.baseId)
+            return false;
+        if (trees == null) {
+            if (other.trees != null)
+                return false;
+        } else if (!trees.equals(other.trees))
+            return false;
+        return true;
+    }
+
+    List<TrieDictionary<T>> getTrees() {
         return Collections.unmodifiableList(this.trees);
     }
 
+    BytesConverter<T> getBytesConvert() {
+        return bytesConvert;
+    }
+
     private int findIndexByValue(ByteArray value) {
-        int index = lowerBound(value, new Comparator<ByteArray>() {
-            @Override
-            public int compare(ByteArray o1, ByteArray o2) {
-                return o1.compareTo(o2);
-            }
-        }, this.valueDivide);
+        int index = lowerBound(value, this.valueDivide);
         return index;
     }
 
     private int findIndexById(Integer id) {
         id -= baseId;
-        int index = lowerBound(id, new Comparator<Integer>() {
-            @Override
-            public int compare(Integer o1, Integer o2) {
-                return o1.compareTo(o2);
-            }
-        }, this.accuOffset);
+        int index = lowerBound(id, this.accuOffset);
+        if (index < 0) {
+            throw new IllegalArgumentException("Tree Not Found. index < 0");
+        }
         return index;
     }
 
-
-    private static <K> int lowerBound(K lookfor, Comparator<K> comparator, ArrayList<K> list) {
+    private static <K extends Comparable> int lowerBound(K lookfor, ArrayList<K> list) {
         if (list == null || list.isEmpty())
-            return 0; //return the first tree
+            return -1; // not found
         int left = 0;
         int right = list.size() - 1;
         int mid = 0;
@@ -373,7 +348,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         int comp = 0;
         while (!found && left <= right) {
             mid = left + (right - left) / 2;
-            comp = comparator.compare(lookfor, list.get(mid));
+            comp = lookfor.compareTo(list.get(mid));
             if (comp < 0)
                 right = mid - 1;
             else if (comp > 0)
@@ -384,7 +359,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         if (found) {
             return mid;
         } else {
-            return Math.min(left, right);  //value may be bigger than the right tree
+            return Math.min(left, right); // value may be bigger than the right tree (could return -1)
         }
     }
 
@@ -402,16 +377,8 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         list.add("paint");
         Collections.sort(list);
         for (String str : list) {
-            System.out.println("found value:" + str + " index:" + lowerBound(str, new Comparator<String>() {
-                @Override
-                public int compare(String o1, String o2) {
-                    return o1.compareTo(o2);
-                }
-            }, list));
+            System.out.println("found value:" + str + " index:" + lowerBound(str, list));
         }
     }
 
-    public BytesConverter<T> getBytesConvert() {
-        return bytesConvert;
-    }
 }
