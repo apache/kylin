@@ -26,7 +26,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Deprecated. use VLongDimEnc instead
+ * Deprecated. use integer encoding instead
  * @deprecated
  */
 public class IntDimEncTest {
