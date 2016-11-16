@@ -18,14 +18,14 @@
 
 package org.apache.kylin.ext;
 
-import org.apache.catalina.loader.WebappClassLoader;
+import org.apache.catalina.loader.ParallelWebappClassLoader;
 
 /**
- * simple extension to standard WebappClassLoader
+ * simple extension to standard ParallelWebappClassLoader
  * the only difference is that CustomizedWebappClassloader is able to delegate more packages
  * to parent classloaders
  */
-public class CustomizedWebappClassloader extends WebappClassLoader {
+public class CustomizedWebappClassloader extends ParallelWebappClassLoader {
     /**
      * Set of package names which are not allowed to be loaded from a webapp
      * class loader without delegating first.
