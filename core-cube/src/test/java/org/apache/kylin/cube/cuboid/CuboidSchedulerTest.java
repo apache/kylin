@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
@@ -281,6 +282,18 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
             sum += x;
         }
         assertEquals(cuboidScheduler.getCuboidCount(), sum);
+    }
+
+    @Test
+    public void testCuboid_onlyBaseCuboid() {
+        CubeDesc cube = getCubeDescManager().getCubeDesc("ut_large_dimension_number");
+        CuboidScheduler scheduler = new CuboidScheduler(cube);
+        
+        Cuboid baseCuboid = Cuboid.getBaseCuboid(cube);
+        assertTrue(Cuboid.isValid(cube, baseCuboid.getId()));
+        
+        List<Long> spanningChild = scheduler.getSpanningCuboid(baseCuboid.getId());
+        assertTrue(spanningChild.size() > 0);
     }
 
     public CubeDescManager getCubeDescManager() {

@@ -124,7 +124,7 @@ public class AggregationGroup {
         for (String dim : mandatory_dims) {
             TblColRef hColumn = colNameAbbr.get(dim);
             Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
-            mandatoryColumnMask |= 1 << index;
+            mandatoryColumnMask |= (1L << index);
         }
 
     }

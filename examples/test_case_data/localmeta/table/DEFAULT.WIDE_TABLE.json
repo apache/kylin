@@ -1,0 +1,217 @@
+{
+  "uuid" : "cd267e5b-6835-4db2-a861-8b78f38271fe",
+  "last_modified" : 1479202699684,
+  "version" : "1.6.0",
+  "name" : "WIDE_TABLE",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "A",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "2",
+    "name" : "B",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "3",
+    "name" : "C",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "4",
+    "name" : "D",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "5",
+    "name" : "E",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "6",
+    "name" : "F",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "7",
+    "name" : "G",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "8",
+    "name" : "H",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "9",
+    "name" : "I",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "10",
+    "name" : "J",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "11",
+    "name" : "K",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "12",
+    "name" : "L",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "13",
+    "name" : "M",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "14",
+    "name" : "N",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "15",
+    "name" : "O",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "16",
+    "name" : "P",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "17",
+    "name" : "Q",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "18",
+    "name" : "R",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "19",
+    "name" : "S",
+    "datatype" : "bigint"
+  }, {
+    "id" : "20",
+    "name" : "T",
+    "datatype" : "bigint"
+  }, {
+    "id" : "21",
+    "name" : "U",
+    "datatype" : "bigint"
+  }, {
+    "id" : "22",
+    "name" : "V",
+    "datatype" : "bigint"
+  }, {
+    "id" : "23",
+    "name" : "W",
+    "datatype" : "bigint"
+  }, {
+    "id" : "24",
+    "name" : "X",
+    "datatype" : "bigint"
+  }, {
+    "id" : "25",
+    "name" : "Y",
+    "datatype" : "bigint"
+  }, {
+    "id" : "26",
+    "name" : "Z",
+    "datatype" : "bigint"
+  }, {
+    "id" : "27",
+    "name" : "AA",
+    "datatype" : "bigint"
+  }, {
+    "id" : "28",
+    "name" : "AB",
+    "datatype" : "bigint"
+  }, {
+    "id" : "29",
+    "name" : "AC",
+    "datatype" : "bigint"
+  }, {
+    "id" : "30",
+    "name" : "AD",
+    "datatype" : "bigint"
+  }, {
+    "id" : "31",
+    "name" : "AE",
+    "datatype" : "bigint"
+  }, {
+    "id" : "32",
+    "name" : "AF",
+    "datatype" : "bigint"
+  }, {
+    "id" : "33",
+    "name" : "AG",
+    "datatype" : "bigint"
+  }, {
+    "id" : "34",
+    "name" : "AH",
+    "datatype" : "bigint"
+  }, {
+    "id" : "35",
+    "name" : "AI",
+    "datatype" : "bigint"
+  }, {
+    "id" : "36",
+    "name" : "AJ",
+    "datatype" : "bigint"
+  }, {
+    "id" : "37",
+    "name" : "AK",
+    "datatype" : "bigint"
+  }, {
+    "id" : "38",
+    "name" : "AL",
+    "datatype" : "bigint"
+  }, {
+    "id" : "39",
+    "name" : "AM",
+    "datatype" : "bigint"
+  }, {
+    "id" : "40",
+    "name" : "AN",
+    "datatype" : "bigint"
+  }, {
+    "id" : "41",
+    "name" : "AO",
+    "datatype" : "bigint"
+  }, {
+    "id" : "42",
+    "name" : "AP",
+    "datatype" : "bigint"
+  }, {
+    "id" : "43",
+    "name" : "AQ",
+    "datatype" : "bigint"
+  }, {
+    "id" : "44",
+    "name" : "AR",
+    "datatype" : "bigint"
+  }, {
+    "id" : "45",
+    "name" : "AS",
+    "datatype" : "bigint"
+  }, {
+    "id" : "46",
+    "name" : "AT",
+    "datatype" : "bigint"
+  }, {
+    "id" : "47",
+    "name" : "AU",
+    "datatype" : "bigint"
+  }, {
+    "id" : "48",
+    "name" : "AV",
+    "datatype" : "bigint"
+  }, {
+    "id" : "49",
+    "name" : "AW",
+    "datatype" : "bigint"
+  }, {
+    "id" : "50",
+    "name" : "AX",
+    "datatype" : "varchar(256)"
+  }, {
+    "id" : "51",
+    "name" : "AY",
+    "datatype" : "bigint"
+  }, {
+    "id" : "52",
+    "name" : "AZ",
+    "datatype" : "varchar(256)"
+  } ],
+  "source_type" : 0,
+  "database" : "DEFAULT"
+}
