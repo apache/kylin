@@ -47,7 +47,7 @@ import com.google.common.collect.Sets;
  * @author yangli9
  */
 public class DerivedFilterTranslator {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(DerivedFilterTranslator.class);
 
     public static Pair<TupleFilter, Boolean> translate(LookupStringTable lookup, DeriveInfo hostInfo, CompareTupleFilter compf) {
@@ -86,7 +86,7 @@ public class DerivedFilterTranslator {
         TupleFilter translated;
         boolean loosened;
         if (satisfyingHostRecords.size() > KylinConfig.getInstanceFromEnv().getDerivedInThreshold()) {
-            logger.info("Deciding to loosen filter on derived filter as host candidates number {} exceeds threshold {}",//
+            logger.info("Deciding to loosen filter on derived filter as host candidates number {} exceeds threshold {}", //
                     satisfyingHostRecords.size(), KylinConfig.getInstanceFromEnv().getDerivedInThreshold()
             );
             translated = buildRangeFilter(hostCols, satisfyingHostRecords);
