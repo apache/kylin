@@ -140,7 +140,7 @@ public class AggregationGroup {
         for (String dim : mandatory_dims) {
             TblColRef hColumn = cubeDesc.getModel().findColumn(dim);
             Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
-            mandatoryColumnMask |= 1 << index;
+            mandatoryColumnMask |= (1L << index);
         }
 
     }
