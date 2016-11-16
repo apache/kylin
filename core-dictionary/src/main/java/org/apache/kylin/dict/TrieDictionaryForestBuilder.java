@@ -61,15 +61,7 @@ public class TrieDictionaryForestBuilder<T> {
     }
 
     public TrieDictionaryForestBuilder(BytesConverter<T> bytesConverter, int baseId) {
-        this.bytesConverter = bytesConverter;
-        this.trieBuilder = new TrieDictionaryBuilder<T>(bytesConverter);
-        this.baseId = baseId;
-        curOffset = 0;
-        int maxTrieTreeSizeMB = getMaxTrieSizeInMB();
-        this.maxTrieTreeSize = maxTrieTreeSizeMB * 1024 * 1024;
-        logger.info("maxTrieSize is set to:" + maxTrieTreeSize + "B");
-        //System.out.println("max trie size:"+maxTrieTreeSize);
-        //stringComparator = new ByteComparator<>(new StringBytesConverter());
+        this(bytesConverter, baseId, getMaxTrieSizeInMB());
     }
 
     public TrieDictionaryForestBuilder(BytesConverter<T> bytesConverter, int baseId, int maxTrieTreeSizeMB) {

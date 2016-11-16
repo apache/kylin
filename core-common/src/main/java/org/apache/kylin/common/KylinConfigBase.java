@@ -210,7 +210,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String[] getRealizationProviders() {
         return getOptionalStringArray("kylin.realization.providers", //
-                new String[]{"org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager"});
+                new String[] {"org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager"});
     }
 
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
@@ -591,7 +591,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int[] getQueryMetricsPercentilesIntervals() {
-        String[] dft = {"60", "300", "3600"};
+        String[] dft = { "60", "300", "3600" };
         return getOptionalIntArray("kylin.query.metrics.percentiles.intervals", dft);
     }
 

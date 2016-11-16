@@ -1,16 +1,7 @@
 package org.apache.kylin.engine.mr.steps;
 
-import org.apache.hadoop.io.Text;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.dict.NumberDictionary;
-import org.apache.kylin.dict.NumberDictionaryBuilder;
-import org.apache.kylin.dict.NumberDictionaryForest;
-import org.apache.kylin.dict.NumberDictionaryForestBuilder;
-import org.apache.kylin.dict.StringBytesConverter;
-import org.apache.kylin.dict.TrieDictionaryForestBuilder;
-import org.apache.kylin.engine.mr.steps.fdc2.SelfDefineSortableKey;
-import org.apache.kylin.engine.mr.steps.fdc2.TypeFlag;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,8 +16,16 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.hadoop.io.Text;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.dict.NumberDictionary;
+import org.apache.kylin.dict.NumberDictionaryBuilder;
+import org.apache.kylin.dict.NumberDictionaryForest;
+import org.apache.kylin.dict.NumberDictionaryForestBuilder;
+import org.apache.kylin.dict.StringBytesConverter;
+import org.apache.kylin.engine.mr.steps.fdc2.SelfDefineSortableKey;
+import org.apache.kylin.engine.mr.steps.fdc2.TypeFlag;
+import org.junit.Test;
 
 /**
  * Created by xiefan on 16-11-2.

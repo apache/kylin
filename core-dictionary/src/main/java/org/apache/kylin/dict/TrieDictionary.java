@@ -126,7 +126,6 @@ public class TrieDictionary<T> extends Dictionary<T> {
             else
                 throw new RuntimeException(e);
         }
-        //this.enableValueCache = false;
         if (enableValueCache) {
             valueToIdCache = new SoftReference<Map>(new ConcurrentHashMap());
             idToValueCache = new SoftReference<Object[]>(new Object[nValues]);
@@ -156,7 +155,6 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected int getIdFromValueImpl(T value, int roundingFlag) {
         if (enableValueCache && roundingFlag == 0) {
-            //System.out.println("use id cache");
             Map cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 Integer id = null;
@@ -171,7 +169,6 @@ public class TrieDictionary<T> extends Dictionary<T> {
                 return id;
             }
         }
-        //System.out.println("not use id cache");
         byte[] valueBytes = bytesConvert.convertToBytes(value);
         return getIdFromValueBytes(valueBytes, 0, valueBytes.length, roundingFlag);
     }
@@ -273,7 +270,6 @@ public class TrieDictionary<T> extends Dictionary<T> {
     @Override
     final protected T getValueFromIdImpl(int id) {
         if (enableValueCache) {
-            //System.out.println("use value cache");
             Object[] cache = idToValueCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 int seq = calcSeqNoFromId(id);
@@ -288,10 +284,8 @@ public class TrieDictionary<T> extends Dictionary<T> {
                 return result;
             }
         }
-        //System.out.println("not use value cache");
         byte[] value = new byte[getSizeOfValue()];
         int length = getValueBytesFromId(id, value, 0);
-        //System.out.println("get value by id:"+id+" value:"+bytesConvert.convertFromBytes(value, 0, length).toString());
         return bytesConvert.convertFromBytes(value, 0, length);
     }
 

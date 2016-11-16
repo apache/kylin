@@ -755,7 +755,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     int find = ArrayUtils.indexOf(dimColArray, fk[i]);
                     if (find >= 0) {
                         TblColRef derivedCol = initDimensionColRef(pk[i]);
-                        initDerivedMap(new TblColRef[]{dimColArray[find]}, DeriveType.PK_FK, dim, new TblColRef[]{derivedCol}, null);
+                        initDerivedMap(new TblColRef[] { dimColArray[find] }, DeriveType.PK_FK, dim, new TblColRef[] { derivedCol }, null);
                     }
                 }
             }
@@ -776,7 +776,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 extra[i] = "";
             }
         }
-        return new String[][]{cols, extra};
+        return new String[][] { cols, extra };
     }
 
     private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {

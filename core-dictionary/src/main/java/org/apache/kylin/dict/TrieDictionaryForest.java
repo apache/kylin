@@ -18,14 +18,6 @@
 package org.apache.kylin.dict;
 
 
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.common.util.Dictionary;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -37,6 +29,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Dictionary;
+
 
 /**
  * use trie forest to optimize trie dictionary
@@ -46,8 +44,7 @@ import java.util.List;
  * Created by xiefan on 16-10-26.
  */
 public class TrieDictionaryForest<T> extends Dictionary<T> {
-
-    private static final Logger logger = LoggerFactory.getLogger(TrieDictionaryForest.class);
+    private static final long serialVersionUID = 1L;
 
     private ArrayList<TrieDictionary<T>> trees;
 
@@ -168,29 +165,18 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         if (id < 0) {
             throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
         }
-        //System.out.println("getIdFromValue  value:"+bytesConvert.convertFromBytes(value,offset,len)+" id:"+id);
         return id;
     }
 
-    //id --> value
-    private boolean printstr = false;
-
     @Override
     protected T getValueFromIdImpl(int id) throws IllegalArgumentException {
-        //System.out.println("here");
         byte[] data = getValueBytesFromIdImpl(id);
         if (data != null) {
-            if (!printstr) {
-                System.out.println("getValueFromIdImpl id:" + id + " value:" + bytesConvert.convertFromBytes(data, 0, data.length));
-                printstr = true;
-            }
             return bytesConvert.convertFromBytes(data, 0, data.length);
         } else {
             return null;
         }
     }
-
-    private boolean isPrintstr2 = false;
 
     @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset)
@@ -199,14 +185,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         int index = findIndexById(id);
         int treeInnerOffset = getTreeInnerOffset(id, index);
         TrieDictionary<T> tree = trees.get(index);
-        //getValueIndexTime2.addAndGet(System.currentTimeMillis() - startTime);
-        //startTime = System.currentTimeMillis();
         int size = tree.getValueBytesFromIdImpl(treeInnerOffset, returnValue, offset);
-        if (!isPrintstr2) {
-            isPrintstr2 = true;
-            System.out.println("getValueBytesFromIdImpl id:" + id + " value:" + bytesConvert.convertFromBytes(returnValue, offset, size));
-        }
-        //getValueTime2.addAndGet(System.currentTimeMillis() - startTime);
         return size;
     }
 
@@ -250,18 +229,9 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     public void write(DataOutput out) throws IOException {
-        System.out.println("write dict");
         writeHead(out);
         writeBody(out);
     }
-
-    /*private int compare(T value1,T value2){
-        byte[] b1 = bytesConvert.convertToBytes(value1);
-        byte[] b2 = bytesConvert.convertToBytes(value2);
-        ByteArray ba1 = new ByteArray(b1,0,b1.length);
-        ByteArray ba2 = new ByteArray(b2,0,b2.length);
-        return ba1.compareTo(ba2);
-    }*/
 
     private void writeHead(DataOutput out) throws IOException {
         ByteArrayOutputStream byteBuf = new ByteArrayOutputStream();
@@ -299,8 +269,8 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        System.out.println("read dict");
         try {
+            @SuppressWarnings("unused")
             int headSize = in.readInt();
             this.baseId = in.readInt();
             String converterName = in.readUTF();
@@ -371,15 +341,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         return Collections.unmodifiableList(this.trees);
     }
 
-    private boolean onlyOneTree() {
-        return trees.size() == 1;
-    }
-
-    private int findIndexByValue(T value) {
-        byte[] valueBytes = bytesConvert.convertToBytes(value);
-        return findIndexByValue(new ByteArray(valueBytes, 0, valueBytes.length));
-    }
-
     private int findIndexByValue(ByteArray value) {
         int index = lowerBound(value, new Comparator<ByteArray>() {
             @Override
@@ -421,29 +382,13 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
                 found = true;
         }
         if (found) {
-            //System.out.println("look for:"+lookfor+" index:"+mid);
             return mid;
         } else {
-            //System.out.println("look for:"+lookfor+" index:"+Math.max(left,right));
             return Math.min(left, right);  //value may be bigger than the right tree
         }
     }
 
     public static void main(String[] args) {
-        /*ArrayList<Integer> list = new ArrayList<>();
-        list.add(3);
-        list.add(10);
-        list.add(15);
-        Comparator<Integer> comp = new Comparator<Integer>() {
-            @Override
-            public int compare(Integer o1, Integer o2) {
-                return o1.compareTo(o2);
-            }
-        };
-        int[] nums = {-1,0,1,2,3,4,13,15,16};
-        for(int i : nums){
-            System.out.println("found value:"+i+" index:"+lowerBound(i,comp,list));
-        }*/
         ArrayList<String> list = new ArrayList<>();
         list.add("一");
         list.add("二");
@@ -464,7 +409,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
                 }
             }, list));
         }
-        //System.out.println(BytesUtil.safeCompareBytes("二".getBytes(),"三".getBytes()));
     }
 
     public BytesConverter<T> getBytesConvert() {

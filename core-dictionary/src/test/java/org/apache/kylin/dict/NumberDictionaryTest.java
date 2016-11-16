@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-/*package org.apache.kylin.dict;
+package org.apache.kylin.dict;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -35,6 +35,7 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -42,7 +43,7 @@ import com.google.common.collect.Sets;
 
 /**
  */
-/*public class NumberDictionaryTest extends LocalFileMetadataTestCase {
+public class NumberDictionaryTest extends LocalFileMetadataTestCase {
 
     NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec(NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT);
     Random rand = new Random();
@@ -70,6 +71,7 @@ import com.google.common.collect.Sets;
         assertEquals(1, maxId);
     }
 
+    @Ignore
     @SuppressWarnings("unchecked")
     @Test
     public void testEmptyInput() throws IOException {
@@ -207,4 +209,4 @@ import com.google.common.collect.Sets;
         return buf.toString();
     }
 
-}*/
+}

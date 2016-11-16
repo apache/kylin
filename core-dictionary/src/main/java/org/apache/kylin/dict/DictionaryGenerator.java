@@ -36,12 +36,12 @@ import com.google.common.base.Preconditions;
 /**
  * @author yangli9
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class DictionaryGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGenerator.class);
 
-    private static final String[] DATE_PATTERNS = new String[]{"yyyy-MM-dd", "yyyyMMdd"};
+    private static final String[] DATE_PATTERNS = new String[] { "yyyy-MM-dd", "yyyyMMdd" };
 
     public static Dictionary<String> buildDictionary(DataType dataType, IDictionaryValueEnumerator valueEnumerator) throws IOException {
         Preconditions.checkNotNull(dataType, "dataType cannot be null");
@@ -138,7 +138,6 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
             int maxTrieSizeInMB = TrieDictionaryForestBuilder.getMaxTrieSizeInMB();
-            //TrieDictionaryBuilder builder = new TrieDictionaryBuilder(new StringBytesConverter());
             TrieDictionaryForestBuilder builder = new TrieDictionaryForestBuilder(new StringBytesConverter(), baseId, maxTrieSizeInMB);
             byte[] value;
             while (valueEnumerator.moveNext()) {
@@ -151,15 +150,13 @@ public class DictionaryGenerator {
                     returnSamples.add(v);
             }
             return builder.build();
-            //return builder.build(baseId);
         }
     }
 
     private static class NumberDictBuilder implements IDictionaryBuilder {
         @Override
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
-            int maxTrieSizeInMB = TrieDictionaryForestBuilder.getMaxTrieSizeInMB();
-            NumberDictionaryForestBuilder builder = new NumberDictionaryForestBuilder(new StringBytesConverter(), baseId, maxTrieSizeInMB);
+            NumberDictionaryForestBuilder builder = new NumberDictionaryForestBuilder(new StringBytesConverter(), baseId);
             byte[] value;
             while (valueEnumerator.moveNext()) {
                 value = valueEnumerator.current();
@@ -176,6 +173,5 @@ public class DictionaryGenerator {
             return builder.build();
         }
     }
-
 
 }
