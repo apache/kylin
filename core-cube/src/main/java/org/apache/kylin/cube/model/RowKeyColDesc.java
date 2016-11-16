@@ -47,6 +47,9 @@ public class RowKeyColDesc {
     private String column;
     @JsonProperty("encoding")
     private String encoding;
+    @JsonProperty("encoding_version")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private int encodingVersion = 1;
     @JsonProperty("isShardBy")
     private boolean isShardBy;//usually it is ultra high cardinality column, shard by such column can reduce the agg cache for each shard
     @JsonProperty("index")
@@ -72,7 +75,7 @@ public class RowKeyColDesc {
         encodingName = (String) encodingConf[0];
         encodingArgs = (String[]) encodingConf[1];
 
-        if (!DimensionEncodingFactory.isVaildEncoding(this.encodingName))
+        if (!DimensionEncodingFactory.isValidEncoding(this.encodingName))
             throw new IllegalArgumentException("Not supported row key col encoding: '" + this.encoding + "'");
 
         // convert date/time dictionary on date/time column to DimensionEncoding implicitly
@@ -142,6 +145,14 @@ public class RowKeyColDesc {
 
     public void setIndex(String index) {
         this.index = index;
+    }
+
+    public int getEncodingVersion() {
+        return encodingVersion;
+    }
+
+    public void setEncodingVersion(int encodingVersion) {
+        this.encodingVersion = encodingVersion;
     }
 
     @Override

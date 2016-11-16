@@ -72,7 +72,7 @@ public class CubeDimEncMap implements IDimensionEncodingMap {
                 }
             } else {
                 // normal case
-                result = DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs());
+                result = DimensionEncodingFactory.create(colDesc.getEncodingName(), colDesc.getEncodingArgs(), colDesc.getEncodingVersion());
             }
             encMap.put(col, result);
         }

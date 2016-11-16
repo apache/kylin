@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
@@ -76,7 +75,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 
 /**
  * CubeController is defined as Restful API entrance for UI.
@@ -120,12 +119,13 @@ public class CubeController extends BasicController {
 
     @RequestMapping(value = "validEncodings", method = { RequestMethod.GET })
     @ResponseBody
-    public Set<String> getValidEncodings() {
-        Set<String> encodings;
+    public Map<String, Integer> getValidEncodings() {
+        Map<String, Integer> encodings;
         try {
             encodings = DimensionEncodingFactory.getValidEncodings();
         } catch (Exception e) {
-            return Sets.newTreeSet();
+            logger.error("Error when getting valid encodings", e);
+            return Maps.newHashMap();
         }
         return encodings;
     }
@@ -360,7 +360,7 @@ public class CubeController extends BasicController {
 
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
-        
+
         KylinConfig config = cubeService.getConfig();
         newCubeDesc.setName(newCubeName);
         newCubeDesc.setEngineType(config.getDefaultCubeEngine());

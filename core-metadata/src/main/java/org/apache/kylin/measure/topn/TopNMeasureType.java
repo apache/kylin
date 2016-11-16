@@ -57,6 +57,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
     public static final String DATATYPE_TOPN = "topn";
 
     public static final String CONFIG_ENCODING_PREFIX = "topn.encoding.";
+    public static final String CONFIG_ENCODING_VERSION_PREFIX = "topn.encoding_version.";
     public static final String CONFIG_AGG = "topn.aggregation";
     public static final String CONFIG_ORDER = "topn.order";
 
@@ -418,11 +419,20 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         for (int i = 0; i < literalCols.size(); i++) {
             TblColRef colRef = literalCols.get(i);
             String encoding = function.getConfiguration().get(TopNMeasureType.CONFIG_ENCODING_PREFIX + colRef.getName());
+            String encodingVersionStr = function.getConfiguration().get(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + colRef.getName());
             if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
                 dimensionEncodings[i] = new DictionaryDimEnc(dictionaryMap.get(colRef));
             } else {
+                int encodingVersion = 1;
+                if (!StringUtils.isEmpty(encodingVersionStr)) {
+                    try {
+                        encodingVersion = Integer.parseInt(encodingVersionStr);
+                    } catch (NumberFormatException e) {
+                        throw new RuntimeException(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + colRef.getName() + " has to be an integer");
+                    }
+                }
                 Object[] encodingConf = DimensionEncoding.parseEncodingConf(encoding);
-                dimensionEncodings[i] = DimensionEncodingFactory.create((String) encodingConf[0], (String[]) encodingConf[1]);
+                dimensionEncodings[i] = DimensionEncodingFactory.create((String) encodingConf[0], (String[]) encodingConf[1], encodingVersion);
             }
         }
 
