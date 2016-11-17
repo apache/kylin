@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -113,6 +114,16 @@ public class AggregationGroupRuleTest {
         vContext.print(System.out);
         assertEquals(1, vContext.getResults().length);
         assertEquals("Aggregation group 0 joint columns overlap with more than 1 dim in same hierarchy", (vContext.getResults()[0].getMessage()));
+    }
+
+    @Test
+    public void testCombinationIntOverflow() throws IOException {
+        ValidateContext vContext = new ValidateContext();
+        CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/ut_cube_desc_combination_int_overflow.json"), CubeDesc.class);
+
+        IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
+        rule.validate(desc, vContext);
+        assertEquals(1, vContext.getResults().length);
     }
 
     public AggregationGroupRule getAggregationGroupRule() {
