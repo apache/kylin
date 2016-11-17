@@ -18,6 +18,9 @@
 
 package org.apache.kylin.cube;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -195,9 +198,17 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testCombinationIntOverflow() throws  Exception {
+        for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA +  "/cube_desc/").listFiles()) {
+            if (f.getName().endsWith("bad")) {
+                String path = f.getPath();
+                f.renameTo(new File(path.substring(0, path.length() - 4)));
+            }
+        }
+
         thrown.expect(IllegalStateException.class);
+        getTestConfig();
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("ut_cube_desc_combination_int_overflow");
-        cubeDesc.init(getTestConfig());
+        cubeDesc.init(getTestConfig(), MetadataManager.getInstance(getTestConfig()).getAllTablesMap());
     }
 
     @Test

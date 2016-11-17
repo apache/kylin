@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -286,6 +287,12 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testCuboid_onlyBaseCuboid() {
+        for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/").listFiles()) {
+            if (f.getName().endsWith("bad")) {
+                String path = f.getPath();
+                f.renameTo(new File(path.substring(0, path.length() - 4)));
+            }
+        }
         CubeDesc cube = getCubeDescManager().getCubeDesc("ut_large_dimension_number");
         CuboidScheduler scheduler = new CuboidScheduler(cube);
         

@@ -61,6 +61,9 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
         DictionaryRule rule = new DictionaryRule();
 
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/").listFiles()) {
+            if (!f.getName().endsWith("json")) {
+                continue;
+            }
             CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
             desc.init(config, metadataManager.getAllTablesMap());
             ValidateContext vContext = new ValidateContext();
