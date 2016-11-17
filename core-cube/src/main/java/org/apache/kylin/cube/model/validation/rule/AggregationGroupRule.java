@@ -62,7 +62,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                 continue;
             }
 
-            int combination = 1;
+            long combination = 1;
             Set<String> includeDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             if (agg.getIncludes() != null) {
                 for (String include : agg.getIncludes()) {
@@ -115,7 +115,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             normalDims.removeAll(hierarchyDims);
             normalDims.removeAll(jointDims);
 
-            combination = combination * (1 << normalDims.size());
+            combination = combination * (1L << normalDims.size());
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
                 Set<String> intersection = new HashSet<>(mandatoryDims);

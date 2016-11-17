@@ -568,7 +568,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 throw new IllegalStateException("Aggregation group " + index + " select rule field not set");
             }
 
-            int combination = 1;
+            long combination = 1;
             Set<String> includeDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(includeDims, agg.getIncludes());
 
@@ -586,7 +586,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(jointDimsList, jointDims, agg.getSelectRule().joint_dims);
             if (jointDimsList.size() > 0) {
-                combination = combination * (1 << jointDimsList.size());
+                combination = combination * (1L << jointDimsList.size());
             }
 
             if (!includeDims.containsAll(mandatoryDims) || !includeDims.containsAll(hierarchyDims) || !includeDims.containsAll(jointDims)) {
@@ -607,7 +607,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             normalDims.removeAll(hierarchyDims);
             normalDims.removeAll(jointDims);
 
-            combination = combination * (1 << normalDims.size());
+            combination = combination * (1L << normalDims.size());
 
             if (combination > config.getCubeAggrGroupMaxCombination()) {
                 String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max.combination' to a bigger value.";

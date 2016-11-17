@@ -193,6 +193,13 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testCombinationIntOverflow() throws  Exception {
+        thrown.expect(IllegalStateException.class);
+        CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("ut_cube_desc_combination_int_overflow");
+        cubeDesc.init(getTestConfig());
+    }
+
+    @Test
     public void testSerialize() throws Exception {
         CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         String str = JsonUtil.writeValueAsIndentString(desc);
