@@ -140,6 +140,14 @@ public class TableExtDesc extends RootPersistentEntity {
         this.columnStats = columnStats;
     }
 
+    public void setTotalRows(String totalRows) {
+        this.totalRows = totalRows;
+    }
+
+    public String getTotalRows() {
+        return this.totalRows;
+    }
+
     public void setName(String name) {
         this.tableName = name;
     }
@@ -267,22 +275,21 @@ public class TableExtDesc extends RootPersistentEntity {
             return this.minValue;
         }
 
-        public void setMaxLenValue(String maxLenValue) {
-            this.maxLengthValue = maxLenValue;
+        public void setMaxLengthValue(String maxLengthValue) {
+            this.maxLengthValue = maxLengthValue;
         }
 
-        public String getMaxLenValue() {
+        public String getMaxLengthValue() {
             return this.maxLengthValue;
         }
 
-        public void setMinLenValue(String minLenValue) {
-            this.minLengthValue = minLenValue;
+        public void setMinLengthValue(String minLengthValue) {
+            this.minLengthValue = minLengthValue;
         }
 
-        public String getMinLenValue() {
+        public String getMinLengthValue() {
             return this.minLengthValue;
         }
-
 
         public void setCardinality(long cardinality) {
             this.cardinality = cardinality;
