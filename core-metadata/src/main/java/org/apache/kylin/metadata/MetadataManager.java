@@ -192,7 +192,7 @@ public class MetadataManager {
      * @param tableName
      * @return
      */
-    public TableExtDesc getTableExt(String tableName) throws IOException {
+    public TableExtDesc getTableExt(String tableName) {
         if (tableName.indexOf(".") < 0)
             tableName = "DEFAULT." + tableName;
 
@@ -205,7 +205,11 @@ public class MetadataManager {
             result.setUuid(UUID.randomUUID().toString());
             result.setLastModified(0);
             result.init();
-            saveTableExt(result);
+            try {
+                saveTableExt(result);
+            } catch (IOException ex) {
+                logger.warn("Failed to save TableExt", ex);
+            }
         }
         return result;
     }
