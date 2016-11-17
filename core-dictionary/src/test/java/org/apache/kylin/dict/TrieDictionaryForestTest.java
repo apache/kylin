@@ -38,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 public class TrieDictionaryForestTest {
 
 
+
     @Test
     public void testBasicFound() {
         ArrayList<String> strs = new ArrayList<String>();
@@ -429,6 +430,48 @@ public class TrieDictionaryForestTest {
             }catch(IllegalArgumentException e){
                 assertNull(set.floor(query));
             }
+        }
+    }
+
+    @Test
+    public void testUnsortedData(){
+        ArrayList<String> strs = new ArrayList<>();
+        Iterator<String> it = new RandomStrings(10000).iterator();
+        int totalSize = 0;
+        final StringBytesConverter converter = new StringBytesConverter();
+        while (it.hasNext()) {
+            String str = it.next();
+            byte[] data = converter.convertToBytes(str);
+            if (data != null) {
+                totalSize += data.length;
+            }
+            strs.add(str);
+        }
+        Collections.shuffle(strs);
+        int baseId = 20;
+        int maxTreeSize = totalSize / 10;
+        System.out.println("data size:" + totalSize / 1024 + "KB  max tree size:" + maxTreeSize / 1024 + "KB");
+        //test maintain one trie
+        TrieDictionaryForestBuilder<String> builder = new TrieDictionaryForestBuilder<String>(converter);
+        builder.setMaxTrieTreeSize(maxTreeSize);
+        for(String str : strs){
+            builder.addValue(str);
+        }
+        TrieDictionaryForest<String> dict = builder.build();
+        assertEquals(1,dict.getTrees().size());
+        //test throws Exception
+        Collections.sort(strs);
+        strs.add("f");
+        strs.add("a");
+        builder = new TrieDictionaryForestBuilder<String>(converter);
+        builder.setMaxTrieTreeSize(maxTreeSize);
+        try {
+            for (String str : strs)
+                builder.addValue(str);
+            dict = builder.build();
+            fail("Input data no sorted and builder have multi trees. Should throw IllegalStateException");
+        }catch (IllegalStateException e){
+            //correct
         }
     }
 

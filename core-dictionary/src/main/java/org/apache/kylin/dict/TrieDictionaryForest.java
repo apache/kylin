@@ -53,16 +53,19 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     private int baseId;
 
+    private ArrayList<ByteArray> maxValue;
+
     public TrieDictionaryForest() { // default constructor for Writable interface
     }
 
     public TrieDictionaryForest(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, //
-            ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+                                ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
         this.trees = trees;
         this.valueDivide = valueDivide;
         this.accuOffset = accuOffset;
         this.bytesConvert = bytesConverter;
         this.baseId = baseId;
+        initMaxValue();
     }
 
     @Override
@@ -116,27 +119,30 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     // id = tree_inner_offset + accumulate_offset + baseId
     protected int _getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
-        ByteArray search = new ByteArray(value, offset, len);
-        int index = findIndexByValue(search);
-        if (index < 0) {
+        int index;
+        if (trees.size() == 1) {
+            index = 0;
+        } else {
+            ByteArray search = new ByteArray(value, offset, len);
+            index = findIndexByValue(search);
+            if (index < 0) {
+                if (roundingFlag > 0) {
+                    return getMinId(); //searching value smaller than the smallest value in dict
+                } else {
+                    throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
+                }
+            }
+
             if (roundingFlag > 0) {
-                return getMinId(); //searching value smaller than the smallest value in dict
-            } else {
-                throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
+                ByteArray maxValueOfTree = maxValue.get(index);
+                if (search.compareTo(maxValueOfTree) > 0)
+                    index++;
+                if (index >= trees.size())
+                    throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
             }
         }
-        int id;
-        if (roundingFlag > 0) {
-            T curTreeMax = trees.get(index).getValueFromId(trees.get(index).getMaxId());
-            byte[] b1 = bytesConvert.convertToBytes(curTreeMax);
-            ByteArray ba1 = new ByteArray(b1, 0, b1.length);
-            if (search.compareTo(ba1) > 0)
-                index++;
-            if (index >= trees.size())
-                throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
-        }
         TrieDictionary<T> tree = trees.get(index);
-        id = tree.getIdFromValueBytes(value, offset, len, roundingFlag);
+        int id = tree.getIdFromValueBytes(value, offset, len, roundingFlag);
         id = id + accuOffset.get(index);
         id += baseId;
         return id;
@@ -154,7 +160,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
-        int index = findIndexById(id);
+        int index = (trees.size() == 1) ? 0 : findIndexById(id);
         int treeInnerOffset = getTreeInnerOffset(id, index);
         TrieDictionary<T> tree = trees.get(index);
         int size = tree.getValueBytesFromIdImpl(treeInnerOffset, returnValue, offset);
@@ -163,7 +169,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     protected byte[] getValueBytesFromIdImpl(int id) throws IllegalArgumentException {
-        int index = findIndexById(id);
+        int index = (trees.size() == 1) ? 0 : findIndexById(id);
         int treeInnerOffset = getTreeInnerOffset(id, index);
         TrieDictionary<T> tree = trees.get(index);
         byte[] result = tree.getValueBytesFromId(treeInnerOffset);
@@ -264,6 +270,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
                 dict.readFields(in);
                 trees.add(dict);
             }
+            initMaxValue();
         } catch (Exception e) {
             if (e instanceof RuntimeException)
                 throw (RuntimeException) e;
@@ -360,6 +367,18 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
             return mid;
         } else {
             return Math.min(left, right); // value may be bigger than the right tree (could return -1)
+        }
+    }
+
+    private void initMaxValue() throws IllegalStateException {
+        this.maxValue = new ArrayList<>();
+        if (this.trees == null || trees.isEmpty())
+            throw new IllegalStateException("Trees not init yet. Could not init max value of each tree");
+        for (int i = 0; i < trees.size(); i++) {
+            T curTreeMax = trees.get(i).getValueFromId(trees.get(i).getMaxId());
+            byte[] b1 = bytesConvert.convertToBytes(curTreeMax);
+            ByteArray ba1 = new ByteArray(b1, 0, b1.length);
+            this.maxValue.add(ba1);
         }
     }
 
