@@ -73,6 +73,12 @@ public abstract class DimensionEncodingFactory {
 
         Map<String, Integer> result = Maps.newHashMap();
         for (Pair<String, Integer> p : factoryMap.keySet()) {
+            if (result.containsKey(p.getFirst())) {
+                if (result.get(p.getFirst()) > p.getSecond()) {
+                    continue;//skip small versions
+                }
+            }
+
             result.put(p.getFirst(), p.getSecond());
         }
         result.put(DictionaryDimEnc.ENCODING_NAME, 1);
