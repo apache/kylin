@@ -29,18 +29,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public interface ReadableTable {
 
-    /** Returns a reader to read the table. */
+    /**
+     * Returns a reader to read the table.
+     */
     public TableReader getReader() throws IOException;
 
-    /** Used to detect table modifications mainly. Return null in case table does not exist. */
+    /**
+     * Used to detect table modifications mainly. Return null in case table does not exist.
+     */
     public TableSignature getSignature() throws IOException;
+
 
     public interface TableReader extends Closeable {
 
-        /** Move to the next row, return false if no more record. */
+        /**
+         * Move to the next row, return false if no more record.
+         */
         public boolean next() throws IOException;
 
-        /** Get the current row. */
+        /**
+         * Get the current row.
+         */
         public String[] getRow();
 
     }

@@ -133,7 +133,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
         job.setMapperClass(FactDistinctHiveColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);
-        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputKeyClass(SelfDefineSortableKey.class);
         job.setMapOutputValueClass(Text.class);
     }
 

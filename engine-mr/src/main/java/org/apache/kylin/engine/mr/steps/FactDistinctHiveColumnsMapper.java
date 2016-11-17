@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
@@ -150,11 +151,20 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                     //for the uhc
                     reducerIndex = columnIndexToReducerBeginId.get(i) + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
                 }
-
                 keyBuffer.put(Bytes.toBytes(reducerIndex)[3]);
                 keyBuffer.put(Bytes.toBytes(fieldValue));
                 outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
-                context.write(outputKey, EMPTY_TEXT);
+                sortableKey.setText(outputKey);
+                //judge type
+                DataType type = factDictCols.get(i).getType();
+                if (!type.isNumberFamily()) {
+                    sortableKey.setTypeId((byte) TypeFlag.NONE_NUMERIC_TYPE.ordinal());
+                } else if (type.isIntegerFamily()) {
+                    sortableKey.setTypeId((byte) TypeFlag.INTEGER_FAMILY_TYPE.ordinal());
+                } else {
+                    sortableKey.setTypeId((byte) TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
+                }
+                context.write(sortableKey, EMPTY_TEXT);
             }
         } catch (Exception ex) {
             handleErrorRecord(row, ex);
@@ -172,7 +182,9 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                     keyBuffer.put(MARK_FOR_PARTITION_COL);
                     keyBuffer.put(Bytes.toBytes(fieldValue));
                     outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
-                    context.write(outputKey, EMPTY_TEXT);
+                    sortableKey.setText(outputKey);
+                    sortableKey.setTypeId((byte) 0);
+                    context.write(sortableKey, EMPTY_TEXT);
                 }
             }
         }
@@ -221,7 +233,9 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                 hllBuf.clear();
                 hll.writeRegisters(hllBuf);
                 outputValue.set(hllBuf.array(), 0, hllBuf.position());
-                context.write(outputKey, outputValue);
+                sortableKey.setText(outputKey);
+                sortableKey.setTypeId((byte) 0);
+                context.write(sortableKey, outputValue);
             }
         }
     }

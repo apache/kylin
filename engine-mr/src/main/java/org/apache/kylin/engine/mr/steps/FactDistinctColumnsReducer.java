@@ -53,7 +53,7 @@ import com.google.common.collect.Maps;
 
 /**
  */
-public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWritable, Text> {
+public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableKey, Text, NullWritable, Text> {
 
     private List<TblColRef> columnList;
     private String statisticsOutput = null;
@@ -130,8 +130,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<Text, Text, NullWri
     }
 
     @Override
-    public void doReduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-
+    public void doReduce(SelfDefineSortableKey skey, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        Text key = skey.getText();
         if (isStatistics == true) {
             // for hll
             long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);

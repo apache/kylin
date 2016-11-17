@@ -23,8 +23,7 @@ import org.apache.kylin.dict.NumberDictionaryBuilder;
 import org.apache.kylin.dict.NumberDictionaryForestBuilder;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TrieDictionaryForest;
-import org.apache.kylin.engine.mr.steps.fdc2.SelfDefineSortableKey;
-import org.apache.kylin.engine.mr.steps.fdc2.TypeFlag;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -91,6 +90,7 @@ public class NumberDictionaryForestTest {
         }
     }
 
+
     @Test
     public void testVerySmallDouble() {
         List<String> testData = new ArrayList<>();
@@ -149,6 +149,19 @@ public class NumberDictionaryForestTest {
             int newId = dict2.getIdFromValueBytes(buf, 0, len);
             assertTrue(newId == 4);
         }
+    }
+
+    @Ignore
+    @Test
+    public void testDecimalsWithBeginZero(){
+        List<String> testData = new ArrayList<>();
+        testData.add("000000000000000000000000000.4868");
+        testData.add("00000000000000000000000000000000000000");
+        NumberDictionaryForestBuilder b = new NumberDictionaryForestBuilder();
+        for (String str : testData)
+            b.addValue(str);
+        TrieDictionaryForest<String> dict = b.build();
+        dict.dump(System.out);
     }
 
     private static TrieDictionaryForest<String> testSerialize(TrieDictionaryForest<String> dict) {

@@ -18,10 +18,12 @@
 
 package org.apache.kylin.engine.mr;
 
+import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -55,6 +57,7 @@ public class DFSFileTable implements ReadableTable {
     }
 
     @Override
+    @Deprecated
     public TableReader getReader() throws IOException {
         return new DFSFileTableReader(path, delim, nColumns);
     }
@@ -67,6 +70,29 @@ public class DFSFileTable implements ReadableTable {
         } catch (FileNotFoundException ex) {
             return null;
         }
+    }
+
+    public Collection<TableReader> getReaders() {
+        ArrayList<TableReader> readers = new ArrayList<>();
+        try {
+            String filePath = HadoopUtil.fixWindowsPath(path);
+            FileSystem fs = HadoopUtil.getFileSystem(filePath);
+            ArrayList<FileStatus> allFiles = new ArrayList<>();
+            FileStatus status = fs.getFileStatus(new Path(filePath));
+            if (status.isFile()) {
+                allFiles.add(status);
+            } else {
+                FileStatus[] listStatus = fs.listStatus(new Path(filePath));
+                allFiles.addAll(Arrays.asList(listStatus));
+            }
+            for (FileStatus f : allFiles) {
+                DFSSingleFileTableReader reader = new DFSSingleFileTableReader(f.getPath().toString(), delim, nColumns);
+                readers.add(reader);
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        return readers;
     }
 
     @Override
@@ -95,5 +121,15 @@ public class DFSFileTable implements ReadableTable {
         }
 
         return Pair.newPair(size, lastModified);
+    }
+
+    private boolean isExceptionSayingNotSeqFile(IOException e) {
+        if (e.getMessage() != null && e.getMessage().contains("not a SequenceFile"))
+            return true;
+
+        if (e instanceof EOFException) // in case the file is very very small
+            return true;
+
+        return false;
     }
 }

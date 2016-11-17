@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.engine.mr.steps.fdc2;
+package org.apache.kylin.engine.mr.steps;
 
 
 import org.apache.hadoop.io.Text;
@@ -67,7 +67,6 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
                     Long num2 = Long.parseLong(str2);
                     return num1.compareTo(num2);
                 } catch (NumberFormatException e) {
-                    System.out.println("NumberFormatException when parse integer family number.str1:" + str1 + " str2:" + str2);
                     logger.error("NumberFormatException when parse integer family number.str1:" + str1 + " str2:" + str2);
                     e.printStackTrace();
                     return 0;
@@ -78,9 +77,7 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
                     Double num2 = Double.parseDouble(str2);
                     return num1.compareTo(num2);
                 } catch (NumberFormatException e) {
-                    System.out.println("NumberFormatException when parse double family number.str1:" + str1 + " str2:" + str2);
                     logger.error("NumberFormatException when parse doul family number.str1:" + str1 + " str2:" + str2);
-                    //e.printStackTrace();
                     return 0;
                 }
             }

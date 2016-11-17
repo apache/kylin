@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,30 +16,13 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.engine.mr.steps.fdc2;
-
-import org.apache.hadoop.io.Text;
-import org.apache.kylin.engine.mr.KylinReducer;
-
-import java.io.IOException;
+package org.apache.kylin.engine.mr.steps;
 
 /**
- * @author yangli9
+ * Created by xiefan on 16-11-2.
  */
-public class FactDistinctColumnsCombiner2 extends KylinReducer<SelfDefineSortableKey, Text, SelfDefineSortableKey, Text> {
-
-    @Override
-    protected void setup(Context context) throws IOException {
-        super.bindCurrentConfiguration(context.getConfiguration());
-    }
-
-    @Override
-    public void doReduce(SelfDefineSortableKey key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-
-
-        // for hll, each key only has one output, no need to do local combine;
-        // for normal col, values are empty text
-        context.write(key, values.iterator().next());
-    }
-
+public enum TypeFlag {
+    NONE_NUMERIC_TYPE,
+    INTEGER_FAMILY_TYPE,
+    DOUBLE_FAMILY_TYPE
 }

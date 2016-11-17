@@ -20,6 +20,7 @@ package org.apache.kylin.source.hive;
 
 import java.io.IOException;
 
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.mr.DFSFileTable;
@@ -77,6 +78,8 @@ public class HiveTable implements ReadableTable {
                 throw new IOException(e);
         }
     }
+
+
 
     private String computeHDFSLocation() throws Exception {
 

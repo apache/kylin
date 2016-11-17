@@ -24,10 +24,11 @@ import org.apache.kylin.common.util.BytesUtil;
 
 /**
  */
-public class FactDistinctColumnPartitioner extends Partitioner<Text, Text> {
+public class FactDistinctColumnPartitioner extends Partitioner<SelfDefineSortableKey, Text> {
 
     @Override
-    public int getPartition(Text key, Text value, int numReduceTasks) {
+    public int getPartition(SelfDefineSortableKey skey, Text value, int numReduceTasks) {
+        Text key = skey.getText();
         if (key.getBytes()[0] == FactDistinctHiveColumnsMapper.MARK_FOR_HLL) {
             // the last reducer is for merging hll
             return numReduceTasks - 1;

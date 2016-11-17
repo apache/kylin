@@ -12,8 +12,6 @@ import java.util.UUID;
 
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.engine.mr.steps.fdc2.SelfDefineSortableKey;
-import org.apache.kylin.engine.mr.steps.fdc2.TypeFlag;
 import org.junit.Test;
 
 /**

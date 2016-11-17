@@ -51,14 +51,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class SnapshotTable extends RootPersistentEntity implements ReadableTable {
 
-
     @JsonProperty("tableName")
     private String tableName;
     @JsonProperty("signature")
     private TableSignature signature;
     @JsonProperty("useDictionary")
     private boolean useDictionary;
-
 
     private ArrayList<int[]> rowIndices;
     private Dictionary<String> dict;

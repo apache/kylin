@@ -78,9 +78,9 @@ public class TrieDictionaryForestBuilder<T> {
         addValue(valueBytes);
     }
 
+
     private void addValue(byte[] valueBytes) {
         ByteArray valueByteArray = new ByteArray(valueBytes);
-        
         if (previousValue != null && isOrdered) {
             int comp = previousValue.compareTo(valueByteArray);
             if (comp == 0) {

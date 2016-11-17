@@ -457,7 +457,7 @@ public class TrieDictionaryForestTest {
     }
 
     @Test
-    public void testUnsortedData(){
+    public void testUnsortedData() {
         ArrayList<String> strs = new ArrayList<>();
         Iterator<String> it = new RandomStrings(10000).iterator();
         int totalSize = 0;
@@ -477,11 +477,11 @@ public class TrieDictionaryForestTest {
         //test maintain one trie
         TrieDictionaryForestBuilder<String> builder = new TrieDictionaryForestBuilder<String>(converter);
         builder.setMaxTrieTreeSize(maxTreeSize);
-        for(String str : strs){
+        for (String str : strs) {
             builder.addValue(str);
         }
         TrieDictionaryForest<String> dict = builder.build();
-        assertEquals(1,dict.getTrees().size());
+        assertEquals(1, dict.getTrees().size());
         //test throws Exception
         Collections.sort(strs);
         strs.add("f");
@@ -493,7 +493,7 @@ public class TrieDictionaryForestTest {
                 builder.addValue(str);
             dict = builder.build();
             fail("Input data no sorted and builder have multi trees. Should throw IllegalStateException");
-        }catch (IllegalStateException e){
+        } catch (IllegalStateException e) {
             //correct
         }
     }
