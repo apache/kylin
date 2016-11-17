@@ -19,49 +19,57 @@
 package org.apache.kylin.dict;
 
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.dict.NumberDictionary.NumberBytesCodec;
 
 /**
  * Created by xiefan on 16-11-2.
  */
-public class NumberDictionaryForestBuilder<T> {
+public class NumberDictionaryForestBuilder extends TrieDictionaryForestBuilder<String> {
 
-    private TrieDictionaryForestBuilder<T> trieBuilder;
+    public static class Number2BytesConverter implements BytesConverter<String> {
 
-    private BytesConverter<T> bytesConverter;
+        static final int MAX_DIGITS_BEFORE_DECIMAL_POINT = NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT;
+        static final ThreadLocal<NumberBytesCodec> LOCAL = new ThreadLocal<NumberBytesCodec>();
 
-    private NumberDictionaryForest.NumberBytesCodec codec = new NumberDictionaryForest.NumberBytesCodec(NumberDictionaryForest.MAX_DIGITS_BEFORE_DECIMAL_POINT);
+        static NumberBytesCodec getCodec() {
+            NumberBytesCodec codec = LOCAL.get();
+            if (codec == null) {
+                codec = new NumberBytesCodec(MAX_DIGITS_BEFORE_DECIMAL_POINT);
+                LOCAL.set(codec);
+            }
+            return codec;
+        }
+        
+        @Override
+        public byte[] convertToBytes(String v) {
+            NumberBytesCodec codec = getCodec();
+            byte[] num = Bytes.toBytes(v);
+            codec.encodeNumber(num, 0, num.length);
+            return Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
+        }
 
-    public NumberDictionaryForestBuilder(BytesConverter<T> bytesConverter) {
-        this(bytesConverter, 0);
+        @Override
+        public String convertFromBytes(byte[] b, int offset, int length) {
+            NumberBytesCodec codec = getCodec();
+            byte[] backup = codec.buf;
+            codec.buf = b;
+            codec.bufOffset = offset;
+            codec.bufLen = length;
+            int len = codec.decodeNumber(backup, 0);
+            codec.buf = backup;
+            return Bytes.toString(backup, 0, len);
+        }
     }
 
-    public NumberDictionaryForestBuilder(BytesConverter<T> bytesConverter, int baseId) {
-        this.trieBuilder = new TrieDictionaryForestBuilder<T>(bytesConverter, baseId);
-        this.bytesConverter = bytesConverter;
+    public NumberDictionaryForestBuilder() {
+        super(new Number2BytesConverter());
     }
 
-    public NumberDictionaryForestBuilder(BytesConverter<T> bytesConverter, int baseId, int maxTrieSizeMB) {
-        this.trieBuilder = new TrieDictionaryForestBuilder<T>(bytesConverter, baseId, maxTrieSizeMB);
-        this.bytesConverter = bytesConverter;
+    public NumberDictionaryForestBuilder(int baseId) {
+        super(new Number2BytesConverter(), 0);
     }
 
-    public void addValue(T value) {
-        addValue(bytesConverter.convertToBytes(value));
-    }
-
-    public void addValue(byte[] value) {
-        codec.encodeNumber(value, 0, value.length);
-        byte[] copy = Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
-        this.trieBuilder.addValue(copy);
-    }
-
-    //TODO:ensure ordered
-    public NumberDictionaryForest<T> build() {
-        TrieDictionaryForest<T> forest = trieBuilder.build();
-        return new NumberDictionaryForest<T>(forest, bytesConverter);
-    }
-
-    public void setMaxTrieSize(int size) {
-        this.trieBuilder.setMaxTrieTreeSize(size);
+    public NumberDictionaryForestBuilder(int baseId, int maxTrieSizeMB) {
+        super(new Number2BytesConverter(), 0, maxTrieSizeMB);
     }
 }

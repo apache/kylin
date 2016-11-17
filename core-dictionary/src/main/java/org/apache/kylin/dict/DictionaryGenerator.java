@@ -156,7 +156,7 @@ public class DictionaryGenerator {
     private static class NumberDictBuilder implements IDictionaryBuilder {
         @Override
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
-            NumberDictionaryForestBuilder builder = new NumberDictionaryForestBuilder(new StringBytesConverter(), baseId);
+            NumberDictionaryForestBuilder builder = new NumberDictionaryForestBuilder(baseId);
             byte[] value;
             while (valueEnumerator.moveNext()) {
                 value = valueEnumerator.current();

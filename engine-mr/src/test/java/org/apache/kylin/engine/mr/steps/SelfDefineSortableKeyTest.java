@@ -1,30 +1,20 @@
 package org.apache.kylin.engine.mr.steps;
 
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.io.Text;
-import org.apache.kylin.common.util.Array;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.dict.NumberDictionaryForest;
-import org.apache.kylin.dict.NumberDictionaryForestBuilder;
-import org.apache.kylin.dict.StringBytesConverter;
-import org.apache.kylin.dict.TrieDictionary;
-import org.apache.kylin.dict.TrieDictionaryBuilder;
-import org.apache.kylin.dict.TrieDictionaryForest;
-import org.apache.kylin.dict.TrieDictionaryForestBuilder;
-import org.apache.kylin.engine.mr.steps.fdc2.SelfDefineSortableKey;
-import org.apache.kylin.engine.mr.steps.fdc2.TypeFlag;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+
+import org.apache.hadoop.io.Text;
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.engine.mr.steps.fdc2.SelfDefineSortableKey;
+import org.apache.kylin.engine.mr.steps.fdc2.TypeFlag;
+import org.junit.Test;
 
 /**
  * Created by xiefan on 16-11-2.

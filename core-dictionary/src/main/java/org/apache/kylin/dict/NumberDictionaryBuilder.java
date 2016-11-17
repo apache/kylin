@@ -22,7 +22,6 @@ import org.apache.kylin.common.util.Bytes;
 
 /**
  * @author yangli9
- * 
  */
 public class NumberDictionaryBuilder<T> extends TrieDictionaryBuilder<T> {
 

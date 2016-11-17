@@ -20,9 +20,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dict.NumberDictionary;
 import org.apache.kylin.dict.NumberDictionaryBuilder;
-import org.apache.kylin.dict.NumberDictionaryForest;
 import org.apache.kylin.dict.NumberDictionaryForestBuilder;
 import org.apache.kylin.dict.StringBytesConverter;
+import org.apache.kylin.dict.TrieDictionaryForest;
 import org.apache.kylin.engine.mr.steps.fdc2.SelfDefineSortableKey;
 import org.apache.kylin.engine.mr.steps.fdc2.TypeFlag;
 import org.junit.Test;
@@ -51,14 +51,13 @@ public class NumberDictionaryForestTest {
         ArrayList<SelfDefineSortableKey> keyList = createKeyList(list, (byte) flag.ordinal());
         Collections.sort(keyList);
         //build tree
-        NumberDictionaryForestBuilder<String> b = new NumberDictionaryForestBuilder<String>(
-                new StringBytesConverter(), 0, 0);
+        NumberDictionaryForestBuilder b = new NumberDictionaryForestBuilder(0, 0);
 
         for (SelfDefineSortableKey key : keyList) {
             String fieldValue = printKey(key);
             b.addValue(fieldValue);
         }
-        NumberDictionaryForest<String> dict = b.build();
+        TrieDictionaryForest<String> dict = b.build();
         dict.dump(System.out);
         ArrayList<Integer> resultIds = new ArrayList<>();
         for (SelfDefineSortableKey key : keyList) {
@@ -81,10 +80,10 @@ public class NumberDictionaryForestTest {
         testData.add("2");
         testData.add("100");
         //TrieDictionaryForestBuilder.MaxTrieTreeSize = 0;
-        NumberDictionaryForestBuilder<String> b = new NumberDictionaryForestBuilder<String>(new StringBytesConverter());
+        NumberDictionaryForestBuilder b = new NumberDictionaryForestBuilder();
         for (String str : testData)
             b.addValue(str);
-        NumberDictionaryForest<String> dict = b.build();
+        TrieDictionaryForest<String> dict = b.build();
         dict = testSerialize(dict);
         dict.dump(System.out);
         for (String str : testData) {
@@ -99,10 +98,10 @@ public class NumberDictionaryForestTest {
         testData.add(Double.MIN_VALUE + "");
         testData.add("1.01");
         testData.add("2.0");
-        NumberDictionaryForestBuilder<String> b = new NumberDictionaryForestBuilder<String>(new StringBytesConverter());
+        NumberDictionaryForestBuilder b = new NumberDictionaryForestBuilder();
         for (String str : testData)
             b.addValue(str);
-        NumberDictionaryForest<String> dict = b.build();
+        TrieDictionaryForest<String> dict = b.build();
         dict.dump(System.out);
 
         NumberDictionaryBuilder<String> b2 = new NumberDictionaryBuilder<>(new StringBytesConverter());
@@ -113,7 +112,7 @@ public class NumberDictionaryForestTest {
 
     }
 
-    private static NumberDictionaryForest<String> testSerialize(NumberDictionaryForest<String> dict) {
+    private static TrieDictionaryForest<String> testSerialize(TrieDictionaryForest<String> dict) {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             DataOutputStream dataout = new DataOutputStream(bout);
@@ -121,7 +120,7 @@ public class NumberDictionaryForestTest {
             dataout.close();
             ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
             DataInputStream datain = new DataInputStream(bin);
-            NumberDictionaryForest<String> r = new NumberDictionaryForest<>();
+            TrieDictionaryForest<String> r = new TrieDictionaryForest<>();
             //r.dump(System.out);
             r.readFields(datain);
             //r.dump(System.out);
