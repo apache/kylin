@@ -245,6 +245,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testUnionallQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_unionall", null, true);
+    }
+
+    @Test
     public void testTimeStampAdd() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_timestamp", null, true);
     }
