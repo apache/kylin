@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.NavigableSet;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
@@ -68,16 +67,15 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
             throw new IllegalStateException(String.format("GlobalDict %s should have 0 or 1 append dict but %d", dictInfo.getResourceDir(), appendDicts.size()));
         }
 
-        byte[] value;
+        String value;
         while (valueEnumerator.moveNext()) {
             value = valueEnumerator.current();
             if (value == null) {
                 continue;
             }
-            String v = Bytes.toString(value);
-            builder.addValue(v);
-            if (returnSamples.size() < nSamples && returnSamples.contains(v) == false)
-                returnSamples.add(v);
+            builder.addValue(value);
+            if (returnSamples.size() < nSamples && returnSamples.contains(value) == false)
+                returnSamples.add(value);
         }
         return builder.build(baseId);
     }

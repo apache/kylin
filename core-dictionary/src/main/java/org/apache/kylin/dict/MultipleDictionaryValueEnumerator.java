@@ -21,7 +21,6 @@ package org.apache.kylin.dict;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 
 import com.google.common.collect.Lists;
@@ -32,15 +31,15 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("rawtypes")
 public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumerator {
     private int curDictIndex = 0;
-    private Dictionary curDict;
+    private Dictionary<String> curDict;
     private int curKey;
-    private byte[] curValue = null;
-    private List<Dictionary> dictionaryList;
+    private String curValue = null;
+    private List<Dictionary<String>> dictionaryList;
 
     public MultipleDictionaryValueEnumerator(List<DictionaryInfo> dictionaryInfoList) {
         dictionaryList = Lists.newArrayListWithCapacity(dictionaryInfoList.size());
         for (DictionaryInfo dictInfo : dictionaryInfoList) {
-            dictionaryList.add(dictInfo.getDictionaryObject());
+            dictionaryList.add((Dictionary<String>) dictInfo.getDictionaryObject());
         }
         if (!dictionaryList.isEmpty()) {
             curDict = dictionaryList.get(0);
@@ -49,7 +48,7 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
     }
 
     @Override
-    public byte[] current() throws IOException {
+    public String current() throws IOException {
         return curValue;
     }
 
@@ -57,9 +56,7 @@ public class MultipleDictionaryValueEnumerator implements IDictionaryValueEnumer
     public boolean moveNext() throws IOException {
         while (curDictIndex < dictionaryList.size()) {
             if (curKey <= curDict.getMaxId()) {
-                byte[] buffer = new byte[curDict.getSizeOfValue()];
-                int size = curDict.getValueBytesFromId(curKey, buffer, 0);
-                curValue = Bytes.copy(buffer, 0, size);
+                curValue = curDict.getValueFromId(curKey);
                 curKey ++;
 
                 return true;

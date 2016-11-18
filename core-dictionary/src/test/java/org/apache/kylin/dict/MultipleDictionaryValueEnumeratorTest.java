@@ -18,9 +18,8 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.Dictionary;
-import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -29,8 +28,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
+import org.apache.kylin.common.util.Dictionary;
+import org.junit.Test;
 
 /**
  * Created by sunyerui on 16/8/2.
@@ -49,7 +48,7 @@ public class MultipleDictionaryValueEnumeratorTest {
         MultipleDictionaryValueEnumerator enumerator = new MultipleDictionaryValueEnumerator(dictionaryInfoList);
         List<Integer> values = new ArrayList<>();
         while (enumerator.moveNext()) {
-            values.add(Bytes.toInt(enumerator.current()));
+            values.add(Integer.parseInt(enumerator.current()));
         }
         return values.toArray(new Integer[0]);
     }
@@ -100,7 +99,9 @@ public class MultipleDictionaryValueEnumeratorTest {
         assertArrayEquals(new Integer[]{0, 1, 2, 6, 7, 8}, values);
     }
 
-    public static class MockDictionary extends Dictionary {
+    public static class MockDictionary extends Dictionary<String> {
+        private static final long serialVersionUID = 1L;
+        
         public int[] values;
 
         @Override
@@ -124,13 +125,13 @@ public class MultipleDictionaryValueEnumeratorTest {
         }
 
         @Override
-        protected int getIdFromValueImpl(Object value, int roundingFlag) {
+        protected int getIdFromValueImpl(String value, int roundingFlag) {
             return 0;
         }
 
         @Override
-        protected Object getValueFromIdImpl(int id) {
-            return null;
+        protected String getValueFromIdImpl(int id) {
+            return "" + values[id];
         }
 
         @Override
@@ -145,8 +146,7 @@ public class MultipleDictionaryValueEnumeratorTest {
 
         @Override
         protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-            System.arraycopy(Bytes.toBytes(values[id]), 0, returnValue, offset, 4);
-            return 4;
+            return 0;
         }
 
         @Override

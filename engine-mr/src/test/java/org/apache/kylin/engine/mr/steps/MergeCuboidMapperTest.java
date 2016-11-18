@@ -39,7 +39,6 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
-import org.apache.kylin.dict.TrieDictionary;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -53,7 +52,7 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("rawtypes")
 public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(MergeCuboidMapperTest.class);
 
     MapDriver<Text, Text, Text, Text> mapDriver;
@@ -73,9 +72,9 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
         DictionaryInfo newDictInfo = new DictionaryInfo("", "", 0, "string", signature);
 
-        List<byte[]> values = new ArrayList<byte[]>();
-        values.add(new byte[] { 101, 101, 101 });
-        values.add(new byte[] { 102, 102, 102 });
+        List<String> values = new ArrayList<>();
+        values.add("eee");
+        values.add("fff");
         Dictionary<?> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()), new IterableDictionaryValueEnumerator(values));
         dictionaryManager.trySaveNewDict(dict, newDictInfo);
         dict.dump(System.out);
@@ -122,12 +121,12 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
 
             DictionaryInfo newDictInfo = new DictionaryInfo(lfn.getTable(), lfn.getColumnDesc().getName(), lfn.getColumnDesc().getZeroBasedIndex(), "string", signature);
 
-            List<byte[]> values = new ArrayList<byte[]>();
-            values.add(new byte[] { 97, 97, 97 });
+            List<String> values = new ArrayList<>();
+            values.add("aaa");
             if (isFirstSegment)
-                values.add(new byte[] { 99, 99, 99 });
+                values.add("ccc");
             else
-                values.add(new byte[] { 98, 98, 98 });
+                values.add("bbb");
             Dictionary<?> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()), new IterableDictionaryValueEnumerator(values));
             dictionaryManager.trySaveNewDict(dict, newDictInfo);
             dict.dump(System.out);

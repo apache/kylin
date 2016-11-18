@@ -200,10 +200,10 @@ public class SparkCubing extends AbstractApplication {
             final DataFrame frame = intermediateTable.select(column).distinct();
 
             final Row[] rows = frame.collect();
-            dictionaryMap.put(tblColRef, DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(new Iterable<byte[]>() {
+            dictionaryMap.put(tblColRef, DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(new Iterable<String>() {
                 @Override
-                public Iterator<byte[]> iterator() {
-                    return new Iterator<byte[]>() {
+                public Iterator<String> iterator() {
+                    return new Iterator<String>() {
                         int i = 0;
 
                         @Override
@@ -212,11 +212,11 @@ public class SparkCubing extends AbstractApplication {
                         }
 
                         @Override
-                        public byte[] next() {
+                        public String next() {
                             if (hasNext()) {
                                 final Row row = rows[i++];
                                 final Object o = row.get(0);
-                                return o != null ? o.toString().getBytes() : null;
+                                return o != null ? o.toString() : null;
                             } else {
                                 throw new NoSuchElementException();
                             }

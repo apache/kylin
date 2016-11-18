@@ -85,7 +85,8 @@ public class TrieDictionaryBuilder<T> {
         addValue(bytesConverter.convertToBytes(value));
     }
 
-    public void addValue(byte[] value) {
+    // add a converted value (given in byte[] format), use with care, for internal only
+    void addValue(byte[] value) {
         addValueR(root, value, 0);
     }
 

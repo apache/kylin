@@ -75,35 +75,28 @@ public class TrieDictionaryForestBuilder<T> {
         if (value == null)
             return;
         byte[] valueBytes = bytesConverter.convertToBytes(value);
-        addValue(new ByteArray(valueBytes, 0, valueBytes.length));
+        addValue(valueBytes);
     }
 
-    public void addValue(byte[] value) {
-        if (value == null)
-            return;
-        ByteArray array = new ByteArray(value, 0, value.length);
-        addValue(array);
-    }
-
-    public void addValue(ByteArray value) {
-        if (value == null)
-            return;
+    private void addValue(byte[] valueBytes) {
+        ByteArray valueByteArray = new ByteArray(valueBytes);
+        
         if (previousValue != null && isOrdered) {
-            int comp = previousValue.compareTo(value);
+            int comp = previousValue.compareTo(valueByteArray);
             if (comp == 0) {
                 return; //duplicate value
             }
             if (comp > 0) {
-                logger.info("values not in ascending order, previous '{}', current '{}'", previousValue, value);
+                logger.info("values not in ascending order, previous '{}', current '{}'", previousValue, valueByteArray);
                 isOrdered = false;
                 if (trees.size() > 0) {
                     throw new IllegalStateException("Invalid input data. Unordered data cannot be split into multi trees");
                 }
             }
         }
-        previousValue = value;
-        trieBuilder.addValue(value.array());
-        curTreeSize += value.length();
+        previousValue = valueByteArray;
+        trieBuilder.addValue(valueBytes);
+        curTreeSize += valueBytes.length;
         
         if (curTreeSize >= maxTrieTreeSize && isOrdered) {
             TrieDictionary<T> tree = trieBuilder.build(0);

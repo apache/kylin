@@ -32,7 +32,7 @@ public class NumberDictionaryBuilder<T> extends TrieDictionaryBuilder<T> {
     }
 
     @Override
-    public void addValue(byte[] value) {
+    void addValue(byte[] value) {
         codec.encodeNumber(value, 0, value.length);
         byte[] copy = Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
         super.addValue(copy);

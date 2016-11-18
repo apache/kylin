@@ -19,20 +19,25 @@
 package org.apache.kylin.dict;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 
 /**
  * Created by dongli on 10/28/15.
  */
 public class IterableDictionaryValueEnumerator implements IDictionaryValueEnumerator {
-    Iterator<byte[]> iterator;
+    Iterator<String> iterator;
 
-    public IterableDictionaryValueEnumerator(Iterable<byte[]> list) {
+    public IterableDictionaryValueEnumerator(String[] strs) {
+        this(Arrays.asList(strs));
+    }
+    
+    public IterableDictionaryValueEnumerator(Iterable<String> list) {
         iterator = list.iterator();
     }
 
     @Override
-    public byte[] current() throws IOException {
+    public String current() throws IOException {
         return iterator.next();
     }
 

@@ -35,7 +35,6 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
@@ -201,7 +200,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
             TblColRef col = columns.get(c);
             if (desc.getRowkey().isUseDictionary(col)) {
                 logger.info("Building dictionary for " + col);
-                List<byte[]> valueList = readValueList(flatTable, nColumns, flatDesc.getRowKeyColumnIndexes()[c]);
+                List<String> valueList = readValueList(flatTable, nColumns, flatDesc.getRowKeyColumnIndexes()[c]);
                 Dictionary<String> dict = DictionaryGenerator.buildDictionary(col.getType(), new IterableDictionaryValueEnumerator(valueList));
                 result.put(col, dict);
             }
@@ -221,7 +220,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
                 if (dictCols.contains(col)) {
                     int colIdxOnFlat = flatTableIdx[i];
                     logger.info("Building dictionary for " + col);
-                    List<byte[]> valueList = readValueList(flatTable, nColumns, colIdxOnFlat);
+                    List<String> valueList = readValueList(flatTable, nColumns, colIdxOnFlat);
                     Dictionary<String> dict = DictionaryGenerator.buildDictionary(col.getType(), new IterableDictionaryValueEnumerator(valueList));
 
                     result.put(col, dict);
@@ -232,8 +231,8 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
         return result;
     }
 
-    private static List<byte[]> readValueList(String flatTable, int nColumns, int c) throws IOException {
-        List<byte[]> result = Lists.newArrayList();
+    private static List<String> readValueList(String flatTable, int nColumns, int c) throws IOException {
+        List<String> result = Lists.newArrayList();
         List<String> lines = FileUtils.readLines(new File(flatTable), "UTF-8");
         for (String line : lines) {
             String[] row = line.trim().split(",");
@@ -241,7 +240,7 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
                 throw new IllegalStateException();
             }
             if (row[c] != null) {
-                result.add(Bytes.toBytes(row[c]));
+                result.add(row[c]);
             }
         }
         return result;

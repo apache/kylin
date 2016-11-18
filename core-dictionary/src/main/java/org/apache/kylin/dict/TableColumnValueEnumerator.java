@@ -21,7 +21,6 @@ package org.apache.kylin.dict;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.source.ReadableTable;
 
 /**
@@ -31,7 +30,7 @@ public class TableColumnValueEnumerator implements IDictionaryValueEnumerator {
 
     private ReadableTable.TableReader reader;
     private int colIndex;
-    private byte[] colValue;
+    private String colValue;
 
     public TableColumnValueEnumerator(ReadableTable.TableReader reader, int colIndex) {
         this.reader = reader;
@@ -53,7 +52,7 @@ public class TableColumnValueEnumerator implements IDictionaryValueEnumerator {
                 colStrValue = split[colIndex];
             }
 
-            colValue = colStrValue == null ? null : Bytes.toBytes(colStrValue);
+            colValue = colStrValue;
             return true;
 
         } else {
@@ -69,7 +68,7 @@ public class TableColumnValueEnumerator implements IDictionaryValueEnumerator {
     }
 
     @Override
-    public byte[] current() {
+    public String current() {
         return colValue;
     }
 }

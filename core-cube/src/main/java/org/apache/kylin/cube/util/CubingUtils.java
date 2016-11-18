@@ -19,10 +19,10 @@
 package org.apache.kylin.cube.util;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -46,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -153,14 +152,8 @@ public class CubingUtils {
             }
         }
         for (TblColRef tblColRef : valueMap.keySet()) {
-            final Collection<byte[]> bytes = Collections2.transform(valueMap.get(tblColRef), new Function<String, byte[]>() {
-                @Nullable
-                @Override
-                public byte[] apply(String input) {
-                    return input == null ? null : input.getBytes();
-                }
-            });
-            final Dictionary<String> dict = DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(bytes));
+            Set<String> values = valueMap.get(tblColRef);
+            Dictionary<String> dict = DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(values));
             result.put(tblColRef, dict);
         }
         return result;

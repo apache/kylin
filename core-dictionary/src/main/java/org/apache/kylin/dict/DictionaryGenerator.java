@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.slf4j.Logger;
@@ -93,7 +92,7 @@ public class DictionaryGenerator {
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
             final int BAD_THRESHOLD = 0;
             String matchPattern = null;
-            byte[] value;
+            String value;
 
             for (String ptn : DATE_PATTERNS) {
                 matchPattern = ptn; // be optimistic
@@ -101,16 +100,15 @@ public class DictionaryGenerator {
                 SimpleDateFormat sdf = new SimpleDateFormat(ptn);
                 while (valueEnumerator.moveNext()) {
                     value = valueEnumerator.current();
-                    if (value == null || value.length == 0)
+                    if (value == null || value.length() == 0)
                         continue;
 
-                    String str = Bytes.toString(value);
                     try {
-                        sdf.parse(str);
-                        if (returnSamples.size() < nSamples && returnSamples.contains(str) == false)
-                            returnSamples.add(str);
+                        sdf.parse(value);
+                        if (returnSamples.size() < nSamples && returnSamples.contains(value) == false)
+                            returnSamples.add(value);
                     } catch (ParseException e) {
-                        logger.info("Unrecognized date value: " + str);
+                        logger.info("Unrecognized date value: " + value);
                         badCount++;
                         if (badCount > BAD_THRESHOLD) {
                             matchPattern = null;
@@ -139,15 +137,14 @@ public class DictionaryGenerator {
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
             int maxTrieSizeInMB = TrieDictionaryForestBuilder.getMaxTrieSizeInMB();
             TrieDictionaryForestBuilder builder = new TrieDictionaryForestBuilder(new StringBytesConverter(), baseId, maxTrieSizeInMB);
-            byte[] value;
+            String value;
             while (valueEnumerator.moveNext()) {
                 value = valueEnumerator.current();
                 if (value == null)
                     continue;
-                String v = Bytes.toString(value);
-                builder.addValue(v);
-                if (returnSamples.size() < nSamples && returnSamples.contains(v) == false)
-                    returnSamples.add(v);
+                builder.addValue(value);
+                if (returnSamples.size() < nSamples && returnSamples.contains(value) == false)
+                    returnSamples.add(value);
             }
             return builder.build();
         }
@@ -157,18 +154,15 @@ public class DictionaryGenerator {
         @Override
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
             NumberDictionaryForestBuilder builder = new NumberDictionaryForestBuilder(baseId);
-            byte[] value;
+            String value;
             while (valueEnumerator.moveNext()) {
                 value = valueEnumerator.current();
-                if (value == null)
-                    continue;
-                String v = Bytes.toString(value);
-                if (StringUtils.isBlank(v)) // empty string is null for numbers
+                if (StringUtils.isBlank(value)) // empty string is null for numbers
                     continue;
 
-                builder.addValue(v);
-                if (returnSamples.size() < nSamples && returnSamples.contains(v) == false)
-                    returnSamples.add(v);
+                builder.addValue(value);
+                if (returnSamples.size() < nSamples && returnSamples.contains(value) == false)
+                    returnSamples.add(value);
             }
             return builder.build();
         }
