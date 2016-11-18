@@ -312,7 +312,7 @@ public class ExecutableManager {
             executableDao.updateJobOutput(jobOutput);
             logger.info("job id:" + jobId + " from " + oldStatus + " to " + newStatus);
         } catch (PersistentException e) {
-            logger.error("error change job:" + jobId + " to " + newStatus.toString());
+            logger.error("error change job:" + jobId + " to " + newStatus);
             throw new RuntimeException(e);
         }
     }
