@@ -40,18 +40,22 @@ Current version (v1.5.3) has no GUI for defining global dictionary yet, you need
 
 The `column` means the column which to be encoded, the `builder` specifies the dictionary builder, only `org.apache.kylin.dict.GlobalDictionaryBuilder` is available for now.
 The 'reuse` is used to optimize the dict of more than one columns based on one dataset, please refer the next section 'Example' for more details.
+
+Higher version (v1.5.4 or above) provided GUI for global dictionary definetion, the 'Advanced Dictionaries' part in step 'Advanced Setting' of cube designer.
+
 The global dictionay cannot be used for dimension encoding for now, that means if one column is used for both dimension and count distinct measure in one cube, its dimension encoding should be others instead of dict.
 
 ## Example
 Here's some example data:
-| DT           | USER\_ID | FLAG1 | FLAG2 | USER\_ID\_FLAG1 | USER\_ID\_FLAG2 |
-| :----------: | :------: | :---: | :---: | :-------------: | :-------------: |
-| 2016-06-08   | AAA      | 1     | 1     | AAA             | AAA             |
-| 2016-06-08   | BBB      | 1     | 1     | BBB             | BBB             |
-| 2016-06-08   | CCC      | 0     | 1     | NULL            | CCC             |
-| 2016-06-09   | AAA      | 0     | 1     | NULL            | AAA             |
-| 2016-06-09   | CCC      | 1     | 0     | CCC             | NULL            |
-| 2016-06-10   | BBB      | 0     | 1     | NULL            | BBB             |
+
+| DT          | USER\_ID | FLAG1 | FLAG2 | USER\_ID\_FLAG1 | USER\_ID\_FLAG2 |
+| :---------- | :------: | :---: | :---: | :-------------: | :-------------: |
+| 2016-06-08  | AAA      | 1     | 1     | AAA             | AAA             |
+| 2016-06-08  | BBB      | 1     | 1     | BBB             | BBB             |
+| 2016-06-08  | CCC      | 0     | 1     | NULL            | CCC             |
+| 2016-06-09  | AAA      | 0     | 1     | NULL            | AAA             |
+| 2016-06-09  | CCC      | 1     | 0     | CCC             | NULL            |
+| 2016-06-10  | BBB      | 0     | 1     | NULL            | BBB             |
 
 There's basic columns `DT`, `USER_ID`, `FLAG1`, `FLAG2`, and condition columns `USER_ID_FLAG1=if(FLAG1=1,USER_ID,null)`, `USER_ID_FLAG2=if(FLAG2=1,USER_ID,null)`. Supposed the cube is builded by day, has 3 segments.
 
