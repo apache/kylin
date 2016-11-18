@@ -156,7 +156,7 @@ public class ExtendCubeToHybridCLI {
                 logger.info("CubeSegment[" + currentSeg + "] was removed.");
             }
         }
-        if (partitionDateStr != null && partitionDate != currentSeg.getDateRangeEnd()) {
+        if (currentSeg != null && partitionDateStr != null && partitionDate != currentSeg.getDateRangeEnd()) {
             logger.error("PartitionDate must be end date of one segment.");
             return;
         }

@@ -486,7 +486,7 @@ public class MetadataManager {
                 if (null != model) {
                     ret.add(model);
                 } else {
-                    logger.error("Failed to load model" + modelName);
+                    logger.error("Failed to load model " + modelName);
                 }
             }
         }
