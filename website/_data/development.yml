@@ -24,6 +24,7 @@
   - howto_contribute
   - howto_docs
   - howto_package
+  - howto_hbase_branches
   - howto_release
   - plugin_arch
   - new_metadata
