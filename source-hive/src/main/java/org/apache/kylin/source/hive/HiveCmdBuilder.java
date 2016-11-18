@@ -20,11 +20,12 @@ package org.apache.kylin.source.hive;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
@@ -63,23 +64,20 @@ public class HiveCmdBuilder {
             BufferedWriter bw = null;
             try {
                 File tmpHql = File.createTempFile("beeline_", ".hql");
-                StringBuffer hqlBuf = new StringBuffer();
                 bw = new BufferedWriter(new FileWriter(tmpHql));
                 for (String statement : statements) {
                     bw.write(statement);
                     bw.newLine();
-
-                    hqlBuf.append(statement).append("\n");
                 }
                 buf.append("beeline ");
                 buf.append(kylinConfig.getHiveBeelineParams());
                 buf.append(" -f ");
                 buf.append(tmpHql.getAbsolutePath());
-                buf.append(";");
+                buf.append(";rm -f ");
+                buf.append(tmpHql.getAbsolutePath());
 
-                logger.info("The statements to execute in beeline: \n" + hqlBuf);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("The SQL to execute in beeline: \n" + IOUtils.toString(new FileReader(tmpHql)));
+                    logger.debug("The SQL to execute in beeline: \n" + FileUtils.readFileToString(tmpHql, Charset.defaultCharset()));
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
