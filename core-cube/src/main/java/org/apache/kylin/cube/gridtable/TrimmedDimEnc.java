@@ -44,7 +44,7 @@ public class TrimmedDimEnc extends DimensionEncoding {
     }
 
     @Override
-    public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
+    public void encode(String valueStr, byte[] output, int outputOffset) {
         throw new UnsupportedOperationException();
     }
 

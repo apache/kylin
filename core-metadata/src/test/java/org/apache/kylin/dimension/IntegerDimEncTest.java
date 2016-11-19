@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -96,7 +95,7 @@ public class IntegerDimEncTest {
             IntegerDimEncV2 enc = new IntegerDimEncV2(i);
 
             byte[] buf = new byte[enc.getLengthOfEncoding()];
-            enc.encode(null, 0, buf, 0);
+            enc.encode(null, buf, 0);
             Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             String decode = enc.decode(buf, 0, buf.length);
             Assert.assertEquals(null, decode);
@@ -132,8 +131,7 @@ public class IntegerDimEncTest {
     private void testEncodeDecode(IntegerDimEncV2 enc, long value) {
         String valueStr = "" + value;
         byte[] buf = new byte[enc.getLengthOfEncoding()];
-        byte[] bytes = Bytes.toBytes(valueStr);
-        enc.encode(bytes, bytes.length, buf, 0);
+        enc.encode(valueStr, buf, 0);
         String decode = enc.decode(buf, 0, buf.length);
         Assert.assertEquals(valueStr, decode);
     }

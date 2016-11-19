@@ -21,7 +21,6 @@ package org.apache.kylin.storage.hbase.common.coprocessor;
 import java.util.Collection;
 import java.util.Set;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.dict.BuiltInFunctionTransformer;
@@ -200,9 +199,8 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
     }
 
     private String translate(TblColRef column, String v, int roundingFlag) {
-        byte[] value = Bytes.toBytes(v);
         byte[] id = new byte[dimEncMap.get(column).getLengthOfEncoding()];
-        columnIO.writeColumn(column, value, value.length, roundingFlag, DimensionEncoding.NULL, id, 0);
+        columnIO.writeColumn(column, v, roundingFlag, DimensionEncoding.NULL, id, 0);
         return Dictionary.dictIdToString(id, 0, id.length);
     }
 }

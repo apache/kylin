@@ -20,7 +20,6 @@ package org.apache.kylin.dimension;
 
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,7 +53,7 @@ public class IntDimEncTest {
             IntDimEnc enc = new IntDimEnc(i);
 
             byte[] buf = new byte[enc.getLengthOfEncoding()];
-            enc.encode(null, 0, buf, 0);
+            enc.encode(null, buf, 0);
             Assert.assertTrue(DimensionEncoding.isNull(buf, 0, buf.length));
             String decode = enc.decode(buf, 0, buf.length);
             Assert.assertEquals(null, decode);
@@ -92,8 +91,7 @@ public class IntDimEncTest {
     private void testEncodeDecode(IntDimEnc enc, long value) {
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         String valueStr = "" + value;
-        byte[] bytes = Bytes.toBytes(valueStr);
-        enc.encode(bytes, bytes.length, buf, 0);
+        enc.encode(valueStr, buf, 0);
         String decode = enc.decode(buf, 0, buf.length);
         Assert.assertEquals(valueStr, decode);
     }

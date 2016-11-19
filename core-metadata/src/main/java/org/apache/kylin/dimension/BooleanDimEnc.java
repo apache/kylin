@@ -25,10 +25,10 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+
+import com.google.common.collect.Maps;
 
 /**
  * Encoding Boolean values to bytes
@@ -75,24 +75,15 @@ public class BooleanDimEnc extends DimensionEncoding {
     }
 
     @Override
-    public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
+    public void encode(String value, byte[] output, int outputOffset) {
         if (value == null) {
             Arrays.fill(output, outputOffset, outputOffset + fixedLen, NULL);
             return;
         }
 
-        encode(Bytes.toString(value, 0, valueLen), output, outputOffset);
-    }
-
-    void encode(String valueStr, byte[] output, int outputOffset) {
-        if (valueStr == null) {
-            Arrays.fill(output, outputOffset, outputOffset + fixedLen, NULL);
-            return;
-        }
-
-        Integer encodeValue = map.get(valueStr);
+        Integer encodeValue = map.get(value);
         if (encodeValue == null) {
-            throw new IllegalArgumentException("Value '" + valueStr + "' is not a recognized boolean value.");
+            throw new IllegalArgumentException("Value '" + value + "' is not a recognized boolean value.");
         }
 
         BytesUtil.writeLong(encodeValue, output, outputOffset, fixedLen);

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -54,21 +53,7 @@ public class AbstractDateDimEnc extends DimensionEncoding {
     }
 
     @Override
-    public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
-        if (value == null) {
-            Arrays.fill(output, outputOffset, outputOffset + fixedLen, NULL);
-            return;
-        }
-
-        try {
-            String str = new String(value, 0, valueLen, "ISO-8859-1");
-            encode(str, output, outputOffset);
-        } catch (UnsupportedEncodingException e) {
-            // never happen
-        }
-    }
-
-    void encode(String value, byte[] output, int outputOffset) {
+    public void encode(String value, byte[] output, int outputOffset) {
         if (value == null) {
             Arrays.fill(output, outputOffset, outputOffset + fixedLen, NULL);
             return;

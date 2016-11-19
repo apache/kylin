@@ -44,15 +44,12 @@ public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, O
             logger.info("Handled " + counter + " records!");
         }
 
+        String[] row = flatTableInputFormat.parseMapperInput(value);
         try {
-            //put a record into the shared bytesSplitter
-            String[] row = flatTableInputFormat.parseMapperInput(value);
-            bytesSplitter.setBuffers(convertUTF8Bytes(row));
-            //take care of the data in bytesSplitter
-            outputKV(context);
+            outputKV(row, context);
 
         } catch (Exception ex) {
-            handleErrorRecord(bytesSplitter, ex);
+            handleErrorRecord(row, ex);
         }
     }
 

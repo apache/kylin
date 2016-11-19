@@ -18,14 +18,12 @@
 
 package org.apache.kylin.cube.kv;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.ShardingHash;
@@ -132,36 +130,23 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
 
     @Override
     public byte[] encode(Map<TblColRef, String> valueMap) {
-        List<byte[]> valueList = new ArrayList<byte[]>();
-        for (TblColRef bdCol : cuboid.getColumns()) {
-            String value = valueMap.get(bdCol);
-            valueList.add(valueStringToBytes(value));
+        List<TblColRef> columns = cuboid.getColumns();
+        String[] values = new String[columns.size()];
+        for (int i = 0; i < columns.size(); i++) {
+            values[i] = valueMap.get(columns.get(i));
         }
-        byte[][] values = valueList.toArray(RowConstants.BYTE_ARR_MARKER);
         return encode(values);
     }
 
-    public byte[] valueStringToBytes(String value) {
-        if (value == null)
-            return null;
-        else
-            return Bytes.toBytes(value);
-    }
-
     @Override
-    public byte[] encode(byte[][] values) {
+    public byte[] encode(String[] values) {
         byte[] bytes = new byte[this.getBytesLength()];
         int offset = getHeaderLength();
 
         for (int i = 0; i < cuboid.getColumns().size(); i++) {
             TblColRef column = cuboid.getColumns().get(i);
             int colLength = colIO.getColumnLength(column);
-            byte[] value = values[i];
-            if (value == null) {
-                fillColumnValue(column, colLength, null, 0, bytes, offset);
-            } else {
-                fillColumnValue(column, colLength, value, value.length, bytes, offset);
-            }
+            fillColumnValue(column, colLength, values[i], bytes, offset);
             offset += colLength;
         }
 
@@ -185,14 +170,14 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
         //return offset;
     }
 
-    protected void fillColumnValue(TblColRef column, int columnLen, byte[] value, int valueLen, byte[] outputValue, int outputValueOffset) {
+    protected void fillColumnValue(TblColRef column, int columnLen, String valueStr, byte[] outputValue, int outputValueOffset) {
         // special null value case
-        if (value == null) {
+        if (valueStr == null) {
             Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen, defaultValue());
             return;
         }
 
-        colIO.writeColumn(column, value, valueLen, 0, this.blankByte, outputValue, outputValueOffset);
+        colIO.writeColumn(column, valueStr, 0, this.blankByte, outputValue, outputValueOffset);
     }
 
     protected byte defaultValue() {

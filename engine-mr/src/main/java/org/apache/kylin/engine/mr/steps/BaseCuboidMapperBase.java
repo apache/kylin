@@ -19,18 +19,16 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.BytesSplitter;
 import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.common.util.SplittedBytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -51,13 +49,13 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  */
 abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, Text, Text> {
     protected static final Logger logger = LoggerFactory.getLogger(BaseCuboidMapperBase.class);
-    public static final byte[] HIVE_NULL = Bytes.toBytes("\\N");
+    public static final String HIVE_NULL = "\\N";
     public static final byte[] ONE = Bytes.toBytes("1");
     protected String cubeName;
     protected String segmentID;
@@ -65,7 +63,7 @@ abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     protected CubeInstance cube;
     protected CubeDesc cubeDesc;
     protected CubeSegment cubeSegment;
-    protected List<byte[]> nullBytes;
+    protected Set<String> nullStrs;
     protected CubeJoinedFlatTableEnrich intermediateTableDesc;
     protected String intermediateTableRowDelimiter;
     protected byte byteRowDelimiter;
@@ -73,8 +71,6 @@ abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     protected MeasureIngester<?>[] aggrIngesters;
     protected Map<TblColRef, Dictionary<String>> dictionaryMap;
     protected Object[] measures;
-    protected byte[][] keyBytesBuf;
-    protected BytesSplitter bytesSplitter;
     protected AbstractRowKeyEncoder rowKeyEncoder;
     protected BufferedMeasureCodec measureCodec;
     private int errorRecordCounter;
@@ -105,14 +101,10 @@ abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
 
         intermediateTableDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
 
-        bytesSplitter = new BytesSplitter(200, 16384);
         rowKeyEncoder = AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid);
 
         measureCodec = new BufferedMeasureCodec(cubeDesc.getMeasures());
         measures = new Object[cubeDesc.getMeasures().size()];
-
-        int colCount = cubeDesc.getRowkey().getRowKeyColumns().length;
-        keyBytesBuf = new byte[colCount][];
 
         aggrIngesters = MeasureIngester.create(cubeDesc.getMeasures());
         dictionaryMap = cubeSegment.buildDictionaryMap();
@@ -121,46 +113,40 @@ abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     }
 
     private void initNullBytes() {
-        nullBytes = Lists.newArrayList();
-        nullBytes.add(HIVE_NULL);
+        nullStrs = Sets.newHashSet();
+        nullStrs.add(HIVE_NULL);
         String[] nullStrings = cubeDesc.getNullStrings();
         if (nullStrings != null) {
             for (String s : nullStrings) {
-                nullBytes.add(Bytes.toBytes(s));
+                nullStrs.add(s);
             }
         }
     }
 
-    protected boolean isNull(byte[] v) {
-        for (byte[] nullByte : nullBytes) {
-            if (Bytes.equals(v, nullByte))
-                return true;
-        }
-        return false;
+    protected boolean isNull(String v) {
+        return nullStrs.contains(v);
     }
 
-    protected byte[] buildKey(SplittedBytes[] splitBuffers) {
+    protected byte[] buildKey(String[] flatRow) {
         int[] rowKeyColumnIndexes = intermediateTableDesc.getRowKeyColumnIndexes();
-        for (int i = 0; i < baseCuboid.getColumns().size(); i++) {
-            int index = rowKeyColumnIndexes[i];
-            keyBytesBuf[i] = Arrays.copyOf(splitBuffers[index].value, splitBuffers[index].length);
-            if (isNull(keyBytesBuf[i])) {
-                keyBytesBuf[i] = null;
-            }
+        List<TblColRef> columns = baseCuboid.getColumns();
+        String[] colValues = new String[columns.size()];
+        for (int i = 0; i < columns.size(); i++) {
+            colValues[i] = getCell(rowKeyColumnIndexes[i], flatRow);
         }
-        return rowKeyEncoder.encode(keyBytesBuf);
+        return rowKeyEncoder.encode(colValues);
     }
 
-    private ByteBuffer buildValue(SplittedBytes[] splitBuffers) {
+    private ByteBuffer buildValue(String[] flatRow) {
 
         for (int i = 0; i < measures.length; i++) {
-            measures[i] = buildValueOf(i, splitBuffers);
+            measures[i] = buildValueOf(i, flatRow);
         }
 
         return measureCodec.encode(measures);
     }
 
-    private Object buildValueOf(int idxOfMeasure, SplittedBytes[] splitBuffers) {
+    private Object buildValueOf(int idxOfMeasure, String[] flatRow) {
         MeasureDesc measure = cubeDesc.getMeasures().get(idxOfMeasure);
         FunctionDesc function = measure.getFunction();
         int[] colIdxOnFlatTable = intermediateTableDesc.getMeasureColumnIndexes()[idxOfMeasure];
@@ -176,7 +162,7 @@ abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
             if (function.isCount()) {
                 value = "1";
             } else if (param.isColumnType()) {
-                value = getCell(colIdxOnFlatTable[colParamIdx++], splitBuffers);
+                value = getCell(colIdxOnFlatTable[colParamIdx++], flatRow);
             } else {
                 value = param.getValue();
             }
@@ -186,34 +172,25 @@ abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
         return aggrIngesters[idxOfMeasure].valueOf(inputToMeasure, measure, dictionaryMap);
     }
 
-    private String getCell(int i, SplittedBytes[] splitBuffers) {
-        byte[] bytes = Arrays.copyOf(splitBuffers[i].value, splitBuffers[i].length);
-        if (isNull(bytes))
+    private String getCell(int i, String[] flatRow) {
+        if (isNull(flatRow[i]))
             return null;
         else
-            return Bytes.toString(bytes);
+            return flatRow[i];
     }
 
-    protected void outputKV(Context context) throws IOException, InterruptedException {
-        byte[] rowKey = buildKey(bytesSplitter.getSplitBuffers());
+    protected void outputKV(String[] flatRow, Context context) throws IOException, InterruptedException {
+        byte[] rowKey = buildKey(flatRow);
         outputKey.set(rowKey, 0, rowKey.length);
 
-        ByteBuffer valueBuf = buildValue(bytesSplitter.getSplitBuffers());
+        ByteBuffer valueBuf = buildValue(flatRow);
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
         context.write(outputKey, outputValue);
     }
 
-    protected byte[][] convertUTF8Bytes(String[] row) throws UnsupportedEncodingException {
-        byte[][] result = new byte[row.length][];
-        for (int i = 0; i < row.length; i++) {
-            result[i] = row[i] == null ? HIVE_NULL : row[i].getBytes("UTF-8");
-        }
-        return result;
-    }
+    protected void handleErrorRecord(String[] flatRow, Exception ex) throws IOException {
 
-    protected void handleErrorRecord(BytesSplitter bytesSplitter, Exception ex) throws IOException {
-
-        logger.error("Insane record: " + bytesSplitter, ex);
+        logger.error("Insane record: " + Arrays.toString(flatRow), ex);
 
         // TODO expose errorRecordCounter as hadoop counter
         errorRecordCounter++;

@@ -24,7 +24,6 @@ import java.io.ObjectOutput;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
@@ -86,16 +85,7 @@ public class OneMoreByteVLongDimEnc extends DimensionEncoding {
     }
 
     @Override
-    public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
-        if (value == null) {
-            Arrays.fill(output, outputOffset, outputOffset + byteLen, NULL);
-            return;
-        }
-
-        encode(Bytes.toString(value, 0, valueLen), output, outputOffset);
-    }
-
-    void encode(String valueStr, byte[] output, int outputOffset) {
+    public void encode(String valueStr, byte[] output, int outputOffset) {
         if (valueStr == null) {
             Arrays.fill(output, outputOffset, outputOffset + byteLen, NULL);
             return;

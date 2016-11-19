@@ -84,5 +84,5 @@ public abstract class AbstractRowKeyEncoder {
 
     abstract public byte[] encode(Map<TblColRef, String> valueMap);
 
-    abstract public byte[] encode(byte[][] values);
+    abstract public byte[] encode(String[] values);
 }

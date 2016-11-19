@@ -44,7 +44,4 @@ public class RowConstants {
 
     public static final int ROWKEY_BUFFER_SIZE = 65 * 256;// a little more than 64 dimensions * 256 bytes each
 
-    // marker class
-    public static final byte[][] BYTE_ARR_MARKER = new byte[0][];
-
 }

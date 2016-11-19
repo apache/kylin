@@ -23,7 +23,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.nio.ByteBuffer;
 
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
@@ -86,15 +85,15 @@ public class DictionaryDimEnc extends DimensionEncoding {
     }
 
     @Override
-    public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
+    public void encode(String valueStr, byte[] output, int outputOffset) {
         try {
-            int id = dict.getIdFromValueBytes(value, 0, valueLen, roundingFlag);
+            int id = dict.getIdFromValue(valueStr, roundingFlag);
             BytesUtil.writeUnsigned(id, output, outputOffset, fixedLen);
         } catch (IllegalArgumentException ex) {
             for (int i = outputOffset; i < outputOffset + fixedLen; i++) {
                 output[i] = defaultByte;
             }
-            logger.error("Can't translate value " + Bytes.toString(value, 0, valueLen) + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", defaultByte));
+            logger.error("Can't translate value " + valueStr + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", defaultByte));
         }
     }
 

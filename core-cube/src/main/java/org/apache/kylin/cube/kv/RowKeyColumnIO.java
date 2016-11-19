@@ -47,12 +47,12 @@ public class RowKeyColumnIO {
         return dimEncMap.getDictionary(col);
     }
 
-    public void writeColumn(TblColRef col, byte[] value, int valueLen, int roundingFlag, byte defaultValue, byte[] output, int outputOffset) {
+    public void writeColumn(TblColRef col, String value, int roundingFlag, byte defaultValue, byte[] output, int outputOffset) {
         DimensionEncoding dimEnc = dimEncMap.get(col);
         if (dimEnc instanceof DictionaryDimEnc)
             dimEnc = ((DictionaryDimEnc) dimEnc).copy(roundingFlag, defaultValue);
 
-        dimEnc.encode(value, valueLen, output, outputOffset);
+        dimEnc.encode(value, output, outputOffset);
     }
 
     public String readColumnString(TblColRef col, byte[] bytes, int offset, int length) {

@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
@@ -147,8 +146,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     if (values[i + 1] == null) {
                         Arrays.fill(key.array(), offset, offset + dimensionEncodings[i].getLengthOfEncoding(), DimensionEncoding.NULL);
                     } else {
-                        byte[] valueBytes = Bytes.toBytes(values[i + 1]);
-                        dimensionEncodings[i].encode(valueBytes, valueBytes.length, key.array(), offset);
+                        dimensionEncodings[i].encode(values[i + 1], key.array(), offset);
                     }
                     offset += dimensionEncodings[i].getLengthOfEncoding();
                 }
@@ -197,8 +195,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     int innerBuffOffset = 0;
                     for (int i = 0; i < dimensionEncodings.length; i++) {
                         String dimValue = dimensionEncodings[i].decode(c.getItem().array(), offset, dimensionEncodings[i].getLengthOfEncoding());
-                        byte[] dimValueBytes = Bytes.toBytes(dimValue);
-                        newDimensionEncodings[i].encode(dimValueBytes, dimValueBytes.length, newIdBuf, bufOffset + innerBuffOffset);
+                        newDimensionEncodings[i].encode(dimValue, newIdBuf, bufOffset + innerBuffOffset);
                         innerBuffOffset += newDimensionEncodings[i].getLengthOfEncoding();
                         offset += dimensionEncodings[i].getLengthOfEncoding();
                     }

@@ -55,15 +55,15 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = cube.getDescriptor();
         // String data =
         // "2013-08-18Abbigliamento e accessoriDonna: AccessoriSciarpFoulard e ScialliAuctionItalyRegular";
-        byte[][] data = new byte[8][];
-        data[0] = Bytes.toBytes("2012-12-15");
-        data[1] = Bytes.toBytes("11848");
-        data[2] = Bytes.toBytes("Health & Beauty");
-        data[3] = Bytes.toBytes("Fragrances");
-        data[4] = Bytes.toBytes("Women");
-        data[5] = Bytes.toBytes("FP-GTC");
-        data[6] = Bytes.toBytes("0");
-        data[7] = Bytes.toBytes("15");
+        String[] data = new String[8];
+        data[0] = "2012-12-15";
+        data[1] = "11848";
+        data[2] = "Health & Beauty";
+        data[3] = "Fragrances";
+        data[4] = "Women";
+        data[5] = "FP-GTC";
+        data[6] = "0";
+        data[7] = "15";
 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
@@ -85,16 +85,16 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = cube.getDescriptor();
         // String data =
         // "1234567892013-08-18Abbigliamento e accessoriDonna: AccessoriSciarpFoulard e ScialliAuctionItalyRegular";
-        byte[][] data = new byte[9][];
-        data[0] = Bytes.toBytes("123456789");
-        data[1] = Bytes.toBytes("2012-12-15");
-        data[2] = Bytes.toBytes("11848");
-        data[3] = Bytes.toBytes("Health & Beauty");
-        data[4] = Bytes.toBytes("Fragrances");
-        data[5] = Bytes.toBytes("Women");
-        data[6] = Bytes.toBytes("FP-GTC");
-        data[7] = Bytes.toBytes("0");
-        data[8] = Bytes.toBytes("15");
+        String[] data = new String[9];
+        data[0] = "123456789";
+        data[1] = "2012-12-15";
+        data[2] = "11848";
+        data[3] = "Health & Beauty";
+        data[4] = "Fragrances";
+        data[5] = "Women";
+        data[6] = "FP-GTC";
+        data[7] = "0";
+        data[8] = "15";
 
         long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
         Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
@@ -121,8 +121,8 @@ public class RowKeyEncoderTest extends LocalFileMetadataTestCase {
         CubeDesc cubeDesc = cube.getDescriptor();
         // String data =
         // "1234567892013-08-18Abbigliamento e accessoriDonna: AccessoriSciarpFoulard e ScialliAuctionItalyRegular";
-        byte[][] data = new byte[9][];
-        data[0] = Bytes.toBytes("123456789");
+        String[] data = new String[9];
+        data[0] = "123456789";
         data[1] = null;
         data[2] = null;
         data[3] = null;

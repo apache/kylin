@@ -66,8 +66,8 @@ public abstract class DimensionEncoding implements Externalizable {
     /** return the fixed length of encoded bytes */
     abstract public int getLengthOfEncoding();
 
-    /** encode given value (a string in byte form) to bytes, note the NULL convention */
-    abstract public void encode(byte[] value, int valueLen, byte[] output, int outputOffset);
+    /** encode given value to bytes, note the NULL convention */
+    abstract public void encode(String value, byte[] output, int outputOffset);
 
     /** decode given bytes to value string, note the NULL convention */
     abstract public String decode(byte[] bytes, int offset, int len);

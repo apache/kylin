@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenHexDimEnc;
 import org.apache.kylin.dimension.IntegerDimEncV2;
@@ -110,19 +109,10 @@ public class DimEncodingPreserveOrderTest {
     }
 
     private ByteArray encode(DimensionEncoding enc, Object value) {
-        if (value != null) {
-            byte[] buf = new byte[enc.getLengthOfEncoding()];
-
-            String valueStr = "" + value;
-            byte[] bytes = Bytes.toBytes(valueStr);
-
-            enc.encode(bytes, bytes.length, buf, 0);
-            return new ByteArray(buf);
-        } else {
-            byte[] buf = new byte[enc.getLengthOfEncoding()];
-            enc.encode(null, 0, buf, 0);
-            return new ByteArray(buf);
-        }
+        byte[] buf = new byte[enc.getLengthOfEncoding()];
+        String valueStr = value == null ? null : value.toString();
+        enc.encode(valueStr, buf, 0);
+        return new ByteArray(buf);
     }
 
     @Test

@@ -156,14 +156,16 @@ public class FixedLenHexDimEnc extends DimensionEncoding {
     }
 
     @Override
-    public void encode(byte[] value, int valueLen, byte[] output, int outputOffset) {
-        if (value == null) {
+    public void encode(String valueStr, byte[] output, int outputOffset) {
+        if (valueStr == null) {
             Arrays.fill(output, outputOffset, outputOffset + bytelen, NULL);
             return;
         }
 
+        byte[] value = Bytes.toBytes(valueStr);
+        int valueLen = value.length;
         int endOffset = outputOffset + bytelen;
-
+        
         if (valueLen > hexLength) {
             if (avoidVerbose++ % 10000 == 0) {
                 logger.warn("Expect at most " + hexLength + " bytes, but got " + valueLen + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
@@ -237,8 +239,8 @@ public class FixedLenHexDimEnc extends DimensionEncoding {
         @Override
         public void serialize(Object value, ByteBuffer out) {
             byte[] buf = currentBuf();
-            byte[] bytes = value == null ? null : Bytes.toBytes(value.toString());
-            encode(bytes, bytes == null ? 0 : bytes.length, buf, 0);
+            String str = value == null ? null : value.toString();
+            encode(str, buf, 0);
             out.put(buf);
         }
 
