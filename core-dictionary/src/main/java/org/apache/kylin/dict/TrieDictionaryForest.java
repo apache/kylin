@@ -32,8 +32,6 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Use trie forest to optimize trie dictionary
@@ -56,8 +54,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
     private int baseId;
 
     private ArrayList<ByteArray> maxValue;
-
-    private static final Logger logger = LoggerFactory.getLogger(TrieDictionaryForest.class);
 
     public TrieDictionaryForest() { // default constructor for Writable interface
     }
@@ -377,7 +373,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
     private void initMaxValue() throws IllegalStateException {
         this.maxValue = new ArrayList<>();
         if (this.trees == null || trees.isEmpty()) {
-            logger.info("Trees not init yet or trees size is zero. Could not init max value of each tree");
             return;
         }
         for (int i = 0; i < trees.size(); i++) {
