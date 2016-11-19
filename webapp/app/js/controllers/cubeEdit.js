@@ -19,7 +19,7 @@
 'use strict';
 
 
-KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert, $log, cubeConfig, CubeDescModel, MetaModel, TableModel, ModelDescService, modelsManager, cubesManager, ProjectModel, StreamingModel, StreamingService) {
+KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert, $log, cubeConfig, CubeDescModel, MetaModel, TableModel, ModelDescService, modelsManager, cubesManager, ProjectModel, StreamingModel, StreamingService,VdmUtil) {
   $scope.cubeConfig = cubeConfig;
   $scope.metaModel = {};
   $scope.modelsManager = modelsManager;
@@ -40,48 +40,70 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     supportedEncoding:[]
   }
   CubeService.getValidEncodings({}, function (encodings) {
-    for(var i =0;i<encodings.length;i++){
-      var value = encodings[i];
-      var name = value;
-      if(value=="int"){
-        name = "int (deprecated)";
+    if(encodings){
+      delete encodings.$promise;
+      delete encodings.$resolved;
+      for(var i in encodings)
+        if(encodings.hasOwnProperty(i)){
+          var value = i
+          var name = value;
+          var typeVersion=+encodings[i];
+          if(value=="int"){
+            name = "int(deprecated)";
+          }
+          if(/\d+/.test(""+typeVersion)&&typeVersion>1){
+              for(var s=1;s<=typeVersion;s++){
+                $scope.store.supportedEncoding.push({
+                  "name":name+" (v"+s+")"+(s==typeVersion&&typeVersion>1?"(suggest)":""),
+                  "value":value+"[v"+s+"]",
+                  "version":typeVersion,
+                  "baseValue":value,
+                  "suggest":s==typeVersion
+
+                });
+              }
+          }else {
+            $scope.store.supportedEncoding.push({
+              "name": name,
+              "value": value+"[v1]",
+              "encoding_version":1,
+              "version":typeVersion,
+              "baseValue":value,
+              "suggest":true
+            });
+          }
+        }
       }
-      $scope.store.supportedEncoding.push({
-        "name":name,
-        "value":value
-      });
-    }
   },function(e){
     $scope.store.supportedEncoding = $scope.cubeConfig.encodings;
   })
 
   $scope.getEncodings =function (name){
-    var type = TableModel.columnNameTypeMap[name];
-    var encodings = $scope.store.supportedEncoding;
-    if(!type){
-      return encodings;
+    var type = TableModel.columnNameTypeMap[name]||'';
+    var encodings =[];
+    for(var k=0;k<$scope.store.supportedEncoding.length;k++){
+      encodings.push($scope.store.supportedEncoding[k]);
     }
-    var filterEncodings = [];
-    for(var i = 0;i<encodings.length;i++){
-      var encodingValue = encodings[i].value;
-      if(encodingValue == "fixed_length_hex" ){
-        if(type.indexOf("varchar")!==-1){
-          filterEncodings.push(encodings[i]);
+    if($scope.isEdit){
+      for(var s=0;s<$scope.cubeMetaFrame.rowkey.rowkey_columns.length;s++){
+        if(name==$scope.cubeMetaFrame.rowkey.rowkey_columns[s].column){
+          var version=$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding_version;
+          encodings=VdmUtil.changeObjectListValueByFilter(encodings,'value',$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding.replace(/:\d+/,"")+(version?"[v"+version+"]":"[v1]"),'suggest',true)
         }
-      }else if(encodingValue == "date"){
-        if(type=="date"){
-          filterEncodings.push(encodings[i]);
-        }
-      }else if(encodingValue == "time"){
-        if(type=="time"||type=="datetime"||type=="timestamp"){
-          filterEncodings.push(encodings[i]);
-        }
-      }else{
-        filterEncodings.push(encodings[i]);
       }
     }
+    //if(type.indexOf("varchar")!==-1){
+    //    filterEncodings=VdmUtil.getObjectListByFilterVal(encodings,'baseValue',['fixed_length_hex','fixed_length'],'suggest',true);
+    //}
+    //else if(type=="date"){
+    //    filterEncodings = VdmUtil.getObjectListByFilterVal(encodings, 'baseValue', 'date','suggest',true);
+    //}else if(type=="time"||type=="datetime"||type=="timestamp"){
+    //    filterEncodings = VdmUtil.getObjectListByFilterVal(encodings, 'baseValue', 'time','suggest',true);
+    //}else{
+    encodings=VdmUtil.getObjectListByFilterVal(encodings, '', '','suggest',true);
+    //}
 
-    return filterEncodings;
+    return encodings;
   }
 
   $scope.getColumnsByTable = function (tableName) {

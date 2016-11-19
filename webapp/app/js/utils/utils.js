@@ -83,6 +83,31 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
         }
       }
       return resultValue;
+    },
+    getObjectListByFilterVal:function(objList,key,value,matchkey,matchval){
+       var len=objList&&objList.length|| 0,newArr=[];
+       for(var i=0;i<len;i++){
+          if(!key||value===objList[i][key]||(angular.isArray(value)&&value.indexOf(objList[i][key])>-1)){
+             if(matchkey){
+               if(matchval==objList[i][matchkey]||(angular.isArray(matchval)&&value.indexOf(objList[i][matchkey])>-1)){
+                 newArr.push(objList[i])
+               }
+             }else{
+               newArr.push(objList[i])
+             }
+          }
+       }
+      return newArr;
+    },
+    changeObjectListValueByFilter:function(objList,key,val,newKey,newVal){
+      var len=objList&&objList.length|| 0,newArr=[];
+      for(var i=0;i<len;i++){
+        if(val===objList[i][key]){
+          objList[i][newKey]=newVal;
+          continue;
+        }
+      }
+      return objList;
     }
   }
 });
