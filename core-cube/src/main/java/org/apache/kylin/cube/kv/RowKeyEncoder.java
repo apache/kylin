@@ -42,8 +42,8 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     private RowKeyColumnIO colIO;
 
     protected boolean enableSharding;
-    private int UHCOffset = -1;//it's a offset to the beginning of body
-    private int UHCLength = -1;
+    private int uhcOffset = -1;//it's a offset to the beginning of body
+    private int uhcLength = -1;
 
     public RowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
         super(cubeSeg, cuboid);
@@ -55,8 +55,8 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
         colIO = new RowKeyColumnIO(cubeSeg.getDimensionEncodingMap());
         for (TblColRef column : cuboid.getColumns()) {
             if (shardByColumns.contains(column)) {
-                UHCOffset = bodyLength;
-                UHCLength = colIO.getColumnLength(column);
+                uhcOffset = bodyLength;
+                uhcLength = colIO.getColumnLength(column);
             }
             bodyLength += colIO.getColumnLength(column);
         }
@@ -72,8 +72,8 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
 
     protected short calculateShard(byte[] key) {
         if (enableSharding) {
-            int shardSeedOffset = UHCOffset == -1 ? 0 : UHCOffset;
-            int shardSeedLength = UHCLength == -1 ? bodyLength : UHCLength;
+            int shardSeedOffset = uhcOffset == -1 ? 0 : uhcOffset;
+            int shardSeedLength = uhcLength == -1 ? bodyLength : uhcLength;
             short cuboidShardNum = cubeSeg.getCuboidShardNum(cuboid.getId());
             short shardOffset = ShardingHash.getShard(key, RowConstants.ROWKEY_SHARD_AND_CUBOID_LEN + shardSeedOffset, shardSeedLength, cuboidShardNum);
             return ShardingHash.normalize(cubeSeg.getCuboidBaseShard(cuboid.getId()), shardOffset, cubeSeg.getTotalShards(cuboid.getId()));
@@ -102,7 +102,7 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     }
 
     //ByteArray representing dimension does not have extra header
-    public void encodeDims(GTRecord record, ImmutableBitSet selectedCols, ByteArray buf, byte defaultValue) {
+    private void encodeDims(GTRecord record, ImmutableBitSet selectedCols, ByteArray buf, byte defaultValue) {
         int pos = 0;
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
             int c = selectedCols.trueBitAt(i);

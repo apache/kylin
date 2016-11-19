@@ -247,10 +247,6 @@ public class BuildCubeWithEngine {
         }
     }
 
-    private void assertJobSuccess() {
-
-    }
-
     @SuppressWarnings("unused")
     // called by reflection
     private boolean testInnerJoinCubeWithSlr() throws Exception {
@@ -433,6 +429,7 @@ public class BuildCubeWithEngine {
         return 0;
     }
 
+    @SuppressWarnings("unused")
     private void checkHFilesInHBase(CubeSegment segment) throws IOException {
         Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
         String tableName = segment.getStorageLocationIdentifier();

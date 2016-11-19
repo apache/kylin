@@ -111,6 +111,45 @@ public class NumberDictionaryForestTest {
         dict2.dump(System.out);
 
     }
+    
+    @Test
+    public void testMerge() {
+        // mimic the logic as in MergeCuboidMapper
+        NumberDictionaryForestBuilder b1 = new NumberDictionaryForestBuilder();
+        b1.addValue("0");
+        b1.addValue("3");
+        b1.addValue("23");
+        TrieDictionaryForest<String> dict1 = b1.build();
+        
+        NumberDictionaryForestBuilder b2 = new NumberDictionaryForestBuilder();
+        b2.addValue("0");
+        b2.addValue("2");
+        b2.addValue("3");
+        b2.addValue("15");
+        b2.addValue("23");
+        TrieDictionaryForest<String> dict2 = b2.build();
+        
+        assertTrue(dict1.getSizeOfId() == dict2.getSizeOfId());
+        assertTrue(dict1.getSizeOfValue() == dict2.getSizeOfValue());
+        
+        byte[] buf = new byte[dict1.getSizeOfValue()];
+        
+        {
+            int len = dict1.getValueBytesFromId(0, buf, 0);
+            int newId = dict2.getIdFromValueBytes(buf, 0, len);
+            assertTrue(newId == 0);
+        }
+        {
+            int len = dict1.getValueBytesFromId(1, buf, 0);
+            int newId = dict2.getIdFromValueBytes(buf, 0, len);
+            assertTrue(newId == 2);
+        }
+        {
+            int len = dict1.getValueBytesFromId(2, buf, 0);
+            int newId = dict2.getIdFromValueBytes(buf, 0, len);
+            assertTrue(newId == 4);
+        }
+    }
 
     private static TrieDictionaryForest<String> testSerialize(TrieDictionaryForest<String> dict) {
         try {
