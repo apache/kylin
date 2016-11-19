@@ -30,6 +30,7 @@ import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.gridtable.IGTCodeSystem;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 import com.google.common.collect.Maps;
@@ -87,9 +88,10 @@ public class TrimmedCubeCodeSystem extends CubeCodeSystem {
         }
     }
 
-    public static final BytesSerializer<TrimmedCubeCodeSystem> serializer = new BytesSerializer<TrimmedCubeCodeSystem>() {
+    public static final BytesSerializer<IGTCodeSystem> serializer = new BytesSerializer<IGTCodeSystem>() {
         @Override
-        public void serialize(TrimmedCubeCodeSystem value, ByteBuffer out) {
+        public void serialize(IGTCodeSystem ivalue, ByteBuffer out) {
+            TrimmedCubeCodeSystem value = (TrimmedCubeCodeSystem) ivalue;
             BytesUtil.writeVInt(value.dependentMetricsMap.size(), out);
             for (Map.Entry<Integer, Integer> x : value.dependentMetricsMap.entrySet()) {
                 BytesUtil.writeVInt(x.getKey(), out);
@@ -105,7 +107,7 @@ public class TrimmedCubeCodeSystem extends CubeCodeSystem {
         }
 
         @Override
-        public TrimmedCubeCodeSystem deserialize(ByteBuffer in) {
+        public IGTCodeSystem deserialize(ByteBuffer in) {
             Map<Integer, Integer> dependentMetricsMap = Maps.newHashMap();
 
             int size = BytesUtil.readVInt(in);

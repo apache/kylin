@@ -290,11 +290,17 @@ public class GTInfo {
                 BytesUtil.writeAsciiString(CubeCodeSystem.class.getCanonicalName(), out);
                 TrimmedCubeCodeSystem trimmed = ((CubeCodeSystem) value.codeSystem).trimForCoprocessor();
                 TrimmedCubeCodeSystem.serializer.serialize(trimmed, out);
-            } else if (value.codeSystem instanceof GTSampleCodeSystem) {
-                BytesUtil.writeAsciiString(GTSampleCodeSystem.class.getCanonicalName(), out);
-                GTSampleCodeSystem.serializer.serialize((GTSampleCodeSystem) value.codeSystem, out);
-            } else {
+            } else if (value.codeSystem != null) {
                 BytesUtil.writeAsciiString(value.codeSystem.getClass().getCanonicalName(), out);
+                BytesSerializer<IGTCodeSystem> serializer = null;
+                try {
+                    serializer = (BytesSerializer<IGTCodeSystem>) value.codeSystem.getClass().getField("serializer").get(null);
+                } catch (IllegalAccessException | NoSuchFieldException e) {
+                    throw new RuntimeException("failed to get serializer for " + value.codeSystem.getClass(), e);
+                }
+                serializer.serialize(value.codeSystem, out);
+            } else {
+                throw new IllegalStateException("code system cannot be null");
             }
 
             BytesUtil.writeUTFString(value.tableName, out);
@@ -317,13 +323,13 @@ public class GTInfo {
             String codeSystemType = BytesUtil.readAsciiString(in);
             if (CubeCodeSystem.class.getCanonicalName().equals(codeSystemType)) {
                 codeSystem = TrimmedCubeCodeSystem.serializer.deserialize(in);
-            } else if (GTSampleCodeSystem.class.getCanonicalName().equals(codeSystemType)) {
-                codeSystem = GTSampleCodeSystem.serializer.deserialize(in);
             } else {
                 try {
-                    codeSystem = (IGTCodeSystem) Class.forName(codeSystemType).newInstance();
-                } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+                    Class clazz = Class.forName(codeSystemType);
+                    BytesSerializer<IGTCodeSystem> serializer = (BytesSerializer<IGTCodeSystem>) clazz.getField("serializer").get(null);
+                    codeSystem = serializer.deserialize(in);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to deserialize IGTCodeSystem " + codeSystemType, e);
                 }
             }
 

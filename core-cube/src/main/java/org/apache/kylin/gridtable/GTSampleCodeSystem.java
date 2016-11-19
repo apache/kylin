@@ -106,13 +106,14 @@ public class GTSampleCodeSystem implements IGTCodeSystem {
         return serializers[col].deserialize(buf);
     }
 
-    public static final BytesSerializer<GTSampleCodeSystem> serializer = new BytesSerializer<GTSampleCodeSystem>() {
+    @SuppressWarnings("unused") //used by reflection
+    public static final BytesSerializer<IGTCodeSystem> serializer = new BytesSerializer<IGTCodeSystem>() {
         @Override
-        public void serialize(GTSampleCodeSystem value, ByteBuffer out) {
+        public void serialize(IGTCodeSystem value, ByteBuffer out) {
         }
 
         @Override
-        public GTSampleCodeSystem deserialize(ByteBuffer in) {
+        public IGTCodeSystem deserialize(ByteBuffer in) {
             return new GTSampleCodeSystem();
         }
     };
