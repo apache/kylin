@@ -376,8 +376,8 @@
     "includes" : [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH"],
     "select_rule" : {
       "hierarchy_dims" : [ ],
-      "mandatory_dims" : [ ],
-      "joint_dims" : [ ]
+      "mandatory_dims" : [ "A" ],
+      "joint_dims" : [ ["L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH"] ]
     }
   }],
   "signature" : "4NqJVcVIYRF5PkJ0jS+9Rg==",

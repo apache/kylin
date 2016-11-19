@@ -616,15 +616,16 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
-                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with hierarchy dimensions: " + CollectionUtils.intersection(mandatoryDims, hierarchyDims));
+
+                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with hierarchy dimensions: " + Sets.intersection(mandatoryDims, hierarchyDims));
             }
             if (CollectionUtils.containsAny(mandatoryDims, jointDims)) {
-                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with joint dimensions: " + CollectionUtils.intersection(mandatoryDims, jointDims));
+                logger.warn("Aggregation group " + index + " mandatory dimensions overlap with joint dimensions: " + Sets.intersection(mandatoryDims, jointDims));
             }
 
             if (CollectionUtils.containsAny(hierarchyDims, jointDims)) {
                 logger.error("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions");
-                throw new IllegalStateException("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions: " + CollectionUtils.intersection(hierarchyDims, jointDims));
+                throw new IllegalStateException("Aggregation group " + index + " hierarchy dimensions overlap with joint dimensions: " + Sets.intersection(hierarchyDims, jointDims));
             }
 
             if (hasSingle(hierarchyDimsList)) {
@@ -689,7 +690,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         Set<String> overlap = new TreeSet<>();
         for (Set<String> dims : dimsList) {
             if (CollectionUtils.containsAny(existing, dims)) {
-                overlap.addAll(CollectionUtils.intersection(existing, dims));
+                overlap.addAll(Sets.intersection(existing, dims));
             }
             existing.addAll(dims);
         }

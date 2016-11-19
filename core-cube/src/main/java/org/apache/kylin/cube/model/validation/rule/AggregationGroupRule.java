@@ -18,12 +18,12 @@
 
 package org.apache.kylin.cube.model.validation.rule;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -148,8 +148,11 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                     int overlapHierarchies = 0;
                     if (agg.getSelectRule().hierarchy_dims != null) {
                         for (String[] oneHierarchy : agg.getSelectRule().hierarchy_dims) {
-                            Set<String> share = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-                            share.addAll(CollectionUtils.intersection(oneJoint, Arrays.asList(oneHierarchy)));
+                            Set<String> oneHierarchySet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+                            for (String s : oneHierarchy) {
+                                oneHierarchySet.add(s);
+                            }
+                            Set<String> share = Sets.intersection(oneJoint, oneHierarchySet);
 
                             if (!share.isEmpty()) {
                                 overlapHierarchies++;
@@ -177,7 +180,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                             oneJoint.add(s);
                         }
                         if (CollectionUtils.containsAny(existing, oneJoint)) {
-                            overlap.addAll(CollectionUtils.intersection(existing, oneJoint));
+                            overlap.addAll(Sets.intersection(existing, oneJoint));
                         }
                         existing.addAll(oneJoint);
                     }

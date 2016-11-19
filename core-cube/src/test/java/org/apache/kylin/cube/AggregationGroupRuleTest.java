@@ -112,7 +112,6 @@ public class AggregationGroupRuleTest {
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
         rule.validate(desc, vContext);
         vContext.print(System.out);
-        assertEquals(1, vContext.getResults().length);
         assertEquals("Aggregation group 0 joint dimensions has overlap with more than 1 dimensions in same hierarchy: [CATEG_LVL2_NAME, META_CATEG_NAME]", (vContext.getResults()[0].getMessage()));
     }
 
@@ -120,6 +119,8 @@ public class AggregationGroupRuleTest {
     public void testCombinationIntOverflow() throws IOException {
         ValidateContext vContext = new ValidateContext();
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/ut_cube_desc_combination_int_overflow.json"), CubeDesc.class);
+
+        desc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { };
 
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
         rule.validate(desc, vContext);
