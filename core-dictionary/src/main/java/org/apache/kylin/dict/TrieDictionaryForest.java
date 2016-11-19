@@ -32,6 +32,8 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Use trie forest to optimize trie dictionary
@@ -55,11 +57,13 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     private ArrayList<ByteArray> maxValue;
 
+    private static final Logger logger = LoggerFactory.getLogger(TrieDictionaryForest.class);
+
     public TrieDictionaryForest() { // default constructor for Writable interface
     }
 
     public TrieDictionaryForest(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, //
-                                ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+            ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
         this.trees = trees;
         this.valueDivide = valueDivide;
         this.accuOffset = accuOffset;
@@ -372,8 +376,10 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     private void initMaxValue() throws IllegalStateException {
         this.maxValue = new ArrayList<>();
-        if (this.trees == null || trees.isEmpty())
-            throw new IllegalStateException("Trees not init yet. Could not init max value of each tree");
+        if (this.trees == null || trees.isEmpty()) {
+            logger.info("Trees not init yet or trees size is zero. Could not init max value of each tree");
+            return;
+        }
         for (int i = 0; i < trees.size(); i++) {
             T curTreeMax = trees.get(i).getValueFromId(trees.get(i).getMaxId());
             byte[] b1 = bytesConvert.convertToBytes(curTreeMax);

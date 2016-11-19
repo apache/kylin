@@ -274,6 +274,24 @@ public class TrieDictionaryForestTest {
     }
 
     @Test
+    public void emptyDictTest() throws Exception{
+        TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter());
+        TrieDictionaryForest<String> dict = b.build();
+        try{
+            int id = dict.getIdFromValue("123",0);
+            fail("id should not exist");
+        }catch (IllegalArgumentException e){
+            //right
+        }
+        try{
+            String value = dict.getValueFromIdImpl(123);
+            fail("value should not exist");
+        }catch (IllegalArgumentException e){
+            //right
+        }
+    }
+
+    @Test
     public void roundingFlagTest() {
         ArrayList<String> testData = new ArrayList<>();
         testData.add("b");
