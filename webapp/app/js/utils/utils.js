@@ -84,7 +84,7 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
       }
       return resultValue;
     },
-    getObjectListByFilterVal:function(objList,key,value,matchkey,matchval){
+    getFilterObjectListByAndFilterVal:function(objList,key,value,matchkey,matchval){
        var len=objList&&objList.length|| 0,newArr=[];
        for(var i=0;i<len;i++){
           if(!key||value===objList[i][key]||(angular.isArray(value)&&value.indexOf(objList[i][key])>-1)){
@@ -99,15 +99,24 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
        }
       return newArr;
     },
-    changeObjectListValueByFilter:function(objList,key,val,newKey,newVal){
+    getFilterObjectListByOrFilterVal:function(objList,key,val,orKey,orVal){
       var len=objList&&objList.length|| 0,newArr=[];
       for(var i=0;i<len;i++){
-        if(val===objList[i][key]){
-          objList[i][newKey]=newVal;
-          continue;
+        if((key&&val===objList[i][key])||(orKey&&objList[i][orKey]===orVal)){
+          newArr.push(objList[i]);
         }
       }
-      return objList;
+      return newArr;
+    },
+    removeFilterObjectList:function(objList,key,val,orKey,orVal){
+      var len=objList&&objList.length|| 0,newArr=[];
+      for(var i=0;i<len;i++){
+        if(key&&val!=objList[i][key]){
+          newArr.push(objList[i]);
+        }
+      }
+      return newArr;
     }
+
   }
 });

@@ -77,33 +77,40 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   },function(e){
     $scope.store.supportedEncoding = $scope.cubeConfig.encodings;
   })
-
+  $scope.createFilter=function(type){
+     if(type.indexOf("varchar")<=0){
+       return ['fixed_length_hex'];
+     }else if(type!="date"){
+       return ['date'];
+     }else if(type!="time"&&type!="datetime"&&type!="timestamp"){
+       return ['time'];
+     }else{
+       return [];
+     }
+  }
   $scope.getEncodings =function (name){
-    var type = TableModel.columnNameTypeMap[name]||'';
-    var encodings =[];
-    for(var k=0;k<$scope.store.supportedEncoding.length;k++){
-      encodings.push($scope.store.supportedEncoding[k]);
-    }
+    var filterName=name;
+    var type = TableModel.columnNameTypeMap[filterName]||'';
+    var encodings =$scope.store.supportedEncoding,filterEncoding;
+    var filerList=$scope.createFilter(type);
     if($scope.isEdit){
-      for(var s=0;s<$scope.cubeMetaFrame.rowkey.rowkey_columns.length;s++){
-        if(name==$scope.cubeMetaFrame.rowkey.rowkey_columns[s].column){
-          var version=$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding_version;
-          encodings=VdmUtil.changeObjectListValueByFilter(encodings,'value',$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding.replace(/:\d+/,"")+(version?"[v"+version+"]":"[v1]"),'suggest',true)
+      if($scope.cubeMetaFrame.rowkey.rowkey_columns&&name){
+        for(var s=0;s<$scope.cubeMetaFrame.rowkey.rowkey_columns.length;s++){
+          if(filterName==$scope.cubeMetaFrame.rowkey.rowkey_columns[s].column){
+            var version=$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding_version;
+            filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'value',$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding.replace(/:\d+/,"")+(version?"[v"+version+"]":"[v1]"),'suggest',true)
+          }
         }
+      }else{
+        filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest',true);
       }
+    }else{
+      filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest',true);
     }
-    //if(type.indexOf("varchar")!==-1){
-    //    filterEncodings=VdmUtil.getObjectListByFilterVal(encodings,'baseValue',['fixed_length_hex','fixed_length'],'suggest',true);
-    //}
-    //else if(type=="date"){
-    //    filterEncodings = VdmUtil.getObjectListByFilterVal(encodings, 'baseValue', 'date','suggest',true);
-    //}else if(type=="time"||type=="datetime"||type=="timestamp"){
-    //    filterEncodings = VdmUtil.getObjectListByFilterVal(encodings, 'baseValue', 'time','suggest',true);
-    //}else{
-    encodings=VdmUtil.getObjectListByFilterVal(encodings, '', '','suggest',true);
-    //}
-
-    return encodings;
+    for(var f=0;f<filerList.length;f++){
+      filterEncoding=VdmUtil.removeFilterObjectList(filterEncoding,'baseValue',filerList[f]);
+    }
+    return filterEncoding;
   }
 
   $scope.getColumnsByTable = function (tableName) {

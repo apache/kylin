@@ -44,16 +44,35 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       return 1;
     }
   }
-
-  $scope.getEncodings =function (name){
-    console.log(name);
-    var type = TableModel.columnNameTypeMap[name]||'';
-    var encodings =$scope.store.supportedEncoding.slice(0),filterEncodings=[];
-    if($scope.isEdit){
-      var version = $scope.newMeasure.function.configuration['topn.encoding_version.' +name] || 1;
-      filterEncodings = VdmUtil.changeObjectListValueByFilter(encodings, 'value', $scope.newMeasure.function.configuration['topn.encoding.' +name].replace(/:\d+/, "") + (version ? "[v" + version + "]" : "[v1]"), 'suggest', true);
+  $scope.createFilter=function(type){
+    if(type.indexOf("varchar")<=0){
+      return ['fixed_length_hex'];
+    }else if(type!="date"){
+      return ['date'];
+    }else if(type!="time"&&type!="datetime"&&type!="timestamp"){
+      return ['time'];
+    }else{
+      return [];
     }
-    return VdmUtil.getObjectListByFilterVal(filterEncodings, '', '','suggest',true);
+  }
+  $scope.getEncodings =function (name){
+    var type = TableModel.columnNameTypeMap[name]||'';
+    var encodings =$scope.store.supportedEncoding,filterEncoding=[];
+    var filerList=$scope.createFilter(type);
+    if($scope.isEdit) {
+      if (name && $scope.newMeasure.function.configuration) {
+        var version = $scope.newMeasure.function.configuration['topn.encoding_version.' + name] || 1;
+        filterEncoding = VdmUtil.getFilterObjectListByOrFilterVal(encodings, 'value', $scope.newMeasure.function.configuration['topn.encoding.' + name].replace(/:\d+/, "") + (version ? "[v" + version + "]" : "[v1]"), 'suggest', true);
+      }else{
+        filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest', true);
+      }
+    }else{
+      filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest', true);
+    }
+    for(var f=0;f<filerList.length;f++){
+      filterEncoding=VdmUtil.removeFilterObjectList(filterEncoding,'baseValue',filerList[f]);
+    }
+    return filterEncoding;
   }
   $scope.addNewMeasure = function (measure, index) {
     if(measure&&index>=0){
