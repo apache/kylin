@@ -239,6 +239,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         return new ColumnRowType(columns);
     }
     
+    @SuppressWarnings("deprecation")
     public TblColRef makeRewriteColumn(String name) {
         TableRef tableRef = columnRowType.getColumnByIndex(0).getTableRef();
         return tableRef.makeFakeColumn(name);

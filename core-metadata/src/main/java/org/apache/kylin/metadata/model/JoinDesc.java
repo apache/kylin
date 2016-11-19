@@ -23,6 +23,7 @@ import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 
 /**
  */
@@ -98,6 +99,37 @@ public class JoinDesc {
         this.foreignKeyColumns = foreignKeyColumns;
     }
 
+    public void sortByFK() {
+        Preconditions.checkState(primaryKey.length == foreignKey.length && primaryKey.length == primaryKeyColumns.length && foreignKey.length == foreignKeyColumns.length);
+        boolean cont = true;
+        int n = foreignKey.length;
+        for (int i = 0; i < n - 1 && cont; i++) {
+            cont = false;
+            for (int j = i; j < n - 1; j++) {
+                int jj = j + 1;
+                if (foreignKey[j].compareTo(foreignKey[jj]) > 0) {
+                    swap(foreignKey, j, jj);
+                    swap(primaryKey, j, jj);
+                    swap(foreignKeyColumns, j, jj);
+                    swap(primaryKeyColumns, j, jj);
+                    cont = true;
+                }
+            }
+        }
+    }
+
+    private void swap(String[] arr, int j, int jj) {
+        String tmp = arr[j];
+        arr[j] = arr[jj];
+        arr[jj] = tmp;
+    }
+    
+    private void swap(TblColRef[] arr, int j, int jj) {
+        TblColRef tmp = arr[j];
+        arr[j] = arr[jj];
+        arr[jj] = tmp;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -118,49 +150,40 @@ public class JoinDesc {
             return false;
         JoinDesc other = (JoinDesc) obj;
 
-        if (!this.colRefsEqualIgnoringOrder(foreignKeyColumns, other.foreignKeyColumns))
+        // note pk/fk are sorted, sortByFK()
+        if (!Arrays.equals(foreignKeyColumns, other.foreignKeyColumns))
             return false;
-        if (!this.colRefsEqualIgnoringOrder(primaryKeyColumns, other.primaryKeyColumns))
+        if (!Arrays.equals(primaryKeyColumns, other.primaryKeyColumns))
             return false;
 
         if (!this.type.equalsIgnoreCase(other.getType()))
             return false;
         return true;
-    }
-
-    private boolean colRefsEqualIgnoringOrder(TblColRef[] a, TblColRef[] b) {
-        if (a.length != b.length)
-            return false;
-
-        return Arrays.asList(a).containsAll(Arrays.asList(b));
     }
 
     // equals() without alias
     public boolean matches(JoinDesc other) {
         if (!this.type.equalsIgnoreCase(other.getType()))
             return false;
-        if (!this.columnsEqualIgnoringOrder(foreignKeyColumns, other.foreignKeyColumns))
+        
+        // note pk/fk are sorted, sortByFK()
+        if (!this.columnDescEquals(foreignKeyColumns, other.foreignKeyColumns))
             return false;
-        if (!this.columnsEqualIgnoringOrder(primaryKeyColumns, other.primaryKeyColumns))
+        if (!this.columnDescEquals(primaryKeyColumns, other.primaryKeyColumns))
             return false;
         
         return true;
     }
 
-    private boolean columnsEqualIgnoringOrder(TblColRef[] a, TblColRef[] b) {
+    private boolean columnDescEquals(TblColRef[] a, TblColRef[] b) {
         if (a.length != b.length)
             return false;
         
-        int match = 0;
         for (int i = 0; i < a.length; i++) {
-            for (int j = 0; j < b.length; j++) {
-                if (a[i].getColumnDesc().equals(b[j].getColumnDesc())) {
-                    match++;
-                    break;
-                }
-            }
+            if (a[i].getColumnDesc().equals(b[i].getColumnDesc()) == false)
+                return false;
         }
-        return match == a.length;
+        return true;
     }
 
     @Override

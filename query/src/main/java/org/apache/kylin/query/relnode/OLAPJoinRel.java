@@ -220,6 +220,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         join.setForeignKeyColumns(fkCols.toArray(new TblColRef[fkCols.size()]));
         join.setPrimaryKey(pks.toArray(COLUMN_ARRAY_MARKER));
         join.setPrimaryKeyColumns(pkCols.toArray(new TblColRef[pkCols.size()]));
+        join.sortByFK();
         return join;
     }
 

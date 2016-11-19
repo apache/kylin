@@ -191,6 +191,12 @@ public class ColumnDesc implements Serializable {
         } else if (!name.equals(other.name))
             return false;
 
+        if (table == null) {
+            if (other.table != null)
+                return false;
+        } else if (!table.equals(other.table))
+            return false;
+        
         if (datatype == null) {
             if (other.datatype != null)
                 return false;

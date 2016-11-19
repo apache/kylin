@@ -21,8 +21,11 @@ package org.apache.kylin.dict;
 import org.apache.kylin.common.util.Bytes;
 
 /**
+ * Use <code>NumberDictionaryForestBuilder</code> instead.
+ * 
  * @author yangli9
  */
+@Deprecated
 public class NumberDictionaryBuilder<T> extends TrieDictionaryBuilder<T> {
 
     NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec(NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT);

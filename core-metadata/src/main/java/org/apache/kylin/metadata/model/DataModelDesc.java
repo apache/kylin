@@ -369,6 +369,8 @@ public class DataModelDesc extends RootPersistentEntity {
                 fkCols[i] = col;
             }
             join.setForeignKeyColumns(fkCols);
+            
+            join.sortByFK();
 
             // Validate join in dimension
             if (pkCols.length != fkCols.length) {
