@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert) {
+KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel) {
   $scope.num=0;
   $scope.convertedColumns=[];
   $scope.groupby=[];
@@ -29,7 +29,32 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     }
   };
   $scope.initUpdateMeasureStatus();
+  var needLengthKeyList=['fixed_length','fixed_length_hex','int','integer'];
+  $scope.removeVersion=function(typename){
+    if(typename){
+      return typename.replace(/\[v\d+\]/g,"");
+    }
+    return "";
+  }
+  $scope.getTypeVersion=function(typename){
+    var searchResult=/\[v(\d+)\]/.exec(typename);
+    if(searchResult&&searchResult.length){
+      return searchResult.length&&searchResult[1]||1;
+    }else{
+      return 1;
+    }
+  }
 
+  $scope.getEncodings =function (name){
+    console.log(name);
+    var type = TableModel.columnNameTypeMap[name]||'';
+    var encodings =$scope.store.supportedEncoding.slice(0),filterEncodings=[];
+    if($scope.isEdit){
+      var version = $scope.newMeasure.function.configuration['topn.encoding_version.' +name] || 1;
+      filterEncodings = VdmUtil.changeObjectListValueByFilter(encodings, 'value', $scope.newMeasure.function.configuration['topn.encoding.' +name].replace(/:\d+/, "") + (version ? "[v" + version + "]" : "[v1]"), 'suggest', true);
+    }
+    return VdmUtil.getObjectListByFilterVal(filterEncodings, '', '','suggest',true);
+  }
   $scope.addNewMeasure = function (measure, index) {
     if(measure&&index>=0){
       $scope.updateMeasureStatus.isEdit = true;
@@ -43,26 +68,43 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     if($scope.newMeasure.function.expression=="TOP_N"){
       $scope.convertedColumns=[];
       for(var configuration in $scope.newMeasure.function.configuration) {
-        var _name=configuration.slice(14);
-        var item=$scope.newMeasure.function.configuration[configuration];
-        var _isFixedLength = item.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
-        var _isIntLength = item.substring(0,3) === "int"?"true":"false";//fixed_length:12
-        var _encoding = item;
-        var _valueLength = 0 ;
-        if(_isFixedLength !=="false"){
-          _valueLength = item.substring(13,item.length);
-          _encoding = "fixed_length";
+          if(/topn\.encoding\./.test(configuration)){
+            var _name=configuration.slice(14);
+            var item=$scope.newMeasure.function.configuration[configuration];
+            //var _isFixedLength = item.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
+            //var _isIntegerLength = item.substring(0,7) === "integer"?"true":"false";
+            //var _isIntLength = item.substring(0,3) === "int"?"true":"false";
+            var _encoding = item;
+            var _valueLength = 0 ;
+            //if(_isFixedLength !=="false"){
+            //  _valueLength = item.substring(13,item.length);
+            //  _encoding = "fixed_length";
+            //}
+            //if(_isIntLength!="false" && _isIntegerLength=="false" ){
+            //  _valueLength = item.substring(4,item.length);
+            //  _encoding = "int";
+            //}
+            //
+            //if(_isIntegerLength!="false" ){
+            //  _valueLength = item.substring(8,item.length);
+            //  _encoding = "integer";
+            //}
+            var version=$scope.newMeasure.function.configuration['topn.encoding_version.'+_name]||1;
+            item=$scope.removeVersion(item);
+            var baseKey=item.replace(/:\d+/,'');
+            if(needLengthKeyList.indexOf(baseKey)>=-1){
+              var result=/:(\d+)/.exec(item);
+              _valueLength=result?result[1]:0;
+            }
+            _encoding=baseKey;
+            $scope.GroupBy = {
+              name:_name,
+              encoding:_encoding+(version?"[v"+version+"]":"[v1]"),
+              valueLength:_valueLength,
+              encoding_version:version||1
+            }
+            $scope.convertedColumns.push($scope.GroupBy);
         }
-        if(_isIntLength!="false"){
-          _valueLength = item.substring(4,item.length);
-          _encoding = "int";
-        }
-        $scope.GroupBy = {
-          name:_name,
-          encoding:_encoding,
-          valueLength:_valueLength,
-        }
-        $scope.convertedColumns.push($scope.GroupBy);
       };
     }
   };
@@ -129,7 +171,6 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   };
 
   $scope.saveNewMeasure = function () {
-
     if ($scope.newMeasure.function.expression === 'TOP_N' ) {
       if($scope.newMeasure.function.parameter.value == ""){
         SweetAlert.swal('', '[TOP_N] ORDER|SUM by Column  is required', 'warning');
@@ -160,21 +201,17 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
         $scope.groupby($scope.nextPara);
         angular.forEach($scope.convertedColumns,function(item){
           var a='topn.encoding.'+item.name;
+          var versionKey='topn.encoding_version.'+item.name;
+          var version=$scope.getTypeVersion(item.encoding);
           var encoding="";
-          if(item.encoding!=="dict" && item.encoding!=="date"&& item.encoding!=="time"){
-            if(item.encoding=="fixed_length" && item.valueLength){
-              encoding = "fixed_length:"+item.valueLength;
-            }
-            else if(item.encoding=="int" && item.valueLength){
-              encoding = "int:"+item.valueLength;
-            }else{
-              encoding = item.encoding;
-            }
+          if(needLengthKeyList.indexOf($scope.removeVersion(item.encoding))>=-1){
+            encoding = $scope.removeVersion(item.encoding)+":"+item.valueLength;
           }else{
-            encoding = item.encoding;
+            encoding = $scope.removeVersion(item.encoding);
             item.valueLength=0;
           }
-          $scope.newMeasure.function.configuration[a]=encoding;
+          $scope.newMeasure.function.configuration[a]= encoding;
+          $scope.newMeasure.function.configuration[versionKey]=version;
           });
     }
 
