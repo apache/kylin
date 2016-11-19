@@ -118,7 +118,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             combination = combination * (1L << normalDims.size());
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
-                Set<String> intersection = new HashSet<>(mandatoryDims);
+                Set<String> intersection = new TreeSet<>(mandatoryDims);
                 intersection.retainAll(hierarchyDims);
                 context.addResult(ResultLevel.ERROR, "Aggregation group " + index + " mandatory dimension has overlap with hierarchy dimension: " + intersection.toString());
                 continue;

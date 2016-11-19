@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -686,8 +685,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     private Pair<Boolean, Set<String>> hasOverlap(ArrayList<Set<String>> dimsList, Set<String> Dims) {
-        Set<String> existing = new HashSet<>();
-        Set<String> overlap = new HashSet<>();
+        Set<String> existing = new TreeSet<>();
+        Set<String> overlap = new TreeSet<>();
         for (Set<String> dims : dimsList) {
             if (CollectionUtils.containsAny(existing, dims)) {
                 overlap.addAll(CollectionUtils.intersection(existing, dims));
