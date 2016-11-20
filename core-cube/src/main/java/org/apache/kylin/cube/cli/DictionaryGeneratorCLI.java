@@ -27,6 +27,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,13 +57,10 @@ public class DictionaryGeneratorCLI {
         // snapshot
         Set<String> toSnapshot = Sets.newHashSet();
         for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
-            if (dim.getTableRef() == null)
-                continue;
-            
-            String lookupTable = dim.getTableRef().getTableIdentity();
-            toSnapshot.add(lookupTable);
+            TableRef table = dim.getTableRef();
+            if (cubeSeg.getModel().isLookupTable(table))
+                toSnapshot.add(table.getTableIdentity());
         }
-        toSnapshot.remove(cubeSeg.getCubeDesc().getFactTable());
         
         for (String tableIdentity : toSnapshot) {
             logger.info("Building snapshot of " + tableIdentity);

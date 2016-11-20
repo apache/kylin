@@ -38,7 +38,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.model.DataModelDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -289,6 +289,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         return tableDesc;
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMetaCRUD() throws Exception {
         final MetadataManager metadataManager = MetadataManager.getInstance(configA);
@@ -320,14 +321,13 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         waitForCounterAndClear(2);
         assertEquals(dataModelDesc.getName(), metadataManagerB.getDataModelDesc(dataModelName).getName());
 
-        final LookupDesc[] lookups = dataModelDesc.getLookups();
+        final JoinTableDesc[] lookups = dataModelDesc.getJoinTables();
         assertTrue(lookups.length > 0);
-        dataModelDesc.setLookups(lookups);
         metadataManager.updateDataModelDesc(dataModelDesc);
         //only one for data model update
         assertEquals(1, broadcaster.getCounterAndClear());
         waitForCounterAndClear(1);
-        assertEquals(dataModelDesc.getLookups().length, metadataManagerB.getDataModelDesc(dataModelName).getLookups().length);
+        assertEquals(dataModelDesc.getJoinTables().length, metadataManagerB.getDataModelDesc(dataModelName).getJoinTables().length);
 
     }
 

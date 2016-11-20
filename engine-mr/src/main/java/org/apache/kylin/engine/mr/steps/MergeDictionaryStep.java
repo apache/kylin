@@ -37,6 +37,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,8 +111,8 @@ public class MergeDictionaryStep extends AbstractExecutable {
         CubeDesc cubeDesc = cube.getDescriptor();
 
         for (TblColRef col : cubeDesc.getAllColumnsNeedDictionaryBuilt()) {
-            String dictTable = dictMgr.decideSourceData(cubeDesc.getModel(), col).getTable();
-            if (cubeDesc.getFactTable().equalsIgnoreCase(dictTable)) {
+            TableRef srcTable = dictMgr.decideSourceData(cubeDesc.getModel(), col).getTableRef();
+            if (cubeDesc.getModel().isFactTable(srcTable)) {
                 colsNeedMeringDict.add(col);
             } else {
                 colsNeedCopyDict.add(col);

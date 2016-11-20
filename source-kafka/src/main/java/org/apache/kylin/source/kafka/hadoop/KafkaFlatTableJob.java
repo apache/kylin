@@ -90,7 +90,7 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
             setJobClasspath(job, cube.getConfig());
 
             KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
-            KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(cube.getFactTable());
+            KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(cube.getRootFactTable());
             String brokers = KafkaClient.getKafkaBrokers(kafkaConfig);
             String topic = kafkaConfig.getTopic();
 

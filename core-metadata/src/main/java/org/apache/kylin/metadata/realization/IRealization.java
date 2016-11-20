@@ -39,9 +39,7 @@ public interface IRealization extends IStorageAware {
      */
     public RealizationType getType();
 
-    public DataModelDesc getDataModelDesc();
-
-    public String getFactTable();
+    public DataModelDesc getModel();
 
     public Set<TblColRef> getAllColumns();
     

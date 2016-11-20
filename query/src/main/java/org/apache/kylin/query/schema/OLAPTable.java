@@ -200,10 +200,10 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         //2. All integer measures in non-cube realizations
         MetadataManager metadataManager = MetadataManager.getInstance(olapSchema.getConfig());
         for (IRealization realization : mgr.listAllRealizations(olapSchema.getProjectName())) {
-            if (realization.getType() == RealizationType.INVERTED_INDEX && sourceTable.getIdentity().equalsIgnoreCase(realization.getFactTable())) {
-                DataModelDesc dataModelDesc = realization.getDataModelDesc();
+            if (realization.getType() == RealizationType.INVERTED_INDEX && realization.getModel().isFactTable(sourceTable.getIdentity())) {
+                DataModelDesc dataModelDesc = realization.getModel();
                 for (String metricColumn : dataModelDesc.getMetrics()) {
-                    ColumnDesc columnDesc = metadataManager.getColumnDesc(dataModelDesc.getFactTable() + "." + metricColumn);
+                    ColumnDesc columnDesc = metadataManager.getColumnDesc(dataModelDesc.getRootFactTable() + "." + metricColumn);
                     if (columnDesc.getType().isIntegerFamily() && !columnDesc.getType().isBigInt())
                         updateColumns.add(columnDesc);
                 }

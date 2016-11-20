@@ -56,11 +56,11 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.source.kafka.hadoop.KafkaFlatTableJob;
 import org.apache.kylin.source.kafka.job.MergeOffsetStep;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class KafkaMRInput implements IMRInput {
 
@@ -178,13 +178,11 @@ public class KafkaMRInput implements IMRInput {
         @Override
         public IMRTableInputFormat getFlatTableInputFormat() {
             KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
-            KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(seg.getRealization().getFactTable());
+            KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(seg.getCubeInstance().getRootFactTable());
             List<TblColRef> columns = new CubeJoinedFlatTableDesc(seg).getAllColumns();
 
             return new KafkaTableInputFormat(seg, columns, kafkaConfig, conf);
-
         }
-
     }
 
     class KafkaMRBatchMergeInputSide implements IMRBatchMergeInputSide {

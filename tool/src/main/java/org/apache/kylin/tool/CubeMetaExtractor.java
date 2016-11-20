@@ -35,8 +35,6 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.metadata.streaming.StreamingConfig;
-import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutablePO;
 import org.apache.kylin.job.exception.PersistentException;
@@ -45,12 +43,15 @@ import org.apache.kylin.metadata.badquery.BadQueryHistoryManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.metadata.streaming.StreamingConfig;
+import org.apache.kylin.metadata.streaming.StreamingManager;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.apache.kylin.storage.hybrid.HybridManager;
@@ -231,7 +232,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private void dealWithStreaming(CubeInstance cube) {
         streamingManager = StreamingManager.getInstance(kylinConfig);
         for (StreamingConfig streamingConfig : streamingManager.listAllStreaming()) {
-            if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getFactTable())) {
+            if (streamingConfig.getName() != null && streamingConfig.getName().equalsIgnoreCase(cube.getRootFactTable())) {
                 addRequired(StreamingConfig.concatResourcePath(streamingConfig.getName()));
                 addRequired(KafkaConfig.concatResourcePath(streamingConfig.getName()));
             }
@@ -254,7 +255,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
             dealWithStreaming(cube);
 
-            for (String tableName : modelDesc.getAllTables()) {
+            for (TableRef table : modelDesc.getAllTables()) {
+                String tableName = table.getTableIdentity();
                 addRequired(TableDesc.concatResourcePath(tableName));
                 addOptional(TableDesc.concatExdResourcePath(tableName));
             }

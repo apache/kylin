@@ -66,13 +66,11 @@ public class CubeCapabilityChecker {
         Collection<FunctionDesc> unmatchedAggregations = unmatchedAggregations(aggrFunctions, cube);
 
         // try custom measure types
-        // in RAW query, unmatchedDimensions and unmatchedAggregations will null, so can't chose RAW cube well!
-        //        if (!unmatchedDimensions.isEmpty() || !unmatchedAggregations.isEmpty()) {
         tryCustomMeasureTypes(unmatchedDimensions, unmatchedAggregations, digest, cube, result);
-        //        }
 
         //more tricks
-        if (cube.getDescriptor().getFactTable().equals(digest.factTable)) {
+        String rootFactTable = cube.getRootFactTable();
+        if (rootFactTable.equals(digest.factTable)) {
             //for query-on-facttable
             //1. dimension as measure
 
@@ -83,7 +81,7 @@ public class CubeCapabilityChecker {
             //for non query-on-facttable 
             if (cube.getSegments().get(0).getSnapshots().containsKey(digest.factTable)) {
 
-                Set<TblColRef> dimCols = Sets.newHashSet(cube.getDataModelDesc().findFirstTable(digest.factTable).getColumns());
+                Set<TblColRef> dimCols = Sets.newHashSet(cube.getModel().findFirstTable(digest.factTable).getColumns());
 
                 //1. all aggregations on lookup table can be done. For distinct count, mark them all DimensionAsMeasures
                 // so that the measure has a chance to be upgraded to DimCountDistinctMeasureType in org.apache.kylin.metadata.model.FunctionDesc#reInitMeasureType
@@ -122,7 +120,7 @@ public class CubeCapabilityChecker {
             return result;
         }
 
-        if (digest.isRawQuery && cube.getFactTable().equals(digest.factTable)) {
+        if (digest.isRawQuery && rootFactTable.equals(digest.factTable)) {
             result.influences.add(new CapabilityInfluence() {
                 @Override
                 public double suggestCostMultiplier() {

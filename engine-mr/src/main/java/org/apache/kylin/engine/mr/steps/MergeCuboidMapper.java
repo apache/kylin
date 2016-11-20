@@ -51,6 +51,7 @@ import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
@@ -250,14 +251,14 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         Boolean ret = dimensionsNeedDict.get(col);
         if (ret != null)
             return ret;
-        else {
-            ret = cubeDesc.getRowkey().isUseDictionary(col);
-            if (ret) {
-                String dictTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), col).getTable();
-                ret = cubeDesc.getFactTable().equalsIgnoreCase(dictTable);
-            }
-            dimensionsNeedDict.put(col, ret);
-            return ret;
+        
+        ret = cubeDesc.getRowkey().isUseDictionary(col);
+        if (ret) {
+            TableRef srcTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), col).getTableRef();
+            ret = cubeDesc.getModel().isFactTable(srcTable);
         }
+        
+        dimensionsNeedDict.put(col, ret);
+        return ret;
     }
 }

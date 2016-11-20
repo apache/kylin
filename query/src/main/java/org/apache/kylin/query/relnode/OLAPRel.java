@@ -163,8 +163,14 @@ public interface OLAPRel extends RelNode {
         }
 
         public static boolean needRewrite(OLAPContext ctx) {
-            boolean hasFactTable = ctx.hasJoin || ctx.firstTableScan.getTableName().equals(ctx.realization.getFactTable());
-            return hasFactTable;
+            if (ctx.hasJoin)
+                return true;
+            
+            String realRootFact = ctx.realization.getModel().getRootFactTable().getTableIdentity();
+            if (ctx.firstTableScan.getTableName().equals(realRootFact))
+                return true;
+            
+            return false;
         }
     }
 

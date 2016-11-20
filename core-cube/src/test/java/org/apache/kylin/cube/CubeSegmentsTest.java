@@ -48,7 +48,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_empty");
 
         // override partition desc
-        cube.getDataModelDesc().setPartitionDesc(new PartitionDesc());
+        cube.getModel().setPartitionDesc(new PartitionDesc());
 
         // first append, creates a new & single segment
         CubeSegment seg = mgr.appendSegment(cube);
@@ -73,7 +73,7 @@ public class CubeSegmentsTest extends LocalFileMetadataTestCase {
         CubeInstance cube = mgr.getCube("test_kylin_cube_without_slr_ready");
 
         // override partition desc
-        cube.getDataModelDesc().setPartitionDesc(new PartitionDesc());
+        cube.getModel().setPartitionDesc(new PartitionDesc());
 
         // assert one ready segment
         assertEquals(1, cube.getSegments().size());

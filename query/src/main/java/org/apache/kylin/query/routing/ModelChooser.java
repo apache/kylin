@@ -29,7 +29,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -74,7 +74,7 @@ public class ModelChooser {
         Map<String, String> result = Maps.newHashMap();
 
         // the greedy match is not perfect but works for the moment
-        Map<String, List<JoinDesc>> modelJoinsMap = model.getJoinsMap();
+        Map<String, List<JoinDesc>> modelJoinsMap = model.getFKSideJoinMap();
         for (OLAPContext ctx : contexts) {
             for (JoinDesc queryJoin : ctx.joins) {
                 String fkTable = queryJoin.getForeignKeyColumns()[0].getTable();
@@ -133,7 +133,7 @@ public class ModelChooser {
                 continue;
 
             RealizationCost cost = new RealizationCost(real);
-            DataModelDesc m = real.getDataModelDesc();
+            DataModelDesc m = real.getModel();
             Set<IRealization> set = models.get(m);
             if (set == null) {
                 set = Sets.newHashSet();
@@ -184,8 +184,8 @@ public class ModelChooser {
 
             // ref CubeInstance.getCost()
             int c = real.getAllDimensions().size() * CubeInstance.COST_WEIGHT_DIMENSION + real.getMeasures().size() * CubeInstance.COST_WEIGHT_MEASURE;
-            for (LookupDesc lookup : real.getDataModelDesc().getLookups()) {
-                if (lookup.getJoin().isInnerJoin())
+            for (JoinTableDesc join : real.getModel().getJoinTables()) {
+                if (join.getJoin().isInnerJoin())
                     c += CubeInstance.COST_WEIGHT_INNER_JOIN;
             }
             this.cost = c;

@@ -104,7 +104,7 @@ public class FactTableGenerator {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         cube = CubeManager.getInstance(config).getCube(cubeName);
         desc = cube.getDescriptor();
-        factTableName = desc.getFactTable();
+        factTableName = cube.getRootFactTable();
         store = ResourceStore.getStore(config);
     }
 
@@ -559,7 +559,7 @@ public class FactTableGenerator {
 
         long currentRowTime = -1;
 
-        for (TblColRef col : cube.getDataModelDesc().getFactTableRef().getColumns()) {
+        for (TblColRef col : cube.getModel().getRootFactTable().getColumns()) {
 
             String colName = col.getName();
 
@@ -579,7 +579,7 @@ public class FactTableGenerator {
                 defaultColumns.add(colName);
             }
 
-            if (col.equals(cube.getDataModelDesc().getPartitionDesc().getPartitionDateColumnRef())) {
+            if (col.equals(cube.getModel().getPartitionDesc().getPartitionDateColumnRef())) {
                 currentRowTime = format.parse(columnValues.get(columnValues.size() - 1)).getTime();
             }
         }

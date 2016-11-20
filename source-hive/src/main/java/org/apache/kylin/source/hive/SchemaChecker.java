@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
 
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -104,15 +103,7 @@ public class SchemaChecker {
                 if (cube == null || cube.allowBrokenDescriptor()) {
                     return false;
                 }
-                CubeDesc desc = cube.getDescriptor();
-
-                Set<String> usedTables = Sets.newHashSet();
-                usedTables.add(desc.getFactTableDesc().getIdentity());
-                for (TableDesc lookup : desc.getLookupTableDescs()) {
-                    usedTables.add(lookup.getIdentity());
-                }
-
-                return usedTables.contains(fullTableName);
+                return cube.getModel().containsTable(fullTableName);
             }
         });
 
@@ -210,13 +201,11 @@ public class SchemaChecker {
 
         List<String> issues = Lists.newArrayList();
         for (CubeInstance cube : findCubeByTable(fullTableName)) {
-            TableDesc factTable = cube.getFactTableDesc();
-            List<TableDesc> lookupTables = cube.getDescriptor().getLookupTableDescs();
-            String modelName = cube.getDataModelDesc().getName();
+            String modelName = cube.getModel().getName();
 
-            // if user reloads a fact table used by cube, then all used columns
-            // must match current schema
-            if (factTable.getIdentity().equals(fullTableName)) {
+            // if user reloads a fact table used by cube, then all used columns must match current schema
+            if (cube.getModel().isFactTable(fullTableName)) {
+                TableDesc factTable = cube.getModel().findFirstTable(fullTableName).getTableDesc();
                 List<String> violateColumns = checkAllColumnsInCube(cube, factTable, currentFieldsMap);
                 if (!violateColumns.isEmpty()) {
                     issues.add(format("Column %s used in cube[%s] and model[%s], but changed in hive", violateColumns, cube.getName(), modelName));
@@ -225,8 +214,9 @@ public class SchemaChecker {
 
             // if user reloads a lookup table used by cube, only append column(s) are allowed, all existing columns
             // must be the same (except compatible type changes)
-            for (TableDesc lookupTable : lookupTables) {
-                if (lookupTable.getIdentity().equals(fullTableName) && !checkAllColumnsInTableDesc(lookupTable, currentFields)) {
+            if (cube.getModel().isLookupTable(fullTableName)) {
+                TableDesc lookupTable = cube.getModel().findFirstTable(fullTableName).getTableDesc();
+                if (!checkAllColumnsInTableDesc(lookupTable, currentFields)) {
                     issues.add(format("Table '%s' is used as Lookup Table in cube[%s] and model[%s], but changed in hive", lookupTable.getIdentity(), cube.getName(), modelName));
                 }
             }

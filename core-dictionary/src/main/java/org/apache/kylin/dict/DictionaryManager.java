@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.ClassUtil;
@@ -36,7 +37,9 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableSignature;
@@ -333,15 +336,36 @@ public class DictionaryManager {
     /**
      * Decide a dictionary's source data, leverage PK-FK relationship.
      */
-    public TblColRef decideSourceData(DataModelDesc model, TblColRef col) throws IOException {
+    public TblColRef decideSourceData(DataModelDesc model, TblColRef col) {
         // Note FK on fact table is supported by scan the related PK on lookup table
         // FK on fact table and join type is inner, use PK from lookup instead
-        if (model.isFactTable(col.getTable())) {
-            TblColRef pkCol = model.findPKByFK(col, "inner");
-            if (pkCol != null)
-                col = pkCol; // scan the counterparty PK on lookup table instead
+        if (model.isFactTable(col.getTable()) == false)
+            return col;
+        
+        // find a lookup table that the col joins as FK
+        for (TableRef lookup : model.getLookupTables()) {
+            JoinDesc lookupJoin = model.getPKSideJoinMap().get(lookup);
+            int find = ArrayUtils.indexOf(lookupJoin.getForeignKeyColumns(), col);
+            if (find < 0)
+                continue;
+        
+            // make sure the joins are all inner up to the root
+            if (isAllInnerJoinsToRoot(model, lookupJoin))
+                return lookupJoin.getPrimaryKeyColumns()[find];
         }
+        
         return col;
+    }
+
+    private boolean isAllInnerJoinsToRoot(DataModelDesc model, JoinDesc join) {
+        while (join != null) {
+            if (join.isInnerJoin() == false)
+                return false;
+            
+            TableRef table = join.getForeignKeyColumns()[0].getTableRef();
+            join = model.getPKSideJoinMap().get(table);
+        }
+        return true;
     }
 
     private String checkDupByInfo(DictionaryInfo dictInfo) throws IOException {

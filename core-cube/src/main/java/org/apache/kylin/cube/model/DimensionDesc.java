@@ -24,7 +24,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -66,9 +66,9 @@ public class DimensionDesc {
             throw new IllegalStateException("Can't find table " + table + " for dimension " + name);
 
         join = null;
-        for (LookupDesc lookup : model.getLookups()) {
-            if (lookup.getTableRef().equals(this.tableRef)) {
-                join = lookup.getJoin();
+        for (JoinTableDesc joinTable : model.getJoinTables()) {
+            if (joinTable.getTableRef().equals(this.tableRef)) {
+                join = joinTable.getJoin();
                 break;
             }
         }

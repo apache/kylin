@@ -76,7 +76,7 @@ public class ITStorageTest extends HBaseMetadataTestCase {
         String url = KylinConfig.getInstanceFromEnv().getStorageUrl();
         context = new StorageContext();
         context.setConnUrl(url);
-        mockup = new StorageMockUtils(cube.getDataModelDesc());
+        mockup = new StorageMockUtils(cube.getModel());
     }
 
     @After

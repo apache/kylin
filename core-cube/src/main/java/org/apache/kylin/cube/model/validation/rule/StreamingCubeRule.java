@@ -23,6 +23,7 @@ import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ISourceAware;
 
 import org.apache.kylin.metadata.model.TblColRef;
@@ -41,21 +42,23 @@ public class StreamingCubeRule implements IValidatorRule<CubeDesc> {
      */
     @Override
     public void validate(CubeDesc cube, ValidateContext context) {
-        if (cube.getFactTableDesc().getSourceType() != ISourceAware.ID_STREAMING) {
+        DataModelDesc model = cube.getModel();
+        
+        if (model.getRootFactTable().getTableDesc().getSourceType() != ISourceAware.ID_STREAMING) {
             return;
         }
 
-        if (cube.getLookupTableDescs() != null && cube.getLookupTableDescs().size() > 0) {
+        if (model.getLookupTables().size() > 0) {
             context.addResult(ResultLevel.ERROR, "Streaming Cube doesn't support star-schema so far; only one fact table is allowed.");
             return;
         }
 
-        if (cube.getModel().getPartitionDesc() == null || cube.getModel().getPartitionDesc().getPartitionDateColumn() == null) {
+        if (model.getPartitionDesc() == null || model.getPartitionDesc().getPartitionDateColumn() == null) {
             context.addResult(ResultLevel.ERROR, "Must define a partition column.");
             return;
         }
 
-        final TblColRef partitionCol = cube.getModel().getPartitionDesc().getPartitionDateColumnRef();
+        final TblColRef partitionCol = model.getPartitionDesc().getPartitionDateColumnRef();
         boolean found = false;
         for (DimensionDesc dimensionDesc : cube.getDimensions()) {
             for (TblColRef dimCol : dimensionDesc.getColumnRefs()) {

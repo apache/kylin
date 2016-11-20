@@ -108,7 +108,7 @@ public class BuildCubeWithStream {
         cubeManager = CubeManager.getInstance(kylinConfig);
 
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
-        final String factTable = cubeInstance.getFactTable();
+        final String factTable = cubeInstance.getRootFactTable();
 
         final StreamingManager streamingManager = StreamingManager.getInstance(kylinConfig);
         final StreamingConfig streamingConfig = streamingManager.getStreamingConfig(factTable);

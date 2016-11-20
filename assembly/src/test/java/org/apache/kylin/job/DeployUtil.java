@@ -150,13 +150,13 @@ public class DeployUtil {
 
     public static void prepareTestDataForStreamingCube(long startTime, long endTime, int numberOfRecords, String cubeName, StreamDataLoader streamDataLoader) throws IOException {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName);
-        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime, cubeInstance.getFactTable());
+        List<String> data = StreamingTableDataGenerator.generate(numberOfRecords, startTime, endTime, cubeInstance.getRootFactTable());
         //load into kafka
         streamDataLoader.loadIntoKafka(data);
         logger.info("Write {} messages into {}", data.size(), streamDataLoader.toString());
 
         //csv data for H2 use
-        TableRef factTable = cubeInstance.getDataModelDesc().getFactTableRef();
+        TableRef factTable = cubeInstance.getModel().getRootFactTable();
         List<TblColRef> tableColumns = Lists.newArrayList(factTable.getColumns());
         TimedJsonStreamParser timedJsonStreamParser = new TimedJsonStreamParser(tableColumns, null);
         StringBuilder sb = new StringBuilder();
@@ -165,7 +165,7 @@ public class DeployUtil {
             sb.append(StringUtils.join(rowColumns, ","));
             sb.append(System.getProperty("line.separator"));
         }
-        appendFactTableData(sb.toString(), cubeInstance.getFactTable());
+        appendFactTableData(sb.toString(), cubeInstance.getRootFactTable());
     }
 
     public static void overrideFactTableData(String factTableContent, String factTableName) throws IOException {

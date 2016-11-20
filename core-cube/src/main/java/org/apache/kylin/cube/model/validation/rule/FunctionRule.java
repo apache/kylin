@@ -153,7 +153,7 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
      * @param value
      */
     private void validateColumnParameter(ValidateContext context, CubeDesc cube, String value) {
-        String factTable = cube.getFactTable();
+        String factTable = cube.getModel().getRootFactTable().getTableIdentity();
         if (StringUtils.isEmpty(factTable)) {
             context.addResult(ResultLevel.ERROR, "Fact table can not be null.");
             return;

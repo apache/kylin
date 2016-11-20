@@ -278,13 +278,16 @@ public class PartitionDesc {
         }
     }
 
-    public static PartitionDesc getCopyOf(PartitionDesc partitionDesc) {
-        PartitionDesc newPartDesc = new PartitionDesc();
-        newPartDesc.setCubePartitionType(partitionDesc.getCubePartitionType());
-        newPartDesc.setPartitionDateColumn(partitionDesc.getPartitionDateColumn());
-        newPartDesc.setPartitionDateFormat(partitionDesc.getPartitionDateFormat());
-        newPartDesc.setPartitionDateStart(partitionDesc.getPartitionDateStart());
-        return newPartDesc;
+    public static PartitionDesc getCopyOf(PartitionDesc orig) {
+        PartitionDesc ret = new PartitionDesc();
+        ret.partitionDateColumn = orig.partitionDateColumn;
+        ret.partitionTimeColumn = orig.partitionTimeColumn;
+        ret.partitionDateStart = orig.partitionDateStart; //Deprecated
+        ret.partitionDateFormat = orig.partitionDateFormat;
+        ret.partitionTimeFormat = orig.partitionTimeFormat;
+        ret.partitionType = orig.partitionType;
+        ret.partitionConditionBuilderClz = orig.partitionConditionBuilderClz;
+        return ret;
     }
 
 }

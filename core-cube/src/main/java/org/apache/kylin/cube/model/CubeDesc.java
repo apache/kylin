@@ -63,7 +63,6 @@ import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -341,18 +340,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.description = description;
     }
 
-    public String getFactTable() {
-        return model.getFactTable();
-    }
-
-    public TableDesc getFactTableDesc() {
-        return model.getFactTableRef().getTableDesc();
-    }
-
-    public List<TableDesc> getLookupTableDescs() {
-        return model.getLookupTableDescs();
-    }
-
     public String[] getNullStrings() {
         return nullStrings;
     }
@@ -441,7 +428,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         if (!name.equals(cubeDesc.name))
             return false;
 
-        if (!getFactTable().equals(cubeDesc.getFactTable()))
+        if (!modelName.equals(cubeDesc.modelName))
             return false;
 
         return true;
@@ -461,7 +448,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public int hashCode() {
         int result = 0;
         result = 31 * result + name.hashCode();
-        result = 31 * result + getFactTable().hashCode();
+        result = 31 * result + model.getRootFactTable().hashCode();
         return result;
     }
 

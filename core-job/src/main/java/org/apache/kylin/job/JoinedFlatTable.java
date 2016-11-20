@@ -29,7 +29,7 @@ import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -122,9 +122,9 @@ public class JoinedFlatTable {
 
     public static String generateCountDataStatement(IJoinedFlatTableDesc flatDesc, final String outputDir) {
         final StringBuilder sql = new StringBuilder();
-        final TableRef factTbl = flatDesc.getDataModel().getFactTableRef();
+        final TableRef rootTbl = flatDesc.getDataModel().getRootFactTable();
         sql.append("dfs -mkdir -p " + outputDir + ";\n");
-        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + factTbl.getTableIdentity() + " " + factTbl.getAlias() + "\n");
+        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + rootTbl.getTableIdentity() + " " + rootTbl.getAlias() + "\n");
         appendWhereStatement(flatDesc, sql);
         return sql.toString();
     }
@@ -132,11 +132,11 @@ public class JoinedFlatTable {
     private static void appendJoinStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
         Set<TableRef> dimTableCache = new HashSet<>();
 
-        DataModelDesc dataModelDesc = flatDesc.getDataModel();
-        TableRef factTable = dataModelDesc.getFactTableRef();
-        sql.append("FROM " + factTable.getTableIdentity() + " as " + factTable.getAlias() + " \n");
+        DataModelDesc model = flatDesc.getDataModel();
+        TableRef rootTable = model.getRootFactTable();
+        sql.append("FROM " + rootTable.getTableIdentity() + " as " + rootTable.getAlias() + " \n");
 
-        for (LookupDesc lookupDesc : dataModelDesc.getLookups()) {
+        for (JoinTableDesc lookupDesc : model.getJoinTables()) {
             JoinDesc join = lookupDesc.getJoin();
             if (join != null && join.getType().equals("") == false) {
                 String joinType = join.getType().toUpperCase();

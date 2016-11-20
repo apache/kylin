@@ -126,22 +126,11 @@ class ProjectL2Cache {
             return Collections.unmodifiableSet(tableCache.realizations);
     }
 
-    public List<IRealization> getOnlineRealizationByFactTable(String project, String factTable) {
-        Set<IRealization> realizations = getRealizationsByTable(project, factTable);
-        List<IRealization> result = Lists.newArrayListWithCapacity(realizations.size());
-        for (IRealization r : realizations) {
-            if (r.getFactTable().equalsIgnoreCase(factTable) && r.isReady()) {
-                result.add(r);
-            }
-        }
-        return result;
-    }
-
     public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable, boolean onlyRewriteMeasure) {
         Set<IRealization> realizations = getRealizationsByTable(project, factTable);
         List<MeasureDesc> result = Lists.newArrayList();
         for (IRealization r : realizations) {
-            if (r.getFactTable().equalsIgnoreCase(factTable) && r.isReady()) {
+            if (r.getModel().isFactTable(factTable) && r.isReady()) {
                 for (MeasureDesc m : r.getMeasures()) {
                     FunctionDesc func = m.getFunction();
                     if (onlyRewriteMeasure) {

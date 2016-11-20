@@ -152,7 +152,7 @@ public class CubeMetaIngester extends AbstractApplication {
 
         for (CubeInstance cube : srcCubeManager.listAllCubes()) {
             logger.info("add " + cube + " to " + targetProjectName);
-            projectManager.updateModelToProject(cube.getDataModelDesc().getName(), targetProjectName);
+            projectManager.updateModelToProject(cube.getModel().getName(), targetProjectName);
             projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), targetProjectName, null);
         }
 

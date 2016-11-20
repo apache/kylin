@@ -88,6 +88,7 @@ public class JoinDesc {
     }
 
     public void setPrimaryKeyColumns(TblColRef[] primaryKeyColumns) {
+        checkSameTable(primaryKeyColumns);
         this.primaryKeyColumns = primaryKeyColumns;
     }
 
@@ -96,7 +97,17 @@ public class JoinDesc {
     }
 
     public void setForeignKeyColumns(TblColRef[] foreignKeyColumns) {
+        checkSameTable(primaryKeyColumns);
         this.foreignKeyColumns = foreignKeyColumns;
+    }
+
+    private void checkSameTable(TblColRef[] cols) {
+        if (cols == null || cols.length == 0)
+            return;
+        
+        TableRef tableRef = cols[0].getTableRef();
+        for (int i = 1; i < cols.length; i++)
+            Preconditions.checkState(tableRef == cols[i].getTableRef());
     }
 
     public void sortByFK() {

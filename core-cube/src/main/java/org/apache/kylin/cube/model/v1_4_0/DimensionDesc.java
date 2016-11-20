@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -73,9 +73,9 @@ public class DimensionDesc {
             throw new IllegalStateException("Can't find table " + table + " for dimension " + name);
 
         join = null;
-        for (LookupDesc lookup : cubeDesc.getModel().getLookups()) {
-            if (lookup.getTable().equalsIgnoreCase(this.getTable())) {
-                join = lookup.getJoin();
+        for (JoinTableDesc joinTable : cubeDesc.getModel().getJoinTables()) {
+            if (joinTable.getTable().equalsIgnoreCase(this.getTable())) {
+                join = joinTable.getJoin();
                 break;
             }
         }

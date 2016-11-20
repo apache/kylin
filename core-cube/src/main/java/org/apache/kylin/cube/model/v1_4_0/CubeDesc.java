@@ -324,11 +324,11 @@ public class CubeDesc extends RootPersistentEntity {
     }
 
     public String getFactTable() {
-        return model.getFactTable();
+        return model.getRootFactTable().getTableIdentity();
     }
 
     public TableDesc getFactTableDesc() {
-        return model.getFactTableRef().getTableDesc();
+        return model.getRootFactTable().getTableDesc();
     }
 
     public List<TableDesc> getLookupTableDescs() {

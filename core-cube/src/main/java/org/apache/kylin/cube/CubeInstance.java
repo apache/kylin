@@ -31,10 +31,9 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IBuildable;
-import org.apache.kylin.metadata.model.LookupDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.CapabilityResult;
 import org.apache.kylin.metadata.realization.CapabilityResult.CapabilityInfluence;
@@ -138,7 +137,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     @Override
-    public DataModelDesc getDataModelDesc() {
+    public DataModelDesc getModel() {
         CubeDesc cubeDesc = this.getDescriptor();
         if (cubeDesc != null) {
             return cubeDesc.getModel();
@@ -214,6 +213,10 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         this.config = config;
     }
 
+    public String getRootFactTable() {
+        return getModel().getRootFactTable().getTableIdentity();
+    }
+
     @Override
     public String getName() {
         return name;
@@ -222,15 +225,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     @Override
     public String getCanonicalName() {
         return getType() + "[name=" + name + "]";
-    }
-
-    @Override
-    public String getFactTable() {
-        return getDescriptor().getFactTable();
-    }
-
-    public TableDesc getFactTableDesc() {
-        return getDescriptor().getFactTableDesc();
     }
 
     @Override
@@ -374,9 +368,9 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         //the number of dimensions is not as accurate as number of row key cols
         calculatedCost += getRowKeyColumnCount() * COST_WEIGHT_DIMENSION + getMeasures().size() * COST_WEIGHT_MEASURE;
 
-        for (LookupDesc lookupDesc : this.getDescriptor().getModel().getLookups()) {
+        for (JoinTableDesc joinTable : this.getModel().getJoinTables()) {
             // more tables, more cost
-            if (lookupDesc.getJoin().isInnerJoin()) {
+            if (joinTable.getJoin().isInnerJoin()) {
                 // inner join cost is bigger than left join, as it will filter some records
                 calculatedCost += COST_WEIGHT_INNER_JOIN;
             }
@@ -457,7 +451,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
 
     @Override
     public int getSourceType() {
-        return getFactTableDesc().getSourceType();
+        return getModel().getRootFactTable().getTableDesc().getSourceType();
     }
 
     @Override
