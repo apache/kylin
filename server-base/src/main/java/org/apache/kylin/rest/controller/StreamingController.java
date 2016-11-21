@@ -26,9 +26,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -104,6 +104,10 @@ public class StreamingController extends BasicController {
 
         String project = streamingRequest.getProject();
         TableDesc tableDesc = deserializeTableDesc(streamingRequest);
+        if (null == tableDesc) {
+            throw new BadRequestException("Failed to add streaming table.");
+        }
+
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
         boolean saveStreamingSuccess = false, saveKafkaSuccess = false;
@@ -235,10 +239,12 @@ public class StreamingController extends BasicController {
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
 
-        String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
-        desc.setName(dbTable[1]);
-        desc.setDatabase(dbTable[0]);
-        desc.getIdentity();
+        if (null != desc) {
+            String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
+            desc.setName(dbTable[1]);
+            desc.setDatabase(dbTable[0]);
+            desc.getIdentity();
+        }
         return desc;
     }
 
