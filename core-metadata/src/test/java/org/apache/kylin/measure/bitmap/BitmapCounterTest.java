@@ -44,10 +44,12 @@ public class BitmapCounterTest {
         counter2.add(12273456);
         counter2.add("4258");
         counter2.add(123);
-        assertEquals(4, counter2.getCount());
+        counter2.add(-2147483648);
+        counter2.add(-2);
+        assertEquals(6, counter2.getCount());
 
         counter.merge(counter2);
-        assertEquals(6, counter.getCount());
+        assertEquals(8, counter.getCount());
         System.out.print("counter size: " + counter.getMemBytes() + ", counter2 size: " + counter2.getMemBytes());
     }
 

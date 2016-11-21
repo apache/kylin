@@ -116,12 +116,12 @@
     },
     "dependent_measure_ref" : null
   }, {
-    "name" : "SITE_NAME_BITMAP",
+    "name" : "USER_COUNT_BITMAP",
     "function" : {
       "expression" : "COUNT_DISTINCT",
       "parameter" : {
         "type" : "column",
-        "value" : "SITE_NAME",
+        "value" : "USER_ID",
         "next_parameter" : null
       },
       "returntype" : "bitmap"
@@ -209,12 +209,10 @@
     },
     "dependent_measure_ref" : null
   } ],
-  "dictionaries" : [
-    {
-      "column" : "SITE_NAME",
-      "builder": "org.apache.kylin.dict.GlobalDictionaryBuilder"
-    }
-  ],
+  "dictionaries": [ {
+    "column": "USER_ID",
+    "builder": "org.apache.kylin.dict.GlobalDictionaryBuilder"
+  } ],
   "rowkey" : {
     "rowkey_columns" : [ {
       "column" : "cal_dt",
@@ -257,7 +255,7 @@
       "name" : "f2",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "seller_cnt_bitmap", "site_name_bitmap", "seller_format_cnt"]
+        "measure_refs" : [ "seller_cnt_bitmap", "user_count_bitmap", "seller_format_cnt"]
       } ]
     }, {
       "name" : "f3",

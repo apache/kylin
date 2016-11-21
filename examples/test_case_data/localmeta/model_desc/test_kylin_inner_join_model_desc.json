@@ -106,7 +106,8 @@
   "metrics": [
     "PRICE",
     "ITEM_COUNT",
-    "SELLER_ID"
+    "SELLER_ID",
+    "USER_ID"
   ],
   "last_modified": 1422435345352,
   "fact_table": "DEFAULT.TEST_KYLIN_FACT",

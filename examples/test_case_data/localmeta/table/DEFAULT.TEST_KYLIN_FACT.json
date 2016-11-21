@@ -40,10 +40,14 @@
     "datatype" : "bigint"
   }, {
     "id" : "10",
+    "name" : "USER_ID",
+    "datatype" : "varchar(32)"
+  }, {
+    "id" : "11",
     "name" : "BUYER_COUNTRY",
     "datatype" : "string"
   }, {
-    "id" : "11",
+    "id" : "12",
     "name" : "SELLER_COUNTRY",
     "datatype" : "string"
   } ],

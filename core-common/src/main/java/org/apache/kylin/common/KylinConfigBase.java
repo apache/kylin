@@ -232,6 +232,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dictionary.append-entry-size", "10000000"));
     }
 
+    public int getAppendDictMaxVersions() {
+        return Integer.parseInt(getOptional("kylin.dictionary.append-max-versions", "3"));
+    }
+
+    public int getAppendDictVersionTTL() {
+        return Integer.parseInt(getOptional("kylin.dictionary.append-version-ttl", "259200000"));
+    }
+
     // for test
     public void setAppendDictEntrySize(int entrySize) {
         setProperty("kylin.dictionary.append-entry-size", String.valueOf(entrySize));

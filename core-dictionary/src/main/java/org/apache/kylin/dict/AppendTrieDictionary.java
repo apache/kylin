@@ -31,10 +31,13 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NavigableSet;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -49,6 +52,8 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,16 +62,16 @@ import org.slf4j.LoggerFactory;
  * int IDs, used for global dictionary.
  *
  * Trie data is split into sub trees, called {@link DictSlice}, and stored in a {@link CachedTreeMap} with a configurable cache size.
- * 
+ *
  * With Trie the memory footprint of the mapping is kinda minimized at the cost
  * CPU, if compared to HashMap of ID Arrays. Performance test shows Trie is
  * roughly 10 times slower, so there's a cache layer overlays on top of Trie and
  * gracefully fall back to Trie using a weak reference.
- * 
+ *
  * The implementation is NOT thread-safe for now.
  *
  * TODO making it thread-safe
- * 
+ *
  * @author sunyerui
  */
 @SuppressWarnings({ "rawtypes", "unchecked", "serial" })
@@ -87,7 +92,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     transient private int nValues;
     transient private BytesConverter<T> bytesConverter;
 
-    private TreeMap<DictSliceKey, DictSlice> dictSliceMap;
+    volatile private TreeMap<DictSliceKey, DictSlice> dictSliceMap;
 
     transient private boolean enableValueCache = true;
     transient private SoftReference<HashMap> valueToIdCache;
@@ -99,17 +104,23 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         }
     }
 
-    public void update(String baseDir, int baseId, int maxId, int maxValueLength, int nValues, BytesConverter bytesConverter, CachedTreeMap dictMap) throws IOException {
+    public void initParams(String baseDir, int baseId, int maxId, int maxValueLength, int nValues, BytesConverter bytesConverter) throws IOException {
         this.baseDir = baseDir;
         this.baseId = baseId;
         this.maxId = maxId;
         this.maxValueLength = maxValueLength;
         this.nValues = nValues;
         this.bytesConverter = bytesConverter;
+    }
 
+    public void initDictSliceMap(CachedTreeMap dictMap) throws IOException {
         int cacheSize = KylinConfig.getInstanceFromEnv().getAppendDictCacheSize();
-        dictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize).baseDir(baseDir).persistent(true).immutable(true).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
-        ((CachedTreeMap)dictSliceMap).loadEntry(dictMap);
+        int maxVersions = KylinConfig.getInstanceFromEnv().getAppendDictMaxVersions();
+        long versionTTL = KylinConfig.getInstanceFromEnv().getAppendDictVersionTTL();
+        CachedTreeMap newDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize).baseDir(baseDir)
+            .immutable(true).maxVersions(maxVersions).versionTTL(versionTTL).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
+        newDictSliceMap.loadEntry(dictMap);
+        this.dictSliceMap = newDictSliceMap;
     }
 
     public byte[] writeDictMap() throws IOException {
@@ -121,6 +132,13 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         out.close();
 
         return dictMapBytes;
+    }
+
+    // The dict id starts from 1 to 2147483647 and 2147483648 to -2, leave 0 and -1 used for uninitialized state
+    public static void checkValidId(int id) {
+        if (id == 0 || id == -1) {
+            throw new IllegalArgumentException("AppendTrieDictionary Id Overflow Unsigned Integer Size 4294967294");
+        }
     }
 
     public static class DictSliceKey implements WritableComparable {
@@ -181,7 +199,8 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
 
         transient private int nValues;
         transient private int sizeOfId;
-        transient private int childOffsetMask;
+        // mask MUST be long, since childOffset maybe 5 bytes at most
+        transient private long childOffsetMask;
         transient private int firstByteOffset;
 
         private void init(byte[] trieBytes) {
@@ -197,7 +216,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                 this.sizeChildOffset = headIn.read();
                 this.sizeOfId = headIn.read();
 
-                this.childOffsetMask = ~((BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE) << ((sizeChildOffset - 1) * 8));
+                this.childOffsetMask = ~(((long)(BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE)) << ((sizeChildOffset - 1) * 8));
                 this.firstByteOffset = sizeChildOffset + 1; // the offset from begin of node to its first value byte
             } catch (Exception e) {
                 if (e instanceof RuntimeException)
@@ -216,7 +235,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                 if (checkFlag(nodeOffset, BIT_IS_END_OF_VALUE)) {
                     break;
                 }
-                nodeOffset = headSize + (BytesUtil.readUnsigned(trieBytes, nodeOffset, sizeChildOffset) & childOffsetMask);
+                nodeOffset = headSize + (int)(BytesUtil.readLong(trieBytes, nodeOffset, sizeChildOffset) & childOffsetMask);
                 if (nodeOffset == headSize) {
                     break;
                 }
@@ -258,7 +277,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                 }
 
                 // find a child to continue
-                int c = headSize + (BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask);
+                int c = headSize + (int)(BytesUtil.readLong(trieBytes, n, sizeChildOffset) & childOffsetMask);
                 if (c == headSize) // has no children
                     return -1;
                 byte inpByte = inp[o];
@@ -297,7 +316,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             DictNode root = null;
             while (true) {
                 int p = n + firstByteOffset;
-                int childOffset = BytesUtil.readUnsigned(trieBytes, n, sizeChildOffset) & childOffsetMask;
+                int childOffset = (int)(BytesUtil.readLong(trieBytes, n, sizeChildOffset) & childOffsetMask);
                 int parLen = BytesUtil.readUnsigned(trieBytes, p - 1, 1);
                 boolean isEndOfValue = checkFlag(n, BIT_IS_END_OF_VALUE);
 
@@ -329,6 +348,53 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             return root;
         }
 
+        public boolean doCheck() {
+            int offset = headSize;
+            HashSet<Integer> parentSet = new HashSet<>();
+            boolean lastChild = false;
+
+            while (offset < trieBytes.length) {
+                if (lastChild) {
+                    boolean contained = parentSet.remove(offset - headSize);
+                    // Can't find parent, the data is corrupted
+                    if (!contained) {
+                        return false;
+                    }
+                    lastChild = false;
+                }
+                int p = offset + firstByteOffset;
+                int childOffset = (int)(BytesUtil.readLong(trieBytes, offset, sizeChildOffset) & childOffsetMask);
+                int parLen = BytesUtil.readUnsigned(trieBytes, p - 1, 1);
+                boolean isEndOfValue = checkFlag(offset, BIT_IS_END_OF_VALUE);
+
+                // Copy value overflow, the data is corrupted
+                if (trieBytes.length < p + parLen) {
+                   return false;
+                }
+
+                // Check id is fine
+                if (isEndOfValue) {
+                    BytesUtil.readUnsigned(trieBytes, p + parLen, sizeOfId);
+                }
+
+                // Record it if has children
+                if (childOffset != 0) {
+                    parentSet.add(childOffset);
+                }
+
+                // brothers done, move to next parent
+                if (checkFlag(offset, BIT_IS_LAST_CHILD)) {
+                    lastChild = true;
+                }
+
+                // move to next node
+                offset += firstByteOffset + parLen + (isEndOfValue ? sizeOfId : 0);
+            }
+
+            // ParentMap is empty, meaning all nodes has parent, the data is correct
+            return parentSet.isEmpty();
+        }
+
         public void write(DataOutput out) throws IOException {
             out.write(trieBytes);
         }
@@ -341,7 +407,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                 throw new IllegalArgumentException("Wrong file type (magic does not match)");
 
             DataInputStream headIn = new DataInputStream(//
-                    new ByteArrayInputStream(headPartial, HEAD_SIZE_I, headPartial.length - HEAD_SIZE_I));
+                new ByteArrayInputStream(headPartial, HEAD_SIZE_I, headPartial.length - HEAD_SIZE_I));
             int headSize = headIn.readShort();
             int bodyLen = headIn.readInt();
             headIn.close();
@@ -398,6 +464,9 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             this.id = o.id;
             this.isEndOfValue = o.isEndOfValue;
             this.children = o.children;
+            for (DictNode child : o.children) {
+                child.parent = this;
+            }
             this.nValuesBeneath = o.nValuesBeneath;
             this.parent = o.parent;
             this.childrenCount = o.childrenCount;
@@ -602,7 +671,8 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
 
             // nValueBytes
             if (n.part.length > 255)
-                throw new RuntimeException();
+                throw new RuntimeException("Value length is " + n.part.length
+                    + " and larger than 255: " + Bytes.toStringBinary(n.part));
             BytesUtil.writeUnsigned(n.part.length, trieBytes, o, 1);
             o++;
 
@@ -611,7 +681,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             o += n.part.length;
 
             if (n.isEndOfValue) {
-                assert n.id > 0;
+                checkValidId(n.id);
                 BytesUtil.writeUnsigned(n.id, trieBytes, o, sizeId);
                 o += sizeId;
             }
@@ -715,12 +785,13 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             s.mbpn_sizeId = 4;
             s.mbpn_sizeValueTotal = s.nValueBytesCompressed + s.nValues * s.mbpn_sizeId;
             s.mbpn_sizeNoValueBytes = 1;
-            s.mbpn_sizeChildOffset = 4;
+            s.mbpn_sizeChildOffset = 5;
             s.mbpn_footprint = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeChildOffset);
             while (true) { // minimize the offset size to match the footprint
                 int t = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeChildOffset - 1);
                 // *4 because 2 MSB of offset is used for isEndOfValue & isEndChild flag
-                if (BytesUtil.sizeForValue(t * 4) <= s.mbpn_sizeChildOffset - 1) {
+                // expand t to long before *4, avoiding exceed Integer.MAX_VALUE
+                if (BytesUtil.sizeForValue((long)t * 4) <= s.mbpn_sizeChildOffset - 1) {
                     s.mbpn_sizeChildOffset--;
                     s.mbpn_footprint = t;
                 } else
@@ -760,31 +831,97 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     }
 
     public static class Builder<T> {
-        private String baseDir;
+        private static ConcurrentHashMap<String, Pair<Integer, Builder>> builderInstanceAndCountMap = new ConcurrentHashMap();
+
+        public static Builder getInstance(String resourcePath) throws IOException {
+            return getInstance(resourcePath, null);
+        }
+
+        public synchronized static Builder getInstance(String resourcePath, AppendTrieDictionary dict) throws IOException {
+            Pair<Integer, Builder> entry = builderInstanceAndCountMap.get(resourcePath);
+            if (entry == null) {
+                entry = new Pair<>(0, createNewBuilder(resourcePath, dict));
+                builderInstanceAndCountMap.put(resourcePath, entry);
+            }
+            entry.setFirst(entry.getFirst() + 1);
+            return entry.getSecond();
+        }
+
+        // return true if entry still in map
+        private synchronized static boolean releaseInstance(String resourcePath) {
+            Pair<Integer, Builder> entry = builderInstanceAndCountMap.get(resourcePath);
+            if (entry != null) {
+                entry.setFirst(entry.getFirst() - 1);
+                if (entry.getFirst() <= 0) {
+                    builderInstanceAndCountMap.remove(resourcePath);
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public static Builder createNewBuilder(String resourcePath, AppendTrieDictionary existDict) throws IOException {
+            String dictDir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "resources/GlobalDict" + resourcePath + "/";
+
+            AppendTrieDictionary dictToUse = existDict;
+            if (dictToUse == null) {
+                // Try to load the existing dict from cache, making sure there's only the same one object in memory
+                NavigableSet<String> dicts = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getStore().listResources(resourcePath);
+                ArrayList<String> appendDicts = new ArrayList<>();
+                if (dicts != null && !dicts.isEmpty()) {
+                    for (String dict : dicts) {
+                        DictionaryInfo info = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv()).getStore().getResource(dict, DictionaryInfo.class, DictionaryInfoSerializer.INFO_SERIALIZER);
+                        if (info.getDictionaryClass().equals(AppendTrieDictionary.class.getName())) {
+                            appendDicts.add(dict);
+                        }
+                    }
+                }
+                if (appendDicts.isEmpty()) {
+                    dictToUse = null;
+                } else if (appendDicts.size() == 1) {
+                    dictToUse = (AppendTrieDictionary) DictionaryManager.getInstance(KylinConfig.getInstanceFromEnv()).getDictionary(appendDicts.get(0));
+                } else {
+                    throw new IllegalStateException(String.format("GlobalDict %s should have 0 or 1 append dict but %d", resourcePath, appendDicts.size()));
+                }
+            }
+
+            AppendTrieDictionary.Builder<String> builder;
+            if (dictToUse == null) {
+                logger.info("GlobalDict {} is empty, create new one", resourcePath);
+                builder = new Builder<>(resourcePath, null, dictDir, 0, 0, 0, new StringBytesConverter(), null);
+            } else {
+                logger.info("GlobalDict {} exist, append value", dictToUse);
+                builder = new Builder<>(resourcePath, dictToUse, dictToUse.baseDir, dictToUse.maxId, dictToUse.maxValueLength,
+                    dictToUse.nValues, dictToUse.bytesConverter, dictToUse.writeDictMap());
+            }
+
+            return builder;
+        }
+
+        private final String resourcePath;
+        private final String baseDir;
         private int maxId;
         private int maxValueLength;
         private int nValues;
-        private BytesConverter<T> bytesConverter;
+        private final BytesConverter<T> bytesConverter;
 
-        private AppendTrieDictionary dict;
+        private final AppendTrieDictionary dict;
 
-        private TreeMap<DictSliceKey, DictNode> mutableDictSliceMap;
-        private static int MAX_ENTRY_IN_SLICE = 10_000_000;
+        private final TreeMap<DictSliceKey, DictNode> mutableDictSliceMap;
+        private int MAX_ENTRY_IN_SLICE = 10_000_000;
         private static final double MAX_ENTRY_OVERHEAD_FACTOR = 1.0;
 
         private int processedCount = 0;
 
-        public static Builder create(String baseDir) throws IOException {
-            return new Builder<>(null, baseDir, 0, 0, 0, new StringBytesConverter(), null);
-        }
-
-        public static Builder create(AppendTrieDictionary dict) throws IOException {
-            return new Builder<>(dict, dict.baseDir, dict.maxId, dict.maxValueLength, dict.nValues, dict.bytesConverter, dict.writeDictMap());
-        }
-
         // Constructor for a new Dict
-        private Builder(AppendTrieDictionary dict, String baseDir, int maxId, int maxValueLength, int nValues, BytesConverter<T> bytesConverter, byte[] dictMapBytes) throws IOException {
-            this.dict = dict;
+        private Builder(String resourcePath, AppendTrieDictionary dict, String baseDir, int maxId, int maxValueLength, int nValues, BytesConverter<T> bytesConverter, byte[] dictMapBytes) throws IOException {
+            this.resourcePath = resourcePath;
+            if (dict == null) {
+                this.dict = new AppendTrieDictionary<T>();
+            } else {
+                this.dict = dict;
+            }
             this.baseDir = baseDir;
             this.maxId = maxId;
             this.maxValueLength = maxValueLength;
@@ -793,8 +930,11 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
 
             MAX_ENTRY_IN_SLICE = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
             int cacheSize = KylinConfig.getInstanceFromEnv().getAppendDictCacheSize();
+            int maxVersions = KylinConfig.getInstanceFromEnv().getAppendDictMaxVersions();
+            long versionTTL = KylinConfig.getInstanceFromEnv().getAppendDictVersionTTL();
             // create a new cached map with baseDir
-            mutableDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize).baseDir(baseDir).keyClazz(DictSliceKey.class).valueClazz(DictNode.class).persistent(true).immutable(false).build();
+            mutableDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize).baseDir(baseDir)
+                .maxVersions(maxVersions).versionTTL(versionTTL).keyClazz(DictSliceKey.class).valueClazz(DictNode.class).immutable(false).build();
             if (dictMapBytes != null) {
                 ((Writable) mutableDictSliceMap).readFields(new DataInputStream(new ByteArrayInputStream(dictMapBytes)));
             }
@@ -804,7 +944,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             addValue(bytesConverter.convertToBytes(value));
         }
 
-        public void addValue(byte[] value) {
+        private synchronized void addValue(byte[] value) {
             if (++processedCount % 1_000_000 == 0) {
                 logger.debug("add value count " + processedCount);
             }
@@ -859,15 +999,41 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
 
         private int createNextId() {
             int id = ++maxId;
-            if (maxId < 0) {
-                throw new IllegalArgumentException("AppendTrieDictionary Id overflow Integer.MAX_VALUE");
-            }
+            checkValidId(id);
             nValues++;
             return id;
         }
 
+        // Only used for test
+        public void setMaxId(int id) {
+            this.maxId = id;
+        }
+
+        // When add a new node, the value part maybe over 255 bytes, need split it into a sub tree
+        private DictNode addNodeMaybeOverflow(byte[] value, int start, int end) {
+            DictNode head = null;
+            DictNode current = null;
+            for (; start + 255 < end; start += 255) {
+                DictNode c = new DictNode(BytesUtil.subarray(value, start, start + 255), false);
+                if (head == null) {
+                    head = c;
+                    current = c;
+                } else {
+                    current.addChild(c);
+                    current = c;
+                }
+            }
+            DictNode last = new DictNode(BytesUtil.subarray(value, start, end), true);
+            last.id = createNextId();
+            if (head == null) {
+                head = last;
+            } else {
+                current.addChild(last);
+            }
+            return head;
+        }
+
         private void addValueR(DictNode node, byte[] value, int start) {
-            assert value.length - start <= 255 : "value bytes overflow than 255";
             // match the value part of current node
             int i = 0, j = start;
             int n = node.part.length, nn = value.length;
@@ -903,8 +1069,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             if (i < n) {
                 DictNode c1 = new DictNode(BytesUtil.subarray(node.part, i, n), node.isEndOfValue, node.children);
                 c1.id = node.id;
-                DictNode c2 = new DictNode(BytesUtil.subarray(value, j, nn), true);
-                c2.id = createNextId();
+                DictNode c2 = addNodeMaybeOverflow(value, j, nn);
                 node.reset(BytesUtil.subarray(node.part, 0, i), false);
                 if (comp < 0) {
                     node.addChild(c1);
@@ -940,18 +1105,17 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                 addValueR(node.children.get(mid), value, j);
             } else {
                 // otherwise, make the value a new child
-                DictNode c = new DictNode(BytesUtil.subarray(value, j, nn), true);
-                c.id = createNextId();
+                DictNode c = addNodeMaybeOverflow(value, j, nn);
                 node.addChild(comp <= 0 ? mid : mid + 1, c);
             }
         }
 
-        public AppendTrieDictionary<T> build(int baseId) throws IOException {
-            if (dict == null) {
-                dict = new AppendTrieDictionary<T>();
-            }
-            dict.update(baseDir, baseId, maxId, maxValueLength, nValues, bytesConverter, (CachedTreeMap)mutableDictSliceMap);
-            dict.flushIndex((CachedTreeMap) mutableDictSliceMap);
+        public synchronized AppendTrieDictionary<T> build(int baseId) throws IOException {
+            boolean keepAppend = releaseInstance(resourcePath);
+            CachedTreeMap dictSliceMap = (CachedTreeMap)mutableDictSliceMap;
+            dict.initParams(baseDir, baseId, maxId, maxValueLength, nValues, bytesConverter);
+            dict.flushIndex(dictSliceMap, keepAppend);
+            dict.initDictSliceMap(dictSliceMap);
 
             return dict;
         }
@@ -970,8 +1134,6 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         }
         DictSlice slice = dictSliceMap.get(sliceKey);
         int id = slice.getIdFromValueBytesImpl(value, offset, len, roundingFlag);
-        if (id < 0)
-            logger.error("Not a valid value: " + bytesConverter.convertFromBytes(value, offset, len));
         return id;
     }
 
@@ -1031,25 +1193,24 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         throw new UnsupportedOperationException("AppendTrieDictionary can't retrive value from id");
     }
 
-    public void flushIndex(CachedTreeMap dictSliceMap) throws IOException {
-        Path filePath = new Path(dictSliceMap.getCurrentDir() + "/.index");
-        Configuration conf = new Configuration();
-        try (FSDataOutputStream indexOut = (FileSystem.get(filePath.toUri(), conf)).create(filePath, true, 8 * 1024 * 1024, (short) 5, 8 * 1024 * 1024 * 8)) {
+    public void flushIndex(CachedTreeMap dictSliceMap, boolean keepAppend) throws IOException {
+        try (FSDataOutputStream indexOut = dictSliceMap.openIndexOutput()) {
             indexOut.writeInt(baseId);
             indexOut.writeInt(maxId);
             indexOut.writeInt(maxValueLength);
             indexOut.writeInt(nValues);
             indexOut.writeUTF(bytesConverter.getClass().getName());
             dictSliceMap.write(indexOut);
+            dictSliceMap.commit(keepAppend);
         }
-        dictSliceMap.commit(false);
     }
 
     @Override
     public AppendTrieDictionary copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
         Configuration conf = new Configuration();
         AppendTrieDictionary newDict = new AppendTrieDictionary();
-        newDict.update(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConverter, (CachedTreeMap)dictSliceMap);
+        newDict.initParams(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConverter);
+        newDict.initDictSliceMap((CachedTreeMap)dictSliceMap);
         logger.info("Copy AppendDict from {} to {}", this.baseDir, newDict.baseDir);
         Path srcPath = new Path(this.baseDir);
         Path dstPath = new Path(newDict.baseDir);
@@ -1071,9 +1232,8 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     @Override
     public void readFields(DataInput in) throws IOException {
         String baseDir = in.readUTF();
-        Path filePath = new Path(baseDir + "/.index");
         Configuration conf = new Configuration();
-        try (FSDataInputStream input = (FileSystem.get(filePath.toUri(), conf)).open(filePath, 8 * 1024 * 1024)) {
+        try (FSDataInputStream input = CachedTreeMap.openLatestIndexInput(conf, baseDir)) {
             int baseId = input.readInt();
             int maxId = input.readInt();
             int maxValueLength = input.readInt();
@@ -1087,10 +1247,13 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                     throw new IOException(e);
                 }
             }
+            initParams(baseDir, baseId, maxId, maxValueLength, nValues, converter);
+
+            // Create instance for deserialize data, and update to map in dict
             CachedTreeMap dictMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder()
-                    .baseDir(baseDir).persistent(true).immutable(true).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
+                .baseDir(baseDir).immutable(true).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
             dictMap.readFields(input);
-            update(baseDir, baseId, maxId, maxValueLength, nValues, converter, dictMap);
+            initDictSliceMap(dictMap);
         }
     }
 
@@ -1120,4 +1283,6 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     public boolean contains(Dictionary other) {
         return false;
     }
+
 }
+

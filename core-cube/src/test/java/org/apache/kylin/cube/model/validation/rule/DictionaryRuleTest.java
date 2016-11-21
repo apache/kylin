@@ -18,6 +18,10 @@
 
 package org.apache.kylin.cube.model.validation.rule;
 
+import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_DUPLICATE_DICTIONARY_COLUMN;
+import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_BUILDER_BOTH_EMPTY;
+import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_BUILDER_BOTH_SET;
+import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_TRANSITIVE_REUSE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -36,9 +40,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Created by sunyerui on 16/6/1.
- */
 public class DictionaryRuleTest extends LocalFileMetadataTestCase {
     private static KylinConfig config;
 
@@ -65,24 +66,31 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
             desc.init(config);
             ValidateContext vContext = new ValidateContext();
             rule.validate(desc, vContext);
-            vContext.print(System.out);
             assertTrue(vContext.getResults().length == 0);
         }
     }
 
     @Test
     public void testBadDesc() throws IOException {
-        testDictionaryDesc("Column EDW.TEST_SITES.SITE_NAME has inconsistent builders " + "FakeBuilderClass and org.apache.kylin.dict.GlobalDictionaryBuilder", DictionaryDesc.create("SITE_NAME", null, "FakeBuilderClass"));
+        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN, DictionaryDesc.create("USER_ID", null, "FakeBuilderClass"));
+        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN, DictionaryDesc.create("USER_ID", null, GlobalDictionaryBuilder.class.getName()));
     }
 
     @Test
     public void testBadDesc2() throws IOException {
-        testDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID cannot have builder and reuse column both", DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
+        testDictionaryDesc(ERROR_REUSE_BUILDER_BOTH_SET, DictionaryDesc.create("lstg_site_id", "SITE_NAME", "FakeBuilderClass"));
     }
 
     @Test
     public void testBadDesc3() throws IOException {
-        testDictionaryDesc("Column DEFAULT.TEST_KYLIN_FACT.LSTG_SITE_ID cannot have builder and reuse column both empty", DictionaryDesc.create("lstg_site_id", null, null));
+        testDictionaryDesc(ERROR_REUSE_BUILDER_BOTH_EMPTY, DictionaryDesc.create("lstg_site_id", null, null));
+    }
+
+    @Test
+    public void testBadDesc4() throws IOException {
+        testDictionaryDesc(ERROR_TRANSITIVE_REUSE,
+                DictionaryDesc.create("lstg_site_id", "USER_ID", null),
+                DictionaryDesc.create("price", "lstg_site_id", null));
     }
     
     @Test
@@ -102,13 +110,13 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
         desc.init(config);
         ValidateContext vContext = new ValidateContext();
         rule.validate(desc, vContext);
-        vContext.print(System.out);
 
         if (expectMessage == null) {
             assertTrue(vContext.getResults().length == 0);
         } else {
-            assertTrue(vContext.getResults().length >= 1);
-            assertEquals(expectMessage, vContext.getResults()[0].getMessage());
+            assertTrue(vContext.getResults().length == 1);
+            String actualMessage = vContext.getResults()[0].getMessage();
+            assertTrue(actualMessage.startsWith(expectMessage));
         }
     }
 }

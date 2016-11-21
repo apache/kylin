@@ -18,9 +18,12 @@
 
 package org.apache.kylin.cube.model.validation.rule;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
 import org.apache.kylin.cube.model.validation.IValidatorRule;
@@ -29,9 +32,19 @@ import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.metadata.model.TblColRef;
 
 /**
- * Created by sunyerui on 16/6/1.
+ * Validate Dictionary Settings:
+ *
+ * <ul>
+ *     <li> no duplicated dictionary for one column
+ *     <li> dictionary can't set both `reuse` and `builder`
+ *     <li> transitive `reuse` like "a <- b <- c" is not allowed, force "a <- b, a <- c"
+ * </ul>
  */
 public class DictionaryRule implements IValidatorRule<CubeDesc> {
+    static final String ERROR_DUPLICATE_DICTIONARY_COLUMN = "Duplicated dictionary specification for column: ";
+    static final String ERROR_REUSE_BUILDER_BOTH_SET = "REUSE and BUILDER both set on dictionary for column: ";
+    static final String ERROR_REUSE_BUILDER_BOTH_EMPTY = "REUSE and BUILDER both empty on dictionary for column: ";
+    static final String ERROR_TRANSITIVE_REUSE = "Transitive REUSE is not allowed for dictionary: ";
 
     @Override
     public void validate(CubeDesc cubeDesc, ValidateContext context) {
@@ -40,40 +53,43 @@ public class DictionaryRule implements IValidatorRule<CubeDesc> {
             return;
         }
 
-        HashMap<TblColRef, String> colToBuilderMap = new HashMap<>();
-        HashMap<TblColRef, TblColRef> colToReuseColMap = new HashMap<>();
+        Set<TblColRef> allDictCols = new HashSet<>();
+        Set<TblColRef> baseCols = new HashSet<>(); // col with builder
+        List<DictionaryDesc> reuseDictionaries = new ArrayList<>();
+
+        // first pass
         for (DictionaryDesc dictDesc : dictDescs) {
             TblColRef dictCol = dictDesc.getColumnRef();
-            if (dictCol == null) {
-                context.addResult(ResultLevel.ERROR, "Some column in dictionaries not found");
+            TblColRef reuseCol = dictDesc.getResuseColumnRef();
+            String builderClass = dictDesc.getBuilderClass();
+
+            if (!allDictCols.add(dictCol)) {
+                context.addResult(ResultLevel.ERROR, ERROR_DUPLICATE_DICTIONARY_COLUMN + dictCol);
                 return;
             }
-            String builder = dictDesc.getBuilderClass();
-            TblColRef reuseCol = dictDesc.getResuseColumnRef();
-            if (reuseCol == null) {
-                if (builder == null || builder.isEmpty()) {
-                    context.addResult(ResultLevel.ERROR, "Column " + dictCol + " cannot have builder and reuse column both empty");
-                    return;
-                }
-                
-                // Make sure the same column associate with same builder class
-                String oldBuilder = colToBuilderMap.put(dictCol, builder);
-                if (oldBuilder != null && !oldBuilder.equals(builder)) {
-                    context.addResult(ResultLevel.ERROR, "Column " + dictCol + " has inconsistent builders " + builder + " and " + oldBuilder);
-                    return;
-                }
+
+            if (reuseCol != null && StringUtils.isNotEmpty(builderClass)) {
+                context.addResult(ResultLevel.ERROR, ERROR_REUSE_BUILDER_BOTH_SET + dictCol);
+                return;
+            }
+
+            if (reuseCol == null && StringUtils.isEmpty(builderClass)) {
+                context.addResult(ResultLevel.ERROR, ERROR_REUSE_BUILDER_BOTH_EMPTY + dictCol);
+                return;
+            }
+
+            if (reuseCol != null) {
+                reuseDictionaries.add(dictDesc);
             } else {
-                if (builder != null && !builder.isEmpty()) {
-                    context.addResult(ResultLevel.ERROR, "Column " + dictCol + " cannot have builder and reuse column both");
-                    return;
-                }
-                
-                // Make sure one column only reuse another one column
-                TblColRef oldReuseCol = colToReuseColMap.put(dictCol, reuseCol);
-                if (oldReuseCol != null && !reuseCol.equals(oldReuseCol)) {
-                    context.addResult(ResultLevel.ERROR, "Column " + dictCol + " reuse inconsistent column " + reuseCol + " and " + oldReuseCol);
-                    return;
-                }
+                baseCols.add(dictCol);
+            }
+        }
+
+        // second pass: check no transitive reuse
+        for (DictionaryDesc dictDesc : reuseDictionaries) {
+            if (!baseCols.contains(dictDesc.getResuseColumnRef())) {
+                context.addResult(ResultLevel.ERROR, ERROR_TRANSITIVE_REUSE + dictDesc.getColumnRef());
+                return;
             }
         }
     }

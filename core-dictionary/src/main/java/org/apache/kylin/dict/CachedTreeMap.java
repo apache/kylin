@@ -31,9 +31,11 @@ import java.util.concurrent.ExecutionException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.slf4j.Logger;
@@ -56,25 +58,29 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
     private final Class<V> valueClazz;
     transient volatile Collection<V> values;
     private final LoadingCache<K, V> valueCache;
-    private final TreeSet<String> fileList;
     private final Configuration conf;
-    private final String baseDir;
-    private final String tmpDir;
+    private final Path baseDir;
+    private final Path versionDir;
+    private final Path workingDir;
     private final FileSystem fs;
-    private final boolean persistent;
     private final boolean immutable;
-    private long writeValueTime = 0;
-    private long readValueTime = 0;
+    private final int maxVersions;
+    private final long versionTTL;
+    private boolean keepAppend;
 
-    private static final int BUFFER_SIZE = 8 * 1024 * 1024;
+    public static final int BUFFER_SIZE = 8 * 1024 * 1024;
+
+    public static final String CACHED_PREFIX = "cached_";
+    public static final String VERSION_PREFIX = "version_";
 
     public static class CachedTreeMapBuilder<K, V> {
         private Class<K> keyClazz;
         private Class<V> valueClazz;
         private int maxCount = 8;
         private String baseDir;
-        private boolean persistent;
         private boolean immutable;
+        private int maxVersions;
+        private long versionTTL;
 
         public static CachedTreeMapBuilder newBuilder() {
             return new CachedTreeMapBuilder();
@@ -103,13 +109,18 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             return this;
         }
 
-        public CachedTreeMapBuilder<K, V> persistent(boolean persistent) {
-            this.persistent = persistent;
+        public CachedTreeMapBuilder<K, V> immutable(boolean immutable) {
+            this.immutable = immutable;
             return this;
         }
 
-        public CachedTreeMapBuilder<K, V> immutable(boolean immutable) {
-            this.immutable = immutable;
+        public CachedTreeMapBuilder<K, V> maxVersions(int maxVersions) {
+            this.maxVersions = maxVersions;
+            return this;
+        }
+
+        public CachedTreeMapBuilder<K, V> versionTTL(long versionTTL) {
+            this.versionTTL = versionTTL;
             return this;
         }
 
@@ -120,26 +131,38 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             if (keyClazz == null || valueClazz == null) {
                 throw new RuntimeException("CachedTreeMap need key and value clazz to serialize data");
             }
-            CachedTreeMap map = new CachedTreeMap(maxCount, keyClazz, valueClazz, baseDir, persistent, immutable);
+            CachedTreeMap map = new CachedTreeMap(maxCount, keyClazz, valueClazz, baseDir, immutable, maxVersions, versionTTL);
             return map;
         }
     }
 
-    private CachedTreeMap(int maxCount, Class<K> keyClazz, Class<V> valueClazz, String baseDir, boolean persistent, boolean immutable) throws IOException {
+    private CachedTreeMap(int maxCount, Class<K> keyClazz, Class<V> valueClazz, String basePath,
+                          boolean immutable, int maxVersions, long versionTTL) throws IOException {
         super();
         this.keyClazz = keyClazz;
         this.valueClazz = valueClazz;
-        this.fileList = new TreeSet<>();
-        this.conf = new Configuration();
-        if (baseDir.endsWith("/")) {
-            this.baseDir = baseDir.substring(0, baseDir.length()-1);
-        } else {
-            this.baseDir = baseDir;
-        }
-        this.tmpDir = this.baseDir + ".tmp";
-        this.fs = FileSystem.get(new Path(baseDir).toUri(), conf);
-        this.persistent = persistent;
         this.immutable = immutable;
+        this.keepAppend = true;
+        this.maxVersions = maxVersions;
+        this.versionTTL = versionTTL;
+        this.conf = new Configuration();
+        if (basePath.endsWith("/")) {
+            basePath = basePath.substring(0, basePath.length()-1);
+        }
+        this.baseDir = new Path(basePath);
+        this.fs = FileSystem.get(baseDir.toUri(), conf);
+        if (!fs.exists(baseDir)) {
+            fs.mkdirs(baseDir);
+        }
+        this.versionDir = getLatestVersion(conf, fs, baseDir);
+        this.workingDir = new Path(baseDir, "working");
+        if (!this.immutable) {
+            // For mutable map, copy all data into working dir and work on it, avoiding suddenly server crash made data corrupt
+            if (fs.exists(workingDir)) {
+                fs.delete(workingDir, true);
+            }
+            FileUtil.copy(fs, versionDir, fs, workingDir, false, true, conf);
+        }
         CacheBuilder builder = CacheBuilder.newBuilder().removalListener(new RemovalListener<K, V>() {
             @Override
             public void onRemoval(RemovalNotification<K, V> notification) {
@@ -152,24 +175,14 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
                     deleteValue(notification.getKey());
                     break;
                 default:
-                    throw new RuntimeException("unexpected evict reason " + notification.getCause());
                 }
             }
         });
-        // For immutable values, load all values as much as possible, and evict by soft reference to free memory when gc
         if (this.immutable) {
+            // For immutable values, load all values as much as possible, and evict by soft reference to free memory when gc
             builder.softValues();
         } else {
             builder.maximumSize(maxCount);
-            // For mutable map, copy all data into tmp and modify on tmp data, avoiding suddenly server crash made data corrupt
-            if (fs.exists(new Path(tmpDir))) {
-                fs.delete(new Path(tmpDir), true);
-            }
-            if (fs.exists(new Path(this.baseDir))) {
-                FileUtil.copy(fs, new Path(this.baseDir), fs, new Path(tmpDir), false, true, conf);
-            } else {
-                fs.mkdirs(new Path(this.baseDir));
-            }
         }
         this.valueCache = builder.build(new CacheLoader<K, V>() {
             @Override
@@ -182,38 +195,108 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
     }
 
     private String generateFileName(K key) {
-        String file = (immutable ? baseDir : tmpDir) + "/cached_" + key.toString();
+        String file = getCurrentDir() + "/" + CACHED_PREFIX + key.toString();
         return file;
     }
 
-    public String getCurrentDir() {
-        return immutable ? baseDir : tmpDir;
+    private String getCurrentDir() {
+        return immutable ? versionDir.toString() : workingDir.toString();
     }
 
-    public void commit(boolean stillMutable) throws IOException {
-        assert !immutable : "Only support commit method with immutable false";
-
-        Path basePath = new Path(baseDir);
-        Path backupPath = new Path(baseDir+".bak");
-        Path tmpPath = new Path(tmpDir);
-        try {
-            fs.rename(basePath, backupPath);
-        } catch (IOException e) {
-            logger.info("CachedTreeMap commit backup basedir failed, " + e, e);
-            throw e;
-        }
-
-        try {
-            if (stillMutable) {
-                FileUtil.copy(fs, tmpPath, fs, basePath, false, true, conf);
-            } else {
-                fs.rename(tmpPath, basePath);
+    private static String[] listAllVersions(FileSystem fs, Path baseDir) throws IOException {
+        FileStatus[] fileStatus = fs.listStatus(baseDir, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                if (path.getName().startsWith(VERSION_PREFIX)) {
+                    return true;
+                }
+                return false;
             }
-            fs.delete(backupPath, true);
-        } catch (IOException e) {
-            fs.rename(backupPath, basePath);
-            logger.info("CachedTreeMap commit move/copy tmpdir failed, " + e, e);
-            throw e;
+        });
+        TreeSet<String> versions = new TreeSet<>();
+        for (FileStatus status : fileStatus) {
+            versions.add(status.getPath().toString());
+        }
+        return versions.toArray(new String[versions.size()]);
+    }
+
+    // only for test
+    public String getLatestVersion() throws IOException {
+        return getLatestVersion(conf, fs, baseDir).toUri().getPath();
+    }
+
+    private static Path getLatestVersion(Configuration conf, FileSystem fs, Path baseDir) throws IOException {
+        String[] versions = listAllVersions(fs, baseDir);
+        if (versions.length > 0) {
+            return new Path(versions[versions.length - 1]);
+        } else {
+            // Old format, directly use base dir, convert to new format
+            Path newVersionDir = new Path(baseDir, VERSION_PREFIX + System.currentTimeMillis());
+            Path tmpNewVersionDir = new Path(baseDir, "tmp_" + VERSION_PREFIX + System.currentTimeMillis());
+            Path indexFile = new Path(baseDir, ".index");
+            FileStatus[] cachedFiles;
+            try {
+                cachedFiles = fs.listStatus(baseDir, new PathFilter() {
+                    @Override
+                    public boolean accept(Path path) {
+                        if (path.getName().startsWith(CACHED_PREFIX)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+                fs.mkdirs(tmpNewVersionDir);
+                if (fs.exists(indexFile) && cachedFiles.length > 0) {
+                    FileUtil.copy(fs, indexFile, fs, tmpNewVersionDir, false, true, conf);
+                    for (FileStatus file : cachedFiles) {
+                        FileUtil.copy(fs, file.getPath(), fs, tmpNewVersionDir, false, true, conf);
+                    }
+                }
+                fs.rename(tmpNewVersionDir, newVersionDir);
+                if (fs.exists(indexFile) && cachedFiles.length > 0) {
+                    fs.delete(indexFile, true);
+                    for (FileStatus file : cachedFiles) {
+                        fs.delete(file.getPath(), true);
+                    }
+                }
+            } finally {
+                if (fs.exists(tmpNewVersionDir)) {
+                    fs.delete(tmpNewVersionDir, true);
+                }
+            }
+            return newVersionDir;
+        }
+    }
+
+    public void commit(boolean keepAppend) throws IOException {
+        assert this.keepAppend & !immutable : "Only support commit method with immutable false and keepAppend true";
+
+        Path newVersionDir = new Path(baseDir, VERSION_PREFIX + System.currentTimeMillis());
+        if (keepAppend) {
+            // Copy to tmp dir, and rename to new version, make sure it's complete when be visible
+            Path tmpNewVersionDir = new Path(baseDir, "tmp_" + VERSION_PREFIX + System.currentTimeMillis());
+            try {
+                FileUtil.copy(fs, workingDir, fs, tmpNewVersionDir, false, true, conf);
+                fs.rename(tmpNewVersionDir, newVersionDir);
+            } finally {
+                if (fs.exists(tmpNewVersionDir)) {
+                    fs.delete(tmpNewVersionDir, true);
+                }
+            }
+        } else {
+            fs.rename(workingDir, newVersionDir);
+        }
+        this.keepAppend = keepAppend;
+
+        // Check versions count, delete expired versions
+        String[] versions = listAllVersions(fs, baseDir);
+        long timestamp = System.currentTimeMillis();
+        for (int i = 0; i < versions.length - maxVersions; i++) {
+            String versionString = versions[i].substring(versions[i].lastIndexOf(VERSION_PREFIX) + VERSION_PREFIX.length());
+            long version = Long.parseLong(versionString);
+            if (version + versionTTL < timestamp) {
+                fs.delete(new Path(versions[i]), true);
+            }
         }
     }
 
@@ -227,25 +310,17 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         if (immutable) {
             return;
         }
-        long t0 = System.currentTimeMillis();
         String fileName = generateFileName(key);
         Path filePath = new Path(fileName);
         try (FSDataOutputStream out = fs.create(filePath, true, BUFFER_SIZE, (short) 5, BUFFER_SIZE * 8)) {
             value.write(out);
-            if (!persistent) {
-                fs.deleteOnExit(filePath);
-            }
         } catch (Exception e) {
             logger.error(String.format("write value into %s exception: %s", fileName, e), e);
             throw new RuntimeException(e.getCause());
-        } finally {
-            fileList.add(fileName);
-            writeValueTime += System.currentTimeMillis() - t0;
         }
     }
 
     private V readValue(K key) throws Exception {
-        long t0 = System.currentTimeMillis();
         String fileName = generateFileName(key);
         Path filePath = new Path(fileName);
         try (FSDataInputStream input = fs.open(filePath, BUFFER_SIZE)) {
@@ -255,13 +330,11 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         } catch (Exception e) {
             logger.error(String.format("read value from %s exception: %s", fileName, e), e);
             return null;
-        } finally {
-            readValueTime += System.currentTimeMillis() - t0;
         }
     }
 
     private void deleteValue(K key) {
-        if (persistent && immutable) {
+        if (immutable) {
             return;
         }
         String fileName = generateFileName(key);
@@ -272,14 +345,12 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             }
         } catch (Exception e) {
             logger.error(String.format("delete value file %s exception: %s", fileName, e), e);
-        } finally {
-            fileList.remove(fileName);
         }
     }
 
     @Override
     public V put(K key, V value) {
-        assert !immutable : "Only support put method with immutable false";
+        assert keepAppend & !immutable : "Only support put method with immutable false and keepAppend true";
         super.put(key, null);
         valueCache.put(key, value);
         return null;
@@ -301,7 +372,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
     @Override
     public V remove(Object key) {
-        assert !immutable : "Only support remove method with immutable false";
+        assert keepAppend & !immutable : "Only support remove method with immutable false keepAppend true";
         super.remove(key);
         valueCache.invalidate(key);
         return null;
@@ -357,15 +428,32 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
         @Override
         public void remove() {
-            assert !immutable : "Only support remove method with immutable false";
+            assert keepAppend & !immutable : "Only support remove method with immutable false and keepAppend true";
             keyIterator.remove();
             valueCache.invalidate(currentKey);
         }
     }
 
+    public FSDataOutputStream openIndexOutput() throws IOException {
+        assert keepAppend & !immutable : "Only support write method with immutable false and keepAppend true";
+        Path indexPath = new Path(getCurrentDir(), ".index");
+        return fs.create(indexPath, true, 8 * 1024 * 1024, (short) 5, 8 * 1024 * 1024 * 8);
+    }
+
+    public FSDataInputStream openIndexInput() throws IOException {
+        Path indexPath = new Path(getCurrentDir(), ".index");
+        return fs.open(indexPath, 8 * 1024 * 1024);
+    }
+
+    public static FSDataInputStream openLatestIndexInput(Configuration conf, String baseDir) throws IOException {
+        Path basePath = new Path(baseDir);
+        FileSystem fs = FileSystem.get(basePath.toUri(), conf);
+        Path indexPath = new Path(getLatestVersion(conf, fs, basePath), ".index");
+        return fs.open(indexPath, 8 * 1024 * 1024);
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
-        assert persistent : "Only support serialize with persistent true";
         out.writeInt(size());
         for (K key : keySet()) {
             key.write(out);
@@ -378,7 +466,6 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        assert persistent : "Only support deserialize with persistent true";
         int size = in.readInt();
         try {
             for (int i = 0; i < size; i++) {
@@ -388,29 +475,6 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             }
         } catch (Exception e) {
             throw new IOException(e);
-        }
-    }
-
-    // clean up all tmp files
-    @Override
-    public void finalize() throws Throwable {
-        if (persistent) {
-            return;
-        }
-        try {
-            this.clear();
-            for (String file : fileList) {
-                try {
-                    Path filePath = new Path(file);
-                    fs.delete(filePath, true);
-                } catch (Throwable t) {
-                    //do nothing?
-                }
-            }
-        } catch (Throwable t) {
-            //do nothing
-        } finally {
-            super.finalize();
         }
     }
 }

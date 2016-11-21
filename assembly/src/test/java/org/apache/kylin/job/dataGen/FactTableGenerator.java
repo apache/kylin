@@ -403,13 +403,13 @@ public class FactTableGenerator {
     }
 
     private String createRandomCell(ColumnDesc cDesc) {
-        String type = cDesc.getTypeName();
-        String s = type.toLowerCase();
-        if (s.equals("string") || s.equals("char") || s.equals("varchar")) {
+        DataType type =cDesc.getType();
+        String s = type.getName();
+        if (s.equals("char") || s.equals("varchar")) {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < 2; i++) {
-                sb.append((char) ('a' + r.nextInt(10)));// there are 10*10
-                // possible strings
+            int len = Math.min(type.getPrecision(), 3);
+            for (int i = 0; i < len; i++) {
+                sb.append((char) ('a' + r.nextInt(10)));  // cardinality at most 10x10x10
             }
             return sb.toString();
         } else if (s.equals("bigint") || s.equals("int") || s.equals("tinyint") || s.equals("smallint")) {
