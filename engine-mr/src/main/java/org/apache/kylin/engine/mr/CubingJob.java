@@ -104,7 +104,7 @@ public class CubingJob extends DefaultChainedExecutable {
         super();
     }
 
-    void setDeployEnvName(String name) {
+    protected void setDeployEnvName(String name) {
         setParam(DEPLOY_ENV_NAME, name);
     }
 
@@ -112,7 +112,7 @@ public class CubingJob extends DefaultChainedExecutable {
         return getParam(DEPLOY_ENV_NAME);
     }
 
-    void setProjectName(String name) {
+    protected void setProjectName(String name) {
         setParam(PROJECT_INSTANCE_NAME, name);
     }
 

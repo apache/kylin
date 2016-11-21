@@ -67,11 +67,11 @@ public class DataModelDesc extends RootPersistentEntity {
     @JsonProperty("fact_table")
     private String rootFactTable;
 
-    @JsonProperty("join_tables")
+    @JsonProperty("lookups")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private JoinTableDesc[] joinTables;
 
-    @JsonProperty("lookups")
+    @JsonProperty("join_tables")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private JoinTableDesc[] deprecatedLookups; // replaced by "join_tables" since KYLIN-1875
 
