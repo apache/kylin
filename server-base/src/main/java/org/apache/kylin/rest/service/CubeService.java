@@ -96,7 +96,7 @@ public class CubeService extends BasicService {
 
     @Autowired
     private JobService jobService;
-    
+
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<CubeInstance> listAllCubes(final String cubeName, final String projectName, final String modelName) {
         List<CubeInstance> cubeInstances = null;
@@ -470,7 +470,7 @@ public class CubeService extends BasicService {
         job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
         job.setSubmitter(submitter);
 
-        String outPath = HiveColumnCardinalityJob.OUTPUT_PATH + "/" + tableName;
+        String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
         String param = "-table " + tableName + " -output " + outPath;
 
         MapReduceExecutable step1 = new MapReduceExecutable();
