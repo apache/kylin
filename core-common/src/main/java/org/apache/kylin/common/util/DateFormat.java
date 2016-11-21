@@ -103,6 +103,7 @@ public class DateFormat {
         // try to be smart and guess the date format
         if (isAllDigits(str)) {
             if (str.length() == 8)
+                //TODO: might be prolematic if an actual ts happends to be 8 digits, e.g. 1970-01-01 10:00:01.123
                 return stringToDate(str, COMPACT_DATE_PATTERN).getTime();
             else
                 return Long.parseLong(str);
@@ -119,8 +120,13 @@ public class DateFormat {
 
     private static boolean isAllDigits(String str) {
         for (int i = 0, n = str.length(); i < n; i++) {
-            if (Character.isDigit(str.charAt(i)) == false)
-                return false;
+            if (!Character.isDigit(str.charAt(i))) {
+                if (i == 0 && str.charAt(0) == '-') {
+                    continue;
+                } else {
+                    return false;
+                }
+            }
         }
         return true;
     }

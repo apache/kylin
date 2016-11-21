@@ -203,7 +203,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             if (realization.getType() == RealizationType.INVERTED_INDEX && realization.getModel().isFactTable(sourceTable.getIdentity())) {
                 DataModelDesc dataModelDesc = realization.getModel();
                 for (String metricColumn : dataModelDesc.getMetrics()) {
-                    ColumnDesc columnDesc = metadataManager.getColumnDesc(dataModelDesc.getRootFactTable() + "." + metricColumn);
+                    ColumnDesc columnDesc = metadataManager.getColumnDesc(dataModelDesc.getRootFactTable().getTableIdentity() + "." + metricColumn);
                     if (columnDesc.getType().isIntegerFamily() && !columnDesc.getType().isBigInt())
                         updateColumns.add(columnDesc);
                 }

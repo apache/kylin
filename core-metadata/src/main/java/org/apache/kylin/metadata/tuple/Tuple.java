@@ -181,29 +181,30 @@ public class Tuple implements ITuple {
         if ((strValue.equals("") || strValue.equals("\\N")) && !dataTypeName.equals("string") && !dataTypeName.startsWith("varchar"))
             return null;
 
-        // TODO use data type enum instead of string comparison
-        if ("date".equals(dataTypeName)) {
+        switch (dataTypeName) {
+        case "date":
             // convert epoch time
             return Integer.valueOf(dateToEpicDays(strValue));// Optiq expects Integer instead of Long. by honma
-        } else if ("timestamp".equals(dataTypeName) || "datetime".equals(dataTypeName)) {
+        case "datetime":
+        case "timestamp":
             return Long.valueOf(DateFormat.stringToMillis(strValue));
-        } else if ("tinyint".equals(dataTypeName)) {
+        case "tinyint":
             return Byte.valueOf(strValue);
-        } else if ("smallint".equals(dataTypeName)) {
+        case "smallint":
             return Short.valueOf(strValue);
-        } else if ("integer".equals(dataTypeName)) {
+        case "integer":
             return Integer.valueOf(strValue);
-        } else if ("bigint".equals(dataTypeName)) {
+        case "bigint":
             return Long.valueOf(strValue);
-        } else if ("double".equals(dataTypeName)) {
+        case "double":
             return Double.valueOf(strValue);
-        } else if ("decimal".equals(dataTypeName)) {
+        case "decimal":
             return new BigDecimal(strValue);
-        } else if ("float".equals(dataTypeName)) {
+        case "float":
             return Float.valueOf(strValue);
-        } else if ("boolean".equals(dataTypeName)) {
-            return Boolean.valueOf(strValue);
-        } else {
+        case "boolean":
+            return Boolean.valueOf(strValue) | "1".equals(strValue); // in some extended encodings boolean might be encoded as a number
+        default:
             return strValue;
         }
     }
