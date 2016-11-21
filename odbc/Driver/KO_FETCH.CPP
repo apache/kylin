@@ -699,7 +699,13 @@ RETCODE SQL_API SQLMoreResults ( HSTMT pStmt )
     __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLMoreResults called" ) );
 
     pODBCStmt odbcStmt = ( pODBCStmt )pStmt;
-    if ( odbcStmt -> IRD . RowDesc != NULL )
+    
+    // check if stmt been released already
+    if ( ! odbcStmt -> Prepared )
+    {
+	return SQL_NO_DATA;
+    }
+    else if ( odbcStmt -> IRD . RowDesc != NULL )
     {
         // ------- THIS CASE SHOULD NOT OCCUR ----------
         // check if position is currently unknown
