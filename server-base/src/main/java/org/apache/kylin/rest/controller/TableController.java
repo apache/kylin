@@ -267,9 +267,8 @@ public class TableController extends BasicController {
 
             // Clone TableDesc
             TableDescResponse rtableDesc = new TableDescResponse(table);
-            rtableDesc.setDescExd(tableExtDesc);
-
             Map<String, Long> cardinality = new HashMap<String, Long>();
+            Map<String, String> dataSourceProp = new HashMap<>();
             String scard = tableExtDesc.getCardinality();
             if (!StringUtils.isEmpty(scard)) {
                 String[] cards = StringUtils.split(scard, ",");
@@ -285,6 +284,13 @@ public class TableController extends BasicController {
                 }
                 rtableDesc.setCardinality(cardinality);
             }
+            dataSourceProp.putAll(tableExtDesc.getDataSourceProp());
+            dataSourceProp.put("location", tableExtDesc.getStorageLocation());
+            dataSourceProp.put("owner", tableExtDesc.getOwner());
+            dataSourceProp.put("last_access_time", tableExtDesc.getLastAccessTime());
+            dataSourceProp.put("partition_column", tableExtDesc.getPartitionColumn());
+            dataSourceProp.put("total_file_size", tableExtDesc.getTotalFileSize());
+            rtableDesc.setDescExd(dataSourceProp);
             descs.add(rtableDesc);
         }
 
