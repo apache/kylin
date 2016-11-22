@@ -122,6 +122,14 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
             CubeSegmentScanner scanner;
+            if (cubeSeg.getInputRecords() == 0) {
+                if (!skipZeroInputSegment(cubeSeg)) {
+                    logger.warn("cube segment {} input record is 0, " + "it may caused by kylin failed to get the job counter " + "as the hadoop history server wasn't running", cubeSeg);
+                } else {
+                    logger.warn("cube segment {} input record is 0, skip it ", cubeSeg);
+                    continue;
+                }
+            }
             try {
                 scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context, getGTStorage());
             } catch (IllegalArgumentException ex) {
@@ -139,6 +147,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
 
         return new SequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo, context);
+    }
+
+    protected boolean skipZeroInputSegment(CubeSegment cubeSegment) {
+        return false;
     }
 
     protected abstract String getGTStorage();
