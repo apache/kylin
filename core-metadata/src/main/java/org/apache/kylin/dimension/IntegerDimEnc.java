@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
  * -2^(8*N-1) is not supported because the slot is reserved for null values.
  * -2^(8*N-1) will be encoded with warn, and its output will be null
  */
-@Deprecated//due to a fatal bug (KYLIN-2191) and the limitation of not able to represent -2^(8N-1)
 public class IntegerDimEnc extends DimensionEncoding {
     private static final long serialVersionUID = 1L;
 
@@ -122,7 +121,7 @@ public class IntegerDimEnc extends DimensionEncoding {
 
         //only take useful bytes
         integer = integer & MASK[fixedLen];
-        boolean positive = (integer & ((0x80) << ((fixedLen - 1) << 3))) == 0;
+        boolean positive = (integer & ((0x80L) << ((fixedLen - 1) << 3))) == 0;
         if (!positive) {
             integer |= (~MASK[fixedLen]);
         }

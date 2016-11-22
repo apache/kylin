@@ -117,10 +117,6 @@ public abstract class DimensionEncodingFactory {
                 map.put(Pair.newPair(IntegerDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
             }
             {
-                IntegerDimEncV2.Factory value = new IntegerDimEncV2.Factory();
-                map.put(Pair.newPair(IntegerDimEncV2.ENCODING_NAME, value.getCurrentVersion()), value);
-            }
-            {
                 FixedLenHexDimEnc.Factory value = new FixedLenHexDimEnc.Factory();
                 map.put(Pair.newPair(FixedLenHexDimEnc.ENCODING_NAME, value.getCurrentVersion()), value);
             }
