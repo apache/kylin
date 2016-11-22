@@ -248,8 +248,8 @@ public class TableExtDesc extends RootPersistentEntity {
         @JsonProperty("min_length_value")
         private String minLengthValue;
 
-        @JsonProperty("has_null")
-        private int hasNull; // number of NULLs
+        @JsonProperty("null_count")
+        private int nullCount;
         
         @JsonProperty("cardinality")
         private long cardinality;
@@ -307,6 +307,14 @@ public class TableExtDesc extends RootPersistentEntity {
             this.minValue = min;
             this.maxLengthValue = maxLenValue;
             this.minLengthValue = minLenValue;
+        }
+
+        public int getNullCount() {
+            return nullCount;
+        }
+
+        public void setNullCount(int nullCount) {
+            this.nullCount = nullCount;
         }
     }
 }
