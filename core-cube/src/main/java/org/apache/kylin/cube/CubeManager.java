@@ -617,24 +617,6 @@ public class CubeManager implements IRealizationProvider {
         }
     }
 
-    private long calculateStartOffsetForAppendSegment(CubeInstance cube) {
-        List<CubeSegment> existing = cube.getSegments();
-        if (existing.isEmpty()) {
-            return 0;
-        } else {
-            return existing.get(existing.size() - 1).getSourceOffsetEnd();
-        }
-    }
-
-    private long calculateStartDateForAppendSegment(CubeInstance cube) {
-        List<CubeSegment> existing = cube.getSegments();
-        if (existing.isEmpty()) {
-            return cube.getDescriptor().getPartitionDateStart();
-        } else {
-            return existing.get(existing.size() - 1).getDateRangeEnd();
-        }
-    }
-
     private void checkBuildingSegment(CubeInstance cube) {
         int maxBuldingSeg = cube.getConfig().getMaxBuildingSegments();
         if (cube.getBuildingSegments().size() >= maxBuldingSeg) {
@@ -923,6 +905,7 @@ public class CubeManager implements IRealizationProvider {
 
             CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(cube.getDescName());
             checkNotNull(cubeDesc, "cube descriptor '%s' (for cube '%s') not found", cube.getDescName(), cubeName);
+            checkState(cubeDesc.getName().equals(cubeName), "cube name '%s' must be same as descriptor name '%s', but it is not", cubeName, cubeDesc.getName());
 
             if (!cubeDesc.getError().isEmpty()) {
                 cube.setStatus(RealizationStatusEnum.DESCBROKEN);

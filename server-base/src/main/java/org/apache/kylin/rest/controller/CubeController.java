@@ -416,7 +416,7 @@ public class CubeController extends BasicController {
             cubeRequest.setMessage("CubeDesc is null.");
             return cubeRequest;
         }
-        String name = CubeService.getCubeNameFromDesc(desc.getName());
+        String name = desc.getName();
         if (StringUtils.isEmpty(name)) {
             logger.info("Cube name should not be empty.");
             throw new BadRequestException("Cube name should not be empty.");
