@@ -125,16 +125,13 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
             CubeSegmentScanner scanner;
-            try {
-                scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context, getGTStorage());
-            } catch (IllegalArgumentException ex) {
-                // ref KYLIN-1967, real empty segment can trigger dictionary exception -- IllegalArgumentException: Value not exists!
-                if (cubeSeg.getInputRecords() == 0) {
-                    logger.warn("cube segment {} input record is 0, skip it still", cubeSeg);
-                    continue;
-                }
-                throw ex;
+
+            if (cubeDesc.getConfig().isSkippingEmptySegments() && cubeSeg.getInputRecords() == 0) {
+                logger.info("Skip cube segment {} because its input record is 0", cubeSeg);
+                continue;
             }
+
+            scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context, getGTStorage());
             scanners.add(scanner);
         }
 

@@ -18,13 +18,6 @@
 
 package org.apache.kylin.common;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.util.CliCommandExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -34,6 +27,14 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * An abstract class to encapsulate access to a set of 'properties'.
@@ -210,7 +211,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String[] getRealizationProviders() {
         return getOptionalStringArray("kylin.realization.providers", //
-                new String[] {"org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager"});
+                new String[] { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager" });
     }
 
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
@@ -488,6 +489,11 @@ abstract public class KylinConfigBase implements Serializable {
 
     public float getHBaseHFileSizeGB() {
         return Float.parseFloat(getOptional("kylin.hbase.hfile.size.gb", "2.0"));
+    }
+
+    //check KYLIN-1684, in most cases keep the default value
+    public boolean isSkippingEmptySegments() {
+        return Boolean.valueOf(getOptional("kylin.query.skip-empty-segments", "true"));
     }
 
     public int getStoragePushDownLimitMax() {
