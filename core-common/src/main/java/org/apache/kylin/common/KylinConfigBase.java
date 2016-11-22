@@ -785,14 +785,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.enable.scheduler", "0"));
     }
 
-    public String getZookeeperAddress() {
-        return this.getOptional("kylin.zookeeper.address");
-    }
-
-    public String getRestAddress() {
-        return this.getOptional("kylin.rest.address", "localhost:7070");
-    }
-
     private Map<Integer, String> convertKeyToInteger(Map<String, String> map) {
         Map<Integer, String> result = Maps.newLinkedHashMap();
         for (Entry<String, String> entry : map.entrySet()) {
