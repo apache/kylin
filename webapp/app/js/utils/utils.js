@@ -67,7 +67,7 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
 
     SCToFloat:function(data){
       var resultValue = "";
-      if (data.indexOf('E') != -1){
+      if (data&&data.indexOf('E') != -1){
         var regExp = new RegExp('^((\\d+.?\\d+)[Ee]{1}(\\d+))$', 'ig');
         var result = regExp.exec(data);
         var power = "";
