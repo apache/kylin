@@ -49,7 +49,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           var name = value;
           var typeVersion=+encodings[i];
           if(value=="int"){
-            name = "int deprecated";
+            name = "int (deprecated)";
           }
           if(/\d+/.test(""+typeVersion)&&typeVersion>1){
               for(var s=1;s<=typeVersion;s++){
