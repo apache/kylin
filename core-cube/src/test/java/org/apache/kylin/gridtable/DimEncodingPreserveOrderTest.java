@@ -27,7 +27,7 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.FixedLenHexDimEnc;
-import org.apache.kylin.dimension.IntegerDimEncV2;
+import org.apache.kylin.dimension.IntegerDimEnc;
 import org.apache.kylin.dimension.OneMoreByteVLongDimEnc;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -99,7 +99,7 @@ public class DimEncodingPreserveOrderTest {
     @Test
     public void testVLongDimEncPreserveOrder() {
         for (int i = 1; i <= successValue.size(); i++) {
-            IntegerDimEncV2 enc = new IntegerDimEncV2(i);
+            IntegerDimEnc enc = new IntegerDimEnc(i);
             List<ByteArray> encodedValues = Lists.newArrayList();
             for (long value : successValue.get(i - 1)) {
                 encodedValues.add(encode(enc, value));

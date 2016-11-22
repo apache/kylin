@@ -76,24 +76,24 @@ public class IntegerDimEncTest {
     @Test
     public void testConstructor() {
         try {
-            new IntegerDimEncV2(0);
+            new IntegerDimEnc(0);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             // expect
         }
         try {
-            new IntegerDimEncV2(9);
+            new IntegerDimEnc(9);
             Assert.fail();
         } catch (IllegalArgumentException e) {
             // expect
         }
-        new IntegerDimEncV2(8);
+        new IntegerDimEnc(8);
     }
 
     @Test
     public void testNull() {
         for (int i = 1; i < 9; i++) {
-            IntegerDimEncV2 enc = new IntegerDimEncV2(i);
+            IntegerDimEnc enc = new IntegerDimEnc(i);
 
             byte[] buf = new byte[enc.getLengthOfEncoding()];
             enc.encode(null, 0, buf, 0);
@@ -113,7 +113,7 @@ public class IntegerDimEncTest {
     @Test
     public void testEncodeDecode() {
         for (int i = 1; i <= successValue.size(); i++) {
-            IntegerDimEncV2 enc = new IntegerDimEncV2(i);
+            IntegerDimEnc enc = new IntegerDimEnc(i);
             for (long value : successValue.get(i - 1)) {
                 testEncodeDecode(enc, value);
             }
@@ -129,7 +129,7 @@ public class IntegerDimEncTest {
         }
     }
 
-    private void testEncodeDecode(IntegerDimEncV2 enc, long value) {
+    private void testEncodeDecode(IntegerDimEnc enc, long value) {
         String valueStr = "" + value;
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         byte[] bytes = Bytes.toBytes(valueStr);
@@ -141,7 +141,7 @@ public class IntegerDimEncTest {
     @Test
     public void testSerDes() {
         for (int i = 1; i <= successValue.size(); i++) {
-            IntegerDimEncV2 enc = new IntegerDimEncV2(i);
+            IntegerDimEnc enc = new IntegerDimEnc(i);
 
             testSerDes(enc, 127);
             for (long value : successValue.get(i - 1)) {
@@ -158,7 +158,7 @@ public class IntegerDimEncTest {
         }
     }
 
-    private void testSerDes(IntegerDimEncV2 enc, long value) {
+    private void testSerDes(IntegerDimEnc enc, long value) {
         DataTypeSerializer<Object> ser = enc.asDataTypeSerializer();
         byte[] buf = new byte[enc.getLengthOfEncoding()];
         String valueStr = "" + value;
