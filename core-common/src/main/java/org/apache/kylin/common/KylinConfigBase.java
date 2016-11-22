@@ -477,6 +477,11 @@ abstract public class KylinConfigBase implements Serializable {
         return Float.parseFloat(getOptional("kylin.hbase.hfile.size.gb", "2.0"));
     }
 
+    //check KYLIN-1684, in most cases keep the default value
+    public boolean isSkippingEmptySegments() {
+        return Boolean.valueOf(getOptional("kylin.query.skip-empty-segments", "true"));
+    }
+
     public int getStoragePushDownLimitMax() {
         return Integer.parseInt(getOptional("kylin.query.pushdown.limit.max", "10000"));
     }

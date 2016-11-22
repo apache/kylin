@@ -122,24 +122,12 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
             CubeSegmentScanner scanner;
-            if (cubeSeg.getInputRecords() == 0) {
-                if (!skipZeroInputSegment(cubeSeg)) {
-                    logger.warn("cube segment {} input record is 0, " + "it may caused by kylin failed to get the job counter " + "as the hadoop history server wasn't running", cubeSeg);
-                } else {
-                    logger.warn("cube segment {} input record is 0, skip it ", cubeSeg);
-                    continue;
-                }
+            if (cubeDesc.getConfig().isSkippingEmptySegments() && cubeSeg.getInputRecords() == 0) {
+                logger.info("Skip cube segment {} because its input record is 0", cubeSeg);
+                continue;
             }
-            try {
-                scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context, getGTStorage());
-            } catch (IllegalArgumentException ex) {
-                // ref KYLIN-1967, real empty segment can trigger dictionary exception -- IllegalArgumentException: Value not exists!
-                if (cubeSeg.getInputRecords() == 0) {
-                    logger.warn("cube segment {} input record is 0, skip it still", cubeSeg);
-                    continue;
-                }
-                throw ex;
-            }
+
+            scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context, getGTStorage());
             scanners.add(scanner);
         }
 
@@ -147,10 +135,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             return ITupleIterator.EMPTY_TUPLE_ITERATOR;
 
         return new SequentialCubeTupleIterator(scanners, cuboid, dimensionsD, metrics, returnTupleInfo, context);
-    }
-
-    protected boolean skipZeroInputSegment(CubeSegment cubeSegment) {
-        return false;
     }
 
     protected abstract String getGTStorage();
