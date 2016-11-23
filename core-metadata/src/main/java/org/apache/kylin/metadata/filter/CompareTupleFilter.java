@@ -59,6 +59,8 @@ public class CompareTupleFilter extends TupleFilter {
     private CompareTupleFilter(CompareTupleFilter another) {
         super(new ArrayList<TupleFilter>(another.children), another.operator);
         this.column = another.column;
+        this.firstCondValue = another.getFirstValue();
+        this.function = another.getFunction();
         this.conditionValues = new HashSet<Object>();
         this.conditionValues.addAll(another.conditionValues);
         this.dynamicVariables = new HashMap<String, Object>();
