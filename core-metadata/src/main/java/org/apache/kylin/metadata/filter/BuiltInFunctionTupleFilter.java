@@ -47,6 +47,7 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     protected Method method;
     protected List<Serializable> methodParams;
     protected boolean isValidFunc = false;
+    private boolean isReversed = false;
 
     public BuiltInFunctionTupleFilter(String name) {
         this(name, null);
@@ -96,6 +97,16 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
 
     public boolean isValid() {
         return isValidFunc && method != null && methodParams.size() == children.size();
+    }
+
+    @Override
+    public TupleFilter reverse() {
+        isReversed = !isReversed;
+        return this;
+    }
+
+    public boolean isReversed() {
+        return isReversed;
     }
 
     @Override
