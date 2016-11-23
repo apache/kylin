@@ -20,6 +20,7 @@
   dev:
   - index
   - dev_env
+  - coding_naming_convention
   - howto_test
   - howto_contribute
   - howto_docs
