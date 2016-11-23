@@ -719,7 +719,14 @@ abstract public class KylinConfigBase implements Serializable {
 
     //UHC: ultra high cardinality columns, contain the ShardByColumns and the GlobalDictionaryColumns
     public int getUHCReducerCount() {
-        return Integer.parseInt(getOptional("kylin.engine.mr.uhc-reducer-count", "3"));
+        return Integer.parseInt(getOptional("kylin.engine.mr.uhc-reducer-count", "1"));
+    }
+
+    public boolean isReducerLocalBuildDict() {
+        if (getUHCReducerCount() != 1) {
+            return false;
+        }
+        return Boolean.parseBoolean(getOptional("kylin.engine.mr.reducer-local-build-dict", "true"));
     }
 
     public String getYarnStatusCheckUrl() {

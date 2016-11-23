@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,14 +38,19 @@ import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.dict.DictionaryReducerLocalGenerator;
+import org.apache.kylin.dict.IDictionaryReducerLocalBuilder;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsWriter;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,10 +80,19 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
 
     protected static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsReducer.class);
 
+    //local build dict
+    private boolean isReducerLocalBuildDict;
+    private IDictionaryReducerLocalBuilder builder;
+    private FastDateFormat dateFormat;
+    private long timeMaxValue = Long.MIN_VALUE;
+    private long timeMinValue = Long.MAX_VALUE;
+    public static final String DICT_FILE_POSTFIX = ".RLD";
+    public static final String PARTITION_COL_INFO_FILE_POSTFIX = ".PCI";
+    private boolean isPartitionCol = false;
+
     @Override
     protected void setup(Context context) throws IOException {
         super.bindCurrentConfiguration(context.getConfiguration());
-
         Configuration conf = context.getConfiguration();
         KylinConfig config = AbstractHadoopJob.loadKylinPropsAndMetadata();
         String cubeName = conf.get(BatchConstants.CFG_CUBE_NAME);
@@ -102,14 +118,36 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         } else if (collectStatistics && (taskId == numberOfTasks - 2)) {
             // partition col
             isStatistics = false;
+            isPartitionCol = true;
             col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
             colValues = Lists.newLinkedList();
+            DataType partitionColType = col.getType();
+            if (partitionColType.isDate()) {
+                dateFormat = DateFormat.getDateFormat(DateFormat.DEFAULT_DATE_PATTERN);
+            } else if (partitionColType.isDatetime() || partitionColType.isTimestamp()) {
+                dateFormat = DateFormat.getDateFormat(DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+            } else if (partitionColType.isStringFamily()) {
+                String partitionDateFormat = cubeDesc.getModel().getPartitionDesc().getPartitionDateFormat();
+                if (StringUtils.isEmpty(partitionDateFormat)) {
+                    partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
+                }
+                dateFormat = DateFormat.getDateFormat(partitionDateFormat);
+            } else {
+                throw new IllegalStateException("Type " + partitionColType + " is not valid partition column type");
+            }
         } else {
             // col
             isStatistics = false;
             col = columnList.get(ReducerIdToColumnIndex.get(taskId));
             colValues = Lists.newLinkedList();
         }
+
+        //local build dict
+        isReducerLocalBuildDict = config.isReducerLocalBuildDict();
+        if (col != null && isReducerLocalBuildDict) {
+            builder = DictionaryReducerLocalGenerator.getBuilder(col.getType());
+        }
+
     }
 
     private void initReducerIdToColumnIndex(KylinConfig config) throws IOException {
@@ -150,11 +188,26 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
                 }
             }
         } else {
-            colValues.add(new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1)));
-            if (colValues.size() == 1000000) { //spill every 1 million
-                logger.info("spill values to disk...");
-                outputDistinctValues(col, colValues, context);
-                colValues.clear();
+            if (isReducerLocalBuildDict) {
+                String value = new String(key.getBytes(), 1, key.getLength() - 1);
+                //partition col
+                try {
+                    if (isPartitionCol) {
+                        long time = dateFormat.parse(value).getTime();
+                        timeMinValue = Math.min(timeMinValue, time);
+                        timeMaxValue = Math.max(timeMaxValue, time);
+                    }
+                    builder.addValue(value);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                colValues.add(new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1)));
+                if (colValues.size() == 1000000) { //spill every 1 million
+                    logger.info("spill values to disk...");
+                    outputDistinctValues(col, colValues, context);
+                    colValues.clear();
+                }
             }
         }
 
@@ -191,12 +244,64 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         }
     }
 
+    private void outputDict(TblColRef col, Dictionary<String> dict, Context context) throws IOException {
+        final String fileName = col.getName() + DICT_FILE_POSTFIX;
+        FSDataOutputStream out = getOutputStream(context, fileName);
+        try {
+            String dictClassName = dict.getClass().getName();
+            out.writeUTF(dictClassName);
+            dict.write(out);
+            logger.info("reducer id is:+" + taskId + " colName:" + col.getName() + "  writing dict at file : " + fileName + "  dict class:" + dictClassName);
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
+    }
+
+    private void outputPartitionInfo(Context context) throws IOException {
+        final String fileName = col.getName() + PARTITION_COL_INFO_FILE_POSTFIX;
+        FSDataOutputStream out = getOutputStream(context, fileName);
+        try {
+            out.writeLong(timeMinValue);
+            out.writeLong(timeMaxValue);
+            logger.info("write partition info for col : " + col.getName() + "  minValue:" + timeMinValue + " maxValue:" + timeMaxValue);
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
+    }
+
+    private FSDataOutputStream getOutputStream(Context context, String outputFileName) throws IOException {
+        final Configuration conf = context.getConfiguration();
+        final FileSystem fs = FileSystem.get(conf);
+        final String outputPath = conf.get(BatchConstants.CFG_OUTPUT_PATH);
+        final Path colDir = new Path(outputPath, col.getName());
+        final Path outputFile = new Path(colDir, outputFileName);
+        FSDataOutputStream out = null;
+        if (!fs.exists(colDir)) {
+            fs.mkdirs(colDir);
+        }
+        fs.deleteOnExit(outputFile);
+        out = fs.create(outputFile);
+        return out;
+    }
+
     @Override
     protected void doCleanup(Context context) throws IOException, InterruptedException {
         if (isStatistics == false) {
-            if (colValues.size() > 0) {
-                outputDistinctValues(col, colValues, context);
-                colValues.clear();
+            if (isReducerLocalBuildDict) {
+                try {
+                    if (isPartitionCol) {
+                        outputPartitionInfo(context);
+                    }
+                    Dictionary<String> dict = builder.build(0);
+                    outputDict(col, dict, context);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                if (colValues.size() > 0) {
+                    outputDistinctValues(col, colValues, context);
+                    colValues.clear();
+                }
             }
         } else {
             //output the hll info;

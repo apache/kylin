@@ -437,7 +437,11 @@ public class CubeStorageQuery implements IStorageQuery {
         // build row key range for each cube segment
         StringBuilder sb = new StringBuilder("hbasekeyrange trace: ");
         for (CubeSegment cubeSeg : segs) {
-
+            CubeDesc cubeDesc = cubeSeg.getCubeDesc();
+            if (cubeDesc.getConfig().isSkippingEmptySegments() && cubeSeg.getInputRecords() == 0) {
+                logger.info("Skip cube segment {} because its input record is 0", cubeSeg);
+                continue;
+            }
             // consider derived (lookup snapshot), filter on dimension may
             // differ per segment
             List<Collection<ColumnValueRange>> orAndDimRanges = translateToOrAndDimRanges(flatFilter, cubeSeg);

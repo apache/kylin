@@ -213,6 +213,7 @@ public class CubeManager implements IRealizationProvider {
         return result;
     }
 
+
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, ReadableTable inpTable) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
@@ -220,6 +221,7 @@ public class CubeManager implements IRealizationProvider {
 
         String builderClass = cubeDesc.getDictionaryBuilderClass(col);
         DictionaryInfo dictInfo = getDictionaryManager().buildDictionary(cubeDesc.getModel(), col, inpTable, builderClass);
+
 
         saveDictionaryInfo(cubeSeg, col, dictInfo);
         return dictInfo;
@@ -266,7 +268,6 @@ public class CubeManager implements IRealizationProvider {
         } catch (IOException e) {
             throw new IllegalStateException("Failed to get dictionary for cube segment" + cubeSeg + ", col" + col, e);
         }
-
         return (Dictionary<String>) info.getDictionaryObject();
     }
 

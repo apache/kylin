@@ -22,11 +22,13 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.dict.DictionaryProvider;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -44,21 +46,30 @@ public class DictionaryGeneratorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGeneratorCLI.class);
 
-    public static void processSegment(KylinConfig config, String cubeName, String segmentID, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
+    public static void processSegment(KylinConfig config, String cubeName, String segmentID, DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeSegment segment = cube.getSegmentById(segmentID);
 
-        processSegment(config, segment, factTableValueProvider);
+        processSegment(config, segment, factTableValueProvider, dictProvider);
     }
 
-    private static void processSegment(KylinConfig config, CubeSegment cubeSeg, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
+    private static void processSegment(KylinConfig config, CubeSegment cubeSeg, DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
         // dictionary
         for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionaryBuilt()) {
             logger.info("Building dictionary for " + col);
             ReadableTable inpTable = decideInputTable(cubeSeg.getModel(), col, factTableValueProvider);
-            cubeMgr.buildDictionary(cubeSeg, col, inpTable);
+            if (config.isReducerLocalBuildDict() && dictProvider != null) {
+                Dictionary<String> dict = dictProvider.getDictionary(col);
+                if (dict != null) {
+                    cubeMgr.saveDictionary(cubeSeg, col, inpTable, dict);
+                } else {
+                    cubeMgr.buildDictionary(cubeSeg, col, inpTable);
+                }
+            } else {
+                cubeMgr.buildDictionary(cubeSeg, col, inpTable);
+            }
         }
 
         // snapshot
@@ -68,19 +79,19 @@ public class DictionaryGeneratorCLI {
             if (cubeSeg.getModel().isLookupTable(table))
                 toSnapshot.add(table.getTableIdentity());
         }
-        
+
         for (String tableIdentity : toSnapshot) {
             logger.info("Building snapshot of " + tableIdentity);
             cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity);
         }
     }
-    
+
     private static ReadableTable decideInputTable(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) {
         KylinConfig config = model.getConfig();
         DictionaryManager dictMgr = DictionaryManager.getInstance(config);
         TblColRef srcCol = dictMgr.decideSourceData(model, col);
         String srcTable = srcCol.getTable();
-        
+
         ReadableTable inpTable;
         if (model.isFactTable(srcTable)) {
             inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);

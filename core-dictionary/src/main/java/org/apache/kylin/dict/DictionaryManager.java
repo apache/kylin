@@ -87,6 +87,7 @@ public class DictionaryManager {
     private KylinConfig config;
     private LoadingCache<String, DictionaryInfo> dictCache; // resource
 
+
     // path ==>
     // DictionaryInfo
 
@@ -275,9 +276,11 @@ public class DictionaryManager {
         return buildDictionary(model, col, inpTable, null);
     }
 
+
     public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable, String builderClass) throws IOException {
         if (inpTable.exists() == false)
             return null;
+
 
         logger.info("building dictionary for " + col);
 
@@ -290,6 +293,12 @@ public class DictionaryManager {
 
         logger.info("Building dictionary object " + JsonUtil.writeValueAsString(dictInfo));
 
+        Dictionary<String> dictionary;
+        dictionary = buildDictFromReadableTable(inpTable, dictInfo, builderClass, col);
+        return trySaveNewDict(dictionary, dictInfo);
+    }
+
+    private Dictionary<String> buildDictFromReadableTable(ReadableTable inpTable, DictionaryInfo dictInfo, String builderClass, TblColRef col) throws IOException {
         Dictionary<String> dictionary;
         IDictionaryValueEnumerator columnValueEnumerator = null;
         try {
@@ -304,7 +313,7 @@ public class DictionaryManager {
             if (columnValueEnumerator != null)
                 columnValueEnumerator.close();
         }
-        return trySaveNewDict(dictionary, dictInfo);
+        return dictionary;
     }
 
     public DictionaryInfo saveDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable, Dictionary<String> dictionary) throws IOException {
@@ -336,19 +345,19 @@ public class DictionaryManager {
         // FK on fact table and join type is inner, use PK from lookup instead
         if (model.isFactTable(col.getTable()) == false)
             return col;
-        
+
         // find a lookup table that the col joins as FK
         for (TableRef lookup : model.getLookupTables()) {
             JoinDesc lookupJoin = model.getJoinByPKSide(lookup);
             int find = ArrayUtils.indexOf(lookupJoin.getForeignKeyColumns(), col);
             if (find < 0)
                 continue;
-        
+
             // make sure the joins are all inner up to the root
             if (isAllInnerJoinsToRoot(model, lookupJoin))
                 return lookupJoin.getPrimaryKeyColumns()[find];
         }
-        
+
         return col;
     }
 
