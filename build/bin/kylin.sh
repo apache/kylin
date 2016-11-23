@@ -151,6 +151,7 @@ then
 
 elif [ "$1" = "version" ]
 then
+    retrieveDependency
     exec hbase -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties org.apache.kylin.common.KylinVersion
     exit 0
 
