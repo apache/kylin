@@ -77,7 +77,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         sqlDigest.includeSubqueryJoinParticipants();
 
         //cope with queries with no aggregations
-        RawQueryLastHacker.hackNoAggregations(sqlDigest, cubeDesc);
+        RawQueryLastHacker.hackNoAggregations(sqlDigest, cubeDesc, returnTupleInfo);
 
         // Customized measure taking effect: e.g. allow custom measures to help raw queries
         notifyBeforeStorageQuery(sqlDigest);

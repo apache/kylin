@@ -24,6 +24,7 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
+import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ public class RawQueryLastHacker {
 
     private static final Logger logger = LoggerFactory.getLogger(RawQueryLastHacker.class);
 
-    public static void hackNoAggregations(SQLDigest sqlDigest, CubeDesc cubeDesc) {
+    public static void hackNoAggregations(SQLDigest sqlDigest, CubeDesc cubeDesc, TupleInfo tupleInfo) {
         if (!sqlDigest.isRawQuery) {
             return;
         }
@@ -45,7 +46,7 @@ public class RawQueryLastHacker {
         boolean isSelectAll = sqlDigest.allColumns.isEmpty() || sqlDigest.allColumns.equals(sqlDigest.filterColumns);
         for (TblColRef col : cubeDesc.listAllColumns()) {
             if (cubeDesc.listDimensionColumnsIncludingDerived().contains(col) || isSelectAll) {
-                if (col.getTable().equals(sqlDigest.factTable))
+                if (tupleInfo.hasColumn(col))
                     sqlDigest.allColumns.add(col);
             }
         }
