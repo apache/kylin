@@ -185,6 +185,8 @@ public class BackwardCompatibilityConfig {
         // exclude webapp/app/components
         if (f.getName().equals("components") && f.getParentFile().getName().equals("app"))
             return false;
+        else if (f.getName().equals("node_modules") && f.getParentFile().getName().equals("webapp"))
+            return false;
         else if (f.getName().equals("target"))
             return false;
         else

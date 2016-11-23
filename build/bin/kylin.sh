@@ -86,14 +86,7 @@ then
     #additionally add tomcat libs to HBASE_CLASSPATH_PREFIX
     export HBASE_CLASSPATH_PREFIX=${tomcat_root}/bin/bootstrap.jar:${tomcat_root}/bin/tomcat-juli.jar:${tomcat_root}/lib/*:${HBASE_CLASSPATH_PREFIX}
 
-    if [ -z "$KYLIN_REST_ADDRESS" ]
-    then
-        kylin_rest_address=`hostname -f`":"`grep "<Connector port=" ${tomcat_root}/conf/server.xml |grep protocol=\"HTTP/1.1\" | cut -d '=' -f 2 | cut -d \" -f 2`
-    else
-        kylin_rest_address=$KYLIN_REST_ADDRESS
-    fi
-    verbose "kylin.rest.address is set to ${kylin_rest_address}"
-
+    kylin_rest_address=`hostname -f`":"`grep "<Connector port=" ${tomcat_root}/conf/server.xml |grep protocol=\"HTTP/1.1\" | cut -d '=' -f 2 | cut -d \" -f 2`
     kylin_rest_address_arr=(${kylin_rest_address//;/ })
     nc -z -w 5 ${kylin_rest_address_arr[0]} ${kylin_rest_address_arr[1]} 1>/dev/null 2>&1; nc_result=$?
     if [ $nc_result -eq 0 ]; then
@@ -119,7 +112,6 @@ then
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dkylin.hbase.dependency=${hbase_dependency} \
     -Dkylin.kafka.dependency=${kafka_dependency} \
-    -Dkylin.rest.address=${kylin_rest_address} \
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     
