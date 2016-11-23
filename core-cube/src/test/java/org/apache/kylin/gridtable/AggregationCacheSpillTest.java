@@ -48,7 +48,6 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
     @BeforeClass
     public static void beforeClass() {
         staticCreateTestMetadata();
-        System.setProperty("log4j.configuration", "kylin-log4j.properties");
 
         INFO = UnitTestSupport.hllInfo();
         final List<GTRecord> data = UnitTestSupport.mockupHllData(INFO, DATA_CARDINALITY);

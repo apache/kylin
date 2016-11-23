@@ -151,7 +151,7 @@ then
 
 elif [ "$1" = "version" ]
 then
-    exec hbase -Dlog4j.configuration=kylin-log4j.properties org.apache.kylin.common.KylinVersion
+    exec hbase -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties org.apache.kylin.common.KylinVersion
     exit 0
 
 elif [ "$1" = "diag" ]
@@ -170,7 +170,7 @@ then
         then source ${dir}/setenv-tool.sh
     fi
 
-    exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=kylin-log4j.properties "$@"
+    exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties "$@"
 
 else
     quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop'"

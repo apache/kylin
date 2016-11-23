@@ -1097,7 +1097,7 @@
                                 </property>
                                 <property>
                                     <name>log4j.configuration</name>
-                                    <value>kylin-log4j.properties</value>
+                                    <value>file:${project.basedir}/build/conf/kylin-tools-log4j.properties</value>
                                 </property>
                             </systemProperties>
                             <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar ${argLine}</argLine>
