@@ -18,29 +18,22 @@
 
 package org.apache.kylin.common;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.Map;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
 public class KylinConfigTest extends LocalFileMetadataTestCase {
 
-    @BeforeClass
-    static public void initBccTestInput() throws FileNotFoundException {
-        FileInputStream is = new FileInputStream(new File(LOCALMETA_TEST_DATA, "kylin-backward-compatibility.properties"));
-        KylinConfigBase.BCC = new BackwardCompatibilityConfig(is);
-    }
-    
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
