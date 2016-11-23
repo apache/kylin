@@ -82,6 +82,7 @@ eGoodBad _SQLCheckDataType ( Word pDataType )
         case SQL_TYPE_TIMESTAMP :
         case SQL_BIT :
         case SQL_DEFAULT :
+        case SQL_BIGINT :
         case SQL_C_SBIGINT :
         case SQL_C_UBIGINT :
         case SQL_C_TINYINT :

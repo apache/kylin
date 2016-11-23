@@ -696,12 +696,13 @@ RETCODE SQL_API SQLPutData ( SQLHSTMT pStmt,
 
 RETCODE SQL_API SQLMoreResults ( HSTMT pStmt )
 {
-    __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLMoreResults called" ) );
-
     pODBCStmt odbcStmt = ( pODBCStmt )pStmt;
-    
+
+    __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLMoreResults called, stmt handle %d with start-row %d and end-row %d, next handle is %d", 
+        (long) odbcStmt, odbcStmt->CurRowsetStartRowPos, odbcStmt->CurRowsetEndRowPos, (long) odbcStmt -> Next) );
+
     // check if stmt been released already
-    if ( ! odbcStmt -> Prepared )
+    if (( ! odbcStmt -> Prepared) || ( ! odbcStmt -> Next ))
     {
 	return SQL_NO_DATA;
     }
