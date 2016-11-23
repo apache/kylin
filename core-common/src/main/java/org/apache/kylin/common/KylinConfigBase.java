@@ -66,7 +66,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     // ============================================================================
 
-    private volatile Properties properties = new Properties();
+    volatile Properties properties = new Properties();
 
     public KylinConfigBase() {
         this(new Properties());
@@ -76,6 +76,10 @@ abstract public class KylinConfigBase implements Serializable {
         this.properties = BCC.check(props);
     }
 
+    protected KylinConfigBase(Properties props, boolean force) {
+        this.properties = force ? props : BCC.check(props);
+    }
+    
     final protected String getOptional(String prop) {
         return getOptional(prop, null);
     }
@@ -182,7 +186,7 @@ abstract public class KylinConfigBase implements Serializable {
      */
     @Deprecated
     public String getHiveUrl() {
-        return getOptional("kylin.source.hive.url", "");
+        return getOptional("kylin.source.hive.connection-url", "");
     }
 
     /**
@@ -190,7 +194,7 @@ abstract public class KylinConfigBase implements Serializable {
      */
     @Deprecated
     public String getHiveUser() {
-        return getOptional("kylin.source.hive.user", "");
+        return getOptional("kylin.source.hive.connection-user", "");
     }
 
     /**
@@ -198,7 +202,7 @@ abstract public class KylinConfigBase implements Serializable {
      */
     @Deprecated
     public String getHivePassword() {
-        return getOptional("kylin.source.hive.password", "");
+        return getOptional("kylin.source.hive.connection-password", "");
     }
 
     public String getHdfsWorkingDirectory() {
@@ -553,7 +557,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public long getQueryMemBudget() {
-        return Long.parseLong(this.getOptional("kylin.query.memory-budget", String.valueOf(3L * 1024 * 1024 * 1024)));
+        return Long.parseLong(this.getOptional("kylin.query.memory-budget-bytes", String.valueOf(3L * 1024 * 1024 * 1024)));
     }
 
     public double getQueryCoprocessorMemGB() {

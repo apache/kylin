@@ -65,7 +65,7 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   }
 
   this.getHiveLimit = function () {
-    this.hiveLimit = this.getProperty("kylin.web.hive.limit");
+    this.hiveLimit = this.getProperty("kylin.web.hive-limit");
     if (!this.hiveLimit) {
       return 20;
     }
@@ -91,9 +91,9 @@ KylinApp.service('kylinConfig', function (AdminService, $log) {
   this.initWebConfigInfo = function () {
 
     try {
-      Config.reference_links.hadoop.link = this.getProperty("kylin.web.hadoop").trim();
-      Config.reference_links.diagnostic.link = this.getProperty("kylin.web.diagnostic").trim();
-      Config.contact_mail = this.getProperty("kylin.web.contact_mail").trim();
+      Config.reference_links.hadoop.link = this.getProperty("kylin.web.link-hadoop").trim();
+      Config.reference_links.diagnostic.link = this.getProperty("kylin.web.link-diagnostic").trim();
+      Config.contact_mail = this.getProperty("kylin.web.contact-mail").trim();
       var doc_length = this.getProperty("kylin.web.help.length").trim();
       for (var i = 0; i < doc_length; i++) {
         var _doc = {};

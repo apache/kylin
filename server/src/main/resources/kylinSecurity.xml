@@ -63,9 +63,9 @@
 
 	<beans profile="ldap,saml">
 		<bean id="ldapSource" class="org.springframework.security.ldap.DefaultSpringSecurityContextSource">
-			<constructor-arg value="${ldap.server}" />
-			<property name="userDn" value="${ldap.username}" />
-			<property name="password" value="${ldap.password}" />
+			<constructor-arg value="${kylin.security.ldap.connection-server}" />
+			<property name="userDn" value="${kylin.security.ldap.connection-username}" />
+			<property name="password" value="${kylin.security.ldap.connection-password}" />
 		</bean>
 		
 		<bean id="kylinUserAuthProvider" class="org.apache.kylin.rest.security.KylinAuthenticationProvider">
@@ -76,8 +76,8 @@
 							<constructor-arg ref="ldapSource" />
 							<property name="userSearch">
 								<bean id="userSearch" class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
-									<constructor-arg index="0" value="${ldap.user.searchBase}" />
-									<constructor-arg index="1" value="${ldap.user.searchPattern}" />
+									<constructor-arg index="0" value="${kylin.security.ldap.user-search-base}" />
+									<constructor-arg index="1" value="${kylin.security.ldap.user-search-pattern}" />
 									<constructor-arg index="2" ref="ldapSource" />
 								</bean>
 							</property>
@@ -86,9 +86,9 @@
 					<constructor-arg>
 						<bean class="org.apache.kylin.rest.security.AuthoritiesPopulator">
 							<constructor-arg index="0" ref="ldapSource" />
-							<constructor-arg index="1" value="${ldap.user.groupSearchBase}" />
-							<constructor-arg index="2" value="${acl.adminRole}" />
-							<constructor-arg index="3" value="${acl.defaultRole}" />
+							<constructor-arg index="1" value="${kylin.security.ldap.user-group-search-base}" />
+							<constructor-arg index="2" value="${kylin.security.acl.admin-role}" />
+							<constructor-arg index="3" value="${kylin.security.acl.default-role}" />
 						</bean>
 					</constructor-arg>
 				</bean>
@@ -103,8 +103,8 @@
 							<constructor-arg ref="ldapSource" />
 							<property name="userSearch">
 								<bean id="userSearch" class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
-									<constructor-arg index="0" value="${ldap.service.searchBase}" />
-									<constructor-arg index="1" value="${ldap.service.searchPattern}" />
+									<constructor-arg index="0" value="${kylin.security.ldap.service-search-base}" />
+									<constructor-arg index="1" value="${kylin.security.ldap.service-search-pattern}" />
 									<constructor-arg index="2" ref="ldapSource" />
 								</bean>
 							</property>
@@ -113,9 +113,9 @@
 					<constructor-arg>
 						<bean class="org.apache.kylin.rest.security.AuthoritiesPopulator">
 							<constructor-arg index="0" ref="ldapSource" />
-							<constructor-arg index="1" value="${ldap.service.groupSearchBase}" />
-							<constructor-arg index="2" value="${acl.adminRole}" />
-							<constructor-arg index="3" value="${acl.defaultRole}" />
+							<constructor-arg index="1" value="${kylin.security.ldap.service-group-search-base}" />
+							<constructor-arg index="2" value="${kylin.security.acl.admin-role}" />
+							<constructor-arg index="3" value="${kylin.security.acl.default-role}" />
 						</bean>
 					</constructor-arg>
 				</bean>
@@ -288,7 +288,7 @@
 							<property name="idpDiscoveryEnabled" value="false"/>
 						</bean>
 					</property>
-					<property name="entityBaseURL" value = "${saml.metadata.entityBaseURL}"/>
+					<property name="entityBaseURL" value = "${kylin.security.saml.metadata-entity-base-url}"/>
 				</bean>
 			</constructor-arg>
 		</bean>
@@ -331,14 +331,14 @@
 
 		<bean id="ldapUserAuthoritiesPopulator" class="org.apache.kylin.rest.security.AuthoritiesPopulator">
 			<constructor-arg index="0" ref="ldapSource" />
-			<constructor-arg index="1" value="${ldap.user.groupSearchBase}" />
-			<constructor-arg index="2" value="${acl.adminRole}" />
-			<constructor-arg index="3" value="${acl.defaultRole}" />
+			<constructor-arg index="1" value="${kylin.security.ldap.user-group-search-base}" />
+			<constructor-arg index="2" value="${kylin.security.acl.admin-role}" />
+			<constructor-arg index="3" value="${kylin.security.acl.default-role}" />
 		</bean>
 
 		<bean id="userSearch" class="org.springframework.security.ldap.search.FilterBasedLdapUserSearch">
-			<constructor-arg index="0" value="${ldap.user.searchBase}" />
-			<constructor-arg index="1" value="${ldap.user.searchPattern}" />
+			<constructor-arg index="0" value="${kylin.security.ldap.user-search-base}" />
+			<constructor-arg index="1" value="${kylin.security.ldap.user-search-pattern}" />
 			<constructor-arg index="2" ref="ldapSource" />
 		</bean>
 
@@ -370,11 +370,11 @@
 		
 		<!-- Provider of a SAML Context behind a LoadBanlancer or reverse proxy -->
 		<bean id="contextProvider" class="org.springframework.security.saml.context.SAMLContextProviderLB">
-			<property name="scheme" value="${saml.context.scheme}"/>
-			<property name="serverName" value="${saml.context.serverName}"/>
-			<property name="serverPort" value="${saml.context.serverPort}"/>
+			<property name="scheme" value="${kylin.security.saml.context-scheme}"/>
+			<property name="serverName" value="${kylin.security.saml.context-server-name}"/>
+			<property name="serverPort" value="${kylin.security.saml.context-server-port}"/>
 			<property name="includeServerPortInRequestURL" value="false"/>
-			<property name="contextPath" value="${saml.context.contextPath}"/>
+			<property name="contextPath" value="${kylin.security.saml.context-path}"/>
 		</bean>
 		
 

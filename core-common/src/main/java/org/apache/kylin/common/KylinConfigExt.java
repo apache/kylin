@@ -39,7 +39,7 @@ public class KylinConfigExt extends KylinConfig {
     }
 
     private KylinConfigExt(KylinConfig base, Map<String, String> overrides) {
-        super(base.getAllProperties());
+        super(base.getAllProperties(), true);
         if (base.getClass() != KylinConfig.class) {
             throw new IllegalArgumentException();
         }
@@ -48,7 +48,7 @@ public class KylinConfigExt extends KylinConfig {
     }
 
     private KylinConfigExt(KylinConfigExt ext, Map<String, String> overrides) {
-        super(ext.base.getAllProperties());
+        super(ext.base.getAllProperties(), true);
         this.base = ext.base;
         this.overrides = BCC.check(overrides);
     }

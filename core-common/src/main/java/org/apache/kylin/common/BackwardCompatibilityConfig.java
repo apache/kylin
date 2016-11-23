@@ -72,6 +72,13 @@ public class BackwardCompatibilityConfig {
         for (Entry<Object, Object> kv : props.entrySet()) {
             String key = (String) kv.getKey();
             String value = (String) kv.getValue();
+            
+            if (key.equals(value))
+                continue; // no change
+            
+            if (value.contains(key))
+                throw new IllegalStateException("New key '" + value + "' contains old key '" + key + "' causes trouble to repeated find & replace");
+            
             if (value.endsWith("."))
                 old2newPrefix.put(key, value);
             else
@@ -89,7 +96,7 @@ public class BackwardCompatibilityConfig {
         for (String oldPrefix : old2newPrefix.keySet()) {
             if (key.startsWith(oldPrefix)) {
                 String newPrefix = old2newPrefix.get(oldPrefix);
-                newKey = newPrefix + key.substring(oldPrefix.length() + 1);
+                newKey = newPrefix + key.substring(oldPrefix.length());
                 logger.warn("Config '{}' is deprecated, use '{}' instead", key, newKey);
                 return newKey;
             }
@@ -187,6 +194,10 @@ public class BackwardCompatibilityConfig {
     private static boolean acceptSourceFile(File f) {
         String name = f.getName();
         if (name.startsWith(KYLIN_BACKWARD_COMPATIBILITY))
+            return false;
+        else if (name.equals("KylinConfigTest.java"))
+            return false;
+        else if (name.endsWith("-site.xml"))
             return false;
         else
             return name.endsWith(".java") || name.endsWith(".js") || name.endsWith(".sh") || name.endsWith(".properties") || name.endsWith(".xml");

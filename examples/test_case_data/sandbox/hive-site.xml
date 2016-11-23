@@ -118,7 +118,7 @@
 
     <property>
         <name>hive.conf.restricted.list</name>
-        <value>hive.security.authenticator.manager,hive.security.authorization.manager,kylin.source.hive.users.in.admin.role</value>
+        <value>hive.security.authenticator.manager,hive.security.authorization.manager,hive.users.in.admin.role</value>
     </property>
 
     <property>
@@ -722,12 +722,12 @@
     </property>
 
     <property>
-        <name>kylin.source.hive.user.install.directory</name>
+        <name>hive.user.install.directory</name>
         <value>/user/</value>
     </property>
 
     <property>
-        <name>kylin.source.hive.users.in.admin.role</name>
+        <name>hive.users.in.admin.role</name>
         <value>hue,hive</value>
     </property>
 

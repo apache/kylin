@@ -18,10 +18,7 @@
 
 package org.apache.kylin.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.util.Map;
 
@@ -56,7 +53,7 @@ public class KylinConfigTest extends LocalFileMetadataTestCase {
     @Test
     public void testBackwardCompatibility() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        final String oldk = "kylin.test.bcc.new.key";
+        final String oldk = "kylin.test.bcc.old.key";
         final String newk = "kylin.test.bcc.new.key";
         
         assertNull(config.getOptional(oldk));
@@ -71,5 +68,16 @@ public class KylinConfigTest extends LocalFileMetadataTestCase {
         
         config.setProperty(oldk, "2");
         assertEquals(config.getOptional(newk), "2");
+    }
+    
+    @Test
+    public void testExtShareTheBase() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        Map<String, String> override = Maps.newHashMap();
+        KylinConfig configExt = KylinConfigExt.createInstance(config, override);
+        
+        assertTrue(config.properties == configExt.properties);
+        config.setProperty("1234", "1234");
+        assertEquals("1234", configExt.getOptional("1234"));
     }
 }
