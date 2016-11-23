@@ -609,7 +609,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             combination = combination * (1L << normalDims.size());
 
             if (combination > config.getCubeAggrGroupMaxCombination()) {
-                String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max.combination' to a bigger value.";
+                String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
                 logger.error("Aggregation group " + index + " has " + combination + " combinations;");
                 logger.error(msg);
                 throw new IllegalStateException(msg);

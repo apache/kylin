@@ -71,7 +71,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
                 return m.group(1) + m.group(2) + ":19888";
             }
         }
-        logger.info("kylin.job.yarn.app.rest.check.status.url" + " is not set read from hadoop configuration");
+        logger.info("kylin.engine.mr.yarn-check-status-url" + " is not set read from hadoop configuration");
 
         Configuration conf = HadoopUtil.getCurrentConfiguration();
         String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);

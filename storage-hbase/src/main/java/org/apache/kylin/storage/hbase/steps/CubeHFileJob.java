@@ -76,7 +76,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
             job = Job.getInstance(getConf(), getOptionValue(OPTION_JOB_NAME));
 
             setJobClasspath(job, cube.getConfig());
-            // For separate HBase cluster, note the output is a qualified HDFS path if "kylin.hbase.cluster.fs" is configured, ref HBaseMRSteps.getHFilePath()
+            // For separate HBase cluster, note the output is a qualified HDFS path if "kylin.storage.hbase.cluster-fs" is configured, ref HBaseMRSteps.getHFilePath()
             HBaseConnection.addHBaseClusterNNHAConfiguration(job.getConfiguration());
 
             addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);

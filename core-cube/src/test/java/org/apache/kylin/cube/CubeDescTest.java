@@ -103,14 +103,14 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadInit4() throws Exception {
         thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Aggregation group 0 has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max.combination' to a bigger value.");
+        thrown.expectMessage("Aggregation group 0 has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.");
 
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_with_slr_desc");
         try {
-            System.setProperty("kylin.cube.aggrgroup.max.combination", "8");
+            System.setProperty("kylin.cube.aggrgroup.max-combination", "8");
             cubeDesc.validateAggregationGroups();
         } finally {
-            System.clearProperty("kylin.cube.aggrgroup.max.combination");
+            System.clearProperty("kylin.cube.aggrgroup.max-combination");
         }
     }
 

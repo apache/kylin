@@ -118,7 +118,7 @@ public class BackwardCompatibilityConfig {
 
     public static void main(String[] args) throws IOException {
         String kylinRepoDir = args.length > 0 ? args[0] : ".";
-        String outputDir = args.length > 1 ? args[1] : ".";
+        String outputDir = args.length > 1 ? args[1] : kylinRepoDir;
         generateFindAndReplaceScript(kylinRepoDir, outputDir);
     }
 
@@ -154,9 +154,10 @@ public class BackwardCompatibilityConfig {
                 for (File f : dir.listFiles()) {
                     if (f.getName().startsWith("."))
                         continue;
-                    if (f.isDirectory())
-                        stack.push(f);
-                    else if (isSourceFile(f))
+                    if (f.isDirectory()) {
+                        if (acceptSourceDir(f))
+                            stack.push(f);
+                    } else if (acceptSourceFile(f))
                         out.println("sed -i -f upgrade-old-config.sed " + f.getAbsolutePath());
                 }
             }
@@ -173,7 +174,17 @@ public class BackwardCompatibilityConfig {
         return key.replace(".", "[.]");
     }
 
-    private static boolean isSourceFile(File f) {
+    private static boolean acceptSourceDir(File f) {
+        // exclude webapp/app/components
+        if (f.getName().equals("components") && f.getParentFile().getName().equals("app"))
+            return false;
+        else if (f.getName().equals("target"))
+            return false;
+        else
+            return true;
+    }
+
+    private static boolean acceptSourceFile(File f) {
         String name = f.getName();
         if (name.startsWith(KYLIN_BACKWARD_COMPATIBILITY))
             return false;

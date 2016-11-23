@@ -29,10 +29,10 @@ echo "Loading sample data into HDFS tmp path: /tmp/kylin/sample_cube/data"
 hadoop fs -mkdir -p /tmp/kylin/sample_cube/data
 hadoop fs -put * /tmp/kylin/sample_cube/data/
 
-hive_client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.client`
+hive_client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.client`
 if [ "${hive_client_mode}" == "beeline" ]
 then
-    beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.beeline.params`
+    beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
     beeline ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 else
     hive -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
@@ -42,8 +42,8 @@ echo "Sample hive tables are created successfully; Going to create sample cube..
 hadoop fs -rm -r /tmp/kylin/sample_cube
 
 # set engine type and storage type to cube desc
-default_engine_type=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.default.cube.engine`
-default_storage_type=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.default.storage.engine`
+default_engine_type=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.engine.default`
+default_storage_type=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.storage.default`
 if [ -z "$default_engine_type" ]; then
     default_engine_type=2
     default_storage_type=2

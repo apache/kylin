@@ -187,7 +187,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             }
 
             if (combination > getMaxCombinations(cube)) {
-                String msg = "Aggregation group " + index + " has too many combinations, current combination is " + combination + ", max allowed combination is " + getMaxCombinations(cube) + "; use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max.combination' to a bigger value.";
+                String msg = "Aggregation group " + index + " has too many combinations, current combination is " + combination + ", max allowed combination is " + getMaxCombinations(cube) + "; use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
                 context.addResult(ResultLevel.ERROR, msg);
                 continue;
             }

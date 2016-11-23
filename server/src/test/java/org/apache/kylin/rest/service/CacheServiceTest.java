@@ -73,9 +73,9 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     public static void beforeClass() throws Exception {
         staticCreateTestMetadata();
         configA = KylinConfig.getInstanceFromEnv();
-        configA.setProperty("kylin.rest.servers", "localhost:7777");
+        configA.setProperty("kylin.server.cluster-servers", "localhost:7777");
         configB = KylinConfig.createKylinConfig(configA);
-        configB.setProperty("kylin.rest.servers", "localhost:7777");
+        configB.setProperty("kylin.server.cluster-servers", "localhost:7777");
         configB.setMetadataUrl("../examples/test_metadata");
 
         server = new Server(7777);

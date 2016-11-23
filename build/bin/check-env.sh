@@ -41,7 +41,7 @@ then
     quit "Please make sure the user has the privilege to run hadoop shell"
 fi
 
-WORKING_DIR=`sh $KYLIN_HOME/bin/get-properties.sh kylin.hdfs.working.dir`
+WORKING_DIR=`sh $KYLIN_HOME/bin/get-properties.sh kylin.env.hdfs-working-dir`
 hadoop fs -mkdir -p $WORKING_DIR
 if [ $? != 0 ]
 then

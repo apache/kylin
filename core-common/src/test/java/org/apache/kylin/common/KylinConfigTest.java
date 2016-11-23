@@ -56,7 +56,7 @@ public class KylinConfigTest extends LocalFileMetadataTestCase {
     @Test
     public void testBackwardCompatibility() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-        final String oldk = "kylin.test.bcc.old.key";
+        final String oldk = "kylin.test.bcc.new.key";
         final String newk = "kylin.test.bcc.new.key";
         
         assertNull(config.getOptional(oldk));

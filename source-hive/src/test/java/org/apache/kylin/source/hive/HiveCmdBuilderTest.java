@@ -40,13 +40,13 @@ public class HiveCmdBuilderTest {
 
     @After
     public void after() throws Exception {
-        System.clearProperty("kylin.hive.client");
-        System.clearProperty("kylin.hive.beeline.params");
+        System.clearProperty("kylin.source.hive.client");
+        System.clearProperty("kylin.source.hive.beeline-params");
     }
 
     @Test
     public void testHiveCLI() {
-        System.setProperty("kylin.hive.client", "cli");
+        System.setProperty("kylin.source.hive.client", "cli");
 
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement("USE default;");
@@ -59,8 +59,8 @@ public class HiveCmdBuilderTest {
     @Test
     public void testBeeline() throws IOException {
         String lineSeparator = java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
-        System.setProperty("kylin.hive.client", "beeline");
-        System.setProperty("kylin.hive.beeline.params", "-u jdbc_url");
+        System.setProperty("kylin.source.hive.client", "beeline");
+        System.setProperty("kylin.source.hive.beeline-params", "-u jdbc_url");
 
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement("USE default;");

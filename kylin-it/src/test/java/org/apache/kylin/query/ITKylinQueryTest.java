@@ -105,7 +105,7 @@ public class ITKylinQueryTest extends KylinTestBase {
             toggles.put(BackdoorToggles.DEBUG_TOGGLE_COPROCESSOR_BEHAVIOR, StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM_WITHDELAY.toString());//delay 10ms for every scan
             BackdoorToggles.setToggles(toggles);
 
-            KylinConfig.getInstanceFromEnv().setProperty("kylin.query.coprocessor.timeout.seconds", "3");
+            KylinConfig.getInstanceFromEnv().setProperty("kylin.storage.hbase.coprocessor-timeout-seconds", "3");
 
             //these two cubes has RAW measure, will disturb limit push down
             RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_without_slr_left_join_empty]");
@@ -118,7 +118,7 @@ public class ITKylinQueryTest extends KylinTestBase {
             RemoveBlackoutRealizationsRule.blackList.remove("CUBE[name=test_kylin_cube_without_slr_left_join_empty]");
             RemoveBlackoutRealizationsRule.blackList.remove("CUBE[name=test_kylin_cube_without_slr_inner_join_empty]");
 
-            KylinConfig.getInstanceFromEnv().setProperty("kylin.query.coprocessor.timeout.seconds", "0"); // set timeout to default
+            KylinConfig.getInstanceFromEnv().setProperty("kylin.storage.hbase.coprocessor-timeout-seconds", "0"); // set timeout to default
             BackdoorToggles.cleanToggles();
         }
     }

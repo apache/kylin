@@ -79,7 +79,7 @@ public class MailService {
 
         if (!enabled) {
             logger.info("Email service is disabled; this mail will not be delivered: " + subject);
-            logger.info("To enable mail service, set 'mail.enabled=true' in kylin.properties");
+            logger.info("To enable mail service, set 'kylin.job.notification-enabled=true' in kylin.properties");
             return false;
         }
 

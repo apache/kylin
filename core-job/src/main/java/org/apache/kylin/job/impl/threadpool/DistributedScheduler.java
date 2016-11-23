@@ -57,9 +57,9 @@ import com.google.common.collect.Maps;
  * schedule the cubing jobs when several job server running with the same metadata.
  *
  * to enable the distributed job server, you need to set and update three configs in the kylin.properties:
- *  1. kylin.enable.scheduler=2
- *  2. kylin.job.controller.lock=org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock
- *  3. add all the job servers and query servers to the kylin.rest.servers
+ *  1. kylin.job.scheduler.default=2
+ *  2. kylin.job.lock=org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock
+ *  3. add all the job servers and query servers to the kylin.server.cluster-servers
  */
 public class DistributedScheduler implements Scheduler<AbstractExecutable>, ConnectionStateListener {
     private ExecutableManager executableManager;

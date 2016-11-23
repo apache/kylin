@@ -19,13 +19,13 @@
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
-client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.client`
+client_mode=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.client`
 hive_env=
 
 echo Retrieving hive dependency...
 if [ "${client_mode}" == "beeline" ]
 then
-    beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.hive.beeline.params`
+    beeline_params=`sh ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
     hive_env=`beeline ${beeline_params} --outputformat=dsv -e set 2>&1 | grep 'env:CLASSPATH' `
 else
     hive_env=`hive -e set 2>&1 | grep 'env:CLASSPATH'`

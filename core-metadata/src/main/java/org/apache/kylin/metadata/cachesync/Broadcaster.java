@@ -102,7 +102,7 @@ public class Broadcaster {
 
         final String[] nodes = config.getRestServers();
         if (nodes == null || nodes.length < 1) {
-            logger.warn("There is no available rest server; check the 'kylin.rest.servers' config");
+            logger.warn("There is no available rest server; check the 'kylin.server.cluster-servers' config");
             broadcastEvents = null; // disable the broadcaster
             return;
         }

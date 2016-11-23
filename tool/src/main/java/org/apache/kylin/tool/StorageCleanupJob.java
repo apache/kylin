@@ -333,7 +333,7 @@ public class StorageCleanupJob extends AbstractApplication {
                 }
                 cmdExec.execute(hiveCmdBuilder.build());
 
-                //if kylin.hive.keep.flat.table, some intermediate table might be kept 
+                //if kylin.source.hive.keep-flat-table, some intermediate table might be kept 
                 //delete external path
                 for (String tableToDelete : allHiveTablesNeedToBeDeleted) {
                     String uuid = tableToDelete.substring(tableToDelete.length() - uuidLength, tableToDelete.length());
@@ -347,7 +347,7 @@ public class StorageCleanupJob extends AbstractApplication {
                             fs.delete(externalDataPath, true);
                             logger.info("Hive table {}'s external path {} deleted", tableToDelete, path);
                         } else {
-                            logger.info("Hive table {}'s external path {} not exist. It's normal if kylin.hive.keep.flat.table set false (By default)", tableToDelete, path);
+                            logger.info("Hive table {}'s external path {} not exist. It's normal if kylin.source.hive.keep-flat-table set false (By default)", tableToDelete, path);
                         }
                     } else {
                         logger.warn("Hive table {}'s job ID not found, segmentId2JobId: {}", tableToDelete, segmentId2JobId.toString());

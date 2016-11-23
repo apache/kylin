@@ -131,7 +131,7 @@ public class StorageContext {
         if (!realization.supportsLimitPushDown()) {
             logger.info("Not enabling limit push down because cube storage type not supported");
         } else if (tempPushDownLimit > pushDownLimitMax) {
-            logger.info("Not enabling limit push down because the limit(including offset) {} is larger than kylin.query.pushdown.limit.max {}", //
+            logger.info("Not enabling limit push down because the limit(including offset) {} is larger than kylin.query.max-limit-pushdown {}", //
                     tempPushDownLimit, pushDownLimitMax);
         } else {
             this.finalPushDownLimit = tempPushDownLimit;
