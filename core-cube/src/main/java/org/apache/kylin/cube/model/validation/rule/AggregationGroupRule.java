@@ -62,7 +62,6 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                 continue;
             }
 
-            long combination = 1;
             Set<String> includeDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             if (agg.getIncludes() != null) {
                 for (String include : agg.getIncludes()) {
@@ -83,7 +82,6 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                     for (String s : ss) {
                         hierarchyDims.add(s);
                     }
-                    combination = combination * (ss.length + 1);
                 }
             }
 
@@ -93,7 +91,6 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                     for (String s : ss) {
                         jointDims.add(s);
                     }
-                    combination = combination * 2;
                 }
             }
 
@@ -108,14 +105,6 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                 context.addResult(ResultLevel.ERROR, "Aggregation group " + index + " 'includes' dimensions not include all the dimensions:" + notIncluded.toString());
                 continue;
             }
-
-            Set<String> normalDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            normalDims.addAll(includeDims);
-            normalDims.removeAll(mandatoryDims);
-            normalDims.removeAll(hierarchyDims);
-            normalDims.removeAll(jointDims);
-
-            combination = combination * (1L << normalDims.size());
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
                 Set<String> intersection = new HashSet<>(mandatoryDims);
@@ -186,6 +175,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                 }
             }
 
+            long combination = agg.calculateCuboidCombination();
             if (combination > getMaxCombinations(cube)) {
                 String msg = "Aggregation group " + index + " has too many combinations, current combination is " + combination + ", max allowed combination is " + getMaxCombinations(cube) + "; use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
                 context.addResult(ResultLevel.ERROR, msg);

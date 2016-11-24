@@ -19,9 +19,12 @@
 package org.apache.kylin.cube.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -34,9 +37,9 @@ import com.google.common.collect.Lists;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class AggregationGroup {
     public static class HierarchyMask {
-        public long fullMask;// 00000111
-        public long[] allMasks;// 00000100,00000110,00000111
-        public long[] dims;// 00000100,00000010,00000001
+        public long fullMask; // 00000111
+        public long[] allMasks; // 00000100,00000110,00000111
+        public long[] dims; // 00000100,00000010,00000001
     }
 
     @JsonProperty("includes")
@@ -64,7 +67,7 @@ public class AggregationGroup {
             throw new IllegalStateException("AggregationGroup incomplete");
         }
 
-        columnNamesToUpperCase();
+        normalizeColumnNames();
         
         buildPartialCubeFullMask(rowKeyDesc);
         buildMandatoryColumnMask(rowKeyDesc);
@@ -76,19 +79,41 @@ public class AggregationGroup {
 
     }
 
-    private void columnNamesToUpperCase() {
-        StringUtil.toUpperCaseArray(includes, includes);
-        StringUtil.toUpperCaseArray(selectRule.mandatory_dims, selectRule.mandatory_dims);
-        if (selectRule.hierarchy_dims != null) {
-            for (String[] cols : selectRule.hierarchy_dims) {
-                StringUtil.toUpperCaseArray(cols, cols);
-            }
+    private void normalizeColumnNames() {
+        Preconditions.checkNotNull(includes);
+        normalizeColumnNames(includes);
+        
+        Preconditions.checkNotNull(selectRule.mandatory_dims);
+        normalizeColumnNames(selectRule.mandatory_dims);
+        
+        if (selectRule.hierarchy_dims == null)
+            selectRule.hierarchy_dims = new String[0][];
+        for (String[] cols : selectRule.hierarchy_dims) {
+            Preconditions.checkNotNull(cols);
+            normalizeColumnNames(cols);
         }
-        if (selectRule.joint_dims != null) {
-            for (String[] cols : selectRule.joint_dims) {
-                StringUtil.toUpperCaseArray(cols, cols);
-            }
+            
+        if (selectRule.joint_dims == null)
+            selectRule.joint_dims = new String[0][];
+        for (String[] cols : selectRule.joint_dims) {
+            Preconditions.checkNotNull(cols);
+            normalizeColumnNames(cols);
         }
+    }
+
+    private void normalizeColumnNames(String[] names) {
+        if (names == null)
+            return;
+        
+        for (int i = 0; i < names.length; i++) {
+            TblColRef col = cubeDesc.getModel().findColumn(names[i]);
+            names[i] = col.getTableAlias() + "." + col.getName();
+        }
+        
+        // check no dup
+        Set<String> set = new HashSet<>(Arrays.asList(names));
+        if (set.size() < names.length)
+            throw new IllegalStateException("Columns in aggrgroup must not contain duplication: " + Arrays.asList(names));
     }
 
     private void buildPartialCubeFullMask(RowKeyDesc rowKeyDesc) {
@@ -250,6 +275,36 @@ public class AggregationGroup {
         return ret;
     }
 
+    /** Compute cuboid combination for aggregation group */
+    public long calculateCuboidCombination() {
+        long combination = 1;
+        
+        Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
+        Set<String> mandatoryDims = new TreeSet<>(Arrays.asList(selectRule.mandatory_dims));
+        
+        Set<String> hierarchyDims = new TreeSet<>();
+        for (String[] ss : selectRule.hierarchy_dims) {
+            hierarchyDims.addAll(Arrays.asList(ss));
+            combination = combination * (ss.length + 1);
+        }
+
+        Set<String> jointDims = new TreeSet<>();
+        for (String[] ss : selectRule.joint_dims) {
+            jointDims.addAll(Arrays.asList(ss));
+            combination = combination * 2;
+        }
+
+        Set<String> normalDims = new TreeSet<>();
+        normalDims.addAll(includeDims);
+        normalDims.removeAll(mandatoryDims);
+        normalDims.removeAll(hierarchyDims);
+        normalDims.removeAll(jointDims);
+
+        combination = combination * (1L << normalDims.size());
+
+        return combination;
+    }
+    
     public void setIncludes(String[] includes) {
         this.includes = includes;
     }
@@ -297,4 +352,5 @@ public class AggregationGroup {
     public CubeDesc getCubeDesc() {
         return cubeDesc;
     }
+
 }

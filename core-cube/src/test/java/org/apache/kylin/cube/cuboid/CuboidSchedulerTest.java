@@ -287,12 +287,13 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testCuboid_onlyBaseCuboid() {
-        for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/").listFiles()) {
-            if (f.getName().endsWith("bad")) {
+        for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc").listFiles()) {
+            if (f.getName().endsWith(".bad")) {
                 String path = f.getPath();
                 f.renameTo(new File(path.substring(0, path.length() - 4)));
             }
         }
+        CubeDescManager.clearCache();
         CubeDesc cube = getCubeDescManager().getCubeDesc("ut_large_dimension_number");
         CuboidScheduler scheduler = new CuboidScheduler(cube);
         

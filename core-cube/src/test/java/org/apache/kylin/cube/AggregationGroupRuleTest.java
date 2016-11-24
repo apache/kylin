@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -111,8 +110,6 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
         rule.validate(desc, vContext);
         vContext.print(System.out);
-        //        System.out.println(vContext.getResults().length);
-        //        System.out.println(vContext.getResults()[0].getMessage());
         assertEquals(1, vContext.getResults().length);
         assertEquals("Aggregation group 0 'includes' dimensions not include all the dimensions:[seller_id, META_CATEG_NAME, lstg_format_name, lstg_site_id, slr_segment_cd]", (vContext.getResults()[0].getMessage()));
     }
