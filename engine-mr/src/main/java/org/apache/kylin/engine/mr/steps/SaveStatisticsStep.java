@@ -73,7 +73,6 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 rs.putResource(statisticsFileName, is, System.currentTimeMillis());
             } finally {
                 IOUtils.closeStream(is);
-                fs.delete(statisticsFilePath, true);
             }
 
             decideCubingAlgorithm(newSegment, kylinConf);

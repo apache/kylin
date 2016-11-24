@@ -69,6 +69,8 @@ public enum ExecutableState {
         VALID_STATE_TRANSFER.put(ExecutableState.RUNNING, ExecutableState.STOPPED);
 
 
+        //rollback
+        VALID_STATE_TRANSFER.put(ExecutableState.SUCCEED, ExecutableState.READY);
 
     }
 

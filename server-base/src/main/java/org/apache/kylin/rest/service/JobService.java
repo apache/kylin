@@ -460,6 +460,13 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
+    public void rollbackJob(JobInstance job, String stepId) throws IOException, JobException {
+        lockSegment(job.getRelatedSegment());
+
+        getExecutableManager().rollbackJob(job.getId(), stepId);
+    }
+
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance cancelJob(JobInstance job) throws IOException, JobException {
         if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())) {
             getExecutableManager().discardJob(job.getId());

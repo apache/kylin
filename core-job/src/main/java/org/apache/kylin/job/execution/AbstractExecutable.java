@@ -82,7 +82,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         setEndTime(System.currentTimeMillis());
-        if (!isDiscarded()) {
+        if (!isDiscarded() && !isRunnable()) {
             if (result.succeed()) {
                 getManager().updateJobOutput(getId(), ExecutableState.SUCCEED, null, result.output());
             } else {

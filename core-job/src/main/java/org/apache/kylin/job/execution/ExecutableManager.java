@@ -292,6 +292,24 @@ public class ExecutableManager {
         updateJobOutput(jobId, ExecutableState.DISCARDED, null, null);
     }
 
+
+    public void rollbackJob(String jobId, String stepId) {
+        AbstractExecutable job = getJob(jobId);
+        if (job == null) {
+            return;
+        }
+
+        if (job instanceof DefaultChainedExecutable) {
+            List<AbstractExecutable> tasks = ((DefaultChainedExecutable) job).getTasks();
+            for (AbstractExecutable task : tasks) {
+                if (task.getId().compareTo(stepId) >= 0) {
+                    logger.debug("rollback task : " + task);
+                    updateJobOutput(task.getId(), ExecutableState.READY, null, null);
+                }
+            }
+        }
+    }
+
     public void pauseJob(String jobId) {
         AbstractExecutable job = getJob(jobId);
         if (job == null) {
