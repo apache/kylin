@@ -364,10 +364,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.job.max-concurrent-jobs", "10"));
     }
 
-    public String[] getAdminDls() {
-        return getOptionalStringArray("kylin.job.notification-admin-emails", null);
-    }
-
     public int getCubingInMemSamplingPercent() {
         int percent = Integer.parseInt(this.getOptional("kylin.job.sampling-percentage", "100"));
         percent = Math.max(percent, 1);
@@ -401,6 +397,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getMailSender() {
         return getOptional("kylin.job.notification-mail-sender", "");
+    }
+
+    public String[] getAdminDls() {
+        return getOptionalStringArray("kylin.job.notification-admin-emails", null);
     }
 
     public int getJobRetry() {

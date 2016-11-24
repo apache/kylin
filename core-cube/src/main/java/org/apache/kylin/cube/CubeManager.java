@@ -918,7 +918,8 @@ public class CubeManager implements IRealizationProvider {
 
             CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(cube.getDescName());
             checkNotNull(cubeDesc, "cube descriptor '%s' (for cube '%s') not found", cube.getDescName(), cubeName);
-            checkState(cubeDesc.getName().equals(cubeName), "cube name '%s' must be same as descriptor name '%s', but it is not", cubeName, cubeDesc.getName());
+            if (!isITTestCube(cubeName))
+                checkState(cubeDesc.getName().equals(cubeName), "cube name '%s' must be same as descriptor name '%s', but it is not", cubeName, cubeDesc.getName());
 
             if (!cubeDesc.getError().isEmpty()) {
                 cube.setStatus(RealizationStatusEnum.DESCBROKEN);
@@ -945,6 +946,11 @@ public class CubeManager implements IRealizationProvider {
             logger.error("Error during load cube instance, skipping : " + path, e);
             return null;
         }
+    }
+
+    private boolean isITTestCube(String cubeName) {
+        return config.isDevEnv() //
+                && (cubeName.startsWith("test_kylin_cube") || cubeName.startsWith("test_streaming"));
     }
 
     private MetadataManager getMetadataManager() {

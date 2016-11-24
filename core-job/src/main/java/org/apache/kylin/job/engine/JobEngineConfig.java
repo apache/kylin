@@ -92,7 +92,6 @@ public class JobEngineConfig {
                 }
             }
         }
-        logger.info("Chosen job conf is : " + path);
         return path;
     }
 

@@ -84,6 +84,11 @@ public class SortedColumnDFSFile implements ReadableTable {
     public TableSignature getSignature() throws IOException {
         return dfsFileTable.getSignature();
     }
+    
+    @Override
+    public boolean exists() throws IOException {
+        return dfsFileTable.exists();
+    }
 
     private Comparator<String> getComparatorByType(DataType type) {
         Comparator<String> comparator;

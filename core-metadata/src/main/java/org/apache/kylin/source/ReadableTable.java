@@ -35,9 +35,11 @@ public interface ReadableTable {
     public TableReader getReader() throws IOException;
 
     /**
-     * Used to detect table modifications mainly. Return null in case table does not exist.
+     * Used to detect table modifications.
      */
     public TableSignature getSignature() throws IOException;
+    
+    public boolean exists() throws IOException;
 
 
     public interface TableReader extends Closeable {

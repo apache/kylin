@@ -148,6 +148,7 @@ public class DictionaryManager {
         initDictInfo(newDict, newDictInfo);
 
         if (config.isGrowingDictEnabled()) {
+            logger.info("Growing dict is enabled, merge with largest dictionary");
             DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
             if (largestDictInfo != null) {
                 largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
@@ -167,7 +168,6 @@ public class DictionaryManager {
                 return saveNewDict(newDictInfo);
             }
         } else {
-            logger.info("Growing dict is not enabled");
             String dupDict = checkDupByContent(newDictInfo, newDict);
             if (dupDict != null) {
                 logger.info("Identical dictionary content, reuse existing dictionary at " + dupDict);
@@ -276,6 +276,8 @@ public class DictionaryManager {
     }
 
     public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable, String builderClass) throws IOException {
+        if (inpTable.exists() == false)
+            return null;
 
         logger.info("building dictionary for " + col);
 

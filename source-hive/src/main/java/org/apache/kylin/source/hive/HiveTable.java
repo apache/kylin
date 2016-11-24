@@ -78,8 +78,11 @@ public class HiveTable implements ReadableTable {
                 throw new IOException(e);
         }
     }
-
-
+    
+    @Override
+    public boolean exists() {
+        return true;
+    }
 
     private String computeHDFSLocation() throws Exception {
 

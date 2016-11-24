@@ -28,7 +28,7 @@ import java.util.Iterator;
 public class IterableDictionaryValueEnumerator implements IDictionaryValueEnumerator {
     Iterator<String> iterator;
 
-    public IterableDictionaryValueEnumerator(String[] strs) {
+    public IterableDictionaryValueEnumerator(String... strs) {
         this(Arrays.asList(strs));
     }
     

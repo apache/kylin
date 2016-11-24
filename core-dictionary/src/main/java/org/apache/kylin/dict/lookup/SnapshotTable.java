@@ -164,6 +164,11 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
         return signature;
     }
 
+    @Override
+    public boolean exists() throws IOException {
+        return true;
+    }
+    
     /**
      * a naive implementation
      *

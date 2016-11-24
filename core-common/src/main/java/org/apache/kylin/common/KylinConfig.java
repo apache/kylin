@@ -222,7 +222,8 @@ public class KylinConfig extends KylinConfigBase {
                 Properties propOverride = new Properties();
                 propOverride.load(ois);
                 IOUtils.closeQuietly(ois);
-                conf.putAll(propOverride);
+                conf = BCC.check(conf);
+                conf.putAll(BCC.check(propOverride));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
