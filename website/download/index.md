@@ -4,7 +4,7 @@ title: Download
 permalink: /download/index.html
 ---
 
-1.5.4.1 is the latest release. 1.6.0-SNAPSHOT is the latest development snapshot build.
+1.5.4.1 is the latest release. 1.6.0-SNAPSHOT is the latest development snapshot build, only for dev/test purpose.
 The current stable version is 1.5.4.1. 
 You can verify your download by following these [procedures](https://www.apache.org/info/verification.html) and using these [KEYS](http://kylin.apache.org/KEYS).
 
@@ -14,16 +14,16 @@ You can verify your download by following these [procedures](https://www.apache.
 * Binary download:
 	* for HBase 0.98 (includes HDP 2.2, CDH 5.2/5.3) - [apache-kylin-1.5.4.1-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-bin.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-bin.tar.gz.md5)\]
 	* for HBase 1.x (includes HDP 2.3/2.4, EMR 5.0) - [apache-kylin-1.5.4.1-hbase1.x-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-hbase1.x-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-hbase1.x-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-hbase1.x-bin.tar.gz.md5)\]
-	* for CDH 5.7/5.8 - [apache-kylin-1.5.4.1-cdh5.7-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-cdh5.7-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-cdh5.7-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-cdh5.7-bin.tar.gz.md5)\]
+	* for CDH 5.5/5.7/5.8 - [apache-kylin-1.5.4.1-cdh5.7-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-cdh5.7-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-cdh5.7-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.5.4.1/apache-kylin-1.5.4.1-cdh5.7-bin.tar.gz.md5)\]
 
 
 ## 1.6.0-SNAPSHOT (scalable streaming)
 * In this version Kylin has better support for Kafka as data source, read blog [New NRT Streaming in Apache Kylin](/blog/2016/10/18/new-nrt-streaming/).
 * [Release Notes (draft)](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12316121&version=12333366)
 * Binary download (updated on 2016-11-04):
-	* for HBase 0.98 - [apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz.md5)\]
-	* for HBase 1.x - [apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz.md5)\]
-	* for CDH 5.7/5.8 - [apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz.md5)\]
+	* for HBase 0.98 (includes HDP 2.2, CDH 5.2/5.3) - [apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-SNAPSHOT-bin.tar.gz.md5)\]
+	* for HBase 1.x (includes HDP 2.3/2.4, EMR 5.0) - [apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-hbase1.x-SNAPSHOT-bin.tar.gz.md5)\]
+	* for CDH 5.5/5.7/5.8 - [apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-1.6.0-rc1-2/apache-kylin-1.6.0-cdh5.7-SNAPSHOT-bin.tar.gz.md5)\]
 
 
 ## Previous Release  
