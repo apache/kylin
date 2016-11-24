@@ -26,9 +26,15 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.DimensionDesc;
+import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
+import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +57,8 @@ public class DictionaryGeneratorCLI {
         // dictionary
         for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionaryBuilt()) {
             logger.info("Building dictionary for " + col);
-            cubeMgr.buildDictionary(cubeSeg, col, factTableValueProvider);
+            ReadableTable inpTable = decideInputTable(cubeSeg.getModel(), col, factTableValueProvider);
+            cubeMgr.buildDictionary(cubeSeg, col, inpTable);
         }
 
         // snapshot
@@ -66,5 +73,30 @@ public class DictionaryGeneratorCLI {
             logger.info("Building snapshot of " + tableIdentity);
             cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity);
         }
+    }
+    
+    private static ReadableTable decideInputTable(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) {
+        KylinConfig config = model.getConfig();
+        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
+        TblColRef srcCol = dictMgr.decideSourceData(model, col);
+        String srcTable = srcCol.getTable();
+        
+        ReadableTable inpTable;
+        if (model.isFactTable(srcTable)) {
+            inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
+        } else {
+            MetadataManager metadataManager = MetadataManager.getInstance(config);
+            TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
+            if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
+                TableDesc materializedTbl = new TableDesc();
+                materializedTbl.setDatabase(config.getHiveDatabaseForIntermediateTable());
+                materializedTbl.setName(tableDesc.getMaterializedName());
+                inpTable = SourceFactory.createReadableTable(materializedTbl);
+            } else {
+                inpTable = SourceFactory.createReadableTable(tableDesc);
+            }
+        }
+
+        return inpTable;
     }
 }

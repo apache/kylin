@@ -65,10 +65,10 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
 
         MockDistinctColumnValuesProvider mockupData = new MockDistinctColumnValuesProvider("A", "B", "C");
 
-        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupData);
+        DictionaryInfo info1 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupData.getDistinctValuesFor(col));
         System.out.println(JsonUtil.writeValueAsIndentString(info1));
 
-        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupData);
+        DictionaryInfo info2 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupData.getDistinctValuesFor(col));
         System.out.println(JsonUtil.writeValueAsIndentString(info2));
 
         // test check duplicate
@@ -89,7 +89,7 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
 
         // test empty dictionary
         MockDistinctColumnValuesProvider mockupEmpty = new MockDistinctColumnValuesProvider();
-        DictionaryInfo info3 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupEmpty);
+        DictionaryInfo info3 = dictMgr.buildDictionary(cubeDesc.getModel(), col, mockupEmpty.getDistinctValuesFor(col));
         System.out.println(JsonUtil.writeValueAsIndentString(info3));
         assertEquals(0, info3.getCardinality());
         assertEquals(0, info3.getDictionaryObject().getSize());

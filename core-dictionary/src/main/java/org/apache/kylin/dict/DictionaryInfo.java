@@ -21,6 +21,7 @@ package org.apache.kylin.dict;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.source.ReadableTable.TableSignature;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -51,6 +52,10 @@ public class DictionaryInfo extends RootPersistentEntity {
     public DictionaryInfo() {
     }
 
+    public DictionaryInfo(ColumnDesc col, String dataType, TableSignature input) {
+        this(col.getTable().getIdentity(), col.getName(), col.getZeroBasedIndex(), dataType, input);
+    }
+    
     public DictionaryInfo(String sourceTable, String sourceColumn, int sourceColumnIndex, String dataType, TableSignature input) {
 
         this.updateRandomUuid();

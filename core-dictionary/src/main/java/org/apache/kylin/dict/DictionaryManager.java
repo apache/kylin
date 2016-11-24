@@ -38,12 +38,10 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableSignature;
-import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -273,45 +271,19 @@ public class DictionaryManager {
         }
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
-        return buildDictionary(model, col, factTableValueProvider, null);
+    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable) throws IOException {
+        return buildDictionary(model, col, inpTable, null);
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider, String builderClass) throws IOException {
+    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable, String builderClass) throws IOException {
 
         logger.info("building dictionary for " + col);
 
-        TblColRef srcCol = decideSourceData(model, col);
-        String srcTable = srcCol.getTable();
-        String srcColName = srcCol.getName();
-        int srcColIdx = srcCol.getColumnDesc().getZeroBasedIndex();
-
-        ReadableTable inpTable;
-        if (model.isFactTable(srcTable)) {
-            inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
-        } else {
-            MetadataManager metadataManager = MetadataManager.getInstance(config);
-            TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
-            if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
-                TableDesc materializedTbl = new TableDesc();
-                materializedTbl.setDatabase(config.getHiveDatabaseForIntermediateTable());
-                materializedTbl.setName(tableDesc.getMaterializedName());
-                inpTable = SourceFactory.createReadableTable(materializedTbl);
-            } else {
-                inpTable = SourceFactory.createReadableTable(tableDesc);
-            }
-        }
-
-        TableSignature inputSig = inpTable.getSignature();
-        if (inputSig == null) // table does not exists
-            return null;
-
-        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcColName, srcColIdx, col.getDatatype(), inputSig);
-
-        String dupDict = checkDupByInfo(dictInfo);
-        if (dupDict != null) {
-            logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
-            return getDictionaryInfo(dupDict);
+        DictionaryInfo dictInfo = createDictionaryInfo(model, col, inpTable);
+        String dupInfo = checkDupByInfo(dictInfo);
+        if (dupInfo != null) {
+            logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupInfo);
+            return getDictionaryInfo(dupInfo);
         }
 
         logger.info("Building dictionary object " + JsonUtil.writeValueAsString(dictInfo));
@@ -331,6 +303,27 @@ public class DictionaryManager {
                 columnValueEnumerator.close();
         }
         return trySaveNewDict(dictionary, dictInfo);
+    }
+
+    public DictionaryInfo saveDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable, Dictionary<String> dictionary) throws IOException {
+        DictionaryInfo dictInfo = createDictionaryInfo(model, col, inpTable);
+        String dupInfo = checkDupByInfo(dictInfo);
+        if (dupInfo != null) {
+            logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupInfo);
+            return getDictionaryInfo(dupInfo);
+        }
+
+        return trySaveNewDict(dictionary, dictInfo);
+    }
+
+    private DictionaryInfo createDictionaryInfo(DataModelDesc model, TblColRef col, ReadableTable inpTable) throws IOException {
+        TblColRef srcCol = decideSourceData(model, col);
+        TableSignature inputSig = inpTable.getSignature();
+        if (inputSig == null) // table does not exists
+            throw new IllegalStateException("Input table does not exist: " + inpTable);
+
+        DictionaryInfo dictInfo = new DictionaryInfo(srcCol.getColumnDesc(), col.getDatatype(), inputSig);
+        return dictInfo;
     }
 
     /**
