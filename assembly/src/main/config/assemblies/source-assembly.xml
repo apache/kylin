@@ -92,11 +92,13 @@ limitations under the License.
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?dist(/.*)?]
                 </exclude>
 
-                <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?build(/.*)?]
-                </exclude>
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?lib(/.*)?]
                 </exclude>
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?docs(/.*)?]
+                </exclude>
+
+                <!-- exclude unmaintained -->
+                <exclude>%regex[(?!((?!${project.build.directory}/)))?engine-spark(/.*)?]
                 </exclude>
             </excludes>
         </fileSet>
