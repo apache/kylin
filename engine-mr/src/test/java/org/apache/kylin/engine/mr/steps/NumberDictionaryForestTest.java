@@ -23,6 +23,7 @@ import org.apache.kylin.dict.NumberDictionaryBuilder;
 import org.apache.kylin.dict.NumberDictionaryForestBuilder;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TrieDictionaryForest;
+import org.apache.kylin.engine.mr.steps.SelfDefineSortableKey.TypeFlag;
 import org.junit.Ignore;
 import org.junit.Test;
 

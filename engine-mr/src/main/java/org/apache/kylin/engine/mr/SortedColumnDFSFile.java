@@ -17,15 +17,19 @@
 */
 package org.apache.kylin.engine.mr;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.dict.ByteComparator;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.source.ReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Comparator;
 
 /**
  * Created by xiefan on 16-11-22.
@@ -34,17 +38,18 @@ import java.util.Comparator;
  *
  * You need to ensure that values inside each file is sorted
  */
-public class SortedColumn implements ReadableTable {
+public class SortedColumnDFSFile implements ReadableTable {
+
+    private static final Logger logger = LoggerFactory.getLogger(SortedColumnDFSFile.class);
+
+    private String dfsPath;
 
     private DFSFileTable dfsFileTable;
 
-    private String path;
-
     private DataType dataType;
 
-    private static final Logger logger = LoggerFactory.getLogger(SortedColumn.class);
-
-    public SortedColumn(String path, DataType dataType) {
+    public SortedColumnDFSFile(String path, DataType dataType) {
+        this.dfsPath = path;
         this.dfsFileTable = new DFSFileTable(path, -1);
         this.dataType = dataType;
     }
@@ -52,7 +57,27 @@ public class SortedColumn implements ReadableTable {
     @Override
     public TableReader getReader() throws IOException {
         final Comparator<String> comparator = getComparatorByType(dataType);
-        return new SortedColumnReader(dfsFileTable.getReaders(), comparator);
+
+        ArrayList<TableReader> readers = new ArrayList<>();
+        String filePath = HadoopUtil.fixWindowsPath(dfsPath);
+        FileSystem fs = HadoopUtil.getFileSystem(filePath);
+        ArrayList<FileStatus> allFiles = new ArrayList<>();
+        FileStatus status = fs.getFileStatus(new Path(filePath));
+        if (status.isFile()) {
+            allFiles.add(status);
+        } else {
+            FileStatus[] listStatus = fs.listStatus(new Path(filePath));
+            for (FileStatus f : listStatus) {
+                if (f.isFile())
+                    allFiles.add(f);
+            }
+        }
+        for (FileStatus f : allFiles) {
+            DFSFileTableReader reader = new DFSFileTableReader(f.getPath().toString(), -1);
+            readers.add(reader);
+        }
+
+        return new SortedColumnDFSFileReader(readers, comparator);
     }
 
     @Override

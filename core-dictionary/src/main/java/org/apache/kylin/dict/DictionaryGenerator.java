@@ -135,8 +135,7 @@ public class DictionaryGenerator {
     private static class StringDictBuilder implements IDictionaryBuilder {
         @Override
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
-            int maxTrieSizeInMB = TrieDictionaryForestBuilder.getMaxTrieSizeInMB();
-            TrieDictionaryForestBuilder builder = new TrieDictionaryForestBuilder(new StringBytesConverter(), baseId, maxTrieSizeInMB);
+            TrieDictionaryForestBuilder builder = new TrieDictionaryForestBuilder(new StringBytesConverter(), baseId);
             String value;
             while (valueEnumerator.moveNext()) {
                 value = valueEnumerator.current();
@@ -153,9 +152,7 @@ public class DictionaryGenerator {
     private static class NumberDictBuilder implements IDictionaryBuilder {
         @Override
         public Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException {
-
-            int maxTrieSizeInMB = TrieDictionaryForestBuilder.getMaxTrieSizeInMB();
-            NumberDictionaryForestBuilder builder = new NumberDictionaryForestBuilder(baseId, maxTrieSizeInMB);
+            NumberDictionaryForestBuilder builder = new NumberDictionaryForestBuilder(baseId);
             String value;
             while (valueEnumerator.moveNext()) {
                 value = valueEnumerator.current();

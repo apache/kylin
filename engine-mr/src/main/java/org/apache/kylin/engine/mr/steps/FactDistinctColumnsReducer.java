@@ -66,7 +66,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private List<ByteArray> colValues;
     private TblColRef col = null;
     private boolean isStatistics = false;
-    private boolean isPartitionCol = false;
     private KylinConfig cubeConfig;
     private int uhcReducerCount;
     private Map<Integer, Integer> ReducerIdToColumnIndex = new HashMap<>();
@@ -103,13 +102,11 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         } else if (collectStatistics && (taskId == numberOfTasks - 2)) {
             // partition col
             isStatistics = false;
-            isPartitionCol = true;
             col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
             colValues = Lists.newLinkedList();
         } else {
             // col
             isStatistics = false;
-            isPartitionCol = false;
             col = columnList.get(ReducerIdToColumnIndex.get(taskId));
             colValues = Lists.newLinkedList();
         }

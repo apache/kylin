@@ -30,13 +30,12 @@ import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  */
@@ -156,14 +155,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                 outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
                 sortableKey.setText(outputKey);
                 //judge type
-                DataType type = factDictCols.get(i).getType();
-                if (!type.isNumberFamily()) {
-                    sortableKey.setTypeId((byte) TypeFlag.NONE_NUMERIC_TYPE.ordinal());
-                } else if (type.isIntegerFamily()) {
-                    sortableKey.setTypeId((byte) TypeFlag.INTEGER_FAMILY_TYPE.ordinal());
-                } else {
-                    sortableKey.setTypeId((byte) TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
-                }
+                sortableKey.setTypeIdByDatatype(factDictCols.get(i).getType());
                 context.write(sortableKey, EMPTY_TEXT);
             }
         } catch (Exception ex) {

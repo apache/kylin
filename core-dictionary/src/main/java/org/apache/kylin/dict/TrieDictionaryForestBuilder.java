@@ -78,7 +78,6 @@ public class TrieDictionaryForestBuilder<T> {
         addValue(valueBytes);
     }
 
-
     private void addValue(byte[] valueBytes) {
         ByteArray valueByteArray = new ByteArray(valueBytes);
         if (previousValue != null && isOrdered) {
@@ -97,7 +96,7 @@ public class TrieDictionaryForestBuilder<T> {
         previousValue = valueByteArray;
         trieBuilder.addValue(valueBytes);
         curTreeSize += valueBytes.length;
-        
+
         if (curTreeSize >= maxTrieTreeSize && isOrdered) {
             TrieDictionary<T> tree = trieBuilder.build(0);
             addTree(tree);

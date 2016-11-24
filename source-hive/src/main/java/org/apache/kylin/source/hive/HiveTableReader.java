@@ -82,9 +82,6 @@ public class HiveTableReader implements TableReader {
         }
 
         this.numberOfSplits = readCntxt.numSplits();
-
-        //        HCatTableInfo tableInfo = HCatTableInfo.
-        //        HCatSchema schema = HCatBaseInputFormat.getTableSchema(context.getConfiguration);
     }
 
     @Override

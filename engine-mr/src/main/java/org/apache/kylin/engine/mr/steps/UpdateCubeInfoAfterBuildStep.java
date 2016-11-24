@@ -29,7 +29,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.mr.SortedColumn;
+import org.apache.kylin.engine.mr.SortedColumnDFSFile;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -101,7 +101,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
         final String factDistinctPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
         //final ReadableTable readableTable = new DFSFileTable(factDistinctPath + "/" + partitionCol.getName(), -1);
-        final ReadableTable readableTable = new SortedColumn(factDistinctPath + "/" + partitionCol.getName(), partitionCol.getType());
+        final ReadableTable readableTable = new SortedColumnDFSFile(factDistinctPath + "/" + partitionCol.getName(), partitionCol.getType());
         final ReadableTable.TableReader tableReader = readableTable.getReader();
         long minValue = Long.MAX_VALUE, maxValue = Long.MIN_VALUE;
         try {

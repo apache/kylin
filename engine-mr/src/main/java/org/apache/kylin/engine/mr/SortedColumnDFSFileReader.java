@@ -27,16 +27,17 @@ import java.util.PriorityQueue;
 /**
  * Created by xiefan on 16-11-22.
  */
-public class SortedColumnReader implements ReadableTable.TableReader {
+public class SortedColumnDFSFileReader implements ReadableTable.TableReader {
     private Collection<ReadableTable.TableReader> readers;
 
+    @SuppressWarnings("unused")
     private Comparator<String> comparator;
 
     private PriorityQueue<ReaderBuffer> pq;
 
     private String[] row;
 
-    public SortedColumnReader(Collection<ReadableTable.TableReader> readers, final Comparator<String> comparator) {
+    public SortedColumnDFSFileReader(Collection<ReadableTable.TableReader> readers, final Comparator<String> comparator) {
         this.readers = readers;
         this.comparator = comparator;
         pq = new PriorityQueue<ReaderBuffer>(11, new Comparator<ReaderBuffer>() {
@@ -95,6 +96,10 @@ public class SortedColumnReader implements ReadableTable.TableReader {
     }
 
     static class ReaderBuffer {
+        private ReadableTable.TableReader reader;
+
+        private String[] row;
+
         public ReaderBuffer(ReadableTable.TableReader reader) throws IOException {
             this.reader = reader;
             reload();
@@ -127,10 +132,5 @@ public class SortedColumnReader implements ReadableTable.TableReader {
             }
         }
 
-        private ReadableTable.TableReader reader;
-
-        private String[] row;
-
     }
-
 }

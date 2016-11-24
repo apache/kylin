@@ -20,15 +20,11 @@ package org.apache.kylin.dict;
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dict.NumberDictionary.NumberBytesCodec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created by xiefan on 16-11-2.
  */
 public class NumberDictionaryForestBuilder extends TrieDictionaryForestBuilder<String> {
-
-    private static final Logger logger = LoggerFactory.getLogger(NumberDictionaryForestBuilder.class);
 
     public static class Number2BytesConverter implements BytesConverter<String> {
 

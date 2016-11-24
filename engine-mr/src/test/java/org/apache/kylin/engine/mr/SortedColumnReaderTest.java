@@ -17,32 +17,28 @@
 */
 package org.apache.kylin.engine.mr;
 
-import org.apache.kylin.dict.ByteComparator;
-import org.apache.kylin.dict.BytesConverter;
-import org.apache.kylin.dict.DictionaryManager;
-import org.apache.kylin.dict.IDictionaryValueEnumerator;
-import org.apache.kylin.dict.StringBytesConverter;
-import org.apache.kylin.dict.TableColumnValueEnumerator;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.source.ReadableTable;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.omg.Messaging.SYNC_WITH_TRANSPORT;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.UUID;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
+
+import org.apache.kylin.dict.ByteComparator;
+import org.apache.kylin.dict.BytesConverter;
+import org.apache.kylin.dict.IDictionaryValueEnumerator;
+import org.apache.kylin.dict.StringBytesConverter;
+import org.apache.kylin.dict.TableColumnValueEnumerator;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Created by xiefan on 16-11-14.
@@ -50,107 +46,106 @@ import static org.junit.Assert.assertEquals;
 public class SortedColumnReaderTest {
 
     @Test
-    public void testReadStringMultiFile() throws Exception{
+    public void testReadStringMultiFile() throws Exception {
         String dirPath = "src/test/resources/multi_file_str";
         StringBytesConverter converter = new StringBytesConverter();
         ArrayList<String> correctAnswer = readAllFiles(dirPath);
         Collections.sort(correctAnswer, new ByteComparator<String>(new StringBytesConverter()));
-        SortedColumn column = new SortedColumn(dirPath + "/",DataType.getType("varchar"));
-        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(),-1);
+        SortedColumnDFSFile column = new SortedColumnDFSFile(dirPath + "/", DataType.getType("varchar"));
+        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(), -1);
         ArrayList<String> output = new ArrayList<>();
-        while(e.moveNext()){
+        while (e.moveNext()) {
             output.add(new String(e.current()));
         }
         System.out.println(correctAnswer.size());
         assertTrue(correctAnswer.size() == output.size());
-        for(int i=0;i<correctAnswer.size();i++){
-            assertEquals(correctAnswer.get(i),output.get(i));
+        for (int i = 0; i < correctAnswer.size(); i++) {
+            assertEquals(correctAnswer.get(i), output.get(i));
         }
     }
 
-
     @Ignore
     @Test
-    public void createStringTestFiles() throws Exception{
+    public void createStringTestFiles() throws Exception {
         String dirPath = "src/test/resources/multi_file_str";
         String prefix = "src/test/resources/multi_file_str/data_";
         ArrayList<String> data = new ArrayList<>();
         int num = 10000;
-        for(int i=0;i<num;i++){
+        for (int i = 0; i < num; i++) {
             UUID uuid = UUID.randomUUID();
             data.add(uuid.toString());
         }
-        Collections.sort(data,new ByteComparator<String>(new StringBytesConverter()));
+        Collections.sort(data, new ByteComparator<String>(new StringBytesConverter()));
         Random rand = new Random(System.currentTimeMillis());
         ArrayList<File> allFiles = new ArrayList<>();
         int fileNum = 5;
-        for(int i=0;i<fileNum;i++){
+        for (int i = 0; i < fileNum; i++) {
             File f = new File(prefix + i);
-            if(!f.exists())
+            if (!f.exists())
                 f.createNewFile();
             allFiles.add(f);
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
-        for(File f : allFiles){
+        for (File f : allFiles) {
             bws.add(new BufferedWriter(new FileWriter(f)));
         }
         System.out.println(data.size());
-        for(String str : data){
+        for (String str : data) {
             int fileId = rand.nextInt(fileNum);
             BufferedWriter bw = bws.get(fileId);
             bw.write(str);
             bw.newLine();
         }
-        for(BufferedWriter bw : bws)
-        {
+        for (BufferedWriter bw : bws) {
             bw.flush();
             bw.close();
         }
         File dir = new File(dirPath);
         File[] files = dir.listFiles();
-        for(File file : files){
-            System.out.println("file:"+file.getAbsolutePath()+" size:"+file.length());
+        for (File file : files) {
+            System.out.println("file:" + file.getAbsolutePath() + " size:" + file.length());
         }
     }
 
     @Test
-    public void testReadIntegerMultiFiles() throws Exception{
+    public void testReadIntegerMultiFiles() throws Exception {
         String dirPath = "src/test/resources/multi_file_int";
         ArrayList<String> correctAnswer = readAllFiles(dirPath);
         Collections.sort(correctAnswer, new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
-                try{
+                try {
                     Long l1 = Long.parseLong(o1);
                     Long l2 = Long.parseLong(o2);
                     return l1.compareTo(l2);
-                }catch (NumberFormatException e){
+                } catch (NumberFormatException e) {
                     e.printStackTrace();
                     return 0;
                 }
             }
         });
-        SortedColumn column = new SortedColumn(dirPath + "/",DataType.getType("long"));
-        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(),-1);
+        SortedColumnDFSFile column = new SortedColumnDFSFile(dirPath + "/", DataType.getType("long"));
+        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(), -1);
         ArrayList<String> output = new ArrayList<>();
-        while(e.moveNext()){
+        while (e.moveNext()) {
             System.out.println(new String(e.current()));
             output.add(new String(e.current()));
         }
         System.out.println(correctAnswer.size());
         assertTrue(correctAnswer.size() == output.size());
-        for(int i=0;i<correctAnswer.size();i++){
-            assertEquals(correctAnswer.get(i),output.get(i));
+        for (int i = 0; i < correctAnswer.size(); i++) {
+            assertEquals(correctAnswer.get(i), output.get(i));
         }
     }
 
     @Test
-    public void testEmptyDir() throws Exception{
+    public void testEmptyDir() throws Exception {
         String dirPath = "src/test/resources/empty_dir";
-        SortedColumn column = new SortedColumn(dirPath + "/",DataType.getType("varchar"));
-        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(),-1);
+        new File(dirPath).mkdirs();
+        SortedColumnDFSFile column = new SortedColumnDFSFile(dirPath + "/", DataType.getType("varchar"));
+        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(), -1);
         ArrayList<String> output = new ArrayList<>();
-        while(e.moveNext()){
+        while (e.moveNext()) {
             System.out.println(new String(e.current()));
             output.add(new String(e.current()));
         }
@@ -158,151 +153,147 @@ public class SortedColumnReaderTest {
     }
 
     @Test
-    public void testEmptyFile() throws Exception{
+    public void testEmptyFile() throws Exception {
         String dirPath = "src/test/resources/multi_file_empty_file";
         ArrayList<String> correctAnswer = readAllFiles(dirPath);
         final BytesConverter<String> converter = new StringBytesConverter();
         Collections.sort(correctAnswer, new ByteComparator<String>(new StringBytesConverter()));
-        System.out.println("correct answer:"+correctAnswer);
-        SortedColumn column = new SortedColumn(dirPath + "/",DataType.getType("varchar"));
-        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(),-1);
+        System.out.println("correct answer:" + correctAnswer);
+        SortedColumnDFSFile column = new SortedColumnDFSFile(dirPath + "/", DataType.getType("varchar"));
+        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(), -1);
         ArrayList<String> output = new ArrayList<>();
-        while(e.moveNext()){
+        while (e.moveNext()) {
             output.add(new String(e.current()));
         }
         System.out.println(correctAnswer.size());
         assertTrue(correctAnswer.size() == output.size());
-        for(int i=0;i<correctAnswer.size();i++){
-            assertEquals(correctAnswer.get(i),output.get(i));
+        for (int i = 0; i < correctAnswer.size(); i++) {
+            assertEquals(correctAnswer.get(i), output.get(i));
         }
     }
 
-
     @Ignore
     @Test
-    public void createIntegerTestFiles() throws Exception{
+    public void createIntegerTestFiles() throws Exception {
         String dirPath = "src/test/resources/multi_file_int";
         String prefix = "src/test/resources/multi_file_int/data_";
         Random rand = new Random(System.currentTimeMillis());
         ArrayList<String> data = new ArrayList<>();
         int num = 10000;
-        for(int i=0;i<num;i++){
-            data.add(i+"");
+        for (int i = 0; i < num; i++) {
+            data.add(i + "");
         }
         ArrayList<File> allFiles = new ArrayList<>();
         int fileNum = 5;
-        for(int i=0;i<fileNum;i++){
+        for (int i = 0; i < fileNum; i++) {
             File f = new File(prefix + i);
-            if(!f.exists())
+            if (!f.exists())
                 f.createNewFile();
             allFiles.add(f);
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
-        for(File f : allFiles){
+        for (File f : allFiles) {
             bws.add(new BufferedWriter(new FileWriter(f)));
         }
         System.out.println(data.size());
-        for(String str : data){
+        for (String str : data) {
             int fileId = rand.nextInt(fileNum);
             BufferedWriter bw = bws.get(fileId);
             bw.write(str);
             bw.newLine();
         }
-        for(BufferedWriter bw : bws)
-        {
+        for (BufferedWriter bw : bws) {
             bw.flush();
             bw.close();
         }
         File dir = new File(dirPath);
         File[] files = dir.listFiles();
-        for(File file : files){
-            System.out.println("file:"+file.getAbsolutePath()+" size:"+file.length());
+        for (File file : files) {
+            System.out.println("file:" + file.getAbsolutePath() + " size:" + file.length());
         }
     }
 
     @Test
-    public void testReadDoubleMultiFiles() throws Exception{
+    public void testReadDoubleMultiFiles() throws Exception {
         String dirPath = "src/test/resources/multi_file_double";
         ArrayList<String> correctAnswer = readAllFiles(dirPath);
         Collections.sort(correctAnswer, new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
-                try{
+                try {
                     Double d1 = Double.parseDouble(o1);
                     Double d2 = Double.parseDouble(o2);
                     return d1.compareTo(d2);
-                }catch (NumberFormatException e){
+                } catch (NumberFormatException e) {
                     e.printStackTrace();
                     return 0;
                 }
             }
         });
-        SortedColumn column = new SortedColumn(dirPath + "/",DataType.getType("double"));
-        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(),-1);
+        SortedColumnDFSFile column = new SortedColumnDFSFile(dirPath + "/", DataType.getType("double"));
+        IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(), -1);
         ArrayList<String> output = new ArrayList<>();
-        while(e.moveNext()){
+        while (e.moveNext()) {
             System.out.println(new String(e.current()));
             output.add(new String(e.current()));
         }
         System.out.println(correctAnswer.size());
         assertTrue(correctAnswer.size() == output.size());
-        for(int i=0;i<correctAnswer.size();i++){
-            assertEquals(correctAnswer.get(i),output.get(i));
+        for (int i = 0; i < correctAnswer.size(); i++) {
+            assertEquals(correctAnswer.get(i), output.get(i));
         }
     }
 
-
     @Ignore
     @Test
-    public void createDoubleTestFiles() throws Exception{
+    public void createDoubleTestFiles() throws Exception {
         String dirPath = "src/test/resources/multi_file_double";
         String prefix = "src/test/resources/multi_file_double/data_";
         Random rand = new Random(System.currentTimeMillis());
         ArrayList<String> data = new ArrayList<>();
         int num = 10000;
         double k = 0.0;
-        for(int i=0;i<num;i++){
-            data.add(k+"");
-            k+=0.52;
+        for (int i = 0; i < num; i++) {
+            data.add(k + "");
+            k += 0.52;
         }
         ArrayList<File> allFiles = new ArrayList<>();
         int fileNum = 5;
-        for(int i=0;i<fileNum;i++){
+        for (int i = 0; i < fileNum; i++) {
             File f = new File(prefix + i);
-            if(!f.exists())
+            if (!f.exists())
                 f.createNewFile();
             allFiles.add(f);
         }
         ArrayList<BufferedWriter> bws = new ArrayList<>();
-        for(File f : allFiles){
+        for (File f : allFiles) {
             bws.add(new BufferedWriter(new FileWriter(f)));
         }
         System.out.println(data.size());
-        for(String str : data){
+        for (String str : data) {
             int fileId = rand.nextInt(fileNum);
             BufferedWriter bw = bws.get(fileId);
             bw.write(str);
             bw.newLine();
         }
-        for(BufferedWriter bw : bws)
-        {
+        for (BufferedWriter bw : bws) {
             bw.flush();
             bw.close();
         }
         File dir = new File(dirPath);
         File[] files = dir.listFiles();
-        for(File file : files){
-            System.out.println("file:"+file.getAbsolutePath()+" size:"+file.length());
+        for (File file : files) {
+            System.out.println("file:" + file.getAbsolutePath() + " size:" + file.length());
         }
     }
 
-    private ArrayList<String> readAllFiles(String dirPath) throws Exception{
+    private ArrayList<String> readAllFiles(String dirPath) throws Exception {
         ArrayList<String> result = new ArrayList<>();
         File dir = new File(dirPath);
-        for(File f : dir.listFiles()){
+        for (File f : dir.listFiles()) {
             BufferedReader br = new BufferedReader(new FileReader(f));
             String str = br.readLine();
-            while(str != null){
+            while (str != null) {
                 result.add(str);
                 str = br.readLine();
             }

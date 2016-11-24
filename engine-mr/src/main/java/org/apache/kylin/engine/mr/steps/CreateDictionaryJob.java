@@ -23,14 +23,13 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cli.DictionaryGeneratorCLI;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
-import org.apache.kylin.engine.mr.SortedColumn;
+import org.apache.kylin.engine.mr.SortedColumnDFSFile;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
 
 /**
  * @author ysong1
- * 
  */
 
 public class CreateDictionaryJob extends AbstractHadoopJob {
@@ -54,8 +53,7 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
         DictionaryGeneratorCLI.processSegment(config, cubeName, segmentID, new DistinctColumnValuesProvider() {
             @Override
             public ReadableTable getDistinctValuesFor(TblColRef col) {
-                //return new DFSFileTable(factColumnsInputPath + "/" + col.getName(), -1);
-                return new SortedColumn(factColumnsInputPath + "/" + col.getName(), col.getType());
+                return new SortedColumnDFSFile(factColumnsInputPath + "/" + col.getName(), col.getType());
             }
         });
 

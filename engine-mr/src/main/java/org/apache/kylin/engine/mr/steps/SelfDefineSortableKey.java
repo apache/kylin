@@ -17,9 +17,9 @@
 */
 package org.apache.kylin.engine.mr.steps;
 
-
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +27,15 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-
 /**
  * Created by xiefan on 16-11-1.
  */
 public class SelfDefineSortableKey implements WritableComparable<SelfDefineSortableKey> {
+    public enum TypeFlag {
+        NONE_NUMERIC_TYPE,
+        INTEGER_FAMILY_TYPE,
+        DOUBLE_FAMILY_TYPE
+    }
 
     private byte typeId; //non-numeric(0000 0000) int(0000 0001) other numberic(0000 0010)
 
@@ -61,7 +65,7 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
                 logger.error("none numeric value!");
                 return 0;
             }
-            if (o.isIntegerFamily()) {  //integer type
+            if (o.isIntegerFamily()) { //integer type
                 try {
                     Long num1 = Long.parseLong(str1);
                     Long num2 = Long.parseLong(str2);
@@ -71,7 +75,7 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
                     e.printStackTrace();
                     return 0;
                 }
-            } else {  //other numeric type
+            } else { //other numeric type
                 try {
                     Double num1 = Double.parseDouble(str1);
                     Double num2 = Double.parseDouble(str2);
@@ -106,7 +110,8 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
     }
 
     public boolean isNumberFamily() {
-        if (typeId == TypeFlag.NONE_NUMERIC_TYPE.ordinal()) return false;
+        if (typeId == TypeFlag.NONE_NUMERIC_TYPE.ordinal())
+            return false;
         return true;
     }
 
@@ -118,6 +123,16 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
         return (typeId == TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
     }
 
+    public void setTypeIdByDatatype(DataType type) {
+        if (!type.isNumberFamily()) {
+            this.typeId = (byte) TypeFlag.NONE_NUMERIC_TYPE.ordinal();
+        } else if (type.isIntegerFamily()) {
+            this.typeId = (byte) TypeFlag.INTEGER_FAMILY_TYPE.ordinal();
+        } else {
+            this.typeId = (byte) TypeFlag.DOUBLE_FAMILY_TYPE.ordinal();
+        }
+    }
+    
     public void setTypeId(byte typeId) {
         this.typeId = typeId;
     }
