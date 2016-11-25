@@ -86,6 +86,7 @@ public class KylinVersion {
      */
     static {
         SIGNATURE_INCOMPATIBLE_REVISIONS.add(new KylinVersion("1.5.1"));
+        SIGNATURE_INCOMPATIBLE_REVISIONS.add(new KylinVersion("1.6.1"));
     }
 
     /**
