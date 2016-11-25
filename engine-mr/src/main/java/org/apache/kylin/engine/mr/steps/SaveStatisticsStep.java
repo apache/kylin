@@ -19,8 +19,6 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Random;
 
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -31,8 +29,8 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.mr.CubingJob.AlgorithmEnum;
 import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.engine.mr.CubingJob.AlgorithmEnum;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -86,16 +84,6 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
     private void decideCubingAlgorithm(CubeSegment seg, KylinConfig kylinConf) throws IOException {
         String algPref = kylinConf.getCubeAlgorithm();
-
-        CubeStatsReader cubeStats = new CubeStatsReader(seg, kylinConf);
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        cubeStats.print(pw);
-        pw.flush();
-        pw.close();
-        logger.info("Cube Stats Estimation for segment {} :", seg.toString());
-        logger.info(sw.toString());
-
         AlgorithmEnum alg;
         if (AlgorithmEnum.INMEM.name().equalsIgnoreCase(algPref)) {
             alg = AlgorithmEnum.INMEM;
@@ -115,13 +103,14 @@ public class SaveStatisticsStep extends AbstractExecutable {
             } else if ("random".equalsIgnoreCase(algPref)) { // for testing
                 alg = new Random().nextBoolean() ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
             } else { // the default
+                CubeStatsReader cubeStats = new CubeStatsReader(seg, kylinConf);
                 int mapperNumber = cubeStats.getMapperNumberOfFirstBuild();
                 int mapperNumLimit = kylinConf.getCubeAlgorithmAutoMapperLimit();
                 double mapperOverlapRatio = cubeStats.getMapperOverlapRatioOfFirstBuild();
                 double overlapThreshold = kylinConf.getCubeAlgorithmAutoThreshold();
                 logger.info("mapperNumber for " + seg + " is " + mapperNumber + " and threshold is " + mapperNumLimit);
                 logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is " + overlapThreshold);
-
+ 
                 // in-mem cubing is good when
                 // 1) the cluster has enough mapper slots to run in parallel
                 // 2) the mapper overlap ratio is small, meaning the shuffle of in-mem MR has advantage

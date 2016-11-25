@@ -227,7 +227,7 @@ public class CubeStatsReader {
         return ret;
     }
 
-    public void print(PrintWriter out) {
+    private void print(PrintWriter out) {
         Map<Long, Long> cuboidRows = getCuboidRowEstimatesHLL();
         Map<Long, Double> cuboidSizes = getCuboidSizeMap();
         List<Long> cuboids = new ArrayList<Long>(cuboidRows.keySet());
