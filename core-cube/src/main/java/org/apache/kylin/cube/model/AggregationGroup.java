@@ -107,7 +107,7 @@ public class AggregationGroup {
         
         for (int i = 0; i < names.length; i++) {
             TblColRef col = cubeDesc.getModel().findColumn(names[i]);
-            names[i] = col.getTableAlias() + "." + col.getName();
+            names[i] = col.getIdentity();
         }
         
         // check no dup

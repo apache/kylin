@@ -62,9 +62,9 @@ public class RowKeyColDesc {
     private TblColRef colRef;
 
     public void init(int index, CubeDesc cubeDesc) {
-        column = column.toUpperCase();
         bitIndex = index;
         colRef = cubeDesc.getModel().findColumn(column);
+        column = colRef.getIdentity();
         Preconditions.checkArgument(colRef != null, "Cannot find rowkey column %s in cube %s", column, cubeDesc);
 
         Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
