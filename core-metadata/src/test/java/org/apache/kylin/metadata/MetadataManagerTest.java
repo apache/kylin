@@ -76,17 +76,20 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testSnowflakeDataModel() throws Exception {
-        DataModelDesc model = getInstance(getTestConfig()).getDataModelDesc("test_kylin_snowflake_model_desc");
+        DataModelDesc model = getInstance(getTestConfig()).getDataModelDesc("test_kylin_snowflake_sales_model");
         Assert.assertTrue(model.getDimensions().size() > 0);
 
         try {
-            model.findTable("TEST_KYLIN_COUNTRY");
+            model.findTable("KYLIN_COUNTRY");
             Assert.fail();
         } catch (IllegalArgumentException ex) {
             // excepted
         }
-        Assert.assertNotNull(model.findColumn("BUYER_COUNTRY"));
-        Assert.assertNotNull(model.findColumn("SELLER_COUNTRY"));
+        
+        Assert.assertNotNull(model.findTable("BUYER_COUNTRY"));
+        Assert.assertNotNull(model.findTable("SELLER_COUNTRY"));
+        Assert.assertNotNull(model.findColumn("BUYER_COUNTRY.NAME"));
+        Assert.assertNotNull(model.findColumn("BUYER_ID"));
     }
 
     @Test

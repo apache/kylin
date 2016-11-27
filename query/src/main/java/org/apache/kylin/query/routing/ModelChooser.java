@@ -30,6 +30,7 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -38,7 +39,7 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -73,45 +74,29 @@ public class ModelChooser {
     private static Map<String, String> matches(DataModelDesc model, List<OLAPContext> contexts) {
         Map<String, String> result = Maps.newHashMap();
 
-        // the greedy match is not perfect but works for the moment
-        Map<String, List<JoinDesc>> modelJoinsMap = model.getFKSideJoinMap();
         for (OLAPContext ctx : contexts) {
-            for (JoinDesc queryJoin : ctx.joins) {
-                String fkTable = queryJoin.getForeignKeyColumns()[0].getTable();
-                List<JoinDesc> modelJoins = modelJoinsMap.get(fkTable);
-                if (modelJoins == null)
-                    return null;
+            TableRef firstTable = ctx.firstTableScan.getTableRef();
 
-                JoinDesc matchJoin = null;
-                for (JoinDesc modelJoin : modelJoins) {
-                    if (modelJoin.matches(queryJoin)) {
-                        matchJoin = modelJoin;
-                        break;
-                    }
+            Map<String, String> matchUp = null;
+
+            if (ctx.joins.isEmpty() && model.isLookupTable(firstTable.getTableIdentity())) {
+                // one lookup table
+                String modelAlias = model.findFirstTable(firstTable.getTableIdentity()).getAlias();
+                matchUp = ImmutableMap.of(firstTable.getAlias(), modelAlias);
+            } else {
+                // normal big joins
+                if (ctx.joinsTree == null) {
+                    ctx.joinsTree = new JoinsTree(firstTable, ctx.joins);
                 }
-                if (matchJoin == null)
-                    return null;
+                matchUp = ctx.joinsTree.matches(model.getJoinsTree(), result);
+            }
 
-                matchesAdd(queryJoin.getForeignKeyColumns()[0].getTableAlias(), matchJoin.getForeignKeyColumns()[0].getTableAlias(), result);
-                matchesAdd(queryJoin.getPrimaryKeyColumns()[0].getTableAlias(), matchJoin.getPrimaryKeyColumns()[0].getTableAlias(), result);
-            }
-            
-            OLAPTableScan firstTable = ctx.firstTableScan;
-            String firstTableAlias = firstTable.getAlias();
-            if (result.containsKey(firstTableAlias) == false) {
-                TableRef tableRef = model.findFirstTable(firstTable.getOlapTable().getTableName());
-                if (tableRef == null)
-                    return null;
-                matchesAdd(firstTableAlias, tableRef.getAlias(), result);
-            }
+            if (matchUp == null)
+                return null;
+
+            result.putAll(matchUp);
         }
-        
         return result;
-    }
-
-    private static void matchesAdd(String origAlias, String targetAlias, Map<String, String> result) {
-        String existingTarget = result.put(origAlias, targetAlias);
-        Preconditions.checkState(existingTarget == null || existingTarget.equals(targetAlias));
     }
 
     private static Map<DataModelDesc, Set<IRealization>> makeOrderedModelMap(List<OLAPContext> contexts) {

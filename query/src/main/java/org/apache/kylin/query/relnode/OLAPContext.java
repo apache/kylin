@@ -33,6 +33,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -127,6 +128,7 @@ public class OLAPContext {
     public Set<TblColRef> filterColumns = new HashSet<>();
     public TupleFilter filter;
     public List<JoinDesc> joins = new LinkedList<>();
+    public JoinsTree joinsTree;
     private List<TblColRef> sortColumns;
     private List<SQLDigest.OrderEnum> sortOrders;
 

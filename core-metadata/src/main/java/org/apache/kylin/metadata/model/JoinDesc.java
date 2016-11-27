@@ -110,6 +110,14 @@ public class JoinDesc {
             Preconditions.checkState(tableRef == cols[i].getTableRef());
     }
 
+    public TableRef getPKSide() {
+        return primaryKeyColumns[0].getTableRef();
+    }
+    
+    public TableRef getFKSide() {
+        return foreignKeyColumns[0].getTableRef();
+    }
+
     public void sortByFK() {
         Preconditions.checkState(primaryKey.length == foreignKey.length && primaryKey.length == primaryKeyColumns.length && foreignKey.length == foreignKeyColumns.length);
         boolean cont = true;
@@ -174,6 +182,9 @@ public class JoinDesc {
 
     // equals() without alias
     public boolean matches(JoinDesc other) {
+        if (other == null)
+            return false;
+        
         if (!this.type.equalsIgnoreCase(other.getType()))
             return false;
         

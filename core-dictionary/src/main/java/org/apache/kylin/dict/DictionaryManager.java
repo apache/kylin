@@ -339,7 +339,7 @@ public class DictionaryManager {
         
         // find a lookup table that the col joins as FK
         for (TableRef lookup : model.getLookupTables()) {
-            JoinDesc lookupJoin = model.getPKSideJoinMap().get(lookup);
+            JoinDesc lookupJoin = model.getJoinByPKSide(lookup);
             int find = ArrayUtils.indexOf(lookupJoin.getForeignKeyColumns(), col);
             if (find < 0)
                 continue;
@@ -357,8 +357,8 @@ public class DictionaryManager {
             if (join.isInnerJoin() == false)
                 return false;
             
-            TableRef table = join.getForeignKeyColumns()[0].getTableRef();
-            join = model.getPKSideJoinMap().get(table);
+            TableRef table = join.getFKSide();
+            join = model.getJoinByPKSide(table);
         }
         return true;
     }

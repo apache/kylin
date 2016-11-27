@@ -97,8 +97,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private Set<TableRef> allTableRefs = Sets.newLinkedHashSet();
     private Map<String, TableRef> aliasMap = Maps.newHashMap(); // alias => TableRef, a table has exactly one alias
     private Map<String, TableRef> tableNameMap = Maps.newHashMap(); // name => TableRef, a table maybe referenced by multiple names
-    private Map<TableRef, JoinDesc> pkSideJoinMap = Maps.newHashMap(); // table (PK side) => JoinTable
-    private Map<String, List<JoinDesc>> fkSideJoinMap = Maps.newHashMap(); // table (FK side) => JoinDesc
+    private JoinsTree joinsTree;
 
     /**
      * Error messages during resolving json metadata
@@ -151,12 +150,12 @@ public class DataModelDesc extends RootPersistentEntity {
         return joinTables;
     }
 
-    public Map<TableRef, JoinDesc> getPKSideJoinMap() {
-        return pkSideJoinMap;
+    public JoinDesc getJoinByPKSide(TableRef table) {
+        return joinsTree.getJoinByPKSide(table);
     }
-
-    public Map<String, List<JoinDesc>> getFKSideJoinMap() {
-        return fkSideJoinMap;
+    
+    public JoinsTree getJoinsTree() {
+        return joinsTree;
     }
 
     @Deprecated
@@ -282,6 +281,7 @@ public class DataModelDesc extends RootPersistentEntity {
         initJoinTablesForUpgrade();
         initTableAlias(tables);
         initJoinColumns();
+        initJoinsTree();
         ModelDimensionDesc.capicalizeStrings(dimensions);
         initPartitionDesc();
     }
@@ -360,8 +360,6 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     private void initJoinColumns() {
-        pkSideJoinMap.clear();
-        fkSideJoinMap.clear();
 
         for (JoinTableDesc joinTable : joinTables) {
             TableRef dimTable = joinTable.getTableRef();
@@ -413,15 +411,15 @@ public class DataModelDesc extends RootPersistentEntity {
                     logger.warn("PK " + dimTable + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with FK " + fkTable + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
                 }
             }
-
-            // pk/fk side join maps
-            pkSideJoinMap.put(dimTable, join);
-            List<JoinDesc> list = fkSideJoinMap.get(fkTable.getTableIdentity());
-            if (list == null) {
-                fkSideJoinMap.put(fkTable.getTableIdentity(), list = Lists.newArrayListWithCapacity(4));
-            }
-            list.add(join);
         }
+    }
+
+    private void initJoinsTree() {
+        List<JoinDesc> joins = new ArrayList<>();
+        for (JoinTableDesc joinTable : joinTables) {
+            joins.add(joinTable.getJoin());
+        }
+        joinsTree = new JoinsTree(rootFactTableRef, joins);
     }
 
     /**
