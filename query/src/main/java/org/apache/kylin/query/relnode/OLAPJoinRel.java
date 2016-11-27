@@ -70,6 +70,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
 
     private OLAPContext context;
     private ColumnRowType columnRowType;
+    private int columnRowTypeLeftRightCut;
     private boolean isTopJoin;
     private boolean hasSubQuery;
 
@@ -180,6 +181,8 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         ColumnRowType leftColumnRowType = olapLeft.getColumnRowType();
         columns.addAll(leftColumnRowType.getAllColumns());
 
+        this.columnRowTypeLeftRightCut = columns.size();
+
         OLAPRel olapRight = (OLAPRel) this.right;
         ColumnRowType rightColumnRowType = olapRight.getColumnRowType();
         columns.addAll(rightColumnRowType.getAllColumns());
@@ -198,21 +201,13 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         List<TblColRef> pkCols = new ArrayList<TblColRef>();
         List<String> fks = new ArrayList<String>();
         List<TblColRef> fkCols = new ArrayList<TblColRef>();
-        String factTable = context.firstTableScan.getTableName();
         for (Map.Entry<TblColRef, TblColRef> columnPair : joinColumns.entrySet()) {
             TblColRef fromCol = columnPair.getKey();
             TblColRef toCol = columnPair.getValue();
-            if (factTable.equalsIgnoreCase(fromCol.getTable())) {
-                fks.add(fromCol.getName());
-                fkCols.add(fromCol);
-                pks.add(toCol.getName());
-                pkCols.add(toCol);
-            } else {
-                fks.add(toCol.getName());
-                fkCols.add(toCol);
-                pks.add(fromCol.getName());
-                pkCols.add(fromCol);
-            }
+            fks.add(fromCol.getName());
+            fkCols.add(fromCol);
+            pks.add(toCol.getName());
+            pkCols.add(toCol);
         }
 
         JoinDesc join = new JoinDesc();
@@ -237,7 +232,11 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
             TblColRef col0 = columnRowType.getColumnByIndex(op0.getIndex());
             RexInputRef op1 = (RexInputRef) operands.get(1);
             TblColRef col1 = columnRowType.getColumnByIndex(op1.getIndex());
-            joinColumns.put(col0, col1);
+            // map left => right
+            if (op0.getIndex() < columnRowTypeLeftRightCut)
+                joinColumns.put(col0, col1);
+            else
+                joinColumns.put(col1, col0);
         }
     }
 

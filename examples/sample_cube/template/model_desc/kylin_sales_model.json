@@ -15,16 +15,60 @@
       "primary_key" : [ "LEAF_CATEG_ID", "SITE_ID" ],
       "foreign_key" : [ "LEAF_CATEG_ID", "LSTG_SITE_ID" ]
     }
+  }, {
+    "table" : "DEFAULT.KYLIN_ACCOUNT",
+    "alias" : "BUYER_ACCOUNT",
+    "join" : {
+      "type" : "inner",
+      "primary_key" : [ "ACCOUNT_ID" ],
+      "foreign_key" : [ "BUYER_ID" ]
+    }
+  }, {
+    "table" : "DEFAULT.KYLIN_ACCOUNT",
+    "alias" : "SELLER_ACCOUNT",
+    "join" : {
+      "type" : "inner",
+      "primary_key" : [ "ACCOUNT_ID" ],
+      "foreign_key" : [ "SELLER_ID" ]
+    }
+  }, {
+    "table" : "DEFAULT.KYLIN_COUNTRY",
+    "alias" : "BUYER_COUNTRY",
+    "join" : {
+      "type" : "inner",
+      "primary_key" : [ "COUNTRY" ],
+      "foreign_key" : [ "BUYER_ACCOUNT.ACCOUNT_COUNTRY" ]
+    }
+  }, {
+    "table" : "DEFAULT.KYLIN_COUNTRY",
+    "alias" : "SELLER_COUNTRY",
+    "join" : {
+      "type" : "inner",
+      "primary_key" : [ "COUNTRY" ],
+      "foreign_key" : [ "SELLER_ACCOUNT.ACCOUNT_COUNTRY" ]
+    }
   }],
   "dimensions" : [ {
+    "table" : "DEFAULT.KYLIN_SALES",
+    "columns" : [ "TRANS_ID", "SELLER_ID", "BUYER_ID", "PART_DT", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "OPS_USER_ID", "OPS_REGION" ]
+  }, {
     "table" : "DEFAULT.KYLIN_CAL_DT",
     "columns" : ["CAL_DT", "WEEK_BEG_DT"]
   }, {
     "table" : "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
-    "columns" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME" ]
+    "columns" : [ "USER_DEFINED_FIELD1", "USER_DEFINED_FIELD3", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "SITE_ID" ]
   }, {
-    "table" : "DEFAULT.KYLIN_SALES",
-    "columns" : [ "LSTG_FORMAT_NAME", "SELLER_ID", "PART_DT", "USER_ID", "REGION" ]
+    "table" : "BUYER_ACCOUNT",
+    "columns" : [ "ACCOUNT_ID", "ACCOUNT_BUYER_LEVEL", "ACCOUNT_SELLER_LEVEL", "ACCOUNT_COUNTRY", "ACCOUNT_CONTACT" ]
+  }, {
+    "table" : "SELLER_ACCOUNT",
+    "columns" : [ "ACCOUNT_ID", "ACCOUNT_BUYER_LEVEL", "ACCOUNT_SELLER_LEVEL", "ACCOUNT_COUNTRY", "ACCOUNT_CONTACT" ]
+  }, {
+    "table" : "BUYER_COUNTRY",
+    "columns" : [ "COUNTRY", "NAME" ]
+  }, {
+    "table" : "SELLER_COUNTRY",
+    "columns" : [ "COUNTRY", "NAME" ]
   } ],
   "metrics": [
     "PRICE",

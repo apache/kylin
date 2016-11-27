@@ -38,10 +38,11 @@ public class RealAclHBaseStorage implements AclHBaseStorage {
 
     @Override
     public String prepareHBaseTable(Class<?> clazz) throws IOException {
-        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String metadataUrl = kylinConfig.getMetadataUrl();
         int cut = metadataUrl.indexOf('@');
-        String tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        String tableNameBase = kylinConfig.getMetadataUrlPrefix();
 
         if (clazz == AclService.class) {
             aclTableName = tableNameBase + ACL_TABLE_NAME;

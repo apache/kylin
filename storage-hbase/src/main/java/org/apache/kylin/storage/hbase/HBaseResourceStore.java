@@ -58,7 +58,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseResourceStore.class);
 
-    private static final String DEFAULT_TABLE_NAME = "kylin_metadata";
+    private static final String DEFAULT_TABLE_NAME = "kylin_default_instance";
     private static final String FAMILY = "f";
     private static final byte[] B_FAMILY = Bytes.toBytes(FAMILY);
     private static final String COLUMN = "c";

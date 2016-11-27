@@ -378,6 +378,9 @@ public class DataModelDesc extends RootPersistentEntity {
             for (int i = 0; i < pks.length; i++) {
                 TblColRef col = dimTable.getColumn(pks[i]);
                 if (col == null) {
+                    col = findColumn(pks[i]);
+                }
+                if (col == null || col.getTableRef().equals(dimTable) == false) {
                     throw new IllegalStateException("Can't find column " + pks[i] + " in table " + dimTable.getTableIdentity());
                 }
                 pkCols[i] = col;

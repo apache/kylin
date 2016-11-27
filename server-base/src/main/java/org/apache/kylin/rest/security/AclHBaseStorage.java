@@ -25,7 +25,6 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 /**
  */
 public interface AclHBaseStorage {
-    String DEFAULT_TABLE_PREFIX = "kylin_metadata";
 
     String ACL_INFO_FAMILY = "i";
     String ACL_ACES_FAMILY = "a";

@@ -104,7 +104,6 @@ public class QueryService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
     public static final String USER_QUERY_FAMILY = "q";
-    private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
     private static final String USER_QUERY_COLUMN = "c";
 
@@ -129,11 +128,12 @@ public class QueryService extends BasicService {
     }
 
     public QueryService() {
-        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String metadataUrl = kylinConfig.getMetadataUrl();
         // split TABLE@HBASE_URL
         int cut = metadataUrl.indexOf('@');
-        String tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        String tableNameBase = kylinConfig.getMetadataUrlPrefix();
         userTableName = tableNameBase + USER_TABLE_NAME;
 
         badQueryDetector.start();
