@@ -30,6 +30,8 @@ You can verify your download by following these [procedures](https://www.apache.
 Older releases can be found in [https://archive.apache.org/dist/kylin/](https://archive.apache.org/dist/kylin/).
     
 ## ODBC Driver
+* [Kylin ODBC Driver v1.6](http://kylin.apache.org/download/KylinODBCDriver-1.6.zip)
 * [Kylin ODBC Driver v1.5](http://kylin.apache.org/download/KylinODBCDriver-1.5.zip)
+
 Please note, it requires [Microsoft Visual C++ 2012 Redistributable](http://www.microsoft.com/en-us/download/details.aspx?id=30679) installed first. 
 
