@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.common.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,9 +70,7 @@ public class HiveCmdBuilderTest {
         assertTrue(cmd.startsWith("beeline -u jdbc_url -f"));
 
         String hqlFile = cmd.substring(cmd.lastIndexOf("-f ") + 3).trim();
-        if (hqlFile.endsWith(";")) {
-            hqlFile = hqlFile.substring(0, hqlFile.length() - 1);
-        }
+        hqlFile = hqlFile.substring(0, hqlFile.length() - ";exit $ret_code".length());
 
         String hqlStatement = FileUtils.readFileToString(new File(hqlFile), Charset.defaultCharset());
         assertEquals("USE default;" + lineSeparator + "DROP TABLE test;" + lineSeparator + "SHOW\n TABLES;" + lineSeparator, hqlStatement);

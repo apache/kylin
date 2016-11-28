@@ -44,6 +44,7 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -83,7 +84,7 @@ public class StorageCleanupJob extends AbstractApplication {
             String host = desc.getValue(IRealizationConstants.HTableTag);
             if (KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix().equalsIgnoreCase(host)) {
                 //only take care htables that belongs to self, and created more than 2 days
-                    allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
+                allTablesNeedToBeDropped.add(desc.getTableName().getNameAsString());
             }
         }
 

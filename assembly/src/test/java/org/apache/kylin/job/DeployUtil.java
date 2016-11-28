@@ -46,7 +46,7 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.hive.HiveClientFactory;
-import org.apache.kylin.source.hive.HiveCmdBuilder;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.source.hive.IHiveClient;
 import org.apache.kylin.source.kafka.TimedJsonStreamParser;
 import org.apache.maven.model.Model;

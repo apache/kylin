@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.source.hive;
+package org.apache.kylin.common.util;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -73,8 +73,9 @@ public class HiveCmdBuilder {
                 buf.append(kylinConfig.getHiveBeelineParams());
                 buf.append(" -f ");
                 buf.append(tmpHql.getAbsolutePath());
-                buf.append(";rm -f ");
+                buf.append(";ret_code=$?;rm -f ");
                 buf.append(tmpHql.getAbsolutePath());
+                buf.append(";exit $ret_code");
 
                 if (logger.isDebugEnabled()) {
                     logger.debug("The SQL to execute in beeline: \n" + FileUtils.readFileToString(tmpHql, Charset.defaultCharset()));

@@ -57,7 +57,7 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.source.hive.HiveClientFactory;
-import org.apache.kylin.source.hive.HiveCmdBuilder;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.source.hive.IHiveClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
