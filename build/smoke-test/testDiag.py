@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This is python unittest used in smoke-test.sh, aim to testing query via rest APIs.
+# This is python unittest used in smoke-test.sh, aim to testing diagnosis via rest APIs.
 
 import unittest
 import requests
@@ -40,5 +40,5 @@ class testDiag(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print 'Test Diagnogis for Kylin sample.'
+    print 'Test Diagnosis for Kylin sample.'
     unittest.main()
