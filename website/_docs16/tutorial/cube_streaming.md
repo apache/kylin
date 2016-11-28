@@ -1,6 +1,6 @@
 ---
 layout: docs16
-title:  Scalable Cubing from Streaming (Kafka)
+title:  Scalable Cubing from Kafka (beta)
 categories: tutorial
 permalink: /docs16/tutorial/cube_streaming.html
 ---

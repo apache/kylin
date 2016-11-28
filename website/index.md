@@ -60,10 +60,11 @@ title: Home
                 - Compression and Encoding Support <br/>
                 - Incremental Refresh of Cubes <br/>
                 - Leverage HBase Coprocessor for query latency <br/>
-                - Approximate Query Capability for distinct Count (HyperLogLog) <br/>
+                - Both approximate and precise Query Capabilities for Distinct Count<br/>
+                - Approximate Top-N Query Capability<br/>
                 - Easy Web interface to manage, build, monitor and query cubes <br/>
                 - Security capability to set ACL at Cube/Project Level <br/>
-                - Support LDAP Integration </div>
+                - Support LDAP and SAML Integration </div>
               </p>
             </div>
           </div>

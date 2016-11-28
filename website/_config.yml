@@ -56,11 +56,15 @@ language_default: 'en'
 collections:
   docs:
     output: true
-  docs15:
-    output: true
   docs-cn:
     output: true
+  docs15:
+    output: true
   docs15-cn:
-    output: true    
+    output: true   
+  docs16:
+    output: true
+  docs16-cn:
+    output: true     
   dev:
     output: true  
