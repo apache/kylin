@@ -454,9 +454,9 @@ https://kylin.apache.org/docs15/release_notes.html
 You can download the source release and binary packages from 
 https://www.apache.org/dyn/closer.cgi?path=/kylin/apache-kylin-1.5.2.1/
 
-More information about the binary packages is on Kylin's download page https://kylin.apache.org/download/
+More information about the binary packages is on Apache Kylin's download page https://kylin.apache.org/download/
 
-Apache Kylin is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Hadoop, supporting extremely large datasets.
+Apache Kylin is an open source Distributed Analytics Engine designed to provide SQL interface and multi-dimensional analysis (OLAP) on Apache Hadoop, supporting extremely large datasets.
 
 Apache Kylin lets you query massive data set at sub-second latency in 3 steps:
 1. Identify a Star Schema data on Hadoop.
