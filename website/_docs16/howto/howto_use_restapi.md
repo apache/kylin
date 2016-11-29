@@ -23,6 +23,7 @@ This page lists the major RESTful APIs provided by Kylin.
    * [Enable cube](#enable-cube)
 * JOB
    * [Resume job](#resume-job)
+   * [Pause job](#pause-job)
    * [Discard job](#discard-job)
    * [Get job status](#get-job-status)
    * [Get job step output](#get-job-step-output)
@@ -34,7 +35,7 @@ This page lists the major RESTful APIs provided by Kylin.
 * Cache
    * [Wipe cache](#wipe-cache)
 * Streaming
-   * [Init cube start offset](#init-start-offset)
+   * [Initiate cube start position](#initiate-cube-start-position)
    * [Build stream cube](#build-stream-cube)
    * [Check segment holes](#check-segment-holes)
    * [Fill segment holes](#fill-segment-holes)
@@ -81,14 +82,14 @@ curl -c /path/to/cookiefile.txt -X POST -H "Authorization: Basic XXXXXXXXX" -H '
 If login successfully, the JSESSIONID will be saved into the cookie file; In the subsequent http requests, attach the cookie, for example:
 
 ```
-curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/rebuild
+curl -b /path/to/cookiefile.txt -X PUT -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/your_cube/build
 ```
 
 Alternatively, you can provide the username/password with option "user" in each curl call; please note this has the risk of password leak in shell history:
 
 
 ```
-curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "startTime": 820454400000, "endTime": 821318400000, "buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/kylin_sales/rebuild
+curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8" -d '{ "startTime": 820454400000, "endTime": 821318400000, "buildType": "BUILD"}' http://localhost:7070/kylin/api/cubes/kylin_sales/build
 ```
 
 ***
@@ -645,7 +646,7 @@ Get descriptor for specified cube instance.
 ```
 
 ## Build cube
-`PUT /kylin/api/cubes/{cubeName}/rebuild`
+`PUT /kylin/api/cubes/{cubeName}/build`
 
 #### Path Variable
 * cubeName - `required` `string` Cube name.
@@ -858,15 +859,17 @@ Get descriptor for specified cube instance.
    "progress":0.0
 }
 ```
+## Pause Job
+`PUT /kylin/api/jobs/{jobId}/pause`
+
+#### Path variable
+* jobId - `required` `string` Job id.
 
 ## Discard Job
 `PUT /kylin/api/jobs/{jobId}/cancel`
 
 #### Path variable
 * jobId - `required` `string` Job id.
-
-#### Response Sample
-(Same as "Resume job")
 
 ## Get Job Status
 `GET /kylin/api/jobs/{jobId}`
@@ -1034,33 +1037,72 @@ Get descriptor for specified cube instance.
 
 ***
 
-## Init cube start offset
+## Initiate cube start position
+Set the stream cube's start position to the current latest offsets; This can avoid building from the earlist position of Kafka topic (if you have set a long retension time); 
+
 `PUT /kylin/api/cubes/{cubeName}/init_start_offsets`
+
 #### Path variable
 * cubeName - `required` `string` Cube name
 
+#### Response Sample
+```sh
+{
+    "result": "success", 
+    "offsets": "{0=246059529, 1=253547684, 2=253023895, 3=172996803, 4=165503476, 5=173513896, 6=19200473, 7=26691891, 8=26699895, 9=26694021, 10=19204164, 11=26694597}"
+}
+```
 
 ## Build stream cube
 `PUT /kylin/api/cubes/{cubeName}/build2`
+
+This API is specific for stream cube's building;
+
 #### Path variable
 * cubeName - `required` `string` Cube name
 
 #### Request Body
+
 * sourceOffsetStart - `required` `long` The start offset, 0 represents from previous position;
 * sourceOffsetEnd  - `required` `long` The end offset, 9223372036854775807 represents to the end position of current stream data
 * buildType - `required` Build type, "BUILD", "MERGE" or "REFRESH"
 
-## Init cube start offset
-`PUT /kylin/api/cubes/{cubeName}/init_start_offsets`
-#### Path variable
-* cubeName - `required` `string` Cube name
+#### Request Sample
+
+```sh
+{  
+   "sourceOffsetStart": 0, 
+   "sourceOffsetEnd": 9223372036854775807, 
+   "buildType": "BUILD"
+}
+```
+
+#### Response Sample
+```sh
+{
+    "uuid": "3afd6e75-f921-41e1-8c68-cb60bc72a601", 
+    "last_modified": 1480402541240, 
+    "version": "1.6.0", 
+    "name": "embedded_cube_clone - 1409830324_1409849348 - BUILD - PST 2016-11-28 22:55:41", 
+    "type": "BUILD", 
+    "duration": 0, 
+    "related_cube": "embedded_cube_clone", 
+    "related_segment": "42ebcdea-cbe9-4905-84db-31cb25f11515", 
+    "exec_start_time": 0, 
+    "exec_end_time": 0, 
+    "mr_waiting": 0, 
+ ...
+}
+```
 
 ## Check segment holes
 `GET /kylin/api/cubes/{cubeName}/holes`
+
 #### Path variable
 * cubeName - `required` `string` Cube name
 
 ## Fill segment holes
 `PUT /kylin/api/cubes/{cubeName}/holes`
+
 #### Path variable
 * cubeName - `required` `string` Cube name
