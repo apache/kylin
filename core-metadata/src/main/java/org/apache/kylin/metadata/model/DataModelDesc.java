@@ -282,7 +282,7 @@ public class DataModelDesc extends RootPersistentEntity {
         initTableAlias(tables);
         initJoinColumns();
         initJoinsTree();
-        ModelDimensionDesc.capicalizeStrings(dimensions);
+        initDimensionsAndMetrics();
         initPartitionDesc();
     }
 
@@ -354,6 +354,15 @@ public class DataModelDesc extends RootPersistentEntity {
         }
     }
 
+    private void initDimensionsAndMetrics() {
+        for (ModelDimensionDesc dim : dimensions) {
+            dim.init(this);
+        }
+        for (int i = 0; i < metrics.length; i++) {
+            metrics[i] = findColumn(metrics[i]).getIdentity();
+        }
+    }
+
     private void initPartitionDesc() {
         if (this.partitionDesc != null)
             this.partitionDesc.init(this);
@@ -381,6 +390,7 @@ public class DataModelDesc extends RootPersistentEntity {
                 if (col == null || col.getTableRef().equals(dimTable) == false) {
                     throw new IllegalStateException("Can't find column " + pks[i] + " in table " + dimTable.getTableIdentity());
                 }
+                pks[i] = col.getIdentity();
                 pkCols[i] = col;
             }
             join.setPrimaryKeyColumns(pkCols);
@@ -393,6 +403,7 @@ public class DataModelDesc extends RootPersistentEntity {
                 if (col == null) {
                     throw new IllegalStateException("Can't find column " + fks[i] + " in table " + this.getRootFactTable());
                 }
+                fks[i] = col.getIdentity();
                 fkCols[i] = col;
             }
             join.setForeignKeyColumns(fkCols);

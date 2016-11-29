@@ -81,8 +81,7 @@ public class FactTableGenerator {
     // table(appear as fk in fact table)
     TreeMap<String, LinkedList<String>> lookupTableKeys = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    // possible values of lookupTableKeys, extracted from existing lookup
-    // tables.
+    // possible values of lookupTableKeys, extracted from existing lookup tables.
     // The key is in the format of tablename/columnname
     TreeMap<String, ArrayList<String>> feasibleValues = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
@@ -244,7 +243,7 @@ public class FactTableGenerator {
             JoinDesc join = dim.getJoin();
             if (join != null) {
                 String lookupTable = dim.getTableRef().getTableIdentity();
-                for (String column : join.getPrimaryKey()) {
+                for (String column : dropAlias(join.getPrimaryKey())) {
                     if (!lookupTableKeys.containsKey(lookupTable)) {
                         lookupTableKeys.put(lookupTable, new LinkedList<String>());
                     }
@@ -297,8 +296,8 @@ public class FactTableGenerator {
         for (DimensionDesc dim : dimensions) {
             JoinDesc jDesc = dim.getJoin();
             if (jDesc != null) {
-                String[] fks = jDesc.getForeignKey();
-                String[] pks = jDesc.getPrimaryKey();
+                String[] fks = dropAlias(jDesc.getForeignKey());
+                String[] pks = dropAlias(jDesc.getPrimaryKey());
                 int num = fks.length;
                 for (int i = 0; i < num; ++i) {
                     String value = dim.getTableRef().getTableIdentity() + "/" + pks[i];
@@ -341,6 +340,19 @@ public class FactTableGenerator {
         }
 
         return createTable(this.rowCount, factTableCol2LookupCol, lookupCol2factTableCol, usedCols);
+    }
+
+    private String[] dropAlias(String[] aliasDotCol) {
+        String[] result = new String[aliasDotCol.length];
+        for (int i = 0; i < aliasDotCol.length; i++) {
+            String str = aliasDotCol[i];
+            int cut = str.lastIndexOf('.');
+            if (cut >= 0) {
+                str = str.substring(cut + 1);
+            }
+            result[i] = str;
+        }
+        return result;
     }
 
     private String normToTwoDigits(int v) {

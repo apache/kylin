@@ -543,6 +543,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         initMeasureColumns();
 
         rowkey.init(this);
+        
         validateAggregationGroups(); // check if aggregation group is valid
         for (AggregationGroup agg : this.aggregationGroups) {
             agg.init(this, rowkey);

@@ -77,14 +77,11 @@ public class FunctionDesc {
         expression = expression.toUpperCase();
         returnDataType = DataType.getType(returnType);
 
-        for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
-            p.setValue(p.getValue().toUpperCase());
-        }
-
         ArrayList<TblColRef> colRefs = Lists.newArrayList();
         for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
             if (p.isColumnType()) {
                 TblColRef colRef = model.findColumn(p.getValue());
+                p.setValue(colRef.getIdentity());
                 colRefs.add(colRef);
             }
         }

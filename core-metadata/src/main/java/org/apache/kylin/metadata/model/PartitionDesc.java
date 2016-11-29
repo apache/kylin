@@ -66,11 +66,11 @@ public class PartitionDesc {
         if (StringUtils.isEmpty(partitionDateColumn))
             return;
 
-        partitionDateColumn = partitionDateColumn.toUpperCase();
         partitionDateColumnRef = model.findColumn(partitionDateColumn);
+        partitionDateColumn = partitionDateColumnRef.getIdentity();
         if (StringUtils.isBlank(partitionTimeColumn) == false) {
-            partitionTimeColumn = partitionTimeColumn.toUpperCase();
             partitionTimeColumnRef = model.findColumn(partitionTimeColumn);
+            partitionTimeColumn = partitionTimeColumnRef.getIdentity();
         }
         partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
     }
