@@ -26,6 +26,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -33,6 +34,7 @@ import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,8 @@ import com.google.common.collect.Lists;
 public class SequentialCubeTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(SequentialCubeTupleIterator.class);
+
+    private final int SCAN_THRESHOLD = KylinConfig.getInstanceFromEnv().getScanThreshold();
 
     protected List<CubeSegmentScanner> scanners;
     protected List<SegmentCubeTupleIterator> segmentCubeTupleIterators;
@@ -78,7 +82,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), getTupleDimensionComparator(cuboid, returnTupleInfo)).getIterator();
         }
     }
-    
+
     public Comparator<ITuple> getTupleDimensionComparator(Cuboid cuboid, TupleInfo returnTupleInfo) {
         // dimensionIndexOnTuple is for SQL with limit
         List<Integer> temp = Lists.newArrayList();
@@ -92,7 +96,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         for (int i = 0; i < temp.size(); i++) {
             dimensionIndexOnTuple[i] = temp.get(i);
         }
-        
+
         return new Comparator<ITuple>() {
             @Override
             public int compare(ITuple o1, ITuple o2) {
@@ -137,7 +141,11 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public ITuple next() {
-        scanCount++;
+        // prevent the big query to make the Query Server OOM
+        if (scanCount++ > SCAN_THRESHOLD) {
+            throw new ScanOutOfLimitException("Scan count exceed the scan threshold: " + SCAN_THRESHOLD);
+        }
+
         if (++scanCountDelta >= 1000)
             flushScanCountDelta();
 
