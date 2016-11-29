@@ -19,21 +19,13 @@
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
-
 if [ $# != 1 ]
 then
     echo 'invalid input'
     exit -1
 fi
 
-if [[ $CI_MODE == 'true' ]]; then
-    cd $dir
-    job_jar=$(ls ../../assembly/target/kylin-*-job.jar)
-    tool_jar=$(ls ../../tool/target/kylin-tool-*.jar|grep -v assembly)
-else
-    job_jar=$(ls $KYLIN_HOME/lib/kylin-job-*.jar)
-    tool_jar=$(ls $KYLIN_HOME/tool/kylin-tool-*.jar)
-fi
-
+job_jar=$(ls $KYLIN_HOME/lib/kylin-job-*.jar)
+tool_jar=$(ls $KYLIN_HOME/tool/kylin-tool-*.jar)
 result=`java -cp $job_jar:$tool_jar org.apache.kylin.tool.KylinConfigCLI $1 2>/dev/null`
 echo "$result"
