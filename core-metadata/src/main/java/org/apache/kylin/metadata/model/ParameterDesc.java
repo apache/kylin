@@ -22,8 +22,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 
 /**
  */
@@ -36,9 +38,10 @@ public class ParameterDesc {
     private String value;
 
     @JsonProperty("next_parameter")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private ParameterDesc nextParameter;
 
-    private List<TblColRef> colRefs;
+    private List<TblColRef> colRefs = ImmutableList.of();
 
     public String getType() {
         return type;
@@ -89,21 +92,36 @@ public class ParameterDesc {
 
         ParameterDesc that = (ParameterDesc) o;
 
-        if (nextParameter != null ? !nextParameter.equals(that.nextParameter) : that.nextParameter != null)
-            return false;
         if (type != null ? !type.equals(that.type) : that.type != null)
             return false;
-        if (value != null ? !value.equals(that.value) : that.value != null)
-            return false;
-
-        return true;
+        
+        ParameterDesc p = this, q = that;
+        int refi = 0, refj = 0;
+        for (; p != null && q != null; p = p.nextParameter, q = q.nextParameter) {
+            if (p.isColumnType()) {
+                if (q.isColumnType() == false)
+                    return false;
+                if (refi >= this.colRefs.size() || refj >= that.colRefs.size())
+                    return false;
+                if (this.colRefs.get(refi).equals(that.colRefs.get(refj)) == false)
+                    return false;
+                refi++;
+                refj++;
+            } else {
+                if (q.isColumnType() == true)
+                    return false;
+                if (p.value.equals(q.value) == false)
+                    return false;
+            }
+        }
+        
+        return p == null && q == null;
     }
 
     @Override
     public int hashCode() {
         int result = type != null ? type.hashCode() : 0;
-        result = 31 * result + (value != null ? value.hashCode() : 0);
-        result = 31 * result + (nextParameter != null ? nextParameter.hashCode() : 0);
+        result = 31 * result + (colRefs != null ? colRefs.hashCode() : 0);
         return result;
     }
 
