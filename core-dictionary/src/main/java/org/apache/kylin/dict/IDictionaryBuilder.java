@@ -19,11 +19,20 @@
 package org.apache.kylin.dict;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import org.apache.kylin.common.util.Dictionary;
 
+/**
+ * An once-only builder for dictionary.
+ */
 public interface IDictionaryBuilder {
 
-    Dictionary<String> build(DictionaryInfo dictInfo, IDictionaryValueEnumerator valueEnumerator, int baseId, int nSamples, ArrayList<String> returnSamples) throws IOException;
+    /** Sets the dictionary info for the dictionary being built. Mainly for GlobalDictionaryBuilder. */
+    void init(DictionaryInfo info, int baseId) throws IOException;
+    
+    /** Add a new value into dictionary, returns it is accepted (not null) or not. */
+    boolean addValue(String value);
+    
+    /** Build the dictionary */
+    Dictionary<String> build() throws IOException;
 }

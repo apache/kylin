@@ -87,10 +87,6 @@ public class DictionaryManager {
     private KylinConfig config;
     private LoadingCache<String, DictionaryInfo> dictCache; // resource
 
-
-    // path ==>
-    // DictionaryInfo
-
     private DictionaryManager(KylinConfig config) {
         this.config = config;
         this.dictCache = CacheBuilder.newBuilder().removalListener(new RemovalListener<String, DictionaryInfo>() {
@@ -276,11 +272,9 @@ public class DictionaryManager {
         return buildDictionary(model, col, inpTable, null);
     }
 
-
     public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable, String builderClass) throws IOException {
         if (inpTable.exists() == false)
             return null;
-
 
         logger.info("building dictionary for " + col);
 
@@ -303,10 +297,12 @@ public class DictionaryManager {
         IDictionaryValueEnumerator columnValueEnumerator = null;
         try {
             columnValueEnumerator = new TableColumnValueEnumerator(inpTable.getReader(), dictInfo.getSourceColumnIndex());
-            if (builderClass == null)
+            if (builderClass == null) {
                 dictionary = DictionaryGenerator.buildDictionary(DataType.getType(dictInfo.getDataType()), columnValueEnumerator);
-            else
-                dictionary = DictionaryGenerator.buildDictionary((IDictionaryBuilder) ClassUtil.newInstance(builderClass), dictInfo, columnValueEnumerator);
+            } else {
+                IDictionaryBuilder builder = (IDictionaryBuilder) ClassUtil.newInstance(builderClass);
+                dictionary = DictionaryGenerator.buildDictionary(builder, dictInfo, columnValueEnumerator);
+            }
         } catch (Exception ex) {
             throw new RuntimeException("Failed to create dictionary on " + col, ex);
         } finally {
@@ -365,7 +361,7 @@ public class DictionaryManager {
         while (join != null) {
             if (join.isInnerJoin() == false)
                 return false;
-            
+
             TableRef table = join.getFKSide();
             join = model.getJoinByPKSide(table);
         }

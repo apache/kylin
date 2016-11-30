@@ -97,15 +97,8 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
                 // if partition col not on cube, no need
                 needFetchPartitionCol = false;
             } else {
-                for (int x : dictionaryColumnIndex) {
-                    if (x == partitionColumnIndex) {
-                        // if partition col already build dict, no need
-                        needFetchPartitionCol = false;
-                        break;
-                    }
-                }
+                needFetchPartitionCol = true;
             }
-
         }
     }
 

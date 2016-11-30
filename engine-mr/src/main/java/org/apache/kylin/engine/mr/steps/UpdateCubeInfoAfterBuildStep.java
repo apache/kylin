@@ -21,7 +21,6 @@ package org.apache.kylin.engine.mr.steps;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -84,8 +83,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
         Path colDir = new Path(factColumnsInputPath, partitionCol.getName());
         Path outputFile = new Path(colDir, partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
-        Configuration conf = HadoopUtil.getCurrentConfiguration();
-        FileSystem fs = HadoopUtil.getFileSystem(outputFile.getName());
+        FileSystem fs = HadoopUtil.getFileSystem(outputFile.toString());
         FSDataInputStream is = null;
         long minValue = Long.MAX_VALUE, maxValue = Long.MIN_VALUE;
         try {
@@ -94,8 +92,6 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
             long max = is.readLong();
             minValue = Math.min(min, minValue);
             maxValue = Math.max(max, maxValue);
-        } catch (IOException e) {
-            throw new IOException(e);
         } finally {
             IOUtils.closeQuietly(is);
         }

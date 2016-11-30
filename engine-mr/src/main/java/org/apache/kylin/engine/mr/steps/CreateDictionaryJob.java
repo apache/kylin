@@ -18,8 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.IOException;
+
 import org.apache.commons.cli.Options;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -36,15 +38,7 @@ import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
 
-import java.io.IOException;
-
-/**
- * @author ysong1
- */
-
 public class CreateDictionaryJob extends AbstractHadoopJob {
-
-    private int returnCode = 0;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -68,38 +62,28 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
         }, new DictionaryProvider() {
 
             @Override
-            public Dictionary<String> getDictionary(TblColRef col) {
-                if (!config.isReducerLocalBuildDict()) {
+            public Dictionary<String> getDictionary(TblColRef col) throws IOException {
+                Path colDir = new Path(factColumnsInputPath, col.getName());
+                Path dictFile = new Path(colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
+                FileSystem fs = HadoopUtil.getFileSystem(dictFile.toString());
+                if (fs.exists(dictFile) == false)
                     return null;
-                }
+                
                 FSDataInputStream is = null;
                 try {
-                    Path colDir = new Path(factColumnsInputPath, col.getName());
-                    Path outputFile = new Path(colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
-                    Configuration conf = HadoopUtil.getCurrentConfiguration();
-                    FileSystem fs = HadoopUtil.getFileSystem(outputFile.getName());
-                    is = fs.open(outputFile);
+                    is = fs.open(dictFile);
                     String dictClassName = is.readUTF();
                     Dictionary<String> dict = (Dictionary<String>) ClassUtil.newInstance(dictClassName);
                     dict.readFields(is);
-                    logger.info("DictionaryProvider read dict form file : " + outputFile.getName());
+                    logger.info("DictionaryProvider read dict from file: " + dictFile);
                     return dict;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null;
                 } finally {
-                    if (is != null) {
-                        try {
-                            is.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    IOUtils.closeQuietly(is);
                 }
             }
         });
 
-        return returnCode;
+        return 0;
     }
 
     public static void main(String[] args) throws Exception {

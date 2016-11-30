@@ -60,7 +60,7 @@ public class DictionaryGeneratorCLI {
         for (TblColRef col : cubeSeg.getCubeDesc().getAllColumnsNeedDictionaryBuilt()) {
             logger.info("Building dictionary for " + col);
             ReadableTable inpTable = decideInputTable(cubeSeg.getModel(), col, factTableValueProvider);
-            if (config.isReducerLocalBuildDict() && dictProvider != null) {
+            if (dictProvider != null) {
                 Dictionary<String> dict = dictProvider.getDictionary(col);
                 if (dict != null) {
                     cubeMgr.saveDictionary(cubeSeg, col, inpTable, dict);

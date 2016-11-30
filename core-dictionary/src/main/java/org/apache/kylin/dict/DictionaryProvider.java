@@ -17,6 +17,8 @@
 */
 package org.apache.kylin.dict;
 
+import java.io.IOException;
+
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -24,5 +26,5 @@ import org.apache.kylin.metadata.model.TblColRef;
  * Created by xiefan on 16-11-23.
  */
 public interface DictionaryProvider {
-    public Dictionary<String> getDictionary(TblColRef col);
+    public Dictionary<String> getDictionary(TblColRef col) throws IOException;
 }
