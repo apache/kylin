@@ -50,6 +50,7 @@ public class MassInTupleFilter extends FunctionTupleFilter {
     private String filterTableName;//key in MetadataManager.extFilterMap
     private String filterTableResourceIdentifier;//HDFS path, or hbase table name depending on FilterTableType
     private Functions.FilterTableType filterTableType;
+    private boolean reverse = false;
 
     public MassInTupleFilter() {
         super(Lists.<TupleFilter> newArrayList(), TupleFilter.FilterOperatorEnum.MASSIN);
@@ -66,7 +67,18 @@ public class MassInTupleFilter extends FunctionTupleFilter {
             valueProvider = VALUE_PROVIDER_FACTORY.getProvider(filterTableType, filterTableResourceIdentifier, column);
         }
         boolean ret = valueProvider.getMassInValues().contains(colValue);
-        return ret;
+        return reverse ? !ret : ret;
+    }
+
+    @Override
+    public TupleFilter reverse() {
+        try {
+            MassInTupleFilter result = (MassInTupleFilter) this.clone();
+            result.setReverse(!this.isReverse());
+            return result;
+        } catch (CloneNotSupportedException e) {
+            throw new UnsupportedOperationException(e);
+        }
     }
 
     @Override
@@ -144,4 +156,18 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         return false;
     }
 
+    public boolean isReverse() {
+        return reverse;
+    }
+
+    public void setReverse(boolean reverse) {
+        this.reverse = reverse;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        MassInTupleFilter result = new MassInTupleFilter();
+        result.setReverse(this.isReverse());
+        return result;
+    }
 }
