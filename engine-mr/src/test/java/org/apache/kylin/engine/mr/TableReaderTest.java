@@ -24,6 +24,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -31,7 +34,15 @@ import org.junit.Test;
  * 
  */
 public class TableReaderTest {
+    @Before
+    public void setUp() throws Exception {
+        LocalFileMetadataTestCase.staticCreateTestMetadata();
+    }
 
+    @After
+    public void after() throws Exception {
+        LocalFileMetadataTestCase.cleanAfterClass();
+    }
     @Test
     public void testBasicReader() throws IOException {
         File f = new File("src/test/resources/dict/DW_SITES");

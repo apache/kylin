@@ -37,6 +37,7 @@ public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
 
     @Before
     public void setup() throws Exception {
+        createTestMetadata();
         conf = HadoopUtil.getCurrentConfiguration();
         conf.set("fs.default.name", "file:///");
         conf.set("mapreduce.framework.name", "local");
@@ -44,7 +45,6 @@ public class RangeKeyDistributionJobTest extends LocalFileMetadataTestCase {
 
         // for local runner out-of-memory issue
         conf.set("mapreduce.task.io.sort.mb", "10");
-        createTestMetadata();
     }
 
     @After
