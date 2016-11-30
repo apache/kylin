@@ -19,7 +19,7 @@
 'use strict';
 
 
-KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager) {
+KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager,VdmUtil) {
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.modelMode = absUrl.indexOf("/models/add")!=-1?'addNewModel':absUrl.indexOf("/models/edit")!=-1?'editExistModel':'default';
@@ -188,7 +188,11 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                 loadingRequest.show();
 
                 if ($scope.isEdit) {
-                    ModelService.update({}, {modelDescData:$scope.state.modelSchema, modelName: $routeParams.modelName, project: $scope.state.project}, function (request) {
+                    ModelService.update({}, {
+                      modelDescData:VdmUtil.filterNullValInObj($scope.state.modelSchema),
+                      modelName: $routeParams.modelName,
+                      project: $scope.state.project
+                    }, function (request) {
                         if (request.successful) {
                             $scope.state.modelSchema = request.modelSchema;
                             SweetAlert.swal('', 'Updated the model successfully.', 'success');
@@ -216,7 +220,10 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                         loadingRequest.hide();
                     });
                 } else {
-                    ModelService.save({}, {modelDescData:$scope.state.modelSchema, project: $scope.state.project}, function (request) {
+                    ModelService.save({}, {
+                      modelDescData:VdmUtil.filterNullValInObj($scope.state.modelSchema),
+                      project: $scope.state.project
+                    }, function (request) {
                         if(request.successful) {
 
                           $scope.state.modelSchema = request.modelSchema;

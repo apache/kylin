@@ -413,7 +413,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
 
         if ($scope.isEdit) {
           CubeService.update({}, {
-            cubeDescData: $scope.state.cubeSchema,
+            cubeDescData: VdmUtil.filterNullValInObj($scope.state.cubeSchema),
             cubeName: $routeParams.cubeName,
             project: $scope.state.project
           }, function (request) {
@@ -453,7 +453,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           });
         } else {
           CubeService.save({}, {
-            cubeDescData: $scope.state.cubeSchema,
+            cubeDescData: VdmUtil.filterNullValInObj($scope.state.cubeSchema),
             project: $scope.state.project
           }, function (request) {
             if (request.successful) {

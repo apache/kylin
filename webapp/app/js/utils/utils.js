@@ -116,6 +116,30 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
         }
       }
       return newArr;
+    },
+    //过滤对象中的空值
+    filterNullValInObj:function(needFilterObj){
+      var newFilterObj,newObj;
+      if(typeof needFilterObj=='string'){
+        newObj=angular.fromJson(needFilterObj);
+      }else{
+        newObj=angular.extend({},needFilterObj);
+      }
+      function filterData(data){
+        var obj=data;
+        for(var i in obj){
+          if(obj[i]===null){
+            if(Object.prototype.toString.call(obj)=='[object Object]'){
+              delete obj[i];
+            }
+          }
+          else if(typeof obj[i]=== 'object'){
+            obj[i]=filterData(obj[i]);
+          }
+        }
+        return obj;
+      }
+      return angular.toJson(filterData(newObj),true);
     }
 
   }
