@@ -19,8 +19,8 @@
 package org.apache.kylin.metadata.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.measure.MeasureType;
@@ -67,7 +67,7 @@ public class FunctionDesc {
 
     @JsonProperty("configuration")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private HashMap<String, String> configuration = new LinkedHashMap<String, String>();
+    private Map<String, String> configuration = new LinkedHashMap<String, String>();
 
     private DataType returnDataType;
     private MeasureType<?> measureType;
@@ -238,11 +238,11 @@ public class FunctionDesc {
         this.returnDataType = DataType.getType(returnType);
     }
 
-    public HashMap<String, String> getConfiguration() {
+    public Map<String, String> getConfiguration() {
         return configuration;
     }
 
-    public void setConfiguration(HashMap<String, String> configurations) {
+    public void setConfiguration(Map<String, String> configurations) {
         this.configuration = configurations;
     }
 

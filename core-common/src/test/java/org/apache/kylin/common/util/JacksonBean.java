@@ -23,6 +23,10 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class JacksonBean {
 
@@ -31,6 +35,10 @@ public class JacksonBean {
     @JsonProperty("b")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private int b;
+
+    @JsonProperty("configuration")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, String> configuration = new HashMap<String, String>();
 
     public String getA() {
         return a;
@@ -46,6 +54,14 @@ public class JacksonBean {
 
     public void setB(int b) {
         this.b = b;
+    }
+
+    public Map<String, String> getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Map<String, String> configuration) {
+        this.configuration = configuration;
     }
 
     @Override
