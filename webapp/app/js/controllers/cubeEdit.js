@@ -78,7 +78,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.store.supportedEncoding = $scope.cubeConfig.encodings;
   })
   $scope.createFilter=function(type){
-     if(type.indexOf("varchar")<=0){
+     if(type.indexOf("varchar")==-1){
        return ['fixed_length_hex'];
      }else if(type!="date"){
        return ['date'];

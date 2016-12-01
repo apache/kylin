@@ -45,7 +45,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     }
   }
   $scope.createFilter=function(type){
-    if(type.indexOf("varchar")<=0){
+    if(type.indexOf("varchar")==-1){
       return ['fixed_length_hex'];
     }else if(type!="date"){
       return ['date'];
@@ -60,7 +60,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     var encodings =$scope.store.supportedEncoding,filterEncoding=[];
     var filerList=$scope.createFilter(type);
     if($scope.isEdit) {
-      if (name && $scope.newMeasure.function.configuration) {
+      if (name && $scope.newMeasure.function.configuration&&$scope.newMeasure.function.configuration['topn.encoding.' + name]) {
         var version = $scope.newMeasure.function.configuration['topn.encoding_version.' + name] || 1;
         filterEncoding = VdmUtil.getFilterObjectListByOrFilterVal(encodings, 'value', $scope.newMeasure.function.configuration['topn.encoding.' + name].replace(/:\d+/, "") + (version ? "[v" + version + "]" : "[v1]"), 'suggest', true);
       }else{
@@ -119,7 +119,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
             var version=$scope.newMeasure.function.configuration['topn.encoding_version.'+_name]||1;
             item=$scope.removeVersion(item);
             var baseKey=item.replace(/:\d+/,'');
-            if(needLengthKeyList.indexOf(baseKey)>=-1){
+            if(needLengthKeyList.indexOf(baseKey)!=-1){
               var result=/:(\d+)/.exec(item);
               _valueLength=result?result[1]:0;
             }
@@ -231,7 +231,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           var versionKey='topn.encoding_version.'+item.name;
           var version=$scope.getTypeVersion(item.encoding);
           var encoding="";
-          if(needLengthKeyList.indexOf($scope.removeVersion(item.encoding))>=-1){
+          if(needLengthKeyList.indexOf($scope.removeVersion(item.encoding))!=-1){
             encoding = $scope.removeVersion(item.encoding)+":"+item.valueLength;
           }else{
             encoding = $scope.removeVersion(item.encoding);
