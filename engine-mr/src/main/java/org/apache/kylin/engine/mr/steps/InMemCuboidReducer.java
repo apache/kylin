@@ -46,9 +46,10 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
     private BufferedMeasureCodec codec;
     private MeasureAggregators aggs;
 
-    private int counter;
     private Object[] input;
     private Object[] result;
+
+    private int vcounter;
 
     private Text outputKey;
     private Text outputValue;
@@ -78,6 +79,9 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
         aggs.reset();
 
         for (ByteArrayWritable value : values) {
+            if (vcounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+                logger.info("Handling value with ordinal: " + vcounter);
+            }
             codec.decode(value.asBuffer(), input);
             aggs.aggregate(input);
         }
@@ -92,10 +96,6 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
 
         context.write(outputKey, outputValue);
 
-        counter++;
-        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + counter + " records!");
-        }
     }
 
 }

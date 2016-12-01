@@ -129,18 +129,16 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         // if still empty or null
         if (myChildren == null || myChildren.size() == 0) {
             context.getCounter(BatchConstants.MAPREDUCE_COUNTER_GROUP_NAME, "Skipped records").increment(1L);
-            skipCounter++;
-            if (skipCounter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-                logger.info("Skipped " + skipCounter + " records!");
+            if (skipCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+                logger.info("Skipping record with ordinal: " + skipCounter);
             }
             return;
         }
 
         context.getCounter(BatchConstants.MAPREDUCE_COUNTER_GROUP_NAME, "Processed records").increment(1L);
 
-        handleCounter++;
-        if (handleCounter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + handleCounter + " records!");
+        if (handleCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+            logger.info("Handling record with ordinal: " + handleCounter);
         }
 
         for (Long child : myChildren) {

@@ -50,11 +50,11 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     private BufferedMeasureCodec codec;
     private MeasureAggregators aggs;
 
-    private int counter;
     private int cuboidLevel;
     private boolean[] needAggr;
     private Object[] input;
     private Object[] result;
+    private int vcounter;
 
     private Text outputValue = new Text();
 
@@ -90,6 +90,9 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         aggs.reset();
 
         for (Text value : values) {
+            if (vcounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+                logger.info("Handling value with ordinal: " + vcounter);
+            }
             codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), input);
             if (cuboidLevel > 0) {
                 aggs.aggregate(input, needAggr);
@@ -103,11 +106,5 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
         context.write(key, outputValue);
-
-        counter++;
-        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + counter + " records!");
-        }
     }
-
 }

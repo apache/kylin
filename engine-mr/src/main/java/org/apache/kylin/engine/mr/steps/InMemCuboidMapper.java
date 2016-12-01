@@ -64,7 +64,6 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
     private CubeSegment cubeSegment;
     private IMRTableInputFormat flatTableInputFormat;
 
-    private int counter;
     private BlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(64);
     private Future<?> future;
 
@@ -120,10 +119,6 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
 
         while (!future.isDone()) {
             if (queue.offer(rowAsList, 1, TimeUnit.SECONDS)) {
-                counter++;
-                if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-                    logger.info("Handled " + counter + " records!");
-                }
                 break;
             }
         }
@@ -131,7 +126,7 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
 
     @Override
     protected void doCleanup(Context context) throws IOException, InterruptedException {
-        logger.info("Totally handled " + counter + " records!");
+        logger.info("Totally handled " + mapCounter + " records!");
 
         while (!future.isDone()) {
             if (queue.offer(Collections.<String> emptyList(), 1, TimeUnit.SECONDS)) {
