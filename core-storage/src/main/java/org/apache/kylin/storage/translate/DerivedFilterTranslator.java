@@ -54,7 +54,7 @@ public class DerivedFilterTranslator {
 
         TblColRef derivedCol = compf.getColumn();
         TblColRef[] hostCols = hostInfo.columns;
-        TblColRef[] pkCols = hostInfo.dimension.getJoin().getPrimaryKeyColumns();
+        TblColRef[] pkCols = hostInfo.join.getPrimaryKeyColumns();
 
         if (hostInfo.type == DeriveType.PK_FK) {
             assert hostCols.length == 1;

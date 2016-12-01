@@ -368,7 +368,7 @@ public class CubeStorageQuery implements IStorageQuery {
         DeriveInfo hostInfo = cubeDesc.getHostInfo(derived);
         CubeManager cubeMgr = CubeManager.getInstance(this.cubeInstance.getConfig());
         CubeSegment seg = cubeInstance.getLatestReadySegment();
-        LookupStringTable lookup = cubeMgr.getLookupTable(seg, hostInfo.dimension);
+        LookupStringTable lookup = cubeMgr.getLookupTable(seg, hostInfo.join);
         Pair<TupleFilter, Boolean> translated = DerivedFilterTranslator.translate(lookup, hostInfo, compf);
         TupleFilter translatedFilter = translated.getFirst();
         boolean loosened = translated.getSecond();

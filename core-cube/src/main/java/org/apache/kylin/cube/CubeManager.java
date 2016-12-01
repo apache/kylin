@@ -44,7 +44,6 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.DictionaryDesc;
-import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.lookup.LookupStringTable;
@@ -54,6 +53,7 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
+import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -629,10 +629,10 @@ public class CubeManager implements IRealizationProvider {
         cubeMap.removeLocal(cubeName);
     }
 
-    public LookupStringTable getLookupTable(CubeSegment cubeSegment, DimensionDesc dim) {
+    public LookupStringTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
 
-        String tableName = dim.getTableRef().getTableIdentity();
-        String[] pkCols = dim.getJoin().getPrimaryKey();
+        String tableName = join.getPKSide().getTableIdentity();
+        String[] pkCols = join.getPrimaryKey();
         String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
         if (snapshotResPath == null)
             throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);

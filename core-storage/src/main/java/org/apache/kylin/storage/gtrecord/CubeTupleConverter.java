@@ -266,7 +266,7 @@ public class CubeTupleConverter {
             case LOOKUP:
                 return new IDerivedColumnFiller() {
                     CubeManager cubeMgr = CubeManager.getInstance(cubeSeg.getCubeInstance().getConfig());
-                    LookupStringTable lookupTable = cubeMgr.getLookupTable(cubeSeg, deriveInfo.dimension);
+                    LookupStringTable lookupTable = cubeMgr.getLookupTable(cubeSeg, deriveInfo.join);
                     int[] derivedColIdx = initDerivedColIdx();
                     Array<String> lookupKey = new Array<String>(new String[hostTmpIdx.length]);
 

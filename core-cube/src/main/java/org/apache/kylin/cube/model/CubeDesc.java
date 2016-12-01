@@ -62,6 +62,7 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -101,20 +102,20 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     public static class DeriveInfo {
         public DeriveType type;
-        public DimensionDesc dimension;
+        public JoinDesc join;
         public TblColRef[] columns;
         public boolean isOneToOne; // only used when ref from derived to host
 
-        DeriveInfo(DeriveType type, DimensionDesc dimension, TblColRef[] columns, boolean isOneToOne) {
+        DeriveInfo(DeriveType type, JoinDesc join, TblColRef[] columns, boolean isOneToOne) {
             this.type = type;
-            this.dimension = dimension;
+            this.join = join;
             this.columns = columns;
             this.isOneToOne = isOneToOne;
         }
 
         @Override
         public String toString() {
-            return "DeriveInfo [type=" + type + ", dimension=" + dimension + ", columns=" + Arrays.toString(columns) + ", isOneToOne=" + isOneToOne + "]";
+            return "DeriveInfo [type=" + type + ", join=" + join + ", columns=" + Arrays.toString(columns) + ", isOneToOne=" + isOneToOne + "]";
         }
 
     }
@@ -742,27 +743,34 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 for (int i = 0; i < derivedNames.length; i++) {
                     derivedCols[i] = initDimensionColRef(dim, derivedNames[i]);
                 }
-                initDerivedMap(dimColArray, DeriveType.LOOKUP, dim, derivedCols, derivedExtra);
+                initDerivedMap(dimColArray, DeriveType.LOOKUP, join, derivedCols, derivedExtra);
             }
-
-            // PK-FK derive the other side
+            
             if (join != null) {
-                TblColRef[] fk = join.getForeignKeyColumns();
-                TblColRef[] pk = join.getPrimaryKeyColumns();
-
-                allColumns.addAll(Arrays.asList(fk));
-                allColumns.addAll(Arrays.asList(pk));
-                for (int i = 0; i < fk.length; i++) {
-                    int find = ArrayUtils.indexOf(dimColArray, fk[i]);
-                    if (find >= 0) {
-                        TblColRef derivedCol = initDimensionColRef(pk[i]);
-                        initDerivedMap(new TblColRef[] { dimColArray[find] }, DeriveType.PK_FK, dim, new TblColRef[] { derivedCol }, null);
-                    }
+                allColumns.addAll(Arrays.asList(join.getForeignKeyColumns()));
+                allColumns.addAll(Arrays.asList(join.getPrimaryKeyColumns()));
+            }
+        }
+        
+        // PK-FK derive the other side
+        Set<TblColRef> realDimensions = new HashSet<>(listDimensionColumnsExcludingDerived(true));
+        for (JoinTableDesc joinTable : model.getJoinTables()) {
+            JoinDesc join = joinTable.getJoin();
+            int n = join.getForeignKeyColumns().length;
+            for (int i = 0; i < n; i++) {
+                TblColRef pk = join.getPrimaryKeyColumns()[i];
+                TblColRef fk = join.getForeignKeyColumns()[i];
+                if (realDimensions.contains(pk) && !realDimensions.contains(fk)) {
+                    initDimensionColRef(fk);
+                    initDerivedMap(new TblColRef[] { pk }, DeriveType.PK_FK, join, new TblColRef[] { fk }, null);
+                } else if (realDimensions.contains(fk) && !realDimensions.contains(pk)) {
+                    initDimensionColRef(pk);
+                    initDerivedMap(new TblColRef[] { fk }, DeriveType.PK_FK, join, new TblColRef[] { pk }, null);
                 }
             }
         }
     }
-
+    
     private String[][] splitDerivedColumnAndExtra(String[] derived) {
         String[] cols = new String[derived.length];
         String[] extra = new String[derived.length];
@@ -780,7 +788,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return new String[][] { cols, extra };
     }
 
-    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
+    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, JoinDesc join, TblColRef[] derivedCols, String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
 
@@ -803,12 +811,12 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         if (infoList == null) {
             hostToMap.put(hostColArray, infoList = new ArrayList<DeriveInfo>());
         }
-        infoList.add(new DeriveInfo(type, dimension, derivedCols, false));
+        infoList.add(new DeriveInfo(type, join, derivedCols, false));
 
         for (int i = 0; i < derivedCols.length; i++) {
             TblColRef derivedCol = derivedCols[i];
             boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol) || (extra != null && extra[i].contains("1-1"));
-            toHostMap.put(derivedCol, new DeriveInfo(type, dimension, hostCols, isOneToOne));
+            toHostMap.put(derivedCol, new DeriveInfo(type, join, hostCols, isOneToOne));
         }
     }
 
