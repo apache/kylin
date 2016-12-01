@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -126,23 +127,30 @@ class ProjectL2Cache {
             return Collections.unmodifiableSet(tableCache.realizations);
     }
 
-    public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String factTable, boolean onlyRewriteMeasure) {
-        Set<IRealization> realizations = getRealizationsByTable(project, factTable);
+    public List<MeasureDesc> listEffectiveRewriteMeasures(String project, String table, boolean onlyRewriteMeasure) {
+        Set<IRealization> realizations = getRealizationsByTable(project, table);
         List<MeasureDesc> result = Lists.newArrayList();
         for (IRealization r : realizations) {
-            if (r.getModel().isFactTable(factTable) && r.isReady()) {
-                for (MeasureDesc m : r.getMeasures()) {
-                    FunctionDesc func = m.getFunction();
-                    if (onlyRewriteMeasure) {
-                        if (func.needRewrite())
-                            result.add(m);
-                    } else {
+            if (!r.isReady())
+                continue;
+
+            for (MeasureDesc m : r.getMeasures()) {
+                FunctionDesc func = m.getFunction();
+                if (belongToTable(func, table, r.getModel())) {
+                    if (!onlyRewriteMeasure || func.needRewrite()) {
                         result.add(m);
                     }
                 }
             }
         }
         return result;
+    }
+
+    private boolean belongToTable(FunctionDesc func, String table, DataModelDesc model) {
+        // measure belong to the first column parameter's table
+        List<TblColRef> cols = func.getParameter().getColRefs();
+        String belongTo = cols.isEmpty() ? model.getRootFactTable().getTableIdentity() : cols.get(0).getTable();
+        return belongTo.equals(table);
     }
 
     // ============================================================================

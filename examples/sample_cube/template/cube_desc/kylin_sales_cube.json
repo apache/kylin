@@ -103,26 +103,26 @@
       "returntype" : "decimal(19,4)"
     }
   }, {
-    "name" : "GMV_MIN",
+    "name" : "BUYER_LEVEL_SUM",
     "function" : {
-      "expression" : "MIN",
+      "expression" : "SUM",
       "parameter" : {
         "type" : "column",
-        "value" : "PRICE",
+        "value" : "BUYER_ACCOUNT.ACCOUNT_BUYER_LEVEL",
         "next_parameter" : null
       },
-      "returntype" : "decimal(19,4)"
+      "returntype" : "bigint"
     }
   }, {
-    "name" : "GMV_MAX",
+    "name" : "SELLER_LEVEL_SUM",
     "function" : {
-      "expression" : "MAX",
+      "expression" : "SUM",
       "parameter" : {
         "type" : "column",
-        "value" : "PRICE",
+        "value" : "SELLER_ACCOUNT.ACCOUNT_SELLER_LEVEL",
         "next_parameter" : null
       },
-      "returntype" : "decimal(19,4)"
+      "returntype" : "bigint"
     }
   }, {
     "name" : "TRANS_CNT",
@@ -224,7 +224,7 @@
       "name" : "F1",
       "columns" : [ {
         "qualifier" : "M",
-        "measure_refs" : [ "GMV_SUM", "GMV_MIN", "GMV_MAX", "TRANS_CNT" ]
+        "measure_refs" : [ "GMV_SUM", "BUYER_LEVEL_SUM", "SELLER_LEVEL_SUM", "TRANS_CNT" ]
       } ]
     }, {
       "name" : "F2",

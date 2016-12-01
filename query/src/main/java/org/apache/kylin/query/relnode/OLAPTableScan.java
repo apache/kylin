@@ -236,6 +236,10 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
             TblColRef colRef = TblColRef.columnForUnknownModel(tableRef, sourceColumn);
             columns.add(colRef);
         }
+        
+        if (columns.size() != rowType.getFieldCount()) {
+            throw new IllegalStateException("RowType=" + rowType.getFieldCount() + ", ColumnRowType=" + columns.size());
+        }
         return new ColumnRowType(columns);
     }
     
