@@ -40,6 +40,15 @@ import com.google.common.collect.Sets;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class FunctionDesc {
 
+    public static FunctionDesc newInstance(String expression, ParameterDesc param, String returnType) {
+        FunctionDesc r = new FunctionDesc();
+        r.expression = (expression == null) ? null : expression.toUpperCase();
+        r.parameter = param;
+        r.returnType = returnType;
+        r.returnDataType = DataType.getType(returnType);
+        return r;
+    }
+    
     public static final String FUNC_SUM = "SUM";
     public static final String FUNC_MIN = "MIN";
     public static final String FUNC_MAX = "MAX";
@@ -202,16 +211,8 @@ public class FunctionDesc {
         return expression;
     }
 
-    public void setExpression(String expression) {
-        this.expression = expression;
-    }
-
     public ParameterDesc getParameter() {
         return parameter;
-    }
-
-    public void setParameter(ParameterDesc parameter) {
-        this.parameter = parameter;
     }
 
     public int getParameterCount() {
@@ -230,17 +231,8 @@ public class FunctionDesc {
         return returnDataType;
     }
 
-    public void setReturnType(String returnType) {
-        this.returnType = returnType;
-        this.returnDataType = DataType.getType(returnType);
-    }
-
     public Map<String, String> getConfiguration() {
         return configuration;
-    }
-
-    public void setConfiguration(Map<String, String> configurations) {
-        this.configuration = configurations;
     }
 
     @Override

@@ -197,18 +197,12 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
         if (sqlDigest.isRawQuery) {
             for (MeasureDesc measureDesc : measureDescs) {
                 TblColRef col = this.getRawColumn(measureDesc.getFunction());
-                ParameterDesc colParameter = new ParameterDesc();
-                colParameter.setType("column");
-                colParameter.setValue(col.getName());
-                FunctionDesc rawFunc = new FunctionDesc();
-                rawFunc.setExpression("RAW");
-                rawFunc.setParameter(colParameter);
+                ParameterDesc colParameter = ParameterDesc.newInstance(col);
+                FunctionDesc rawFunc = FunctionDesc.newInstance("RAW", colParameter, null);
 
                 if (sqlDigest.allColumns.contains(col)) {
                     if (measureDesc.getFunction().equals(rawFunc)) {
-                        FunctionDesc sumFunc = new FunctionDesc();
-                        sumFunc.setExpression("SUM");
-                        sumFunc.setParameter(colParameter);
+                        FunctionDesc sumFunc = FunctionDesc.newInstance("SUM", colParameter, null);
                         sqlDigest.aggregations.remove(sumFunc);
                         sqlDigest.aggregations.add(rawFunc);
                         logger.info("Add RAW measure on column " + col);

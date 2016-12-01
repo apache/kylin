@@ -19,7 +19,6 @@
 package org.apache.kylin.query.relnode;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -238,16 +237,11 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 int index = aggCall.getArgList().get(0);
                 TblColRef column = inputColumnRowType.getColumnByIndex(index);
                 if (!column.isInnerColumn()) {
-                    parameter = new ParameterDesc();
-                    parameter.setValue(column.getName());
-                    parameter.setType(FunctionDesc.PARAMETER_TYPE_COLUMN);
-                    parameter.setColRefs(Arrays.asList(column));
+                    parameter = ParameterDesc.newInstance(column);
                 }
             }
-            FunctionDesc aggFunc = new FunctionDesc();
-            String funcName = getAggrFuncName(aggCall);
-            aggFunc.setExpression(funcName);
-            aggFunc.setParameter(parameter);
+            String expression = getAggrFuncName(aggCall);
+            FunctionDesc aggFunc = FunctionDesc.newInstance(expression, parameter, null);
             this.aggregations.add(aggFunc);
         }
     }

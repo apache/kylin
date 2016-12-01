@@ -36,8 +36,6 @@ import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 
-import com.google.common.collect.ImmutableList;
-
 /**
  */
 public class StorageMockUtils {
@@ -83,14 +81,8 @@ public class StorageMockUtils {
 
         TblColRef priceCol = model.findColumn("DEFAULT.TEST_KYLIN_FACTPRICE");
 
-        FunctionDesc f1 = new FunctionDesc();
-        f1.setExpression("SUM");
-        ParameterDesc p1 = new ParameterDesc();
-        p1.setType("column");
-        p1.setValue("PRICE");
-        p1.setColRefs(ImmutableList.of(priceCol));
-        f1.setParameter(p1);
-        f1.setReturnType("decimal(19,4)");
+        FunctionDesc f1 = FunctionDesc.newInstance("SUM", //
+                ParameterDesc.newInstance(priceCol), "decimal(19,4)");
         functions.add(f1);
 
         return functions;
@@ -102,24 +94,12 @@ public class StorageMockUtils {
         TblColRef priceCol = model.findColumn("DEFAULT.TEST_KYLIN_FACT.PRICE");
         TblColRef sellerCol = model.findColumn("DEFAULT.TEST_KYLIN_FACT.SELLER_ID");
 
-        FunctionDesc f1 = new FunctionDesc();
-        f1.setExpression("SUM");
-        ParameterDesc p1 = new ParameterDesc();
-        p1.setType("column");
-        p1.setValue("PRICE");
-        p1.setColRefs(ImmutableList.of(priceCol));
-        f1.setParameter(p1);
-        f1.setReturnType("decimal(19,4)");
+        FunctionDesc f1 = FunctionDesc.newInstance("SUM", //
+                ParameterDesc.newInstance(priceCol), "decimal(19,4)");
         functions.add(f1);
 
-        FunctionDesc f2 = new FunctionDesc();
-        f2.setExpression("COUNT_DISTINCT");
-        ParameterDesc p2 = new ParameterDesc();
-        p2.setType("column");
-        p2.setValue("SELLER_ID");
-        p2.setColRefs(ImmutableList.of(sellerCol));
-        f2.setParameter(p2);
-        f2.setReturnType("hllc(10)");
+        FunctionDesc f2 = FunctionDesc.newInstance("COUNT_DISTINCT", //
+                ParameterDesc.newInstance(sellerCol), "hllc(10)");
         functions.add(f2);
 
         return functions;

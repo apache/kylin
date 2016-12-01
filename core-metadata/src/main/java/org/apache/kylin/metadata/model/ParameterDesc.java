@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -26,12 +27,42 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ParameterDesc {
 
+    public static ParameterDesc newInstance(Object... objs) {
+        if (objs.length == 0)
+            throw new IllegalArgumentException();
+        
+        ParameterDesc r = new ParameterDesc();
+        
+        Object obj = objs[0];
+        if (obj instanceof TblColRef) {
+            TblColRef col = (TblColRef) obj;
+            r.type = FunctionDesc.PARAMETER_TYPE_COLUMN;
+            r.value = col.getIdentity();
+            r.colRefs = ImmutableList.of(col);
+        } else {
+            r.type = FunctionDesc.PARAMETER_TYPE_CONSTANT;
+            r.value = (String) obj;
+        }
+        
+        if (objs.length >= 2) {
+            r.nextParameter = newInstance(Arrays.copyOfRange(objs, 1, objs.length));
+            if (r.nextParameter.colRefs.size() > 0) {
+                if (r.colRefs.isEmpty())
+                    r.colRefs = r.nextParameter.colRefs;
+                else
+                    r.colRefs = ImmutableList.copyOf(Iterables.concat(r.colRefs, r.nextParameter.colRefs));
+            }
+        }
+        return r;
+    }
+    
     @JsonProperty("type")
     private String type;
     @JsonProperty("value")
@@ -47,10 +78,6 @@ public class ParameterDesc {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public byte[] getBytes() throws UnsupportedEncodingException {
         return value.getBytes("UTF-8");
     }
@@ -58,25 +85,21 @@ public class ParameterDesc {
     public String getValue() {
         return value;
     }
-
-    public void setValue(String value) {
+    
+    void setValue(String value) {
         this.value = value;
     }
 
     public List<TblColRef> getColRefs() {
         return colRefs;
     }
-
-    public void setColRefs(List<TblColRef> colRefs) {
+    
+    void setColRefs(List<TblColRef> colRefs) {
         this.colRefs = colRefs;
     }
 
     public ParameterDesc getNextParameter() {
         return nextParameter;
-    }
-
-    public void setNextParameter(ParameterDesc nextParameter) {
-        this.nextParameter = nextParameter;
     }
 
     public boolean isColumnType() {

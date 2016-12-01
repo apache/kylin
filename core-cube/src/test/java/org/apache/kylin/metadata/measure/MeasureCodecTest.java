@@ -83,8 +83,7 @@ public class MeasureCodecTest extends LocalFileMetadataTestCase {
 
     private MeasureDesc measure(String returnType) {
         MeasureDesc desc = new MeasureDesc();
-        FunctionDesc func = new FunctionDesc();
-        func.setReturnType(returnType);
+        FunctionDesc func = FunctionDesc.newInstance(null, null, returnType);
         desc.setFunction(func);
         return desc;
     }
