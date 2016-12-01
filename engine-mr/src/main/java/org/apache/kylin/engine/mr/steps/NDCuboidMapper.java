@@ -18,9 +18,6 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-import java.util.Collection;
-
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
@@ -41,9 +38,11 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.Collection;
+
 /**
  * @author George Song (ysong1)
- * 
  */
 public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
@@ -97,9 +96,9 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         int index = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & parentCuboidId) > 0) {// if the this bit position equals
-                                                  // 1
+                // 1
                 if ((mask & childCuboidId) > 0) {// if the child cuboid has this
-                                                     // column
+                    // column
                     System.arraycopy(splitBuffers[index].value, 0, newKeyBodyBuf, offset, splitBuffers[index].length);
                     offset += splitBuffers[index].length;
                 }
@@ -123,24 +122,21 @@ public class NDCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     public void doMap(Text key, Text value, Context context) throws IOException, InterruptedException {
         long cuboidId = rowKeySplitter.split(key.getBytes());
         Cuboid parentCuboid = Cuboid.findById(cubeDesc, cuboidId);
-
         Collection<Long> myChildren = cuboidScheduler.getSpanningCuboid(cuboidId);
 
         // if still empty or null
         if (myChildren == null || myChildren.size() == 0) {
             context.getCounter(BatchConstants.MAPREDUCE_COUNTER_GROUP_NAME, "Skipped records").increment(1L);
-            skipCounter++;
-            if (skipCounter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-                logger.info("Skipped " + skipCounter + " records!");
+            if (skipCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+                logger.info("Skipping record with ordinal " + skipCounter);
             }
             return;
         }
 
         context.getCounter(BatchConstants.MAPREDUCE_COUNTER_GROUP_NAME, "Processed records").increment(1L);
 
-        handleCounter++;
-        if (handleCounter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + handleCounter + " records!");
+        if (handleCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+            logger.info("Handling record with ordinal: " + handleCounter);
         }
 
         for (Long child : myChildren) {

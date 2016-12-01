@@ -18,18 +18,7 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
+import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
@@ -51,7 +40,17 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  */
@@ -64,7 +63,6 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
     private CubeSegment cubeSegment;
     private IMRTableInputFormat flatTableInputFormat;
 
-    private int counter;
     private BlockingQueue<List<String>> queue = new ArrayBlockingQueue<List<String>>(64);
     private Future<?> future;
 
@@ -120,10 +118,6 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
 
         while (!future.isDone()) {
             if (queue.offer(rowAsList, 1, TimeUnit.SECONDS)) {
-                counter++;
-                if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-                    logger.info("Handled " + counter + " records!");
-                }
                 break;
             }
         }
@@ -131,10 +125,10 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
 
     @Override
     protected void doCleanup(Context context) throws IOException, InterruptedException {
-        logger.info("Totally handled " + counter + " records!");
+        logger.info("Totally handled " + mapCounter + " records!");
 
         while (!future.isDone()) {
-            if (queue.offer(Collections.<String> emptyList(), 1, TimeUnit.SECONDS)) {
+            if (queue.offer(Collections.<String>emptyList(), 1, TimeUnit.SECONDS)) {
                 break;
             }
         }

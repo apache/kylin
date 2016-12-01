@@ -18,10 +18,6 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.List;
-
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
@@ -37,6 +33,10 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.List;
+
 /**
  */
 public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArrayWritable, Object, Object> {
@@ -46,7 +46,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
     private BufferedMeasureCodec codec;
     private MeasureAggregators aggs;
 
-    private int counter;
+    private int vcounter;
     private Object[] input;
     private Object[] result;
 
@@ -74,10 +74,14 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
 
     @Override
     public void doReduce(ByteArrayWritable key, Iterable<ByteArrayWritable> values, Context context) throws IOException, InterruptedException {
-
         aggs.reset();
 
         for (ByteArrayWritable value : values) {
+
+            if (vcounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+                logger.info("Handling value with ordinal: " + vcounter);
+            }
+
             codec.decode(value.asBuffer(), input);
             aggs.aggregate(input);
         }
@@ -92,10 +96,6 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
 
         context.write(outputKey, outputValue);
 
-        counter++;
-        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + counter + " records!");
-        }
     }
 
 }

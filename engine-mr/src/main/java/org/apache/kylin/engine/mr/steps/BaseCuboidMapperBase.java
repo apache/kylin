@@ -69,7 +69,6 @@ abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
     protected CubeJoinedFlatTableEnrich intermediateTableDesc;
     protected String intermediateTableRowDelimiter;
     protected byte byteRowDelimiter;
-    protected int counter;
     protected MeasureIngester<?>[] aggrIngesters;
     protected Map<TblColRef, Dictionary<String>> dictionaryMap;
     protected Object[] measures;

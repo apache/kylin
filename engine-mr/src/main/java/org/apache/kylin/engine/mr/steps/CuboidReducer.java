@@ -18,10 +18,6 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.List;
-
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
@@ -35,9 +31,12 @@ import org.apache.kylin.metadata.model.MeasureDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.List;
+
 /**
  * @author George Song (ysong1)
- * 
  */
 public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
@@ -50,7 +49,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     private BufferedMeasureCodec codec;
     private MeasureAggregators aggs;
 
-    private int counter;
+    private int vcounter = 0;
     private int cuboidLevel;
     private boolean[] needAggr;
     private Object[] input;
@@ -90,12 +89,18 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         aggs.reset();
 
         for (Text value : values) {
+
+            if (vcounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+                logger.info("Handling value with ordinal: " + vcounter + "!");
+            }
+
             codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), input);
             if (cuboidLevel > 0) {
                 aggs.aggregate(input, needAggr);
             } else {
                 aggs.aggregate(input);
             }
+
         }
         aggs.collectStates(result);
 
@@ -104,10 +109,6 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
         context.write(key, outputValue);
 
-        counter++;
-        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + counter + " records!");
-        }
     }
 
 }

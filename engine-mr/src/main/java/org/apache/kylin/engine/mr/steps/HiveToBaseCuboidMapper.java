@@ -18,11 +18,10 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
-import org.apache.kylin.engine.mr.common.BatchConstants;
+
+import java.io.IOException;
 
 /**
  * @author George Song (ysong1)
@@ -39,11 +38,6 @@ public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, O
 
     @Override
     public void doMap(KEYIN key, Object value, Context context) throws IOException, InterruptedException {
-        counter++;
-        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + counter + " records!");
-        }
-
         try {
             //put a record into the shared bytesSplitter
             String[] row = flatTableInputFormat.parseMapperInput(value);
