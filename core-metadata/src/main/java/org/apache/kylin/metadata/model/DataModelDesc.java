@@ -112,7 +112,7 @@ public class DataModelDesc extends RootPersistentEntity {
         return name;
     }
 
-    // for test only
+    // for test mainly
     @Deprecated
     public void setName(String name) {
         this.name = name;

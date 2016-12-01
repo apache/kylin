@@ -121,6 +121,7 @@ public class ColumnTupleFilter extends TupleFilter {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
 

@@ -18,6 +18,7 @@
   }, {
     "table" : "DEFAULT.KYLIN_ACCOUNT",
     "alias" : "BUYER_ACCOUNT",
+    "kind" : "LOOKUP",
     "join" : {
       "type" : "inner",
       "primary_key" : [ "ACCOUNT_ID" ],
@@ -26,6 +27,7 @@
   }, {
     "table" : "DEFAULT.KYLIN_ACCOUNT",
     "alias" : "SELLER_ACCOUNT",
+    "kind" : "LOOKUP",
     "join" : {
       "type" : "inner",
       "primary_key" : [ "ACCOUNT_ID" ],
@@ -34,6 +36,7 @@
   }, {
     "table" : "DEFAULT.KYLIN_COUNTRY",
     "alias" : "BUYER_COUNTRY",
+    "kind" : "LOOKUP",
     "join" : {
       "type" : "inner",
       "primary_key" : [ "COUNTRY" ],
@@ -42,6 +45,7 @@
   }, {
     "table" : "DEFAULT.KYLIN_COUNTRY",
     "alias" : "SELLER_COUNTRY",
+    "kind" : "LOOKUP",
     "join" : {
       "type" : "inner",
       "primary_key" : [ "COUNTRY" ],
