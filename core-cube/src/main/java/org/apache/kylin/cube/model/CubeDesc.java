@@ -466,6 +466,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
      * @return
      */
     public boolean checkSignature() {
+        if (this.getConfig().isIgnoreCubeSignatureInconsistency()) {
+            logger.info("Skip checking cube signature");
+            return true;
+        }
+
         if (KylinVersion.getCurrentVersion().isCompatibleWith(new KylinVersion(getVersion())) && !KylinVersion.getCurrentVersion().isSignatureCompatibleWith(new KylinVersion(getVersion()))) {
             logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), getVersion());
             return true;
@@ -1101,7 +1106,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setPartitionOffsetStart(cubeDesc.getPartitionOffsetStart());
         return newCubeDesc;
     }
-
 
     private Collection ensureOrder(Collection c) {
         TreeSet set = new TreeSet();

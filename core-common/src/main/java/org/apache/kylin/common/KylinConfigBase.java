@@ -79,7 +79,7 @@ abstract public class KylinConfigBase implements Serializable {
     protected KylinConfigBase(Properties props, boolean force) {
         this.properties = force ? props : BCC.check(props);
     }
-    
+
     final protected String getOptional(String prop) {
         return getOptional(prop, null);
     }
@@ -161,7 +161,7 @@ abstract public class KylinConfigBase implements Serializable {
     public boolean isDevEnv() {
         return "DEV".equals(getOptional("kylin.env", "DEV"));
     }
-    
+
     public String getDeployEnv() {
         return getOptional("kylin.env", "DEV");
     }
@@ -211,7 +211,7 @@ abstract public class KylinConfigBase implements Serializable {
     public Map<String, String> getCubeCustomMeasureTypes() {
         return getPropertiesByPrefix("kylin.metadata.custom-measure-types.");
     }
-    
+
     // ============================================================================
     // DICTIONARY & SNAPSHOT
     // ============================================================================
@@ -278,6 +278,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.algorithm.inmem-split-limit", "500"));
     }
 
+    public boolean isIgnoreCubeSignatureInconsistency() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.ignore-signature-inconsistency", "false"));
+    }
+
     @Deprecated
     public int getCubeAggrGroupMaxSize() {
         return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max-size", "12"));
@@ -298,7 +302,7 @@ abstract public class KylinConfigBase implements Serializable {
     public void setMaxBuildingSegments(int maxBuildingSegments) {
         setProperty("kylin.cube.max-building-segments", String.valueOf(maxBuildingSegments));
     }
-    
+
     // ============================================================================
     // JOB
     // ============================================================================
