@@ -18,6 +18,13 @@
 
 package org.apache.kylin.common;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.util.CliCommandExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -27,14 +34,6 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.util.CliCommandExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * An abstract class to encapsulate access to a set of 'properties'.
@@ -174,19 +173,25 @@ abstract public class KylinConfigBase implements Serializable {
         setProperty("kylin.storage.url", storageUrl);
     }
 
-    /** was for route to hive, not used any more */
+    /**
+     * was for route to hive, not used any more
+     */
     @Deprecated
     public String getHiveUrl() {
         return getOptional("hive.url", "");
     }
 
-    /** was for route to hive, not used any more */
+    /**
+     * was for route to hive, not used any more
+     */
     @Deprecated
     public String getHiveUser() {
         return getOptional("hive.user", "");
     }
 
-    /** was for route to hive, not used any more */
+    /**
+     * was for route to hive, not used any more
+     */
     @Deprecated
     public String getHivePassword() {
         return getOptional("hive.password", "");
@@ -202,7 +207,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String[] getRealizationProviders() {
         return getOptionalStringArray("kylin.realization.providers", //
-                new String[] { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager" });
+                new String[]{"org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager"});
     }
 
     public CliCommandExecutor getCliCommandExecutor() throws IOException {
@@ -427,6 +432,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.algorithm.auto.mapper.limit", "500"));
     }
 
+    public boolean isIgnoreCubeSignatureInconsistency() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.ignore-signature-inconsistency", "false"));
+    }
+
     @Deprecated
     public int getCubeAggrGroupMaxSize() {
         return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max.size", "12"));
@@ -480,10 +489,11 @@ abstract public class KylinConfigBase implements Serializable {
     public float getCubeVisitTimeoutTimes() {
         return Float.parseFloat(getOptional("kylin.query.cube.visit.timeout.times", "1"));
     }
-    
+
     public int getDerivedInThreshold() {
         return Integer.parseInt(getOptional("kylin.query.filter.derived_in.max", "20"));
     }
+
     public int getBadQueryStackTraceDepth() {
         return Integer.parseInt(getOptional("kylin.query.badquery.stacktrace.depth", "10"));
     }
@@ -569,7 +579,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int[] getQueryMetricsPercentilesIntervals() {
-        String[] dft = { "60", "300", "3600" };
+        String[] dft = {"60", "300", "3600"};
         return getOptionalIntArray("kylin.query.metrics.percentiles.intervals", dft);
     }
 
@@ -591,6 +601,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     /**
      * HBase region cut size, in GB
+     *
      * @return
      */
     public float getKylinHBaseRegionCut() {

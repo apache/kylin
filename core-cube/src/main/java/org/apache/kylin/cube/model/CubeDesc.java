@@ -18,27 +18,16 @@
 
 package org.apache.kylin.cube.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
-
-import javax.annotation.Nullable;
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -67,16 +56,25 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import javax.annotation.Nullable;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  */
@@ -199,7 +197,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     /**
-     * @return dimension columns excluding derived 
+     * @return dimension columns excluding derived
      */
     public List<TblColRef> listDimensionColumnsExcludingDerived(boolean alsoExcludeExtendedCol) {
         List<TblColRef> result = new ArrayList<TblColRef>();
@@ -467,11 +465,17 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     /**
      * this method is to prevent malicious metadata change by checking the saved signature
      * with the calculated signature.
-     * 
+     * <p>
      * if you're comparing two cube descs, prefer to use consistentWith()
+     *
      * @return
      */
     public boolean checkSignature() {
+        if (this.getConfig().isIgnoreCubeSignatureInconsistency()) {
+            logger.info("Skip checking cube signature");
+            return true;
+        }
+
         if (KylinVersion.getCurrentVersion().isCompatibleWith(new KylinVersion(getVersion())) && !KylinVersion.getCurrentVersion().isSignatureCompatibleWith(new KylinVersion(getVersion()))) {
             logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), getVersion());
             return true;
@@ -752,7 +756,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                     int find = ArrayUtils.indexOf(dimColArray, fk[i]);
                     if (find >= 0) {
                         TblColRef derivedCol = initDimensionColRef(pk[i]);
-                        initDerivedMap(new TblColRef[] { dimColArray[find] }, DeriveType.PK_FK, dim, new TblColRef[] { derivedCol }, null);
+                        initDerivedMap(new TblColRef[]{dimColArray[find]}, DeriveType.PK_FK, dim, new TblColRef[]{derivedCol}, null);
                     }
                 }
                 /** disable this code as we don't need fk be derived from pk
@@ -782,7 +786,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 extra[i] = "";
             }
         }
-        return new String[][] { cols, extra };
+        return new String[][]{cols, extra};
     }
 
     private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
@@ -1011,7 +1015,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.partitionDateEnd = partitionDateEnd;
     }
 
-    /** Get columns that have dictionary */
+    /**
+     * Get columns that have dictionary
+     */
     public Set<TblColRef> getAllColumnsHaveDictionary() {
         Set<TblColRef> result = Sets.newLinkedHashSet();
 
@@ -1040,7 +1046,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return result;
     }
 
-    /** Get columns that need dictionary built on it. Note a column could reuse dictionary of another column. */
+    /**
+     * Get columns that need dictionary built on it. Note a column could reuse dictionary of another column.
+     */
     public Set<TblColRef> getAllColumnsNeedDictionaryBuilt() {
         Set<TblColRef> result = getAllColumnsHaveDictionary();
 
@@ -1057,7 +1065,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return result;
     }
 
-    /** A column may reuse dictionary of another column, find the dict column, return same col if there's no reuse column*/
+    /**
+     * A column may reuse dictionary of another column, find the dict column, return same col if there's no reuse column
+     */
     public TblColRef getDictionaryReuseColumn(TblColRef col) {
         if (dictionaries == null) {
             return col;
@@ -1070,7 +1080,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return col;
     }
 
-    /** Get a column which can be used in distributing the source table */
+    /**
+     * Get a column which can be used in distributing the source table
+     */
     public TblColRef getDistributedByColumn() {
         Set<TblColRef> shardBy = getShardByColumns();
         if (shardBy != null && shardBy.size() > 0) {
