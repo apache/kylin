@@ -18,6 +18,12 @@
 
 package org.apache.kylin.common.util;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
@@ -26,19 +32,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * <p/>
@@ -79,7 +79,15 @@ public class BasicTest {
 
     @Test
     public void testxx() throws InterruptedException {
-        System.out.println( 0x8fL);
+        Map<String, String> a = Maps.newLinkedHashMap();
+        a.put("1", "1");
+        a.put("3", "3");
+        a.put("2", "2");
+        for (Map.Entry<String, String> e : a.entrySet()) {
+            System.out.println(e.getKey());
+        }
+
+        System.out.println(0x8fL);
         byte[] space = new byte[100];
         ByteBuffer buffer = ByteBuffer.wrap(space, 10, 20);
         buffer.put((byte) 1);
