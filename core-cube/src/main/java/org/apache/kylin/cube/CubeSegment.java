@@ -217,6 +217,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         this.inputRecordsSize = inputRecordsSize;
     }
 
+    @Override
     public long getLastBuildTime() {
         return lastBuildTime;
     }
@@ -366,11 +367,12 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     }
 
     // date range is used in place of source offsets when offsets are missing
-    public boolean sourceOffsetContains(CubeSegment seg) {
+    @Override
+    public boolean sourceOffsetContains(ISegment seg) {
         if (isSourceOffsetsOn())
-            return sourceOffsetStart <= seg.sourceOffsetStart && seg.sourceOffsetEnd <= sourceOffsetEnd;
+            return sourceOffsetStart <= ((CubeSegment) seg).sourceOffsetStart && ((CubeSegment) seg).sourceOffsetEnd <= sourceOffsetEnd;
         else
-            return dateRangeContains(seg);
+            return dateRangeContains(((CubeSegment) seg));
     }
 
     public void validate() {

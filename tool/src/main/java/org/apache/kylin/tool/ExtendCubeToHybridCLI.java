@@ -18,7 +18,6 @@
 
 package org.apache.kylin.tool;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,6 +44,7 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -185,7 +185,7 @@ public class ExtendCubeToHybridCLI {
         logger.info("CubeDesc was saved at: " + cubeDesc.getResourcePath());
 
         // clear segments for old cube
-        cubeInstance.setSegments(new ArrayList<CubeSegment>());
+        cubeInstance.setSegments(new Segments());
         cubeInstance.setStatus(RealizationStatusEnum.DISABLED);
         store.putResource(cubeInstance.getResourcePath(), cubeInstance, CubeManager.CUBE_SERIALIZER);
         logger.info("CubeInstance was saved at: " + cubeInstance.getResourcePath());

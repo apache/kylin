@@ -56,6 +56,7 @@ import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -213,7 +214,6 @@ public class CubeManager implements IRealizationProvider {
         return result;
     }
 
-
     public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, ReadableTable inpTable) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
@@ -222,18 +222,17 @@ public class CubeManager implements IRealizationProvider {
         String builderClass = cubeDesc.getDictionaryBuilderClass(col);
         DictionaryInfo dictInfo = getDictionaryManager().buildDictionary(cubeDesc.getModel(), col, inpTable, builderClass);
 
-
         saveDictionaryInfo(cubeSeg, col, dictInfo);
         return dictInfo;
     }
-    
+
     public DictionaryInfo saveDictionary(CubeSegment cubeSeg, TblColRef col, ReadableTable inpTable, Dictionary<String> dict) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
             return null;
 
         DictionaryInfo dictInfo = getDictionaryManager().saveDictionary(cubeDesc.getModel(), col, inpTable, dict);
-        
+
         saveDictionaryInfo(cubeSeg, col, dictInfo);
         return dictInfo;
     }
@@ -366,7 +365,7 @@ public class CubeManager implements IRealizationProvider {
         CubeInstance cube = update.getCubeInstance();
         logger.info("Updating cube instance '" + cube.getName() + "'");
 
-        List<CubeSegment> newSegs = Lists.newArrayList(cube.getSegments());
+        Segments<CubeSegment> newSegs = (Segments) cube.getSegments().clone();
 
         if (update.getToAddSegs() != null)
             newSegs.addAll(Arrays.asList(update.getToAddSegs()));
@@ -385,7 +384,6 @@ public class CubeManager implements IRealizationProvider {
                     }
                 }
             }
-
         }
 
         if (update.getToUpdateSegs() != null) {
