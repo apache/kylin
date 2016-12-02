@@ -21,7 +21,9 @@ package org.apache.kylin.jdbc;
 import java.io.IOException;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.calcite.avatica.AvaticaParameter;
@@ -57,9 +59,14 @@ public class KylinResultSet extends AvaticaResultSet {
         }
 
         IRemoteClient client = ((KylinConnection) statement.connection).getRemoteClient();
+
+        Map<String, String> queryToggles = new HashMap<>();
+        int maxRows = statement.getMaxRows();
+        queryToggles.put("ATTR_STATEMENT_MAX_ROWS", String.valueOf(maxRows));
+
         QueryResult result;
         try {
-            result = client.executeQuery(sql, params, paramValues);
+            result = client.executeQuery(sql, params, paramValues, queryToggles);
         } catch (IOException e) {
             throw new SQLException(e);
         }

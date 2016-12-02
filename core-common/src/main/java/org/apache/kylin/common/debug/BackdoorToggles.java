@@ -79,6 +79,14 @@ public class BackdoorToggles {
         }
     }
 
+    public static Integer getStatementMaxRows() {
+        String v = getString(ATTR_STATEMENT_MAX_ROWS);
+        if (v == null)
+            return null;
+        else
+            return Integer.valueOf(v);
+    }
+
     private static String getString(String key) {
         Map<String, String> toggles = _backdoorToggles.get();
         if (toggles == null) {
@@ -183,4 +191,14 @@ public class BackdoorToggles {
      */
     public final static String DEBUG_TOGGLE_SHARD_ASSIGNMENT = "DEBUG_TOGGLE_SHARD_ASSIGNMENT";
 
+    // properties on statement may go with this "channel" too
+    /**
+     * set ATTR_STATEMENT_MAX_ROWS="maxRows" to statement's max rows property
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "ATTR_STATEMENT_MAX_ROWS": "10"
+     }
+     */
+    public final static String ATTR_STATEMENT_MAX_ROWS = "ATTR_STATEMENT_MAX_ROWS";
 }

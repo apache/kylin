@@ -21,6 +21,7 @@ package org.apache.kylin.jdbc;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
@@ -51,6 +52,6 @@ public interface IRemoteClient extends Closeable {
     /**
      * Execute query remotely and get back result.
      */
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues) throws IOException;
+    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues, Map<String, String> queryToggles) throws IOException;
 
 }

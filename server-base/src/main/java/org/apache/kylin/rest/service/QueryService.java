@@ -324,12 +324,12 @@ public class QueryService extends BasicService {
         }
 
         final String queryId = UUID.randomUUID().toString();
-
         Map<String, String> toggles = new HashMap<>();
         toggles.put(BackdoorToggles.KEY_QUERY_ID, queryId);
         if (sqlRequest.getBackdoorToggles() != null) {
             toggles.putAll(sqlRequest.getBackdoorToggles());
         }
+        sqlRequest.setBackdoorToggles(toggles);
         BackdoorToggles.setToggles(toggles);
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
@@ -510,6 +510,13 @@ public class QueryService extends BasicService {
         return tableMetas;
     }
 
+    private void processStatementAttr(Statement s, SQLRequest sqlRequest) throws SQLException {
+        Integer statementMaxRows = BackdoorToggles.getStatementMaxRows();
+        if (statementMaxRows != null) {
+            s.setMaxRows(statementMaxRows);
+        }
+    }
+
     /**
      * @param sql
      * @param sqlRequest
@@ -529,6 +536,7 @@ public class QueryService extends BasicService {
 
             if (sqlRequest instanceof PrepareSqlRequest) {
                 PreparedStatement preparedState = conn.prepareStatement(sql);
+                processStatementAttr(preparedState, sqlRequest);
 
                 for (int i = 0; i < ((PrepareSqlRequest) sqlRequest).getParams().length; i++) {
                     setParam(preparedState, i + 1, ((PrepareSqlRequest) sqlRequest).getParams()[i]);
@@ -537,6 +545,7 @@ public class QueryService extends BasicService {
                 resultSet = preparedState.executeQuery();
             } else {
                 stat = conn.createStatement();
+                processStatementAttr(stat, sqlRequest);
                 resultSet = stat.executeQuery(sql);
             }
 
