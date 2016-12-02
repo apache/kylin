@@ -64,6 +64,9 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -519,10 +522,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     public void init(KylinConfig config) {
         this.errors.clear();
-        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
 
         checkArgument(StringUtils.isNotBlank(name), "CubeDesc name is blank");
         checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc(%s) has blank modelName", name);
+
+        // note CubeDesc.name == CubeInstance.name
+        List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
+        logger.info("CubeDesc '" + name + "' is owned by " + ownerPrj);
+
+        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
 
         this.model = MetadataManager.getInstance(config).getDataModelDesc(modelName);
         checkNotNull(this.model, "DateModelDesc(%s) not found", modelName);
@@ -823,6 +831,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return col;
     }
 
+    @SuppressWarnings("deprecation")
     private void initMeasureColumns() {
         if (measures == null || measures.isEmpty()) {
             return;
