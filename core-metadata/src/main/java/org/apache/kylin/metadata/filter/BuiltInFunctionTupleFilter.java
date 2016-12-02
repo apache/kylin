@@ -151,17 +151,21 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     @Override
     public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
         BytesUtil.writeUTFString(name, buffer);
+        buffer.put((byte) (isReversed ? 1 : 0));
     }
 
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
         this.name = BytesUtil.readUTFString(buffer);
+        this.isReversed = buffer.get() != 0;
         this.initMethod();
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        if (isReversed)
+            sb.append("NOT ");
         sb.append(name);
         sb.append("(");
         for (int i = 0; i < methodParams.size(); i++) {
