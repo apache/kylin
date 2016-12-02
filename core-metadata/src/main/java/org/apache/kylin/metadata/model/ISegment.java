@@ -36,5 +36,4 @@ public interface ISegment{
 
     public long getLastBuildTime();
 
-    public boolean sourceOffsetContains(ISegment seg);
 }

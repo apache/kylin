@@ -21,6 +21,16 @@ package org.apache.kylin.metadata.model;
 import java.util.ArrayList;
 
 public class Segments<T extends ISegment> extends ArrayList<T> {
+    
+    private static final long serialVersionUID = 1L;
+
+    public static boolean sourceOffsetContains(ISegment a, ISegment b) {
+        return a.getSourceOffsetStart() <= b.getSourceOffsetStart() && b.getSourceOffsetEnd() <= a.getSourceOffsetEnd();
+    }
+    
+    public static boolean sourceOffsetOverlaps(ISegment a, ISegment b) {
+        return a.getSourceOffsetStart() < b.getSourceOffsetEnd() && b.getSourceOffsetStart() < a.getSourceOffsetEnd();
+    }
 
     public T getFirstSegment() {
         if (this == null || this.size() == 0) {
@@ -121,7 +131,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> {
             if (seg == mergedSegment)
                 continue;
 
-            if (mergedSegment.sourceOffsetContains(seg)) {
+            if (sourceOffsetContains(mergedSegment, seg)) {
                 // make sure no holes
                 if (result.size() > 0 && result.getLast().getSourceOffsetEnd() != seg.getSourceOffsetStart())
                     throw new IllegalStateException("Merging segments must not have holes between " + result.getLast() + " and " + seg);
