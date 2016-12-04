@@ -47,7 +47,7 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
     protected Method method;
     protected List<Serializable> methodParams;
     protected boolean isValidFunc = false;
-    private boolean isReversed = false;
+    protected boolean isReversed = false;
 
     public BuiltInFunctionTupleFilter(String name) {
         this(name, null);
