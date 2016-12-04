@@ -173,8 +173,8 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
         }
 
         for (Map.Entry<T, Counter<T>> entry : another.counterMap.entrySet()) {
-            if (counterMap.containsKey(entry.getKey())) {
-                this.offer(entry.getValue().getItem(), anotherFull ? (thisFull ? entry.getValue().count - m2 - m1 : entry.getValue().count - m2) : (thisFull ? (entry.getValue().count - m1) : entry.getValue().count));
+            if (this.counterMap.containsKey(entry.getKey())) {
+                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2 - m1));
             } else {
                 this.offer(entry.getValue().getItem(), entry.getValue().count);
             }
