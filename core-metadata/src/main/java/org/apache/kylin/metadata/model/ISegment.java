@@ -26,6 +26,8 @@ public interface ISegment {
 
     public long getDateRangeEnd();
 
+    public boolean isSourceOffsetsOn();
+
     public long getSourceOffsetStart();
 
     public long getSourceOffsetEnd();
@@ -35,6 +37,4 @@ public interface ISegment {
     public SegmentStatusEnum getStatus();
 
     public long getLastBuildTime();
-
-    public boolean isSourceOffsetsOn();
 }

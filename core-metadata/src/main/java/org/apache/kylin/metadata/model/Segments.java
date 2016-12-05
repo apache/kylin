@@ -187,8 +187,8 @@ public class Segments<T extends ISegment> extends ArrayList<T> {
 
             for (int s = 0; s < readySegs.size(); s++) {
                 ISegment seg = readySegs.get(s);
-                Pair<T, T> p = findMergeOffsetsByDateRange(readySegs.getSubList(s, readySegs.size()), //
-                        seg.getDateRangeStart(), seg.getDateRangeStart() + toMergeRange, toMergeRange);
+                Pair<T, T> p = readySegs.getSubList(s, readySegs.size()) //
+                        .findMergeOffsetsByDateRange(seg.getDateRangeStart(), seg.getDateRangeStart() + toMergeRange, toMergeRange);
                 if (p != null && p.getSecond().getDateRangeEnd() - p.getFirst().getDateRangeStart() >= toMergeRange)
                     return Pair.newPair(p.getFirst().getSourceOffsetStart(), p.getSecond().getSourceOffsetEnd());
             }
@@ -197,10 +197,10 @@ public class Segments<T extends ISegment> extends ArrayList<T> {
         return null;
     }
 
-    public Pair<T, T> findMergeOffsetsByDateRange(Segments<T> segments, long startDate, long endDate, long skipSegDateRangeCap) {
+    public Pair<T, T> findMergeOffsetsByDateRange(long startDate, long endDate, long skipSegDateRangeCap) {
         // must be offset cube
         Segments result = new Segments();
-        for (ISegment seg : segments) {
+        for (ISegment seg : this) {
 
             // include if date range overlaps
             if (startDate < seg.getDateRangeEnd() && seg.getDateRangeStart() < endDate) {

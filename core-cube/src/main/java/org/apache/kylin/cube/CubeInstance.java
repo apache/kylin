@@ -371,10 +371,6 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return segments.calculateToBeSegments(newSegment, getModel().getPartitionDesc().isPartitioned());
     }
 
-    public Pair<CubeSegment, CubeSegment> findMergeOffsetsByDateRange(Segments<CubeSegment> segs, long startDate, long endDate, long skipSegDateRangeCap) {
-        return this.segments.findMergeOffsetsByDateRange(segs, startDate, endDate, skipSegDateRangeCap);
-    }
-
     public CubeSegment getLastSegment() {
         List<CubeSegment> existing = getSegments();
         if (existing.isEmpty()) {

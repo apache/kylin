@@ -519,7 +519,7 @@ public class CubeManager implements IRealizationProvider {
         if (isOffsetsOn) {
             // offset cube, merge by date range?
             if (startOffset == endOffset) {
-                Pair<CubeSegment, CubeSegment> pair = cube.findMergeOffsetsByDateRange(cube.getSegments(SegmentStatusEnum.READY), startDate, endDate, Long.MAX_VALUE);
+                Pair<CubeSegment, CubeSegment> pair = cube.getSegments(SegmentStatusEnum.READY).findMergeOffsetsByDateRange(startDate, endDate, Long.MAX_VALUE);
                 if (pair == null)
                     throw new IllegalArgumentException("Find no segments to merge by date range " + startDate + "-" + endDate + " for cube " + cube);
                 startOffset = pair.getFirst().getSourceOffsetStart();
