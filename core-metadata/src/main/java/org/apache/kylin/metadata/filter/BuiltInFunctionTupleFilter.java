@@ -109,6 +109,10 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
         return isReversed;
     }
 
+    public void setReversed(boolean reversed) {
+        this.isReversed = reversed;
+    }
+
     @Override
     public void addChild(TupleFilter child) {
         if (child instanceof ColumnTupleFilter || child instanceof BuiltInFunctionTupleFilter) {
