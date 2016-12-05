@@ -18,7 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
-public interface ISegment{
+public interface ISegment {
 
     public String getName();
 
@@ -29,11 +29,12 @@ public interface ISegment{
     public long getSourceOffsetStart();
 
     public long getSourceOffsetEnd();
-    
+
     public DataModelDesc getModel();
 
     public SegmentStatusEnum getStatus();
 
     public long getLastBuildTime();
 
+    public boolean isSourceOffsetsOn();
 }

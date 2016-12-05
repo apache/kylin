@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -25,6 +26,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfigExt;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -359,6 +361,18 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
             return false;
 
         return this.getDescriptor().getAutoMergeTimeRanges() != null && this.getDescriptor().getAutoMergeTimeRanges().length > 0;
+    }
+
+    public Pair<Long, Long> autoMergeCubeSegments() throws IOException {
+        return segments.autoMergeCubeSegments(needAutoMerge(), getName(), getDescriptor().getAutoMergeTimeRanges());
+    }
+
+    public Segments calculateToBeSegments(CubeSegment newSegment) {
+        return segments.calculateToBeSegments(newSegment, getModel().getPartitionDesc().isPartitioned());
+    }
+
+    public Pair<CubeSegment, CubeSegment> findMergeOffsetsByDateRange(Segments<CubeSegment> segs, long startDate, long endDate, long skipSegDateRangeCap) {
+        return this.segments.findMergeOffsetsByDateRange(segs, startDate, endDate, skipSegDateRangeCap);
     }
 
     public CubeSegment getLastSegment() {
