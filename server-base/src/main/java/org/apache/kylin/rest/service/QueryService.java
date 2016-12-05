@@ -513,6 +513,7 @@ public class QueryService extends BasicService {
     private void processStatementAttr(Statement s, SQLRequest sqlRequest) throws SQLException {
         Integer statementMaxRows = BackdoorToggles.getStatementMaxRows();
         if (statementMaxRows != null) {
+            logger.info("Setting current statement's max rows to {}", statementMaxRows);
             s.setMaxRows(statementMaxRows);
         }
     }

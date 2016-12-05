@@ -261,6 +261,36 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     }
 
+
+    @Test
+    public void testResultSetWithMaxRows() throws Exception {
+        String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n" + " group by LSTG_FORMAT_NAME ";
+
+        Connection conn = getConnection();
+        Statement statement = conn.createStatement();
+        statement.setMaxRows(2);
+
+        statement.execute(sql);
+
+        ResultSet rs = statement.getResultSet();
+
+        int count = 0;
+        while (rs.next()) {
+            count++;
+            String lstg = rs.getString(1);
+            double gmv = rs.getDouble(2);
+            int trans_count = rs.getInt(3);
+
+            System.out.println("Get a line: LSTG_FORMAT_NAME=" + lstg + ", GMV=" + gmv + ", TRANS_CNT=" + trans_count);
+        }
+
+        Assert.assertTrue(count == 2);
+        statement.close();
+        rs.close();
+        conn.close();
+
+    }
+
     private static class SystemPropertiesOverride {
         HashMap<String, String> backup = new HashMap<String, String>();
 
