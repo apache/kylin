@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -75,9 +76,11 @@ public class CubeStatsReader {
     final int mapperNumberOfFirstBuild; // becomes meaningless after merge
     final double mapperOverlapRatioOfFirstBuild; // becomes meaningless after merge
     final Map<Long, HyperLogLogPlusCounter> cuboidRowEstimatesHLL;
+    final CuboidScheduler cuboidScheduler;
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
         ResourceStore store = ResourceStore.getStore(kylinConfig);
+        cuboidScheduler = new CuboidScheduler(cubeSegment.getCubeDesc());
         String statsKey = cubeSegment.getStatisticsResourcePath();
         File tmpSeqFile = writeTmpSeqFile(store.getResource(statsKey).inputStream);
         Reader reader = null;
@@ -143,6 +146,10 @@ public class CubeStatsReader {
     // return map of Cuboid ID => MB
     public Map<Long, Double> getCuboidSizeMap() {
         return getCuboidSizeMapFromRowCount(seg, getCuboidRowEstimatesHLL());
+    }
+
+    public double estimateCubeSize() {
+        return SumHelper.sumDouble(getCuboidSizeMap().values());
     }
 
     public int getMapperNumberOfFirstBuild() {
@@ -248,12 +255,23 @@ public class CubeStatsReader {
         out.println("----------------------------------------------------------------------------");
     }
 
+    //return MB
+    public double estimateLayerSize(int level) {
+        List<List<Long>> layeredCuboids = cuboidScheduler.getCuboidsByLayer();
+        Map<Long, Double> cuboidSizeMap = getCuboidSizeMap();
+        double ret = 0;
+        for (Long cuboidId : layeredCuboids.get(level)) {
+            ret += cuboidSizeMap.get(cuboidId);
+        }
+
+        logger.info("Estimating size for layer {}, all cuboids are {}, total size is {}", level, StringUtils.join(layeredCuboids.get(level), ","), ret);
+        return ret;
+    }
+
     private void printCuboidInfoTreeEntry(Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, PrintWriter out) {
-        CubeDesc cubeDesc = seg.getCubeDesc();
-        CuboidScheduler scheduler = new CuboidScheduler(cubeDesc);
-        long baseCuboid = Cuboid.getBaseCuboidId(cubeDesc);
+        long baseCuboid = Cuboid.getBaseCuboidId(seg.getCubeDesc());
         int dimensionCount = Long.bitCount(baseCuboid);
-        printCuboidInfoTree(-1L, baseCuboid, scheduler, cuboidRows, cuboidSizes, dimensionCount, 0, out);
+        printCuboidInfoTree(-1L, baseCuboid, cuboidScheduler, cuboidRows, cuboidSizes, dimensionCount, 0, out);
     }
 
     private void printKVInfo(PrintWriter writer) {

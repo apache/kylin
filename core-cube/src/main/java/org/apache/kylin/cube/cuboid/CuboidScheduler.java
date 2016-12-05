@@ -18,7 +18,7 @@
 
 package org.apache.kylin.cube.cuboid;
 
-/** 
+/**
  */
 
 import java.util.Collections;
@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -39,6 +40,7 @@ public class CuboidScheduler {
     private final CubeDesc cubeDesc;
     private final long max;
     private final Map<Long, List<Long>> cache;
+    private List<List<Long>> cuboidsByLayer;
 
     public CuboidScheduler(CubeDesc cubeDesc) {
         this.cubeDesc = cubeDesc;
@@ -231,5 +233,32 @@ public class CuboidScheduler {
         for (Long cuboidId : getSpanningCuboid(parentCuboidId)) {
             getSubCuboidIds(cuboidId, result);
         }
+    }
+
+    public List<List<Long>> getCuboidsByLayer() {
+        if (cuboidsByLayer != null) {
+            return cuboidsByLayer;
+        }
+
+        int totalNum = 0;
+        int layerNum = cubeDesc.getBuildLevel();
+        cuboidsByLayer = Lists.newArrayList();
+
+        cuboidsByLayer.add(Collections.singletonList(Cuboid.getBaseCuboidId(cubeDesc)));
+        totalNum++;
+
+        for (int i = 1; i <= layerNum; i++) {
+            List<Long> lastLayer = cuboidsByLayer.get(i - 1);
+            List<Long> newLayer = Lists.newArrayList();
+            for (Long parent : lastLayer) {
+                newLayer.addAll(getSpanningCuboid(parent));
+            }
+            cuboidsByLayer.add(newLayer);
+            totalNum += newLayer.size();
+        }
+
+        int size = getAllCuboidIds().size();
+        Preconditions.checkState(totalNum == size, "total Num: " + totalNum + " actual size: " + size);
+        return cuboidsByLayer;
     }
 }
