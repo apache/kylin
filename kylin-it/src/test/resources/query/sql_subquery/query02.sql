@@ -18,7 +18,7 @@
 
 SELECT
   week_beg_dt
-  ,sum(price)
+  ,sum(price) as sum_price
 FROM
 ( 
   select
