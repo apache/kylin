@@ -125,4 +125,8 @@
   githubId: kyotoYaho
   org: eBay
   role: committer
-
+- name: Billy Liu (刘一鸣)
+  apacheId: billyliu
+  githubId: yiming187
+  org: Kyligence Inc.
+  role: committer
