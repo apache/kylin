@@ -42,7 +42,7 @@ public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc {
         // != works due to object cache
         if (cubeDesc.getModel() != flatDesc.getDataModel())
             throw new IllegalArgumentException();
-        
+
         this.cubeDesc = cubeDesc;
         this.flatDesc = flatDesc;
         parseCubeDesc();
@@ -130,6 +130,11 @@ public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc {
     @Override
     public ISegment getSegment() {
         return flatDesc.getSegment();
+    }
+
+    @Override
+    public TblColRef getClusterBy() {
+        return flatDesc.getClusterBy();
     }
 
 }

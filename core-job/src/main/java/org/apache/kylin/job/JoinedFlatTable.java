@@ -171,6 +171,10 @@ public class JoinedFlatTable {
         }
     }
 
+    private static void appendClusterStatement(StringBuilder sql, TblColRef clusterCol) {
+        sql.append(" CLUSTER BY ").append(colName(clusterCol)).append(";\n");
+    }
+
     private static void appendWhereStatement(IJoinedFlatTableDesc flatDesc, StringBuilder sql) {
         boolean hasCondition = false;
         StringBuilder whereBuilder = new StringBuilder();
@@ -219,8 +223,13 @@ public class JoinedFlatTable {
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT OVERWRITE TABLE " + tableName + " SELECT * FROM " + tableName);
 
-        TblColRef distDcol = flatDesc.getDistributedBy();
-        appendDistributeStatement(sql, distDcol);
+        TblColRef clusterCol = flatDesc.getClusterBy();
+        if (clusterCol != null) {
+            appendClusterStatement(sql, clusterCol);
+        } else {
+            appendDistributeStatement(sql, flatDesc.getDistributedBy());
+        }
+
         return sql.toString();
     }
 
