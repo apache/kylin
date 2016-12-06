@@ -60,6 +60,11 @@ import com.google.common.collect.Sets;
 
 public class HiveMRInput implements IMRInput {
 
+    public static String getTableNameForHCat(TableDesc table) {
+        String tableName = table.isView() ? table.getMaterializedName() : table.getName();
+        return String.format("%s.%s", table.getDatabase(), tableName).toUpperCase();
+    }
+
     @Override
     public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
         return new BatchCubingInputSide(flatDesc);
@@ -67,9 +72,9 @@ public class HiveMRInput implements IMRInput {
 
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
-        return new HiveTableInputFormat(table.getIdentity());
+        return new HiveTableInputFormat(getTableNameForHCat(table));
     }
-
+    
     @Override
     public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
         return new IMRBatchMergeInputSide() {
@@ -167,7 +172,7 @@ public class HiveMRInput implements IMRInput {
 
             for (JoinTableDesc lookupDesc : flatDesc.getDataModel().getJoinTables()) {
                 TableDesc tableDesc = metadataManager.getTableDesc(lookupDesc.getTable());
-                if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
+                if (tableDesc.isView()) {
                     lookupViewsTables.add(tableDesc);
                 }
             }
@@ -180,7 +185,7 @@ public class HiveMRInput implements IMRInput {
             hiveCmdBuilder.addStatement(useDatabaseHql);
             hiveCmdBuilder.addStatement(JoinedFlatTable.generateHiveSetStatements(conf));
             for (TableDesc lookUpTableDesc : lookupViewsTables) {
-                if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(lookUpTableDesc.getTableType())) {
+                if (lookUpTableDesc.isView()) {
                     StringBuilder createIntermediateTableHql = new StringBuilder();
                     createIntermediateTableHql.append("DROP TABLE IF EXISTS " + lookUpTableDesc.getMaterializedName() + ";\n");
                     createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS " + lookUpTableDesc.getMaterializedName() + "\n");

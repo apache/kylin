@@ -26,8 +26,8 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringSplitter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Table Metadata from Source. All name should be uppercase.
@@ -36,7 +36,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
-    public static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
+    private static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
+    private static final String materializedTableNamePrefix = "kylin_intermediate_";
+
     @JsonProperty("name")
     private String name;
     @JsonProperty("columns")
@@ -45,8 +47,6 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private int sourceType = ISourceAware.ID_HIVE;
     @JsonProperty("table_type")
     private String tableType;
-
-    private static final String materializedTableNamePrefix = "kylin_intermediate_";
 
     private DatabaseDesc database = new DatabaseDesc();
 
@@ -95,6 +95,10 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             identity = String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
         }
         return identity;
+    }
+    
+    public boolean isView() {
+        return TABLE_TYPE_VIRTUAL_VIEW.equals(tableType);
     }
 
     public static String concatResourcePath(String tableIdentity) {
@@ -211,7 +215,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             return false;
         if (!Arrays.equals(columns, tableDesc.columns))
             return false;
-        
+
         return getIdentity().equals(tableDesc.getIdentity());
 
     }

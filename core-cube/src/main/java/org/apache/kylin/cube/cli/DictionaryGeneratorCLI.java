@@ -98,7 +98,7 @@ public class DictionaryGeneratorCLI {
         } else {
             MetadataManager metadataManager = MetadataManager.getInstance(config);
             TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
-            if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
+            if (tableDesc.isView()) {
                 TableDesc materializedTbl = new TableDesc();
                 materializedTbl.setDatabase(config.getHiveDatabaseForIntermediateTable());
                 materializedTbl.setName(tableDesc.getMaterializedName());
