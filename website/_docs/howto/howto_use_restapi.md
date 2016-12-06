@@ -858,7 +858,7 @@ Get descriptor for specified cube instance.
 (Same as "Resume Job")
 
 ## Get job step output
-`GET /{jobId}/steps/{stepId}/output`
+`GET /jobs/{jobId}/steps/{stepId}/output`
 
 #### Path Variable
 * jobId - `required` `string` Job id.

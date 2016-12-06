@@ -881,7 +881,7 @@ Get descriptor for specified cube instance.
 (Same as "Resume Job")
 
 ## Get job step output
-`GET /kylin/api/{jobId}/steps/{stepId}/output`
+`GET /kylin/api/jobs/{jobId}/steps/{stepId}/output`
 
 #### Path Variable
 * jobId - `required` `string` Job id.
