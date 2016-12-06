@@ -229,7 +229,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> {
      * - Favors new segments over the old
      * - Favors big segments over the small
      */
-    public Segments calculateToBeSegments(ISegment newSegment, boolean isPartitioned) {
+    public Segments calculateToBeSegments(ISegment newSegment) {
 
         Segments tobe = (Segments) this.clone();
         if (newSegment != null && !tobe.contains(newSegment)) {
@@ -242,12 +242,12 @@ public class Segments<T extends ISegment> extends ArrayList<T> {
         Collections.sort(tobe);
 
         ISegment firstSeg = tobe.getFirst();
-        validate(firstSeg, isPartitioned);
+        firstSeg.validate();
 
         for (int i = 0, j = 1; j < tobe.size();) {
             ISegment is = (ISegment) tobe.get(i);
             ISegment js = (ISegment) tobe.get(j);
-            validate(js, isPartitioned);
+            js.validate();
 
             // check i is either ready or new
             if (!isNew(is) && !isReady(is)) {
@@ -304,15 +304,6 @@ public class Segments<T extends ISegment> extends ArrayList<T> {
         }
 
         return tobe;
-    }
-
-    private void validate(ISegment seg, boolean isPartitioned) {
-        if (isPartitioned) {
-            if (!seg.isSourceOffsetsOn() && seg.getDateRangeStart() >= seg.getDateRangeEnd())
-                throw new IllegalStateException("Invalid segment, dateRangeStart(" + seg.getDateRangeStart() + ") must be smaller than dateRangeEnd(" + seg.getDateRangeEnd() + ") in segment " + seg);
-            if (seg.isSourceOffsetsOn() && seg.getSourceOffsetStart() >= seg.getSourceOffsetEnd())
-                throw new IllegalStateException("Invalid segment, sourceOffsetStart(" + seg.getSourceOffsetStart() + ") must be smaller than sourceOffsetEnd(" + seg.getSourceOffsetEnd() + ") in segment " + seg);
-        }
     }
 
     private boolean isReady(ISegment seg) {

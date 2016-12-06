@@ -368,7 +368,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
     }
 
     public Segments calculateToBeSegments(CubeSegment newSegment) {
-        return segments.calculateToBeSegments(newSegment, getModel().getPartitionDesc().isPartitioned());
+        return segments.calculateToBeSegments(newSegment);
     }
 
     public CubeSegment getLastSegment() {
