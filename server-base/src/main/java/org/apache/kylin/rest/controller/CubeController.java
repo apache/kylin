@@ -83,6 +83,8 @@ import com.google.common.collect.Maps;
 public class CubeController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(CubeController.class);
 
+    private static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
+
     @Autowired
     private CubeService cubeService;
 
@@ -343,6 +345,10 @@ public class CubeController extends BasicController {
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
             throw new BadRequestException("Broken cube can't be cloned");
         }
+        if (!StringUtils.containsOnly(newCubeName, VALID_CUBENAME)) {
+            logger.info("Invalid Cube name {}, only letters, numbers and underline supported.", newCubeName);
+            throw new BadRequestException("Invalid Cube name, only letters, numbers and underline supported.");
+        }
 
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
@@ -420,6 +426,10 @@ public class CubeController extends BasicController {
         if (StringUtils.isEmpty(name)) {
             logger.info("Cube name should not be empty.");
             throw new BadRequestException("Cube name should not be empty.");
+        }
+        if (!StringUtils.containsOnly(name, VALID_CUBENAME)) {
+            logger.info("Invalid Cube name {}, only letters, numbers and underline supported.", name);
+            throw new BadRequestException("Invalid Cube name, only letters, numbers and underline supported.");
         }
 
         try {

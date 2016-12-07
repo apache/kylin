@@ -44,8 +44,8 @@ public class CubeDescController extends BasicController {
     /**
      * Get detail information of the "Cube ID"
      * 
-     * @param cubeDescName
-     *            Cube ID
+     * @param cubeName
+     *            Cube Name
      * @return
      * @throws IOException
      */

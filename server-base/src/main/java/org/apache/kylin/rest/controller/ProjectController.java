@@ -27,6 +27,7 @@ import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.request.CreateProjectRequest;
 import org.apache.kylin.rest.request.UpdateProjectRequest;
@@ -59,6 +60,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping(value = "/projects")
 public class ProjectController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ProjectController.class);
+
+    private static final char[] VALID_PROJECTNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     @Autowired
     private ProjectService projectService;
@@ -197,7 +200,12 @@ public class ProjectController extends BasicController {
     @ResponseBody
     public ProjectInstance saveProject(@RequestBody CreateProjectRequest projectRequest) {
         if (StringUtils.isEmpty(projectRequest.getName())) {
-            throw new InternalErrorException("A project name must be given to create a project");
+            logger.info("Project name should not be empty.");
+            throw new BadRequestException("Project name should not be empty.");
+        }
+        if (!StringUtils.containsOnly(projectRequest.getName(), VALID_PROJECTNAME)) {
+            logger.info("Invalid Project name {}, only letters, numbers and underline supported.", projectRequest.getName());
+            throw new BadRequestException("Invalid Project name, only letters, numbers and underline supported.");
         }
 
         ProjectInstance createdProj = null;
