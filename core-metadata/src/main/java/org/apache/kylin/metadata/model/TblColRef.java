@@ -150,7 +150,7 @@ public class TblColRef implements Serializable {
         return column.getType();
     }
 
-    public void markInnerColumn(InnerDataTypeEnum dataType) {
+    private void markInnerColumn(InnerDataTypeEnum dataType) {
         this.column.setDatatype(dataType.getDataType());
         this.column.getTable().setName(INNER_TABLE_NAME);
         this.column.getTable().setDatabase("DEFAULT");

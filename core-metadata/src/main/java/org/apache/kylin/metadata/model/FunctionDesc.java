@@ -140,7 +140,7 @@ public class FunctionDesc {
         } else if (isCount()) {
             return "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
         } else {
-            return getFullExpression().replaceAll("[(), ]", "_");
+            return getFullExpression().replaceAll("[(),. ]", "_");
         }
     }
 

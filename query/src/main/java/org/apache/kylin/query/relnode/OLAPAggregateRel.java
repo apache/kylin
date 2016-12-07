@@ -192,17 +192,16 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
-            TblColRef aggCol = null;
+            String aggOutName;
             if (aggFunc.needRewriteField()) {
-                aggCol = buildRewriteColumn(aggFunc);
+                aggOutName = aggFunc.getRewriteFieldName();
             } else {
                 AggregateCall aggCall = this.rewriteAggCalls.get(i);
-                if (!aggCall.getArgList().isEmpty()) {
-                    int index = aggCall.getArgList().get(0);
-                    aggCol = inputColumnRowType.getColumnByIndex(index);
-                }
+                int index = aggCall.getArgList().get(0);
+                aggOutName = aggFunc.getExpression() + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity() + "_";
             }
-            columns.add(aggCol);
+            TblColRef aggOutCol = TblColRef.newInnerColumn(aggOutName, TblColRef.InnerDataTypeEnum.LITERAL);
+            columns.add(aggOutCol);
         }
         return new ColumnRowType(columns);
     }

@@ -20,6 +20,7 @@ package org.apache.kylin.query.relnode;
 
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,14 +62,13 @@ import org.apache.kylin.metadata.filter.DynamicTupleFilter;
 import org.apache.kylin.metadata.filter.ExtractTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.filter.UnsupportedTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
+import org.apache.kylin.metadata.filter.UnsupportedTupleFilter;
 import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  */
@@ -78,6 +78,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
 
         private final ColumnRowType inputRowType;
         private final OLAPContext context;
+        private final Set<TblColRef> columnsInFilter = new HashSet<>();
 
         public TupleFilterVisitor(ColumnRowType inputRowType, OLAPContext context) {
             super(true);
@@ -227,7 +228,10 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         @Override
         public TupleFilter visitInputRef(RexInputRef inputRef) {
             TblColRef column = inputRowType.getColumnByIndex(inputRef.getIndex());
-            context.allColumns.add(column);
+            if (!column.isInnerColumn()) {
+                context.allColumns.add(column);
+                columnsInFilter.add(column);
+            }
             ColumnTupleFilter filter = new ColumnTupleFilter(column);
             return filter;
         }
@@ -320,25 +324,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType, context);
         context.filter = this.condition.accept(visitor);
 
-        context.filterColumns = collectColumns(context.filter);
-    }
-
-    private Set<TblColRef> collectColumns(TupleFilter filter) {
-        Set<TblColRef> ret = Sets.newHashSet();
-        collectColumnsRecursively(filter, ret);
-        return ret;
-    }
-
-    private void collectColumnsRecursively(TupleFilter filter, Set<TblColRef> collector) {
-        if (filter == null)
-            return;
-
-        if (filter instanceof ColumnTupleFilter) {
-            collector.add(((ColumnTupleFilter) filter).getColumn());
-        }
-        for (TupleFilter child : filter.getChildren()) {
-            collectColumnsRecursively(child, collector);
-        }
+        context.filterColumns = visitor.columnsInFilter;
     }
 
     @Override
