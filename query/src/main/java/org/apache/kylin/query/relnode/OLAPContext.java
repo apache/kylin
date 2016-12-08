@@ -135,8 +135,6 @@ public class OLAPContext {
     // rewrite info
     public Map<String, RelDataType> rewriteFields = new HashMap<>();
 
-    public int limit;
-
     // hive query
     public String sql = "";
 

@@ -92,7 +92,12 @@ public class StorageContext {
     }
 
     public void setLimit(int l) {
-        this.limit = l;
+        if (l > limit) {
+            //cases like : select price from (select * from kylin_sales limit 10) limit 5000
+            logger.info("Setting limit to {} but in current olap context, the limit is already {}, won't apply", l, limit);
+        } else {
+            this.limit = l;
+        }
     }
 
     public int getOffset() {
@@ -126,7 +131,7 @@ public class StorageContext {
         if (tempPushDownLimit == Integer.MAX_VALUE) {
             return;
         }
-        
+
         int pushDownLimitMax = KylinConfig.getInstanceFromEnv().getStoragePushDownLimitMax();
         if (!realization.supportsLimitPushDown()) {
             logger.info("Not enabling limit push down because cube storage type not supported");
