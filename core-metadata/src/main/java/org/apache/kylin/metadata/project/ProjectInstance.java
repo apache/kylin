@@ -80,7 +80,7 @@ public class ProjectInstance extends RootPersistentEntity {
     @JsonProperty("ext_filters")
     private Set<String> extFilters = new TreeSet<String>();
 
-    @JsonProperty("overrideKylinProps")
+    @JsonProperty("override_kylin_properties")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private LinkedHashMap<String, String> overrideKylinProps;
 
@@ -300,7 +300,7 @@ public class ProjectInstance extends RootPersistentEntity {
         return overrideKylinProps;
     }
 
-    public void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
+    void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
         this.overrideKylinProps = overrideKylinProps;
     }
 

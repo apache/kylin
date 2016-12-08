@@ -65,7 +65,7 @@
     "test_kylin_left_join_view_model_desc",
     "test_streaming_table_model_desc"
   ],
-  "overrideKylinProps" :{
+  "override_kylin_properties" :{
     "kylin.storage.hbase.owner-tag": "kylin@kylin.apache.org"
   }
 }
