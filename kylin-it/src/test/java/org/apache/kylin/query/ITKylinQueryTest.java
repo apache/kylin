@@ -34,7 +34,6 @@ import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
-import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.ITable;
@@ -95,10 +94,6 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testTimeoutQuery() throws Exception {
-        if (HBaseStorage.overwriteStorageQuery != null) {
-            //v1 engine does not suit
-            return;
-        }
         try {
 
             Map<String, String> toggles = Maps.newHashMap();
@@ -157,7 +152,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_subquery/query11.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_subquery/query02.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
@@ -329,30 +324,25 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testLimitEnabled() throws Exception {
-        if (HBaseStorage.overwriteStorageQuery == null) {//v1 query engine will not work
+        try {
+            //other cubes have strange aggregation groups
+            RemoveBlackoutRealizationsRule.whiteList.add("CUBE[name=test_kylin_cube_with_slr_empty]");
 
-            try {
-                //other cubes have strange aggregation groups
-                RemoveBlackoutRealizationsRule.whiteList.add("CUBE[name=test_kylin_cube_with_slr_empty]");
-
-                List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_limit"), ".sql");
-                for (File sqlFile : sqlFiles) {
-                    runSQL(sqlFile, false, false);
-                    assertTrue(checkLimitEnabled());
-                    assertTrue(checkFinalPushDownLimit());
-                }
-
-            } finally {
-                RemoveBlackoutRealizationsRule.whiteList.remove("CUBE[name=test_kylin_cube_with_slr_empty]");
+            List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_limit"), ".sql");
+            for (File sqlFile : sqlFiles) {
+                runSQL(sqlFile, false, false);
+                assertTrue(checkLimitEnabled());
+                assertTrue(checkFinalPushDownLimit());
             }
+
+        } finally {
+            RemoveBlackoutRealizationsRule.whiteList.remove("CUBE[name=test_kylin_cube_with_slr_empty]");
         }
     }
 
     @Test
     public void testLimitCorrectness() throws Exception {
-        if (HBaseStorage.overwriteStorageQuery == null) {//v1 query engine will not work
-            execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
-        }
+        this.execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
     }
 
     @Test
@@ -385,7 +375,6 @@ public class ITKylinQueryTest extends KylinTestBase {
         IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
         ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
         String queriedVersion = String.valueOf(kylinTable.getValue(0, "version"));
-        
 
         // compare the result
         Assert.assertEquals(expectVersion, queriedVersion);

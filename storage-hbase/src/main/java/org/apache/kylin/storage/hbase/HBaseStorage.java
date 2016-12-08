@@ -41,8 +41,6 @@ import org.apache.kylin.storage.hbase.steps.HBaseMROutput2Transition;
 public class HBaseStorage implements IStorage {
 
     public final static String v2CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v2.CubeStorageQuery";
-    public final static String v1CubeStorageQuery = "org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery";
-    public static String overwriteStorageQuery = null;//for test case
 
     @Override
     public IStorageQuery createQuery(IRealization realization) {
@@ -52,11 +50,7 @@ public class HBaseStorage implements IStorage {
             CubeInstance cubeInstance = (CubeInstance) realization;
             String cubeStorageQuery;
             if (cubeInstance.getStorageType() == IStorageAware.ID_HBASE) {//v2 query engine cannot go with v1 storage now
-                cubeStorageQuery = v1CubeStorageQuery;
-            } else if (overwriteStorageQuery != null) {
-                cubeStorageQuery = overwriteStorageQuery;
-            } else if ("v1".equalsIgnoreCase(BackdoorToggles.getHbaseCubeQueryVersion())) {
-                cubeStorageQuery = v1CubeStorageQuery;
+                throw new IllegalStateException("Storage Engine (id=" + IStorageAware.ID_HBASE + ") is not supported any more");
             } else {
                 cubeStorageQuery = v2CubeStorageQuery;//by default use v2
             }

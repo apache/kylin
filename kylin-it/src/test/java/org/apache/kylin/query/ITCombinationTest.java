@@ -26,7 +26,6 @@ import java.util.Map;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
-import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -53,7 +52,6 @@ public class ITCombinationTest extends ITKylinQueryTest {
     public static void tearDown() {
         printInfo("tearDown in ITCombinationTest");
         clean();
-        HBaseStorage.overwriteStorageQuery = null;
         Candidate.restorePriorities();
     }
 
