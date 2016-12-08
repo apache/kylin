@@ -64,9 +64,9 @@ import com.google.common.collect.Lists;
  */
 public class DeployCoprocessorCLI {
 
-    public static final String CubeObserverClass = "org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.AggregateRegionObserver";
     public static final String CubeEndpointClass = "org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.CubeVisitService";
     public static final String CubeObserverClassOld = "org.apache.kylin.storage.hbase.coprocessor.observer.AggregateRegionObserver";
+    public static final String CubeObserverClassOld2 = "org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.AggregateRegionObserver";
     public static final String IIEndpointClassOld = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
     public static final String IIEndpointClass = "org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.IIEndpoint";
 
@@ -187,7 +187,6 @@ public class DeployCoprocessorCLI {
     public static void addCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
         logger.info("Add coprocessor on " + desc.getNameAsString());
         desc.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
-        desc.addCoprocessor(CubeObserverClass, hdfsCoprocessorJar, 1002, null);
     }
 
     public static boolean resetCoprocessor(String tableName, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
@@ -207,8 +206,8 @@ public class DeployCoprocessorCLI {
         logger.info("Disable " + tableName);
         hbaseAdmin.disableTable(tableName);
 
-        while (desc.hasCoprocessor(CubeObserverClass)) {
-            desc.removeCoprocessor(CubeObserverClass);
+        while (desc.hasCoprocessor(CubeObserverClassOld2)) {
+            desc.removeCoprocessor(CubeObserverClassOld2);
         }
         while (desc.hasCoprocessor(CubeEndpointClass)) {
             desc.removeCoprocessor(CubeEndpointClass);
