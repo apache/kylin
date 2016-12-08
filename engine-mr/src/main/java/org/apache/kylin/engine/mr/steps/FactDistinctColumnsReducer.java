@@ -117,7 +117,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             isPartitionCol = true;
             col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (col == null) {
-                isPartitionCol = false;
                 logger.info("Do not have partition col. This reducer will keep empty");
             }
             colValues = Lists.newLinkedList();
@@ -283,9 +282,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
                     cuboidHLLMap, samplingPercentage, mapperNumber, mapperOverlapRatio);
         } else if (isPartitionCol) {
             // partition col
-            if (col == null)
-                return;
-            outputPartitionInfo(context);
+            if (col != null) {
+                outputPartitionInfo(context);
+            }
         } else {
             // normal col
             if (isReducerLocalBuildDict) {
