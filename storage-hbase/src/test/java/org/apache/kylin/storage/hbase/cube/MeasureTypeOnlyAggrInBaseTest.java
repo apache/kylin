@@ -20,12 +20,9 @@ package org.apache.kylin.storage.hbase.cube;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +39,6 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.storage.IStorageQuery;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,23 +86,6 @@ public class MeasureTypeOnlyAggrInBaseTest extends LocalFileMetadataTestCase {
     @After
     public void after() throws Exception {
         this.cleanupTestMetadata();
-    }
-
-    @Test
-    public void testIdentifyCuboidV1() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, NoSuchFieldException {
-        IStorageQuery query = new org.apache.kylin.storage.hbase.cube.v1.CubeStorageQuery(cube);
-        long baseCuboidId = cubeDesc.getRowkey().getFullMask();
-
-        Method method = query.getClass().getDeclaredMethod("identifyCuboid", Set.class, Collection.class);
-        method.setAccessible(true);
-
-        Object ret = method.invoke(query, Sets.newHashSet(), Lists.newArrayList());
-
-        assertTrue(ret instanceof Cuboid);
-        assertNotEquals(baseCuboidId, ((Cuboid) ret).getId());
-
-        ret = method.invoke(query, dimensions, metrics);
-        assertEquals(baseCuboidId, ((Cuboid) ret).getId());
     }
 
     @Test

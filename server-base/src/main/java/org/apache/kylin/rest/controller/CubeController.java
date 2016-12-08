@@ -55,7 +55,6 @@ import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
 import org.apache.kylin.source.kafka.util.KafkaClient;
-import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -193,19 +192,6 @@ public class CubeController extends BasicController {
             return cubeService.updateCubeCost(cube, cost);
         } catch (Exception e) {
             String message = "Failed to update cube cost: " + cubeName + " : " + cost;
-            logger.error(message, e);
-            throw new InternalErrorException(message + " Caused by: " + e.getMessage(), e);
-        }
-    }
-
-    @RequestMapping(value = "/{cubeName}/coprocessor", method = { RequestMethod.PUT })
-    @ResponseBody
-    public Map<String, Boolean> updateCubeCoprocessor(@PathVariable String cubeName, @RequestParam(value = "force") String force) {
-        try {
-            ObserverEnabler.updateCubeOverride(cubeName, force);
-            return ObserverEnabler.getCubeOverrides();
-        } catch (Exception e) {
-            String message = "Failed to update cube coprocessor: " + cubeName + " : " + force;
             logger.error(message, e);
             throw new InternalErrorException(message + " Caused by: " + e.getMessage(), e);
         }

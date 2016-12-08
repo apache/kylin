@@ -27,7 +27,6 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.storage.hbase.HBaseStorage;
-import org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.ObserverEnabler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -67,7 +66,6 @@ public class ITCombinationTest extends ITKylinQueryTest {
     public static Collection<Object[]> configs() {
         return Arrays.asList(new Object[][] { //
                 { "inner", "on", "v2", true }, //
-                { "left", "on", "v1", true }, //
                 { "left", "on", "v2", true }, //
                 //{ "inner", "on", "v2", false }, // exclude view to simply model/cube selection
                 //{ "left", "on", "v1", false }, // exclude view to simply model/cube selection
@@ -84,23 +82,10 @@ public class ITCombinationTest extends ITKylinQueryTest {
         ITKylinQueryTest.joinType = joinType;
         ITKylinQueryTest.setupAll();
 
-        if (coprocessorToggle.equals("on")) {
-            ObserverEnabler.forceCoprocessorOn();
-        } else if (coprocessorToggle.equals("off")) {
-            ObserverEnabler.forceCoprocessorOff();
-        } else if (coprocessorToggle.equals("unset")) {
-            // unset
-        }
-
         RemoveBlackoutRealizationsRule.blackList.clear();
         if (excludeViewCubes) {
             RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
             RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
         }
-
-        if ("v1".equalsIgnoreCase(queryEngine))
-            HBaseStorage.overwriteStorageQuery = HBaseStorage.v1CubeStorageQuery;
-        else
-            HBaseStorage.overwriteStorageQuery = null;
     }
 }
