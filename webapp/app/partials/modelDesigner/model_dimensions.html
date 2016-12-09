@@ -70,13 +70,13 @@
                     </td>
                     <td class="col-xs-9">
                       <ui-select
-                        ng-if="state.mode=='edit'" style="width: 100%"
+                        style="width: 100%"
                         autofocus="true"
                         close-on-select="false"
                         ng-model="modelsManager.selectedModel.dimensions[$index].columns" multiple>
                         <ui-select-match placeholder="Select Column...">{{$item.name}}</ui-select-match>
                         <ui-select-choices
-                          repeat="column.name as column in getColumnsByTable(dimension.table) | filter:$select.search">
+                          repeat="column.name as column in getColumnsByAlias(dimension.table) | filter:$select.search">
                           {{column.name}}
                         </ui-select-choices>
                       </ui-select>

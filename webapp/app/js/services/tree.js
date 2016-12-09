@@ -16,8 +16,9 @@
  * limitations under the License.
 */
 
-KylinApp.service('ModelGraphService', function () {
-
+KylinApp.service('ModelGraphService', function (VdmUtil) {
+    var tablesNodeList=[];
+    var aliasList=[];
     var margin = {top: 20, right: 100, bottom: 20, left: 100},
         width = 1100 - margin.right - margin.left,
         height = 600;
@@ -37,31 +38,52 @@ KylinApp.service('ModelGraphService', function () {
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         var graphData = {
-            "type": "fact",
-            "name": model.fact_table,
+            "type": "FACT",
+            "name": VdmUtil.removeNameSpace(model.fact_table),
             "children": []
         };
-
+        tablesNodeList.push(graphData);
+        aliasList.push(graphData.name);
         model.graph = (!!model.graph) ? model.graph : {};
 
-      angular.forEach(model.lookups, function (lookup, index) {
-        if (lookup.join && lookup.join.primary_key.length > 0) {
+        angular.forEach(model.lookups, function (lookup, index) {
+          if (lookup.join && aliasList.indexOf(lookup.alias)==-1) {
+            var  dimensionNode={
+                "type": lookup.kind,
+                "name": lookup.alias,
+                "join": lookup.join,
+                "children": [],
+                "_children": []
+              }
+              aliasList.push(dimensionNode.name);
+              tablesNodeList.push(dimensionNode);
+            }
 
-          var dimensionNode;
+        });
+        angular.forEach(model.lookups, function (lookup) {
+           if (lookup.join && lookup.join.primary_key.length > 0) {
+                  VdmUtil.getNameSpaceAliasName(lookup.join.primary_key[0]);
+                  VdmUtil.getNameSpaceAliasName(lookup.join.foreign_key[0]);
+           }
+        });
 
-          /* Loop through the graphData.children array to find out: If the LKP table is already existed */
+
+/* Loop through the graphData.children array to find out: If the LKP table is already existed *//*
+
           for(var j = 0; j < graphData.children.length; j++ ) {
-            if(graphData.children[j].name == lookup.table){
+            if(graphData.children[j].name == lookup.alias){
               dimensionNode = graphData.children[j];
               break;
             }
           }
 
-          /* If not existed, create dimensionNode and push it */
+          */
+/* If not existed, create dimensionNode and push it *//*
+
           if(j == graphData.children.length) {
             dimensionNode = {
               "type": "dimension",
-              "name": lookup.table,
+              "name": lookup.alias,
               "join": lookup.join,
               "children": [],
               "_children": []
@@ -73,7 +95,7 @@ KylinApp.service('ModelGraphService', function () {
           }
 
         }
-      });
+*/
 
       angular.forEach(model.dimensions, function (dimension, index) {
         // for dimension on lookup table

@@ -16,7 +16,7 @@
 * limitations under the License.
 -->
 
-<div ng-controller="CubeModelCtrl">
+<div ng-controller="ModelDataModelCtrl">
     <ng-form name="forms.data_model_form">
 
     <!-- Fact Table Name -->
@@ -26,9 +26,9 @@
                 <b>Fact Table</b>
             </label>
             <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.data_model_form.table_name.$invalid && (forms.data_model_form.table_name.$dirty||forms.data_model_form.$submitted)}">
-              <select chosen ng-model="modelsManager.selectedModel.fact_table" ng-if="state.mode=='edit'"
+              <select chosen ng-model="$parent.rootFactTable" ng-if="state.mode=='edit'"
                       ng-options="table.name as table.name for table in tableModel.selectProjectTables"
-                      style="width:100%;"
+                      style="width:100%;" ng-change="changeFactTable()"
                       name="table_name"
                       ng-required="true"
                       data-placeholder="Fact Table Name"
@@ -37,7 +37,7 @@
               </select>
 
                 <small class="help-block" ng-show="forms.data_model_form.innerform.typeahead.$error.required && (forms.data_model_form.innerform.typeahead.$dirty||forms.data_model_form.$submitted)">The fact table is required</small>
-                <span ng-if="state.mode=='view'">{{modelsManager.selectedModel.fact_table}}</span>
+                <span ng-if="state.mode=='view'">{{$parent.rootFactTable}}</span>
             </div>
         </div>
     </div>
@@ -48,11 +48,11 @@
             <div class="col-xs-6" ng-if="state.mode=='edit'">
                 <button type="button" class="btn btn-primary" ng-disabled="!modelsManager.selectedModel.fact_table.length"
                         ng-click="openLookupModal()">
-                    <i class="fa fa-plus"></i> Add Lookup Table
+                    <i class="fa fa-plus"></i> Add Join Table
                 </button>
             </div>
             <div class="col-xs-6" ng-if="state.mode!='edit'">
-                <b>{{modelsManager.selectedModel.lookups.length ? 'Lookup Tables' : 'No Lookup Tables'}}</b>
+                <b>{{modelsManager.selectedModel.lookups.length ? 'Join Tables' : 'No Join Tables'}}</b>
             </div>
             <div class="col-xs-6">
                 <span class="pull-right input-icon input-icon-right nav-search" style="margin-left: 22px;" ng-if="modelsManager.selectedModel.lookups.length">
@@ -66,19 +66,24 @@
             <tr>
                 <th>ID</th>
                 <th>Table Name</th>
+                <th>Table Kind</th>
                 <th>Join Type</th>
                 <th>Join Condition</th>
                 <th ng-if="state.mode=='edit'">Actions</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="lookup in modelsManager.selectedModel.lookups | filter:lookupState.filter track by $index">
+            <tr ng-repeat="lookup in modelsManager.selectedModel.lookups | filter:lookupState.filter">
                 <td>
                     <b>{{$index + 1}}</b>
                 </td>
                 <!-- Table Name -->
                 <td>
-                    <span tooltip="Lookup Table Name">{{lookup.table}}</span>
+                    <span>{{lookup.alias}}</span>
+                </td>
+                <!-- Table Kind -->
+                <td>
+                    <span>{{lookup.kind}}</span>
                 </td>
                 <!-- Join Type -->
                 <td>
@@ -88,7 +93,7 @@
                 <td>
                     <ul class="list-unstyled">
                         <li ng-repeat="pk in lookup.join.primary_key track by $index">
-                            <code>{{modelsManager.selectedModel.fact_table + '.' + lookup.join.foreign_key[$index]}} = {{lookup.table + '.' + pk}}</code>
+                            <code>{{lookup.join.foreign_key[$index]}} = {{pk}}</code>
                         </li>
                     </ul>
                 </td>
@@ -108,7 +113,7 @@
     </div>
     </ng-form>
 
-    <!-- Add Lookup Table Form -->
+    <!-- Add Join Table Form -->
     <script type="text/ng-template" id="dataModelLookupTable.html">
         <div class="modal-header">
             <h4 class="box-title lighter">{{lookupState.editing ? 'Edit' : 'Add'}} Lookup</h4>
@@ -117,28 +122,45 @@
             <div class="row">
                 <div class="col-xs-8">
                     <ng-form name="lookup_form">
-                    <!--Table Name-->
+                      <div class="form-group">
+                        <div class="row">
+                          <div class="col-xs-9">
+                            <div>
+                              <select chosen ng-model="newLookup.joinTable" style="width: 45%"
+                                      ng-options="table as table for table in aliasName"
+                                      name="table_name"
+                                      ng-required="true"
+                                      data-placeholder="Join Table Name"
+                                      class="chosen-select">
+                                <option value=""> &#45;&#45; Select Join Table &#45;&#45; </option>
+                              </select>
+                              <small class="help-block" ng-show="lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$submitted)">Table name required</small>
+                              <b>&nbsp;</b>
+                              <select chosen ng-model="newLookup.table" style="width: 45%"
+                                      ng-options="table.name as table.name for table in tableModel.selectProjectTables"
+                                      name="table_name"
+                                      ng-required="true"  ng-change="changeJoinTable()"
+                                      data-placeholder="Join Table Name"
+                                      class="chosen-select">
+                                <option value=""> &#45;&#45; Select Join Table &#45;&#45; </option>
+                              </select>
+                              <small class="help-block" ng-show="lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$submitted)">Table name required</small>
+
+                            </div>
+                            <div class="space-4"></div>
+                            <small class="help-block red" ng-show="newLookup.join.isCompatible[$index]==false"><i class="fa fa-exclamation-triangle"></i> <b>Column Type incompatible {{newLookup.join.foreign_key[$index]}}[{{newLookup.join.fk_type[$index]}}], {{newLookup.join.primary_key[$index]}} [{{newLookup.join.pk_type[$index]}}]</b></small>
+                          </div>
+                        </div>
+                      </div>
                     <div class="form-group">
                         <div class="row">
-                            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Lookup Table Name</b></label>
-                            <div ng-class="{'has-error':lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$submitted)}">
-                                <div class="col-xs-12 col-sm-6">
-                                  <select chosen ng-model="newLookup.table"
-                                          ng-options="table.name as table.name for table in tableModel.selectProjectTables"
-                                          style="width:100%;"
-                                          name="table_name"
-                                          ng-required="true"
-                                          data-placeholder="Lookup Table Name"
-                                          class="chosen-select">
-                                    <option value=""> -- Select Lookup Table -- </option>
-                                  </select>
-
-                                    <small class="help-block" ng-show="lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$submitted)">Table name required</small>
-                                </div>
+                            <label class="col-sm-3 control-label font-color-default"><b>Alias</b></label>
+                            <div class="col-sm-6">
+                              <input type="text" class="form-control " placeholder="Input Table Alias" ng-required="true"
+                                     ng-model="newLookup.alias" ng-change="changeAlias()" ng-disabled="">
                             </div>
                         </div>
                     </div>
-
                     <!--Join Type and Columns-->
                     <div class="form-group">
                         <div class="row">
@@ -153,18 +175,27 @@
                     </div>
                     <div class="form-group">
                         <div class="row">
+                          <label class="col-sm-3 control-label font-color-default"><b>Table Type</b></label>
+                          <div class="col-sm-6">
+                            <label> <input type="radio" ng-model="newLookup.kind" value="FACT" > Fact Table </label>
+                            <label> <input type="radio" ng-model="newLookup.kind" value="LOOKUP"> Lookup Table </label>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="row">
                             <div class="col-xs-9">
                                 <div ng-repeat="joinIndex in [] | range: newLookup.join.primary_key.length">
                                     <div>
                                         <select style="width: 45%" chosen data-placeholder="Fact Table Column"
                                                 ng-model="newLookup.join.foreign_key[$index]"  ng-change="changeKey($index)"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(modelsManager.selectedModel.fact_table)" >
+                                                ng-options="newLookup.joinTable+'.'+columns.name as columns.name for columns in getColumnsByAlias(newLookup.joinTable)" >
                                             <option value=""></option>
                                         </select>
                                         <b>=</b>
                                         <select style="width: 45%" chosen data-placeholder="Lookup Table Column"
                                                 ng-model="newLookup.join.primary_key[$index]"  ng-change="changeKey($index)"
-                                                ng-options="columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
+                                                ng-options="newLookup.alias+'.'+columns.name as columns.name for columns in getColumnsByTable(newLookup.table)" >
                                             <option value=""></option>
                                         </select>
                                         <button class="pull-right btn btn-xs btn-danger" style="cursor: pointer" tooltip="Delete"

@@ -140,7 +140,27 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
         return obj;
       }
       return angular.toJson(filterData(newObj),true);
-    }
-
+    },
+    removeNameSpace:function(str){
+      if(str){
+         return str.replace(/([^.\s]+\.)+/,'');
+      }else{
+        return '';
+      }
+    },
+    getNameSpaceTopName:function(str){
+      if(str){
+         return str.replace(/(\.[^.]+)/,'');
+      }else{
+        return '';
+      }
+    },
+    getNameSpaceAliasName:function(str){
+      if(str){
+         return str.replace(/\.[^.]+$/,'');
+      }else{
+        return '';
+      }
+    },
   }
 });
