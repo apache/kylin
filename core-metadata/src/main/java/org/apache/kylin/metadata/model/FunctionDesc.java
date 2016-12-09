@@ -240,8 +240,8 @@ public class FunctionDesc {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
-        result = prime * result + ((returnType == null) ? 0 : returnType.hashCode());
         result = prime * result + ((isCount() || parameter == null) ? 0 : parameter.hashCode());
+        // NOTE: don't compare returnType, FunctionDesc created at query engine does not have a returnType
         return result;
     }
 
@@ -272,6 +272,7 @@ public class FunctionDesc {
                     return false;
             }
         }
+        // NOTE: don't compare returnType, FunctionDesc created at query engine does not have a returnType
         return true;
     }
 
