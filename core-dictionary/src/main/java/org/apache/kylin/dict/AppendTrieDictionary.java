@@ -36,7 +36,6 @@ import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NavigableSet;
-import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -892,7 +891,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
                 logger.info("GlobalDict {} is empty, create new one", resourcePath);
                 builder = new Builder<>(resourcePath, null, dictDir, 0, 0, 0, new StringBytesConverter(), null);
             } else {
-                logger.info("GlobalDict {} exist, append value", resourcePath);
+                logger.info("GlobalDict {} exist, append value", dictToUse);
                 builder = new Builder<>(resourcePath, dictToUse, dictToUse.baseDir, dictToUse.maxId, dictToUse.maxValueLength,
                     dictToUse.nValues, dictToUse.bytesConverter, dictToUse.writeDictMap());
             }
@@ -1265,7 +1264,11 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(baseDir);
+        int hashCode = 31;
+        for (DictSlice slice : dictSliceMap.values()) {
+            hashCode += 31 * slice.hashCode();
+        }
+        return hashCode;
     }
 
     @Override
@@ -1273,16 +1276,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         if (this == o) {
             return true;
         }
-        if (o instanceof AppendTrieDictionary) {
-            AppendTrieDictionary that = (AppendTrieDictionary) o;
-            return Objects.equals(this.baseDir, that.baseDir);
-        }
         return false;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("AppendTrieDictionary(%s)", baseDir);
     }
 
     @Override
