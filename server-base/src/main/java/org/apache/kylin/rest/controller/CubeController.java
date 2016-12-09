@@ -259,14 +259,26 @@ public class CubeController extends BasicController {
     /** Build/Rebuild a cube segment by source offset */
     @RequestMapping(value = "/{cubeName}/build2", method = { RequestMethod.PUT })
     @ResponseBody
-    public JobInstance build(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
-        return rebuild(cubeName, req);
+    public JobInstance build2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
+        boolean existKafkaClient = false;
+        try {
+            Class<?> clazz = Class.forName("org.apache.kafka.clients.consumer.KafkaConsumer");
+            if (clazz != null) {
+                existKafkaClient = true;
+            }
+        } catch (ClassNotFoundException e) {
+            existKafkaClient = false;
+        }
+        if (!existKafkaClient) {
+            throw new InternalErrorException("Could not find Kafka dependency");
+        }
+        return rebuild2(cubeName, req);
     }
 
     /** Build/Rebuild a cube segment by source offset */
     @RequestMapping(value = "/{cubeName}/rebuild2", method = { RequestMethod.PUT })
     @ResponseBody
-    public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
+    public JobInstance rebuild2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
         return buildInternal(cubeName, 0, 0, req.getSourceOffsetStart(), req.getSourceOffsetEnd(), req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(), req.isForce());
     }
 
@@ -583,7 +595,7 @@ public class CubeController extends BasicController {
                 request.setSourceOffsetEnd(hole.getSourceOffsetEnd());
                 request.setSourcePartitionOffsetEnd(hole.getSourcePartitionOffsetEnd());
                 try {
-                    JobInstance job = build(cubeName, request);
+                    JobInstance job = build2(cubeName, request);
                     jobs.add(job);
                 } catch (Exception e) {
                     // it may exceed the max allowed job number
