@@ -47,7 +47,7 @@ import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsWriter;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private List<TblColRef> columnList;
     private String statisticsOutput = null;
     private List<Long> baseCuboidRowCountInMappers;
-    protected Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = null;
+    protected Map<Long, HyperLogLogPlusCounterNew> cuboidHLLMap = null;
     protected long baseCuboidId;
     protected CubeDesc cubeDesc;
     private long totalRowsBeforeMerge = 0;
@@ -156,7 +156,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             // for hll
             long cuboidId = Bytes.toLong(key.getBytes(), 1, Bytes.SIZEOF_LONG);
             for (Text value : values) {
-                HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(cubeConfig.getCubeStatsHLLPrecision());
+                HyperLogLogPlusCounterNew hll = new HyperLogLogPlusCounterNew(cubeConfig.getCubeStatsHLLPrecision());
                 ByteBuffer bf = ByteBuffer.wrap(value.getBytes(), 0, value.getLength());
                 hll.readRegisters(bf);
 
@@ -270,7 +270,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         if (isStatistics) {
             // output the hll info
             long grandTotal = 0;
-            for (HyperLogLogPlusCounter hll : cuboidHLLMap.values()) {
+            for (HyperLogLogPlusCounterNew hll : cuboidHLLMap.values()) {
                 grandTotal += hll.getCountEstimate();
             }
             double mapperOverlapRatio = grandTotal == 0 ? 0 : (double) totalRowsBeforeMerge / grandTotal;

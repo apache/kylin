@@ -28,7 +28,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.CubeStatsWriter;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -48,7 +48,7 @@ public class FactDistinctColumnsReducerTest {
         }
 
         System.out.println(outputPath);
-        Map<Long, HyperLogLogPlusCounter> cuboidHLLMap = Maps.newHashMap();
+        Map<Long, HyperLogLogPlusCounterNew> cuboidHLLMap = Maps.newHashMap();
         CubeStatsWriter.writeCuboidStatistics(conf, outputPath, cuboidHLLMap, 100);
         FileSystem.getLocal(conf).delete(outputPath, true);
 

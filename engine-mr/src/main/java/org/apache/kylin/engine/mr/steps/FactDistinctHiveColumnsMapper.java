@@ -29,7 +29,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.Lists;
@@ -45,7 +45,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     protected CuboidScheduler cuboidScheduler = null;
     protected int nRowKey;
     private Integer[][] allCuboidsBitSet = null;
-    private HyperLogLogPlusCounter[] allCuboidsHLL = null;
+    private HyperLogLogPlusCounterNew[] allCuboidsHLL = null;
     private Long[] cuboidIds;
     private HashFunction hf = null;
     private int rowCount = 0;
@@ -76,9 +76,9 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             allCuboidsBitSet = allCuboidsBitSetList.toArray(new Integer[cuboidIdList.size()][]);
             cuboidIds = cuboidIdList.toArray(new Long[cuboidIdList.size()]);
 
-            allCuboidsHLL = new HyperLogLogPlusCounter[cuboidIds.length];
+            allCuboidsHLL = new HyperLogLogPlusCounterNew[cuboidIds.length];
             for (int i = 0; i < cuboidIds.length; i++) {
-                allCuboidsHLL[i] = new HyperLogLogPlusCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision());
+                allCuboidsHLL[i] = new HyperLogLogPlusCounterNew(cubeDesc.getConfig().getCubeStatsHLLPrecision());
             }
 
             hf = Hashing.murmur3_32();
@@ -207,7 +207,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
         if (collectStatistics) {
             ByteBuffer hllBuf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
             // output each cuboid's hll to reducer, key is 0 - cuboidId
-            HyperLogLogPlusCounter hll;
+            HyperLogLogPlusCounterNew hll;
             for (int i = 0; i < cuboidIds.length; i++) {
                 hll = allCuboidsHLL[i];
 

@@ -38,7 +38,7 @@ import com.google.common.hash.Hashing;
  * @author yangli9
  */
 @SuppressWarnings("serial")
-public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLogLogPlusCounter> {
+public class HyperLogLogPlusCounterOld implements Serializable, Comparable<HyperLogLogPlusCounterOld> {
 
     private final int p;
     private final int m;
@@ -46,21 +46,21 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
     byte[] registers;
     int singleBucket;
 
-    public HyperLogLogPlusCounter() {
+    public HyperLogLogPlusCounterOld() {
         this(10);
     }
 
-    public HyperLogLogPlusCounter(int p) {
+    public HyperLogLogPlusCounterOld(int p) {
         this(p, Hashing.murmur3_128());
     }
 
-    public HyperLogLogPlusCounter(HyperLogLogPlusCounter another) {
+    public HyperLogLogPlusCounterOld(HyperLogLogPlusCounterOld another) {
         this(another.p, another.hashFunc);
         merge(another);
     }
 
     /** The larger p is, the more storage (2^p bytes), the better accuracy */
-    private HyperLogLogPlusCounter(int p, HashFunction hashFunc) {
+    private HyperLogLogPlusCounterOld(int p, HashFunction hashFunc) {
         this.p = p;
         this.m = 1 << p;//(int) Math.pow(2, p);
         this.hashFunc = hashFunc;
@@ -110,7 +110,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
             singleBucket = Integer.MIN_VALUE;
     }
 
-    public void merge(HyperLogLogPlusCounter another) {
+    public void merge(HyperLogLogPlusCounterOld another) {
         assert this.p == another.p;
         assert this.hashFunc == another.hashFunc;
 
@@ -172,7 +172,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
         double registerSum;
         int zeroBuckets;
 
-        public HLLCSnapshot(HyperLogLogPlusCounter hllc) {
+        public HLLCSnapshot(HyperLogLogPlusCounterOld hllc) {
             p = (byte) hllc.p;
             registerSum = 0;
             zeroBuckets = 0;
@@ -290,14 +290,14 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
         return 1 + m;
     }
 
-    public void writeRegistersArray(final ByteBuffer out) {
+    /*public void writeRegistersArray(final ByteBuffer out) {
         out.put(this.registers);
     }
 
     public void readRegistersArray(ByteBuffer in) {
         in.get(registers, 0, m);
         singleBucket = Integer.MIN_VALUE;
-    }
+    }*/
 
     private int getRegisterIndexSize() {
         return (p - 1) / 8 + 1; // 2 when p=16, 3 when p=17
@@ -321,7 +321,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
             return false;
         if (getClass() != obj.getClass())
             return false;
-        HyperLogLogPlusCounter other = (HyperLogLogPlusCounter) obj;
+        HyperLogLogPlusCounterOld other = (HyperLogLogPlusCounterOld) obj;
         if (hashFunc == null) {
             if (other.hashFunc != null)
                 return false;
@@ -335,7 +335,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
     }
 
     @Override
-    public int compareTo(HyperLogLogPlusCounter o) {
+    public int compareTo(HyperLogLogPlusCounterOld o) {
         if (o == null)
             return 1;
 
@@ -356,7 +356,7 @@ public class HyperLogLogPlusCounter implements Serializable, Comparable<HyperLog
 
     static void dumpErrorRates() {
         for (int p = 10; p <= 18; p++) {
-            double rate = new HyperLogLogPlusCounter(p).getErrorRate();
+            double rate = new HyperLogLogPlusCounterOld(p).getErrorRate();
             double er = Math.round(rate * 10000) / 100D;
             double er2 = Math.round(rate * 2 * 10000) / 100D;
             double er3 = Math.round(rate * 3 * 10000) / 100D;

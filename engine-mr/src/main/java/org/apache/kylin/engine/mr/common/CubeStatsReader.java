@@ -53,7 +53,7 @@ import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -76,7 +76,7 @@ public class CubeStatsReader {
     final int samplingPercentage;
     final int mapperNumberOfFirstBuild; // becomes meaningless after merge
     final double mapperOverlapRatioOfFirstBuild; // becomes meaningless after merge
-    final Map<Long, HyperLogLogPlusCounter> cuboidRowEstimatesHLL;
+    final Map<Long, HyperLogLogPlusCounterNew> cuboidRowEstimatesHLL;
     final CuboidScheduler cuboidScheduler;
 
     public CubeStatsReader(CubeSegment cubeSegment, KylinConfig kylinConfig) throws IOException {
@@ -96,7 +96,7 @@ public class CubeStatsReader {
             int percentage = 100;
             int mapperNumber = 0;
             double mapperOverlapRatio = 0;
-            Map<Long, HyperLogLogPlusCounter> counterMap = Maps.newHashMap();
+            Map<Long, HyperLogLogPlusCounterNew> counterMap = Maps.newHashMap();
 
             LongWritable key = (LongWritable) ReflectionUtils.newInstance(reader.getKeyClass(), hadoopConf);
             BytesWritable value = (BytesWritable) ReflectionUtils.newInstance(reader.getValueClass(), hadoopConf);
@@ -108,7 +108,7 @@ public class CubeStatsReader {
                 } else if (key.get() == -2) {
                     mapperNumber = Bytes.toInt(value.getBytes());
                 } else if (key.get() > 0) {
-                    HyperLogLogPlusCounter hll = new HyperLogLogPlusCounter(kylinConfig.getCubeStatsHLLPrecision());
+                    HyperLogLogPlusCounterNew hll = new HyperLogLogPlusCounterNew(kylinConfig.getCubeStatsHLLPrecision());
                     ByteArray byteArray = new ByteArray(value.getBytes());
                     hll.readRegisters(byteArray.asBuffer());
                     counterMap.put(key.get(), hll);
@@ -161,9 +161,9 @@ public class CubeStatsReader {
         return mapperOverlapRatioOfFirstBuild;
     }
 
-    public static Map<Long, Long> getCuboidRowCountMapFromSampling(Map<Long, HyperLogLogPlusCounter> hllcMap, int samplingPercentage) {
+    public static Map<Long, Long> getCuboidRowCountMapFromSampling(Map<Long, HyperLogLogPlusCounterNew> hllcMap, int samplingPercentage) {
         Map<Long, Long> cuboidRowCountMap = Maps.newHashMap();
-        for (Map.Entry<Long, HyperLogLogPlusCounter> entry : hllcMap.entrySet()) {
+        for (Map.Entry<Long, HyperLogLogPlusCounterNew> entry : hllcMap.entrySet()) {
             // No need to adjust according sampling percentage. Assumption is that data set is far
             // more than cardinality. Even a percentage of the data should already see all cardinalities.
             cuboidRowCountMap.put(entry.getKey(), entry.getValue().getCountEstimate());

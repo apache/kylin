@@ -38,7 +38,7 @@ import org.apache.kylin.dict.DictionaryGenerator;
 import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
@@ -59,7 +59,7 @@ public class CubingUtils {
 
     private static Logger logger = LoggerFactory.getLogger(CubingUtils.class);
 
-    public static Map<Long, HyperLogLogPlusCounter> sampling(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDescIn, Iterable<List<String>> streams) {
+    public static Map<Long, HyperLogLogPlusCounterNew> sampling(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDescIn, Iterable<List<String>> streams) {
         final CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(flatDescIn, cubeDesc);
         final int rowkeyLength = cubeDesc.getRowkey().getRowKeyColumns().length;
         final List<Long> allCuboidIds = new CuboidScheduler(cubeDesc).getAllCuboidIds();
@@ -84,9 +84,9 @@ public class CubingUtils {
                 return result;
             }
         });
-        final Map<Long, HyperLogLogPlusCounter> result = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
+        final Map<Long, HyperLogLogPlusCounterNew> result = Maps.newHashMapWithExpectedSize(allCuboidIds.size());
         for (Long cuboidId : allCuboidIds) {
-            result.put(cuboidId, new HyperLogLogPlusCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision()));
+            result.put(cuboidId, new HyperLogLogPlusCounterNew(cubeDesc.getConfig().getCubeStatsHLLPrecision()));
             Integer[] cuboidBitSet = new Integer[Long.bitCount(cuboidId)];
 
             long mask = Long.highestOneBit(baseCuboidId);
@@ -118,9 +118,9 @@ public class CubingUtils {
                 }
             }
 
-            for (Map.Entry<Long, HyperLogLogPlusCounter> longHyperLogLogPlusCounterEntry : result.entrySet()) {
-                Long cuboidId = longHyperLogLogPlusCounterEntry.getKey();
-                HyperLogLogPlusCounter counter = longHyperLogLogPlusCounterEntry.getValue();
+            for (Map.Entry<Long, HyperLogLogPlusCounterNew> longHyperLogLogPlusCounterNewEntry : result.entrySet()) {
+                Long cuboidId = longHyperLogLogPlusCounterNewEntry.getKey();
+                HyperLogLogPlusCounterNew counter = longHyperLogLogPlusCounterNewEntry.getValue();
                 Hasher hc = hf.newHasher();
                 final Integer[] cuboidBitSet = allCuboidsBitSet.get(cuboidId);
                 for (int position = 0; position < cuboidBitSet.length; position++) {

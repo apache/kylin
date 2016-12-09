@@ -35,7 +35,7 @@ import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.measure.BufferedMeasureCodec;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,7 +57,7 @@ public class ColumnCardinalityReducerTest {
     }
 
     private byte[] getBytes(String str) throws IOException {
-        HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter();
+        HyperLogLogPlusCounterNew hllc = new HyperLogLogPlusCounterNew();
         StringTokenizer tokenizer = new StringTokenizer(str, ColumnCardinalityMapper.DEFAULT_DELIM);
         int i = 0;
         while (tokenizer.hasMoreTokens()) {

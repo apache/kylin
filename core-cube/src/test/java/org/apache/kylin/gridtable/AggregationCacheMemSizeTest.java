@@ -26,7 +26,7 @@ import org.apache.kylin.measure.basic.LongSumAggregator;
 import org.apache.kylin.measure.bitmap.BitmapAggregator;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
 import org.apache.kylin.measure.hllc.HLLCAggregator;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.github.jamm.MemoryMeter;
@@ -105,7 +105,7 @@ public class AggregationCacheMemSizeTest {
 
     private HLLCAggregator createHLLCAggr() {
         HLLCAggregator hllcAggregator = new HLLCAggregator(14);
-        hllcAggregator.aggregate(new HyperLogLogPlusCounter(14));
+        hllcAggregator.aggregate(new HyperLogLogPlusCounterNew(14));
         return hllcAggregator;
     }
 

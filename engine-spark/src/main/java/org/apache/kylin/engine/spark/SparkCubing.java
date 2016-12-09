@@ -83,7 +83,7 @@ import org.apache.kylin.engine.spark.cube.DefaultTupleConverter;
 import org.apache.kylin.engine.spark.util.IteratorUtils;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -241,15 +241,15 @@ public class SparkCubing extends AbstractApplication {
         }
     }
 
-    private Map<Long, HyperLogLogPlusCounter> sampling(final JavaRDD<List<String>> rowJavaRDD, final String cubeName, String segmentId) throws Exception {
+    private Map<Long, HyperLogLogPlusCounterNew> sampling(final JavaRDD<List<String>> rowJavaRDD, final String cubeName, String segmentId) throws Exception {
         CubeInstance cubeInstance = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).reloadCubeLocal(cubeName);
         CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
         CuboidScheduler cuboidScheduler = new CuboidScheduler(cubeDesc);
         List<Long> allCuboidIds = cuboidScheduler.getAllCuboidIds();
-        final HashMap<Long, HyperLogLogPlusCounter> zeroValue = Maps.newHashMap();
+        final HashMap<Long, HyperLogLogPlusCounterNew> zeroValue = Maps.newHashMap();
         for (Long id : allCuboidIds) {
-            zeroValue.put(id, new HyperLogLogPlusCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision()));
+            zeroValue.put(id, new HyperLogLogPlusCounterNew(cubeDesc.getConfig().getCubeStatsHLLPrecision()));
         }
 
         CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
@@ -278,12 +278,12 @@ public class SparkCubing extends AbstractApplication {
             row_hashcodes[i] = new ByteArray();
         }
 
-        final HashMap<Long, HyperLogLogPlusCounter> samplingResult = rowJavaRDD.aggregate(zeroValue, new Function2<HashMap<Long, HyperLogLogPlusCounter>, List<String>, HashMap<Long, HyperLogLogPlusCounter>>() {
+        final HashMap<Long, HyperLogLogPlusCounterNew> samplingResult = rowJavaRDD.aggregate(zeroValue, new Function2<HashMap<Long, HyperLogLogPlusCounterNew>, List<String>, HashMap<Long, HyperLogLogPlusCounterNew>>() {
 
             final HashFunction hashFunction = Hashing.murmur3_128();
 
             @Override
-            public HashMap<Long, HyperLogLogPlusCounter> call(HashMap<Long, HyperLogLogPlusCounter> v1, List<String> v2) throws Exception {
+            public HashMap<Long, HyperLogLogPlusCounterNew> call(HashMap<Long, HyperLogLogPlusCounterNew> v1, List<String> v2) throws Exception {
                 for (int i = 0; i < nRowKey; i++) {
                     Hasher hc = hashFunction.newHasher();
                     String colValue = v2.get(rowKeyColumnIndexes[i]);
@@ -296,7 +296,7 @@ public class SparkCubing extends AbstractApplication {
 
                 for (Map.Entry<Long, Integer[]> entry : allCuboidsBitSet.entrySet()) {
                     Hasher hc = hashFunction.newHasher();
-                    HyperLogLogPlusCounter counter = v1.get(entry.getKey());
+                    HyperLogLogPlusCounterNew counter = v1.get(entry.getKey());
                     final Integer[] cuboidBitSet = entry.getValue();
                     for (int position = 0; position < cuboidBitSet.length; position++) {
                         hc.putBytes(row_hashcodes[cuboidBitSet[position]].array());
@@ -305,14 +305,14 @@ public class SparkCubing extends AbstractApplication {
                 }
                 return v1;
             }
-        }, new Function2<HashMap<Long, HyperLogLogPlusCounter>, HashMap<Long, HyperLogLogPlusCounter>, HashMap<Long, HyperLogLogPlusCounter>>() {
+        }, new Function2<HashMap<Long, HyperLogLogPlusCounterNew>, HashMap<Long, HyperLogLogPlusCounterNew>, HashMap<Long, HyperLogLogPlusCounterNew>>() {
             @Override
-            public HashMap<Long, HyperLogLogPlusCounter> call(HashMap<Long, HyperLogLogPlusCounter> v1, HashMap<Long, HyperLogLogPlusCounter> v2) throws Exception {
+            public HashMap<Long, HyperLogLogPlusCounterNew> call(HashMap<Long, HyperLogLogPlusCounterNew> v1, HashMap<Long, HyperLogLogPlusCounterNew> v2) throws Exception {
                 Preconditions.checkArgument(v1.size() == v2.size());
                 Preconditions.checkArgument(v1.size() > 0);
-                for (Map.Entry<Long, HyperLogLogPlusCounter> entry : v1.entrySet()) {
-                    final HyperLogLogPlusCounter counter1 = entry.getValue();
-                    final HyperLogLogPlusCounter counter2 = v2.get(entry.getKey());
+                for (Map.Entry<Long, HyperLogLogPlusCounterNew> entry : v1.entrySet()) {
+                    final HyperLogLogPlusCounterNew counter1 = entry.getValue();
+                    final HyperLogLogPlusCounterNew counter2 = v2.get(entry.getKey());
                     counter1.merge(Preconditions.checkNotNull(counter2, "counter cannot be null"));
                 }
                 return v1;
@@ -470,7 +470,7 @@ public class SparkCubing extends AbstractApplication {
         ClassUtil.addClasspath(confPath);
     }
 
-    private byte[][] createHTable(String cubeName, String segmentId, Map<Long, HyperLogLogPlusCounter> samplingResult) throws Exception {
+    private byte[][] createHTable(String cubeName, String segmentId, Map<Long, HyperLogLogPlusCounterNew> samplingResult) throws Exception {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         final CubeInstance cubeInstance = CubeManager.getInstance(kylinConfig).getCube(cubeName);
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
@@ -614,7 +614,7 @@ public class SparkCubing extends AbstractApplication {
             }
         });
 
-        final Map<Long, HyperLogLogPlusCounter> samplingResult = sampling(rowJavaRDD, cubeName, segmentId);
+        final Map<Long, HyperLogLogPlusCounterNew> samplingResult = sampling(rowJavaRDD, cubeName, segmentId);
         final byte[][] splitKeys = createHTable(cubeName, segmentId, samplingResult);
 
         final String hfile = build(rowJavaRDD, cubeName, segmentId, splitKeys);

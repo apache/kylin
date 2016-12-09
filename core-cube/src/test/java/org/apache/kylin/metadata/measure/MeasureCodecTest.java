@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 import org.apache.kylin.metadata.datatype.DoubleMutable;
 import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -57,7 +57,7 @@ public class MeasureCodecTest extends LocalFileMetadataTestCase {
         DoubleMutable d = new DoubleMutable(1.0);
         LongMutable l = new LongMutable(2);
         BigDecimal b = new BigDecimal("333.1234");
-        HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(16);
+        HyperLogLogPlusCounterNew hllc = new HyperLogLogPlusCounterNew(16);
         hllc.add("1234567");
         hllc.add("abcdefg");
         BitmapCounter bitmap = new BitmapCounter();

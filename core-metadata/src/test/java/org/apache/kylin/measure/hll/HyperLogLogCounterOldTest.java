@@ -28,7 +28,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterOld;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ import org.junit.Test;
  * @author yangli9
  * 
  */
-public class HyperLogLogCounterTest {
+public class HyperLogLogCounterOldTest {
 
     ByteBuffer buf = ByteBuffer.allocate(1024 * 1024);
     Random rand1 = new Random(1);
@@ -48,8 +48,8 @@ public class HyperLogLogCounterTest {
 
     @Test
     public void testOneAdd() throws IOException {
-        HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(14);
-        HyperLogLogPlusCounter one = new HyperLogLogPlusCounter(14);
+        HyperLogLogPlusCounterOld hllc = new HyperLogLogPlusCounterOld(14);
+        HyperLogLogPlusCounterOld one = new HyperLogLogPlusCounterOld(14);
         for (int i = 0; i < 1000000; i++) {
             one.clear();
             one.add(rand1.nextInt());
@@ -60,8 +60,8 @@ public class HyperLogLogCounterTest {
 
     @Test
     public void testPeekLength() throws IOException {
-        HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(10);
-        HyperLogLogPlusCounter copy = new HyperLogLogPlusCounter(10);
+        HyperLogLogPlusCounterOld hllc = new HyperLogLogPlusCounterOld(10);
+        HyperLogLogPlusCounterOld copy = new HyperLogLogPlusCounterOld(10);
         byte[] value = new byte[10];
         for (int i = 0; i < 200000; i++) {
             rand1.nextBytes(value);
@@ -127,7 +127,7 @@ public class HyperLogLogCounterTest {
     private void count(int n) throws IOException {
         Set<String> testSet = generateTestData(n);
 
-        HyperLogLogPlusCounter hllc = newHLLC();
+        HyperLogLogPlusCounterOld hllc = newHLLC();
         for (String testData : testSet) {
             hllc.add(Bytes.toBytes(testData));
         }
@@ -143,7 +143,7 @@ public class HyperLogLogCounterTest {
         checkSerialize(hllc);
     }
 
-    private void checkSerialize(HyperLogLogPlusCounter hllc) throws IOException {
+    private void checkSerialize(HyperLogLogPlusCounterOld hllc) throws IOException {
         long estimate = hllc.getCountEstimate();
         buf.clear();
         hllc.writeRegisters(buf);
@@ -175,7 +175,7 @@ public class HyperLogLogCounterTest {
         int ln = 20;
         int dn = 100 * (round + 1);
         Set<String> testSet = new HashSet<String>();
-        HyperLogLogPlusCounter[] hllcs = new HyperLogLogPlusCounter[ln];
+        HyperLogLogPlusCounterOld[] hllcs = new HyperLogLogPlusCounterOld[ln];
         for (int i = 0; i < ln; i++) {
             hllcs[i] = newHLLC();
             for (int k = 0; k < dn; k++) {
@@ -186,8 +186,8 @@ public class HyperLogLogCounterTest {
                 }
             }
         }
-        HyperLogLogPlusCounter mergeHllc = newHLLC();
-        for (HyperLogLogPlusCounter hllc : hllcs) {
+        HyperLogLogPlusCounterOld mergeHllc = newHLLC();
+        for (HyperLogLogPlusCounterOld hllc : hllcs) {
             mergeHllc.merge(serDes(hllc));
         }
 
@@ -211,11 +211,11 @@ public class HyperLogLogCounterTest {
         return actualError;
     }
 
-    private HyperLogLogPlusCounter serDes(HyperLogLogPlusCounter hllc) throws IOException {
+    private HyperLogLogPlusCounterOld serDes(HyperLogLogPlusCounterOld hllc) throws IOException {
         buf.clear();
         hllc.writeRegisters(buf);
         buf.flip();
-        HyperLogLogPlusCounter copy = new HyperLogLogPlusCounter(hllc.getPrecision());
+        HyperLogLogPlusCounterOld copy = new HyperLogLogPlusCounterOld(hllc.getPrecision());
         copy.readRegisters(buf);
         Assert.assertEquals(copy.getCountEstimate(), hllc.getCountEstimate());
         return copy;
@@ -226,7 +226,7 @@ public class HyperLogLogCounterTest {
         int N = 3; // reduce N HLLC into one
         int M = 1000; // for M times, use 100000 for real perf test
 
-        HyperLogLogPlusCounter samples[] = new HyperLogLogPlusCounter[N];
+        HyperLogLogPlusCounterOld samples[] = new HyperLogLogPlusCounterOld[N];
         for (int i = 0; i < N; i++) {
             samples[i] = newHLLC();
             for (String str : generateTestData(10000))
@@ -235,7 +235,7 @@ public class HyperLogLogCounterTest {
 
         System.out.println("Perf test running ... ");
         long start = System.currentTimeMillis();
-        HyperLogLogPlusCounter sum = newHLLC();
+        HyperLogLogPlusCounterOld sum = newHLLC();
         for (int i = 0; i < M; i++) {
             sum.clear();
             for (int j = 0; j < N; j++) {
@@ -251,15 +251,15 @@ public class HyperLogLogCounterTest {
     public void testEquivalence() {
         byte[] a = new byte[] { 0, 3, 4, 42, 2, 2 };
         byte[] b = new byte[] { 3, 4, 42 };
-        HyperLogLogPlusCounter ha = new HyperLogLogPlusCounter();
-        HyperLogLogPlusCounter hb = new HyperLogLogPlusCounter();
+        HyperLogLogPlusCounterOld ha = new HyperLogLogPlusCounterOld();
+        HyperLogLogPlusCounterOld hb = new HyperLogLogPlusCounterOld();
         ha.add(a, 1, 3);
         hb.add(b);
 
         Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
     }
 
-    private HyperLogLogPlusCounter newHLLC() {
-        return new HyperLogLogPlusCounter(16);
+    private HyperLogLogPlusCounterOld newHLLC() {
+        return new HyperLogLogPlusCounterOld(16);
     }
 }
