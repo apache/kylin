@@ -12,11 +12,11 @@ Steps:
 1. Check which resources can be cleanup, this will not remove anything:
 {% highlight Groff markup %}
 export KYLIN_HOME=/path/to/kylin_home
-${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.StorageCleanupJob --delete false
+${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.storage.hbase.util.StorageCleanupJob --delete false
 {% endhighlight %}
 Here please replace (version) with the specific Kylin jar version in your installation;
 2. You can pickup 1 or 2 resources to check whether they're no longer be referred; Then add the "--delete true" option to start the cleanup:
 {% highlight Groff markup %}
-${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.StorageCleanupJob --delete true
+${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.storage.hbase.util.StorageCleanupJob --delete true
 {% endhighlight %}
 On finish, the intermediate HDFS location and HTables should be dropped;
