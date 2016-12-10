@@ -153,7 +153,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public JoinDesc getJoinByPKSide(TableRef table) {
         return joinsTree.getJoinByPKSide(table);
     }
-    
+
     public JoinsTree getJoinsTree() {
         return joinsTree;
     }
@@ -181,7 +181,7 @@ public class DataModelDesc extends RootPersistentEntity {
         }
         return false;
     }
-    
+
     public boolean isFactTable(TableRef t) {
         if (t == null)
             return false;
@@ -196,7 +196,7 @@ public class DataModelDesc extends RootPersistentEntity {
         }
         return false;
     }
-    
+
     public boolean containsTable(String fullTableName) {
         for (TableRef t : allTableRefs) {
             if (t.getTableIdentity().equals(fullTableName))
@@ -204,7 +204,7 @@ public class DataModelDesc extends RootPersistentEntity {
         }
         return false;
     }
-    
+
     public String getFilterCondition() {
         return filterCondition;
     }
@@ -526,6 +526,7 @@ public class DataModelDesc extends RootPersistentEntity {
         copy.filterCondition = orig.filterCondition;
         copy.partitionDesc = PartitionDesc.getCopyOf(orig.getPartitionDesc());
         copy.capacity = orig.capacity;
+        copy.lastModified = orig.lastModified;
         copy.updateRandomUuid();
         return copy;
     }

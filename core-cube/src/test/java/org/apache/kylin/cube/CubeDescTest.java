@@ -40,13 +40,15 @@ import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.Maps;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author yangli9
  */
 public class CubeDescTest extends LocalFileMetadataTestCase {
 
     private static final String CUBE_WITH_SLR_DESC = "test_kylin_cube_with_slr_desc";
-    
+
     private String SELLER_ID;
     private String SLR_SEGMENT_CD;
     private String LSTG_FORMAT_NAME;
@@ -55,14 +57,14 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     private String CATEG_LVL2_NAME;
     private String CATEG_LVL3_NAME;
     private String LEAF_CATEG_ID;
-    
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        
+
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         AggregationGroup g = cubeDesc.getAggregationGroups().get(0);
         SELLER_ID = getColInAggrGroup(g, "SELLER_ID");
@@ -230,7 +232,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCombinationIntOverflow() throws  Exception {
+    public void testCombinationIntOverflow() throws Exception {
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc").listFiles()) {
             if (f.getName().endsWith(".bad")) {
                 String path = f.getPath();
@@ -254,6 +256,20 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testGetCopyOf() throws Exception {
+        CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+        CubeDesc copyDesc = CubeDesc.getCopyOf(desc);
+
+        // uuid is different, set to equals for json comparison
+        copyDesc.setUuid(desc.getUuid());
+
+        String descStr = JsonUtil.writeValueAsIndentString(desc);
+        String copyStr = JsonUtil.writeValueAsIndentString(copyDesc);
+
+        assertEquals(descStr, copyStr);
+    }
+
+    @Test
     public void testGetCubeDesc() throws Exception {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         Assert.assertNotNull(cubeDesc);
@@ -272,7 +288,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
         Map<?, ?> map2 = JsonUtil.readValue(mapStr, HashMap.class);
 
-        Assert.assertEquals(map, map2);
+        assertEquals(map, map2);
 
     }
 
