@@ -182,10 +182,10 @@ public class SelfDefineSortableKeyTest {
     }
 
     private String printKey(SelfDefineSortableKey key) {
-        byte[] data = key.getText().getBytes();
-        byte[] fieldValue = Bytes.copy(data, 1, data.length - 1);
-        System.out.println("type flag:" + key.getTypeId() + " fieldValue:" + new String(fieldValue));
-        return new String(fieldValue);
+        Text data = key.getText();
+        String fieldValue = Bytes.toString(data.getBytes(), 1, data.getLength() - 1);
+        System.out.println("type flag:" + key.getTypeId() + " fieldValue:" + fieldValue);
+        return fieldValue;
     }
 
     private <T> boolean isIncreasedOrder(List<T> list, Comparator<T> comp) {

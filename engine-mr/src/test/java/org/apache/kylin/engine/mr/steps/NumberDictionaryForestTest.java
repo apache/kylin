@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.Bytes;
@@ -35,14 +34,13 @@ import org.junit.Test;
 public class NumberDictionaryForestTest {
     @Test
     public void testNumberDictionaryForestLong() {
-        List<String> list = randomLongData(10);
+        List<String> list = randomLongData(100);
         testData(list, TypeFlag.INTEGER_FAMILY_TYPE);
     }
 
     @Test
     public void testNumberDictionaryForestDouble() {
-        List<String> list = randomDoubleData(10);
-
+        List<String> list = randomDoubleData(100);
         testData(list, TypeFlag.DOUBLE_FAMILY_TYPE);
     }
 
@@ -199,20 +197,12 @@ public class NumberDictionaryForestTest {
         Random rand = new Random(System.currentTimeMillis());
         ArrayList<String> list = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            list.add(rand.nextDouble() + "");
+            String str = rand.nextDouble() + "";
+            if (str.contains("E"))
+                continue;
+            list.add(str);
         }
         list.add("-1");
-        return list;
-    }
-
-    private List<String> randomStringData(int count) {
-        Random rand = new Random(System.currentTimeMillis());
-        ArrayList<String> list = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            list.add(UUID.randomUUID().toString());
-        }
-        list.add("123");
-        list.add("123");
         return list;
     }
 
@@ -237,16 +227,15 @@ public class NumberDictionaryForestTest {
     }
 
     private String printKey(SelfDefineSortableKey key) {
-        byte[] data = key.getText().getBytes();
-        byte[] fieldValue = Bytes.copy(data, 1, data.length - 1);
-        System.out.println("type flag:" + key.getTypeId() + " fieldValue:" + new String(fieldValue));
-        return new String(fieldValue);
+        Text data = key.getText();
+        String fieldValue = Bytes.toString(data.getBytes(), 1, data.getLength() - 1);
+        System.out.println("type flag:" + key.getTypeId() + " fieldValue:" + fieldValue);
+        return fieldValue;
     }
 
     private String getFieldValue(SelfDefineSortableKey key) {
-        byte[] data = key.getText().getBytes();
-        byte[] fieldValue = Bytes.copy(data, 1, data.length - 1);
-        return new String(fieldValue);
+        Text data = key.getText();
+        return Bytes.toString(data.getBytes(), 1, data.getLength() - 1);
     }
 
     private <T> boolean isIncreasedOrder(List<T> list, Comparator<T> comp) {
