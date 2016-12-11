@@ -287,6 +287,10 @@ public class CubeController extends BasicController {
         try {
             String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
+
+            if (cube == null) {
+                throw new IllegalArgumentException("Cube with name '" + cubeName + "' was not found.");
+            }
             return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //
                     sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force, submitter);
         } catch (Exception e) {
