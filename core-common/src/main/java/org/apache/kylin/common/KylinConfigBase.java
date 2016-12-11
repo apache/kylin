@@ -245,15 +245,6 @@ abstract public class KylinConfigBase implements Serializable {
         setProperty("kylin.dictionary.append-entry-size", String.valueOf(entrySize));
     }
 
-    public int getAppendDictCacheSize() {
-        return Integer.parseInt(getOptional("kylin.dictionary.append-cache-size", "20"));
-    }
-
-    // for test
-    public void setAppendDictCacheSize(int cacheSize) {
-        setProperty("kylin.dictionary.append-cache-size", String.valueOf(cacheSize));
-    }
-
     public int getCachedSnapshotMaxEntrySize() {
         return Integer.parseInt(getOptional("kylin.snapshot.max-cache-entry", "500"));
     }

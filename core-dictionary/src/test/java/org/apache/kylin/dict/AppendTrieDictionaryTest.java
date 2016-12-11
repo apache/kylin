@@ -63,7 +63,6 @@ public class AppendTrieDictionaryTest {
         System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/localmeta");
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         config.setAppendDictEntrySize(50000);
-        config.setAppendDictCacheSize(3);
         config.setProperty("kylin.env.hdfs-working-dir", BASE_DIR);
     }
 

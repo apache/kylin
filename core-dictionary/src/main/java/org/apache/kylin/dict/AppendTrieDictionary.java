@@ -115,10 +115,9 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     }
 
     public void initDictSliceMap(CachedTreeMap dictMap) throws IOException {
-        int cacheSize = KylinConfig.getInstanceFromEnv().getAppendDictCacheSize();
         int maxVersions = KylinConfig.getInstanceFromEnv().getAppendDictMaxVersions();
         long versionTTL = KylinConfig.getInstanceFromEnv().getAppendDictVersionTTL();
-        CachedTreeMap newDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize).baseDir(baseDir)
+        CachedTreeMap newDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(1).baseDir(baseDir)
             .immutable(true).maxVersions(maxVersions).versionTTL(versionTTL).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
         newDictSliceMap.loadEntry(dictMap);
         this.dictSliceMap = newDictSliceMap;
@@ -930,11 +929,10 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             this.bytesConverter = bytesConverter;
 
             MAX_ENTRY_IN_SLICE = KylinConfig.getInstanceFromEnv().getAppendDictEntrySize();
-            int cacheSize = KylinConfig.getInstanceFromEnv().getAppendDictCacheSize();
             int maxVersions = KylinConfig.getInstanceFromEnv().getAppendDictMaxVersions();
             long versionTTL = KylinConfig.getInstanceFromEnv().getAppendDictVersionTTL();
             // create a new cached map with baseDir
-            mutableDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(cacheSize).baseDir(baseDir)
+            mutableDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(1).baseDir(baseDir)
                 .maxVersions(maxVersions).versionTTL(versionTTL).keyClazz(DictSliceKey.class).valueClazz(DictNode.class).immutable(false).build();
             if (dictMapBytes != null) {
                 ((Writable) mutableDictSliceMap).readFields(new DataInputStream(new ByteArrayInputStream(dictMapBytes)));
