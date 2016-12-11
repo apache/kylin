@@ -24,13 +24,13 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.persistence.AclEntity;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.rest.request.CreateProjectRequest;
-import org.apache.kylin.rest.request.UpdateProjectRequest;
+import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ProjectService;
@@ -198,19 +198,22 @@ public class ProjectController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.POST })
     @ResponseBody
-    public ProjectInstance saveProject(@RequestBody CreateProjectRequest projectRequest) {
-        if (StringUtils.isEmpty(projectRequest.getName())) {
-            logger.info("Project name should not be empty.");
-            throw new BadRequestException("Project name should not be empty.");
+
+    public ProjectInstance saveProject(@RequestBody ProjectRequest projectRequest) {
+        ProjectInstance projectDesc = deserializeProjectDesc(projectRequest);
+
+        if (StringUtils.isEmpty(projectDesc.getName())) {
+            throw new InternalErrorException("A project name must be given to create a project");
         }
-        if (!StringUtils.containsOnly(projectRequest.getName(), VALID_PROJECTNAME)) {
-            logger.info("Invalid Project name {}, only letters, numbers and underline supported.", projectRequest.getName());
+
+        if (!StringUtils.containsOnly(projectDesc.getName(), VALID_PROJECTNAME)) {
+            logger.info("Invalid Project name {}, only letters, numbers and underline supported.", projectDesc.getName());
             throw new BadRequestException("Invalid Project name, only letters, numbers and underline supported.");
         }
 
         ProjectInstance createdProj = null;
         try {
-            createdProj = projectService.createProject(projectRequest);
+            createdProj = projectService.createProject(projectDesc);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
@@ -221,21 +224,40 @@ public class ProjectController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.PUT })
     @ResponseBody
-    public ProjectInstance updateProject(@RequestBody UpdateProjectRequest projectRequest) {
-        if (StringUtils.isEmpty(projectRequest.getFormerProjectName())) {
+    public ProjectInstance updateProject(@RequestBody ProjectRequest projectRequest) {
+        String formerProjectName = projectRequest.getFormerProjectName();
+        if (StringUtils.isEmpty(formerProjectName)) {
             throw new InternalErrorException("A project name must be given to update a project");
         }
 
+        ProjectInstance projectDesc = deserializeProjectDesc(projectRequest);
+
         ProjectInstance updatedProj = null;
         try {
-            ProjectInstance currentProject = projectService.getProjectManager().getProject(projectRequest.getFormerProjectName());
-            updatedProj = projectService.updateProject(projectRequest, currentProject);
+            ProjectInstance currentProject = projectService.getProjectManager().getProject(formerProjectName);
+            if (currentProject == null) {
+                throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
+            }
+
+            updatedProj = projectService.updateProject(projectDesc, currentProject);
         } catch (Exception e) {
             logger.error("Failed to deal with the request.", e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
 
         return updatedProj;
+    }
+
+    private ProjectInstance deserializeProjectDesc(ProjectRequest projectRequest) {
+        ProjectInstance projectDesc = null;
+        try {
+            logger.debug("Saving project " + projectRequest.getProjectDescData());
+            projectDesc = JsonUtil.readValue(projectRequest.getProjectDescData(), ProjectInstance.class);
+        } catch (Exception e) {
+            logger.error("Failed to deal with the request.", e);
+            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
+        }
+        return projectDesc;
     }
 
     @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE })

@@ -18,40 +18,30 @@
 
 package org.apache.kylin.rest.request;
 
-import java.util.LinkedHashMap;
-
 /**
  */
-public class CreateProjectRequest {
-    private String name;
-    private String description;
-    private LinkedHashMap<String, String> overrideKylinProps;
+public class ProjectRequest {
+    private String formerProjectName;
 
-    public CreateProjectRequest() {
+    private String projectDescData;
+
+    public ProjectRequest() {
     }
 
-    public String getName() {
-        return name;
+    public String getProjectDescData() {
+        return projectDescData;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setProjectDescData(String projectDescData) {
+        this.projectDescData = projectDescData;
     }
 
-    public String getDescription() {
-        return description;
+    public String getFormerProjectName() {
+        return formerProjectName;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public LinkedHashMap<String, String> getOverrideKylinProps() {
-        return overrideKylinProps;
-    }
-
-    public void setOverrideKylinProps(LinkedHashMap<String, String> overrideKylinProps) {
-        this.overrideKylinProps = overrideKylinProps;
+    public void setFormerProjectName(String formerProjectName) {
+        this.formerProjectName = formerProjectName;
     }
 
 }
