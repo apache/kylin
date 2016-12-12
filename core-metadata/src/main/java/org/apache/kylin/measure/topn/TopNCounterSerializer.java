@@ -54,7 +54,7 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
 
     @Override
     public int maxLength() {
-        return precision * TopNCounter.EXTRA_SPACE_RATE * (4 + 8);
+        return Math.max(precision * TopNCounter.EXTRA_SPACE_RATE * (4 + 8), 1024 * 1024); // use at least 1M
     }
 
     @Override
