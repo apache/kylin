@@ -289,7 +289,7 @@ public class CubeController extends BasicController {
             CubeInstance cube = jobService.getCubeManager().getCube(cubeName);
 
             if (cube == null) {
-                throw new IllegalArgumentException("Cube with name '" + cubeName + "' was not found.");
+                throw new InternalErrorException("Cannot find cube " + cubeName);
             }
             return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //
                     sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force, submitter);
@@ -324,7 +324,12 @@ public class CubeController extends BasicController {
             CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
 
             if (cube == null) {
-                throw new InternalErrorException("Cannot find cube " + cubeName);
+                throw new IllegalArgumentException("Cannot find cube '" + cubeName + "'");
+            }
+
+            if (cube.getSegments() != null && cube.getBuildingSegments().size() > 0) {
+                int num = cube.getBuildingSegments().size();
+                throw new IllegalStateException("Cannot purge cube '" + cubeName + "' as there is " + num + " building " + (num > 1 ? "segment(s)." : "segment."));
             }
 
             return cubeService.purgeCube(cube);

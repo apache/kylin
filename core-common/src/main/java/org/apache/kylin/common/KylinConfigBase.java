@@ -281,11 +281,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.cube.ignore-signature-inconsistency", "false"));
     }
 
-    @Deprecated
-    public int getCubeAggrGroupMaxSize() {
-        return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max-size", "12"));
-    }
-
     public int getCubeAggrGroupMaxCombination() {
         return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max-combination", "4096"));
     }
