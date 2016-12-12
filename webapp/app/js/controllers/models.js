@@ -177,6 +177,7 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
   };
 
   var ModelDetailModalCtrl = function ($scope, $location, $modalInstance, scope) {
+    modelsManager.selectedModel.visiblePage='metadata';
     $scope.cancel = function () {
       $modalInstance.dismiss('cancel');
     };

@@ -21,7 +21,7 @@
 KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cubeConfig,MetaModel,SweetAlert,ModelGraphService,$log,TableModel,ModelService,loadingRequest,modelsManager,VdmUtil) {
     $scope.modelsManager = modelsManager;
     $scope.init = function (){
-      $scope.rootFactTable=$scope.modelsManager.selectedModel.fact_table;
+      $scope.FactTable={root:$scope.modelsManager.selectedModel.fact_table};
       $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)]=$scope.modelsManager.selectedModel.fact_table;
       $scope.tableAliasMap[$scope.modelsManager.selectedModel.fact_table]=VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table);
       $scope.aliasName.push(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table));
@@ -137,12 +137,12 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
     };
     $scope.changeFactTable = function () {
         delete $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)];
-        $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.rootFactTable)]=$scope.rootFactTable;
+        $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.FactTable.root)]=$scope.FactTable.root;
         delete $scope.tableAliasMap[$scope.modelsManager.selectedModel.fact_table];
-        $scope.tableAliasMap[$scope.rootFactTable]=VdmUtil.removeNameSpace($scope.rootFactTable);
+        $scope.tableAliasMap[$scope.FactTable.root]=VdmUtil.removeNameSpace($scope.FactTable.root);
         $scope.aliasName.splice($scope.aliasName.indexOf(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)),1);
-        $scope.aliasName.push(VdmUtil.removeNameSpace($scope.rootFactTable));
-        $scope.modelsManager.selectedModel.fact_table=$scope.rootFactTable;
+        $scope.aliasName.push(VdmUtil.removeNameSpace($scope.FactTable.root));
+        $scope.modelsManager.selectedModel.fact_table=$scope.FactTable.root;
     }
     $scope.changeJoinTable = function () {
         $scope.newLookup.alias=$scope.newLookup.table;
