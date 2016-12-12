@@ -191,6 +191,14 @@ public class KafkaConfigManager {
             throw new IllegalArgumentException();
         }
 
+        if (StringUtils.isEmpty(kafkaConfig.getTopic())) {
+            throw new IllegalArgumentException("No topic info");
+        }
+
+        if (kafkaConfig.getKafkaClusterConfigs() == null || kafkaConfig.getKafkaClusterConfigs().size() ==0) {
+            throw new IllegalArgumentException("No cluster info");
+        }
+
         String path = KafkaConfig.concatResourcePath(kafkaConfig.getName());
         getStore().putResource(path, kafkaConfig, KafkaConfig.SERIALIZER);
     }

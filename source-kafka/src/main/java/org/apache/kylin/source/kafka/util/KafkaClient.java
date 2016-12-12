@@ -18,6 +18,7 @@
 package org.apache.kylin.source.kafka.util;
 
 import com.google.common.collect.Maps;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.PartitionInfo;
@@ -95,6 +96,10 @@ public class KafkaClient {
                     brokers = brokers + "," + brokerConfig.getHost() + ":" + brokerConfig.getPort();
                 }
             }
+        }
+
+        if (StringUtils.isEmpty(brokers)) {
+            throw new IllegalArgumentException("No cluster info in Kafka config '" + kafkaConfig.getName() + "'");
         }
         return brokers;
     }
