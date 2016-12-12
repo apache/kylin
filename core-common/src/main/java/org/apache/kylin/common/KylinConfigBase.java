@@ -261,8 +261,13 @@ abstract public class KylinConfigBase implements Serializable {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-ratio", "0.25"));
     }
 
+    @Deprecated
     public double getJobCuboidSizeMemHungryRatio() {
         return Double.parseDouble(getOptional("kylin.cube.size-estimate-memhungry-ratio", "0.05"));
+    }
+
+    public double getJobCuboidSizeCountDistinctRatio() {
+        return Double.parseDouble(getOptional("kylin.cube.size-estimate-countdistinct-ratio", "0.05"));
     }
 
     public String getCubeAlgorithm() {
