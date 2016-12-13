@@ -57,7 +57,7 @@
                     </td>
                     <!--Table Name -->
                     <td>
-                        <span>{{dimension.table}}</span>
+                        <span tooltip="{{availableFactTables.indexOf(dimension.table)==-1? 'Lookup Table':'Fact Table'}}">{{dimension.table}}</span>
                     </td>
                     <!--Type-->
                     <td>
