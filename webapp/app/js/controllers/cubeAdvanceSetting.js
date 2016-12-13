@@ -38,12 +38,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   //rowkey
   $scope.convertedRowkeys = [];
   angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
-    //var _isDictionaries = item.encoding === "dict"?"true":"false";
-    //var version=$scope.getTypeVersion(encoding);
     item.encoding=$scope.removeVersion(item.encoding);
-    //var _isFixedLength = item.encoding.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
-    //var _isIntegerLength = item.encoding.substring(0,7) === "integer"?"true":"false";
-    //var _isIntLength = item.encoding.substring(0,3) === "int"?"true":"false";
     var _encoding = item.encoding;
     var _valueLength ;
     var baseKey=item.encoding.replace(/:\d+/,'');

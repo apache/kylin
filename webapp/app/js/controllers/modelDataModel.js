@@ -20,15 +20,20 @@
 
 KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cubeConfig,MetaModel,SweetAlert,ModelGraphService,$log,TableModel,ModelService,loadingRequest,modelsManager,VdmUtil) {
     $scope.modelsManager = modelsManager;
+    angular.forEach($scope.modelsManager.selectedModel.lookups,function(joinTable){
+      if(!joinTable.alias){
+           joinTable.alias=VdmUtil.removeNameSpace(joinTable.table);
+      }
+    });
     $scope.init = function (){
       $scope.FactTable={root:$scope.modelsManager.selectedModel.fact_table};
       $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)]=$scope.modelsManager.selectedModel.fact_table;
       $scope.tableAliasMap[$scope.modelsManager.selectedModel.fact_table]=VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table);
       $scope.aliasName.push(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table));
       angular.forEach($scope.modelsManager.selectedModel.lookups,function(joinTable){
-         $scope.aliasTableMap[joinTable.alias]=joinTable.table;
-         $scope.tableAliasMap[joinTable.table]=joinTable.alias;
-         $scope.aliasName.push(joinTable.alias);
+        $scope.aliasTableMap[joinTable.alias]=joinTable.table;
+        $scope.tableAliasMap[joinTable.table]=joinTable.alias;
+        $scope.aliasName.push(joinTable.alias);
       });
     }
     if($scope.state.mode=='edit'){

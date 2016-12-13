@@ -98,24 +98,8 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           if(/topn\.encoding\./.test(configuration)){
             var _name=configuration.slice(14);
             var item=$scope.newMeasure.function.configuration[configuration];
-            //var _isFixedLength = item.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
-            //var _isIntegerLength = item.substring(0,7) === "integer"?"true":"false";
-            //var _isIntLength = item.substring(0,3) === "int"?"true":"false";
             var _encoding = item;
             var _valueLength = 0 ;
-            //if(_isFixedLength !=="false"){
-            //  _valueLength = item.substring(13,item.length);
-            //  _encoding = "fixed_length";
-            //}
-            //if(_isIntLength!="false" && _isIntegerLength=="false" ){
-            //  _valueLength = item.substring(4,item.length);
-            //  _encoding = "int";
-            //}
-            //
-            //if(_isIntegerLength!="false" ){
-            //  _valueLength = item.substring(8,item.length);
-            //  _encoding = "integer";
-            //}
             var version=$scope.newMeasure.function.configuration['topn.encoding_version.'+_name]||1;
             item=$scope.removeVersion(item);
             var baseKey=item.replace(/:\d+/,'');
@@ -369,8 +353,9 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     if($scope.newMeasure.function.parameter.type=="column"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
 
       var column = $scope.newMeasure.function.parameter.value;
-      var colType = $scope.getColumnType(column, $scope.metaModel.model.fact_table); // $scope.getColumnType defined in cubeEdit.js
-
+      if(column){
+        var colType = $scope.getColumnType(VdmUtil.removeNameSpace(column), VdmUtil.getNameSpaceAliasName(column)); // $scope.getColumnType defined in cubeEdit.js
+      }
       if(colType==""||!colType){
         $scope.newMeasure.function.returntype = "";
         return;

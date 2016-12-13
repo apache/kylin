@@ -148,6 +148,7 @@
                                       ng-if="newMeasure.function.parameter.type == 'constant'"
                                       ng-init="newMeasure.function.parameter.value = 1"><b>&nbsp;&nbsp;1</b></span>
                                 <!--!COUNT_DISTINCT-->
+
                                 <select class="form-control" chosen
                                         ng-if="newMeasure.function.parameter.type == 'column' && (newMeasure.function.expression == 'COUNT_DISTINCT'||newMeasure.function.expression == 'RAW')"
                                         ng-model="newMeasure.function.parameter.value" required
@@ -239,7 +240,7 @@
                                   <thead>
                                   <tr>
                                     <th>ID</th>
-                                    <th>Column</th>
+                                    <th class="col-xs-5" >Column</th>
                                     <th>Encoding</th>
                                     <th>Length</th>
                                     <th ng-if="state.mode=='edit'"></th>
@@ -257,9 +258,9 @@
                                     </td>
                                     <!--Column Name -->
                                     <td>
-                                      <select class="form-control" chosen ng-if="nextPara.type !== 'constant'" required
+                                      <select class="form-control col-xs-12" chosen ng-if="nextPara.type !== 'constant'" required
                                               ng-model="groupby_column.name"
-                                              ng-options="column as column for column in getAllModelDimColumns()" style="width:200px;">
+                                              ng-options="column as column for column in getAllModelDimColumns()" >
                                         <option value="">--Select A Column--</option>
                                       </select>
                                     </td>
