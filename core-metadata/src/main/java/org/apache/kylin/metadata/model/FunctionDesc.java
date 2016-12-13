@@ -138,9 +138,9 @@ public class FunctionDesc {
         if (isSum()) {
             return getParameter().getValue();
         } else if (isCount()) {
-            return "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
+            return "_KY_" + "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
         } else {
-            return getFullExpression().replaceAll("[(),. ]", "_");
+            return "_KY_" + getFullExpression().replaceAll("[(),. ]", "_");
         }
     }
 

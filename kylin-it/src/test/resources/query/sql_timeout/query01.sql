@@ -16,4 +16,4 @@
 -- limitations under the License.
 --
 
-select * from test_kylin_fact limit 1200
+select seller_id,lstg_format_name from test_kylin_fact limit 1200

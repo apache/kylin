@@ -379,4 +379,10 @@ public class ITKylinQueryTest extends KylinTestBase {
         // compare the result
         Assert.assertEquals(expectVersion, queriedVersion);
     }
+    
+    @Test
+    public void testSelectStarColumnCount() throws Exception {
+        execAndCompColumnCount("select * from test_kylin_fact limit 10", 9);
+        execAndCompColumnCount("select * from test_kylin_fact", 9);
+    }
 }

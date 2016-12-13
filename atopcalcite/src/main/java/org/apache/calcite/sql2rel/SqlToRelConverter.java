@@ -67,6 +67,7 @@ import org.apache.calcite.rel.stream.Delta;
 import org.apache.calcite.rel.stream.LogicalDelta;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeFactory.FieldInfoBuilder;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
@@ -194,6 +195,7 @@ import static org.apache.calcite.util.Static.RESOURCE;
  * - getInSubqueryThreshold(), was `20`, now `Integer.MAX_VALUE`
  * - isTrimUnusedFields(), override to false
  * - AggConverter.translateAgg(...), skip column reading for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
+ * - convertQuery(), call hackSelectStar() at the end
  */
 
 /**
@@ -529,6 +531,8 @@ public class SqlToRelConverter {
      *                        the query will be part of a view.
      */
     public RelRoot convertQuery(SqlNode query, final boolean needsValidation, final boolean top) {
+        SqlNode origQuery = query; /* OVERRIDE POINT */
+        
         if (needsValidation) {
             query = validator.validate(query);
         }
@@ -553,7 +557,63 @@ public class SqlToRelConverter {
         }
 
         final RelDataType validatedRowType = validator.getValidatedNodeType(query);
-        return RelRoot.of(result, validatedRowType, query.getKind()).withCollation(collation);
+        return hackSelectStar(origQuery, RelRoot.of(result, validatedRowType, query.getKind()).withCollation(collation));
+    }
+
+    /* OVERRIDE POINT */
+    private RelRoot hackSelectStar(SqlNode query, RelRoot root) {
+        /*
+         * Rel tree is like:
+         * 
+         *   LogicalSort (optional)
+         *    |- LogicalProject
+         *        |- OLAPTableScan
+         */
+        LogicalProject rootPrj = null;
+        LogicalSort rootSort = null;
+        if (root.rel instanceof LogicalProject) {
+            rootPrj = (LogicalProject) root.rel;
+        } else if (root.rel instanceof LogicalSort && root.rel.getInput(0) instanceof LogicalProject) {
+            rootPrj = (LogicalProject) root.rel.getInput(0);
+            rootSort = (LogicalSort) root.rel;
+        } else {
+            return root;
+        }
+        
+        if (!rootPrj.getInput().getClass().getSimpleName().equals("OLAPTableScan"))
+            return root;
+
+        RelNode scan = rootPrj.getInput();
+        if (rootPrj.getRowType().getFieldCount() < scan.getRowType().getFieldCount())
+            return root;
+        
+        RelDataType inType = rootPrj.getRowType();
+        List<String> inFields = inType.getFieldNames();
+        List<RexNode> projExp = new ArrayList<>();
+        List<Pair<Integer, String>> projFields = new ArrayList<>();
+        FieldInfoBuilder projTypeBuilder = getCluster().getTypeFactory().builder();
+        FieldInfoBuilder validTypeBuilder = getCluster().getTypeFactory().builder();
+        for (int i = 0; i < inFields.size(); i++) {
+            if (!inFields.get(i).startsWith("_KY_")) {
+                projExp.add(rootPrj.getProjects().get(i));
+                projFields.add(Pair.of(projFields.size(), inFields.get(i)));
+                projTypeBuilder.add(inType.getFieldList().get(i));
+                validTypeBuilder.add(root.validatedRowType.getFieldList().get(i));
+            }
+        }
+
+        RelDataType projRowType = getCluster().getTypeFactory().createStructType(projTypeBuilder);
+        rootPrj = LogicalProject.create(scan, projExp, projRowType);
+        if (rootSort != null) {
+            rootSort = (LogicalSort) rootSort.copy(rootSort.getTraitSet(), rootPrj, rootSort.collation, rootSort.offset, rootSort.fetch);
+        }
+        
+        RelDataType validRowType = getCluster().getTypeFactory().createStructType(validTypeBuilder);
+        root = new RelRoot(rootSort == null ? rootPrj : rootSort, validRowType, root.kind, projFields, root.collation);
+        
+        validator.setValidatedNodeType(query, validRowType);
+        
+        return root;
     }
 
     private static boolean isStream(SqlNode query) {

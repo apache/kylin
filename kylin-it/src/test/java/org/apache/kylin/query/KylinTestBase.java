@@ -67,6 +67,7 @@ import org.dbunit.ext.h2.H2Connection;
 import org.dbunit.ext.h2.H2DataTypeFactory;
 import org.junit.Assert;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 /**
@@ -422,6 +423,26 @@ public class KylinTestBase {
         }
     }
 
+    protected void execAndCompColumnCount(String input, int expectedColumnCount) throws Exception {
+        printInfo("---------- test column count: " + input);
+        Set<String> sqlSet = ImmutableSet.of(input);
+        
+        for (String sql : sqlSet) {
+            // execute Kylin
+            printInfo("Query Result from Kylin - " + sql);
+            IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
+            ITable kylinTable = executeQuery(kylinConn, sql, sql, false);
+            
+            try {
+                // compare the result
+                Assert.assertEquals(expectedColumnCount, kylinTable.getTableMetaData().getColumns().length);
+            } catch (Throwable t) {
+                printInfo("execAndCompColumnCount failed on: " + sql);
+                throw t;
+            }
+        }
+    }
+    
     protected void execLimitAndValidate(String queryFolder) throws Exception {
         printInfo("---------- test folder: " + new File(queryFolder).getAbsolutePath());
 
