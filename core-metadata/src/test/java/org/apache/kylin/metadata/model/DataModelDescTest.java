@@ -47,6 +47,7 @@ public class DataModelDescTest extends LocalFileMetadataTestCase {
 
         // uuid is different, set to equals for json comparison
         copyDesc.setUuid(desc.getUuid());
+        copyDesc.setLastModified(desc.getLastModified());
 
         String descStr = JsonUtil.writeValueAsIndentString(desc);
         String copyStr = JsonUtil.writeValueAsIndentString(copyDesc);

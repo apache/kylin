@@ -526,7 +526,6 @@ public class DataModelDesc extends RootPersistentEntity {
         copy.filterCondition = orig.filterCondition;
         copy.partitionDesc = PartitionDesc.getCopyOf(orig.getPartitionDesc());
         copy.capacity = orig.capacity;
-        copy.lastModified = orig.lastModified;
         copy.updateRandomUuid();
         return copy;
     }
