@@ -215,6 +215,7 @@ public class KylinConfig extends KylinConfigBase {
             FileInputStream is = new FileInputStream(propFile);
             conf.load(is);
             IOUtils.closeQuietly(is);
+            conf = BCC.check(conf);
 
             File propOverrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
             if (propOverrideFile.exists()) {
@@ -222,7 +223,6 @@ public class KylinConfig extends KylinConfigBase {
                 Properties propOverride = new Properties();
                 propOverride.load(ois);
                 IOUtils.closeQuietly(ois);
-                conf = BCC.check(conf);
                 conf.putAll(BCC.check(propOverride));
             }
         } catch (IOException e) {
