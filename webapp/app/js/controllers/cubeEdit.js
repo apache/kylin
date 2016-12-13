@@ -662,14 +662,18 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             var mandatory = group.select_rule.mandatory_dims;
             if(mandatory && mandatory.length){
               var columnIndex = mandatory.indexOf(deprecatedItem);
-              group.select_rule.mandatory_dims.splice(columnIndex,1);
+              if(columnIndex>=0){
+                group.select_rule.mandatory_dims.splice(columnIndex,1);
+              }
             }
 
             var hierarchys =  group.select_rule.hierarchy_dims;
             if(hierarchys && hierarchys.length){
               for(var i=0;i<hierarchys.length;i++){
                 var hierarchysIndex = hierarchys[i].indexOf(deprecatedItem);
-                group.select_rule.hierarchy_dims[i].splice(hierarchysIndex,1);
+                if(hierarchysIndex>=0) {
+                  group.select_rule.hierarchy_dims[i].splice(hierarchysIndex, 1);
+                }
               }
 
             }
@@ -678,7 +682,9 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
             if(joints && joints.length){
               for(var i=0;i<joints.length;i++){
                 var jointIndex = joints[i].indexOf(deprecatedItem);
-                group.select_rule.joint_dims[i].splice(jointIndex,1);
+                if(jointIndex>=0) {
+                  group.select_rule.joint_dims[i].splice(jointIndex, 1);
+                }
               }
 
             }
