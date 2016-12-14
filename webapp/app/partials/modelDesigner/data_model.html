@@ -29,7 +29,7 @@
               <select chosen ng-model="FactTable.root" ng-if="state.mode=='edit'"
                       ng-options="table.name as table.name for table in tableModel.selectProjectTables"
                       style="width:100%;" ng-change="changeFactTable()"
-                      name="table_name"
+                      name="table_name"   ng-disabled="cubesLength>0"
                       ng-required="true"
                       data-placeholder="Fact Table Name"
                       class="chosen-select">
@@ -92,17 +92,18 @@
                     <ul class="list-unstyled">
                         <li ng-repeat="pk in lookup.join.primary_key track by $index">
                             <code>{{lookup.join.foreign_key[$index]}} = {{pk}}</code>
+
                         </li>
                     </ul>
                 </td>
                 <td ng-if="state.mode=='edit'">
                     <!-- edit button -->
-                    <button class="btn btn-xs btn-info" ng-disabled="lookupState.editing"
-                            ng-click="editLookup(lookup)" tooltip="Edit Lookup"><i class="fa fa-pencil"></i>
+                    <button class="btn btn-xs btn-info" ng-disabled="lookupState.editing||cubesLength>0"
+                            ng-click="editLookup(lookup)" ><i class="fa fa-pencil"></i>
                     </button>
                     <!-- remove button -->
-                    <button class="btn btn-xs btn-danger" ng-disabled="lookupState.editing"
-                            ng-click="removeLookup(lookup)" tooltip="Remove Lookup"><i class="fa fa-trash-o"></i>
+                    <button class="btn btn-xs btn-danger" ng-disabled="lookupState.editing||cubesLength>0"
+                            ng-click="removeLookup(lookup)" ><i class="fa fa-trash-o"></i>
                     </button>
                 </td>
             </tr>
@@ -126,17 +127,17 @@
                             <div>
                               <select chosen ng-model="newLookup.joinTable" style="width: 45%"
                                       ng-options="table as table for table in aliasName"
-                                      name="table_name"
+                                      name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true"
                                       data-placeholder="Join Table Name"
                                       class="chosen-select">
                                 <option value=""> &#45;&#45; Select Join Table &#45;&#45; </option>
                               </select>
                               <small class="help-block" ng-show="lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$submitted)">Table name required</small>
-                              <b>&nbsp;</b>
+                              <b>&nbsp;&nbsp;&nbsp;</b>
                               <select chosen ng-model="newLookup.table" style="width: 45%"
-                                      ng-options="table.name as table.name for table in tableModel.selectProjectTables"
-                                      name="table_name"
+                                      ng-options="table.name as table.name for table in tableModel.selectProjectTables|filter:filterNotRoot"
+                                      name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true"  ng-change="changeJoinTable()"
                                       data-placeholder="Join Table Name"
                                       class="chosen-select">
@@ -146,7 +147,6 @@
 
                             </div>
                             <div class="space-4"></div>
-                            <small class="help-block red" ng-show="newLookup.join.isCompatible[$index]==false"><i class="fa fa-exclamation-triangle"></i> <b>Column Type incompatible {{newLookup.join.foreign_key[$index]}}[{{newLookup.join.fk_type[$index]}}], {{newLookup.join.primary_key[$index]}} [{{newLookup.join.pk_type[$index]}}]</b></small>
                           </div>
                         </div>
                       </div>
@@ -154,8 +154,9 @@
                         <div class="row">
                             <label class="col-sm-3 control-label font-color-default"><b>Alias</b></label>
                             <div class="col-sm-6">
-                              <input type="text" class="form-control " placeholder="Input Table Alias" ng-required="true"
-                                     ng-model="newLookup.alias" ng-change="changeAlias()" ng-disabled="">
+                              <input type="text" class="form-control " name="joinTable_alias" placeholder="Input Table Alias" ng-required="true"
+                                     ng-model="newLookup.alias" ng-change="changeAlias()"  ng-pattern="/^\w+$/">
+                              <small class="help-block red" ng-show="!lookup_form.joinTable_alias.$error.required&&lookup_form.joinTable_alias.$invalid && (lookup_form.joinTable_alias.$dirty||lookup_form.$submitted)"><i class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp; Alias is invalid.</small>
                             </div>
                         </div>
                     </div>

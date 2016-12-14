@@ -47,6 +47,9 @@ KylinApp.service('ModelGraphService', function (VdmUtil) {
         model.graph = (!!model.graph) ? model.graph : {};
 
         angular.forEach(model.lookups,function (lookup, index) {
+          if(!lookup.alias){
+            lookup.alias=VdmUtil.removeNameSpace(lookup.table);
+          }
           if (lookup.join && lookup.join.primary_key.length > 0) {
             var  dimensionNode={
                 "type": lookup.kind,

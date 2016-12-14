@@ -22,7 +22,7 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
     $scope.modelsManager = modelsManager;
     angular.forEach($scope.modelsManager.selectedModel.lookups,function(joinTable){
       if(!joinTable.alias){
-           joinTable.alias=VdmUtil.removeNameSpace(joinTable.table);
+        joinTable.alias=VdmUtil.removeNameSpace(joinTable.table);
       }
     });
     $scope.init = function (){
@@ -110,10 +110,21 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
     $scope.editLookup = function (lookup) {
         $scope.lookupState.editingIndex = lookupList.indexOf(lookup);
         $scope.lookupState.editing = true;
-
         // Make a copy of model will be editing.
         $scope.newLookup = angular.copy(lookup);
+        $scope.newLookup.join.pk_type = [];
+        $scope.newLookup.join.fk_type = [];
+        $scope.newLookup.join.isCompatible=[];
         $scope.newLookup.joinTable=VdmUtil.getNameSpaceTopName($scope.newLookup.join.foreign_key[0]);
+        angular.forEach($scope.newLookup.join.primary_key,function(pk,index){
+            $scope.newLookup.join.pk_type[index] = TableModel.getColumnType(VdmUtil.removeNameSpace(pk),$scope.newLookup.table);
+            $scope.newLookup.join.fk_type[index] = TableModel.getColumnType(VdmUtil.removeNameSpace($scope.newLookup.join.foreign_key[index]),$scope.aliasTableMap[$scope.newLookup.joinTable]);
+            if($scope.newLookup.join.pk_type[index]!==$scope.newLookup.join.fk_type[index]){
+               $scope.newLookup.join.isCompatible[index]=false;
+            }else{
+               $scope.newLookup.join.isCompatible[index]=true;
+            }
+        });
         $scope.openLookupModal();
     };
 
@@ -129,24 +140,51 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
 
     $scope.doneEditLookup = function () {
         // Copy edited model to destination model.
-        $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)]=$scope.modelsManager.selectedModel.fact_table;
-        $scope.aliasName=[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)];
         angular.copy($scope.newLookup, lookupList[$scope.lookupState.editingIndex]);
-        angular.forEach(lookupList,function(joinTable){
-          $scope.aliasName.push(joinTable.alias);
-          $scope.aliasTableMap[joinTable.alias]=joinTable.table;
-         // $scope.tableAliasMap[joinTable.alias]=joinTable.table;
-        });
+        var oldAlias=$scope.aliasName[$scope.lookupState.editingIndex+1];
+        var newAlias=$scope.newLookup.alias;
+        if(oldAlias!=newAlias){
+          $scope.aliasName[$scope.lookupState.editingIndex+1]=newAlias;
+          for(var i=0;i<$scope.newLookup.join.primary_key.length;i++){
+            $scope.newLookup.join.primary_key[i]=$scope.newLookup.join.primary_key[i].replace(oldAlias+'.',newAlias+'.');
+          }
+
+          delete $scope.aliasTableMap[oldAlias];
+          $scope.aliasTableMap[newAlias]=$scope.newLookup.table;
+
+          for(var i=0;i<lookupList.length;i++){
+            for(var j=0;j<lookupList[i].join.foreign_key.length;j++){
+             lookupList[i].join.foreign_key[j]=lookupList[i].join.foreign_key[j].replace(oldAlias+'.',newAlias+'.');
+            }
+          }
+
+          for(var i=0;i<modelsManager.selectedModel.dimensions.length;i++){
+            if(modelsManager.selectedModel.dimensions[i].table==oldAlias){
+              modelsManager.selectedModel.dimensions[i].table=newAlias;
+            }
+          }
+
+          if($scope.newLookup.kind=="FACT"){
+            for(var i=0;i< modelsManager.selectedModel.metrics.length;i++){
+               modelsManager.selectedModel.metrics[i]= modelsManager.selectedModel.metrics[i].replace(oldAlias+'.',newAlias+'.');
+            }
+            modelsManager.selectedModel.partition_desc.partition_date_column = modelsManager.selectedModel.partition_desc.partition_date_column.replace(oldAlias+'.',newAlias+'.');
+          }
+        }
+        angular.copy($scope.newLookup,lookupList[$scope.lookupState.editingIndex]);
 
         $scope.resetParams();
     };
     $scope.changeFactTable = function () {
-        delete $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)];
+        $scope.aliasTableMap={};
         $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.FactTable.root)]=$scope.FactTable.root;
-        delete $scope.tableAliasMap[$scope.modelsManager.selectedModel.fact_table];
+        $scope.tableAliasMap={};
         $scope.tableAliasMap[$scope.FactTable.root]=VdmUtil.removeNameSpace($scope.FactTable.root);
-        $scope.aliasName.splice($scope.aliasName.indexOf(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)),1);
-        $scope.aliasName.push(VdmUtil.removeNameSpace($scope.FactTable.root));
+        $scope.aliasName=[VdmUtil.removeNameSpace($scope.FactTable.root)];
+        modelsManager.selectedModel.lookups = [];
+        modelsManager.selectedModel.dimensions = [];
+        modelsManager.selectedModel.metrics= [];
+        modelsManager.selectedModel.partition_desc.partition_date_column = null;
         $scope.modelsManager.selectedModel.fact_table=$scope.FactTable.root;
     }
     $scope.changeJoinTable = function () {
@@ -158,7 +196,7 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
 
     $scope.removeLookup = function (lookup) {
         var dimExist = _.some(modelsManager.selectedModel.dimensions,function(item,index){
-            return item.alias===lookup.alias;
+            return item.table===lookup.alias;
         });
         if(dimExist) {
             SweetAlert.swal({
@@ -172,7 +210,7 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
             }, function (isConfirm) {
                 if (isConfirm) {
                     for (var i = modelsManager.selectedModel.dimensions.length - 1; i >= 0; i--) {
-                        if (modelsManager.selectedModel.dimensions[i].alias === lookup.alias) {
+                        if (modelsManager.selectedModel.dimensions[i].table === lookup.alias) {
                             modelsManager.selectedModel.dimensions.splice(i, 1);
                         }
                     }
@@ -187,13 +225,13 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
     }
 
     $scope.changeKey = function(index){
-         var join_table = $scope.newLookup.jointable;
+         var join_table = $scope.newLookup.joinTable;
          var lookup_table = $scope.newLookup.table;
          var pk_column = $scope.newLookup.join.primary_key[index];
          var fk_column = $scope.newLookup.join.foreign_key[index];
          if(pk_column!=='null'&&fk_column!=='null'){
-             $scope.newLookup.join.pk_type[index] = TableModel.getColumnType(pk_column,lookup_table);
-             $scope.newLookup.join.fk_type[index] = TableModel.getColumnType(fk_column,join_table);
+            $scope.newLookup.join.pk_type[index] = TableModel.getColumnType(VdmUtil.removeNameSpace(pk_column),$scope.newLookup.table);
+            $scope.newLookup.join.fk_type[index] = TableModel.getColumnType(VdmUtil.removeNameSpace(fk_column),$scope.aliasTableMap[$scope.newLookup.joinTable]);
             if($scope.newLookup.join.pk_type[index]!==$scope.newLookup.join.fk_type[index]){
                $scope.newLookup.join.isCompatible[index]=false;
             }else{
@@ -226,34 +264,43 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
     };
 
     $scope.checkLookupForm = function(){
-            var errors = [];
-            // null validate
-            for(var i = 0;i<$scope.newLookup.join.primary_key.length;i++){
-                if($scope.newLookup.join.primary_key[i]==='null'){
-                    errors.push("Primary Key can't be null.");
-                    break;
-                }
-            }
-            for(var i = 0;i<$scope.newLookup.join.foreign_key.length;i++){
-                if($scope.newLookup.join.foreign_key[i]==='null'){
-                    errors.push("Foreign Key can't be null.");
-                    break;
-                }
-            }
-
-            var errorInfo = "";
-            angular.forEach(errors,function(item){
-                errorInfo+="\n"+item;
-            });
-            if(errors.length){
-//                SweetAlert.swal('Warning!', errorInfo, '');
-                SweetAlert.swal('', errorInfo, 'warning');
-                return false;
-            }else{
-                return true;
-            }
-
+      var errors = [];
+      for(var i = 0;i<$scope.newLookup.join.primary_key.length;i++){
+        if($scope.newLookup.join.primary_key[i]==='null'){
+          errors.push("Primary Key can't be null.");
+          break;
+        }
+      }
+      for(var i = 0;i<$scope.newLookup.join.foreign_key.length;i++){
+        if($scope.newLookup.join.foreign_key[i]==='null'){
+          errors.push("Foreign Key can't be null.");
+          break;
+        }
+      }
+      if($scope.aliasName.indexOf($scope.newLookup.alias)!=-1&&$scope.lookupState.editing == false){
+        errors.push("Table Alias ["+$scope.newLookup.alias+"] already exist!");
+      }
+      if($scope.aliasName.indexOf($scope.newLookup.alias)!=-1&&$scope.aliasName[$scope.lookupState.editingIndex+1] != $scope.newLookup.alias){
+        errors.push("Table Alias ["+$scope.newLookup.alias+"] already exist!");
+      }
+      var errorInfo = "";
+      angular.forEach(errors,function(item){
+        errorInfo+="\n"+item;
+      });
+      if(errors.length){
+        SweetAlert.swal('', errorInfo, 'warning');
+        return false;
+      }else{
+        return true;
+      }
     };
-
-
+    $scope.filterNotRoot = function (item) {
+      return item.name!==modelsManager.selectedModel.fact_table;
+    };
+/*    $scope.$watch('$scope.newLookup.alias', function (newValue, oldValue) {
+      if (newValue&&$scope.lookupState.editing ) {
+        console.log(newValue);
+        console.log(oldValue);
+      }
+    });*/
 });

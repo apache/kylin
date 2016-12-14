@@ -19,7 +19,7 @@
 'use strict';
 
 
-KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager,VdmUtil) {
+KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager, CubeService, VdmUtil) {
     //add or edit ?
     var absUrl = $location.absUrl();
     $scope.tableAliasMap={};
@@ -93,9 +93,9 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
       ModelDescService.query({model_name: modelName}, function (model) {
         if (model) {
           modelsManager.selectedModel = model;
-          if($scope.modelsManager.selectedModel.partition_desc.partition_time_column){
-            $scope.partitionColumn.hasSeparateTimeColumn = true;
-          }
+          CubeService.list({modelName:model.name}, function (_cubes) {
+              $scope.cubesLength = _cubes.length;
+          });
           modelsManager.selectedModel.project = ProjectModel.getProjectByCubeModel(modelName);
           if(!ProjectModel.getSelectedProject()){
             ProjectModel.setSelectedProject(modelsManager.selectedModel.project);

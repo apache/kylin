@@ -4744,6 +4744,11 @@ Gradient Background colors
   opacity: 1;
   filter: alpha(opacity=100);
 }
+.model_graph svg{
+  width:1100px !important;
+  height:600px !important;
+}
+
 
 /*
  * Misc: print
