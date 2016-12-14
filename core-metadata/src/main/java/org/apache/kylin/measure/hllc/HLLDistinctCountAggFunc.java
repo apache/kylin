@@ -31,21 +31,21 @@ public class HLLDistinctCountAggFunc {
 
     private static final Logger logger = LoggerFactory.getLogger(HLLDistinctCountAggFunc.class);
 
-    public static HyperLogLogPlusCounterNew init() {
+    public static HLLCounter init() {
         return null;
     }
 
-    public static HyperLogLogPlusCounterNew initAdd(Object v) {
+    public static HLLCounter initAdd(Object v) {
         if (v instanceof Long) { // holistic case
             long l = (Long) v;
             return new FixedValueHLLCMockup(l);
         } else {
-            HyperLogLogPlusCounterNew c = (HyperLogLogPlusCounterNew) v;
-            return new HyperLogLogPlusCounterNew(c);
+            HLLCounter c = (HLLCounter) v;
+            return new HLLCounter(c);
         }
     }
 
-    public static HyperLogLogPlusCounterNew add(HyperLogLogPlusCounterNew counter, Object v) {
+    public static HLLCounter add(HLLCounter counter, Object v) {
         if (v instanceof Long) { // holistic case
             long l = (Long) v;
             if (counter == null) {
@@ -58,9 +58,9 @@ public class HLLDistinctCountAggFunc {
                 return counter;
             }
         } else {
-            HyperLogLogPlusCounterNew c = (HyperLogLogPlusCounterNew) v;
+            HLLCounter c = (HLLCounter) v;
             if (counter == null) {
-                return new HyperLogLogPlusCounterNew(c);
+                return new HLLCounter(c);
             } else {
                 counter.merge(c);
                 return counter;
@@ -68,16 +68,16 @@ public class HLLDistinctCountAggFunc {
         }
     }
 
-    public static HyperLogLogPlusCounterNew merge(HyperLogLogPlusCounterNew counter0, Object counter1) {
+    public static HLLCounter merge(HLLCounter counter0, Object counter1) {
         return add(counter0, counter1);
     }
 
-    public static long result(HyperLogLogPlusCounterNew counter) {
+    public static long result(HLLCounter counter) {
         return counter == null ? 0L : counter.getCountEstimate();
     }
 
     @SuppressWarnings("serial")
-    private static class FixedValueHLLCMockup extends HyperLogLogPlusCounterNew {
+    private static class FixedValueHLLCMockup extends HLLCounter {
 
         private Long value = null;
 
@@ -107,7 +107,7 @@ public class HLLDistinctCountAggFunc {
         }
 
         @Override
-        public void merge(HyperLogLogPlusCounterNew another) {
+        public void merge(HLLCounter another) {
             throw new UnsupportedOperationException();
         }
 

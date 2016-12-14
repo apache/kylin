@@ -33,15 +33,15 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.ImmutableMap;
 
-public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounterNew> {
+public class HLLCMeasureType extends MeasureType<HLLCounter> {
 
     public static final String FUNC_COUNT_DISTINCT = FunctionDesc.FUNC_COUNT_DISTINCT;
     public static final String DATATYPE_HLLC = "hllc";
 
-    public static class Factory extends MeasureTypeFactory<HyperLogLogPlusCounterNew> {
+    public static class Factory extends MeasureTypeFactory<HLLCounter> {
 
         @Override
-        public MeasureType<HyperLogLogPlusCounterNew> createMeasureType(String funcName, DataType dataType) {
+        public MeasureType<HLLCounter> createMeasureType(String funcName, DataType dataType) {
             return new HLLCMeasureType(funcName, dataType);
         }
 
@@ -56,7 +56,7 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounterNew> {
         }
 
         @Override
-        public Class<? extends DataTypeSerializer<HyperLogLogPlusCounterNew>> getAggrDataTypeSerializer() {
+        public Class<? extends DataTypeSerializer<HLLCounter>> getAggrDataTypeSerializer() {
             return HLLCSerializer.class;
         }
     }
@@ -91,13 +91,13 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounterNew> {
     }
 
     @Override
-    public MeasureIngester<HyperLogLogPlusCounterNew> newIngester() {
-        return new MeasureIngester<HyperLogLogPlusCounterNew>() {
-            HyperLogLogPlusCounterNew current = new HyperLogLogPlusCounterNew(dataType.getPrecision());
+    public MeasureIngester<HLLCounter> newIngester() {
+        return new MeasureIngester<HLLCounter>() {
+            HLLCounter current = new HLLCounter(dataType.getPrecision());
 
             @Override
-            public HyperLogLogPlusCounterNew valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
-                HyperLogLogPlusCounterNew hllc = current;
+            public HLLCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+                HLLCounter hllc = current;
                 hllc.clear();
                 for (String v : values) {
                     if (v != null)
@@ -109,7 +109,7 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounterNew> {
     }
 
     @Override
-    public MeasureAggregator<HyperLogLogPlusCounterNew> newAggregator() {
+    public MeasureAggregator<HLLCounter> newAggregator() {
         return new HLLCAggregator(dataType.getPrecision());
     }
 

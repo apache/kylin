@@ -36,7 +36,7 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
  * MeasureType captures how a kind of aggregation is defined, how it is calculated 
  * during cube build, and how it is involved in query and storage scan.
  * 
- * @param <T> the Java type of aggregation data object, e.g. HyperLogLogPlusCounterOld
+ * @param <T> the Java type of aggregation data object, e.g. HLLCounter
  */
 abstract public class MeasureType<T> {
 

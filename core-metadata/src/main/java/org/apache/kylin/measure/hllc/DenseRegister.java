@@ -25,7 +25,6 @@ import java.util.Map;
  * Created by xiefan on 16-12-9.
  */
 public class DenseRegister implements Register {
-    private int p;
 
     private int m;
 
@@ -41,7 +40,7 @@ public class DenseRegister implements Register {
     }
 
     @Override
-    public Byte get(int pos) {
+    public byte get(int pos) {
         return register[pos];
     }
 
@@ -80,11 +79,28 @@ public class DenseRegister implements Register {
     }
 
     @Override
-    public int getHashCode() {
-        return Arrays.hashCode(register);
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(register);
+        return result;
     }
 
-    public byte[] getRawRegister() {
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DenseRegister other = (DenseRegister) obj;
+        if (!Arrays.equals(register, other.register))
+            return false;
+        return true;
+    }
+
+    byte[] getRawRegister() {
         return this.register;
     }
 

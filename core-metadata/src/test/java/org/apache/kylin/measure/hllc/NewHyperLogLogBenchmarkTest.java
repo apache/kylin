@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.measure.hll2;
+package org.apache.kylin.measure.hllc;
 
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterOld;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
+import org.apache.kylin.measure.hllc.HLLCounterOld;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.measure.hllc.RegisterType;
 import org.junit.Test;
 
@@ -30,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by xiefan on 16-12-12.
  */
+@SuppressWarnings("deprecation")
 public class NewHyperLogLogBenchmarkTest {
 
     public static final Random rand = new Random(1);
@@ -41,12 +42,12 @@ public class NewHyperLogLogBenchmarkTest {
         final int p = 15;
         int m = 1 << p;
 
-        System.out.println("m : " + m);
-        double oldFactor = HyperLogLogPlusCounterNew.overflowFactor;
-        HyperLogLogPlusCounterNew.overflowFactor = 1.1; //keep sparse
+        System.out.println("denseToDenseRegisterMergeBenchmark(), m : " + m);
+        double oldFactor = HLLCounter.OVERFLOW_FACTOR;
+        HLLCounter.OVERFLOW_FACTOR = 1.1; //keep sparse
         for (int cardinality : getTestDataDivide(m)) {
-            final HyperLogLogPlusCounterOld oldCounter = new HyperLogLogPlusCounterOld(p);
-            final HyperLogLogPlusCounterOld oldCounter2 = getRandOldCounter(p, cardinality);
+            final HLLCounterOld oldCounter = new HLLCounterOld(p);
+            final HLLCounterOld oldCounter2 = getRandOldCounter(p, cardinality);
             long oldTime = runTestCase(new TestCase() {
                 @Override
                 public void run() {
@@ -56,8 +57,8 @@ public class NewHyperLogLogBenchmarkTest {
                     }
                 }
             });
-            final HyperLogLogPlusCounterNew newCounter = new HyperLogLogPlusCounterNew(p, RegisterType.DENSE);
-            final HyperLogLogPlusCounterNew newCounter2 = new HyperLogLogPlusCounterNew(p, RegisterType.DENSE);
+            final HLLCounter newCounter = new HLLCounter(p, RegisterType.DENSE);
+            final HLLCounter newCounter2 = new HLLCounter(p, RegisterType.DENSE);
             for (int i = 0; i < testTimes; i++)
                 newCounter2.add(i);
             long newTime = runTestCase(new TestCase() {
@@ -75,19 +76,19 @@ public class NewHyperLogLogBenchmarkTest {
             System.out.println("old time : " + oldTime);
             System.out.println("new time : " + newTime);
         }
-        HyperLogLogPlusCounterNew.overflowFactor = oldFactor;
+        HLLCounter.OVERFLOW_FACTOR = oldFactor;
     }
 
     @Test
     public void sparseToSparseMergeBenchmark() throws Exception {
         final int p = 15;
         int m = 1 << p;
-        System.out.println("m : " + m);
-        double oldFactor = HyperLogLogPlusCounterNew.overflowFactor;
-        HyperLogLogPlusCounterNew.overflowFactor = 1.1; //keep sparse
+        System.out.println("sparseToSparseMergeBenchmark(), m : " + m);
+        double oldFactor = HLLCounter.OVERFLOW_FACTOR;
+        HLLCounter.OVERFLOW_FACTOR = 1.1; //keep sparse
         for (int cardinality : getTestDataDivide(m)) {
-            final HyperLogLogPlusCounterOld oldCounter = new HyperLogLogPlusCounterOld(p);
-            final HyperLogLogPlusCounterOld oldCounter2 = getRandOldCounter(p, cardinality);
+            final HLLCounterOld oldCounter = new HLLCounterOld(p);
+            final HLLCounterOld oldCounter2 = getRandOldCounter(p, cardinality);
             long oldTime = runTestCase(new TestCase() {
                 @Override
                 public void run() {
@@ -97,8 +98,8 @@ public class NewHyperLogLogBenchmarkTest {
                     }
                 }
             });
-            final HyperLogLogPlusCounterNew newCounter = new HyperLogLogPlusCounterNew(p);
-            final HyperLogLogPlusCounterNew newCounter2 = getRandNewCounter(p, cardinality);
+            final HLLCounter newCounter = new HLLCounter(p);
+            final HLLCounter newCounter2 = getRandNewCounter(p, cardinality);
             long newTime = runTestCase(new TestCase() {
                 @Override
                 public void run() {
@@ -114,21 +115,21 @@ public class NewHyperLogLogBenchmarkTest {
             System.out.println("old time : " + oldTime);
             System.out.println("new time : " + newTime);
         }
-        HyperLogLogPlusCounterNew.overflowFactor = oldFactor;
+        HLLCounter.OVERFLOW_FACTOR = oldFactor;
     }
 
     @Test
     public void sparseToDenseRegisterMergeBenchmark() throws Exception {
         final int p = 15;
         int m = 1 << p;
-        System.out.println("m : " + m);
-        double oldFactor = HyperLogLogPlusCounterNew.overflowFactor;
-        HyperLogLogPlusCounterNew.overflowFactor = 1.1; //keep sparse
+        System.out.println("sparseToDenseRegisterMergeBenchmark(), m : " + m);
+        double oldFactor = HLLCounter.OVERFLOW_FACTOR;
+        HLLCounter.OVERFLOW_FACTOR = 1.1; //keep sparse
         for (int cardinality : getTestDataDivide(m)) {
             System.out.println("----------------------------");
             System.out.println("cardinality : " + cardinality);
-            final HyperLogLogPlusCounterOld oldCounter = new HyperLogLogPlusCounterOld(p);
-            final HyperLogLogPlusCounterOld oldCounter2 = getRandOldCounter(p, cardinality);
+            final HLLCounterOld oldCounter = new HLLCounterOld(p);
+            final HLLCounterOld oldCounter2 = getRandOldCounter(p, cardinality);
             long oldTime = runTestCase(new TestCase() {
                 @Override
                 public void run() {
@@ -137,8 +138,8 @@ public class NewHyperLogLogBenchmarkTest {
                     }
                 }
             });
-            final HyperLogLogPlusCounterNew newCounter = new HyperLogLogPlusCounterNew(p, RegisterType.DENSE);
-            final HyperLogLogPlusCounterNew newCounter2 = getRandNewCounter(p, cardinality);
+            final HLLCounter newCounter = new HLLCounter(p, RegisterType.DENSE);
+            final HLLCounter newCounter2 = getRandNewCounter(p, cardinality);
             long newTime = runTestCase(new TestCase() {
                 @Override
                 public void run() {
@@ -152,19 +153,20 @@ public class NewHyperLogLogBenchmarkTest {
             System.out.println("old time : " + oldTime);
             System.out.println("new time : " + newTime);
         }
-        HyperLogLogPlusCounterNew.overflowFactor = oldFactor;
+        HLLCounter.OVERFLOW_FACTOR = oldFactor;
     }
 
     @Test
     public void sparseSerializeBenchmark() throws Exception {
         final int p = 15;
         int m = 1 << p;
-        double oldFactor = HyperLogLogPlusCounterNew.overflowFactor;
-        HyperLogLogPlusCounterNew.overflowFactor = 1.1; //keep sparse
+        double oldFactor = HLLCounter.OVERFLOW_FACTOR;
+        HLLCounter.OVERFLOW_FACTOR = 1.1; //keep sparse
+        System.out.println("sparseSerializeBenchmark()");
         for (int cardinality : getTestDataDivide(m)) {
             System.out.println("----------------------------");
             System.out.println("cardinality : " + cardinality);
-            final HyperLogLogPlusCounterOld oldCounter = getRandOldCounter(p, cardinality);
+            final HLLCounterOld oldCounter = getRandOldCounter(p, cardinality);
             long oldTime = runTestCase(new TestCase() {
                 @Override
                 public void run() throws Exception {
@@ -180,7 +182,7 @@ public class NewHyperLogLogBenchmarkTest {
                     System.out.println("old serialize bytes : " + totalBytes / testTimes + "B");
                 }
             });
-            final HyperLogLogPlusCounterNew newCounter = getRandNewCounter(p, cardinality);
+            final HLLCounter newCounter = getRandNewCounter(p, cardinality);
             long newTime = runTestCase(new TestCase() {
                 @Override
                 public void run() throws Exception {
@@ -200,19 +202,20 @@ public class NewHyperLogLogBenchmarkTest {
             System.out.println("old serialize time : " + oldTime);
             System.out.println("new serialize time : " + newTime);
         }
-        HyperLogLogPlusCounterNew.overflowFactor = oldFactor;
+        HLLCounter.OVERFLOW_FACTOR = oldFactor;
     }
 
     @Test
     public void denseSerializeBenchmark() throws Exception {
         final int p = 15;
-        int m = 1 << p;
-        double oldFactor = HyperLogLogPlusCounterNew.overflowFactor;
-        HyperLogLogPlusCounterNew.overflowFactor = 0; //keep sparse
+        final int m = 1 << p;
+        double oldFactor = HLLCounter.OVERFLOW_FACTOR;
+        HLLCounter.OVERFLOW_FACTOR = 0; //keep sparse
+        System.out.println("denseSerializeBenchmark()");
         for (int cardinality : getTestDataDivide(m)) {
             System.out.println("----------------------------");
             System.out.println("cardinality : " + cardinality);
-            final HyperLogLogPlusCounterOld oldCounter = getRandOldCounter(p, cardinality);
+            final HLLCounterOld oldCounter = getRandOldCounter(p, cardinality);
             long oldTime = runTestCase(new TestCase() {
                 @Override
                 public void run() throws Exception {
@@ -228,7 +231,7 @@ public class NewHyperLogLogBenchmarkTest {
                     System.out.println("old serialize bytes : " + totalBytes / testTimes + "B");
                 }
             });
-            final HyperLogLogPlusCounterNew newCounter = getRandNewCounter(p, cardinality, RegisterType.DENSE);
+            final HLLCounter newCounter = getRandNewCounter(p, cardinality, RegisterType.DENSE);
             long newTime = runTestCase(new TestCase() {
                 @Override
                 public void run() throws Exception {
@@ -248,7 +251,7 @@ public class NewHyperLogLogBenchmarkTest {
             System.out.println("old serialize time : " + oldTime);
             System.out.println("new serialize time : " + newTime);
         }
-        HyperLogLogPlusCounterNew.overflowFactor = oldFactor;
+        HLLCounter.OVERFLOW_FACTOR = oldFactor;
     }
 
     interface TestCase {
@@ -261,22 +264,22 @@ public class NewHyperLogLogBenchmarkTest {
         return System.currentTimeMillis() - startTime;
     }
 
-    public HyperLogLogPlusCounterOld getRandOldCounter(int p, int num) {
-        HyperLogLogPlusCounterOld c = new HyperLogLogPlusCounterOld(p);
+    public HLLCounterOld getRandOldCounter(int p, int num) {
+        HLLCounterOld c = new HLLCounterOld(p);
         for (int i = 0; i < num; i++)
             c.add(i);
         return c;
     }
 
-    public HyperLogLogPlusCounterNew getRandNewCounter(int p, int num) {
-        HyperLogLogPlusCounterNew c = new HyperLogLogPlusCounterNew(p);
+    public HLLCounter getRandNewCounter(int p, int num) {
+        HLLCounter c = new HLLCounter(p);
         for (int i = 0; i < num; i++)
             c.add(i);
         return c;
     }
 
-    public HyperLogLogPlusCounterNew getRandNewCounter(int p, int num, RegisterType type) {
-        HyperLogLogPlusCounterNew c = new HyperLogLogPlusCounterNew(p, type);
+    public HLLCounter getRandNewCounter(int p, int num, RegisterType type) {
+        HLLCounter c = new HLLCounter(p, type);
         for (int i = 0; i < num; i++)
             c.add(i);
         return c;

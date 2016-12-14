@@ -32,7 +32,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.kylin.engine.mr.KylinReducer;
 import org.apache.kylin.measure.BufferedMeasureCodec;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
+import org.apache.kylin.measure.hllc.HLLCounter;
 
 /**
  * @author Jack
@@ -41,7 +41,7 @@ import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
 public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWritable, IntWritable, LongWritable> {
 
     public static final int ONE = 1;
-    private Map<Integer, HyperLogLogPlusCounterNew> hllcMap = new HashMap<Integer, HyperLogLogPlusCounterNew>();
+    private Map<Integer, HLLCounter> hllcMap = new HashMap<Integer, HLLCounter>();
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -53,16 +53,16 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
         int skey = key.get();
         for (BytesWritable v : values) {
             ByteBuffer buffer = ByteBuffer.wrap(v.getBytes());
-            HyperLogLogPlusCounterNew hll = new HyperLogLogPlusCounterNew();
+            HLLCounter hll = new HLLCounter();
             hll.readRegisters(buffer);
             getHllc(skey).merge(hll);
             hll.clear();
         }
     }
 
-    private HyperLogLogPlusCounterNew getHllc(Integer key) {
+    private HLLCounter getHllc(Integer key) {
         if (!hllcMap.containsKey(key)) {
-            hllcMap.put(key, new HyperLogLogPlusCounterNew());
+            hllcMap.put(key, new HLLCounter());
         }
         return hllcMap.get(key);
     }
@@ -78,7 +78,7 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
         it = keys.iterator();
         while (it.hasNext()) {
             int key = it.next();
-            HyperLogLogPlusCounterNew hllc = hllcMap.get(key);
+            HLLCounter hllc = hllcMap.get(key);
             ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
             buf.clear();
             hllc.writeRegisters(buf);

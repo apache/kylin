@@ -62,7 +62,7 @@ import com.google.common.collect.Maps;
   }
 </pre>
  * 
- * @param <T> the Java type of aggregation data object, e.g. HyperLogLogPlusCounterOld
+ * @param <T> the Java type of aggregation data object, e.g. HLLCounter
  */
 abstract public class MeasureTypeFactory<T> {
 

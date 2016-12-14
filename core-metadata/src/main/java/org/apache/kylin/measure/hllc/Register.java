@@ -24,14 +24,12 @@ public interface Register {
 
     void set(int pos, byte value);
 
-    Byte get(int pos);
+    byte get(int pos);
 
     void merge(Register another);
 
     void clear();
 
     int getSize();
-
-    int getHashCode();
 
 }

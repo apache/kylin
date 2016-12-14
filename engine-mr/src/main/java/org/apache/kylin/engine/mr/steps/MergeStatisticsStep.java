@@ -47,7 +47,7 @@ import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ import com.google.common.collect.Maps;
 public class MergeStatisticsStep extends AbstractExecutable {
     private static final Logger logger = LoggerFactory.getLogger(MergeStatisticsStep.class);
 
-    protected Map<Long, HyperLogLogPlusCounterNew> cuboidHLLMap = Maps.newHashMap();
+    protected Map<Long, HLLCounter> cuboidHLLMap = Maps.newHashMap();
 
     public MergeStatisticsStep() {
         super();
@@ -100,7 +100,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
                             // sampling percentage;
                             averageSamplingPercentage += Bytes.toInt(value.getBytes());
                         } else if (key.get() > 0) {
-                            HyperLogLogPlusCounterNew hll = new HyperLogLogPlusCounterNew(kylinConf.getCubeStatsHLLPrecision());
+                            HLLCounter hll = new HLLCounter(kylinConf.getCubeStatsHLLPrecision());
                             ByteArray byteArray = new ByteArray(value.getBytes());
                             hll.readRegisters(byteArray.asBuffer());
 

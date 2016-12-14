@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.apache.kylin.measure.hll2;
+package org.apache.kylin.measure.hllc;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterOld;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
+import org.apache.kylin.measure.hllc.HLLCounterOld;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.measure.hllc.RegisterType;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,7 +36,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by xiefan on 16-12-12.
  */
-public class HyperLogLogCounterNewTest {
+@SuppressWarnings("deprecation")
+public class HLLCounterTest {
     ByteBuffer buf = ByteBuffer.allocate(1024 * 1024);
     Random rand1 = new Random(1);
     Random rand2 = new Random(2);
@@ -47,8 +48,8 @@ public class HyperLogLogCounterNewTest {
 
     @Test
     public void testOneAdd() throws IOException {
-        HyperLogLogPlusCounterNew hllc = new HyperLogLogPlusCounterNew(14);
-        HyperLogLogPlusCounterNew one = new HyperLogLogPlusCounterNew(14);
+        HLLCounter hllc = new HLLCounter(14);
+        HLLCounter one = new HLLCounter(14);
         for (int i = 0; i < 1000000; i++) {
             one.clear();
             one.add(rand1.nextInt());
@@ -60,7 +61,7 @@ public class HyperLogLogCounterNewTest {
 
     @Test
     public void tesSparseEstimate() throws IOException {
-        HyperLogLogPlusCounterNew hllc = new HyperLogLogPlusCounterNew(14);
+        HLLCounter hllc = new HLLCounter(14);
         for (int i = 0; i < 10; i++) {
             hllc.add(i);
         }
@@ -96,41 +97,55 @@ public class HyperLogLogCounterNewTest {
         Assert.assertTrue(errorCount3 <= n * 0.02);
     }
 
-    /*
-    compare the result of two different hll counter
-     */
+    /* compare the result of two different hll counter */
     @Test
-    public void compareResult() {
+    public void compareResult() throws IOException {
         int p = 12; //4096
         int m = 1 << p;
+        
+        ByteBuffer buf = ByteBuffer.allocate(1024 * 1024);
     
         for (int t = 0; t < 5; t++) {
             //compare sparse
-            HyperLogLogPlusCounterOld oldCounter = new HyperLogLogPlusCounterOld(p);
-            HyperLogLogPlusCounterNew newCounter = new HyperLogLogPlusCounterNew(p);
-    
+            HLLCounterOld oldCounter = new HLLCounterOld(p);
+            HLLCounter newCounter = new HLLCounter(p);
+            HLLCounter newCounter2 = new HLLCounter(p);
+
             for (int i = 0; i < 20; i++) {
-                //int r = rand1.nextInt();
-                oldCounter.add(i);
-                newCounter.add(i);
+                int r = rand1.nextInt();
+                oldCounter.add(r);
+                newCounter.add(r);
             }
             assertEquals(RegisterType.SPARSE, newCounter.getRegisterType());
             assertEquals(oldCounter.getCountEstimate(), newCounter.getCountEstimate());
+            
+            buf.clear();
+            oldCounter.writeRegisters(buf);
+            buf.flip();
+            newCounter2.readRegisters(buf);
+            assertEquals(oldCounter.getCountEstimate(), newCounter2.getCountEstimate());
+            
             //compare dense
-            for (int i = 0; i < m; i++) {
-                oldCounter.add(i);
-                newCounter.add(i);
+            for (int i = 0; i < m / 2; i++) {
+                int r = rand1.nextInt();
+                oldCounter.add(r);
+                newCounter.add(r);
             }
             assertEquals(RegisterType.DENSE, newCounter.getRegisterType());
             assertEquals(oldCounter.getCountEstimate(), newCounter.getCountEstimate());
+            
+            buf.clear();
+            oldCounter.writeRegisters(buf);
+            buf.flip();
+            newCounter2.readRegisters(buf);
+            assertEquals(oldCounter.getCountEstimate(), newCounter2.getCountEstimate());
         }
-    
     }
 
     @Test
     public void testPeekLength() throws IOException {
-        HyperLogLogPlusCounterNew hllc = new HyperLogLogPlusCounterNew(10);
-        HyperLogLogPlusCounterNew copy = new HyperLogLogPlusCounterNew(10);
+        HLLCounter hllc = new HLLCounter(10);
+        HLLCounter copy = new HLLCounter(10);
         byte[] value = new byte[10];
         for (int i = 0; i < 200000; i++) {
             rand1.nextBytes(value);
@@ -154,8 +169,8 @@ public class HyperLogLogCounterNewTest {
     public void testEquivalence() {
         byte[] a = new byte[] { 0, 3, 4, 42, 2, 2 };
         byte[] b = new byte[] { 3, 4, 42 };
-        HyperLogLogPlusCounterNew ha = new HyperLogLogPlusCounterNew();
-        HyperLogLogPlusCounterNew hb = new HyperLogLogPlusCounterNew();
+        HLLCounter ha = new HLLCounter();
+        HLLCounter hb = new HLLCounter();
         ha.add(a, 1, 3);
         hb.add(b);
 
@@ -166,9 +181,9 @@ public class HyperLogLogCounterNewTest {
     public void testAutoChangeToSparse() {
         int p = 15;
         int m = 1 << p;
-        HyperLogLogPlusCounterNew counter = new HyperLogLogPlusCounterNew(p);
+        HLLCounter counter = new HLLCounter(p);
         assertEquals(RegisterType.SPARSE, counter.getRegisterType());
-        double over = HyperLogLogPlusCounterNew.overflowFactor * m;
+        double over = HLLCounter.OVERFLOW_FACTOR * m;
         int overFlow = (int) over + 1000;
         for (int i = 0; i < overFlow; i++)
             counter.add(i);
@@ -180,12 +195,12 @@ public class HyperLogLogCounterNewTest {
         //test sparse serialize
         int p = 15;
         int m = 1 << p;
-        HyperLogLogPlusCounterNew counter = new HyperLogLogPlusCounterNew(p);
+        HLLCounter counter = new HLLCounter(p);
         counter.add(123);
         assertEquals(RegisterType.SPARSE, counter.getRegisterType());
         checkSerialize(counter);
         //test dense serialize
-        double over = HyperLogLogPlusCounterNew.overflowFactor * m;
+        double over = HLLCounter.OVERFLOW_FACTOR * m;
         int overFlow = (int) over + 1000;
         for (int i = 0; i < overFlow; i++)
             counter.add(i);
@@ -231,7 +246,7 @@ public class HyperLogLogCounterNewTest {
         int ln = 20;
         int dn = 100 * (round + 1);
         Set<String> testSet = new HashSet<String>();
-        HyperLogLogPlusCounterNew[] hllcs = new HyperLogLogPlusCounterNew[ln];
+        HLLCounter[] hllcs = new HLLCounter[ln];
         for (int i = 0; i < ln; i++) {
             hllcs[i] = newHLLC();
             for (int k = 0; k < dn; k++) {
@@ -242,8 +257,8 @@ public class HyperLogLogCounterNewTest {
                 }
             }
         }
-        HyperLogLogPlusCounterNew mergeHllc = newHLLC();
-        for (HyperLogLogPlusCounterNew hllc : hllcs) {
+        HLLCounter mergeHllc = newHLLC();
+        for (HLLCounter hllc : hllcs) {
             mergeHllc.merge(hllc);
         }
 
@@ -267,14 +282,14 @@ public class HyperLogLogCounterNewTest {
         return actualError;
     }
 
-    private HyperLogLogPlusCounterNew newHLLC() {
-        return new HyperLogLogPlusCounterNew(16);
+    private HLLCounter newHLLC() {
+        return new HLLCounter(16);
     }
 
     private void count(int n) throws IOException {
         Set<String> testSet = generateTestData(n);
 
-        HyperLogLogPlusCounterNew hllc = newHLLC();
+        HLLCounter hllc = newHLLC();
         for (String testData : testSet) {
             hllc.add(Bytes.toBytes(testData));
         }
@@ -290,7 +305,7 @@ public class HyperLogLogCounterNewTest {
         checkSerialize(hllc);
     }
 
-    private void checkSerialize(HyperLogLogPlusCounterNew hllc) throws IOException {
+    private void checkSerialize(HLLCounter hllc) throws IOException {
         long estimate = hllc.getCountEstimate();
         buf.clear();
         hllc.writeRegisters(buf);

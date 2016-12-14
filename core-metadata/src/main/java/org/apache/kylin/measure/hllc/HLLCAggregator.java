@@ -23,10 +23,10 @@ import org.apache.kylin.measure.MeasureAggregator;
 /**
  */
 @SuppressWarnings("serial")
-public class HLLCAggregator extends MeasureAggregator<HyperLogLogPlusCounterNew> {
+public class HLLCAggregator extends MeasureAggregator<HLLCounter> {
 
     final int precision;
-    HyperLogLogPlusCounterNew sum = null;
+    HLLCounter sum = null;
 
     public HLLCAggregator(int precision) {
         this.precision = precision;
@@ -38,15 +38,15 @@ public class HLLCAggregator extends MeasureAggregator<HyperLogLogPlusCounterNew>
     }
 
     @Override
-    public void aggregate(HyperLogLogPlusCounterNew value) {
+    public void aggregate(HLLCounter value) {
         if (sum == null)
-            sum = new HyperLogLogPlusCounterNew(value);
+            sum = new HLLCounter(value);
         else
             sum.merge(value);
     }
 
     @Override
-    public HyperLogLogPlusCounterNew getState() {
+    public HLLCounter getState() {
         return sum;
     }
 

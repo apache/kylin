@@ -18,61 +18,67 @@
 
 package org.apache.kylin.measure.hllc;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
-import org.apache.kylin.common.util.BytesUtil;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Map;
+import java.util.Arrays;
 
+import org.apache.kylin.common.util.BytesUtil;
+
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
+/**
+ * Deprecated, use HLLCounter instead.
+ * 
+ * About compression, test on HLLC data shows
+ * 
+ * - LZF compression ratio is around 65%-80%, fast
+ * - GZIP compression ratio is around 41%-46%, very slow
+ */
+@Deprecated
 @SuppressWarnings("serial")
-public class HyperLogLogPlusCounterNew implements Serializable, Comparable<HyperLogLogPlusCounterNew> {
+public class HLLCounterOld implements Serializable, Comparable<HLLCounterOld> {
 
-    private int p;
+    private final int p;
+    private final int m;
+    private final HashFunction hashFunc;
+    byte[] registers;
+    int singleBucket;
 
-    private int m;
+    public HLLCounterOld() {
+        this(10);
+    }
 
-    private HashFunction hashFunc = Hashing.murmur3_128();
+    public HLLCounterOld(int p) {
+        this(p, Hashing.murmur3_128());
+    }
 
-    private Register register;
+    public HLLCounterOld(HLLCounterOld another) {
+        this(another.p, another.hashFunc);
+        merge(another);
+    }
 
-    public static double overflowFactor = 0.01;
-
-    public HyperLogLogPlusCounterNew(int p, RegisterType type, HashFunction hashFunc) {
+    /** The larger p is, the more storage (2^p bytes), the better accuracy */
+    private HLLCounterOld(int p, HashFunction hashFunc) {
         this.p = p;
         this.m = 1 << p;//(int) Math.pow(2, p);
         this.hashFunc = hashFunc;
-        if (type == RegisterType.SPARSE) {
-            double over = overflowFactor * m;
-            this.register = new SparseRegister((int) over);
+        this.registers = new byte[m];
+        this.singleBucket = -1;
+    }
+
+    public void clear() {
+        byte zero = (byte) 0;
+        if (singleBucket == -1) {
+            //nothing
+        } else if (singleBucket >= 0) {
+            registers[singleBucket] = 0;
         } else {
-            this.register = new DenseRegister(p);
+            Arrays.fill(registers, zero);
         }
-    }
-
-    public HyperLogLogPlusCounterNew() {
-        this(10, RegisterType.SPARSE, Hashing.murmur3_128());
-    }
-
-    public HyperLogLogPlusCounterNew(int p) {
-        this(p, RegisterType.SPARSE, Hashing.murmur3_128());
-    }
-
-    public HyperLogLogPlusCounterNew(int p, RegisterType type) {
-        this(p, type, Hashing.murmur3_128());
-    }
-
-    public HyperLogLogPlusCounterNew(int p, HashFunction hashFunc) {
-        this(p, RegisterType.SPARSE, hashFunc);
-    }
-
-    public HyperLogLogPlusCounterNew(HyperLogLogPlusCounterNew another) {
-        this(another.p, another.hashFunc);
-        merge(another);
+        singleBucket = -1;
     }
 
     public void add(int value) {
@@ -95,31 +101,35 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
         int bucketMask = m - 1;
         int bucket = (int) (hash & bucketMask);
         int firstOnePos = Long.numberOfLeadingZeros(hash | bucketMask) + 1;
-        Byte b = register.get(bucket);
-        if (b == null || (byte) firstOnePos > b) {
-            register.set(bucket, (byte) firstOnePos);
-        }
-        if (register instanceof SparseRegister) {
-            if (((SparseRegister) register).isOverThreshold()) {
-                register = ((SparseRegister) register).toDense(p);
-            }
-        }
+
+        if (firstOnePos > registers[bucket])
+            registers[bucket] = (byte) firstOnePos;
+
+        if (singleBucket == -1)
+            singleBucket = bucket;
+        else
+            singleBucket = Integer.MIN_VALUE;
     }
 
-    public void merge(HyperLogLogPlusCounterNew another) {
+    public void merge(HLLCounterOld another) {
         assert this.p == another.p;
         assert this.hashFunc == another.hashFunc;
-        if (register instanceof SparseRegister && another.register instanceof SparseRegister) {
-            register.merge(another.register);
-            if (((SparseRegister) register).isOverThreshold()) {
-                register = ((SparseRegister) register).toDense(p);
-            }
-        } else if (register instanceof SparseRegister && another.register instanceof DenseRegister) {
-            register = ((SparseRegister) register).toDense(p);
-            register.merge(another.register);
+
+        // quick path for single value HLLC
+        if (another.singleBucket == -1) {
+            return;
+        } else if (another.singleBucket >= 0) {
+            int b = another.singleBucket;
+            if (registers[b] < another.registers[b])
+                registers[b] = another.registers[b];
         } else {
-            register.merge(another.register);
+            // normal path
+            for (int i = 0; i < m; i++) {
+                if (registers[i] < another.registers[i])
+                    registers[i] = another.registers[i];
+            }
         }
+        singleBucket = Integer.MIN_VALUE;
     }
 
     public long getCountEstimate() {
@@ -132,6 +142,21 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
 
     public double getErrorRate() {
         return 1.04 / Math.sqrt(m);
+    }
+
+    private int size() {
+        if (singleBucket == -1) {
+            return 0;
+        } else if (singleBucket >= 0) {
+            return 1;
+        } else {
+            int size = 0;
+            for (int i = 0; i < m; i++) {
+                if (registers[i] > 0)
+                    size++;
+            }
+            return size;
+        }
     }
 
     @Override
@@ -148,18 +173,12 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
         double registerSum;
         int zeroBuckets;
 
-        public HLLCSnapshot(HyperLogLogPlusCounterNew hllc) {
+        public HLLCSnapshot(HLLCounterOld hllc) {
             p = (byte) hllc.p;
             registerSum = 0;
             zeroBuckets = 0;
-            Register register = hllc.getRegister();
-            DenseRegister dr;
-            if (register instanceof SparseRegister) {
-                dr = ((SparseRegister) register).toDense(p);
-            } else {
-                dr = (DenseRegister) register;
-            }
-            byte[] registers = dr.getRawRegister();
+
+            byte[] registers = hllc.registers;
             for (int i = 0; i < hllc.m; i++) {
                 if (registers[i] == 0) {
                     registerSum++;
@@ -186,36 +205,6 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        dumpErrorRates();
-    }
-
-    static void dumpErrorRates() {
-        for (int p = 10; p <= 18; p++) {
-            double rate = new HyperLogLogPlusCounterNew(p, RegisterType.SPARSE).getErrorRate();
-            double er = Math.round(rate * 10000) / 100D;
-            double er2 = Math.round(rate * 2 * 10000) / 100D;
-            double er3 = Math.round(rate * 3 * 10000) / 100D;
-            long size = Math.round(Math.pow(2, p));
-            System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%" + ",\t99.7% err<" + er3 + "%");
-        }
-    }
-
-    public Register getRegister() {
-        return register;
-    }
-
-    public void clear() {
-        register.clear();
-    }
-
-    public RegisterType getRegisterType() {
-        if (register instanceof SparseRegister)
-            return RegisterType.SPARSE;
-        else
-            return RegisterType.DENSE;
-    }
-
     // ============================================================================
 
     public void writeRegisters(final ByteBuffer out) throws IOException {
@@ -225,23 +214,20 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
 
         // decide output scheme -- map (3*size bytes) or array (2^p bytes)
         byte scheme;
-        //byte type;
-        if (register instanceof SparseRegister || 5 + (indexLen + 1) * size < m) {
-            scheme = 0; //map
-        } else {
+        if (5 + (indexLen + 1) * size < m) // 5 is max len of vint
+            scheme = 0; // map
+        else
             scheme = 1; // array
-        }
         out.put(scheme);
+
         if (scheme == 0) { // map scheme
             BytesUtil.writeVInt(size, out);
-            if (register instanceof SparseRegister) { //sparse　register
-                Collection<Map.Entry<Integer, Byte>> allValue = ((SparseRegister) register).getAllValue();
-                for (Map.Entry<Integer, Byte> entry : allValue) {
-                    writeUnsigned(entry.getKey(), indexLen, out);
-                    out.put(entry.getValue());
-                }
-            } else { //dense register
-                byte[] registers = ((DenseRegister) register).getRawRegister();
+            if (singleBucket == -1) {
+                // no non-zero register
+            } else if (singleBucket >= 0) {
+                writeUnsigned(singleBucket, indexLen, out);
+                out.put(registers[singleBucket]);
+            } else {
                 for (int i = 0; i < m; i++) {
                     if (registers[i] > 0) {
                         writeUnsigned(i, indexLen, out);
@@ -250,35 +236,36 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
                 }
             }
         } else if (scheme == 1) { // array scheme
-            out.put(((DenseRegister) register).getRawRegister());
+            out.put(registers);
         } else
             throw new IllegalStateException();
     }
 
     public void readRegisters(ByteBuffer in) throws IOException {
         byte scheme = in.get();
+
         if (scheme == 0) { // map scheme
             clear();
             int size = BytesUtil.readVInt(in);
             if (size > m)
                 throw new IllegalArgumentException("register size (" + size + ") cannot be larger than m (" + m + ")");
-            double over = overflowFactor * m;
-            if (size > (int) over) {
-                this.register = new DenseRegister(p);
-            } else {
-                this.register = new SparseRegister((int) over);//default is sparse
-            }
             int indexLen = getRegisterIndexSize();
             int key = 0;
             for (int i = 0; i < size; i++) {
                 key = readUnsigned(in, indexLen);
-                register.set(key, in.get());
+                registers[key] = in.get();
             }
+
+            if (size == 0)
+                singleBucket = -1;
+            else if (size == 1)
+                singleBucket = key;
+            else
+                singleBucket = Integer.MIN_VALUE;
+
         } else if (scheme == 1) { // array scheme
-            this.register = new DenseRegister(p);
-            for (int i = 0; i < m; i++) {
-                register.set(i, in.get());
-            }
+            in.get(registers);
+            singleBucket = Integer.MIN_VALUE;
         } else
             throw new IllegalStateException();
     }
@@ -286,6 +273,7 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
     public int peekLength(ByteBuffer in) {
         int mark = in.position();
         int len;
+
         byte scheme = in.get();
         if (scheme == 0) { // map scheme
             int size = BytesUtil.readVInt(in);
@@ -303,6 +291,15 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
         return 1 + m;
     }
 
+    /*public void writeRegistersArray(final ByteBuffer out) {
+        out.put(this.registers);
+    }
+
+    public void readRegistersArray(ByteBuffer in) {
+        in.get(registers, 0, m);
+        singleBucket = Integer.MIN_VALUE;
+    }*/
+
     private int getRegisterIndexSize() {
         return (p - 1) / 8 + 1; // 2 when p=16, 3 when p=17
     }
@@ -313,7 +310,7 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
         int result = 1;
         result = prime * result + ((hashFunc == null) ? 0 : hashFunc.hashCode());
         result = prime * result + p;
-        result = prime * result + register.getHashCode();
+        result = prime * result + Arrays.hashCode(registers);
         return result;
     }
 
@@ -325,7 +322,7 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
             return false;
         if (getClass() != obj.getClass())
             return false;
-        HyperLogLogPlusCounterNew other = (HyperLogLogPlusCounterNew) obj;
+        HLLCounterOld other = (HLLCounterOld) obj;
         if (hashFunc == null) {
             if (other.hashFunc != null)
                 return false;
@@ -333,15 +330,13 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
             return false;
         if (p != other.p)
             return false;
-        if (this.getRegisterType() != other.getRegisterType())
-            return false;
-        if (register.getHashCode() != other.register.getHashCode())
+        if (!Arrays.equals(registers, other.registers))
             return false;
         return true;
     }
 
     @Override
-    public int compareTo(HyperLogLogPlusCounterNew o) {
+    public int compareTo(HLLCounterOld o) {
         if (o == null)
             return 1;
 
@@ -354,6 +349,21 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
             return 1;
         else
             return -1;
+    }
+
+    public static void main(String[] args) throws IOException {
+        dumpErrorRates();
+    }
+
+    static void dumpErrorRates() {
+        for (int p = 10; p <= 18; p++) {
+            double rate = new HLLCounterOld(p).getErrorRate();
+            double er = Math.round(rate * 10000) / 100D;
+            double er2 = Math.round(rate * 2 * 10000) / 100D;
+            double er3 = Math.round(rate * 3 * 10000) / 100D;
+            long size = Math.round(Math.pow(2, p));
+            System.out.println("HLLC" + p + ",\t" + size + " bytes,\t68% err<" + er + "%" + ",\t95% err<" + er2 + "%" + ",\t99.7% err<" + er3 + "%");
+        }
     }
 
     /**
@@ -380,9 +390,4 @@ public class HyperLogLogPlusCounterNew implements Serializable, Comparable<Hyper
         }
         return integer;
     }
-
-    private int size() {
-        return register.getSize();
-    }
-
 }

@@ -27,12 +27,9 @@ import java.util.TreeMap;
  */
 public class SparseRegister implements Register {
 
-    private int overThreshold;
-
     private Map<Integer, Byte> sparseRegister = new TreeMap<>();
 
-    public SparseRegister(int overThreshold) {
-        this.overThreshold = overThreshold;
+    public SparseRegister() {
     }
 
     public DenseRegister toDense(int p) {
@@ -49,8 +46,9 @@ public class SparseRegister implements Register {
     }
 
     @Override
-    public Byte get(int pos) {
-        return sparseRegister.get(pos);
+    public byte get(int pos) {
+        Byte b = sparseRegister.get(pos);
+        return b == null ? 0 : b;
     }
 
     @Override
@@ -58,8 +56,8 @@ public class SparseRegister implements Register {
         assert another instanceof SparseRegister;
         SparseRegister sr = (SparseRegister) another;
         for (Map.Entry<Integer, Byte> entry : sr.sparseRegister.entrySet()) {
-            Byte v = sparseRegister.get(entry.getKey());
-            if (v == null || entry.getValue() > v)
+            byte v = get(entry.getKey());
+            if (entry.getValue() > v)
                 sparseRegister.put(entry.getKey(), entry.getValue());
         }
     }
@@ -75,20 +73,28 @@ public class SparseRegister implements Register {
     }
 
     @Override
-    public int getHashCode() {
+    public int hashCode() {
         final int prime = 31;
         int result = 1;
-        for (Map.Entry<Integer, Byte> entry : sparseRegister.entrySet()) {
-            result = prime * result + entry.getKey();
-            result = prime * result + entry.getValue();
-        }
+        result = prime * result + ((sparseRegister == null) ? 0 : sparseRegister.hashCode());
         return result;
     }
 
-    public boolean isOverThreshold() {
-        if (this.sparseRegister.size() > overThreshold)
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
             return true;
-        return false;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SparseRegister other = (SparseRegister) obj;
+        if (sparseRegister == null) {
+            if (other.sparseRegister != null)
+                return false;
+        } else if (!sparseRegister.equals(other.sparseRegister))
+            return false;
+        return true;
     }
 
     public Collection<Map.Entry<Integer, Byte>> getAllValue() {

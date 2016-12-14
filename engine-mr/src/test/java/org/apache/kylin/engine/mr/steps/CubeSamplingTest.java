@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounterNew;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,7 +45,7 @@ public class CubeSamplingTest {
     private Integer[][] allCuboidsBitSet;
     private HashFunction hf = null;
     private long baseCuboidId;
-    private HyperLogLogPlusCounterNew[] allCuboidsHLL = null;
+    private HLLCounter[] allCuboidsHLL = null;
     private final byte[] seperator = Bytes.toBytes(",");
 
     @Before
@@ -61,9 +61,9 @@ public class CubeSamplingTest {
 
         allCuboidsBitSet = allCuboidsBitSetList.toArray(new Integer[allCuboidsBitSetList.size()][]);
         System.out.println("Totally have " + allCuboidsBitSet.length + " cuboids.");
-        allCuboidsHLL = new HyperLogLogPlusCounterNew[allCuboids.size()];
+        allCuboidsHLL = new HLLCounter[allCuboids.size()];
         for (int i = 0; i < allCuboids.size(); i++) {
-            allCuboidsHLL[i] = new HyperLogLogPlusCounterNew(14);
+            allCuboidsHLL[i] = new HLLCounter(14);
         }
 
         //  hf = Hashing.goodFastHash(32);
