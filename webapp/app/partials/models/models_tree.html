@@ -41,15 +41,23 @@
   <div>
     <h3 class="text-info">Models</h3>
   </div>
+
     <div style="width:100%; height:{{window}}px; overflow:auto;margin-top: 20px;" class="cube_model_trees">
 
         <ul class="list-group models-tree">
           <li class="list-group-item" ng-repeat="model in modelsManager.models">
 
-            <div class="pull-right" showonhoverparent style="display:none;">
-              <a ng-click="editModel(model)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-pencil fa-lg fa-fw"></span></a>
-              <a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-copy fa-lg fa-fw"></span></a>
-              <a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))"><span class="fa fa-trash-o fa-lg fa-fw"></span></a>
+            <div class="pull-right" showonhoverparent style="display:none;" >
+              <div ng-click="$event.stopPropagation();" class="btn-group">
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listModelAccess(model)">
+                  Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu" ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(model, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask))">
+                  <li><a ng-click="editModel(model)"  title="Edit Model" style="cursor:pointer;margin-right: 8px;" >Edit</a></li>
+                  <li><a ng-click="cloneModel(model)" title="Clone Model"  style="cursor:pointer;margin-right: 8px;" >Clone </a></li>
+                  <li><a ng-click="dropModel(model)" title="Drop Model"  style="cursor:pointer;margin-right: 8px;">Drop</a></li>
+                </ul>
+              </div>
             </div>
             <span class="strong"><a style="cursor: pointer;word-break:break-all;" ng-click="openModal(model)">{{model.name}}</a></span>
 

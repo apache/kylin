@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, $animate) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, AccessService) {
 
   //tree data
 
@@ -131,21 +131,28 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     var cubename = [];
     var modelstate=false;
     var i=0;
-    if (model.cubes.length != 0) {
-      angular.forEach(model.cubes,function(cube){
-        if (cube.status=="READY"){
-          modelstate=true;
-          cubename[i] =cube.name;
-          i++;
-        }
-      })
-    }
-    if(modelstate==false){
-      $location.path("/models/edit/"+model.name);
-    }
-    else{
-      SweetAlert.swal('Sorry','This model is still used by '+ cubename.join(','));
-    }
+
+    CubeService.list({modelName:model.name}, function (_cubes) {
+      model.cubes = _cubes;
+
+      if (model.cubes.length != 0) {
+        angular.forEach(model.cubes,function(cube){
+          if (cube.status=="READY"){
+            modelstate=true;
+            cubename[i] =cube.name;
+            i++;
+          }
+        })
+      }
+
+      if(modelstate==false){
+        $location.path("/models/edit/"+model.name);
+      }
+      else{
+        SweetAlert.swal('Sorry','This model is still used by '+ cubename.join(','));
+      }
+    })
+
   };
 
   $scope.cloneModel = function(model){
@@ -174,6 +181,21 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
         }
       }
     });
+  };
+
+  $scope.listModelAccess = function (model) {
+    if(model.uuid){
+      AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
+        model.accessEntities = accessEntities;
+        try {
+          if (!model.owner) {
+            model.owner = accessEntities[0].sid.principal;
+          }
+        } catch (error) {
+          $log.error("No acl info.");
+        }
+      })
+    }
   };
 
   var ModelDetailModalCtrl = function ($scope, $location, $modalInstance, scope) {
