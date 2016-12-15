@@ -20,26 +20,13 @@
 
 KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cubeConfig,MetaModel,SweetAlert,ModelGraphService,$log,TableModel,ModelService,loadingRequest,modelsManager,VdmUtil) {
     $scope.modelsManager = modelsManager;
+    $scope.VdmUtil = VdmUtil;
     angular.forEach($scope.modelsManager.selectedModel.lookups,function(joinTable){
       if(!joinTable.alias){
         joinTable.alias=VdmUtil.removeNameSpace(joinTable.table);
       }
     });
-    $scope.init = function (){
-      $scope.FactTable={root:$scope.modelsManager.selectedModel.fact_table};
-      $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)]=$scope.modelsManager.selectedModel.fact_table;
-      $scope.tableAliasMap[$scope.modelsManager.selectedModel.fact_table]=VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table);
-      $scope.aliasName.push(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table));
-      angular.forEach($scope.modelsManager.selectedModel.lookups,function(joinTable){
-        $scope.aliasTableMap[joinTable.alias]=joinTable.table;
-        $scope.tableAliasMap[joinTable.table]=joinTable.alias;
-        $scope.aliasName.push(joinTable.alias);
-      });
-    }
-    if($scope.state.mode=='edit'){
-      $scope.init();
-    }
-
+    $scope.FactTable={root:$scope.modelsManager.selectedModel.fact_table};
     $scope.cubeConfig = cubeConfig;
     var DataModel = function () {
         return {
@@ -134,13 +121,11 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
         $scope.tableAliasMap[$scope.newLookup.table]=$scope.newLookup.alias;
         $scope.aliasName.push($scope.newLookup.alias);
         lookupList.push(angular.copy($scope.newLookup));
-
         $scope.resetParams();
     };
 
     $scope.doneEditLookup = function () {
         // Copy edited model to destination model.
-        angular.copy($scope.newLookup, lookupList[$scope.lookupState.editingIndex]);
         var oldAlias=$scope.aliasName[$scope.lookupState.editingIndex+1];
         var newAlias=$scope.newLookup.alias;
         if(oldAlias!=newAlias){
@@ -168,7 +153,9 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
             for(var i=0;i< modelsManager.selectedModel.metrics.length;i++){
                modelsManager.selectedModel.metrics[i]= modelsManager.selectedModel.metrics[i].replace(oldAlias+'.',newAlias+'.');
             }
-            modelsManager.selectedModel.partition_desc.partition_date_column = modelsManager.selectedModel.partition_desc.partition_date_column.replace(oldAlias+'.',newAlias+'.');
+            if(modelsManager.selectedModel.partition_desc.partition_date_column){
+              modelsManager.selectedModel.partition_desc.partition_date_column = modelsManager.selectedModel.partition_desc.partition_date_column.replace(oldAlias+'.',newAlias+'.');
+            }
           }
         }
         angular.copy($scope.newLookup,lookupList[$scope.lookupState.editingIndex]);
@@ -176,19 +163,21 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
         $scope.resetParams();
     };
     $scope.changeFactTable = function () {
-        $scope.aliasTableMap={};
+        if(!$scope.FactTable){
+         return;
+        }
         $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.FactTable.root)]=$scope.FactTable.root;
-        $scope.tableAliasMap={};
         $scope.tableAliasMap[$scope.FactTable.root]=VdmUtil.removeNameSpace($scope.FactTable.root);
-        $scope.aliasName=[VdmUtil.removeNameSpace($scope.FactTable.root)];
-        modelsManager.selectedModel.lookups = [];
-        modelsManager.selectedModel.dimensions = [];
-        modelsManager.selectedModel.metrics= [];
+        $scope.aliasName.splice(0,$scope.aliasName.length);
+        $scope.aliasName.push(VdmUtil.removeNameSpace($scope.FactTable.root));
+        modelsManager.selectedModel.lookups.splice(0,modelsManager.selectedModel.lookups.length);
+        modelsManager.selectedModel.dimensions.splice(0,modelsManager.selectedModel.dimensions.length);
+        modelsManager.selectedModel.metrics.splice(0,modelsManager.selectedModel.metrics.length);
         modelsManager.selectedModel.partition_desc.partition_date_column = null;
         $scope.modelsManager.selectedModel.fact_table=$scope.FactTable.root;
     }
     $scope.changeJoinTable = function () {
-        $scope.newLookup.alias=$scope.newLookup.table;
+        $scope.newLookup.alias=VdmUtil.removeNameSpace($scope.newLookup.table);
     }
     $scope.cancelLookup = function () {
         $scope.resetParams();
@@ -221,8 +210,6 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
             lookupList.splice(lookupList.indexOf(lookup), 1);
         }
     };
-    $scope.changeAlias = function (){
-    }
 
     $scope.changeKey = function(index){
          var join_table = $scope.newLookup.joinTable;
@@ -297,10 +284,4 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
     $scope.filterNotRoot = function (item) {
       return item.name!==modelsManager.selectedModel.fact_table;
     };
-/*    $scope.$watch('$scope.newLookup.alias', function (newValue, oldValue) {
-      if (newValue&&$scope.lookupState.editing ) {
-        console.log(newValue);
-        console.log(oldValue);
-      }
-    });*/
 });

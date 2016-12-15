@@ -25,6 +25,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     $scope.tableAliasMap={};
     $scope.aliasTableMap={};
     $scope.aliasName=[];
+    $scope.selectedAliasCubeMap={};
     $scope.route={params:$routeParams.modelName};
     $scope.modelMode = absUrl.indexOf("/models/add")!=-1?'addNewModel':absUrl.indexOf("/models/edit")!=-1?'editExistModel':'default';
 
@@ -93,8 +94,27 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
       ModelDescService.query({model_name: modelName}, function (model) {
         if (model) {
           modelsManager.selectedModel = model;
+          $scope.FactTable={root:$scope.modelsManager.selectedModel.fact_table};
+          $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)]=$scope.modelsManager.selectedModel.fact_table;
+          $scope.tableAliasMap[$scope.modelsManager.selectedModel.fact_table]=VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table);
+          $scope.aliasName.push(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table));
+          angular.forEach($scope.modelsManager.selectedModel.lookups,function(joinTable){
+            $scope.aliasTableMap[joinTable.alias]=joinTable.table;
+            $scope.tableAliasMap[joinTable.table]=joinTable.alias;
+            $scope.aliasName.push(joinTable.alias);
+          });
           CubeService.list({modelName:model.name}, function (_cubes) {
-              $scope.cubesLength = _cubes.length;
+            $scope.cubesLength = _cubes.length;
+            angular.forEach(_cubes,function(cube){
+              CubeDescService.query({cube_name:cube.name},{},function(each){
+                angular.forEach(each[0].dimensions,function(dimension){
+                  $scope.selectedAliasCubeMap[dimension.table]=true;
+                });
+                angular.forEach(each[0].measures,function(measure){
+                  $scope.selectedAliasCubeMap[VdmUtil.getNameSpaceAliasName(measure.function.parameter.value)]=true;
+                });
+              })
+            });
           });
           modelsManager.selectedModel.project = ProjectModel.getProjectByCubeModel(modelName);
           if(!ProjectModel.getSelectedProject()){

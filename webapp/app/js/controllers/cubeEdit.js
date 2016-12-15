@@ -328,6 +328,18 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if (!modelsManager.getModels().length) {
           ModelDescService.query({model_name: $scope.cubeMetaFrame.model_name}, function (_model) {
             $scope.metaModel.model = _model;
+            var rootFactTable = VdmUtil.removeNameSpace($scope.metaModel.model.fact_table);
+            $scope.aliasName.push(rootFactTable);
+            $scope.aliasTableMap[rootFactTable]=$scope.metaModel.model.fact_table;
+            $scope.tableAliasMap[$scope.metaModel.model.fact_table]=rootFactTable;
+            angular.forEach($scope.metaModel.model.lookups,function(joinTable){
+              if(!joinTable.alias){
+                joinTable.alias=VdmUtil.removeNameSpace(joinTable.table);
+              }
+              $scope.aliasTableMap[joinTable.alias]=joinTable.table;
+              $scope.tableAliasMap[joinTable.table]=joinTable.alias;
+              $scope.aliasName.push(joinTable.alias);
+            });
           });
         }
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);

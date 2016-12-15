@@ -27,14 +27,14 @@
               <div class="row middle-popover">
                   <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Date Column</b> <i kylinpopover placement="right" title="Partition Date Column" template="partitionTip.html" class="fa fa-info-circle"></i></label>
                   <div class="col-xs-12 col-sm-6" ng-if="state.mode=='edit'">
-                      <select style="width: 45%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
+                      <select style="width: 49%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
                               ng-model="selectedTables.fact"
                               data-placement=""
                               ng-options="alias as alias for alias in availableFactTables" >
                           <option value="">--Select Partition Table--</option>
                       </select>
 
-                      <select style="width: 45%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
+                      <select style="width: 49%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
                             ng-model="modelsManager.selectedModel.partition_desc.partition_date_column"
                             ng-change="partitionChange(modelsManager.selectedModel.partition_desc.partition_date_column)"
                             data-placement=""
