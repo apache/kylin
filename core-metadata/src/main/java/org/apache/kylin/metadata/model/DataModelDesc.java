@@ -209,6 +209,11 @@ public class DataModelDesc extends RootPersistentEntity {
         return filterCondition;
     }
 
+    // for internal only
+    public void setFilterCondition(String filterCondition) {
+        this.filterCondition = filterCondition;
+    }
+    
     public PartitionDesc getPartitionDesc() {
         return partitionDesc;
     }
