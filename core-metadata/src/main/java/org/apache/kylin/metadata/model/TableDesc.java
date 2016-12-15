@@ -26,6 +26,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringSplitter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -47,6 +48,10 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private int sourceType = ISourceAware.ID_HIVE;
     @JsonProperty("table_type")
     private String tableType;
+    
+    @JsonProperty("data_gen")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String dataGen;
 
     private DatabaseDesc database = new DatabaseDesc();
 
@@ -158,6 +163,10 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public int getColumnCount() {
         return getMaxColumnIndex() + 1;
+    }
+
+    public String getDataGen() {
+        return dataGen;
     }
 
     public void init() {

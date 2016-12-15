@@ -33,20 +33,21 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceTool;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
-import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.kylin.job.streaming.StreamDataLoader;
 import org.apache.kylin.job.streaming.StreamingTableDataGenerator;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.source.datagen.ModelDataGenerator;
 import org.apache.kylin.source.hive.HiveClientFactory;
-import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.source.hive.IHiveClient;
 import org.apache.kylin.source.kafka.TimedJsonStreamParser;
 import org.apache.maven.model.Model;
@@ -131,16 +132,15 @@ public class DeployUtil {
 
     public static void prepareTestDataForNormalCubes(String cubeName) throws Exception {
 
-        String factTableName = TABLE_KYLIN_FACT.toUpperCase();
-        String content = null;
-
         boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
         if (!buildCubeUsingProvidedData) {
             System.out.println("build cube with random dataset");
+            
             // data is generated according to cube descriptor and saved in resource store
-            content = FactTableGenerator.generate(cubeName, "10000", "0.6", null);
-            assert content != null;
-            overrideFactTableData(content, factTableName);
+            MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+            DataModelDesc model = mgr.getDataModelDesc("test_kylin_inner_join_model_desc");
+            ModelDataGenerator gen = new ModelDataGenerator(model, 10000);
+            gen.generate();
         } else {
             System.out.println("build normal cubes with provided dataset");
         }
@@ -166,17 +166,6 @@ public class DeployUtil {
             sb.append(System.getProperty("line.separator"));
         }
         appendFactTableData(sb.toString(), cubeInstance.getRootFactTable());
-    }
-
-    public static void overrideFactTableData(String factTableContent, String factTableName) throws IOException {
-        // Write to resource store
-        ResourceStore store = ResourceStore.getStore(config());
-
-        InputStream in = new ByteArrayInputStream(factTableContent.getBytes("UTF-8"));
-        String factTablePath = "/data/" + factTableName + ".csv";
-        store.deleteResource(factTablePath);
-        store.putResource(factTablePath, in, System.currentTimeMillis());
-        in.close();
     }
 
     public static void appendFactTableData(String factTableContent, String factTableName) throws IOException {

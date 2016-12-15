@@ -1,23 +1,27 @@
 {
- 
   "uuid" : "e286e39e-40d7-44c2-8fa2-41b365522771",
   "name" : "TEST_KYLIN_FACT",
+  "data_gen" : "1",
   "columns" : [ {
     "id" : "1",
     "name" : "TRANS_ID",
-    "datatype" : "bigint"
+    "datatype" : "bigint",
+    "data_gen" : "ID"
   }, {
     "id" : "2",
     "name" : "CAL_DT",
-    "datatype" : "date"
+    "datatype" : "date",
+    "data_gen" : "FK,order"
   }, {
     "id" : "3",
     "name" : "LSTG_FORMAT_NAME",
-    "datatype" : "string"
+    "datatype" : "string",
+    "data_gen" : "FP-GTC|FP-non GTC|ABIN|Auction|Others"
   }, {
     "id" : "4",
     "name" : "LEAF_CATEG_ID",
-    "datatype" : "bigint"
+    "datatype" : "bigint",
+    "data_gen" : "FK,null,nullstr=0"
   }, {
     "id" : "5",
     "name" : "LSTG_SITE_ID",
@@ -29,27 +33,33 @@
   }, {
     "id" : "7",
     "name" : "PRICE",
-    "datatype" : "decimal"
+    "datatype" : "decimal",
+    "data_gen" : "RAND|.##|-100|1000"
   }, {
     "id" : "8",
     "name" : "ITEM_COUNT",
-    "datatype" : "int"
+    "datatype" : "int",
+    "data_gen" : "RAND"
   }, {
     "id" : "9",
     "name" : "SELLER_ID",
-    "datatype" : "bigint"
+    "datatype" : "bigint",
+    "data_gen" : "RAND||10000000|10001000"
   }, {
     "id" : "10",
     "name" : "USER_ID",
-    "datatype" : "varchar(32)"
+    "datatype" : "varchar(32)",
+    "data_gen" : "RAND,order"
   }, {
     "id" : "11",
     "name" : "BUYER_COUNTRY",
-    "datatype" : "string"
+    "datatype" : "string",
+    "data_gen" : "CN|DE|FR|JP|UK|US"
   }, {
     "id" : "12",
     "name" : "SELLER_COUNTRY",
-    "datatype" : "string"
+    "datatype" : "string",
+    "data_gen" : "CN|DE|FR|JP|UK|US"
   } ],
   "database" : "DEFAULT",
   "last_modified" : 0

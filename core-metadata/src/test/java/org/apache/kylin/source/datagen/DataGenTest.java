@@ -16,26 +16,23 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.job;
+package org.apache.kylin.source.datagen;
 
-import static org.junit.Assert.assertTrue;
+import java.io.IOException;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.job.dataGen.FactTableGenerator;
 import org.apache.kylin.metadata.MetadataManager;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- *
- */
 public class DataGenTest extends LocalFileMetadataTestCase {
 
     @Before
-    public void before() throws Exception {
+    public void setUp() throws Exception {
         this.createTestMetadata();
-        MetadataManager.clearCache();
     }
 
     @After
@@ -44,13 +41,27 @@ public class DataGenTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testBasics() throws Exception {
-        String content = FactTableGenerator.generate("test_kylin_cube_with_slr_ready", "10000", "1", null);// default  settings
-        //System.out.println(content);
-        assertTrue(content.contains("FP-non GTC"));
-        assertTrue(content.contains("ABIN"));
+    public void testCIConfigured() throws IOException {
+        DataModelDesc model = getModel("test_kylin_inner_join_model_desc");
+        ModelDataGenerator gen = new ModelDataGenerator(model, 100);
+        gen.outprint = true;
+        
+        gen.generate();
+    }
 
-        //DeployUtil.overrideFactTableData(content, "default.test_kylin_fact");
+    @Test
+    public void testSSBNoConfig() throws IOException {
+        DataModelDesc model = getModel("ssb");
+        ModelDataGenerator gen = new ModelDataGenerator(model, 100);
+        gen.outprint = true;
+        
+        gen.generate();
+    }
+
+    private DataModelDesc getModel(String name) {
+        MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        DataModelDesc model = mgr.getDataModelDesc(name);
+        return model;
     }
 
 }

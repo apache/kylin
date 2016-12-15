@@ -20,6 +20,7 @@ package org.apache.kylin.measure.hllc;
 import org.apache.kylin.measure.hllc.HLLCounterOld;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.measure.hllc.RegisterType;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
@@ -30,6 +31,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by xiefan on 16-12-12.
  */
+@Ignore("Save UT time")
 @SuppressWarnings("deprecation")
 public class NewHyperLogLogBenchmarkTest {
 

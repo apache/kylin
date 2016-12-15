@@ -45,6 +45,10 @@ public class ColumnDesc implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String comment;
 
+    @JsonProperty("data_gen")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String dataGen;
+
     // parsed from data type
     private DataType type;
     private DataType upgradedType;
@@ -147,6 +151,10 @@ public class ColumnDesc implements Serializable {
 
     public void setNullable(boolean nullable) {
         this.isNullable = nullable;
+    }
+    
+    public String getDataGen() {
+        return dataGen;
     }
 
     public void init(TableDesc table) {
