@@ -43,13 +43,13 @@ import org.apache.calcite.schema.impl.AbstractTableQueryable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -198,14 +198,13 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             }
         }
         //2. All integer measures in non-cube realizations
-        MetadataManager metadataManager = MetadataManager.getInstance(olapSchema.getConfig());
         for (IRealization realization : mgr.listAllRealizations(olapSchema.getProjectName())) {
             if (realization.getType() == RealizationType.INVERTED_INDEX && realization.getModel().isFactTable(sourceTable.getIdentity())) {
-                DataModelDesc dataModelDesc = realization.getModel();
-                for (String metricColumn : dataModelDesc.getMetrics()) {
-                    ColumnDesc columnDesc = metadataManager.getColumnDesc(dataModelDesc.getRootFactTable().getTableIdentity() + "." + metricColumn);
-                    if (columnDesc.getType().isIntegerFamily() && !columnDesc.getType().isBigInt())
-                        updateColumns.add(columnDesc);
+                DataModelDesc model = realization.getModel();
+                for (String metricColumn : model.getMetrics()) {
+                    TblColRef col = model.findColumn(metricColumn);
+                    if (col.getType().isIntegerFamily() && !col.getType().isBigInt())
+                        updateColumns.add(col.getColumnDesc());
                 }
             }
         }
