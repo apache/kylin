@@ -140,6 +140,7 @@ public class HiveSourceTableLoader {
             tableExtDesc.addDataSourceProp("total_file_number", String.valueOf(hiveTableMeta.fileNum));
             tableExtDesc.addDataSourceProp("hive_inputFormat", hiveTableMeta.sdInputFormat);
             tableExtDesc.addDataSourceProp("hive_outputFormat", hiveTableMeta.sdOutputFormat);
+            tableExtDesc.addDataSourceProp("skip_header_line_count", String.valueOf(hiveTableMeta.skipHeaderLineCount));
 
             metaMgr.saveTableExt(tableExtDesc);
             metaMgr.saveSourceTable(tableDesc);

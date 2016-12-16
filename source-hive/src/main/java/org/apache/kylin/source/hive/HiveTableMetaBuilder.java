@@ -32,6 +32,7 @@ public class HiveTableMetaBuilder {
     private int lastAccessTime;
     private long fileSize;
     private long fileNum;
+    private int skipHeaderLineCount;
     private boolean isNative = true;
     private List<HiveTableMeta.HiveTableColumnMeta> allColumns = Lists.newArrayList();
     private List<HiveTableMeta.HiveTableColumnMeta> partitionColumns = Lists.newArrayList();
@@ -81,6 +82,14 @@ public class HiveTableMetaBuilder {
         return this;
     }
 
+    public HiveTableMetaBuilder setSkipHeaderLineCount(String skipHeaderLineCount) {
+        if (null == skipHeaderLineCount)
+            this.skipHeaderLineCount = 0;
+        else
+            this.skipHeaderLineCount = Integer.parseInt(skipHeaderLineCount);
+        return this;
+    }
+
     public HiveTableMetaBuilder setIsNative(boolean isNative) {
         this.isNative = isNative;
         return this;
@@ -97,6 +106,6 @@ public class HiveTableMetaBuilder {
     }
 
     public HiveTableMeta createHiveTableMeta() {
-        return new HiveTableMeta(tableName, sdLocation, sdInputFormat, sdOutputFormat, owner, tableType, lastAccessTime, fileSize, fileNum, isNative, allColumns, partitionColumns);
+        return new HiveTableMeta(tableName, sdLocation, sdInputFormat, sdOutputFormat, owner, tableType, lastAccessTime, fileSize, fileNum, skipHeaderLineCount, isNative, allColumns, partitionColumns);
     }
 }
