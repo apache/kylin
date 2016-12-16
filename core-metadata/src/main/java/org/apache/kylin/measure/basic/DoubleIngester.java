@@ -37,7 +37,7 @@ public class DoubleIngester extends MeasureIngester<DoubleMutable> {
             throw new IllegalArgumentException();
 
         DoubleMutable l = current;
-        if (values[0] == null)
+        if (values[0] == null || values[0].length() == 0)
             l.set(0L);
         else
             l.set(Double.parseDouble(values[0]));

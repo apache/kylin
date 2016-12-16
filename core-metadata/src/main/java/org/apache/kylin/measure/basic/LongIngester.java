@@ -37,7 +37,7 @@ public class LongIngester extends MeasureIngester<LongMutable> {
             throw new IllegalArgumentException();
 
         LongMutable l = current;
-        if (values[0] == null)
+        if (values[0] == null || values[0].length() == 0)
             l.set(0L);
         else
             l.set(Long.parseLong(values[0]));
