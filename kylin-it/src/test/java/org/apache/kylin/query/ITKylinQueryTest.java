@@ -331,7 +331,6 @@ public class ITKylinQueryTest extends KylinTestBase {
             List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_limit"), ".sql");
             for (File sqlFile : sqlFiles) {
                 runSQL(sqlFile, false, false);
-                assertTrue(checkLimitEnabled());
                 assertTrue(checkFinalPushDownLimit());
             }
 

@@ -112,7 +112,9 @@ public class OLAPContext {
     public Set<OLAPTableScan> allTableScans = new HashSet<>();
     public TupleInfo returnTupleInfo = null;
     public boolean afterAggregate = false;
-    public boolean afterSkippedFilter = false;
+    public boolean afterHavingClauseFilter = false;
+    public boolean afterLimit = false;
+    public boolean limitPrecedesAggr = false;
     public boolean afterJoin = false;
     public boolean hasJoin = false;
 
@@ -148,7 +150,7 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, subqueryJoinParticipants, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortColumns, sortOrders);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, subqueryJoinParticipants, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortColumns, sortOrders, limitPrecedesAggr);
         return sqlDigest;
     }
 

@@ -36,7 +36,7 @@ public class GTScanRequestBuilder {
     private boolean allowStorageAggregation = true;
     private double aggCacheMemThreshold = 0;
     private int storageScanRowNumThreshold = Integer.MAX_VALUE;// storage should terminate itself when $storageScanRowNumThreshold cuboid rows are scanned, and throw exception.   
-    private int storagePushDownLimit = Integer.MAX_VALUE;// storage can quit working when $toragePushDownLimit aggregated rows are produced. 
+    private int storagePushDownLimit = Integer.MAX_VALUE;// storage can quit scanning safely when $toragePushDownLimit aggregated rows are produced. 
     private long startTime = -1;
     private long timeout = -1;
     private String storageBehavior = null;

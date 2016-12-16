@@ -254,14 +254,15 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 @Override
                 public boolean hasNext() {
 
+                    counter++;
+
                     if (counter > scanReq.getStorageScanRowNumThreshold()) {
-                        throw new GTScanExceedThresholdException("Exceed scan threshold at " + counter);
+                        throw new GTScanExceedThresholdException("Exceed scan threshold at " + counter + ", consider increasing kylin.query.memory-budget-bytes and kylin.query.scan-threshold");
                     }
 
                     if (counter % (10 * GTScanRequest.terminateCheckInterval) == 1) {
-                        logger.info("Scanned " + counter + " rows from HBase.");
+                        logger.info("scanning " + counter + "th row from HBase.");
                     }
-                    counter++;
                     return allCellLists.hasNext();
                 }
 

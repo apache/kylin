@@ -46,7 +46,6 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     protected List<CubeSegmentScanner> scanners;
     protected List<SegmentCubeTupleIterator> segmentCubeTupleIterators;
     protected Iterator<ITuple> tupleIterator;
-    protected final int storagePushDownLimit;
     protected StorageContext context;
 
     private int scanCount;
@@ -62,8 +61,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context));
         }
 
-        this.storagePushDownLimit = context.getFinalPushDownLimit();
-        if (storagePushDownLimit == Integer.MAX_VALUE) {
+        if (!context.isLimitEnabled()) {
             //normal case
             tupleIterator = Iterators.concat(segmentCubeTupleIterators.iterator());
         } else {
@@ -75,7 +73,7 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
                     return input;
                 }
             });
-            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, storagePushDownLimit, segmentCubeTupleIterators.get(0).getCubeTupleConverter().getTupleDimensionComparator()).getIterator();
+            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), segmentCubeTupleIterators.get(0).getCubeTupleConverter().getTupleDimensionComparator()).getIterator();
         }
     }
 

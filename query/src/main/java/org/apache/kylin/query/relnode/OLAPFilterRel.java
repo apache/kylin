@@ -306,7 +306,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         if (!context.afterAggregate) {
             translateFilter(context);
         } else {
-            context.afterSkippedFilter = true;//having clause is skipped
+            context.afterHavingClauseFilter = true;//having clause is skipped
         }
     }
 

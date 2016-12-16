@@ -34,42 +34,28 @@ import com.google.common.collect.Range;
 public class StorageContext {
     private static final Logger logger = LoggerFactory.getLogger(StorageContext.class);
 
-    public static final int DEFAULT_THRESHOLD = 1000000;
-
     private String connUrl;
     private int threshold;
-    private int limit;
-    private int offset;
-    private int finalPushDownLimit;
-    private boolean hasSort;
-    private boolean acceptPartialResult;
+    private int limit = Integer.MAX_VALUE;
+    private int offset = 0;
+    private int finalPushDownLimit = Integer.MAX_VALUE;
+    private boolean hasSort = false;
+    private boolean acceptPartialResult = false;
 
-    private boolean exactAggregation;
-    private boolean needStorageAggregation;
-    private boolean enableLimit;
-    private boolean enableCoprocessor;
+    private boolean exactAggregation = false;
+    private boolean needStorageAggregation = false;
+    private boolean limitEnabled = false;
+    private boolean enableCoprocessor = false;
 
-    private AtomicLong totalScanCount;
+    private AtomicLong totalScanCount = new AtomicLong();
     private Cuboid cuboid;
-    private boolean partialResultReturned;
-
-    private Range<Long> reusedPeriod;
+    private boolean partialResultReturned = false;
 
     public StorageContext() {
-        this.threshold = DEFAULT_THRESHOLD;
-        this.limit = DEFAULT_THRESHOLD;
-        this.totalScanCount = new AtomicLong();
-        this.cuboid = null;
-        this.hasSort = false;
-
-        this.exactAggregation = false;
-        this.enableLimit = false;
-        this.enableCoprocessor = false;
-
-        this.acceptPartialResult = false;
-        this.partialResultReturned = false;
-        this.finalPushDownLimit = Integer.MAX_VALUE;
+        this.threshold = KylinConfig.getInstanceFromEnv().getScanThreshold();
     }
+
+    private Range<Long> reusedPeriod;
 
     public String getConnUrl() {
         return connUrl;
@@ -92,11 +78,10 @@ public class StorageContext {
     }
 
     public void setLimit(int l) {
-        if (l > limit) {
-            //cases like : select price from (select * from kylin_sales limit 10) limit 5000
-            logger.info("Setting limit to {} but in current olap context, the limit is already {}, won't apply", l, limit);
+        if (limit != Integer.MAX_VALUE) {
+            logger.warn("Setting limit to {} but in current olap context, the limit is already {}, won't apply", l, limit);
         } else {
-            this.limit = l;
+            limit = l;
         }
     }
 
@@ -109,15 +94,11 @@ public class StorageContext {
     }
 
     public void enableLimit() {
-        this.enableLimit = true;
+        this.limitEnabled = true;
     }
 
     public boolean isLimitEnabled() {
-        return this.enableLimit;
-    }
-
-    private int getStoragePushDownLimit() {
-        return this.isLimitEnabled() ? this.getOffset() + this.getLimit() : Integer.MAX_VALUE;
+        return this.limitEnabled;
     }
 
     public int getFinalPushDownLimit() {
@@ -126,19 +107,16 @@ public class StorageContext {
 
     public void setFinalPushDownLimit(IRealization realization) {
 
-        //decide the final limit push down
-        int tempPushDownLimit = this.getStoragePushDownLimit();
-        if (tempPushDownLimit == Integer.MAX_VALUE) {
+        if (this.getLimit() == Integer.MAX_VALUE) {
             return;
         }
 
-        int pushDownLimitMax = KylinConfig.getInstanceFromEnv().getStoragePushDownLimitMax();
+        int tempPushDownLimit = this.getOffset() + this.getLimit();
+
         if (!realization.supportsLimitPushDown()) {
-            logger.info("Not enabling limit push down because cube storage type not supported");
-        } else if (tempPushDownLimit > pushDownLimitMax) {
-            logger.info("Not enabling limit push down because the limit(including offset) {} is larger than kylin.query.max-limit-pushdown {}", //
-                    tempPushDownLimit, pushDownLimitMax);
+            logger.warn("Not enabling limit push down because cube storage type not supported");
         } else {
+            this.limitEnabled = true;
             this.finalPushDownLimit = tempPushDownLimit;
             logger.info("Enable limit: " + tempPushDownLimit);
         }

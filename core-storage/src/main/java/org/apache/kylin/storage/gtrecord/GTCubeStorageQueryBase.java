@@ -383,7 +383,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
 
         if (possible) {
-            context.enableLimit();
             context.setFinalPushDownLimit(cubeInstance);
         }
     }

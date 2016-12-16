@@ -77,7 +77,9 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
         this.columnRowType = buildColumnRowType();
         this.context = implementor.getContext();
 
-        if (!context.afterSkippedFilter) {
+        // ignore limit after having clause
+        // ignore limit after another limit, e.g. select A, count(*) from (select A,B from fact group by A,B limit 100) limit 10
+        if (!context.afterHavingClauseFilter && !context.afterLimit) {
             Number limitValue = (Number) (((RexLiteral) localFetch).getValue());
             int limit = limitValue.intValue();
             this.context.storageContext.setLimit(limit);
@@ -87,6 +89,8 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
                 int offset = offsetValue.intValue();
                 this.context.storageContext.setOffset(offset);
             }
+
+            context.afterLimit = true;
         }
     }
 

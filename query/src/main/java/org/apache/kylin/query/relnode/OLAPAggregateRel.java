@@ -156,6 +156,10 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             this.context.groupByColumns.addAll(this.groups);
             this.context.aggregations.addAll(this.aggregations);
             this.context.afterAggregate = true;
+
+            if (this.context.afterLimit) {
+                this.context.limitPrecedesAggr = true;
+            }
         } else {
             for (AggregateCall aggCall : aggCalls) {
                 // check if supported by kylin
