@@ -155,8 +155,34 @@ public class RowKeyColDesc {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((column == null) ? 0 : column.hashCode());
+        return result;
+    }
+
+    @Override
     public String toString() {
         return Objects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RowKeyColDesc that = (RowKeyColDesc) o;
+
+        if (column != null ? !column.equals(that.column) : that.column != null) {
+            return false;
+        }
+
+        return true;
+    }
 }
