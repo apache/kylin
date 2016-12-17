@@ -60,9 +60,11 @@ public class SaveStatisticsStep extends AbstractExecutable {
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
             FileSystem fs = HadoopUtil.getWorkingFileSystem();
-            Path statisticsFilePath = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
-            if (!fs.exists(statisticsFilePath))
-                throw new IOException("File " + statisticsFilePath + " does not exists");
+            Path statisticsDir = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()));
+            Path statisticsFilePath = HadoopUtil.getFilterOnlyPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
+            if (statisticsFilePath == null) {
+                throw new IOException("fail to find the statistics file in base dir: " + statisticsDir);
+            }
 
             FSDataInputStream is = fs.open(statisticsFilePath);
             try {
@@ -110,7 +112,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 double overlapThreshold = kylinConf.getCubeAlgorithmAutoThreshold();
                 logger.info("mapperNumber for " + seg + " is " + mapperNumber + " and threshold is " + mapperNumLimit);
                 logger.info("mapperOverlapRatio for " + seg + " is " + mapperOverlapRatio + " and threshold is " + overlapThreshold);
- 
+
                 // in-mem cubing is good when
                 // 1) the cluster has enough mapper slots to run in parallel
                 // 2) the mapper overlap ratio is small, meaning the shuffle of in-mem MR has advantage

@@ -23,11 +23,16 @@ import java.util.List;
 
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.LazyOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
@@ -82,8 +87,8 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             int uhcReducerCount = cube.getConfig().getUHCReducerCount();
 
             int[] uhcIndex = cubeMgr.getUHCIndex(cube.getDescriptor());
-            for(int index : uhcIndex) {
-                if(index == 1) {
+            for (int index : uhcIndex) {
+                if (index == 1) {
                     reducerCount += uhcReducerCount - 1;
                 }
             }
@@ -91,7 +96,6 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
             if (reducerCount > 255) {
                 throw new IllegalArgumentException("The max reducer number for FactDistinctColumnsJob is 255, but now it is " + reducerCount + ", decrease 'kylin.engine.mr.uhc-reducer-count'");
             }
-
 
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
@@ -117,6 +121,12 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
             attachCubeMetadata(cube, job.getConfiguration());
 
+            /**
+             * don't compress the reducer output so that {@link CreateDictionaryJob} and {@link UpdateCubeInfoAfterBuildStep}
+             * could read the reducer file directly
+             */
+            job.getConfiguration().set(BatchConstants.CFG_MAPRED_OUTPUT_COMPRESS, "false");
+
             return waitForCompletion(job);
 
         } finally {
@@ -138,17 +148,21 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
 
     private void setupReducer(Path output, int numberOfReducers) throws IOException {
         job.setReducerClass(FactDistinctColumnsReducer.class);
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
-        job.setOutputKeyClass(NullWritable.class);
-        job.setOutputValueClass(Text.class);
         job.setPartitionerClass(FactDistinctColumnPartitioner.class);
         job.setNumReduceTasks(numberOfReducers);
 
-        // important, reducer writes HDFS directly at the moment
-        job.setReduceSpeculativeExecution(false);
-        
+        //make each reducer output to respective dir
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_COLUMN, SequenceFileOutputFormat.class, NullWritable.class, Text.class);
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_DICT, SequenceFileOutputFormat.class, NullWritable.class, BytesWritable.class);
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_STATISTICS, SequenceFileOutputFormat.class, LongWritable.class, BytesWritable.class);
+        MultipleOutputs.addNamedOutput(job, BatchConstants.CFG_OUTPUT_PARTITION, TextOutputFormat.class, NullWritable.class, LongWritable.class);
+
+
         FileOutputFormat.setOutputPath(job, output);
         job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
+
+        //prevent to create zero-sized default output
+        LazyOutputFormat.setOutputFormatClass(job, SequenceFileOutputFormat.class);
 
         deletePath(job.getConfiguration(), output);
     }

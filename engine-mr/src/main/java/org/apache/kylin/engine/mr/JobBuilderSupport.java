@@ -171,7 +171,7 @@ public class JobBuilderSupport {
     }
 
     public String getStatisticsPath(String jobId) {
-        return getRealizationRootPath(jobId) + "/statistics";
+        return getRealizationRootPath(jobId) + "/fact_distinct_columns/" + BatchConstants.CFG_OUTPUT_STATISTICS;
     }
 
     // ============================================================================
