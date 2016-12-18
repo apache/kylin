@@ -1173,19 +1173,26 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
 
     @Override
     public AppendTrieDictionary copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
+        //copy appendDict
         Configuration conf = new Configuration();
-        AppendTrieDictionary newDict = new AppendTrieDictionary();
-        newDict.initParams(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConvert);
-        newDict.initDictSliceMap((CachedTreeMap)dictSliceMap);
-        logger.info("Copy AppendDict from {} to {}", this.baseDir, newDict.baseDir);
-        Path srcPath = new Path(this.baseDir);
-        Path dstPath = new Path(newDict.baseDir);
+
+        Path base = new Path(baseDir);
+        FileSystem srcFs = FileSystem.get(base.toUri(), conf);
+        Path srcPath = CachedTreeMap.getLatestVersion(conf, srcFs, base);
+        Path dstPath = new Path(srcPath.toString().replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()));
+        logger.info("Copy appendDict from {} to {}", srcPath, dstPath);
+
         FileSystem dstFs = FileSystem.get(dstPath.toUri(), conf);
         if (dstFs.exists(dstPath)) {
             logger.info("Delete existing AppendDict {}", dstPath);
             dstFs.delete(dstPath, true);
         }
         FileUtil.copy(FileSystem.get(srcPath.toUri(), conf), srcPath, FileSystem.get(dstPath.toUri(), conf), dstPath, false, true, conf);
+
+        // init new AppendTrieDictionary
+        AppendTrieDictionary newDict = new AppendTrieDictionary();
+        newDict.initParams(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConverter);
+        newDict.initDictSliceMap((CachedTreeMap) dictSliceMap);
 
         return newDict;
     }

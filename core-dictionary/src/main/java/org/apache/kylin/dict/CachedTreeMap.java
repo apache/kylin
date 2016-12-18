@@ -225,7 +225,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         return getLatestVersion(conf, fs, baseDir).toUri().getPath();
     }
 
-    private static Path getLatestVersion(Configuration conf, FileSystem fs, Path baseDir) throws IOException {
+    public static Path getLatestVersion(Configuration conf, FileSystem fs, Path baseDir) throws IOException {
         String[] versions = listAllVersions(fs, baseDir);
         if (versions.length > 0) {
             return new Path(versions[versions.length - 1]);
