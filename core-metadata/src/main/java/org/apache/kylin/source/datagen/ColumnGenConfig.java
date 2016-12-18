@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 
 public class ColumnGenConfig {
@@ -69,7 +71,7 @@ public class ColumnGenConfig {
         
         if (FK.equals(values.get(0)) || (values.get(0).isEmpty() && pkValues != null)) {
             isFK = true;
-            values = pkValues;
+            values = getPkValues(modelGen, config, pkValues);
         } else if (ID.equals(values.get(0))) {
             isID = true;
             idStart = (values.size() > 1) ? Integer.parseInt(values.get(1)) : 0;
@@ -88,6 +90,20 @@ public class ColumnGenConfig {
         genNullStr = Util.parseString(config, "nullstr", "\\N"); // '\N' is null in hive
         order = Util.parseBoolean(config, "order", false);
         unique = Util.parseBoolean(config, "uniq", modelGen.isPK(col));
+    }
+
+    private List<String> getPkValues(ModelDataGenerator modelGen, Map<String, String> config, List<String> dftPkValues) throws IOException {
+        String pkColName = config.get("pk");
+        if (pkColName == null)
+            return dftPkValues;
+        
+        int cut = pkColName.lastIndexOf('.');
+        String pkTableName = pkColName.substring(0, cut);
+        pkColName = pkColName.substring(cut + 1);
+        
+        KylinConfig kylinConfig = modelGen.getModle().getConfig();
+        ColumnDesc pkcol = MetadataManager.getInstance(kylinConfig).getTableDesc(pkTableName).findColumnByName(pkColName);
+        return modelGen.getPkValues(pkcol);
     }
 
     private int guessCardinality(String col) {

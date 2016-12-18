@@ -62,7 +62,7 @@ public class ITKylinQueryTest extends KylinTestBase {
         priorities.put(RealizationType.INVERTED_INDEX, 0);
         Candidate.setPriorities(priorities);
 
-        joinType = "left";
+        joinType = "inner";
 
         setupAll();
 

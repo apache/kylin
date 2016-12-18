@@ -29,7 +29,8 @@
   }, {
     "id" : "6",
     "name" : "SLR_SEGMENT_CD",
-    "datatype" : "smallint"
+    "datatype" : "smallint",
+    "data_gen" : "FK,pk=EDW.TEST_SELLER_TYPE_DIM_TABLE.SELLER_TYPE_CD"
   }, {
     "id" : "7",
     "name" : "PRICE",

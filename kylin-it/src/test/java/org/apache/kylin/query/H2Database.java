@@ -28,6 +28,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
@@ -72,10 +73,10 @@ public class H2Database {
         try {
             tempFile = File.createTempFile("tmp_h2", ".csv");
             FileOutputStream tempFileStream = new FileOutputStream(tempFile);
-            String normalPath = "/data/" + tableDesc.getIdentity() + ".csv";
-            InputStream csvStream = metaMgr.getStore().getResource(normalPath).inputStream;
+            String path = path(tableDesc);
+            InputStream csvStream = metaMgr.getStore().getResource(path).inputStream;
 
-            org.apache.commons.io.IOUtils.copy(csvStream, tempFileStream);
+            IOUtils.copy(csvStream, tempFileStream);
 
             csvStream.close();
             tempFileStream.close();
@@ -95,6 +96,13 @@ public class H2Database {
 
         if (tempFile != null)
             tempFile.delete();
+    }
+
+    private String path(TableDesc tableDesc) {
+        if ("EDW.TEST_SELLER_TYPE_DIM".equals(tableDesc.getIdentity())) // it is a view of table below
+            return "/data/" + "EDW.TEST_SELLER_TYPE_DIM_TABLE" + ".csv";
+        else
+            return "/data/" + tableDesc.getIdentity() + ".csv";
     }
 
     private String generateCreateH2TableSql(TableDesc tableDesc, String csvFilePath) {

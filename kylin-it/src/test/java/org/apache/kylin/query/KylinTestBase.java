@@ -639,7 +639,6 @@ public class KylinTestBase {
         // Load H2 Tables (inner join)
         H2Database h2DB = new H2Database(h2Connection, config);
         h2DB.loadAllTables();
-
     }
 
     protected static void clean() {

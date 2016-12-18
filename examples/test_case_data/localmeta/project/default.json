@@ -33,16 +33,6 @@
       "realization": "test_kylin_hybrid_inner_join"
     },
     {
-      "name": "test_kylin_cube_with_view_left_join_empty",
-      "type": "CUBE",
-      "realization": "test_kylin_cube_with_view_left_join_empty"
-    },
-    {
-      "name": "test_kylin_cube_with_view_inner_join_empty",
-      "type": "CUBE",
-      "realization": "test_kylin_cube_with_view_inner_join_empty"
-    },
-    {
       "name": "ssb",
       "type": "CUBE",
       "realization": "ssb"
@@ -51,18 +41,16 @@
   "tables": [
     "DEFAULT.TEST_KYLIN_FACT",
     "EDW.TEST_CAL_DT",
-    "EDW.V_TEST_CAL_DT",
     "DEFAULT.TEST_CATEGORY_GROUPINGS",
     "EDW.TEST_SITES",
     "EDW.TEST_SELLER_TYPE_DIM",
+    "EDW.TEST_SELLER_TYPE_DIM_TABLE",
     "DEFAULT.STREAMING_TABLE"
   ],
   "models": [
     "ssb",
     "test_kylin_inner_join_model_desc",
-    "test_kylin_inner_join_view_model_desc",
     "test_kylin_left_join_model_desc",
-    "test_kylin_left_join_view_model_desc",
     "test_streaming_table_model_desc"
   ],
   "override_kylin_properties" :{

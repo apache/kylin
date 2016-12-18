@@ -34,7 +34,10 @@ public class TableGenConfig {
             dataGen = "";
         }
         
-        if (dataGen == null)
+        if (dataGen == null || "no".equals(dataGen) || "false".equals(dataGen) || "skip".equals(dataGen))
+            return;
+        
+        if (table.isView())
             return;
         
         needGen = true;

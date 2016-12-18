@@ -122,13 +122,13 @@ public class DeployUtil {
     // ============================================================================
 
     static final String TABLE_CAL_DT = "edw.test_cal_dt";
-    static final String VIEW_CAL_DT = "edw.v_test_cal_dt";
     static final String TABLE_CATEGORY_GROUPINGS = "default.test_category_groupings";
     static final String TABLE_KYLIN_FACT = "default.test_kylin_fact";
-    static final String TABLE_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
+    static final String VIEW_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
+    static final String TABLE_SELLER_TYPE_DIM_TABLE = "edw.test_seller_type_dim_table";
     static final String TABLE_SITES = "edw.test_sites";
 
-    static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM, TABLE_SITES };
+    static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM_TABLE, TABLE_SITES };
 
     public static void prepareTestDataForNormalCubes(String cubeName) throws Exception {
 
@@ -230,7 +230,7 @@ public class DeployUtil {
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
-        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM.toUpperCase())));
+        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM_TABLE.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SITES.toUpperCase())));
 
         // load data to hive tables
@@ -238,11 +238,11 @@ public class DeployUtil {
         hiveClient.executeHQL(generateLoadDataHql(TABLE_CAL_DT, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_CATEGORY_GROUPINGS, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_KYLIN_FACT, tableFileDir));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_SELLER_TYPE_DIM, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_SELLER_TYPE_DIM_TABLE, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_SITES, tableFileDir));
 
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
-        hiveCmdBuilder.addStatements(generateCreateViewHql(VIEW_CAL_DT, metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
+        hiveCmdBuilder.addStatements(generateCreateViewHql(VIEW_SELLER_TYPE_DIM, TABLE_SELLER_TYPE_DIM_TABLE));
 
         config().getCliCommandExecutor().execute(hiveCmdBuilder.build());
     }
@@ -274,14 +274,14 @@ public class DeployUtil {
         return new String[] { dropsql, ddl.toString() };
     }
 
-    private static String[] generateCreateViewHql(String viewName, TableDesc tableDesc) {
+    private static String[] generateCreateViewHql(String viewName, String tableName) {
 
-        String dropsql = "DROP VIEW IF EXISTS " + viewName + ";";
-        StringBuilder ddl = new StringBuilder();
+        String dropView = "DROP VIEW IF EXISTS " + viewName + ";\n";
+        String dropTable = "DROP TABLE IF EXISTS " + viewName + ";\n";
 
-        ddl.append("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableDesc.getIdentity() + ";\n");
+        String createSql = ("CREATE VIEW " + viewName + " AS SELECT * FROM " + tableName + ";\n");
 
-        return new String[] { dropsql, ddl.toString() };
+        return new String[] { dropView, dropTable, createSql };
     }
 
     private static String getHiveDataType(String javaDataType) {

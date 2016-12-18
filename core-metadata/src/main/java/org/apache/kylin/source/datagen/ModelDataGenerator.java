@@ -166,6 +166,9 @@ public class ModelDataGenerator {
 
     private void generateCreateTableDDL(Set<TableDesc> tables, PrintWriter out) {
         for (TableDesc t : tables) {
+            if (t.isView())
+                continue;
+            
             out.print("DROP TABLE IF EXISTS " + t.getIdentity() + ";\n");
 
             out.print("CREATE TABLE " + t.getIdentity() + "(" + "\n");
@@ -198,6 +201,11 @@ public class ModelDataGenerator {
 
     private void generateLoadDataDDL(Set<TableDesc> tables, PrintWriter out) {
         for (TableDesc t : tables) {
+            if (t.isView()) {
+                out.print("-- " + t.getIdentity() + " is view \n");
+                continue;
+            }
+            
             out.print("LOAD DATA LOCAL INPATH '" + t.getIdentity() + ".csv' OVERWRITE INTO TABLE " + t.getIdentity() + ";\n");
         }
     }
@@ -241,7 +249,7 @@ public class ModelDataGenerator {
         return null;
     }
 
-    private List<String> getPkValues(ColumnDesc pk) throws IOException {
+    public List<String> getPkValues(ColumnDesc pk) throws IOException {
         if (existsInStore(pk.getTable()) == false)
             return null;
 
