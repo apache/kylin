@@ -271,7 +271,7 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
 
         var hour = newDate.getHours()<10?'0'+newDate.getHours():newDate.getHours();
         var mins = newDate.getMinutes()<10?'0'+newDate.getMinutes():newDate.getMinutes();
-        var seconds = newDate.getSeconds()<10?'0'+newDate.getSeconds():getSeconds();
+        var seconds = newDate.getSeconds()<10?'0'+newDate.getSeconds():newDate.getSeconds();
 
         var viewVal = year+"-"+month+"-"+date+" "+hour+":"+mins+":"+seconds;
         return viewVal;
