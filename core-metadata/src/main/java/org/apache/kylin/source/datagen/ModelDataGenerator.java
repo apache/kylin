@@ -21,6 +21,7 @@ package org.apache.kylin.source.datagen;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -34,8 +35,10 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -56,10 +59,14 @@ public class ModelDataGenerator {
     boolean outprint = false; // for debug
 
     public ModelDataGenerator(DataModelDesc model, int nRows) {
-        this(model, nRows, ResourceStore.getStore(model.getConfig()), "/data");
+        this(model, nRows, ResourceStore.getStore(model.getConfig()));
     }
 
-    public ModelDataGenerator(DataModelDesc model, int nRows, ResourceStore outputStore, String outputPath) {
+    private ModelDataGenerator(DataModelDesc model, int nRows, ResourceStore outputStore) {
+        this(model, nRows, outputStore, "/data");
+    }
+    
+    private ModelDataGenerator(DataModelDesc model, int nRows, ResourceStore outputStore, String outputPath) {
         this.model = model;
         this.targetRows = nRows;
         this.outputStore = outputStore;
@@ -268,8 +275,8 @@ public class ModelDataGenerator {
     }
 
     private void saveResource(byte[] content, String path) throws IOException {
+        System.out.println("Generated " + outputStore.getReadableResourcePath(path));
         if (outprint) {
-            System.out.println("Generated " + path);
             System.out.println(Bytes.toString(content));
         }
         outputStore.putResource(path, new ByteArrayInputStream(content), System.currentTimeMillis());
@@ -287,4 +294,22 @@ public class ModelDataGenerator {
         return model;
     }
 
+    public static void main(String[] args) throws IOException {
+        String modelName = args[0];
+        int nRows = Integer.parseInt(args[1]);
+        String outputDir = args.length > 2 ? args[2] : null;
+        
+        KylinConfig conf = KylinConfig.getInstanceFromEnv();
+        DataModelDesc model = MetadataManager.getInstance(conf).getDataModelDesc(modelName);
+        ResourceStore store = outputDir == null ? ResourceStore.getStore(conf) : ResourceStore.getStore(mockup(outputDir));
+        
+        ModelDataGenerator gen = new ModelDataGenerator(model, nRows, store);
+        gen.generate();
+    }
+
+    private static KylinConfig mockup(String outputDir) {
+        KylinConfig mockup = KylinConfig.createKylinConfig(KylinConfig.getInstanceFromEnv());
+        mockup.setMetadataUrl(new File(outputDir).getAbsolutePath());
+        return mockup;
+    }
 }

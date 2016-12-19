@@ -16,6 +16,10 @@
 -- limitations under the License.
 --
 
-select * from test_kylin_fact
-  where lstg_format_name='FP-GTC' 
- limit 20
+select
+    *
+from test_kylin_fact
+    inner join TEST_CATEGORY_GROUPINGS as TEST_CATEGORY_GROUPINGS
+    ON TEST_KYLIN_FACT.LEAF_CATEG_ID = TEST_CATEGORY_GROUPINGS.LEAF_CATEG_ID AND TEST_KYLIN_FACT.LSTG_SITE_ID = TEST_CATEGORY_GROUPINGS.SITE_ID
+where lstg_format_name='FP-GTC' 
+limit 20

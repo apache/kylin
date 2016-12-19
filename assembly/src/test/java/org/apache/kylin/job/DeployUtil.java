@@ -124,13 +124,14 @@ public class DeployUtil {
     static final String TABLE_CAL_DT = "edw.test_cal_dt";
     static final String TABLE_CATEGORY_GROUPINGS = "default.test_category_groupings";
     static final String TABLE_KYLIN_FACT = "default.test_kylin_fact";
+    static final String TABLE_ORDER = "default.test_order";
     static final String VIEW_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
     static final String TABLE_SELLER_TYPE_DIM_TABLE = "edw.test_seller_type_dim_table";
     static final String TABLE_SITES = "edw.test_sites";
 
-    static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM_TABLE, TABLE_SITES };
+    static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_ORDER, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM_TABLE, TABLE_SITES };
 
-    public static void prepareTestDataForNormalCubes(String cubeName) throws Exception {
+    public static void prepareTestDataForNormalCubes(String modelName) throws Exception {
 
         boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
         if (!buildCubeUsingProvidedData) {
@@ -138,7 +139,7 @@ public class DeployUtil {
             
             // data is generated according to cube descriptor and saved in resource store
             MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-            DataModelDesc model = mgr.getDataModelDesc("test_kylin_inner_join_model_desc");
+            DataModelDesc model = mgr.getDataModelDesc(modelName);
             ModelDataGenerator gen = new ModelDataGenerator(model, 10000);
             gen.generate();
         } else {
@@ -230,6 +231,7 @@ public class DeployUtil {
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
+        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_ORDER.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM_TABLE.toUpperCase())));
         hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SITES.toUpperCase())));
 
@@ -238,6 +240,7 @@ public class DeployUtil {
         hiveClient.executeHQL(generateLoadDataHql(TABLE_CAL_DT, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_CATEGORY_GROUPINGS, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_KYLIN_FACT, tableFileDir));
+        hiveClient.executeHQL(generateLoadDataHql(TABLE_ORDER, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_SELLER_TYPE_DIM_TABLE, tableFileDir));
         hiveClient.executeHQL(generateLoadDataHql(TABLE_SITES, tableFileDir));
 

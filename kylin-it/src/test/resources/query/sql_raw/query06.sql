@@ -16,4 +16,4 @@
 -- limitations under the License.
 --
 
-select LSTG_FORMAT_NAME,LSTG_SITE_ID,SLR_SEGMENT_CD,CAL_DT,LEAF_CATEG_ID,PRICE from test_kylin_fact
+select LSTG_FORMAT_NAME,LSTG_SITE_ID,SLR_SEGMENT_CD,CAL_DT,LEAF_CATEG_ID,PRICE,TRANS_ID from test_kylin_fact

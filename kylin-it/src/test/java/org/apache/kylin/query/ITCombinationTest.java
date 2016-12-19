@@ -63,17 +63,14 @@ public class ITCombinationTest extends ITKylinQueryTest {
     @Parameterized.Parameters
     public static Collection<Object[]> configs() {
         return Arrays.asList(new Object[][] { //
-                { "inner", "on", "v2", true }, //
-                { "left", "on", "v2", true }, //
-                //{ "inner", "on", "v2", false }, // exclude view to simply model/cube selection
-                //{ "left", "on", "v1", false }, // exclude view to simply model/cube selection
-                //{ "left", "on", "v2", false }, // exclude view to simply model/cube selection
+                { "inner", "on", "v2" }, //
+                { "left", "on", "v2" }, //
         });
     }
 
-    public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine, boolean excludeViewCubes) throws Exception {
+    public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine) throws Exception {
 
-        printInfo("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle + ", query engine: " + queryEngine + ", excludeViewCubes: " + excludeViewCubes);
+        printInfo("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle + ", query engine: " + queryEngine);
 
         ITKylinQueryTest.clean();
 
@@ -81,9 +78,5 @@ public class ITCombinationTest extends ITKylinQueryTest {
         ITKylinQueryTest.setupAll();
 
         RemoveBlackoutRealizationsRule.blackList.clear();
-        if (excludeViewCubes) {
-            RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
-            RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
-        }
     }
 }

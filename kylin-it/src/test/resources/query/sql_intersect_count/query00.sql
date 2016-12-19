@@ -18,13 +18,13 @@
 
 select
 week_beg_dt as week,
-intersect_count( seller_id, lstg_format_name, array['FP-GTC']) as a,
-intersect_count( seller_id, lstg_format_name, array['Auction']) as b,
-intersect_count( seller_id, lstg_format_name, array['Others']) as c,
-intersect_count( seller_id, lstg_format_name, array['FP-GTC', 'Auction']) as ab,
-intersect_count( seller_id, lstg_format_name, array['FP-GTC', 'Others']) as ac,
-intersect_count( seller_id, lstg_format_name, array['FP-GTC', 'Auction', 'Others']) as abc,
-count(distinct seller_id) as sellers,
+intersect_count( TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['FP-GTC']) as a,
+intersect_count( TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['Auction']) as b,
+intersect_count( TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['Others']) as c,
+intersect_count( TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['FP-GTC', 'Auction']) as ab,
+intersect_count( TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['FP-GTC', 'Others']) as ac,
+intersect_count( TEST_COUNT_DISTINCT_BITMAP, lstg_format_name, array['FP-GTC', 'Auction', 'Others']) as abc,
+count(distinct TEST_COUNT_DISTINCT_BITMAP) as sellers,
 count(*) as cnt
 from test_kylin_fact left join edw.test_cal_dt on test_kylin_fact.cal_dt = edw.test_cal_dt.CAL_DT
 where week_beg_dt in (DATE '2013-12-22', DATE '2012-06-23')

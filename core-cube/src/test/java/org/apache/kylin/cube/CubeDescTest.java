@@ -41,6 +41,7 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.Maps;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author yangli9
@@ -90,6 +91,13 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
+    @Test
+    public void testCiCube() {
+        CubeDescManager mgr = CubeDescManager.getInstance(getTestConfig());
+        assertNotNull(mgr.getCubeDesc("ci_left_join_cube"));
+        assertNotNull(mgr.getCubeDesc("ci_inner_join_cube"));
+    }
+    
     @Test
     public void testGoodInit() throws Exception {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);

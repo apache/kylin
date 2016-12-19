@@ -78,19 +78,19 @@
     <!--Additional config for in-mem cubing, giving mapper more memory -->
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>512</value>
+        <value>768</value>
         <description></description>
     </property>
 
     <property>
         <name>mapreduce.map.java.opts</name>
-        <value>-Xmx384m</value>
+        <value>-Xmx700m</value>
         <description></description>
     </property>
 
     <property>
         <name>mapreduce.task.io.sort.mb</name>
-        <value>100</value>
+        <value>10</value>
         <description></description>
     </property>
 

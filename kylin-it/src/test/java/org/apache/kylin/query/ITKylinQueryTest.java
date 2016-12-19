@@ -62,12 +62,9 @@ public class ITKylinQueryTest extends KylinTestBase {
         priorities.put(RealizationType.INVERTED_INDEX, 0);
         Candidate.setPriorities(priorities);
 
-        joinType = "inner";
+        joinType = "left";
 
         setupAll();
-
-        RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
-        RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
     }
 
     @AfterClass
@@ -152,11 +149,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_subquery/query02.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_limit/query01.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
-            runSQL(sqlFile, true, true);
+            //runSQL(sqlFile, true, true);
             runSQL(sqlFile, true, false);
         }
     }
@@ -324,18 +321,10 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testLimitEnabled() throws Exception {
-        try {
-            //other cubes have strange aggregation groups
-            RemoveBlackoutRealizationsRule.whiteList.add("CUBE[name=test_kylin_cube_with_slr_empty]");
-
-            List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_limit"), ".sql");
-            for (File sqlFile : sqlFiles) {
-                runSQL(sqlFile, false, false);
-                assertTrue(checkFinalPushDownLimit());
-            }
-
-        } finally {
-            RemoveBlackoutRealizationsRule.whiteList.remove("CUBE[name=test_kylin_cube_with_slr_empty]");
+        List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_limit"), ".sql");
+        for (File sqlFile : sqlFiles) {
+            runSQL(sqlFile, false, false);
+            assertTrue(checkFinalPushDownLimit());
         }
     }
 
@@ -381,7 +370,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     
     @Test
     public void testSelectStarColumnCount() throws Exception {
-        execAndCompColumnCount("select * from test_kylin_fact limit 10", 9);
-        execAndCompColumnCount("select * from test_kylin_fact", 9);
+        execAndCompColumnCount("select * from test_kylin_fact limit 10", 12);
+        execAndCompColumnCount("select * from test_kylin_fact", 12);
     }
 }

@@ -496,11 +496,6 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.source.hive.flat-table-cluster-by-dict-column");
     }
 
-    @Deprecated
-    public String getCreateFlatHiveTableMethod() {
-        return getOptional("kylin.source.hive.create-flat-table-method", "1");
-    }
-
     // ============================================================================
     // STORAGE.HBASE
     // ============================================================================

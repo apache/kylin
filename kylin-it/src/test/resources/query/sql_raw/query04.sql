@@ -16,4 +16,4 @@
 -- limitations under the License.
 --
 
-select CAL_DT,LSTG_FORMAT_NAME from test_kylin_fact where LSTG_FORMAT_NAME = 'ABIN'
+select CAL_DT,LSTG_FORMAT_NAME,PRICE,TRANS_ID from test_kylin_fact where LSTG_FORMAT_NAME = 'ABIN'

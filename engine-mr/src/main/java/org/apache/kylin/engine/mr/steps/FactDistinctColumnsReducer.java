@@ -128,6 +128,9 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
 
             // local build dict
             isReducerLocalBuildDict = config.isReducerLocalBuildDict();
+            if (cubeDesc.getDictionaryBuilderClass(col) != null) { // only works with default dictionary builder
+                isReducerLocalBuildDict = false;
+            }
             if (col != null && isReducerLocalBuildDict) {
                 builder = DictionaryGenerator.newDictionaryBuilder(col.getType());
                 builder.init(null, 0);

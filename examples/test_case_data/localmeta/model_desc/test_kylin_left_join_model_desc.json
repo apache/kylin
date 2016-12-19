@@ -63,7 +63,8 @@
         "TRANS_ID",
         "CAL_DT",
         "LEAF_CATEG_ID",
-        "SELLER_ID"
+        "SELLER_ID",
+        "ORDER_ID"
       ]
     },
     {
@@ -105,9 +106,7 @@
   ],
   "metrics": [
     "PRICE",
-    "ITEM_COUNT",
-    "SELLER_ID",
-    "USER_ID"
+    "ITEM_COUNT"
   ],
   "last_modified": 1422435345352,
   "fact_table": "DEFAULT.TEST_KYLIN_FACT",

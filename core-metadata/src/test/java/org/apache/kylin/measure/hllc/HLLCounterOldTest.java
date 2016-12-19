@@ -157,7 +157,7 @@ public class HLLCounterOldTest {
     public void mergeTest() throws IOException {
         double error = 0;
         int n = 100;
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i += 10) {
             double e = merge(i);
             error += e;
         }

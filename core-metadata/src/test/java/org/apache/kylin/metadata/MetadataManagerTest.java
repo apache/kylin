@@ -46,6 +46,13 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
+    
+    @Test
+    public void testCiModel() {
+        MetadataManager mgr = getInstance(getTestConfig());
+        Assert.assertNotNull(mgr.getDataModelDesc("ci_left_join_model"));
+        Assert.assertNotNull(mgr.getDataModelDesc("ci_inner_join_model"));
+    }
 
     @Test
     public void testListAllTables() throws Exception {

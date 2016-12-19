@@ -1,0 +1,18 @@
+{
+  "uuid" : "f216e39e-40d7-44c2-8fa2-41b3656398ae",
+  "name" : "TEST_ORDER",
+  "data_gen" : "0.5",
+  "columns" : [ {
+    "id" : "1",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "ID"
+  }, {
+    "id" : "2",
+    "name" : "BUYER_ID",
+    "datatype" : "bigint",
+    "data_gen" : "RAND||10000500|10001500"
+  } ],
+  "database" : "DEFAULT",
+  "last_modified" : 0
+}

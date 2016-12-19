@@ -250,8 +250,8 @@ public class ColumnGenerator {
         public String next() {
             if (values.isEmpty())
                 return null;
-            else
-                return values.get(rand.nextInt(values.size()));
+            
+            return values.get(rand.nextInt(values.size()));
         }
     }
 
@@ -308,7 +308,15 @@ public class ColumnGenerator {
 
         @Override
         public String next() {
-            return rand.nextDouble() < nullPct || !input.hasNext() ? nullStr : input.next();
+            String r = nullStr;
+            if (input.hasNext()) {
+                r = input.next();
+            }
+            
+            if (rand.nextDouble() < nullPct) {
+                r = nullStr;
+            }
+            return r;
         }
     }
 

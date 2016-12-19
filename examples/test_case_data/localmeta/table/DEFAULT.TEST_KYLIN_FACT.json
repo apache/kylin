@@ -9,58 +9,57 @@
     "data_gen" : "ID"
   }, {
     "id" : "2",
+    "name" : "ORDER_ID",
+    "datatype" : "bigint"
+  }, {
+    "id" : "3",
     "name" : "CAL_DT",
     "datatype" : "date",
     "data_gen" : "FK,order"
   }, {
-    "id" : "3",
+    "id" : "4",
     "name" : "LSTG_FORMAT_NAME",
     "datatype" : "string",
     "data_gen" : "FP-GTC|FP-non GTC|ABIN|Auction|Others"
   }, {
-    "id" : "4",
+    "id" : "5",
     "name" : "LEAF_CATEG_ID",
     "datatype" : "bigint",
     "data_gen" : "FK,null,nullstr=0"
   }, {
-    "id" : "5",
+    "id" : "6",
     "name" : "LSTG_SITE_ID",
     "datatype" : "int"
   }, {
-    "id" : "6",
+    "id" : "7",
     "name" : "SLR_SEGMENT_CD",
     "datatype" : "smallint",
     "data_gen" : "FK,pk=EDW.TEST_SELLER_TYPE_DIM_TABLE.SELLER_TYPE_CD"
   }, {
-    "id" : "7",
-    "name" : "PRICE",
-    "datatype" : "decimal",
-    "data_gen" : "RAND|.##|-100|1000"
-  }, {
     "id" : "8",
-    "name" : "ITEM_COUNT",
-    "datatype" : "int",
-    "data_gen" : "RAND"
-  }, {
-    "id" : "9",
     "name" : "SELLER_ID",
     "datatype" : "bigint",
     "data_gen" : "RAND||10000000|10001000"
   }, {
+    "id" : "9",
+    "name" : "PRICE",
+    "datatype" : "decimal",
+    "data_gen" : "RAND|.##|-100|1000"
+  }, {
     "id" : "10",
-    "name" : "USER_ID",
-    "datatype" : "varchar(32)",
-    "data_gen" : "RAND,order"
+    "name" : "ITEM_COUNT",
+    "datatype" : "int",
+    "data_gen" : "RAND"
   }, {
     "id" : "11",
-    "name" : "BUYER_COUNTRY",
+    "name" : "TEST_EXTENDED_COLUMN",
     "datatype" : "string",
-    "data_gen" : "CN|DE|FR|JP|UK|US"
+    "data_gen" : "RAND"
   }, {
     "id" : "12",
-    "name" : "SELLER_COUNTRY",
+    "name" : "TEST_COUNT_DISTINCT_BITMAP",
     "datatype" : "string",
-    "data_gen" : "CN|DE|FR|JP|UK|US"
+    "data_gen" : "RAND"
   } ],
   "database" : "DEFAULT",
   "last_modified" : 0

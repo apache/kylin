@@ -72,8 +72,8 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testBadDesc() throws IOException {
-        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN, DictionaryDesc.create("USER_ID", null, "FakeBuilderClass"));
-        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN, DictionaryDesc.create("USER_ID", null, GlobalDictionaryBuilder.class.getName()));
+        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN, DictionaryDesc.create("ORDER_ID", null, "FakeBuilderClass"));
+        testDictionaryDesc(ERROR_DUPLICATE_DICTIONARY_COLUMN, DictionaryDesc.create("ORDER_ID", null, GlobalDictionaryBuilder.class.getName()));
     }
 
     @Test
@@ -89,7 +89,7 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
     @Test
     public void testBadDesc4() throws IOException {
         testDictionaryDesc(ERROR_TRANSITIVE_REUSE,
-                DictionaryDesc.create("lstg_site_id", "USER_ID", null),
+                DictionaryDesc.create("lstg_site_id", "SELLER_ID", null),
                 DictionaryDesc.create("price", "lstg_site_id", null));
     }
     

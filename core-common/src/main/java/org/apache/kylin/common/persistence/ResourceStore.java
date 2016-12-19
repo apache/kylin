@@ -109,7 +109,7 @@ abstract public class ResourceStore {
 
     final protected KylinConfig kylinConfig;
 
-    public ResourceStore(KylinConfig kylinConfig) {
+    protected ResourceStore(KylinConfig kylinConfig) {
         this.kylinConfig = kylinConfig;
     }
 
