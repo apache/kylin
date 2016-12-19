@@ -31,12 +31,15 @@ import java.util.Comparator;
 import java.util.Random;
 import java.util.UUID;
 
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.ByteComparator;
 import org.apache.kylin.dict.BytesConverter;
 import org.apache.kylin.dict.IDictionaryValueEnumerator;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TableColumnValueEnumerator;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -45,6 +48,15 @@ import org.junit.Test;
  */
 public class SortedColumnReaderTest {
 
+    @Before
+    public void setUp() throws Exception {
+        LocalFileMetadataTestCase.staticCreateTestMetadata();
+    }
+
+    @After
+    public void after() throws Exception {
+        LocalFileMetadataTestCase.cleanAfterClass();
+    }
     @Test
     public void testReadStringMultiFile() throws Exception {
         String dirPath = "src/test/resources/multi_file_str";

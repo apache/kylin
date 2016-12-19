@@ -492,6 +492,18 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.source.hive.beeline-params", "");
     }
 
+    public String getHiveClusterFs() {
+        return getOptional("kylin.source.hive.cluster-fs", "");
+    }
+
+    public String getHiveAzureAccount() {
+        return getOptional("kylin.source.hive.azure.account", "");
+    }
+
+    public String getHiveAzureAccountKey() {
+        return getOptional("kylin.source.hive.azure.account-key", "");
+    }
+
     @Deprecated
     public String getCreateFlatHiveTableMethod() {
         return getOptional("kylin.source.hive.create-flat-table-method", "1");

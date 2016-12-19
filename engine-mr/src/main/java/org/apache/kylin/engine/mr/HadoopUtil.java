@@ -30,6 +30,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.io.Writable;
+import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,7 @@ public class HadoopUtil {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
     private static final ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
+    public static final String DFS_AZURE_ACCOUNT_KEY = "fs.azure.account.key.<accountname>.blob.core.windows.net";
 
     public static void setCurrentConfiguration(Configuration conf) {
         hadoopConfig.set(conf);
@@ -56,6 +58,18 @@ public class HadoopUtil {
         // why we have this hard code?
         conf.set(DFSConfigKeys.DFS_CLIENT_BLOCK_WRITE_LOCATEFOLLOWINGBLOCK_RETRIES_KEY, "8");
 
+        // support hive/mapreduce running on a different FS
+        String hiveClusterFs = KylinConfig.getInstanceFromEnv().getHiveClusterFs();
+        if (StringUtils.isNotEmpty(hiveClusterFs)) {
+            conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hiveClusterFs);
+        }
+        // support hive/mapreduce running on a different azure storage container, https://hadoop.apache.org/docs/current/hadoop-azure/index.html
+        String azureAccount = KylinConfig.getInstanceFromEnv().getHiveAzureAccount();
+        String azureAccountKey = KylinConfig.getInstanceFromEnv().getHiveAzureAccountKey();
+        if (StringUtils.isNotEmpty(azureAccount) && StringUtils.isNotEmpty(azureAccountKey)) {
+            String azureAccountKeyName = DFS_AZURE_ACCOUNT_KEY.replace("<accountname>", azureAccount);
+            conf.set(azureAccountKeyName, azureAccountKey);
+        }
         // https://issues.apache.org/jira/browse/KYLIN-953
         if (StringUtils.isBlank(conf.get("hadoop.tmp.dir"))) {
             conf.set("hadoop.tmp.dir", "/tmp");
