@@ -109,7 +109,6 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
     };
 
     $scope.goToStep = function(stepIndex){
-      console.log($scope.cubeMode);
         if($scope.cubeMode == "addNewCube"){
             if(stepIndex+1>=$scope.curStep.step){
                 return;

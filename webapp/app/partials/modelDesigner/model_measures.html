@@ -67,7 +67,7 @@
                 ng-model="selectedFactTables[table]" multiple>
                 <ui-select-match placeholder="Select Column...">{{$item.name}}</ui-select-match>
                 <ui-select-choices
-                  repeat="table+'.'+measure.name as measure in getColumnsByAlias(table) | filter:$select.search">
+                  repeat="table+'.'+measure.name as measure in getColumnsByAlias(table) | filter:$select.search|inDimNotInMea:table:modelsManager.selectedModel.dimensions">
                   {{measure.name}}
                 </ui-select-choices>
               </ui-select>

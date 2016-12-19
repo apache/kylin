@@ -32,12 +32,12 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   var needLengthKeyList=['fixed_length','fixed_length_hex','int','integer'];
   $scope.removeVersion=function(typename){
     if(typename){
-      return typename.replace(/\[v\d+\]/g,"");
+      return typename.replace(/\s*\(v\d+\)/g,"");
     }
     return "";
   }
   $scope.getTypeVersion=function(typename){
-    var searchResult=/\[v(\d+)\]/.exec(typename);
+    var searchResult=/\s*\(v(\d+)\)/.exec(typename);
     if(searchResult&&searchResult.length){
       return searchResult.length&&searchResult[1]||1;
     }else{
@@ -62,7 +62,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     if($scope.isEdit) {
       if (name && $scope.newMeasure.function.configuration&&$scope.newMeasure.function.configuration['topn.encoding.' + name]) {
         var version = $scope.newMeasure.function.configuration['topn.encoding_version.' + name] || 1;
-        filterEncoding = VdmUtil.getFilterObjectListByOrFilterVal(encodings, 'value', $scope.newMeasure.function.configuration['topn.encoding.' + name].replace(/:\d+/, "") + (version ? "[v" + version + "]" : "[v1]"), 'suggest', true);
+        filterEncoding = VdmUtil.getFilterObjectListByOrFilterVal(encodings, 'value', $scope.newMeasure.function.configuration['topn.encoding.' + name].replace(/:\d+/, "") + (version ? "  (v" + version + ")" : "  (v1)"), 'suggest', true);
       }else{
         filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest', true);
       }
@@ -89,7 +89,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       if($scope.newMeasure.function.configuration==null){
         var GroupBy = {
             name:$scope.newMeasure.function.parameter.next_parameter.value,
-            encoding:"dict",
+            encoding:"dict  (v1)",
             valueLength:0,
             }
         $scope.convertedColumns.push(GroupBy);
@@ -110,7 +110,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
             _encoding=baseKey;
             $scope.GroupBy = {
               name:_name,
-              encoding:_encoding+(version?"[v"+version+"]":"[v1]"),
+              encoding:_encoding+(version?"  (v"+version+")":"  (v1)"),
               valueLength:_valueLength,
               encoding_version:version||1
             }
@@ -271,7 +271,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   $scope.addNewGroupByColumn = function () {
     $scope.nextGroupBy = {
       name:null,
-      encoding:"dict",
+      encoding:"dict  (v1)",
       valueLength:0,
     }
     $scope.convertedColumns.push($scope.nextGroupBy);

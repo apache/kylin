@@ -60,7 +60,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
               for(var s=1;s<=typeVersion;s++){
                 $scope.store.supportedEncoding.push({
                   "name":name+" (v"+s+","+(s==typeVersion&&typeVersion>1?"suggest)":")"),
-                  "value":value+"[v"+s+"]",
+                  "value":value+"  (v"+s+")",
                   "version":typeVersion,
                   "baseValue":value,
                   "suggest":s==typeVersion
@@ -70,7 +70,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
           }else {
             $scope.store.supportedEncoding.push({
               "name": name,
-              "value": value+"[v1]",
+              "value": value+"  (v1)",
               "encoding_version":1,
               "version":typeVersion,
               "baseValue":value,
@@ -103,7 +103,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         for(var s=0;s<$scope.cubeMetaFrame.rowkey.rowkey_columns.length;s++){
           if(filterName==$scope.cubeMetaFrame.rowkey.rowkey_columns[s].column){
             var version=$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding_version;
-            filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'value',$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding.replace(/:\d+/,"")+(version?"[v"+version+"]":"[v1]"),'suggest',true)
+            filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'value',$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding.replace(/:\d+/,"")+(version?"  (v"+version+")":"  (v1)"),'suggest',true)
           }
         }
       }else{

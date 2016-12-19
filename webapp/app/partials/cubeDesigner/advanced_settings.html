@@ -202,11 +202,10 @@
                   <thead>
                   <tr>
                     <th>ID</th>
-                    <th class="col-xs-4">Column</th>
+                    <th class="col-xs-5">Column</th>
                     <th>Encoding</th>
                     <th>Length</th>
                     <th>Shard By</th>
-                    <th ng-if="state.mode=='edit'"></th>
                   </tr>
                   </thead>
 
@@ -243,11 +242,11 @@
                       <!--Column Length -->
                       <input type="text" class="form-control" placeholder="Column Length.." ng-if="state.mode=='edit'"
                              tooltip="rowkey column length.." tooltip-trigger="focus"
-                             ng-disabled="rowkey_column.encoding=='dict'||rowkey_column.encoding=='date'||rowkey_column.encoding=='time'||rowkey_column.encoding=='boolean'||instance.status=='READY'"
+                             ng-disabled="rowkey_column.encoding.indexOf('dict')>=0||rowkey_column.encoding.indexOf('date')>=0||rowkey_column.encoding.indexOf('time')>=0||instance.status=='READY'"
                              ng-change="refreshRowKey(convertedRowkeys,$index,rowkey_column);"
                              ng-model="rowkey_column.valueLength" class="form-control">
 
-                      <small class="help-block red" ng-show="state.mode=='edit' && rowkey_column.encoding=='int' && (rowkey_column.valueLength>8 || rowkey_column.valueLength<1)">int encoding column length should between 1 and 8</small>
+                      <small class="help-block red" ng-show="state.mode=='edit' && rowkey_column.encoding.indexOf('integer')>=0 && (rowkey_column.valueLength>8 || rowkey_column.valueLength<1)">integer encoding column length should between 1 and 8</small>
                       <span ng-if="state.mode=='view'">{{rowkey_column.valueLength}}</span>
                     </td>
 
@@ -263,21 +262,11 @@
                       <small class="help-block red" ng-show="state.mode=='edit' && rule.shardColumnAvailable==false && rowkey_column.isShardBy == true">at most one 'shard by' column is allowed.</small>
                       <span ng-if="state.mode=='view'">{{rowkey_column.isShardBy}}</span>
                     </td>
-
-                    <td ng-if="state.mode=='edit'">
-                      <button class="btn btn-xs btn-info"  ng-disabled="instance.status=='READY'"
-                              ng-click="removeRowkey(convertedRowkeys, $index,rowkey_column)"><i
-                        class="fa fa-minus"></i>
-                      </button>
-                    </td>
                   </tr>
                   </tbody>
                 </table>
               </div>
           </div>
-          <button class="btn btn-sm btn-info" style="margin-left:42px" ng-disabled="instance.status=='READY'"
-                  ng-click="addNewRowkeyColumn()" ng-show="state.mode=='edit'">New Rowkey Column<i class="fa fa-plus"></i>
-          </button>
         </div>
         <div class="form-group large-popover" style="overflow:auto">
           <h3 style="margin-left:42px">Advanced Dictionaries  <i kylinpopover placement="right" title="Advanced Dictionaries" template="AdvancedDictionariesTip.html" class="fa fa-info-circle"></i></h3>

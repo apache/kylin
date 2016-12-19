@@ -209,7 +209,7 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                           $scope.state.modelSchema = request.modelSchema;
                           SweetAlert.swal('', 'Created the model successfully.', 'success');
                           $location.path("/models");
-                          location.reload();
+                         // location.reload();
                         } else {
                             $scope.saveModelRollBack();
                             var message =request.message;

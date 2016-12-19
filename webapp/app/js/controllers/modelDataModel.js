@@ -264,9 +264,6 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
           break;
         }
       }
-      if($scope.aliasName.indexOf($scope.newLookup.alias)!=-1&&$scope.lookupState.editing == false){
-        errors.push("Table Alias ["+$scope.newLookup.alias+"] already exist!");
-      }
       if($scope.aliasName.indexOf($scope.newLookup.alias)!=-1&&$scope.aliasName[$scope.lookupState.editingIndex+1] != $scope.newLookup.alias){
         errors.push("Table Alias ["+$scope.newLookup.alias+"] already exist!");
       }
@@ -280,8 +277,5 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
       }else{
         return true;
       }
-    };
-    $scope.filterNotRoot = function (item) {
-      return item.name!==modelsManager.selectedModel.fact_table;
     };
 });

@@ -206,9 +206,7 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
         });
 
         modalInstance.result.then(function () {
-            if (!$scope.dimState.editing) {
-                $scope.doneAddDim();
-            } else {
+            if ($scope.dimState.editing) {
                 $scope.doneEditDim();
             }
 
@@ -268,31 +266,31 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
 
     };
 
-    $scope.addDim = function (dimType) {
-        $scope.newDimension = Dimension('', [], dimType);
-
-        $scope.openDimModal(dimType);
-    };
-
     $scope.editDim = function (dim) {
         $scope.dimState.editingIndex = dimList.indexOf(dim);
         $scope.dimState.editing = true;
 
         // Make a copy of model will be editing.
         $scope.newDimension = angular.copy(dim);
+        if($scope.newDimension.derived&&$scope.newDimension.derived.length>0){
+          $scope.newDimension.normal="false";
+        }else{
+          $scope.newDimension.normal="true";
+        }
 
         $scope.openDimModal($scope.getDimType(dim));
     };
 
-    $scope.doneAddDim = function () {
-        // Push new dimension which bound user input data.
-        dimList.push(angular.copy($scope.newDimension));
-
-        $scope.resetParams();
-    };
-
     $scope.doneEditDim = function () {
         // Copy edited model to destination model.
+        if($scope.newDimension.derived&&($scope.newDimension.normal=="true")){
+           $scope.newDimension.column=$scope.newDimension.derived[0];
+           $scope.newDimension.derived=null;
+        }
+        if(!$scope.newDimension.derived&&($scope.newDimension.normal=="false")){
+           $scope.newDimension.derived=[$scope.newDimension.column];
+           $scope.newDimension.column=null;
+        }
         angular.copy($scope.newDimension, dimList[$scope.dimState.editingIndex]);
 
         $scope.resetParams();
@@ -489,14 +487,6 @@ KylinApp.controller('CubeDimensionsCtrl', function ($scope, $modal,MetaModel,cub
              return true;
         }
     }
-
-    $scope.addNewDimension = function(newDimension){
-           if(newDimension.derived==null){
-             newDimension.derived=[];
-           }
-           newDimension.derived.push('');
-    }
-
 
     // Just reset the selected status of columns.
     $scope.resetGenDims = function () {

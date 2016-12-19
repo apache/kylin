@@ -126,7 +126,7 @@
                         <div class="row">
                           <div class="col-xs-9">
                             <div>
-                              <select chosen ng-model="newLookup.joinTable" style="width: 45%"
+                              <select chosen ng-model="newLookup.joinTable" class="col-sm-4"
                                       ng-options="table as table for table in aliasName"
                                       name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true"
@@ -134,20 +134,21 @@
                                       class="chosen-select">
                                 <option value=""> &#45;&#45; Select Join Table &#45;&#45; </option>
                               </select>
-                              <small class="help-block" ng-show="lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$submitted)">Table name required</small>
-                              <b>&nbsp;&nbsp;&nbsp;</b>
-                              <select chosen ng-model="newLookup.table" style="width: 45%"
-                                      ng-options="table.name as VdmUtil.removeNameSpace(table.name) for table in tableModel.selectProjectTables|filter:filterNotRoot"
+                              <!--Join Type-->
+                              <select class="form-control"  chosen ng-model="newLookup.join.type" style="width:120px;"
+                                            ng-options="joinType.value as joinType.name for joinType in cubeConfig.joinTypes">
+                                <option value=""></option>
+                              </select>
+                              <label class="control-label font-color-default"><b>Join</b></label>
+                              <select chosen ng-model="newLookup.table" class="col-sm-4"
+                                      ng-options="table.name as VdmUtil.removeNameSpace(table.name) for table in tableModel.selectProjectTables"
                                       name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true"  ng-change="changeJoinTable()"
                                       data-placeholder="Join Table Name"
                                       class="chosen-select">
                                 <option value=""> &#45;&#45; Select Join Table &#45;&#45; </option>
                               </select>
-                              <small class="help-block" ng-show="lookup_form.table_name.$invalid && (lookup_form.table_name.$dirty||forms.model_info_form.$submitted)">Table name required</small>
-
                             </div>
-                            <div class="space-4"></div>
                           </div>
                         </div>
                       </div>
@@ -161,18 +162,7 @@
                             </div>
                         </div>
                     </div>
-                    <!--Join Type and Columns-->
-                    <div class="form-group">
-                        <div class="row">
-                            <label class="col-sm-3 control-label font-color-default"><b>Join Type</b></label>
-                            <div class="col-sm-6">
-                                <select class="form-control"  chosen ng-model="newLookup.join.type"
-                                        ng-options="joinType.value as joinType.name for joinType in cubeConfig.joinTypes">
-                                    <option value=""></option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                    <!--Table Type-->
                     <div class="form-group">
                         <div class="row">
                           <label class="col-sm-3 control-label font-color-default"><b>Table Type</b></label>
@@ -233,8 +223,8 @@
                             <div class="row">
                                 <div class="col-xs-12">
                                     <ol class="text-info">
-                                      <li>Pick up lookup table at first</li>
-                                      <li>Specify join relationship between fact table and chosen lookup table.</li>
+                                      <li>Pick up a table joins another table that already exist.</li>
+                                      <li>Specify join relationship between two tables.</li>
                                       <li>Join Type have to be same as will be used in query</li>
                                     </ol>
                                 </div>

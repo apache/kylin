@@ -21,7 +21,7 @@
 KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,cubesManager,CubeDescModel,SweetAlert) {
   $scope.cubesManager = cubesManager;
   $scope.getTypeVersion=function(typename){
-    var searchResult=/\[v(\d+)\]/.exec(typename);
+    var searchResult=/\s*\(v(\d+)\)/.exec(typename);
     if(searchResult&&searchResult.length){
       return searchResult.length&&searchResult[1]||1;
     }else{
@@ -30,7 +30,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
   }
   $scope.removeVersion=function(typename){
     if(typename){
-      return typename.replace(/\[v\d+\]/g,"");
+      return typename.replace(/\s*\(v\d+\)/g,"");
     }
     return "";
   }
@@ -49,7 +49,7 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     _encoding=baseKey;
     var rowkeyObj = {
       column:item.column,
-      encoding:_encoding+(item.encoding_version?"[v"+item.encoding_version+"]":"[v1]"),
+      encoding:_encoding+(item.encoding_version?"  (v"+item.encoding_version+")":"  (v1)"),
       valueLength:_valueLength,
       isShardBy:item.isShardBy,
       encoding_version:item.encoding_version||1
@@ -108,31 +108,6 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
       $scope.refreshRowKey($scope.convertedRowkeys,i,$scope.convertedRowkeys[i]);
     }
   }
-
-  $scope.removeRowkey = function(arr,index,item){
-    if (index > -1) {
-      arr.splice(index, 1);
-    }
-    $scope.cubeMetaFrame.rowkey.rowkey_columns.splice(index,1);
-  }
-
-
-  $scope.addNewRowkeyColumn = function () {
-    var rowkeyObj = {
-      column:"",
-      encoding:"dict",
-      valueLength:0,
-      isShardBy:"false"
-    }
-
-    $scope.convertedRowkeys.push(rowkeyObj);
-    $scope.cubeMetaFrame.rowkey.rowkey_columns.push({
-      column:'',
-      encoding:'dict',
-      isShardBy:'false'
-    });
-
-  };
 
   $scope.addNewHierarchy = function(grp){
     grp.select_rule.hierarchy_dims.push([]);
