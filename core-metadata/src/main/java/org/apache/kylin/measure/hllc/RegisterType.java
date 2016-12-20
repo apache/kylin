@@ -21,5 +21,5 @@ package org.apache.kylin.measure.hllc;
  * Created by xiefan on 16-12-9.
  */
 public enum RegisterType {
-    SPARSE, DENSE
+    SINGLE_VALUE, SPARSE, DENSE
 }

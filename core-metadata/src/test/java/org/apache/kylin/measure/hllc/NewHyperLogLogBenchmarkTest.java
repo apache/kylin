@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by xiefan on 16-12-12.
@@ -37,7 +38,7 @@ public class NewHyperLogLogBenchmarkTest {
 
     public static final Random rand = new Random(1);
 
-    final int testTimes = 10000;
+    final int testTimes = 100000;
 
     @Test
     public void denseToDenseRegisterMergeBenchmark() throws Exception {
@@ -47,7 +48,7 @@ public class NewHyperLogLogBenchmarkTest {
         System.out.println("denseToDenseRegisterMergeBenchmark(), m : " + m);
         double oldFactor = HLLCounter.OVERFLOW_FACTOR;
         HLLCounter.OVERFLOW_FACTOR = 1.1; //keep sparse
-        for (int cardinality : getTestDataDivide(m)) {
+        for (int cardinality : new int[]{m/10,m/5,m/2,m}) {
             final HLLCounterOld oldCounter = new HLLCounterOld(p);
             final HLLCounterOld oldCounter2 = getRandOldCounter(p, cardinality);
             long oldTime = runTestCase(new TestCase() {
@@ -100,7 +101,7 @@ public class NewHyperLogLogBenchmarkTest {
                     }
                 }
             });
-            final HLLCounter newCounter = new HLLCounter(p);
+            final HLLCounter newCounter = new HLLCounter(p,RegisterType.SPARSE);
             final HLLCounter newCounter2 = getRandNewCounter(p, cardinality);
             long newTime = runTestCase(new TestCase() {
                 @Override
@@ -111,7 +112,11 @@ public class NewHyperLogLogBenchmarkTest {
                 }
             });
             assertEquals(RegisterType.SPARSE, newCounter.getRegisterType());
-            assertEquals(RegisterType.SPARSE, newCounter2.getRegisterType());
+            if(cardinality == 1){
+                assertEquals(RegisterType.SINGLE_VALUE,newCounter2.getRegisterType());
+            }else{
+                assertEquals(RegisterType.SPARSE,newCounter2.getRegisterType());
+            }
             System.out.println("----------------------------");
             System.out.println("cardinality : " + cardinality);
             System.out.println("old time : " + oldTime);
@@ -151,7 +156,11 @@ public class NewHyperLogLogBenchmarkTest {
                 }
             });
             assertEquals(RegisterType.DENSE, newCounter.getRegisterType());
-            assertEquals(RegisterType.SPARSE, newCounter2.getRegisterType());
+            if(cardinality == 1){
+                assertEquals(RegisterType.SINGLE_VALUE,newCounter2.getRegisterType());
+            }else{
+                assertEquals(RegisterType.SPARSE,newCounter2.getRegisterType());
+            }
             System.out.println("old time : " + oldTime);
             System.out.println("new time : " + newTime);
         }
@@ -200,7 +209,11 @@ public class NewHyperLogLogBenchmarkTest {
                     System.out.println("new serialize bytes : " + totalBytes / testTimes + "B");
                 }
             });
-            assertEquals(RegisterType.SPARSE, newCounter.getRegisterType());
+            if(cardinality == 1){
+                assertEquals(RegisterType.SINGLE_VALUE,newCounter.getRegisterType());
+            }else{
+                assertEquals(RegisterType.SPARSE,newCounter.getRegisterType());
+            }
             System.out.println("old serialize time : " + oldTime);
             System.out.println("new serialize time : " + newTime);
         }
@@ -288,6 +301,6 @@ public class NewHyperLogLogBenchmarkTest {
     }
 
     public static int[] getTestDataDivide(int m) {
-        return new int[] { 1, 5, 10, 100, m / 200, m / 100, m / 50, m / 20, m / 10, m };
+        return new int[] { 1, 5, 10, 100, m / 200, m / 100, m / 50, m / 20, m / 10};
     }
 }

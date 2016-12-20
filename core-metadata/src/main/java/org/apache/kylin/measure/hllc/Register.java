@@ -32,4 +32,6 @@ public interface Register {
 
     int getSize();
 
+    RegisterType getRegisterType();
+
 }

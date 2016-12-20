@@ -44,19 +44,19 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
     private Register register;
 
     public HLLCounter() {
-        this(10, RegisterType.SPARSE, Hashing.murmur3_128());
+        this(10, RegisterType.SINGLE_VALUE, Hashing.murmur3_128());
     }
 
     public HLLCounter(int p) {
-        this(p, RegisterType.SPARSE, Hashing.murmur3_128());
+        this(p, RegisterType.SINGLE_VALUE, Hashing.murmur3_128());
     }
 
     public HLLCounter(int p, HashFunction hashFunc) {
-        this(p, RegisterType.SPARSE, hashFunc);
+        this(p, RegisterType.SINGLE_VALUE, hashFunc);
     }
 
     public HLLCounter(HLLCounter another) {
-        this(another.p, another.hashFunc);
+        this(another.p, another.getRegisterType(), another.hashFunc);
         merge(another);
     }
 
@@ -68,7 +68,10 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         this.p = p;
         this.m = 1 << p;//(int) Math.pow(2, p);
         this.hashFunc = hashFunc;
-        if (type == RegisterType.SPARSE) {
+
+        if (type == RegisterType.SINGLE_VALUE) {
+            this.register = new SingleValueRegister();
+        } else if (type == RegisterType.SPARSE) {
             this.register = new SparseRegister();
         } else {
             this.register = new DenseRegister(p);
@@ -79,7 +82,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         double over = OVERFLOW_FACTOR * m;
         return size > (int) over;
     }
-    
+
     public void add(int value) {
         add(hashFunc.hashInt(value).asLong());
     }
@@ -100,11 +103,26 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         int bucketMask = m - 1;
         int bucket = (int) (hash & bucketMask);
         int firstOnePos = Long.numberOfLeadingZeros(hash | bucketMask) + 1;
-        Byte b = register.get(bucket);
-        if (b == null || (byte) firstOnePos > b) {
-            register.set(bucket, (byte) firstOnePos);
+        if (register.getRegisterType() == RegisterType.SINGLE_VALUE) {
+            SingleValueRegister sr = (SingleValueRegister) register;
+            int pos = sr.getSingleValuePos();
+            if (pos < 0 || pos == bucket) { //one or zero value
+                setIfBigger(register, bucket, (byte) firstOnePos);
+            } else { //two value
+                this.register = sr.toSparse();
+                setIfBigger(register, bucket, (byte) firstOnePos);
+            }
+        } else {
+            setIfBigger(register, bucket, (byte) firstOnePos);
+            toDenseIfNeeded();
         }
-        toDenseIfNeeded();
+    }
+
+    private void setIfBigger(Register register, int pos, byte value) {
+        Byte b = register.get(pos);
+        if (b == null || value > b) {
+            register.set(pos, value);
+        }
     }
 
     private void toDenseIfNeeded() {
@@ -118,15 +136,38 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
     public void merge(HLLCounter another) {
         assert this.p == another.p;
         assert this.hashFunc == another.hashFunc;
-        if (register instanceof SparseRegister && another.register instanceof SparseRegister) {
-            register.merge(another.register);
-            toDenseIfNeeded();
-        } else if (register instanceof SparseRegister && another.register instanceof DenseRegister) {
-            register = ((SparseRegister) register).toDense(p);
-            register.merge(another.register);
-        } else {
-            register.merge(another.register);
+        switch (register.getRegisterType()) {
+        case SINGLE_VALUE:
+            switch (another.getRegisterType()) {
+            case SINGLE_VALUE:
+                if (register.getSize() > 0 && another.register.getSize() > 0) {
+                    register = ((SingleValueRegister) register).toSparse();
+                } else if (register.getSize() == 0 && another.register.getSize() > 0) {
+                    SingleValueRegister sr = (SingleValueRegister) another.register;
+                    register.set(sr.getSingleValuePos(), sr.getValue());
+                }
+                break;
+            case SPARSE:
+                register = ((SingleValueRegister) register).toSparse();
+                break;
+            case DENSE:
+                register = ((SingleValueRegister) register).toDense(this.p);
+                break;
+            default:
+                break;
+            }
+
+            break;
+        case SPARSE:
+            if (another.getRegisterType() == RegisterType.DENSE) {
+                register = ((SparseRegister) register).toDense(p);
+            }
+            break;
+        default:
+            break;
         }
+        register.merge(another.register);
+        toDenseIfNeeded();
     }
 
     public long getCountEstimate() {
@@ -160,7 +201,9 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
             zeroBuckets = 0;
             Register register = hllc.getRegister();
             DenseRegister dr;
-            if (register instanceof SparseRegister) {
+            if (register.getRegisterType() == RegisterType.SINGLE_VALUE) {
+                dr = ((SingleValueRegister) register).toDense(p);
+            } else if (register.getRegisterType() == RegisterType.SPARSE) {
                 dr = ((SparseRegister) register).toDense(p);
             } else {
                 dr = (DenseRegister) register;
@@ -224,7 +267,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
 
         // decide output scheme -- map (3*size bytes) or array (2^p bytes)
         byte scheme;
-        if (register instanceof SparseRegister || 5 + (indexLen + 1) * size < m) {
+        if (register instanceof SingleValueRegister || register instanceof SparseRegister || 5 + (indexLen + 1) * size < m) {
             scheme = 0; // map
         } else {
             scheme = 1; // array
@@ -232,11 +275,17 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         out.put(scheme);
         if (scheme == 0) { // map scheme
             BytesUtil.writeVInt(size, out);
-            if (register instanceof SparseRegister) { //sparse register
+            if (register.getRegisterType() == RegisterType.SPARSE) { //sparse register
                 Collection<Map.Entry<Integer, Byte>> allValue = ((SparseRegister) register).getAllValue();
                 for (Map.Entry<Integer, Byte> entry : allValue) {
                     writeUnsigned(entry.getKey(), indexLen, out);
                     out.put(entry.getValue());
+                }
+            } else if (register.getRegisterType() == RegisterType.SINGLE_VALUE) {
+                if (size > 0) {
+                    SingleValueRegister sr = (SingleValueRegister) register;
+                    writeUnsigned(sr.getSingleValuePos(), indexLen, out);
+                    out.put(sr.getValue());
                 }
             } else { //dense register
                 byte[] registers = ((DenseRegister) register).getRawRegister();
@@ -262,8 +311,10 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
                 throw new IllegalArgumentException("register size (" + size + ") cannot be larger than m (" + m + ")");
             if (isDense(size)) {
                 register = new DenseRegister(p);
+            } else if (size <= 1) {
+                register = new SingleValueRegister();
             } else {
-                register = new SparseRegister();//default is sparse
+                register = new SparseRegister();
             }
             int indexLen = getRegisterIndexSize();
             int key = 0;
@@ -272,7 +323,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
                 register.set(key, in.get());
             }
         } else if (scheme == 1) { // array scheme
-            if (register instanceof SparseRegister) {
+            if (register.getRegisterType() != RegisterType.DENSE) {
                 register = new DenseRegister(p);
             }
             in.get(((DenseRegister) register).getRawRegister());
@@ -368,10 +419,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
     }
 
     public RegisterType getRegisterType() {
-        if (register instanceof SparseRegister)
-            return RegisterType.SPARSE;
-        else
-            return RegisterType.DENSE;
+        return register.getRegisterType();
     }
 
 }

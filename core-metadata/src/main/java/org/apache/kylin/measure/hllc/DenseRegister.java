@@ -46,18 +46,23 @@ public class DenseRegister implements Register {
 
     @Override
     public void merge(Register another) {
-        if (another instanceof DenseRegister) {
+        if (another.getRegisterType() == RegisterType.DENSE) {
             DenseRegister dr = (DenseRegister) another;
             for (int i = 0; i < register.length; i++) {
                 if (dr.register[i] > register[i])
                     register[i] = dr.register[i];
             }
-        } else {
+        } else if(another.getRegisterType() == RegisterType.SPARSE){
             SparseRegister sr = (SparseRegister) another;
             Collection<Map.Entry<Integer, Byte>> allValue = sr.getAllValue();
             for (Map.Entry<Integer, Byte> entry : allValue) {
                 if (entry.getValue() > register[entry.getKey()])
                     register[entry.getKey()] = entry.getValue();
+            }
+        }else{
+            SingleValueRegister sr = (SingleValueRegister)another;
+            if(sr.getSize() > 0 && sr.getValue() > register[sr.getSingleValuePos()]){
+                register[sr.getSingleValuePos()] = sr.getValue();
             }
         }
     }
@@ -76,6 +81,11 @@ public class DenseRegister implements Register {
                 size++;
         }
         return size;
+    }
+
+    @Override
+    public RegisterType getRegisterType() {
+        return RegisterType.DENSE;
     }
 
     @Override

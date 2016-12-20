@@ -52,10 +52,12 @@ public class HLLCounterTest {
         HLLCounter one = new HLLCounter(14);
         for (int i = 0; i < 1000000; i++) {
             one.clear();
-            one.add(rand1.nextInt());
+            one.add(i);
+            //System.out.println(hllc.getCountEstimate());
             hllc.merge(one);
         }
         System.out.println(hllc.getCountEstimate());
+        System.out.println(hllc.getRegister().getRegisterType());
         assertTrue(hllc.getCountEstimate() > 1000000 * 0.9);
     }
 
@@ -102,15 +104,28 @@ public class HLLCounterTest {
     public void compareResult() throws IOException {
         int p = 12; //4096
         int m = 1 << p;
-        
+
         ByteBuffer buf = ByteBuffer.allocate(1024 * 1024);
-    
+
         for (int t = 0; t < 5; t++) {
-            //compare sparse
+            //compare single
             HLLCounterOld oldCounter = new HLLCounterOld(p);
             HLLCounter newCounter = new HLLCounter(p);
             HLLCounter newCounter2 = new HLLCounter(p);
+            newCounter.add(1);
+            oldCounter.add(1);
+            assertEquals(RegisterType.SINGLE_VALUE,newCounter.getRegisterType());
+            assertEquals(oldCounter.getCountEstimate(), newCounter.getCountEstimate());
+            buf.clear();
+            oldCounter.writeRegisters(buf);
+            buf.flip();
+            newCounter2.readRegisters(buf);
+            assertEquals(oldCounter.getCountEstimate(), newCounter2.getCountEstimate());
 
+            //compare sparse
+            oldCounter.clear();
+            newCounter.clear();
+            newCounter2.clear();
             for (int i = 0; i < 20; i++) {
                 int r = rand1.nextInt();
                 oldCounter.add(r);
@@ -118,13 +133,13 @@ public class HLLCounterTest {
             }
             assertEquals(RegisterType.SPARSE, newCounter.getRegisterType());
             assertEquals(oldCounter.getCountEstimate(), newCounter.getCountEstimate());
-            
+
             buf.clear();
             oldCounter.writeRegisters(buf);
             buf.flip();
             newCounter2.readRegisters(buf);
             assertEquals(oldCounter.getCountEstimate(), newCounter2.getCountEstimate());
-            
+
             //compare dense
             for (int i = 0; i < m / 2; i++) {
                 int r = rand1.nextInt();
@@ -133,7 +148,7 @@ public class HLLCounterTest {
             }
             assertEquals(RegisterType.DENSE, newCounter.getRegisterType());
             assertEquals(oldCounter.getCountEstimate(), newCounter.getCountEstimate());
-            
+
             buf.clear();
             oldCounter.writeRegisters(buf);
             buf.flip();
@@ -167,13 +182,32 @@ public class HLLCounterTest {
 
     @Test
     public void testEquivalence() {
-        byte[] a = new byte[] { 0, 3, 4, 42, 2, 2 };
-        byte[] b = new byte[] { 3, 4, 42 };
+        //test single
         HLLCounter ha = new HLLCounter();
         HLLCounter hb = new HLLCounter();
+        ha.add(1);
+        hb.add(1);
+        Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
+        //test sparse
+        ha = new HLLCounter();
+        hb = new HLLCounter();
+        byte[] a = new byte[] { 0, 3, 4, 42, 2, 2 };
+        byte[] b = new byte[] { 3, 4, 42 };
         ha.add(a, 1, 3);
         hb.add(b);
-
+        Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
+        //test dense
+        int p = 10;
+        ha = new HLLCounter(p);
+        hb = new HLLCounter(p);
+        int m = 1 << p;
+        double over = HLLCounter.OVERFLOW_FACTOR * m;
+        int overFlow = (int) over + 1000;
+        for (int i = 0; i < overFlow; i++){
+            int k = rand1.nextInt();
+            ha.add(k);
+            hb.add(k);
+        }
         Assert.assertTrue(ha.getCountEstimate() == hb.getCountEstimate());
     }
 
@@ -182,6 +216,10 @@ public class HLLCounterTest {
         int p = 15;
         int m = 1 << p;
         HLLCounter counter = new HLLCounter(p);
+        assertEquals(RegisterType.SINGLE_VALUE, counter.getRegisterType());
+        counter.add(1);
+        assertEquals(RegisterType.SINGLE_VALUE, counter.getRegisterType());
+        counter.add(2);
         assertEquals(RegisterType.SPARSE, counter.getRegisterType());
         double over = HLLCounter.OVERFLOW_FACTOR * m;
         int overFlow = (int) over + 1000;
@@ -192,11 +230,15 @@ public class HLLCounterTest {
 
     @Test
     public void testSerialilze() throws Exception {
-        //test sparse serialize
+        //test single serialize
         int p = 15;
         int m = 1 << p;
         HLLCounter counter = new HLLCounter(p);
         counter.add(123);
+        assertEquals(RegisterType.SINGLE_VALUE, counter.getRegisterType());
+        checkSerialize(counter);
+        //test sparse serialize
+        counter.add(124);
         assertEquals(RegisterType.SPARSE, counter.getRegisterType());
         checkSerialize(counter);
         //test dense serialize
