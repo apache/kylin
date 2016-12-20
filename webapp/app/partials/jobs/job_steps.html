@@ -107,6 +107,8 @@
                     </div>
                     <span style="color: #4383B4">Duration: </span>
                     {{step.exec_start_time != 0 ?  (step.exec_end_time != 0 ? ((step.exec_end_time - step.exec_start_time)/1000/60 | number:2) + ' mins' : '0 seconds') : '0 seconds'}}
+                    <span style="color: #4383B4">Waiting: </span>
+                    {{(step.exec_wait_time > 60)? (step.exec_wait_time/60 | number:2) + ' mins': step.exec_wait_time + ' seconds'}}<br>
                 </div>
                 <div class="timeline-footer">
                     <a ng-if="step.exec_cmd && userService.hasRole('ROLE_ADMIN')"
@@ -126,7 +128,7 @@
                         <i class="ace-icon fa fa-tasks yellow bigger-110"></i>
                     </a>
                     <a ng-if="config.reference_links && config.reference_links['diagnostic'].link" href="{{config.reference_links['diagnostic'].link + step.info.mr_job_id}}" target="_blank"
-                       tooltip="Eagle Monitoring">
+                       tooltip="Monitoring">
                         <i class="ace-icon fa fa-chain grey bigger-110"></i>
                     </a>
                 </div>
