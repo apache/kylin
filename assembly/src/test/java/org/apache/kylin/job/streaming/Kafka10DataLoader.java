@@ -19,6 +19,7 @@
 package org.apache.kylin.job.streaming;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.annotation.Nullable;
@@ -26,6 +27,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
@@ -34,8 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-
-import org.apache.kylin.source.kafka.util.KafkaClient;
 
 /**
  * Load prepared data into kafka(for test use)
@@ -60,10 +60,7 @@ public class Kafka10DataLoader extends StreamDataLoader {
             }
         }), ",");
 
-        Properties props = new Properties();
-        props.put("acks", "1");
-        props.put("retry.backoff.ms", "1000");
-        KafkaProducer producer = KafkaClient.getKafkaProducer(brokerList, props);
+        KafkaProducer producer = getKafkaProducer(brokerList, null);
 
         for (int i = 0; i < messages.size(); i++) {
             ProducerRecord<String, String> keyedMessage = new ProducerRecord<String, String>(clusterConfig.getTopic(), String.valueOf(i), messages.get(i));
@@ -71,6 +68,32 @@ public class Kafka10DataLoader extends StreamDataLoader {
         }
         logger.info("sent " + messages.size() + " messages to " + this.toString());
         producer.close();
+    }
+
+    public static KafkaProducer getKafkaProducer(String brokers, Properties properties) {
+        Properties props = constructDefaultKafkaProducerProperties(brokers, properties);
+        KafkaProducer<String, String> producer = new KafkaProducer<String, String>(props);
+        return producer;
+    }
+
+    private static Properties constructDefaultKafkaProducerProperties(String brokers, Properties properties) {
+        Properties props = new Properties();
+        props.put("retry.backoff.ms", "1000");
+        props.put("bootstrap.servers", brokers);
+        props.put("key.serializer", StringSerializer.class.getName());
+        props.put("value.serializer", StringSerializer.class.getName());
+        props.put("acks", "1");
+        props.put("buffer.memory", 33554432);
+        props.put("retries", 0);
+        props.put("batch.size", 16384);
+        props.put("linger.ms", 50);
+        props.put("request.timeout.ms", "30000");
+        if (properties != null) {
+            for (Map.Entry entry : properties.entrySet()) {
+                props.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return props;
     }
 
 }

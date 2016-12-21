@@ -55,9 +55,6 @@ public class KafkaConfig extends RootPersistentEntity {
     @JsonProperty("timeout")
     private int timeout;
 
-    @JsonProperty("bufferSize")
-    private int bufferSize;
-
     @JsonProperty("parserName")
     private String parserName;
 
@@ -95,14 +92,6 @@ public class KafkaConfig extends RootPersistentEntity {
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
-    }
-
-    public int getBufferSize() {
-        return bufferSize;
-    }
-
-    public void setBufferSize(int bufferSize) {
-        this.bufferSize = bufferSize;
     }
 
     public String getTopic() {

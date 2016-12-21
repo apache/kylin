@@ -83,8 +83,8 @@ public class KafkaSource implements ISource {
                 logger.debug("Last segment doesn't exist, use the start offset that be initiated previously: " + cube.getDescriptor().getPartitionOffsetStart());
                 result.setSourcePartitionOffsetStart(cube.getDescriptor().getPartitionOffsetStart());
             } else {
-                // from the topic's very begining;
-                logger.debug("Last segment doesn't exist, and didn't initiate the start offset, will seek from topic's very beginning.");
+                // from the topic's earliest offset;
+                logger.debug("Last segment doesn't exist, and didn't initiate the start offset, will seek from topic's earliest offset.");
                 result.setSourcePartitionOffsetStart(KafkaClient.getEarliestOffsets(cube));
             }
         }
