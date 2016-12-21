@@ -200,6 +200,35 @@ public class ExecutableManager {
         }
     }
 
+    /**
+     * Since ExecutableManager will instantiate all AbstractExecutable class by Class.forName(), but for each version release,
+     * new classes are introduced, old classes are deprecated, renamed or removed. The Class.forName() will throw out
+     * ClassNotFoundException. This API is used to retrieve the Executable Object list, not for calling the object method,
+     * so we could just instance the parent common class instead of the concrete class. It will tolerate the class missing issue.
+     *
+     * @param timeStartInMillis
+     * @param timeEndInMillis
+     * @param expectedClass
+     * @return
+     */
+    public List<AbstractExecutable> getAllAbstractExecutables(long timeStartInMillis, long timeEndInMillis, Class<? extends AbstractExecutable> expectedClass) {
+        try {
+            List<AbstractExecutable> ret = Lists.newArrayList();
+            for (ExecutablePO po : executableDao.getJobs(timeStartInMillis, timeEndInMillis)) {
+                try {
+                    AbstractExecutable ae = parseToAbstract(po, expectedClass);
+                    ret.add(ae);
+                } catch (IllegalArgumentException e) {
+                    logger.error("error parsing one executabePO: ", e);
+                }
+            }
+            return ret;
+        } catch (PersistentException e) {
+            logger.error("error get All Jobs", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public List<String> getAllJobIds() {
         try {
             return executableDao.getJobIds();
@@ -423,4 +452,29 @@ public class ExecutableManager {
         }
     }
 
+    private AbstractExecutable parseToAbstract(ExecutablePO executablePO, Class<? extends AbstractExecutable> expectedClass) {
+        if (executablePO == null) {
+            logger.warn("executablePO is null");
+            return null;
+        }
+        try {
+            Class<? extends AbstractExecutable> clazz = ClassUtil.forName(expectedClass.getName(), AbstractExecutable.class);
+            Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor();
+            AbstractExecutable result = constructor.newInstance();
+            result.initConfig(config);
+            result.setId(executablePO.getUuid());
+            result.setName(executablePO.getName());
+            result.setParams(executablePO.getParams());
+            List<ExecutablePO> tasks = executablePO.getTasks();
+            if (tasks != null && !tasks.isEmpty()) {
+                Preconditions.checkArgument(result instanceof ChainedExecutable);
+                for (ExecutablePO subTask : tasks) {
+                    ((ChainedExecutable) result).addTask(parseToAbstract(subTask, DefaultChainedExecutable.class));
+                }
+            }
+            return result;
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("cannot parse this job:" + executablePO.getId(), e);
+        }
+    }
 }

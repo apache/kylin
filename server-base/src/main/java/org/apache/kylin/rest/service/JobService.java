@@ -532,7 +532,7 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs) {
-        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllExecutables(timeStartInMillis, timeEndInMillis)).filter(new Predicate<AbstractExecutable>() {
+        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllAbstractExecutables(timeStartInMillis, timeEndInMillis, CubingJob.class)).filter(new Predicate<AbstractExecutable>() {
             @Override
             public boolean apply(AbstractExecutable executable) {
                 if (executable instanceof CubingJob) {
