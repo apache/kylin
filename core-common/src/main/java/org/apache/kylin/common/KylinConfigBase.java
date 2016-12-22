@@ -497,6 +497,14 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     // ============================================================================
+    // SOURCE.KAFKA
+    // ============================================================================
+
+    public Map<String, String> getKafkaConfigOverride() {
+        return getPropertiesByPrefix("kylin.source.kafka.config-override.");
+    }
+
+    // ============================================================================
     // STORAGE.HBASE
     // ============================================================================
 

@@ -32,9 +32,9 @@ public class KafkaConsumerPropertiesTest extends LocalFileMetadataTestCase {
     @Test
     public void testLoadKafkaProperties() {
         KafkaConsumerProperties kafkaConsumerProperties = KafkaConsumerProperties.getInstanceFromEnv();
-        assertFalse(kafkaConsumerProperties.getProperties().containsKey("acks"));
-        assertTrue(kafkaConsumerProperties.getProperties().containsKey("session.timeout.ms"));
-        assertEquals("30000", kafkaConsumerProperties.getProperties().getProperty("session.timeout.ms"));
+        assertFalse(kafkaConsumerProperties.extractKafkaConfigToProperties().containsKey("acks"));
+        assertTrue(kafkaConsumerProperties.extractKafkaConfigToProperties().containsKey("session.timeout.ms"));
+        assertEquals("30000", kafkaConsumerProperties.extractKafkaConfigToProperties().getProperty("session.timeout.ms"));
     }
 
     @Test
@@ -44,7 +44,7 @@ public class KafkaConsumerPropertiesTest extends LocalFileMetadataTestCase {
         conf.addResource(new FileInputStream(new File(kafkaConsumerProperties.getKafkaConsumerHadoopJobConf())), KafkaConsumerProperties.KAFKA_CONSUMER_FILE);
         assertEquals("30000", conf.get("session.timeout.ms"));
 
-        Properties prop = KafkaConsumerProperties.getProperties(conf);
+        Properties prop = KafkaConsumerProperties.extractKafkaConfigToProperties(conf);
         assertEquals("30000", prop.getProperty("session.timeout.ms"));
     }
 }

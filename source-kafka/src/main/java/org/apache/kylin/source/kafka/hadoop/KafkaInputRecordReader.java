@@ -87,7 +87,7 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
         }
         String consumerGroup = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_CONSUMER_GROUP);
 
-        Properties kafkaProperties = KafkaConsumerProperties.getProperties(conf);
+        Properties kafkaProperties = KafkaConsumerProperties.extractKafkaConfigToProperties(conf);
 
         consumer = org.apache.kylin.source.kafka.util.KafkaClient.getKafkaConsumer(brokers, consumerGroup, kafkaProperties);
 

@@ -75,7 +75,7 @@ public class KafkaConsumerProperties {
         return new File(path, KAFKA_CONSUMER_FILE);
     }
 
-    public static Properties getProperties(Configuration configuration) {
+    public static Properties extractKafkaConfigToProperties(Configuration configuration) {
         Set<String> configNames = new HashSet<String>();
         try {
             configNames = ConsumerConfig.configNames();
@@ -109,7 +109,7 @@ public class KafkaConsumerProperties {
             FileInputStream is = new FileInputStream(propFile);
             Configuration conf = new Configuration();
             conf.addResource(is);
-            properties.putAll(getProperties(conf));
+            properties.putAll(extractKafkaConfigToProperties(conf));
             IOUtils.closeQuietly(is);
 
             File propOverrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
@@ -118,7 +118,7 @@ public class KafkaConsumerProperties {
                 Properties propOverride = new Properties();
                 Configuration oconf = new Configuration();
                 oconf.addResource(ois);
-                properties.putAll(getProperties(oconf));
+                properties.putAll(extractKafkaConfigToProperties(oconf));
                 IOUtils.closeQuietly(ois);
             }
         } catch (IOException e) {
@@ -151,7 +151,7 @@ public class KafkaConsumerProperties {
         return getKafkaConsumerFile(path);
     }
 
-    public Properties getProperties() {
+    public Properties extractKafkaConfigToProperties() {
         Properties prop = new Properties();
         prop.putAll(this.properties);
         return prop;

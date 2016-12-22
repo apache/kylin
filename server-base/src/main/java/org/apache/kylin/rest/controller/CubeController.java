@@ -650,7 +650,7 @@ public class CubeController extends BasicController {
 
         final GeneralResponse response = new GeneralResponse();
         try {
-            final Map<Integer, Long> startOffsets = KafkaClient.getCurrentOffsets(cubeInstance);
+            final Map<Integer, Long> startOffsets = KafkaClient.getLatestOffsets(cubeInstance);
             CubeDesc desc = cubeInstance.getDescriptor();
             desc.setPartitionOffsetStart(startOffsets);
             cubeService.getCubeDescManager().updateCubeDesc(desc);
