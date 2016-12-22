@@ -240,11 +240,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.dictionary.append-version-ttl", "259200000"));
     }
 
-    // for test
-    public void setAppendDictEntrySize(int entrySize) {
-        setProperty("kylin.dictionary.append-entry-size", String.valueOf(entrySize));
-    }
-
     public int getCachedSnapshotMaxEntrySize() {
         return Integer.parseInt(getOptional("kylin.snapshot.max-cache-entry", "500"));
     }
@@ -298,10 +293,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.max-building-segments", "10"));
     }
 
-    public void setMaxBuildingSegments(int maxBuildingSegments) {
-        setProperty("kylin.cube.max-building-segments", String.valueOf(maxBuildingSegments));
-    }
-
     // ============================================================================
     // JOB
     // ============================================================================
@@ -322,10 +313,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.job.use-remote-cli"));
     }
 
-    public void setRunAsRemoteCommand(String v) {
-        setProperty("kylin.job.use-remote-cli", v);
-    }
-
     public int getRemoteHadoopCliPort() {
         return Integer.parseInt(getOptional("kylin.job.remote-cli-port", "22"));
     }
@@ -334,24 +321,12 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.job.remote-cli-hostname");
     }
 
-    public void setRemoteHadoopCliHostname(String v) {
-        setProperty("kylin.job.remote-cli-hostname", v);
-    }
-
     public String getRemoteHadoopCliUsername() {
         return getOptional("kylin.job.remote-cli-username");
     }
 
-    public void setRemoteHadoopCliUsername(String v) {
-        setProperty("kylin.job.remote-cli-username", v);
-    }
-
     public String getRemoteHadoopCliPassword() {
         return getOptional("kylin.job.remote-cli-password");
-    }
-
-    public void setRemoteHadoopCliPassword(String v) {
-        setProperty("kylin.job.remote-cli-password", v);
     }
 
     public String getCliWorkingDir() {
@@ -379,10 +354,6 @@ abstract public class KylinConfigBase implements Serializable {
 
     public boolean isMailEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.job.notification-enabled", "false"));
-    }
-
-    public void setMailEnabled(boolean enable) {
-        setProperty("kylin.job.notification-enabled", "" + enable);
     }
 
     public String getMailHost() {
@@ -525,11 +496,6 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.storage.url");
     }
 
-    // for test only
-    public void setStorageUrl(String storageUrl) {
-        setProperty("kylin.storage.url", storageUrl);
-    }
-
     public String getHBaseClusterFs() {
         return getOptional("kylin.storage.hbase.cluster-fs", "");
     }
@@ -583,11 +549,6 @@ abstract public class KylinConfigBase implements Serializable {
 
     public int getHBaseRegionCountMax() {
         return Integer.parseInt(getOptional("kylin.storage.hbase.max-region-count", "500"));
-    }
-
-    // for test only
-    public void setHBaseHFileSizeGB(float size) {
-        setProperty("kylin.storage.hbase.hfile-size-gb", String.valueOf(size));
     }
 
     public float getHBaseHFileSizeGB() {

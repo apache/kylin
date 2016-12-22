@@ -131,7 +131,7 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     public void testConcurrentBuildAndMerge() throws Exception {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
-        getTestConfig().setMaxBuildingSegments(10);
+        System.setProperty("kylin.cube.max-building-segments", "10");
         // no segment at first
         assertEquals(0, cube.getSegments().size());
 
@@ -186,8 +186,8 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testConcurrentMergeAndMerge() throws Exception {
+        System.setProperty("kylin.cube.max-building-segments", "10");
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
-        getTestConfig().setMaxBuildingSegments(10);
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
         // no segment at first

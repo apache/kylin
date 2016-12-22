@@ -43,37 +43,31 @@ import java.util.concurrent.TimeUnit;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.KylinConfig;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Created by sunyerui on 16/4/28.
  */
-public class AppendTrieDictionaryTest {
+public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
 
     public static final String BASE_DIR = "/tmp/kylin_append_dict";
     public static final String RESOURCE_DIR = "/dict/append_dict_test";
 
-    @BeforeClass
-    public static void setUp() {
-        KylinConfig.destroyInstance();
-        System.setProperty(KylinConfig.KYLIN_CONF, "../examples/test_case_data/localmeta");
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        config.setAppendDictEntrySize(50000);
-        config.setProperty("kylin.env.hdfs-working-dir", BASE_DIR);
+    @Before
+    public void setUp() {
+        staticCreateTestMetadata();
+        System.setProperty("kylin.dictionary.append-entry-size", "50000");
+        System.setProperty("kylin.env.hdfs-working-dir", BASE_DIR);
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @After
+    public void after() {
         cleanup();
-    }
-
-//    @After
-    public void afterTest() {
-        cleanup();
+        staticCleanupTestMetadata();
     }
 
     public static void cleanup() {

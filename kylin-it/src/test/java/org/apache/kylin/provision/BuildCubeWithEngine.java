@@ -168,10 +168,10 @@ public class BuildCubeWithEngine {
 
     public void build() throws Exception {
         DeployUtil.prepareTestDataForNormalCubes("ci_left_join_model");
-        KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(1.0f);
+        System.setProperty("kylin.storage.hbase.hfile-size-gb", "1.0f");
         testInner();
         testLeft();
-        KylinConfig.getInstanceFromEnv().setHBaseHFileSizeGB(0.0f);
+        System.setProperty("kylin.storage.hbase.hfile-size-gb", "0.0f");
     }
 
     protected ExecutableState waitForJob(String jobId) {
