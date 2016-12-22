@@ -52,16 +52,16 @@ public class DenseRegister implements Register {
                 if (dr.register[i] > register[i])
                     register[i] = dr.register[i];
             }
-        } else if(another.getRegisterType() == RegisterType.SPARSE){
+        } else if (another.getRegisterType() == RegisterType.SPARSE) {
             SparseRegister sr = (SparseRegister) another;
             Collection<Map.Entry<Integer, Byte>> allValue = sr.getAllValue();
             for (Map.Entry<Integer, Byte> entry : allValue) {
                 if (entry.getValue() > register[entry.getKey()])
                     register[entry.getKey()] = entry.getValue();
             }
-        }else{
-            SingleValueRegister sr = (SingleValueRegister)another;
-            if(sr.getSize() > 0 && sr.getValue() > register[sr.getSingleValuePos()]){
+        } else {
+            SingleValueRegister sr = (SingleValueRegister) another;
+            if (sr.getSize() > 0 && sr.getValue() > register[sr.getSingleValuePos()]) {
                 register[sr.getSingleValuePos()] = sr.getValue();
             }
         }

@@ -119,8 +119,8 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
     }
 
     private void setIfBigger(Register register, int pos, byte value) {
-        Byte b = register.get(pos);
-        if (b == null || value > b) {
+        byte b = register.get(pos);
+        if (value > b) {
             register.set(pos, value);
         }
     }
@@ -145,6 +145,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
                 } else if (register.getSize() == 0 && another.register.getSize() > 0) {
                     SingleValueRegister sr = (SingleValueRegister) another.register;
                     register.set(sr.getSingleValuePos(), sr.getValue());
+                    return;
                 }
                 break;
             case SPARSE:
@@ -267,7 +268,8 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
 
         // decide output scheme -- map (3*size bytes) or array (2^p bytes)
         byte scheme;
-        if (register instanceof SingleValueRegister || register instanceof SparseRegister || 5 + (indexLen + 1) * size < m) {
+        if (register instanceof SingleValueRegister || register instanceof SparseRegister //
+                || 5 + (indexLen + 1) * size < m) {
             scheme = 0; // map
         } else {
             scheme = 1; // array
@@ -275,17 +277,17 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         out.put(scheme);
         if (scheme == 0) { // map scheme
             BytesUtil.writeVInt(size, out);
-            if (register.getRegisterType() == RegisterType.SPARSE) { //sparse register
-                Collection<Map.Entry<Integer, Byte>> allValue = ((SparseRegister) register).getAllValue();
-                for (Map.Entry<Integer, Byte> entry : allValue) {
-                    writeUnsigned(entry.getKey(), indexLen, out);
-                    out.put(entry.getValue());
-                }
-            } else if (register.getRegisterType() == RegisterType.SINGLE_VALUE) {
+            if (register.getRegisterType() == RegisterType.SINGLE_VALUE) { //single value register
                 if (size > 0) {
                     SingleValueRegister sr = (SingleValueRegister) register;
                     writeUnsigned(sr.getSingleValuePos(), indexLen, out);
                     out.put(sr.getValue());
+                }
+            } else if (register.getRegisterType() == RegisterType.SPARSE) { //sparse register
+                Collection<Map.Entry<Integer, Byte>> allValue = ((SparseRegister) register).getAllValue();
+                for (Map.Entry<Integer, Byte> entry : allValue) {
+                    writeUnsigned(entry.getKey(), indexLen, out);
+                    out.put(entry.getValue());
                 }
             } else { //dense register
                 byte[] registers = ((DenseRegister) register).getRawRegister();

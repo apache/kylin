@@ -32,6 +32,7 @@ public class SingleValueRegister implements Register {
 
     @Override
     public void set(int pos, byte value) {
+        assert this.singleValuePos < 0 || this.singleValuePos == pos;
         this.singleValuePos = pos;
         this.value = value;
     }
@@ -43,13 +44,9 @@ public class SingleValueRegister implements Register {
         return value;
     }
 
-    /*
-    this method should not be used in single value register
-     */
-    @Deprecated
     @Override
     public void merge(Register another) {
-        return;
+        throw new IllegalStateException();
     }
 
     @Override

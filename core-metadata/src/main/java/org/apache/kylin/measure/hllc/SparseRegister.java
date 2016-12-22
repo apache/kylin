@@ -54,16 +54,16 @@ public class SparseRegister implements Register {
     @Override
     public void merge(Register another) {
         assert another.getRegisterType() != RegisterType.DENSE;
-        if(another.getRegisterType() == RegisterType.SPARSE) {
+        if (another.getRegisterType() == RegisterType.SPARSE) {
             SparseRegister sr = (SparseRegister) another;
             for (Map.Entry<Integer, Byte> entry : sr.sparseRegister.entrySet()) {
                 byte v = get(entry.getKey());
                 if (entry.getValue() > v)
                     sparseRegister.put(entry.getKey(), entry.getValue());
             }
-        }else if(another.getRegisterType() == RegisterType.SINGLE_VALUE){
-            SingleValueRegister sr = (SingleValueRegister)another;
-            if(sr.getSize() > 0){
+        } else if (another.getRegisterType() == RegisterType.SINGLE_VALUE) {
+            SingleValueRegister sr = (SingleValueRegister) another;
+            if (sr.getSize() > 0) {
                 byte v = get(sr.getSingleValuePos());
                 if (sr.getValue() > v)
                     sparseRegister.put(sr.getSingleValuePos(), sr.getValue());

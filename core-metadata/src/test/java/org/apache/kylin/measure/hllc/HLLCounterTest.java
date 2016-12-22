@@ -53,8 +53,8 @@ public class HLLCounterTest {
         for (int i = 0; i < 1000000; i++) {
             one.clear();
             one.add(i);
-            //System.out.println(hllc.getCountEstimate());
             hllc.merge(one);
+            assertTrue(one.getRegisterType() == RegisterType.SINGLE_VALUE);
         }
         System.out.println(hllc.getCountEstimate());
         System.out.println(hllc.getRegister().getRegisterType());
@@ -112,9 +112,10 @@ public class HLLCounterTest {
             HLLCounterOld oldCounter = new HLLCounterOld(p);
             HLLCounter newCounter = new HLLCounter(p);
             HLLCounter newCounter2 = new HLLCounter(p);
-            newCounter.add(1);
-            oldCounter.add(1);
-            assertEquals(RegisterType.SINGLE_VALUE,newCounter.getRegisterType());
+            int rr = rand1.nextInt();
+            newCounter.add(rr);
+            oldCounter.add(rr);
+            assertEquals(RegisterType.SINGLE_VALUE, newCounter.getRegisterType());
             assertEquals(oldCounter.getCountEstimate(), newCounter.getCountEstimate());
             buf.clear();
             oldCounter.writeRegisters(buf);
@@ -133,7 +134,6 @@ public class HLLCounterTest {
             }
             assertEquals(RegisterType.SPARSE, newCounter.getRegisterType());
             assertEquals(oldCounter.getCountEstimate(), newCounter.getCountEstimate());
-
             buf.clear();
             oldCounter.writeRegisters(buf);
             buf.flip();
@@ -141,6 +141,8 @@ public class HLLCounterTest {
             assertEquals(oldCounter.getCountEstimate(), newCounter2.getCountEstimate());
 
             //compare dense
+            oldCounter.clear();
+            newCounter.clear();
             for (int i = 0; i < m / 2; i++) {
                 int r = rand1.nextInt();
                 oldCounter.add(r);
@@ -148,7 +150,6 @@ public class HLLCounterTest {
             }
             assertEquals(RegisterType.DENSE, newCounter.getRegisterType());
             assertEquals(oldCounter.getCountEstimate(), newCounter.getCountEstimate());
-
             buf.clear();
             oldCounter.writeRegisters(buf);
             buf.flip();
@@ -203,7 +204,7 @@ public class HLLCounterTest {
         int m = 1 << p;
         double over = HLLCounter.OVERFLOW_FACTOR * m;
         int overFlow = (int) over + 1000;
-        for (int i = 0; i < overFlow; i++){
+        for (int i = 0; i < overFlow; i++) {
             int k = rand1.nextInt();
             ha.add(k);
             hb.add(k);
