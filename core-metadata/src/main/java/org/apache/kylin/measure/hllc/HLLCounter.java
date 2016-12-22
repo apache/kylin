@@ -142,9 +142,10 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
             case SINGLE_VALUE:
                 if (register.getSize() > 0 && another.register.getSize() > 0) {
                     register = ((SingleValueRegister) register).toSparse();
-                } else if (register.getSize() == 0 && another.register.getSize() > 0) {
+                } else {
                     SingleValueRegister sr = (SingleValueRegister) another.register;
-                    register.set(sr.getSingleValuePos(), sr.getValue());
+                    if (sr.getSize() > 0)
+                        register.set(sr.getSingleValuePos(), sr.getValue());
                     return;
                 }
                 break;
