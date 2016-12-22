@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Map;
@@ -35,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,18 +282,15 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public String getConfigAsString() throws IOException {
-        final StringWriter stringWriter = new StringWriter();
-        list(new PrintWriter(stringWriter));
-        return stringWriter.toString();
-    }
-
-    private void list(PrintWriter out) {
-        Properties props = getAllProperties();
-        for (Enumeration<?> e = props.keys(); e.hasMoreElements();) {
-            String key = (String) e.nextElement();
-            String val = (String) props.get(key);
-            out.println(key + "=" + val);
+        File propertiesFile = getKylinPropertiesFile();
+        OrderedProperties orderedProperties = new OrderedProperties();
+        orderedProperties.load(new FileInputStream(propertiesFile));
+        orderedProperties = BCC.check(orderedProperties);
+        final StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
         }
+        return sb.toString();
     }
 
     public KylinConfig base() {

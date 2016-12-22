@@ -29,6 +29,7 @@ import java.util.Properties;
 import java.util.Stack;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,6 +118,14 @@ public class BackwardCompatibilityConfig {
         Properties result = new Properties();
         for (Entry<Object, Object> kv : props.entrySet()) {
             result.setProperty(check((String) kv.getKey()), (String) kv.getValue());
+        }
+        return result;
+    }
+
+    public OrderedProperties check(OrderedProperties props){
+        OrderedProperties result = new OrderedProperties();
+        for (Entry<String, String> kv : props.entrySet()) {
+            result.setProperty(check(kv.getKey()), kv.getValue());
         }
         return result;
     }
