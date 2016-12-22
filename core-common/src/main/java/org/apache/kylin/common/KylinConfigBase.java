@@ -750,13 +750,17 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.valueOf(getOptional("kylin.query.skip-empty-segments", "true"));
     }
 
-    @Deprecated//Limit is good even it's large. This config is meaning less since we already have scan threshold 
+    @Deprecated //Limit is good even it's large. This config is meaning less since we already have scan threshold 
     public int getStoragePushDownLimitMax() {
         return Integer.parseInt(getOptional("kylin.query.max-limit-pushdown", "10000"));
     }
 
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan-threshold", "10000000"));
+    }
+
+    public int getLargeQueryThreshold() {
+        return Integer.parseInt(getOptional("kylin.query.large-query-threshold", String.valueOf((int) (getScanThreshold() * 0.1))));
     }
 
     public int getDerivedInThreshold() {

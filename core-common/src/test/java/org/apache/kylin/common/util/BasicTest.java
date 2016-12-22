@@ -34,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.google.common.collect.Iterators;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.junit.Ignore;
 import org.junit.Test;

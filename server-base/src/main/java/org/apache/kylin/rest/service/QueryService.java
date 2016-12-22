@@ -360,8 +360,10 @@ public class QueryService extends BasicService {
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                     logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
                             String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()), String.valueOf(sqlResponse.getTotalScanCount()));
-                    if (queryCacheEnabled && !sqlResponse.getIsException() //
-                            && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                    if (queryCacheEnabled && //
+                            !sqlResponse.getIsException() && //
+                            (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold) && //
+                            (sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold())) { //don't cache too large response
                         cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                     }
                 } else {

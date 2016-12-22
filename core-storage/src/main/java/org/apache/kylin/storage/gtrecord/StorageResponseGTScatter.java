@@ -42,14 +42,16 @@ public class StorageResponseGTScatter implements IGTScanner {
     private static final Logger logger = LoggerFactory.getLogger(StorageResponseGTScatter.class);
 
     private GTInfo info;
+    private IPartitionStreamer partitionStreamer;
     private Iterator<byte[]> blocks;
     private ImmutableBitSet columns;
     private long totalScannedCount;
     private int storagePushDownLimit = -1;
 
-    public StorageResponseGTScatter(GTInfo info, Iterator<byte[]> blocks, ImmutableBitSet columns, long totalScannedCount, int storagePushDownLimit) {
+    public StorageResponseGTScatter(GTInfo info, IPartitionStreamer partitionStreamer, ImmutableBitSet columns, long totalScannedCount, int storagePushDownLimit) {
         this.info = info;
-        this.blocks = blocks;
+        this.partitionStreamer = partitionStreamer;
+        this.blocks = partitionStreamer.asByteArrayIterator();
         this.columns = columns;
         this.totalScannedCount = totalScannedCount;
         this.storagePushDownLimit = storagePushDownLimit;
@@ -67,7 +69,8 @@ public class StorageResponseGTScatter implements IGTScanner {
 
     @Override
     public void close() throws IOException {
-        //do nothing
+        //If upper consumer failed while consuming the GTRecords, the consumer should call IGTScanner's close method to ensure releasing resource
+        partitionStreamer.close();
     }
 
     @Override
