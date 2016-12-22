@@ -40,7 +40,7 @@ public class H2Database {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(H2Database.class);
 
-    private static final String[] ALL_TABLES = new String[] { "edw.test_cal_dt", "default.test_category_groupings", "default.test_kylin_fact", "edw.test_seller_type_dim", "edw.test_sites", "default.streaming_table" };
+    private static final String[] ALL_TABLES = new String[] { "edw.test_cal_dt", "default.test_category_groupings", "default.test_kylin_fact", "default.test_order", "edw.test_seller_type_dim", "edw.test_sites", "default.streaming_table" };
     private static final Map<String, String> javaToH2DataTypeMapping = new HashMap<String, String>();
 
     static {

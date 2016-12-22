@@ -79,7 +79,6 @@
         "LEAF_CATEG_ID",
         "SLR_SEGMENT_CD",
         "SELLER_ID",
-        "TEST_EXTENDED_COLUMN",
         "TEST_COUNT_DISTINCT_BITMAP"
       ]
     },
@@ -87,7 +86,10 @@
       "table": "DEFAULT.TEST_ORDER",
       "columns": [
         "ORDER_ID",
-        "BUYER_ID"
+        "BUYER_ID",
+        "TEST_DATE_ENC",
+        "TEST_TIME_ENC",
+        "TEST_EXTENDED_COLUMN"
       ]
     },
     {

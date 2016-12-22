@@ -4,14 +4,22 @@
   "model_name" : "ci_inner_join_model",
   "description" : null,
   "dimensions" : [ {
-    "name" : "ORDER_ID",
-    "table" : "DEFAULT.TEST_KYLIN_FACT",
-    "column" : "ORDER_ID"
-  }, {
     "name" : "CAL_DT",
     "table" : "EDW.TEST_CAL_DT",
     "column" : "{FK}",
     "derived" : [ "WEEK_BEG_DT" ]
+  }, {
+    "name" : "ORDER_ID",
+    "table" : "DEFAULT.TEST_KYLIN_FACT",
+    "column" : "ORDER_ID"
+  }, {
+    "name" : "TEST_DATE_ENC",
+    "table" : "DEFAULT.TEST_ORDER",
+    "column" : "TEST_DATE_ENC"
+  }, {
+    "name" : "TEST_TIME_ENC",
+    "table" : "DEFAULT.TEST_ORDER",
+    "column" : "TEST_TIME_ENC"
   }, {
     "name" : "CATEGORY",
     "table" : "DEFAULT.TEST_CATEGORY_GROUPINGS",
@@ -232,6 +240,12 @@
     }, {
       "column" : "SLR_SEGMENT_CD",
       "encoding" : "dict"
+    }, {
+      "column" : "TEST_TIME_ENC",
+      "encoding" : "time"
+    }, {
+      "column" : "TEST_DATE_ENC",
+      "encoding" : "date"
     } ]
   },
   "signature" : null,
@@ -259,17 +273,20 @@
     } ]
   },
   "aggregation_groups" : [ {
-    "includes" : [ "CAL_DT", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "SLR_SEGMENT_CD" ],
+    "includes" : [ "CAL_DT", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", 
+                   "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "SLR_SEGMENT_CD" ],
     "select_rule" : {
       "hierarchy_dims" : [ [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID" ] ],
       "mandatory_dims" : [ ],
       "joint_dims" : [ [ "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "SLR_SEGMENT_CD" ] ]
     }
   }, {
-    "includes" : [ "CAL_DT", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "SLR_SEGMENT_CD", "SELLER_ID", "ORDER_ID" ],
+    "includes" : [ "CAL_DT", "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID", "LSTG_FORMAT_NAME", 
+                   "LSTG_SITE_ID", "SLR_SEGMENT_CD", "SELLER_ID", 
+                   "ORDER_ID", "TEST_DATE_ENC", "TEST_TIME_ENC" ],
     "select_rule" : {
       "hierarchy_dims" : [ ],
-      "mandatory_dims" : [ "CAL_DT", "SELLER_ID", "ORDER_ID" ],
+      "mandatory_dims" : [ "CAL_DT", "SELLER_ID", "ORDER_ID", "TEST_DATE_ENC", "TEST_TIME_ENC" ],
       "joint_dims" : [ [ "META_CATEG_NAME", "CATEG_LVL2_NAME", "CATEG_LVL3_NAME", "LEAF_CATEG_ID" ], [ "LSTG_FORMAT_NAME", "LSTG_SITE_ID", "SLR_SEGMENT_CD" ] ]
     }
   } ],

@@ -42,7 +42,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testCIConfigured() throws IOException {
-        DataModelDesc model = getModel("test_kylin_inner_join_model_desc");
+        DataModelDesc model = getModel("ci_inner_join_model");
         ModelDataGenerator gen = new ModelDataGenerator(model, 100);
         gen.outprint = true;
         

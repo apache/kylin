@@ -52,11 +52,6 @@
     "data_gen" : "RAND"
   }, {
     "id" : "11",
-    "name" : "TEST_EXTENDED_COLUMN",
-    "datatype" : "string",
-    "data_gen" : "RAND"
-  }, {
-    "id" : "12",
     "name" : "TEST_COUNT_DISTINCT_BITMAP",
     "datatype" : "string",
     "data_gen" : "RAND"

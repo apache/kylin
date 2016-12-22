@@ -189,6 +189,16 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testDateTimeQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_datetime", null, true);
+    }
+    
+    @Test
+    public void testExtendedColumnQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_extended_column", null, true);
+    }
+    
+    @Test
     public void testLikeQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_like", null, true);
     }
@@ -370,7 +380,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     
     @Test
     public void testSelectStarColumnCount() throws Exception {
-        execAndCompColumnCount("select * from test_kylin_fact limit 10", 12);
-        execAndCompColumnCount("select * from test_kylin_fact", 12);
+        execAndCompColumnCount("select * from test_kylin_fact limit 10", 11);
+        execAndCompColumnCount("select * from test_kylin_fact", 11);
     }
 }
