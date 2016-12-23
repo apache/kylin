@@ -87,7 +87,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
     @Override
     public int getSizeOfId() {
         if (trees.isEmpty())
-            return -1;
+            return 1;
         int maxOffset = accuOffset.get(accuOffset.size() - 1);
         TrieDictionary<T> lastTree = trees.get(trees.size() - 1);
         int sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1);
@@ -96,7 +96,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
 
     @Override
     public int getSizeOfValue() {
-        int maxValue = -1;
+        int maxValue = 0;
         for (TrieDictionary<T> tree : trees)
             maxValue = Math.max(maxValue, tree.getSizeOfValue());
         return maxValue;

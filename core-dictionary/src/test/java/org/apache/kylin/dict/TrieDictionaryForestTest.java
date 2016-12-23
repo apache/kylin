@@ -52,6 +52,14 @@ import org.junit.Test;
 public class TrieDictionaryForestTest {
 
     @Test
+    public void testEmptyDict() {
+        ArrayList<String> strs = new ArrayList<String>();
+        TrieDictionaryForestBuilder<String> builder = newDictBuilder(strs, 0);
+        TrieDictionaryForest<String> dict = builder.build();
+        assertSameBehaviorAsTrie(dict, strs, 0);
+    }
+    
+    @Test
     public void testBasicFound() {
         ArrayList<String> strs = new ArrayList<String>();
         strs.add("part");
@@ -67,11 +75,11 @@ public class TrieDictionaryForestTest {
         dict.dump(System.out);
         int expectId = baseId;
         for (String s : strs) {
-            System.out.println("value:" + s + "  expect id:" + expectId);
             assertEquals(expectId, dict.getIdFromValue(s));
             expectId++;
         }
-        System.out.println("test ok");
+
+        assertSameBehaviorAsTrie(dict, strs, baseId);
     }
 
     @Test //one string one tree
@@ -95,11 +103,11 @@ public class TrieDictionaryForestTest {
         assertEquals(strs.size(), dict.getTrees().size());
         int expectId = baseId;
         for (String s : strs) {
-            System.out.println("value:" + s + "  expect id:" + expectId);
             assertEquals(expectId, dict.getIdFromValue(s));
             expectId++;
         }
-        System.out.println("test ok");
+        
+        assertSameBehaviorAsTrie(dict, strs, baseId);
     }
 
     @Test
@@ -115,11 +123,13 @@ public class TrieDictionaryForestTest {
         dict.dump(System.out);
         //null value query
         int id = dict.getIdFromValue(null, 0);
-        System.out.println(id);
+        assertEquals(255, id);
         id = dict.getIdFromValue(null, 1);
-        System.out.println(id);
+        assertEquals(255, id);
         id = dict.getIdFromValue(null, -1);
-        System.out.println(id);
+        assertEquals(255, id);
+        
+        assertSameBehaviorAsTrie(dict, strs, 0);
     }
 
     @Test
@@ -940,7 +950,7 @@ public class TrieDictionaryForestTest {
             b.addValue(strs.next());
         return b;
     }
-
+    
     private static class RandomStrings implements Iterable<String> {
         final private int size;
 
@@ -1020,6 +1030,21 @@ public class TrieDictionaryForestTest {
         Collections.sort(testData, new ByteComparator<String>(new StringBytesConverter()));
         evaluateDataSize(testData);
         return testData;
+    }
+
+    private void assertSameBehaviorAsTrie(TrieDictionaryForest<String> dict, ArrayList<String> strs, int baseId) {
+        TrieDictionaryBuilder<String> trieBuilder = new TrieDictionaryBuilder<>(new StringBytesConverter());
+        for (String s : strs) {
+            if (s != null)
+                trieBuilder.addValue(s);
+        }
+        TrieDictionary<String> trie = trieBuilder.build(baseId);
+        
+        assertEquals(trie.getMaxId(), dict.getMaxId());
+        assertEquals(trie.getMinId(), dict.getMinId());
+        assertEquals(trie.getSize(), dict.getSize());
+        assertEquals(trie.getSizeOfId(), dict.getSizeOfId());
+        assertEquals(trie.getSizeOfValue(), dict.getSizeOfValue());
     }
 
 }
