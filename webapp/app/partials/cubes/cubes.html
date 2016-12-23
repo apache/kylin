@@ -92,7 +92,6 @@
                             <a ng-click="dropCube(cube)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
                         <li ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
                             <a ng-click="cubeEdit(cube);">Edit</a></li>
-                        <li ng-if="cube.streaming && cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startJobSubmit(cube);">Build</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startRefresh(cube)">Refresh</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startMerge(cube)">Merge</a></li>
