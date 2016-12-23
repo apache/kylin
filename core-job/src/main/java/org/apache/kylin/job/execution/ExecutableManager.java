@@ -44,9 +44,15 @@ public class ExecutableManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutableManager.class);
     private static final ConcurrentHashMap<KylinConfig, ExecutableManager> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableManager>();
-    
+
     private final KylinConfig config;
     private final ExecutableDao executableDao;
+
+    private ExecutableManager(KylinConfig config) {
+        logger.info("Using metadata url: " + config);
+        this.config = config;
+        this.executableDao = ExecutableDao.getInstance(config);
+    }
 
     public static ExecutableManager getInstance(KylinConfig config) {
         ExecutableManager r = CACHE.get(config);
@@ -69,10 +75,20 @@ public class ExecutableManager {
         CACHE.clear();
     }
 
-    private ExecutableManager(KylinConfig config) {
-        logger.info("Using metadata url: " + config);
-        this.config = config;
-        this.executableDao = ExecutableDao.getInstance(config);
+    private static ExecutablePO parse(AbstractExecutable executable) {
+        ExecutablePO result = new ExecutablePO();
+        result.setName(executable.getName());
+        result.setUuid(executable.getId());
+        result.setType(executable.getClass().getName());
+        result.setParams(executable.getParams());
+        if (executable instanceof ChainedExecutable) {
+            List<ExecutablePO> tasks = Lists.newArrayList();
+            for (AbstractExecutable task : ((ChainedExecutable) executable).getTasks()) {
+                tasks.add(parse(task));
+            }
+            result.setTasks(tasks);
+        }
+        return result;
     }
 
     public void addJob(AbstractExecutable executable) {
@@ -321,7 +337,6 @@ public class ExecutableManager {
         updateJobOutput(jobId, ExecutableState.DISCARDED, null, null);
     }
 
-
     public void rollbackJob(String jobId, String stepId) {
         AbstractExecutable job = getJob(jobId);
         if (job == null) {
@@ -409,22 +424,6 @@ public class ExecutableManager {
         addJobInfo(id, info);
     }
 
-    private static ExecutablePO parse(AbstractExecutable executable) {
-        ExecutablePO result = new ExecutablePO();
-        result.setName(executable.getName());
-        result.setUuid(executable.getId());
-        result.setType(executable.getClass().getName());
-        result.setParams(executable.getParams());
-        if (executable instanceof ChainedExecutable) {
-            List<ExecutablePO> tasks = Lists.newArrayList();
-            for (AbstractExecutable task : ((ChainedExecutable) executable).getTasks()) {
-                tasks.add(parse(task));
-            }
-            result.setTasks(tasks);
-        }
-        return result;
-    }
-
     private AbstractExecutable parseTo(ExecutablePO executablePO) {
         if (executablePO == null) {
             logger.warn("executablePO is null");
@@ -457,8 +456,14 @@ public class ExecutableManager {
             logger.warn("executablePO is null");
             return null;
         }
+        String type = executablePO.getType();
         try {
-            Class<? extends AbstractExecutable> clazz = ClassUtil.forName(expectedClass.getName(), AbstractExecutable.class);
+            Class<? extends AbstractExecutable> clazz = null;
+            try {
+                clazz = ClassUtil.forName(type, AbstractExecutable.class);
+            } catch (ClassNotFoundException e) {
+                clazz = ClassUtil.forName(expectedClass.getName(), AbstractExecutable.class);
+            }
             Constructor<? extends AbstractExecutable> constructor = clazz.getConstructor();
             AbstractExecutable result = constructor.newInstance();
             result.initConfig(config);
@@ -469,7 +474,13 @@ public class ExecutableManager {
             if (tasks != null && !tasks.isEmpty()) {
                 Preconditions.checkArgument(result instanceof ChainedExecutable);
                 for (ExecutablePO subTask : tasks) {
-                    ((ChainedExecutable) result).addTask(parseToAbstract(subTask, DefaultChainedExecutable.class));
+                    AbstractExecutable parseToTask = null;
+                    try {
+                        parseToTask = parseTo(subTask);
+                    } catch (IllegalStateException e) {
+                        parseToTask = parseToAbstract(subTask, DefaultChainedExecutable.class);
+                    }
+                    ((ChainedExecutable) result).addTask(parseToTask);
                 }
             }
             return result;
