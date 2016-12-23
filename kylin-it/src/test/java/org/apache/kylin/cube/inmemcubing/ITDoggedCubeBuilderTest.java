@@ -57,7 +57,7 @@ public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(ITDoggedCubeBuilderTest.class);
 
-    private static final int INPUT_ROWS = 4000;
+    private static final int INPUT_ROWS = 10000;
     private static final int SPLIT_ROWS = 2000;
     private static final int THREADS = 4;
 

@@ -37,6 +37,7 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
 /**
  * very time consuming
  */
+@Ignore("to save CI time")
 public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
 
     @SuppressWarnings("unused")
