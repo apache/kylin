@@ -552,9 +552,6 @@ KylinApp
 
     var StreamingSourceCtrl = function ($scope, $location,$interpolate,$templateCache, $modalInstance, tableNames, MessageService, projectName, scope, tableConfig,cubeConfig,StreamingModel,StreamingService) {
 
-      $scope.cubeState={
-        "isStreaming": false
-      }
       $scope.state={
         'mode':'edit'
       }

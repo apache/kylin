@@ -88,6 +88,12 @@ KylinApp.controller('CubeCtrl', function ($scope, AccessService, MessageService,
             CubeService.getHbaseInfo({cubeId: cube.name, propValue: null, action: null}, function (hbase) {
                 cube.hbase = hbase;
 
+                TableService.get({tableName:cube.model.fact_table},function(table) {
+                  if (table && table.source_type == 1) {
+                    cube.streaming = true;
+                  }
+                })
+
                 // Calculate cube total size based on each htable.
                 var totalSize = 0;
                 hbase.forEach(function(t) {
