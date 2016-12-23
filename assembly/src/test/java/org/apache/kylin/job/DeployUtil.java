@@ -125,11 +125,15 @@ public class DeployUtil {
     static final String TABLE_CATEGORY_GROUPINGS = "default.test_category_groupings";
     static final String TABLE_KYLIN_FACT = "default.test_kylin_fact";
     static final String TABLE_ORDER = "default.test_order";
+    static final String TABLE_ACCOUNT = "default.test_account";
+    static final String TABLE_COUNTRY = "default.test_country";
     static final String VIEW_SELLER_TYPE_DIM = "edw.test_seller_type_dim";
     static final String TABLE_SELLER_TYPE_DIM_TABLE = "edw.test_seller_type_dim_table";
     static final String TABLE_SITES = "edw.test_sites";
 
-    static final String[] TABLE_NAMES = new String[] { TABLE_CAL_DT, TABLE_ORDER, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, TABLE_SELLER_TYPE_DIM_TABLE, TABLE_SITES };
+    static final String[] TABLE_NAMES = new String[] { //
+            TABLE_CAL_DT, TABLE_ORDER, TABLE_CATEGORY_GROUPINGS, TABLE_KYLIN_FACT, //
+            TABLE_SELLER_TYPE_DIM_TABLE, TABLE_SITES, TABLE_ACCOUNT, TABLE_COUNTRY };
 
     public static void prepareTestDataForNormalCubes(String modelName) throws Exception {
 
@@ -228,21 +232,15 @@ public class DeployUtil {
         IHiveClient hiveClient = HiveClientFactory.getHiveClient();
         // create hive tables
         hiveClient.executeHQL("CREATE DATABASE IF NOT EXISTS EDW");
-        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CAL_DT.toUpperCase())));
-        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_CATEGORY_GROUPINGS.toUpperCase())));
-        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_KYLIN_FACT.toUpperCase())));
-        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_ORDER.toUpperCase())));
-        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SELLER_TYPE_DIM_TABLE.toUpperCase())));
-        hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(TABLE_SITES.toUpperCase())));
+        for (String tablename : TABLE_NAMES) {
+            hiveClient.executeHQL(generateCreateTableHql(metaMgr.getTableDesc(tablename.toUpperCase())));
+        }
 
         // load data to hive tables
         // LOAD DATA LOCAL INPATH 'filepath' [OVERWRITE] INTO TABLE tablename
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_CAL_DT, tableFileDir));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_CATEGORY_GROUPINGS, tableFileDir));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_KYLIN_FACT, tableFileDir));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_ORDER, tableFileDir));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_SELLER_TYPE_DIM_TABLE, tableFileDir));
-        hiveClient.executeHQL(generateLoadDataHql(TABLE_SITES, tableFileDir));
+        for (String tablename : TABLE_NAMES) {
+            hiveClient.executeHQL(generateLoadDataHql(tablename.toUpperCase(), tableFileDir));
+        }
 
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatements(generateCreateViewHql(VIEW_SELLER_TYPE_DIM, TABLE_SELLER_TYPE_DIM_TABLE));
@@ -251,7 +249,7 @@ public class DeployUtil {
     }
 
     private static String generateLoadDataHql(String tableName, String tableFileDir) {
-        return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName.toUpperCase() + ".csv' OVERWRITE INTO TABLE " + tableName.toUpperCase();
+        return "LOAD DATA LOCAL INPATH '" + tableFileDir + "/" + tableName + ".csv' OVERWRITE INTO TABLE " + tableName;
     }
 
     private static String[] generateCreateTableHql(TableDesc tableDesc) {

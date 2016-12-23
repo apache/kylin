@@ -59,7 +59,7 @@ import com.google.common.collect.Maps;
  */
 public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableKey, Text, NullWritable, Text> {
 
-    protected static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsReducer.class);
+    private static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsReducer.class);
 
     private List<TblColRef> columnList;
     private String statisticsOutput = null;
@@ -76,6 +76,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private int uhcReducerCount;
     private Map<Integer, Integer> reducerIdToColumnIndex = new HashMap<>();
     private int taskId;
+    private boolean isPartitionCol = false;
+    private int rowCount = 0;
 
     //local build dict
     private boolean isReducerLocalBuildDict;
@@ -84,7 +86,6 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private long timeMinValue = Long.MAX_VALUE;
     public static final String DICT_FILE_POSTFIX = ".rldict";
     public static final String PARTITION_COL_INFO_FILE_POSTFIX = ".pci";
-    private boolean isPartitionCol = false;
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -111,6 +112,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             baseCuboidRowCountInMappers = Lists.newArrayList();
             cuboidHLLMap = Maps.newHashMap();
             samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
+            logger.info("Reducer " + taskId + " handling stats");
         } else if (collectStatistics && (taskId == numberOfTasks - 2)) {
             // partition col
             isStatistics = false;
@@ -120,6 +122,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
                 logger.info("Do not have partition col. This reducer will keep empty");
             }
             colValues = Lists.newLinkedList();
+            logger.info("Reducer " + taskId + " handling partition column " + col);
         } else {
             // normal col
             isStatistics = false;
@@ -135,6 +138,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
                 builder = DictionaryGenerator.newDictionaryBuilder(col.getType());
                 builder.init(null, 0);
             }
+            logger.info("Reducer " + taskId + " handling column " + col + ", isReducerLocalBuildDict=" + isReducerLocalBuildDict);
         }
     }
 
@@ -178,6 +182,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
         } else if (isPartitionCol) {
             // partition col
             String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
+            logAFewRows(value);
             long time = DateFormat.stringToMillis(value);
             timeMinValue = Math.min(timeMinValue, time);
             timeMaxValue = Math.max(timeMaxValue, time);
@@ -185,6 +190,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             // normal col
             if (isReducerLocalBuildDict) {
                 String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
+                logAFewRows(value);
                 builder.addValue(value);
             } else {
                 colValues.add(new ByteArray(Bytes.copy(key.getBytes(), 1, key.getLength() - 1)));
@@ -195,14 +201,22 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
                 }
             }
         }
+        
+        rowCount++;
+    }
+
+    private void logAFewRows(String value) {
+        if (rowCount < 10) {
+            logger.info("Received value: " + value);
+        }
     }
 
     private void outputDistinctValues(TblColRef col, Collection<ByteArray> values, Context context) throws IOException {
         final Configuration conf = context.getConfiguration();
         final FileSystem fs = FileSystem.get(conf);
         final String outputPath = conf.get(BatchConstants.CFG_OUTPUT_PATH);
-        final Path colDir = new Path(outputPath, col.getName());
-        final String fileName = col.getName() + "-" + taskId % uhcReducerCount;
+        final Path colDir = new Path(outputPath, col.getIdentity());
+        final String fileName = col.getIdentity() + "-" + taskId % uhcReducerCount;
         final Path outputFile = new Path(colDir, fileName);
 
         FSDataOutputStream out = null;
@@ -229,7 +243,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     }
 
     private void outputDict(TblColRef col, Dictionary<String> dict, Context context) throws IOException {
-        final String fileName = col.getName() + DICT_FILE_POSTFIX;
+        final String fileName = col.getIdentity() + DICT_FILE_POSTFIX;
         FSDataOutputStream out = getOutputStream(context, fileName);
         try {
             String dictClassName = dict.getClass().getName();
@@ -242,7 +256,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     }
 
     private void outputPartitionInfo(Context context) throws IOException {
-        final String fileName = col.getName() + PARTITION_COL_INFO_FILE_POSTFIX;
+        final String fileName = col.getIdentity() + PARTITION_COL_INFO_FILE_POSTFIX;
         FSDataOutputStream out = getOutputStream(context, fileName);
         try {
             out.writeLong(timeMinValue);
@@ -256,15 +270,12 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private FSDataOutputStream getOutputStream(Context context, String outputFileName) throws IOException {
         final Configuration conf = context.getConfiguration();
         final FileSystem fs = FileSystem.get(conf);
-        final String outputPath = conf.get(BatchConstants.CFG_OUTPUT_PATH);
-        final Path colDir = new Path(outputPath, col.getName());
-        final Path outputFile = new Path(colDir, outputFileName);
-        FSDataOutputStream out = null;
-        if (!fs.exists(colDir)) {
-            fs.mkdirs(colDir);
+        final Path outputPath = new Path(conf.get(BatchConstants.CFG_OUTPUT_PATH));
+        final Path outputFile = new Path(outputPath, outputFileName);
+        if (!fs.exists(outputPath)) {
+            fs.mkdirs(outputPath);
         }
-        fs.deleteOnExit(outputFile);
-        out = fs.create(outputFile);
+        FSDataOutputStream out = fs.create(outputFile);
         return out;
     }
 

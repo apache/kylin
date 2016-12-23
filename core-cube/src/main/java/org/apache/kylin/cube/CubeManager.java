@@ -240,7 +240,7 @@ public class CubeManager implements IRealizationProvider {
         if (dictInfo != null) {
             Dictionary<?> dict = dictInfo.getDictionaryObject();
             cubeSeg.putDictResPath(col, dictInfo.getResourcePath());
-            cubeSeg.getRowkeyStats().add(new Object[] { col.getName(), dict.getSize(), dict.getSizeOfId() });
+            cubeSeg.getRowkeyStats().add(new Object[] { col.getIdentity(), dict.getSize(), dict.getSizeOfId() });
 
             CubeUpdate update = new CubeUpdate(cubeSeg.getCubeInstance());
             update.setToUpdateSegs(cubeSeg);

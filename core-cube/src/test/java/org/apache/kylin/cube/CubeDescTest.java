@@ -30,7 +30,9 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,8 +42,7 @@ import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.Maps;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * @author yangli9
@@ -94,8 +95,39 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @Test
     public void testCiCube() {
         CubeDescManager mgr = CubeDescManager.getInstance(getTestConfig());
-        assertNotNull(mgr.getCubeDesc("ci_left_join_cube"));
-        assertNotNull(mgr.getCubeDesc("ci_inner_join_cube"));
+        CubeDesc lc = mgr.getCubeDesc("ci_left_join_cube");
+        CubeDesc ic = mgr.getCubeDesc("ci_inner_join_cube");
+        assertNotNull(lc);
+        assertNotNull(ic);
+        
+        // assert the two CI cubes are identical apart from the left/inner difference
+        assertEquals(lc.getDimensions().size(), ic.getDimensions().size());
+        for (int i = 0, n = lc.getDimensions().size(); i < n; i++) {
+            DimensionDesc ld = lc.getDimensions().get(i);
+            DimensionDesc id = ic.getDimensions().get(i);
+            assertEquals(ld.getTable(), id.getTable());
+            assertEquals(ld.getColumn(), id.getColumn());
+            assertArrayEquals(ld.getDerived(), id.getDerived());
+        }
+        
+        assertEquals(lc.getMeasures().size(), ic.getMeasures().size());
+        for (int i = 0, n = lc.getMeasures().size(); i < n; i++) {
+            MeasureDesc lm = lc.getMeasures().get(i);
+            MeasureDesc im = ic.getMeasures().get(i);
+            assertEquals(lm.getName(), im.getName());
+            assertEquals(lm.getFunction().getFullExpression(), im.getFunction().getFullExpression());
+            assertEquals(lm.getFunction().getReturnType(), im.getFunction().getReturnType());
+        }
+        
+        assertEquals(lc.getAggregationGroups().size(), ic.getAggregationGroups().size());
+        for (int i = 0, n = lc.getAggregationGroups().size(); i < n; i++) {
+            AggregationGroup lag = lc.getAggregationGroups().get(i);
+            AggregationGroup iag = ic.getAggregationGroups().get(i);
+            assertArrayEquals(lag.getIncludes(), iag.getIncludes());
+            assertArrayEquals(lag.getSelectRule().mandatory_dims, iag.getSelectRule().mandatory_dims);
+            assertArrayEquals(lag.getSelectRule().hierarchy_dims, iag.getSelectRule().hierarchy_dims);
+            assertArrayEquals(lag.getSelectRule().joint_dims, iag.getSelectRule().joint_dims);
+        }
     }
     
     @Test

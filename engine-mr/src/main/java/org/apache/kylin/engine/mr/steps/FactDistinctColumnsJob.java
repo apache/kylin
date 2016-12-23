@@ -145,6 +145,9 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         job.setPartitionerClass(FactDistinctColumnPartitioner.class);
         job.setNumReduceTasks(numberOfReducers);
 
+        // important, reducer writes HDFS directly at the moment
+        job.setReduceSpeculativeExecution(false);
+        
         FileOutputFormat.setOutputPath(job, output);
         job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
 

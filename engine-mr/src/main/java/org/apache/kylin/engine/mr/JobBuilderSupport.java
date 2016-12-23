@@ -100,7 +100,6 @@ public class JobBuilderSupport {
         CubingExecutableUtil.setCubeName(seg.getRealization().getName(), result.getParams());
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
-        CubingExecutableUtil.setIndexPath(this.getSecondaryIndexPath(jobId), result.getParams());
 
 
         return result;
@@ -125,7 +124,6 @@ public class JobBuilderSupport {
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
         CubingExecutableUtil.setMergingSegmentIds(mergingSegmentIds, result.getParams());
-        CubingExecutableUtil.setIndexPath(this.getSecondaryIndexPath(jobId), result.getParams());
 
         return result;
     }

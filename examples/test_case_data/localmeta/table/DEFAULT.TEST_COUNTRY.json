@@ -1,7 +1,7 @@
 {
   "uuid" : "e286e39e-40d7-44c2-8fa2-41b365632882",
  
-  "name" : "KYLIN_COUNTRY",
+  "name" : "TEST_COUNTRY",
   "columns" : [ {
     "id" : "1",
     "name" : "COUNTRY",
@@ -19,6 +19,6 @@
     "name" : "NAME",
     "datatype" : "string"
   } ],
-  "database" : "SNOWTEST",
+  "database" : "DEFAULT",
   "last_modified" : 0
 }

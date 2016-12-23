@@ -17,6 +17,34 @@
       }
     },
     {
+      "table": "DEFAULT.TEST_ACCOUNT",
+      "alias": "BUYER_ACCOUNT",
+      "kind": "FACT",
+      "join": {
+        "type": "LEFT",
+        "primary_key": [
+          "BUYER_ACCOUNT.ACCOUNT_ID"
+        ],
+        "foreign_key": [
+          "TEST_ORDER.BUYER_ID"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_ACCOUNT",
+      "alias": "SELLER_ACCOUNT",
+      "kind": "FACT",
+      "join": {
+        "type": "LEFT",
+        "primary_key": [
+          "SELLER_ACCOUNT.ACCOUNT_ID"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.SELLER_ID"
+        ]
+      }
+    },
+    {
       "table": "EDW.TEST_CAL_DT",
       "join": {
         "type": "LEFT",
@@ -65,11 +93,37 @@
           "TEST_KYLIN_FACT.SLR_SEGMENT_CD"
         ]
       }
+    },
+    {
+      "table": "DEFAULT.TEST_COUNTRY",
+      "alias": "BUYER_COUNTRY",
+      "join": {
+        "type": "LEFT",
+        "primary_key": [
+          "BUYER_COUNTRY.COUNTRY"
+        ],
+        "foreign_key": [
+          "BUYER_ACCOUNT.ACCOUNT_COUNTRY"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_COUNTRY",
+      "alias": "SELLER_COUNTRY",
+      "join": {
+        "type": "LEFT",
+        "primary_key": [
+          "SELLER_COUNTRY.COUNTRY"
+        ],
+        "foreign_key": [
+          "SELLER_ACCOUNT.ACCOUNT_COUNTRY"
+        ]
+      }
     }
   ],
   "dimensions": [
     {
-      "table": "DEFAULT.TEST_KYLIN_FACT",
+      "table": "TEST_KYLIN_FACT",
       "columns": [
         "TRANS_ID",
         "ORDER_ID",
@@ -83,7 +137,7 @@
       ]
     },
     {
-      "table": "DEFAULT.TEST_ORDER",
+      "table": "TEST_ORDER",
       "columns": [
         "ORDER_ID",
         "BUYER_ID",
@@ -93,7 +147,27 @@
       ]
     },
     {
-      "table": "DEFAULT.TEST_CATEGORY_GROUPINGS",
+      "table": "BUYER_ACCOUNT",
+      "columns": [
+        "ACCOUNT_ID",
+        "ACCOUNT_BUYER_LEVEL",
+        "ACCOUNT_SELLER_LEVEL",
+        "ACCOUNT_COUNTRY",
+        "ACCOUNT_CONTACT"
+      ]
+    },
+    {
+      "table": "SELLER_ACCOUNT",
+      "columns": [
+        "ACCOUNT_ID",
+        "ACCOUNT_BUYER_LEVEL",
+        "ACCOUNT_SELLER_LEVEL",
+        "ACCOUNT_COUNTRY",
+        "ACCOUNT_CONTACT"
+      ]
+    },
+    {
+      "table": "TEST_CATEGORY_GROUPINGS",
       "columns": [
         "LEAF_CATEG_ID",
         "SITE_ID",
@@ -107,7 +181,7 @@
       ]
     },
     {
-      "table": "EDW.TEST_SITES",
+      "table": "TEST_SITES",
       "columns": [
         "SITE_ID",
         "SITE_NAME",
@@ -115,17 +189,31 @@
       ]
     },
     {
-      "table": "EDW.TEST_SELLER_TYPE_DIM",
+      "table": "TEST_SELLER_TYPE_DIM",
       "columns": [
         "SELLER_TYPE_CD",
         "SELLER_TYPE_DESC"
       ]
     },
     {
-      "table": "EDW.TEST_CAL_DT",
+      "table": "TEST_CAL_DT",
       "columns": [
         "CAL_DT",
         "WEEK_BEG_DT"
+      ]
+    },
+    {
+      "table": "BUYER_COUNTRY",
+      "columns": [
+        "COUNTRY",
+        "NAME"
+      ]
+    },
+    {
+      "table": "SELLER_COUNTRY",
+      "columns": [
+        "COUNTRY",
+        "NAME"
       ]
     }
   ],

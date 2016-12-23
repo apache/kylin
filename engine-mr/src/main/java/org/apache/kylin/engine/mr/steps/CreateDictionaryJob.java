@@ -57,14 +57,13 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
         DictionaryGeneratorCLI.processSegment(config, cubeName, segmentID, new DistinctColumnValuesProvider() {
             @Override
             public ReadableTable getDistinctValuesFor(TblColRef col) {
-                return new SortedColumnDFSFile(factColumnsInputPath + "/" + col.getName(), col.getType());
+                return new SortedColumnDFSFile(factColumnsInputPath + "/" + col.getIdentity(), col.getType());
             }
         }, new DictionaryProvider() {
 
             @Override
             public Dictionary<String> getDictionary(TblColRef col) throws IOException {
-                Path colDir = new Path(factColumnsInputPath, col.getName());
-                Path dictFile = new Path(colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
+                Path dictFile = new Path(factColumnsInputPath, col.getIdentity() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
                 FileSystem fs = HadoopUtil.getFileSystem(dictFile.toString());
                 if (fs.exists(dictFile) == false)
                     return null;

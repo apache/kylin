@@ -98,9 +98,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     @JsonProperty("snapshots")
     private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
 
-    @JsonProperty("index_path")
-    private String indexPath;
-
     @JsonProperty("rowkey_stats")
     private List<Object[]> rowkeyStats = Lists.newArrayList();
 
@@ -296,15 +293,22 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     }
 
     public String getDictResPath(TblColRef col) {
-        return getDictionaries().get(dictKey(col));
+        String r;
+        String dictKey = col.getIdentity();
+        r = getDictionaries().get(dictKey);
+        
+        // try Kylin v1.x dict key as well
+        if (r == null) {
+            String v1DictKey = col.getTable() + "/" + col.getName();
+            r = getDictionaries().get(v1DictKey);
+        }
+        
+        return r;
     }
 
     public void putDictResPath(TblColRef col, String dictResPath) {
-        getDictionaries().put(dictKey(col), dictResPath);
-    }
-
-    private String dictKey(TblColRef col) {
-        return col.getTable() + "/" + col.getName();
+        String dictKey = col.getIdentity();
+        getDictionaries().put(dictKey, dictResPath);
     }
 
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
@@ -521,14 +525,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
 
     public IRealization getRealization() {
         return cubeInstance;
-    }
-
-    public String getIndexPath() {
-        return indexPath;
-    }
-
-    public void setIndexPath(String indexPath) {
-        this.indexPath = indexPath;
     }
 
     public Map<String, String> getAdditionalInfo() {

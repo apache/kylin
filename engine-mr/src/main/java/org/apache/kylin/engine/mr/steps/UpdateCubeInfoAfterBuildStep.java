@@ -59,7 +59,6 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         long cubeSizeBytes = cubingJob.findCubeSizeBytes();
 
         segment.setLastBuildJobID(CubingExecutableUtil.getCubingJobId(this.getParams()));
-        segment.setIndexPath(CubingExecutableUtil.getIndexPath(this.getParams()));
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(cubeSizeBytes / 1024);
         segment.setInputRecords(sourceCount);
@@ -81,8 +80,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     private void updateTimeRange(CubeSegment segment) throws IOException {
         final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
         final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
-        Path colDir = new Path(factColumnsInputPath, partitionCol.getName());
-        Path outputFile = new Path(colDir, partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
+        Path outputFile = new Path(factColumnsInputPath, partitionCol.getIdentity() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
         FileSystem fs = HadoopUtil.getFileSystem(outputFile.toString());
         FSDataInputStream is = null;
         long minValue = Long.MAX_VALUE, maxValue = Long.MIN_VALUE;

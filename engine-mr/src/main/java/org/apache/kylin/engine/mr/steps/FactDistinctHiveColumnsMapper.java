@@ -31,6 +31,8 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
@@ -40,6 +42,8 @@ import com.google.common.hash.Hashing;
 /**
  */
 public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, Object> {
+
+    private static final Logger logger = LoggerFactory.getLogger(FactDistinctHiveColumnsMapper.class);
 
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
@@ -51,7 +55,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     private int rowCount = 0;
     private int samplingPercentage;
     private ByteArray[] row_hashcodes = null;
-    private ByteBuffer keyBuffer;
+    private ByteBuffer tmpbuf;
     private static final Text EMPTY_TEXT = new Text();
     public static final byte MARK_FOR_PARTITION_COL = (byte) 0xFE;
     public static final byte MARK_FOR_HLL = (byte) 0xFF;
@@ -62,7 +66,7 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     @Override
     protected void setup(Context context) throws IOException {
         super.setup(context);
-        keyBuffer = ByteBuffer.allocate(4096);
+        tmpbuf = ByteBuffer.allocate(4096);
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
             samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
@@ -127,55 +131,54 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         String[] row = flatTableInputFormat.parseMapperInput(record);
 
-        keyBuffer.clear();
-        try {
-            for (int i = 0; i < factDictCols.size(); i++) {
-                String fieldValue = row[dictionaryColumnIndex[i]];
-                if (fieldValue == null)
-                    continue;
-                int offset = keyBuffer.position();
+        for (int i = 0; i < factDictCols.size(); i++) {
+            String fieldValue = row[dictionaryColumnIndex[i]];
+            if (fieldValue == null)
+                continue;
 
-                int reducerIndex;
-                if (uhcIndex[i] == 0) {
-                    //for the normal dictionary column
-                    reducerIndex = columnIndexToReducerBeginId.get(i);
-                } else {
-                    //for the uhc
-                    reducerIndex = columnIndexToReducerBeginId.get(i) + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
-                }
-                keyBuffer.put(Bytes.toBytes(reducerIndex)[3]);
-                keyBuffer.put(Bytes.toBytes(fieldValue));
-                outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
-                sortableKey.setText(outputKey);
-                //judge type
-                sortableKey.setTypeIdByDatatype(factDictCols.get(i).getType());
-                context.write(sortableKey, EMPTY_TEXT);
+            int reducerIndex;
+            if (uhcIndex[i] == 0) {
+                //for the normal dictionary column
+                reducerIndex = columnIndexToReducerBeginId.get(i);
+            } else {
+                //for the uhc
+                reducerIndex = columnIndexToReducerBeginId.get(i) + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
             }
-        } catch (Exception ex) {
-            handleErrorRecord(row, ex);
+
+            tmpbuf.clear();
+            tmpbuf.put(Bytes.toBytes(reducerIndex)[3]);
+            tmpbuf.put(Bytes.toBytes(fieldValue));
+            outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
+            sortableKey.setText(outputKey);
+            //judge type
+            sortableKey.setTypeIdByDatatype(factDictCols.get(i).getType());
+            context.write(sortableKey, EMPTY_TEXT);
+
+            // log a few rows for troubleshooting
+            if (rowCount < 10) {
+                logger.info("Sample output: " + factDictCols.get(i) + " '" + fieldValue + "' => reducer " + reducerIndex);
+            }
         }
 
         if (collectStatistics) {
-            if (rowCount < samplingPercentage) {
+            if (rowCount % 100 < samplingPercentage) {
                 putRowKeyToHLL(row);
             }
 
             if (needFetchPartitionCol == true) {
                 String fieldValue = row[partitionColumnIndex];
                 if (fieldValue != null) {
-                    int offset = keyBuffer.position();
-                    keyBuffer.put(MARK_FOR_PARTITION_COL);
-                    keyBuffer.put(Bytes.toBytes(fieldValue));
-                    outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
+                    tmpbuf.clear();
+                    tmpbuf.put(MARK_FOR_PARTITION_COL);
+                    tmpbuf.put(Bytes.toBytes(fieldValue));
+                    outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
                     sortableKey.setText(outputKey);
                     sortableKey.setTypeId((byte) 0);
                     context.write(sortableKey, EMPTY_TEXT);
                 }
             }
         }
-
-        if (rowCount++ == 100)
-            rowCount = 0;
+        rowCount++;
     }
 
     private void putRowKeyToHLL(String[] row) {
@@ -211,10 +214,10 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             for (int i = 0; i < cuboidIds.length; i++) {
                 hll = allCuboidsHLL[i];
 
-                keyBuffer.clear();
-                keyBuffer.put(MARK_FOR_HLL); // one byte
-                keyBuffer.putLong(cuboidIds[i]);
-                outputKey.set(keyBuffer.array(), 0, keyBuffer.position());
+                tmpbuf.clear();
+                tmpbuf.put(MARK_FOR_HLL); // one byte
+                tmpbuf.putLong(cuboidIds[i]);
+                outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
                 hllBuf.clear();
                 hll.writeRegisters(hllBuf);
                 outputValue.set(hllBuf.array(), 0, hllBuf.position());

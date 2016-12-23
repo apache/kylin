@@ -48,21 +48,22 @@ public class JoinsTreeTest extends LocalFileMetadataTestCase {
     @Test
     public void testBasics() {
         MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        DataModelDesc model = mgr.getDataModelDesc("test_kylin_snowflake_sales_model");
+        DataModelDesc model = mgr.getDataModelDesc("ci_left_join_model");
         JoinsTree joinsTree = model.getJoinsTree();
         
         Chain chain = joinsTree.tableChains.get("BUYER_COUNTRY");
         assertTrue(chain.table == model.findTable("BUYER_COUNTRY"));
         assertTrue(chain.fkSide.table == model.findTable("BUYER_ACCOUNT"));
-        assertTrue(chain.fkSide.fkSide.table == model.findTable("KYLIN_SALES"));
-        assertTrue(chain.fkSide.fkSide.join == null);
-        assertTrue(chain.fkSide.fkSide.fkSide == null);
+        assertTrue(chain.fkSide.fkSide.table == model.findTable("TEST_ORDER"));
+        assertTrue(chain.fkSide.fkSide.fkSide.table == model.findTable("TEST_KYLIN_FACT"));
+        assertTrue(chain.fkSide.fkSide.fkSide.join == null);
+        assertTrue(chain.fkSide.fkSide.fkSide.fkSide == null);
     }
     
     @Test
     public void testMatch() {
         MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        DataModelDesc model = mgr.getDataModelDesc("test_kylin_snowflake_sales_model");
+        DataModelDesc model = mgr.getDataModelDesc("ci_inner_join_model");
         JoinsTree joinsTree = model.getJoinsTree();
 
         Map<String, String> matchUp = joinsTree.matches(joinsTree);

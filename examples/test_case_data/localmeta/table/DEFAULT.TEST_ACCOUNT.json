@@ -1,28 +1,34 @@
 {
   "uuid" : "f386e39e-40d7-44c2-9eb3-41b365632231",
  
-  "name" : "KYLIN_ACCOUNT",
+  "name" : "TEST_ACCOUNT",
+  "data_gen" : "2000",
+  
   "columns" : [ {
     "id" : "1",
     "name" : "ACCOUNT_ID",
-    "datatype" : "bigint"
+    "datatype" : "bigint",
+    "data_gen" : "ID|10000000"
   }, {
     "id" : "2",
     "name" : "ACCOUNT_BUYER_LEVEL",
-    "datatype" : "int"
+    "datatype" : "int",
+    "data_gen" : "RAND||0|5"
   }, {
     "id" : "3",
     "name" : "ACCOUNT_SELLER_LEVEL",
-    "datatype" : "int"
+    "datatype" : "int",
+    "data_gen" : "RAND||0|5"
   }, {
     "id" : "4",
     "name" : "ACCOUNT_COUNTRY",
-    "datatype" : "string"
+    "datatype" : "string",
+    "data_gen" : "CN|FR|GB|GE|JP|IT|RU|US"
   }, {
     "id" : "5",
     "name" : "ACCOUNT_CONTACT",
     "datatype" : "string"
   } ],
-  "database" : "SNOWTEST",
+  "database" : "DEFAULT",
   "last_modified" : 0
 }
