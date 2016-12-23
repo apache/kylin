@@ -149,7 +149,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_limit/query01.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/temp/sample.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {

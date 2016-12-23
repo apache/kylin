@@ -164,7 +164,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         } else if (leftHasSubquery != rightHasSubquery) {
             //When join contains subquery, the join-condition fields of fact_table will add into context.
             Map<TblColRef, TblColRef> joinCol = new HashMap<TblColRef, TblColRef>();
-            translateJoinColumn((RexCall) this.getCondition(), joinCol);
+            translateJoinColumn(this.getCondition(), joinCol);
 
             for (Map.Entry<TblColRef, TblColRef> columnPair : joinCol.entrySet()) {
                 TblColRef fromCol = (rightHasSubquery ? columnPair.getKey() : columnPair.getValue());
@@ -217,6 +217,12 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         join.setPrimaryKeyColumns(pkCols.toArray(new TblColRef[pkCols.size()]));
         join.sortByFK();
         return join;
+    }
+
+    private void translateJoinColumn(RexNode condition, Map<TblColRef, TblColRef> joinCol) {
+        if (condition instanceof RexCall) {
+            translateJoinColumn((RexCall) condition, joinCol);
+        }
     }
 
     private void translateJoinColumn(RexCall condition, Map<TblColRef, TblColRef> joinColumns) {

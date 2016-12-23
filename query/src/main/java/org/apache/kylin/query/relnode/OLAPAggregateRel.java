@@ -153,7 +153,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
         // only translate the innermost aggregation
         if (!this.afterAggregate) {
-            this.context.groupByColumns.addAll(this.groups);
+            addToContextGroupBy(this.groups);
             this.context.aggregations.addAll(this.aggregations);
             this.context.afterAggregate = true;
 
@@ -326,7 +326,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             FunctionDesc aggFunc = this.aggregations.get(i);
 
             if (aggFunc.isDimensionAsMetric()) {
-                this.context.groupByColumns.addAll(aggFunc.getParameter().getColRefs());
+                addToContextGroupBy(aggFunc.getParameter().getColRefs());
                 continue; // skip rewrite, let calcite handle
             }
 
@@ -347,6 +347,13 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                     this.context.metricsColumns.add(column);
                 }
             }
+        }
+    }
+
+    private void addToContextGroupBy(List<TblColRef> colRefs) {
+        for (TblColRef col : colRefs) {
+            if (col.isInnerColumn() == false)
+                this.context.groupByColumns.add(col);
         }
     }
 

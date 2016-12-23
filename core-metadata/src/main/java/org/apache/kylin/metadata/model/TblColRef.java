@@ -27,7 +27,7 @@ import org.apache.kylin.metadata.datatype.DataType;
 
 /**
  */
-@SuppressWarnings("serial")
+@SuppressWarnings({ "serial", "deprecation" })
 public class TblColRef implements Serializable {
 
     private static final String INNER_TABLE_NAME = "_kylin_table";
@@ -82,6 +82,7 @@ public class TblColRef implements Serializable {
         TableRef tableRef = model.findTable(alias);
         checkArgument(tableRef.getTableDesc() == col.column.getTable());
         col.table = tableRef;
+        col.identity = null;
     }
 
     // for test mainly
@@ -158,10 +159,6 @@ public class TblColRef implements Serializable {
 
     public boolean isInnerColumn() {
         return InnerDataTypeEnum.contains(getDatatype());
-    }
-
-    public boolean isDerivedDataType() {
-        return InnerDataTypeEnum.DERIVED.getDataType().equals(getDatatype());
     }
 
     public int hashCode() {

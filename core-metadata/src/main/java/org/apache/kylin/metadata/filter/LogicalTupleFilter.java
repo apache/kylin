@@ -47,19 +47,6 @@ public class LogicalTupleFilter extends TupleFilter {
         return cloneTuple;
     }
 
-    //    private TupleFilter reverseNestedNots(TupleFilter filter, int depth) {
-    //        if ((filter instanceof LogicalTupleFilter) && (filter.operator == FilterOperatorEnum.NOT)) {
-    //            assert (filter.children.size() == 1);
-    //            return reverseNestedNots(filter.children.get(0), depth + 1);
-    //        }
-    //
-    //        if (depth % 2 == 1) {
-    //            return filter;
-    //        } else {
-    //            return filter.reverse();
-    //        }
-    //    }
-
     @Override
     public TupleFilter reverse() {
         switch (operator) {
