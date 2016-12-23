@@ -77,8 +77,10 @@ public class StorageResponseGTScatter implements IGTScanner {
     public Iterator<GTRecord> iterator() {
         Iterator<Iterator<GTRecord>> shardSubsets = Iterators.transform(blocks, new EndpointResponseGTScatterFunc());
         if (storagePushDownLimit != Integer.MAX_VALUE) {
+            logger.info("Using SortedIteratorMergerWithLimit to merge partitions");
             return new SortedIteratorMergerWithLimit<GTRecord>(shardSubsets, storagePushDownLimit, GTRecord.getPrimaryKeyComparator()).getIterator();
         } else {
+            logger.info("Using Iterators.concat to merge partitions");
             return Iterators.concat(shardSubsets);
         }
     }

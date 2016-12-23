@@ -62,6 +62,14 @@ public class BackdoorToggles {
         return getBoolean(DEBUG_TOGGLE_LOCAL_COPROCESSOR);
     }
 
+    public static String getPartitionDumpDir() {
+        return getString(DEBUG_TOGGLE_PARTITION_DUMP_DIR);
+    }
+
+    public static String getDumpedPartitionDir() {
+        return getString(DEBUG_TOGGLE_DUMPED_PARTITION_DIR);
+    }
+
     public static int getQueryTimeout() {
         String v = getString(DEBUG_TOGGLE_QUERY_TIMEOUT);
         if (v == null)
@@ -189,6 +197,28 @@ public class BackdoorToggles {
      }
      */
     public final static String DEBUG_TOGGLE_SHARD_ASSIGNMENT = "DEBUG_TOGGLE_SHARD_ASSIGNMENT";
+
+    /**
+     * set DEBUG_TOGGLE_PARTITION_DUMP_DIR="dir" to dump the partitions from storage.
+     * The dumped partitions are used for performance profiling, for example.
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_PARTITION_DUMP_DIR": "/tmp/dumping"
+     }
+     */
+    public final static String DEBUG_TOGGLE_PARTITION_DUMP_DIR = "DEBUG_TOGGLE_PARTITION_DUMP_DIR";
+
+    /**
+     * set DEBUG_TOGGLE_DUMPED_PARTITION_DIR="dir" to specify the dir to retrieve previously dumped partitions
+     * it's a companion toggle with DEBUG_TOGGLE_PARTITION_DUMP_DIR
+     *
+     example:(put it into request body)
+     "backdoorToggles": {
+     "DEBUG_TOGGLE_DUMPED_PARTITION_DIR": "/tmp/dumped"
+     }
+     */
+    public final static String DEBUG_TOGGLE_DUMPED_PARTITION_DIR = "DEBUG_TOGGLE_DUMPED_PARTITION_DIR";
 
     // properties on statement may go with this "channel" too
     /**
