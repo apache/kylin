@@ -61,20 +61,31 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     @Override
     public boolean moveNext() {
-        if (cursor == null) {
-            cursor = queryStorage();
-        }
+        try {
+            if (cursor == null) {
+                cursor = queryStorage();
+            }
 
-        if (!cursor.hasNext()) {
-            return false;
-        }
+            if (!cursor.hasNext()) {
+                return false;
+            }
 
-        ITuple tuple = cursor.next();
-        if (tuple == null) {
-            return false;
+            ITuple tuple = cursor.next();
+            if (tuple == null) {
+                return false;
+            }
+            convertCurrentRow(tuple);
+            return true;
+        } catch (Exception e) {
+            try {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            } catch (Exception ee) {
+                logger.info("Error when closing cursor, ignore it", ee);
+            }
+            throw e;
         }
-        convertCurrentRow(tuple);
-        return true;
     }
 
     private Object[] convertCurrentRow(ITuple tuple) {
