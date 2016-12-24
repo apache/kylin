@@ -236,7 +236,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             }
 
             final MutableBoolean scanNormalComplete = new MutableBoolean(true);
-            final long deadline = scanReq.getTimeout() + this.serviceStartTime;
+            final long deadline = scanReq.getStartTime() + scanReq.getTimeout();
             logger.info("deadline is " + deadline);
             final long storagePushDownLimit = scanReq.getStoragePushDownLimit();
 
