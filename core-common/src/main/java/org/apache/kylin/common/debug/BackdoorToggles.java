@@ -24,6 +24,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.Pair;
 
 /**
+ * BackdoorToggles and QueryContext are similar because they're both hosting per-query thread local variables.
+ * The difference is that BackdoorToggles are specified by user input and work for debug purpose. QueryContext
+ * is used voluntarily by program itself
+ * 
+ * BackdoorToggles is part of SQLRequest, QueryContext does not belong to SQLRequest
  */
 public class BackdoorToggles {
 
@@ -65,10 +70,6 @@ public class BackdoorToggles {
             return Integer.valueOf(v);
     }
 
-    public static String getQueryId() {
-        return getString(KEY_QUERY_ID);
-    }
-
     public static Pair<Short, Short> getShardAssignment() {
         String v = getString(DEBUG_TOGGLE_SHARD_ASSIGNMENT);
         if (v == null) {
@@ -103,8 +104,6 @@ public class BackdoorToggles {
     public static void cleanToggles() {
         _backdoorToggles.remove();
     }
-
-    public final static String KEY_QUERY_ID = "QUERY_ID";
 
     /**
      * set DEBUG_TOGGLE_DISABLE_FUZZY_KEY=true to disable fuzzy key for debug/profile usage

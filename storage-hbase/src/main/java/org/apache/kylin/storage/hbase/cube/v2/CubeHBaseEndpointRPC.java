@@ -32,7 +32,7 @@ import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
@@ -158,7 +158,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
         builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
         builder.setKylinProperties(kylinConfig.getConfigAsString());
-        final String queryId = BackdoorToggles.getQueryId();
+        final String queryId = QueryContext.getQueryId();
         if (queryId != null) {
             builder.setQueryId(queryId);
         }

@@ -53,6 +53,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.DBUtils;
@@ -266,7 +267,7 @@ public class QueryService extends BasicService {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
-        stringBuilder.append("Query Id: ").append(BackdoorToggles.getQueryId()).append(newLine);
+        stringBuilder.append("Query Id: ").append(QueryContext.getQueryId()).append(newLine);
         stringBuilder.append("SQL: ").append(request.getSql()).append(newLine);
         stringBuilder.append("User: ").append(user).append(newLine);
         stringBuilder.append("Success: ").append((null == response.getExceptionMessage())).append(newLine);
@@ -324,13 +325,7 @@ public class QueryService extends BasicService {
         }
 
         final String queryId = UUID.randomUUID().toString();
-        Map<String, String> toggles = new HashMap<>();
-        toggles.put(BackdoorToggles.KEY_QUERY_ID, queryId);
-        if (sqlRequest.getBackdoorToggles() != null) {
-            toggles.putAll(sqlRequest.getBackdoorToggles());
-        }
-        sqlRequest.setBackdoorToggles(toggles);
-        BackdoorToggles.setToggles(toggles);
+        QueryContext.setQueryId(queryId);
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
             String sql = sqlRequest.getSql();
@@ -442,7 +437,9 @@ public class QueryService extends BasicService {
         String correctedSql = QueryUtil.massageSql(sqlRequest);
         if (!correctedSql.equals(sqlRequest.getSql())) {
             logger.info("The corrected query: " + correctedSql);
-            sqlRequest.setSql(correctedSql);
+            
+            //CAUTION: should not change sqlRequest content!
+            //sqlRequest.setSql(correctedSql);
         }
 
         // add extra parameters into olap context, like acceptPartial
@@ -521,12 +518,12 @@ public class QueryService extends BasicService {
     }
 
     /**
-     * @param sql
+     * @param correctedSql
      * @param sqlRequest
      * @return
      * @throws Exception
      */
-    private SQLResponse execute(String sql, SQLRequest sqlRequest) throws Exception {
+    private SQLResponse execute(String correctedSql, SQLRequest sqlRequest) throws Exception {
         Connection conn = null;
         Statement stat = null;
         ResultSet resultSet = null;
@@ -538,7 +535,7 @@ public class QueryService extends BasicService {
             conn = cacheService.getOLAPDataSource(sqlRequest.getProject()).getConnection();
 
             if (sqlRequest instanceof PrepareSqlRequest) {
-                PreparedStatement preparedState = conn.prepareStatement(sql);
+                PreparedStatement preparedState = conn.prepareStatement(correctedSql);
                 processStatementAttr(preparedState, sqlRequest);
 
                 for (int i = 0; i < ((PrepareSqlRequest) sqlRequest).getParams().length; i++) {
@@ -549,7 +546,7 @@ public class QueryService extends BasicService {
             } else {
                 stat = conn.createStatement();
                 processStatementAttr(stat, sqlRequest);
-                resultSet = stat.executeQuery(sql);
+                resultSet = stat.executeQuery(correctedSql);
             }
 
             ResultSetMetaData metaData = resultSet.getMetaData();

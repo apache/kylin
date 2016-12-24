@@ -25,6 +25,7 @@ public class SQLRequest implements Serializable {
     protected static final long serialVersionUID = 1L;
 
     private String sql;
+
     private String project;
     private Integer offset = 0;
     private Integer limit = 0;
@@ -83,19 +84,25 @@ public class SQLRequest implements Serializable {
         this.acceptPartial = acceptPartial;
     }
 
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         SQLRequest that = (SQLRequest) o;
 
-        if (acceptPartial != that.acceptPartial) return false;
-        if (sql != null ? !sql.equals(that.sql) : that.sql != null) return false;
-        if (project != null ? !project.equals(that.project) : that.project != null) return false;
-        if (offset != null ? !offset.equals(that.offset) : that.offset != null) return false;
-        if (limit != null ? !limit.equals(that.limit) : that.limit != null) return false;
+        if (acceptPartial != that.acceptPartial)
+            return false;
+        if (sql != null ? !sql.equals(that.sql) : that.sql != null)
+            return false;
+        if (project != null ? !project.equals(that.project) : that.project != null)
+            return false;
+        if (offset != null ? !offset.equals(that.offset) : that.offset != null)
+            return false;
+        if (limit != null ? !limit.equals(that.limit) : that.limit != null)
+            return false;
         return backdoorToggles != null ? backdoorToggles.equals(that.backdoorToggles) : that.backdoorToggles == null;
 
     }
