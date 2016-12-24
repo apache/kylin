@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.util.CheckUtil.checkCondition;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -341,7 +343,9 @@ public class QueryService extends BasicService {
             long startTime = System.currentTimeMillis();
 
             SQLResponse sqlResponse = null;
-            boolean queryCacheEnabled = kylinConfig.isQueryCacheEnabled() && !BackdoorToggles.getDisableCache();
+            boolean queryCacheEnabled = checkCondition(kylinConfig.isQueryCacheEnabled(), "query cache disabled in KylinConfig") && //
+                    checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
+
             if (queryCacheEnabled) {
                 sqlResponse = searchQueryInCache(sqlRequest);
             }
@@ -355,12 +359,13 @@ public class QueryService extends BasicService {
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                     logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
                             String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()), String.valueOf(sqlResponse.getTotalScanCount()));
-                    if (queryCacheEnabled && //
-                            !sqlResponse.getIsException() && //
-                            (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold) && //
-                            (sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold())) { //don't cache too large response
+                    if (checkCondition(queryCacheEnabled, "query cache is disabled") && //
+                            checkCondition(!sqlResponse.getIsException(), "query has exception") && //
+                            checkCondition(sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold, "query is too lightweight with duration: {} ({}), scan count: {} ({})", sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(), scancountThreshold) && // 
+                            checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(), "query response is too large: {} ({})", sqlResponse.getResults().size(), kylinConfig.getLargeQueryThreshold())) {
                         cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                     }
+
                 } else {
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                 }
@@ -437,7 +442,7 @@ public class QueryService extends BasicService {
         String correctedSql = QueryUtil.massageSql(sqlRequest);
         if (!correctedSql.equals(sqlRequest.getSql())) {
             logger.info("The corrected query: " + correctedSql);
-            
+
             //CAUTION: should not change sqlRequest content!
             //sqlRequest.setSql(correctedSql);
         }
