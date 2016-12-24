@@ -189,6 +189,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testSnowflakeQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_snowflake", null, true);
+    }
+    
+    @Test
     public void testDateTimeQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_datetime", null, true);
     }

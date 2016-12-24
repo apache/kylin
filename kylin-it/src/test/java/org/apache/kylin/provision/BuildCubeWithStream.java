@@ -311,6 +311,9 @@ public class BuildCubeWithStream {
     }
 
     public static void main(String[] args) throws Exception {
+        long start = System.currentTimeMillis();
+        int exitCode = 0;
+
         BuildCubeWithStream buildCubeWithStream = null;
         try {
             beforeClass();
@@ -320,11 +323,14 @@ public class BuildCubeWithStream {
             logger.info("Build is done");
             buildCubeWithStream.cleanup();
             logger.info("Going to exit");
-            System.exit(0);
         } catch (Throwable e) {
             logger.error("error", e);
-            System.exit(1);
+            exitCode = 1;
         }
 
+        long millis = System.currentTimeMillis() - start;
+        System.out.println("Time elapsed: " + (millis / 1000) + " sec - in " + BuildCubeWithStream.class.getName());
+        
+        System.exit(exitCode);
     }
 }
