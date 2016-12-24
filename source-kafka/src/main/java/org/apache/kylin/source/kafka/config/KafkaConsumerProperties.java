@@ -101,8 +101,8 @@ public class KafkaConsumerProperties {
     private Properties loadKafkaConsumerProperties() {
         File propFile = getKafkaConsumerFile();
         if (propFile == null || !propFile.exists()) {
-            logger.error("fail to locate " + KAFKA_CONSUMER_FILE);
-            throw new RuntimeException("fail to locate " + KAFKA_CONSUMER_FILE);
+            logger.warn("fail to locate " + KAFKA_CONSUMER_FILE + ", use empty kafka consumer properties");
+            return new Properties();
         }
         Properties properties = new Properties();
         try {
@@ -115,7 +115,6 @@ public class KafkaConsumerProperties {
             File propOverrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
             if (propOverrideFile.exists()) {
                 FileInputStream ois = new FileInputStream(propOverrideFile);
-                Properties propOverride = new Properties();
                 Configuration oconf = new Configuration();
                 oconf.addResource(ois);
                 properties.putAll(extractKafkaConfigToProperties(oconf));
@@ -134,7 +133,6 @@ public class KafkaConsumerProperties {
     }
 
     private File getKafkaConsumerFile() {
-        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String kylinConfHome = System.getProperty(KylinConfig.KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {
             logger.info("Use KYLIN_CONF=" + kylinConfHome);
@@ -143,7 +141,7 @@ public class KafkaConsumerProperties {
 
         logger.warn("KYLIN_CONF property was not set, will seek KYLIN_HOME env variable");
 
-        String kylinHome = kylinConfig.getKylinHome();
+        String kylinHome = KylinConfig.getKylinHome();
         if (StringUtils.isEmpty(kylinHome))
             throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
 

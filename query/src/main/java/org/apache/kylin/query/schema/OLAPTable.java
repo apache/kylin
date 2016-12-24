@@ -203,7 +203,7 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
                 DataModelDesc model = realization.getModel();
                 for (String metricColumn : model.getMetrics()) {
                     TblColRef col = model.findColumn(metricColumn);
-                    if (col.getType().isIntegerFamily() && !col.getType().isBigInt())
+                    if (col.getTable().equals(sourceTable.getIdentity()) && col.getType().isIntegerFamily() && !col.getType().isBigInt())
                         updateColumns.add(col.getColumnDesc());
                 }
             }
