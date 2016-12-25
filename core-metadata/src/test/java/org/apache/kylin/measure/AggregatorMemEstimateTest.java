@@ -38,8 +38,6 @@ import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCAggregator;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.DoubleMutable;
-import org.apache.kylin.metadata.datatype.LongMutable;
 import org.github.jamm.MemoryMeter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -61,7 +59,7 @@ public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
     }
 
     private List<? extends MeasureAggregator> basicAggregators() {
-        LongMutable longVal = new LongMutable(1000);
+        Long longVal = new Long(1000);
         LongMinAggregator longMin = new LongMinAggregator();
         LongMaxAggregator longMax = new LongMaxAggregator();
         LongSumAggregator longSum = new LongSumAggregator();
@@ -69,7 +67,7 @@ public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
         longMax.aggregate(longVal);
         longSum.aggregate(longVal);
 
-        DoubleMutable doubleVal = new DoubleMutable(1.0);
+        Double doubleVal = new Double(1.0);
         DoubleMinAggregator doubleMin = new DoubleMinAggregator();
         DoubleMaxAggregator doubleMax = new DoubleMaxAggregator();
         DoubleSumAggregator doubleSum = new DoubleSumAggregator();

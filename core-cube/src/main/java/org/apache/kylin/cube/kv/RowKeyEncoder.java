@@ -18,11 +18,7 @@
 
 package org.apache.kylin.cube.kv;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.base.Preconditions;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -32,9 +28,12 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import com.google.common.base.Preconditions;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class RowKeyEncoder extends AbstractRowKeyEncoder {
+public class RowKeyEncoder extends AbstractRowKeyEncoder implements java.io.Serializable {
 
     private int bodyLength = 0;
     private RowKeyColumnIO colIO;
@@ -42,11 +41,13 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     protected boolean enableSharding;
     private int uhcOffset = -1;//it's a offset to the beginning of body
     private int uhcLength = -1;
+    private int headerLength;
 
     public RowKeyEncoder(CubeSegment cubeSeg, Cuboid cuboid) {
         super(cubeSeg, cuboid);
         enableSharding = cubeSeg.isEnableSharding();
-        Set<TblColRef> shardByColumns = cubeSeg.getShardByColumns();
+        headerLength = cubeSeg.getRowKeyPreambleSize();
+        Set<TblColRef> shardByColumns = cubeSeg.getCubeDesc().getShardByColumns();
         if (shardByColumns.size() > 1) {
             throw new IllegalStateException("Does not support multiple UHC now");
         }
@@ -61,7 +62,7 @@ public class RowKeyEncoder extends AbstractRowKeyEncoder {
     }
 
     public int getHeaderLength() {
-        return cubeSeg.getRowKeyPreambleSize();
+        return headerLength;
     }
 
     public int getBytesLength() {

@@ -31,7 +31,6 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.HBaseColumnDesc;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
@@ -60,8 +59,8 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         BigDecimal sum = new BigDecimal("333.1234567");
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");
-        LongMutable count = new LongMutable(2);
-        LongMutable item_count = new LongMutable(100);
+        Long count = new Long(2);
+        Long item_count = new Long(100);
         ByteBuffer buf = codec.encode(new Object[] { sum, min, max, count, item_count });
 
         buf.flip();
@@ -91,7 +90,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
         BigDecimal min = new BigDecimal("333.1111111");
         BigDecimal max = new BigDecimal("333.1999999");
         LongWritable count = new LongWritable(2);
-        LongMutable item_count = new LongMutable(100);
+        Long item_count = new Long(100);
         codec.encode(new Object[] { sum, min, max, count, item_count });
 
     }

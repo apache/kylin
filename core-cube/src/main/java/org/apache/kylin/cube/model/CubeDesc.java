@@ -100,7 +100,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
 
-    public static class DeriveInfo {
+    public static class DeriveInfo implements java.io.Serializable {
         public DeriveType type;
         public JoinDesc join;
         public TblColRef[] columns;

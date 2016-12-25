@@ -24,7 +24,7 @@ package org.apache.kylin.dict;
 @SuppressWarnings("serial")
 public class NumberDictionary2<T> extends NumberDictionary<T> {
 
-    static ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
+    static transient ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
 
     // ============================================================================
 

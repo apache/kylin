@@ -105,6 +105,11 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
                 }
                 return hllc;
             }
+
+            @Override
+            public void reset() {
+                current = new HLLCounter(dataType.getPrecision());
+            }
         };
     }
 

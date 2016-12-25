@@ -37,7 +37,7 @@ import com.google.common.collect.Lists;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class AggregationGroup implements Serializable{
-    public static class HierarchyMask {
+    public static class HierarchyMask implements java.io.Serializable {
         public long fullMask; // 00000111
         public long[] allMasks; // 00000100,00000110,00000111
         public long[] dims; // 00000100,00000010,00000001

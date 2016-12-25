@@ -20,7 +20,7 @@ package org.apache.kylin.dict;
 
 import org.apache.kylin.common.util.Bytes;
 
-public class StringBytesConverter implements BytesConverter<String> {
+public class StringBytesConverter implements BytesConverter<String>, java.io.Serializable {
 
     @Override
     public byte[] convertToBytes(String v) {

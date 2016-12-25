@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.datatype.StringSerializer;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -72,7 +71,7 @@ public class SimpleInvertedIndexTest extends LocalFileMetadataTestCase {
         GTRowBlock.Writer writer = mockBlock.getWriter();
         GTRecord record = new GTRecord(info);
         for (int i = 0; i < 10; i++) {
-            record.setValues(i < 9 ? "" + i : null, "", "", new LongMutable(0), new BigDecimal(0));
+            record.setValues(i < 9 ? "" + i : null, "", "", new Long(0), new BigDecimal(0));
             for (int j = 0; j < info.getRowBlockSize(); j++) {
                 writer.append(record);
             }

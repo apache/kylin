@@ -21,6 +21,12 @@ package org.apache.kylin.cube.cuboid;
 /**
  */
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import org.apache.kylin.cube.model.AggregationGroup;
+import org.apache.kylin.cube.model.CubeDesc;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -28,14 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.kylin.cube.model.AggregationGroup;
-import org.apache.kylin.cube.model.CubeDesc;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-public class CuboidScheduler {
+public class CuboidScheduler implements java.io.Serializable {
 
     private final CubeDesc cubeDesc;
     private final long max;

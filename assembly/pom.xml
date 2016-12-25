@@ -47,6 +47,10 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-mr</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-engine-spark</artifactId>
+        </dependency>
 
         <!-- Env & Test -->
         <dependency>
@@ -173,7 +177,6 @@
                             <shadedClassifierName>job</shadedClassifierName>
                             <artifactSet>
                                 <excludes>
-                                    <exclude>io.netty:*</exclude>
                                     <exclude>org.apache.zookeeper:*</exclude>
                                     <exclude>net.sf.ehcache:*</exclude>
                                     <exclude>org.apache.httpcomponents:*</exclude>

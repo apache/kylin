@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class HadoopUtil {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HadoopUtil.class);
-    private static final ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
+    private static final transient ThreadLocal<Configuration> hadoopConfig = new ThreadLocal<>();
 
     public static void setCurrentConfiguration(Configuration conf) {
         hadoopConfig.set(conf);

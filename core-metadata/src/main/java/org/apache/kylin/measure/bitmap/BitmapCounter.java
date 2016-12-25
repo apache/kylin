@@ -31,7 +31,7 @@ import org.roaringbitmap.buffer.MutableRoaringBitmap;
 /**
  * Created by sunyerui on 15/12/1.
  */
-public class BitmapCounter implements Comparable<BitmapCounter> {
+public class BitmapCounter implements Comparable<BitmapCounter>, java.io.Serializable {
 
     private MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
     private final int VERSION = 2;

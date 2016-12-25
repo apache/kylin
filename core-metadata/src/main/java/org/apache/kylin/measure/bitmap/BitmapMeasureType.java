@@ -138,6 +138,11 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
                 }
                 return retValue;
             }
+
+            @Override
+            public void reset() {
+                current = new BitmapCounter();
+            }
         };
     }
 

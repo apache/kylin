@@ -18,20 +18,17 @@
 
 package org.apache.kylin.measure.hllc;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author yangli9
  * 
  */
 public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
-
-    // be thread-safe and avoid repeated obj creation
-    private ThreadLocal<HLLCounter> current = new ThreadLocal<HLLCounter>();
 
     private int precision;
 
@@ -49,7 +46,7 @@ public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
     }
 
     private HLLCounter current() {
-        HLLCounter hllc = current.get();
+        HLLCounter hllc = (HLLCounter) current.get();
         if (hllc == null) {
             hllc = new HLLCounter(precision);
             current.set(hllc);

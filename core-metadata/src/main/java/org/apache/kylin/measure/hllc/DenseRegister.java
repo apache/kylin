@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * Created by xiefan on 16-12-9.
  */
-public class DenseRegister implements Register {
+public class DenseRegister implements Register, java.io.Serializable {
 
     private int m;
 

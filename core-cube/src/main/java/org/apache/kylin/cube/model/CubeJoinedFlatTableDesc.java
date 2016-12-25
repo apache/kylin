@@ -36,7 +36,7 @@ import com.google.common.collect.Maps;
 
 /**
  */
-public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
+public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, java.io.Serializable {
 
     protected final String tableName;
     protected final CubeDesc cubeDesc;

@@ -84,7 +84,7 @@
         <commons-math3.version>3.6.1</commons-math3.version>
 
         <!-- Spark -->
-        <spark.version>1.3.0</spark.version>
+        <spark.version>1.6.3</spark.version>
 
         <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>

@@ -18,14 +18,14 @@
 
 package org.apache.kylin.measure;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-abstract public class MeasureIngester<V> {
+import java.util.Collection;
+import java.util.Map;
+
+abstract public class MeasureIngester<V> implements java.io.Serializable {
 
     public static MeasureIngester<?> create(MeasureDesc measure) {
         return measure.getFunction().getMeasureType().newIngester();
@@ -41,6 +41,10 @@ abstract public class MeasureIngester<V> {
     }
 
     abstract public V valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap);
+
+    public void reset() {
+
+    }
 
     public V reEncodeDictionary(V value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
         throw new UnsupportedOperationException();

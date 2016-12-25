@@ -75,6 +75,7 @@ public class JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Fact_Distinct_Columns_" + seg.getRealization().getName() + "_Step");
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
         result.setMapReduceParams(cmd.toString());
+        result.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES);
         return result;
     }
 
@@ -203,5 +204,14 @@ public class JobBuilderSupport {
         }
         return paths;
     }
+
+    public static String getCuboidOutputPathsByLevel(String cuboidRootPath, int level) {
+        if (level == 0) {
+            return cuboidRootPath + "base_cuboid";
+        } else {
+            return cuboidRootPath + level + "level_cuboid";
+        }
+    }
+
 
 }

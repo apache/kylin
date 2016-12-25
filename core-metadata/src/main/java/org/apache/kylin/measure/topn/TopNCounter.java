@@ -40,7 +40,7 @@ import com.google.common.collect.Maps;
  *
  * @param <T> type of data in the stream to be summarized
  */
-public class TopNCounter<T> implements Iterable<Counter<T>> {
+public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializable {
 
     public static final int EXTRA_SPACE_RATE = 50;
 

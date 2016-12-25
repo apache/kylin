@@ -51,7 +51,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegment {
+public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegment, java.io.Serializable {
 
     @JsonBackReference
     private CubeInstance cubeInstance;

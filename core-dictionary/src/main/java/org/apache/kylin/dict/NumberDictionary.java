@@ -153,7 +153,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
         }
     }
 
-    static ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
+    static transient ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
 
     // ============================================================================
 

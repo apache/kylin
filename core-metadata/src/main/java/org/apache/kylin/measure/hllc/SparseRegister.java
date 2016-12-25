@@ -25,7 +25,7 @@ import java.util.TreeMap;
 /**
  * Created by xiefan on 16-12-9.
  */
-public class SparseRegister implements Register {
+public class SparseRegister implements Register, java.io.Serializable {
 
     private Map<Integer, Byte> sparseRegister = new TreeMap<>();
 

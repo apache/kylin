@@ -28,7 +28,6 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.GTInfo.Builder;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.datatype.LongMutable;
 
 public class UnitTestSupport {
 
@@ -84,16 +83,16 @@ public class UnitTestSupport {
             String d_01_15 = datePlus("2015-01-15", i * 4);
             String d_01_16 = datePlus("2015-01-16", i * 4);
             String d_01_17 = datePlus("2015-01-17", i * 4);
-            result.add(newRec(info, d_01_14, "Yang", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_14, "Luke", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_15, "Xu", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_15, "Dong", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_15, "Jason", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_16, "Mahone", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_16, "Shaofeng", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_16, "Qianhao", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_16, "George", "Food", new LongMutable(10), new BigDecimal("10.5")));
-            result.add(newRec(info, d_01_17, "Kejia", "Food", new LongMutable(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_14, "Yang", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_14, "Luke", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_15, "Xu", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_15, "Dong", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_15, "Jason", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_16, "Mahone", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_16, "Shaofeng", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_16, "Qianhao", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_16, "George", "Food", new Long(10), new BigDecimal("10.5")));
+            result.add(newRec(info, d_01_17, "Kejia", "Food", new Long(10), new BigDecimal("10.5")));
         }
         return result;
     }
@@ -106,16 +105,16 @@ public class UnitTestSupport {
             String d_01_15 = datePlus("2015-01-15", i * 4);
             String d_01_16 = datePlus("2015-01-16", i * 4);
             String d_01_17 = datePlus("2015-01-17", i * 4);
-            result.add(newRec(info, d_01_14, "Yang", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_14, "Luke", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_15, "Xu", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_15, "Dong", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_15, "Jason", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_16, "Mahone", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_16, "Shaofeng", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_16, "Qianhao", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_16, "George", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_17, "Kejia", "Food", new LongMutable(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_14, "Yang", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_14, "Luke", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_15, "Xu", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_15, "Dong", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_15, "Jason", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_16, "Mahone", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_16, "Shaofeng", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_16, "Qianhao", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_16, "George", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_17, "Kejia", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
         }
         return result;
     }

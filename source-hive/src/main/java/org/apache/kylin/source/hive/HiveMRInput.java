@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -56,8 +57,6 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
-
 public class HiveMRInput implements IMRInput {
 
     public static String getTableNameForHCat(TableDesc table) {
@@ -74,7 +73,7 @@ public class HiveMRInput implements IMRInput {
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
         return new HiveTableInputFormat(getTableNameForHCat(table));
     }
-    
+
     @Override
     public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg) {
         return new IMRBatchMergeInputSide() {

@@ -463,6 +463,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         for (int i = 0; i < totalSum.length; i++) {
             if (totalSum[i] instanceof DoubleMutable) {
                 totalSum[i] = Math.round(((DoubleMutable) totalSum[i]).get());
+            } else if (totalSum[i] instanceof Double) {
+                totalSum[i] = Math.round(((Double) totalSum[i]).doubleValue());
             } else if (totalSum[i] instanceof TopNCounter) {
                 TopNCounter counter = (TopNCounter) totalSum[i];
                 Iterator<Counter> iterator = counter.iterator();

@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
  * 
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class RowKeyColDesc {
+public class RowKeyColDesc implements java.io.Serializable {
 
     @JsonProperty("column")
     private String column;

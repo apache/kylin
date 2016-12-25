@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.datatype.LongMutable;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -91,7 +90,7 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
         for (GTRecord record : scanner) {
             assertNotNull(record);
             Object[] returnRecord = record.getValues();
-            assertEquals(20, ((LongMutable) returnRecord[3]).get());
+            assertEquals(20, ((Long) returnRecord[3]).longValue());
             assertEquals(21, ((BigDecimal) returnRecord[4]).longValue());
             count++;
 
@@ -133,7 +132,7 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
         for (GTRecord record : scanner) {
             assertNotNull(record);
             Object[] returnRecord = record.getValues();
-            assertEquals(80000, ((LongMutable) returnRecord[3]).get());
+            assertEquals(80000, ((Long) returnRecord[3]).longValue());
             assertEquals(84000, ((BigDecimal) returnRecord[4]).longValue());
             count++;
 

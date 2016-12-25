@@ -262,6 +262,11 @@ public class CubeStatsReader {
         return ret;
     }
 
+    public List<Long> getCuboidsByLayer(int level) {
+        List<List<Long>> layeredCuboids = cuboidScheduler.getCuboidsByLayer();
+        return layeredCuboids.get(level);
+    }
+
     private void printCuboidInfoTreeEntry(Map<Long, Long> cuboidRows, Map<Long, Double> cuboidSizes, PrintWriter out) {
         long baseCuboid = Cuboid.getBaseCuboidId(seg.getCubeDesc());
         int dimensionCount = Long.bitCount(baseCuboid);

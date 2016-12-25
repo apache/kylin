@@ -18,10 +18,8 @@
 
 package org.apache.kylin.cube.model;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
@@ -36,7 +34,7 @@ import com.google.common.base.Objects;
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class DimensionDesc implements Serializable {
+public class DimensionDesc implements java.io.Serializable {
 
     @JsonProperty("name")
     private String name;
@@ -137,16 +135,6 @@ public class DimensionDesc implements Serializable {
 
     public TableRef getTableRef() {
         return this.tableRef;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public int hashCode() {
-        throw new NotImplementedException();
     }
 
     @Override

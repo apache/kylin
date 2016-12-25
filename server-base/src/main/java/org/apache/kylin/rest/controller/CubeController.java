@@ -327,10 +327,10 @@ public class CubeController extends BasicController {
                 throw new InternalErrorException("Cannot find cube '" + cubeName + "'");
             }
 
-            if (cube.getSegments() != null && cube.getBuildingSegments().size() > 0) {
-                int num = cube.getBuildingSegments().size();
-                throw new InternalErrorException("Cannot purge cube '" + cubeName + "' as there is " + num + " building " + (num > 1 ? "segment(s)." : "segment. Discard the related job first."));
-            }
+//            if (cube.getSegments() != null && cube.getBuildingSegments().size() > 0) {
+//                int num = cube.getBuildingSegments().size();
+//                throw new InternalErrorException("Cannot purge cube '" + cubeName + "' as there is " + num + " building " + (num > 1 ? "segment(s)." : "segment. Discard the related job first."));
+//            }
 
             return cubeService.purgeCube(cube);
         } catch (Exception e) {

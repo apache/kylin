@@ -109,11 +109,9 @@ public class BooleanDimEnc extends DimensionEncoding {
     }
 
     private class BooleanSerializer extends DataTypeSerializer<Object> {
-        // be thread-safe and avoid repeated obj creation
-        private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
 
         private byte[] currentBuf() {
-            byte[] buf = current.get();
+            byte[] buf = (byte[]) current.get();
             if (buf == null) {
                 buf = new byte[fixedLen];
                 current.set(buf);

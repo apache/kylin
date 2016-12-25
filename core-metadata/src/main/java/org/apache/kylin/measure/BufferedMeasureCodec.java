@@ -18,12 +18,12 @@
 
 package org.apache.kylin.measure;
 
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.MeasureDesc;
+
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
-
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  * This class embeds a reusable byte buffer for measure encoding, and is not thread-safe.
@@ -31,13 +31,13 @@ import org.apache.kylin.metadata.model.MeasureDesc;
  * The problem here to solve is some measure type cannot provide accurate DataTypeSerializer.maxLength()
  */
 @SuppressWarnings({ "unchecked" })
-public class BufferedMeasureCodec {
+public class BufferedMeasureCodec implements java.io.Serializable {
     public static final int DEFAULT_BUFFER_SIZE = 1024 * 1024; // 1 MB
     public static final int MAX_BUFFER_SIZE = 1 * 1024 * DEFAULT_BUFFER_SIZE; // 1 GB
 
     final private MeasureCodec codec;
 
-    private ByteBuffer buf;
+    private transient ByteBuffer buf;
     final private int[] measureSizes;
 
     public BufferedMeasureCodec(Collection<MeasureDesc> measureDescs) {

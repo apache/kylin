@@ -29,7 +29,7 @@ import org.apache.kylin.metadata.model.TblColRef;
  *
  * @author yangli9
  */
-public class RowKeyColumnIO {
+public class RowKeyColumnIO implements java.io.Serializable {
 
     //private static final Logger logger = LoggerFactory.getLogger(RowKeyColumnIO.class);
 

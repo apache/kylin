@@ -36,8 +36,6 @@ import org.apache.kylin.measure.bitmap.BitmapAggregator;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
 import org.apache.kylin.measure.hllc.HLLCAggregator;
 import org.apache.kylin.measure.hllc.HLLCounter;
-import org.apache.kylin.metadata.datatype.DoubleMutable;
-import org.apache.kylin.metadata.datatype.LongMutable;
 import org.github.jamm.MemoryMeter;
 import org.junit.Test;
 
@@ -100,10 +98,10 @@ public class AggregationCacheMemSizeTest {
 
     private MeasureAggregator<?>[] createNoMemHungryAggrs() {
         LongSumAggregator longSum = new LongSumAggregator();
-        longSum.aggregate(new LongMutable(10));
+        longSum.aggregate(new Long(10));
 
         DoubleSumAggregator doubleSum = new DoubleSumAggregator();
-        doubleSum.aggregate(new DoubleMutable(10));
+        doubleSum.aggregate(new Double(10));
 
         BigDecimalSumAggregator decimalSum = new BigDecimalSumAggregator();
         decimalSum.aggregate(new BigDecimal("12345678901234567890.123456789"));

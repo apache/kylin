@@ -20,7 +20,7 @@ package org.apache.kylin.measure.hllc;
 /**
  * Created by xiefan on 16-12-20.
  */
-public class SingleValueRegister implements Register {
+public class SingleValueRegister implements Register, java.io.Serializable {
 
     private int singleValuePos;
 

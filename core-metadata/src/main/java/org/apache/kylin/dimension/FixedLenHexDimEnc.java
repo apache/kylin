@@ -224,11 +224,9 @@ public class FixedLenHexDimEnc extends DimensionEncoding {
     }
 
     public class FixedLenSerializer extends DataTypeSerializer<Object> {
-        // be thread-safe and avoid repeated obj creation
-        private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
 
         private byte[] currentBuf() {
-            byte[] buf = current.get();
+            byte[] buf = (byte[]) current.get();
             if (buf == null) {
                 buf = new byte[bytelen];
                 current.set(buf);

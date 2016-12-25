@@ -97,9 +97,6 @@ limitations under the License.
                 <exclude>%regex[(?!((?!${project.build.directory}/)[^/]+/)*src/)(.*/)?docs(/.*)?]
                 </exclude>
 
-                <!-- exclude unmaintained -->
-                <exclude>%regex[(?!((?!${project.build.directory}/)))?engine-spark(/.*)?]
-                </exclude>
             </excludes>
         </fileSet>
         <!-- LICENSE, NOTICE, DEPENDENCIES, git.properties, etc. calculated at build time -->

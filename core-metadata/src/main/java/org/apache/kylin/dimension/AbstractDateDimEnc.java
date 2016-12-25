@@ -18,16 +18,16 @@
 
 package org.apache.kylin.dimension;
 
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 public class AbstractDateDimEnc extends DimensionEncoding {
     private static final long serialVersionUID = 1L;
@@ -81,11 +81,9 @@ public class AbstractDateDimEnc extends DimensionEncoding {
     @Override
     public DataTypeSerializer<Object> asDataTypeSerializer() {
         return new DataTypeSerializer<Object>() {
-            // be thread-safe and avoid repeated obj creation
-            private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
 
             private byte[] currentBuf() {
-                byte[] buf = current.get();
+                byte[] buf = (byte[]) current.get();
                 if (buf == null) {
                     buf = new byte[fixedLen];
                     current.set(buf);

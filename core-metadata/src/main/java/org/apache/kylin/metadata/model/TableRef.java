@@ -18,26 +18,28 @@
 
 package org.apache.kylin.metadata.model;
 
+import com.google.common.collect.Maps;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
-
 public class TableRef implements Serializable{
 
-    final private DataModelDesc model;
+    final transient private DataModelDesc model;
     final private String alias;
     final private TableDesc table;
     final private Map<String, TblColRef> columns;
+    final private String modelName;
 
     TableRef(DataModelDesc model, String alias, TableDesc table) {
         this.model = model;
+        this.modelName = model.getName();
         this.alias = alias;
         this.table = table;
         this.columns = Maps.newLinkedHashMap();
-        
+
         for (ColumnDesc col : table.getColumns()) {
             columns.put(col.getName(), new TblColRef(this, col));
         }
@@ -95,7 +97,7 @@ public class TableRef implements Serializable{
 
         TableRef t = (TableRef) o;
 
-        if ((model == null ? t.model == null : model.getName().equals(t.model.getName())) == false)
+        if ((modelName == null ? t.modelName != null : modelName.equals(t.modelName)) == false)
             return false;
         if ((alias == null ? t.alias == null : alias.equals(t.alias)) == false)
             return false;
@@ -108,7 +110,7 @@ public class TableRef implements Serializable{
     @Override
     public int hashCode() {
         int result = 0;
-        result = 31 * result + model.getName().hashCode();
+        result = 31 * result + modelName.hashCode();
         result = 31 * result + alias.hashCode();
         result = 31 * result + table.getIdentity().hashCode();
         return result;

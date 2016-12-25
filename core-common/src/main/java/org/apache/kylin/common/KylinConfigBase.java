@@ -652,6 +652,7 @@ abstract public class KylinConfigBase implements Serializable {
         // ref constants in IEngineAware
         r.put(0, "org.apache.kylin.engine.mr.MRBatchCubingEngine");
         r.put(2, "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
+        r.put(4, "org.apache.kylin.engine.spark.SparkBatchCubingEngine2");
         return r;
     }
 
@@ -728,29 +729,62 @@ abstract public class KylinConfigBase implements Serializable {
     // ENGINE.SPARK
     // ============================================================================
 
-    public String getKylinSparkJobJarPath() {
-        final String jobJar = getOptional("kylin.engine.spark.job-jar");
-        if (StringUtils.isNotEmpty(jobJar)) {
-            return jobJar;
-        }
-        String kylinHome = getKylinHome();
-        if (StringUtils.isEmpty(kylinHome)) {
-            return "";
-        }
-        return getFileName(kylinHome + File.separator + "lib", SPARK_JOB_JAR_NAME_PATTERN);
-    }
-
-    public void overrideSparkJobJarPath(String path) {
-        logger.info("override " + "kylin.engine.spark.job-jar" + " to " + path);
-        System.setProperty("kylin.engine.spark.job-jar", path);
-    }
-
     public String getSparkHome() {
-        return getRequired("kylin.engine.spark.spark-home");
+        String sparkHome = getOptional("kylin.engine.spark.spark-home", "spark");
+        File f = new File(sparkHome);
+        if (f.exists()) {
+            return f.getAbsolutePath();
+        } else {
+            String home = getKylinHome();
+            f = new File(home, sparkHome);
+            if (f.exists()) {
+                return f.getAbsolutePath();
+            }
+        }
+
+        throw new IllegalArgumentException("Spark home '" + sparkHome + "' does not exist, check 'kylin.engine.spark.spark-home' in kylin.properties");
+
     }
 
-    public String getSparkMaster() {
-        return getRequired("kylin.engine.spark.spark-master");
+    public String getSparkHadoopConfDir() {
+        return getRequired("kylin.engine.spark.env.hadoop-conf-dir");
+    }
+
+    public String getSparkConfFile() {
+        String conf = getOptional("kylin.engine.spark.properties-file", "conf/kylin-spark-conf.properties");
+        File f = new File(conf);
+        if (f.exists()) {
+            return f.getAbsolutePath();
+        } else {
+            String home = getKylinHome();
+            f = new File(home, conf);
+            if (f.exists()) {
+                return f.getAbsolutePath();
+            }
+        }
+
+        throw new IllegalArgumentException("Spark conf properties file '" + conf + "' does not exist.");
+    }
+
+    public String getSparkAdditionalJars() {
+        return getOptional("kylin.engine.spark.additional-jars", "");
+    }
+
+    public float getSparkRDDPartitionCutMB() {
+        return Float.valueOf(getOptional("kylin.engine.spark.rdd-partition-cut-mb", "200.0"));
+    }
+
+
+    public int getSparkMinPartition() {
+        return Integer.valueOf(getOptional("kylin.engine.spark.min-partition", "1"));
+    }
+
+    public int getSparkMaxPartition() {
+        return Integer.valueOf(getOptional("kylin.engine.spark.max-partition", "500"));
+    }
+
+    public boolean isSparkSanityCheckEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.spark.sanity-check-enabled", "false"));
     }
 
     // ============================================================================

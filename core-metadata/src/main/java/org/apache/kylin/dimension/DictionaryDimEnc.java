@@ -39,12 +39,15 @@ public class DictionaryDimEnc extends DimensionEncoding {
     // ============================================================================
 
     // could use a lazy loading trick here, to prevent loading all dictionaries of a segment at once
-    private final Dictionary<String> dict;
-    private final int fixedLen;
+    private Dictionary<String> dict;
+    private int fixedLen;
 
     // used in encode(), when a value does not exist in dictionary
-    private final int roundingFlag;
-    private final byte defaultByte;
+    private int roundingFlag;
+    private byte defaultByte;
+
+    public DictionaryDimEnc() {
+    }
 
     public DictionaryDimEnc(Dictionary<String> dict) {
         this(dict, 0, NULL);
@@ -145,12 +148,18 @@ public class DictionaryDimEnc extends DimensionEncoding {
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        throw new UnsupportedOperationException();
+        out.writeInt(fixedLen);
+        out.writeInt(roundingFlag);
+        out.write(defaultByte);
+        out.writeObject(dict);
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        throw new UnsupportedOperationException();
+        this.fixedLen = in.readInt();
+        this.roundingFlag = in.readInt();
+        this.defaultByte = in.readByte();
+        this.dict = (Dictionary<String>) in.readObject();
     }
 
 }
