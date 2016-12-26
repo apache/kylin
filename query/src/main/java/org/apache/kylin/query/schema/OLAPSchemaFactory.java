@@ -163,6 +163,6 @@ public class OLAPSchemaFactory implements SchemaFactory {
             }
             index++;
         }
-        out.write("              ]\n");
+        out.write("            ]\n");
     }
 }
