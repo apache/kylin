@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -49,10 +50,12 @@ public class DictionaryGenerator {
                 builder = new DateDictBuilder();
             else
                 builder = new TimeDictBuilder();
-        } else if (dataType.isNumberFamily()) {
-            builder = new NumberDictBuilder();
         } else {
-            builder = new StringDictBuilder();
+            boolean useForest = KylinConfig.getInstanceFromEnv().isUseForestTrieDictionary();
+            if (dataType.isNumberFamily())
+                builder = useForest ? new NumberTrieDictForestBuilder() : new NumberTrieDictBuilder();
+            else
+                builder = useForest ? new StringTrieDictForestBuilder() : new StringTrieDictBuilder();
         }
         return builder;
     }
@@ -168,7 +171,32 @@ public class DictionaryGenerator {
         }
     }
 
-    private static class StringDictBuilder implements IDictionaryBuilder {
+    private static class StringTrieDictBuilder implements IDictionaryBuilder {
+        int baseId;
+        TrieDictionaryBuilder builder;
+        
+        @Override
+        public void init(DictionaryInfo info, int baseId) throws IOException {
+            this.baseId = baseId;
+            this.builder = new TrieDictionaryBuilder(new StringBytesConverter());
+        }
+        
+        @Override
+        public boolean addValue(String value) {
+            if (value == null)
+                return false;
+            
+            builder.addValue(value);
+            return true;
+        }
+        
+        @Override
+        public Dictionary<String> build() throws IOException {
+            return builder.build(baseId);
+        }
+    }
+    
+    private static class StringTrieDictForestBuilder implements IDictionaryBuilder {
         TrieDictionaryForestBuilder builder;
 
         @Override
@@ -191,7 +219,33 @@ public class DictionaryGenerator {
         }
     }
 
-    private static class NumberDictBuilder implements IDictionaryBuilder {
+    @SuppressWarnings("deprecation")
+    private static class NumberTrieDictBuilder implements IDictionaryBuilder {
+        int baseId;
+        NumberDictionaryBuilder builder;
+        
+        @Override
+        public void init(DictionaryInfo info, int baseId) throws IOException {
+            this.baseId = baseId;
+            this.builder = new NumberDictionaryBuilder(new StringBytesConverter());
+        }
+        
+        @Override
+        public boolean addValue(String value) {
+            if (StringUtils.isBlank(value)) // empty string is treated as null
+                return false;
+            
+            builder.addValue(value);
+            return true;
+        }
+        
+        @Override
+        public Dictionary<String> build() throws IOException {
+            return builder.build(baseId);
+        }
+    }
+    
+    private static class NumberTrieDictForestBuilder implements IDictionaryBuilder {
         NumberDictionaryForestBuilder builder;
 
         @Override
