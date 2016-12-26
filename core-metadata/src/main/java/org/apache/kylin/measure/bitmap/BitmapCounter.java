@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import org.apache.commons.io.IOUtils;
 import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 /**
@@ -107,12 +106,8 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
     }
 
     public void readRegisters(ByteBuffer in) throws IOException {
-        DataInputByteBuffer input = new DataInputByteBuffer();
-        try {
-            input.reset(new ByteBuffer[] { in });
-            bitmap.deserialize(input);
-        } finally {
-            IOUtils.closeQuietly(input);
+        try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(in))) {
+            bitmap.deserialize(is);
         }
     }
 
@@ -178,15 +173,11 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         int mark = in.position();
         int len;
 
-        DataInputByteBuffer input = new DataInputByteBuffer();
-        input.reset(new ByteBuffer[] { in });
         MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
-        try {
-            bitmap.deserialize(input);
+        try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(in))) {
+            bitmap.deserialize(is);
         } catch (IOException e) {
             throw new IllegalStateException(e);
-        } finally {
-            IOUtils.closeQuietly(input);
         }
 
         len = in.position() - mark;
@@ -194,93 +185,27 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         return len;
     }
 
-    static class DataInputByteBuffer extends DataInputStream {
-        private DataInputByteBuffer.Buffer buffers;
+    private class ByteBufferBackedInputStream extends InputStream {
+        private final ByteBuffer buffer;
 
-        public DataInputByteBuffer() {
-            this(new DataInputByteBuffer.Buffer());
+        private ByteBufferBackedInputStream(ByteBuffer buf) {
+            buffer = buf;
         }
 
-        private DataInputByteBuffer(DataInputByteBuffer.Buffer buffers) {
-            super(buffers);
-            this.buffers = buffers;
+        @Override
+        public int read() throws IOException {
+            return buffer.hasRemaining() ? (buffer.get() & 0xFF) : -1;
         }
 
-        public void reset(ByteBuffer... input) {
-            this.buffers.reset(input);
-        }
-
-        public ByteBuffer[] getData() {
-            return this.buffers.getData();
-        }
-
-        public int getPosition() {
-            return this.buffers.getPosition();
-        }
-
-        public int getLength() {
-            return this.buffers.getLength();
-        }
-
-        private static class Buffer extends InputStream {
-            private final byte[] scratch;
-            ByteBuffer[] buffers;
-            int bidx;
-            int pos;
-            int length;
-
-            private Buffer() {
-                this.scratch = new byte[1];
-                this.buffers = new ByteBuffer[0];
+        @Override
+        public int read(byte[] bytes, int off, int len) throws IOException {
+            if (!buffer.hasRemaining()) {
+                return -1;
             }
 
-            public int read() {
-                return -1 == this.read(this.scratch, 0, 1) ? -1 : this.scratch[0] & 255;
-            }
-
-            public int read(byte[] b, int off, int len) {
-                if (this.bidx >= this.buffers.length) {
-                    return -1;
-                } else {
-                    int cur = 0;
-
-                    do {
-                        int rem = Math.min(len, this.buffers[this.bidx].remaining());
-                        this.buffers[this.bidx].get(b, off, rem);
-                        cur += rem;
-                        off += rem;
-                        len -= rem;
-                    } while (len > 0 && ++this.bidx < this.buffers.length);
-
-                    this.pos += cur;
-                    return cur;
-                }
-            }
-
-            public void reset(ByteBuffer[] buffers) {
-                this.bidx = this.pos = this.length = 0;
-                this.buffers = buffers;
-                ByteBuffer[] arr$ = buffers;
-                int len$ = buffers.length;
-
-                for (int i$ = 0; i$ < len$; ++i$) {
-                    ByteBuffer b = arr$[i$];
-                    this.length += b.remaining();
-                }
-
-            }
-
-            public int getPosition() {
-                return this.pos;
-            }
-
-            public int getLength() {
-                return this.length;
-            }
-
-            public ByteBuffer[] getData() {
-                return this.buffers;
-            }
+            len = Math.min(len, buffer.remaining());
+            buffer.get(bytes, off, len);
+            return len;
         }
     }
 }
