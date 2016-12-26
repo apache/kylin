@@ -255,8 +255,9 @@ public class DeployUtil {
     private static String[] generateCreateTableHql(TableDesc tableDesc) {
 
         String dropsql = "DROP TABLE IF EXISTS " + tableDesc.getIdentity();
+        String dropsql2 = "DROP VIEW IF EXISTS " + tableDesc.getIdentity();
+        
         StringBuilder ddl = new StringBuilder();
-
         ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");
 
@@ -272,7 +273,7 @@ public class DeployUtil {
         ddl.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY ','" + "\n");
         ddl.append("STORED AS TEXTFILE");
 
-        return new String[] { dropsql, ddl.toString() };
+        return new String[] { dropsql, dropsql2, ddl.toString() };
     }
 
     private static String[] generateCreateViewHql(String viewName, String tableName) {
