@@ -288,7 +288,7 @@ public class TrieDictionaryForestTest {
         TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter());
         TrieDictionaryForest<String> dict = b.build();
         try{
-            int id = dict.getIdFromValue("123",0);
+            int id = dict.getIdFromValue("123", 0);
             fail("id should not exist");
         }catch (IllegalArgumentException e){
             //right

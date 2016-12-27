@@ -145,8 +145,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
             while ((word = reader.readLine()) != null) {
                 word = word.trim();
                 if (!word.isEmpty())
-                    ;
-                b.addValue(word);
+                    b.addValue(word);
             }
         } finally {
             reader.close();

@@ -82,7 +82,7 @@ public class BasicTest {
 
     @Test
     public void testxx() throws InterruptedException {
-        System.out.println( 0x8fL);
+        System.out.println(0x8fL);
         byte[] space = new byte[100];
         ByteBuffer buffer = ByteBuffer.wrap(space, 10, 20);
         buffer.put((byte) 1);

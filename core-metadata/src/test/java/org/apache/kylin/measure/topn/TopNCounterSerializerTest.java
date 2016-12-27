@@ -23,8 +23,6 @@ import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.measure.topn.TopNCounter;
-import org.apache.kylin.measure.topn.TopNCounterSerializer;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.AfterClass;
 import org.junit.Assert;

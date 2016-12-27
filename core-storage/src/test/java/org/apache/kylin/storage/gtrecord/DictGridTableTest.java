@@ -561,7 +561,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     static GTInfo newInfo() {
         Builder builder = GTInfo.builder();
         builder.setCodeSystem(newDictCodeSystem());
-        builder.setColumns( //
+        builder.setColumns(//
                 DataType.getType("timestamp"), //
                 DataType.getType("integer"), //
                 DataType.getType("varchar(10)"), //

@@ -28,7 +28,6 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.measure.hllc.HLLCounterOld;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -227,7 +226,7 @@ public class HLLCounterOldTest {
         int N = 3; // reduce N HLLC into one
         int M = 1000; // for M times, use 100000 for real perf test
 
-        HLLCounterOld samples[] = new HLLCounterOld[N];
+        HLLCounterOld[] samples = new HLLCounterOld[N];
         for (int i = 0; i < N; i++) {
             samples[i] = newHLLC();
             for (String str : generateTestData(10000))

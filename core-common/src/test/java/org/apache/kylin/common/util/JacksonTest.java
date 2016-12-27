@@ -18,11 +18,10 @@
 
 package org.apache.kylin.common.util;
 
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
+
+import org.junit.Test;
 
 public class JacksonTest {
     @Test

@@ -51,7 +51,7 @@ public class CubeSamplingTest {
     @Before
     public void setup() {
 
-        baseCuboidId = (1l << ROW_LENGTH) - 1;
+        baseCuboidId = (1L << ROW_LENGTH) - 1;
         List<Long> allCuboids = Lists.newArrayList();
         List<Integer[]> allCuboidsBitSetList = Lists.newArrayList();
         for (long i = 1; i < baseCuboidId; i++) {

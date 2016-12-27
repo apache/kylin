@@ -942,12 +942,12 @@
                     <version>2.17</version>
                     <executions>
                         <execution>
-                            <id>validate</id>
+                            <id>check-style</id>
                             <phase>validate</phase>
                             <configuration>
                                 <configLocation>dev-support/checkstyle.xml</configLocation>
                                 <suppressionsLocation>dev-support/checkstyle-suppressions.xml</suppressionsLocation>
-                                <encoding>UTF-8</encoding>
+                                <includeTestSourceDirectory>true</includeTestSourceDirectory>
                                 <consoleOutput>true</consoleOutput>
                                 <failsOnError>true</failsOnError>
                             </configuration>

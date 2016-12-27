@@ -17,12 +17,8 @@
 */
 package org.apache.kylin.measure.hllc;
 
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.measure.hllc.HLLCounterOld;
-import org.apache.kylin.measure.hllc.HLLCounter;
-import org.apache.kylin.measure.hllc.RegisterType;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,8 +26,9 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.kylin.common.util.Bytes;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Created by xiefan on 16-12-12.

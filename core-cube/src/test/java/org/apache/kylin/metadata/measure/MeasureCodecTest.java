@@ -51,7 +51,7 @@ public class MeasureCodecTest extends LocalFileMetadataTestCase {
 
     @Test
     public void basicTest() {
-        MeasureDesc descs[] = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16"), measure("bitmap") };
+        MeasureDesc[] descs = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16"), measure("bitmap") };
         BufferedMeasureCodec codec = new BufferedMeasureCodec(descs);
 
         DoubleMutable d = new DoubleMutable(1.0);
@@ -64,13 +64,13 @@ public class MeasureCodecTest extends LocalFileMetadataTestCase {
         bitmap.add(123);
         bitmap.add(45678);
         bitmap.add(Integer.MAX_VALUE - 10);
-        Object values[] = new Object[] { d, l, b, hllc, bitmap };
+        Object[] values = new Object[] { d, l, b, hllc, bitmap };
 
         ByteBuffer buf = codec.encode(values);
         buf.flip();
         System.out.println("size: " + buf.limit());
 
-        Object copy[] = new Object[values.length];
+        Object[] copy = new Object[values.length];
 
         codec.decode(buf, copy);
 

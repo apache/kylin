@@ -18,6 +18,10 @@
 
 package org.apache.kylin.cube;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,8 +45,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.Maps;
-
-import static org.junit.Assert.*;
 
 /**
  * @author yangli9

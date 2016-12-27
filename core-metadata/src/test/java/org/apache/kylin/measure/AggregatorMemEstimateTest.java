@@ -18,10 +18,20 @@
 
 package org.apache.kylin.measure;
 
-import com.google.common.collect.Lists;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.measure.basic.*;
+import org.apache.kylin.measure.basic.BigDecimalMaxAggregator;
+import org.apache.kylin.measure.basic.BigDecimalMinAggregator;
+import org.apache.kylin.measure.basic.BigDecimalSumAggregator;
+import org.apache.kylin.measure.basic.DoubleMaxAggregator;
+import org.apache.kylin.measure.basic.DoubleMinAggregator;
+import org.apache.kylin.measure.basic.DoubleSumAggregator;
+import org.apache.kylin.measure.basic.LongMaxAggregator;
+import org.apache.kylin.measure.basic.LongMinAggregator;
+import org.apache.kylin.measure.basic.LongSumAggregator;
 import org.apache.kylin.measure.bitmap.BitmapAggregator;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
@@ -35,8 +45,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.math.BigDecimal;
-import java.util.List;
+import com.google.common.collect.Lists;
 
 public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
     private static final MemoryMeter meter = new MemoryMeter();
