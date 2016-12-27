@@ -327,6 +327,7 @@ public class QueryService extends BasicService {
         }
 
         final String queryId = UUID.randomUUID().toString();
+        BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
         QueryContext.setQueryId(queryId);
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {

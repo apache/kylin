@@ -23,6 +23,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.Pair;
 
+import com.google.common.collect.Maps;
+
 /**
  * BackdoorToggles and QueryContext are similar because they're both hosting per-query thread local variables.
  * The difference is that BackdoorToggles are specified by user input and work for debug purpose. QueryContext
@@ -36,6 +38,14 @@ public class BackdoorToggles {
 
     public static void setToggles(Map<String, String> toggles) {
         _backdoorToggles.set(toggles);
+    }
+
+    public static void addToggles(Map<String, String> toggles) {
+        Map<String, String> map = _backdoorToggles.get();
+        if (map == null) {
+            setToggles(Maps.<String, String> newHashMap());
+        }
+        _backdoorToggles.get().putAll(toggles);
     }
 
     public static String getCoprocessorBehavior() {
