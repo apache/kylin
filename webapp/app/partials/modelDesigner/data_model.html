@@ -27,7 +27,7 @@
             </label>
             <div class="col-xs-12 col-sm-6" ng-class="{'has-error':forms.data_model_form.table_name.$invalid && (forms.data_model_form.table_name.$dirty||forms.data_model_form.$submitted)}">
               <select chosen ng-model="FactTable.root" ng-if="state.mode=='edit'"
-                      ng-options="table.name as VdmUtil.removeNameSpace(table.name) for table in tableModel.selectProjectTables"
+                      ng-options="table.name as table.name for table in tableModel.selectProjectTables"
                       style="width:100%;" ng-change="changeFactTable()"
                       name="table_name"   ng-disabled="cubesLength>0"
                       ng-required="true"
