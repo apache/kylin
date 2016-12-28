@@ -536,10 +536,13 @@ public class JobService extends BasicService implements InitializingBean {
             @Override
             public boolean apply(AbstractExecutable executable) {
                 if (executable instanceof CubingJob) {
-                    if (cubeName == null) {
+                    if (StringUtils.isEmpty(cubeName)) {
                         return true;
                     }
-                    return CubingExecutableUtil.getCubeName(executable.getParams()).equalsIgnoreCase(cubeName);
+                    String executableCubeName = CubingExecutableUtil.getCubeName(executable.getParams());
+                    if (executableCubeName == null)
+                        return true;
+                    return executableCubeName.contains(cubeName);
                 } else {
                     return false;
                 }
