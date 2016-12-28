@@ -23,20 +23,28 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.cube.model.CubeDesc.DeriveType;
 import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SelectRule;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -331,8 +339,43 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
 
         Map<?, ?> map2 = JsonUtil.readValue(mapStr, HashMap.class);
 
-        assertEquals(map, map2);
+        Assert.assertEquals(map, map2);
+    }
 
+    @Test
+    public void testDerivedInfo() {
+        {
+            CubeDesc cube = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+            List<TblColRef> givenCols = new ArrayList<>();
+            givenCols.add(cube.findColumnRef("TEST_KYLIN_FACT", "LSTG_SITE_ID"));
+            givenCols.add(cube.findColumnRef("TEST_KYLIN_FACT", "LEAF_CATEG_ID"));
+            Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cube.getHostToDerivedInfo(givenCols, null);
+            assertEquals(3, hostToDerivedInfo.size());
+            assertEquals(Pair.newPair(3, 2), countDerivedInfo(hostToDerivedInfo));
+        }
+
+        {
+            CubeDesc cube = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("ssb");
+            List<TblColRef> givenCols = new ArrayList<>();
+            givenCols.add(cube.findColumnRef("V_LINEORDER", "LO_PARTKEY"));
+            Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cube.getHostToDerivedInfo(givenCols, null);
+            assertEquals(1, hostToDerivedInfo.size());
+            assertEquals(Pair.newPair(1, 1), countDerivedInfo(hostToDerivedInfo));
+        }
+    }
+
+    private Pair<Integer, Integer> countDerivedInfo(Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo) {
+        int pkfkCount = 0;
+        int lookupCount = 0;
+        for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
+            for (DeriveInfo deriveInfo : entry.getValue()) {
+                if (deriveInfo.type == DeriveType.PK_FK)
+                    pkfkCount++;
+                if (deriveInfo.type == DeriveType.LOOKUP)
+                    lookupCount++;
+            }
+        }
+        return Pair.newPair(pkfkCount, lookupCount);
     }
 
     private Collection<String> sortStrs(String[] strs) {

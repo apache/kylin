@@ -23,7 +23,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 
 /**
- * checkout {@link org.apache.kylin.common.debug.BackdoorToggles} for comparision
+ * checkout {@link org.apache.kylin.common.debug.BackdoorToggles} for comparison
  */
 public class QueryContext {
     private static final ThreadLocal<Map<String, String>> _queryContext = new ThreadLocal<Map<String, String>>();

@@ -807,25 +807,49 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         for (int i = 0; i < derivedCols.length; i++) {
             if (ArrayUtils.contains(hostCols, derivedCols[i])) {
                 derivedCols = (TblColRef[]) ArrayUtils.remove(derivedCols, i);
-                extra = (String[]) ArrayUtils.remove(extra, i);
+                if (extra != null)
+                    extra = (String[]) ArrayUtils.remove(extra, i);
                 i--;
             }
         }
-
-        Map<TblColRef, DeriveInfo> toHostMap = derivedToHostMap;
-        Map<Array<TblColRef>, List<DeriveInfo>> hostToMap = hostToDerivedMap;
-
-        Array<TblColRef> hostColArray = new Array<TblColRef>(hostCols);
-        List<DeriveInfo> infoList = hostToMap.get(hostColArray);
-        if (infoList == null) {
-            hostToMap.put(hostColArray, infoList = new ArrayList<DeriveInfo>());
-        }
-        infoList.add(new DeriveInfo(type, join, derivedCols, false));
+        
+        if (derivedCols.length == 0)
+            return;
 
         for (int i = 0; i < derivedCols.length; i++) {
             TblColRef derivedCol = derivedCols[i];
             boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol) || (extra != null && extra[i].contains("1-1"));
-            toHostMap.put(derivedCol, new DeriveInfo(type, join, hostCols, isOneToOne));
+            derivedToHostMap.put(derivedCol, new DeriveInfo(type, join, hostCols, isOneToOne));
+        }
+
+        Array<TblColRef> hostColArray = new Array<TblColRef>(hostCols);
+        List<DeriveInfo> infoList = hostToDerivedMap.get(hostColArray);
+        if (infoList == null) {
+            hostToDerivedMap.put(hostColArray, infoList = new ArrayList<DeriveInfo>());
+        }
+        
+        // Merged duplicated derived column
+        List<TblColRef> whatsLeft = new ArrayList<>();
+        for (TblColRef derCol : derivedCols) {
+            boolean merged = false;
+            for (DeriveInfo existing : infoList) {
+                if (existing.type == type && existing.join.getPKSide().equals(join.getPKSide())) {
+                    if (ArrayUtils.contains(existing.columns, derCol)) {
+                        merged = true;
+                        break;
+                    }
+                    if (type == DeriveType.LOOKUP) {
+                        existing.columns = (TblColRef[]) ArrayUtils.add(existing.columns, derCol);
+                        merged = true;
+                        break;
+                    }
+                }
+            }
+            if (!merged)
+                whatsLeft.add(derCol);
+        }
+        if (whatsLeft.size() > 0) {
+            infoList.add(new DeriveInfo(type, join, (TblColRef[]) whatsLeft.toArray(new TblColRef[whatsLeft.size()]), false));
         }
     }
 

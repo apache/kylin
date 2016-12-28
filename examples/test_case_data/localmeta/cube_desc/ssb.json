@@ -6,7 +6,17 @@
     "name" : "SSB.PART_DERIVED",
     "table" : "SSB.PART",
     "column" : null,
-    "derived" : [ "P_MFGR", "P_CATEGORY", "P_BRAND" ]
+    "derived" : [ "P_MFGR" ]
+  }, {
+    "name" : "SSB.PART_DERIVED",
+    "table" : "SSB.PART",
+    "column" : null,
+    "derived" : [ "P_CATEGORY" ]
+  }, {
+    "name" : "SSB.PART_DERIVED",
+    "table" : "SSB.PART",
+    "column" : null,
+    "derived" : [ "P_BRAND" ]
   }, {
     "name" : "C_CITY",
     "table" : "SSB.CUSTOMER",
