@@ -150,14 +150,15 @@
                                 <!--!COUNT_DISTINCT-->
 
                                 <select class="form-control" chosen
-                                        ng-if="newMeasure.function.parameter.type == 'column' && (newMeasure.function.expression == 'COUNT_DISTINCT'||newMeasure.function.expression == 'RAW')"
+                                        ng-if="newMeasure.function.parameter.type == 'column' && newMeasure.function.expression !== 'EXTENDED_COLUMN' && newMeasure.showDim==true "
                                         ng-model="newMeasure.function.parameter.value" required
                                         ng-change="measureReturnTypeUpdate();"
                                         ng-options="column as column for column in getAllModelDimMeasureColumns(newMeasure)" >
                                   <option value="">-- Select a Column --</option>
                                 </select>
+
                                 <select class="form-control" chosen
-                                        ng-if="newMeasure.function.parameter.type == 'column' && newMeasure.function.expression !== 'EXTENDED_COLUMN' && newMeasure.function.expression !== 'COUNT_DISTINCT' && newMeasure.function.expression !== 'RAW'"
+                                        ng-if="newMeasure.function.parameter.type == 'column' && newMeasure.function.expression !== 'EXTENDED_COLUMN' && newMeasure.showDim==false "
                                         ng-model="newMeasure.function.parameter.value" required
                                         ng-change="measureReturnTypeUpdate();"
                                         ng-options="column as column for column in getCommonMetricColumns(newMeasure)" >
@@ -171,6 +172,7 @@
                                   <option value="">-- Select a Column --</option>
                                 </select>
                               </div>
+                              <label ng-if="newMeasure.function.parameter.type == 'column'&& newMeasure.function.expression !== 'EXTENDED_COLUMN'"><input type="checkbox" ng-model="newMeasure.showDim" />&nbsp;Also Show Dimensions</label>
                           </div>
                       </div>
 

@@ -84,6 +84,15 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     if(!!measure && measure.function.parameter.next_parameter){
       $scope.nextPara.value = measure.function.parameter.next_parameter.value;
     }
+    if($scope.newMeasure.function.parameter.value){
+      if($scope.metaModel.model.metrics&&$scope.metaModel.model.metrics.indexOf($scope.newMeasure.function.parameter.value)!=-1){
+          $scope.newMeasure.showDim=false;
+      }else{
+          $scope.newMeasure.showDim=true;
+      }
+    }else{
+      $scope.newMeasure.showDim=false;
+    }
     if($scope.newMeasure.function.expression=="TOP_N"){
       $scope.convertedColumns=[];
       if($scope.newMeasure.function.configuration==null){
@@ -353,7 +362,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     if($scope.newMeasure.function.parameter.type=="column"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
 
       var column = $scope.newMeasure.function.parameter.value;
-      if(column){
+      if(column&&(typeof column=="string")){
         var colType = $scope.getColumnType(VdmUtil.removeNameSpace(column), VdmUtil.getNameSpaceAliasName(column)); // $scope.getColumnType defined in cubeEdit.js
       }
       if(colType==""||!colType){
