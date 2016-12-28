@@ -103,7 +103,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         logger.info("Going to submit HiveColumnCardinalityJob for table '" + table + "'");
 
         TableDesc tableDesc = MetadataManager.getInstance(kylinConfig).getTableDesc(table);
-        attachKylinPropsAndMetadata(tableDesc, job.getConfiguration());
+        attachTableMetadata(tableDesc, job.getConfiguration());
         int result = waitForCompletion(job);
 
         return result;

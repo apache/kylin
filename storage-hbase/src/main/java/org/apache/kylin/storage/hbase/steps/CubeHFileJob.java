@@ -88,19 +88,18 @@ public class CubeHFileJob extends AbstractHadoopJob {
 
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-            Configuration conf = HBaseConfiguration.create(getConf());
             // add metadata to distributed cache
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
+            attachCubeMetadata(cube, job.getConfiguration());
 
-            String tableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase();
-            HTable htable = new HTable(conf, tableName);
+            Configuration hbaseConf = HBaseConfiguration.create(getConf());
+            HTable htable = new HTable(hbaseConf, getOptionValue(OPTION_HTABLE_NAME).toUpperCase());
 
             // Automatic config !
             HFileOutputFormat.configureIncrementalLoad(job, htable);
-            reconfigurePartitions(conf, partitionFilePath);
+            reconfigurePartitions(hbaseConf, partitionFilePath);
 
             // set block replication to 3 for hfiles
-            conf.set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
+            hbaseConf.set(DFSConfigKeys.DFS_REPLICATION_KEY, "3");
 
             this.deletePath(job.getConfiguration(), output);
 

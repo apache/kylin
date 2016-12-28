@@ -120,9 +120,6 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
 
             deletePath(job.getConfiguration(), output);
-
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
-
             return waitForCompletion(job);
 
         } catch (Exception e) {

@@ -129,7 +129,7 @@ public class CuboidJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
             job.getConfiguration().setInt(BatchConstants.CFG_CUBE_CUBOID_LEVEL, nCuboidLevel);
             // add metadata to distributed cache
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
+            attachSegmentMetadataWithDict(segment, job.getConfiguration());
 
             LayerReduerNumSizing.setReduceTaskNum(job, segment, getTotalMapInputMB(), nCuboidLevel);
 

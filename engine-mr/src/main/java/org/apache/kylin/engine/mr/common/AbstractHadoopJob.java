@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -449,33 +448,49 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    protected void attachKylinPropsAndMetadata(TableDesc table, Configuration conf) throws IOException {
+    protected void attachTableMetadata(TableDesc table, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.add(table.getResourcePath());
         attachKylinPropsAndMetadata(dumpList, KylinConfig.getInstanceFromEnv(), conf);
     }
 
-    protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
-        // write cube / model_desc / cube_desc / dict / table
+    protected void attachCubeMetadata(CubeInstance cube, Configuration conf) throws IOException {
+        attachKylinPropsAndMetadata(collectCubeMetadata(cube), cube.getConfig(), conf);
+    }
+
+    protected void attachCubeMetadataWithDict(CubeInstance cube, Configuration conf) throws IOException {
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.addAll(collectCubeMetadata(cube));
+        for (CubeSegment segment : cube.getSegments()) {
+            dumpList.addAll(segment.getDictionaryPaths());
+        }
+        attachKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
+    }
+
+    protected void attachSegmentMetadataWithDict(CubeSegment segment, Configuration conf) throws IOException {
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.addAll(collectCubeMetadata(segment.getCubeInstance()));
+        dumpList.addAll(segment.getDictionaryPaths());
+        attachKylinPropsAndMetadata(dumpList, segment.getConfig(), conf);
+    }
+
+    private Set<String> collectCubeMetadata(CubeInstance cube) {
+        // cube, model_desc, cube_desc, table
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.add(cube.getResourcePath());
         dumpList.add(cube.getDescriptor().getModel().getResourcePath());
         dumpList.add(cube.getDescriptor().getResourcePath());
 
-        for (TableRef tableRef: cube.getDescriptor().getModel().getAllTables()) {
+        for (TableRef tableRef : cube.getDescriptor().getModel().getAllTables()) {
             TableDesc table = tableRef.getTableDesc();
             dumpList.add(table.getResourcePath());
-            List<String> dependentResources = SourceFactory.getMRDependentResources(table);
-            dumpList.addAll(dependentResources);
-        }
-        for (CubeSegment segment : cube.getSegments()) {
-            dumpList.addAll(segment.getDictionaryPaths());
+            dumpList.addAll(SourceFactory.getMRDependentResources(table));
         }
 
-        attachKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
+        return dumpList;
     }
 
-    protected void attachKylinPropsAndMetadata(Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
+    private void attachKylinPropsAndMetadata(Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
@@ -524,6 +539,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     }
 
     private void dumpResources(KylinConfig kylinConfig, File metaDir, Set<String> dumpList) throws IOException {
+        long startTime = System.currentTimeMillis();
+
         ResourceStore from = ResourceStore.getStore(kylinConfig);
         KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());
         ResourceStore to = ResourceStore.getStore(localConfig);
@@ -534,6 +551,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             to.putResource(path, res.inputStream, res.timestamp);
             res.inputStream.close();
         }
+
+        logger.debug("Dump resources to {} took {} ms", metaDir, System.currentTimeMillis() - startTime);
     }
 
     protected void deletePath(Configuration conf, Path path) throws IOException {

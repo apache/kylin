@@ -86,11 +86,11 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
-            CubeSegment cubeSeg = cube.getSegmentById(segmentID);
+            CubeSegment segment = cube.getSegmentById(segmentID);
             String cubingJobId = getOptionValue(OPTION_CUBING_JOB_ID);
 
             if (checkSkip(cubingJobId)) {
-                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + cubeSeg);
+                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + segment);
                 return 0;
             }
 
@@ -101,14 +101,14 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             setJobClasspath(job, cube.getConfig());
 
             // add metadata to distributed cache
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
+            attachSegmentMetadataWithDict(segment, job.getConfiguration());
 
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
 
             // set input
-            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
+            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(segment).getFlatTableInputFormat();
             flatTableInputFormat.configureJob(job);
 
             // set mapper
@@ -118,7 +118,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
 
             // set output
             job.setReducerClass(InMemCuboidReducer.class);
-            job.setNumReduceTasks(calculateReducerNum(cubeSeg));
+            job.setNumReduceTasks(calculateReducerNum(segment));
 
             // the cuboid file and KV class must be compatible with 0.7 version for smooth upgrade
             job.setOutputFormatClass(SequenceFileOutputFormat.class);

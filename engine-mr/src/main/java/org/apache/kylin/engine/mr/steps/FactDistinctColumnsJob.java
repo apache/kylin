@@ -110,13 +110,12 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
                     logger.error(s.getName() + " with status " + s.getStatus());
                 }
                 throw new IllegalStateException();
-            } else {
-                logger.info("Found segment: " + segment);
             }
-            setupMapper(cube.getSegmentById(segmentID));
+
+            setupMapper(segment);
             setupReducer(output, "true".equalsIgnoreCase(statistics_enabled) ? reducerCount + 2 : reducerCount);
 
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
+            attachCubeMetadata(cube, job.getConfiguration());
 
             return waitForCompletion(job);
 
