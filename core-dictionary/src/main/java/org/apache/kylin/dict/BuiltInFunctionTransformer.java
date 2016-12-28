@@ -57,13 +57,13 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
             //normal case
             translated = translateCompareTupleFilter((CompareTupleFilter) tupleFilter);
             if (translated != null) {
-                logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
+                logger.debug("Translated {{}} to IN clause: {{}}", tupleFilter, translated);
             }
         } else if (tupleFilter instanceof BuiltInFunctionTupleFilter) {
             //like case
             translated = translateFunctionTupleFilter((BuiltInFunctionTupleFilter) tupleFilter);
             if (translated != null) {
-                logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
+                logger.debug("Translated {{}} to IN clause: {{}}", tupleFilter, translated);
             }
         } else if (tupleFilter instanceof LogicalTupleFilter) {
             @SuppressWarnings("unchecked")
