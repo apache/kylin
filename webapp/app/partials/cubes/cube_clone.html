@@ -39,8 +39,8 @@
             <b>New Cube Name:</b>
             <br/>
             <input type="text" class="form-control"  name="cube_name" ng-model="targetObj.cubeName" ng-pattern="/^\w+$/"  required  />
-            <small class="help-block red" ng-show="forms.cube_clone_form.cube_name.$error.required && (forms.cube_clone_form.cube_name.$dirty||forms.cube_clone_form.$submitted)">Cube name is required.</small>
-            <small class="help-block red" ng-show="!forms.cube_clone_form.cube_name.$error.required&&forms.cube_clone_form.cube_name.$invalid && (forms.cube_clone_form.cube_name.$dirty||forms.cube_clone_form.$submitted)">Cube name is invalid.</small>
+            <small class="help-block red" ng-show="forms.cube_clone_form.cube_name.$error.required && (forms.cube_clone_form.cube_name.$dirty)">Cube name is required.</small>
+            <small class="help-block red" ng-show="!forms.cube_clone_form.cube_name.$error.required&&forms.cube_clone_form.cube_name.$invalid && (forms.cube_clone_form.cube_name.$dirty)">Cube name is invalid.</small>
           </div>
         </div>
       </div>
