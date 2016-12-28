@@ -72,27 +72,7 @@ KylinApp.service('ModelGraphService', function (VdmUtil) {
           }
         });
 
-/*      angular.forEach(model.dimensions, function (dimension, index) {
-        // for dimension on lookup table
-        if(model.fact_table!==dimension.table){
-            var lookup = _.find(graphData.children,function(item){
-              return item.name === dimension.table;
-            });
 
-          angular.forEach(lookup.join.primary_key, function(pk, index){
-                  for (var i = 0; i < lookup._children.length; i++) {
-                      if(lookup._children[i].name == pk)
-                          break;
-                  }
-                  if(i == lookup._children.length) {
-                    lookup._children.push({
-                          "type": "column",
-                          "name": pk
-                      });
-                  }
-          });
-        };
-      });*/
         model.graph.columnsCount = 0;
         model.graph.tree = tree;
         model.graph.root = graphData;

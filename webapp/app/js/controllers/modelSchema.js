@@ -249,35 +249,10 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
    * 1.metric can't be null
    */
   $scope.check_model_measure = function () {
-
-    var errors = [];
-    if (!modelsManager.selectedModel.metrics || !modelsManager.selectedModel.metrics.length) {
-      errors.push("Please define your metrics.");
-    }
-    var errorInfo = "";
-    angular.forEach(errors, function (item) {
-      errorInfo += "\n" + item;
-    });
-    if (errors.length) {
-      SweetAlert.swal('', errorInfo, 'warning');
-      return false;
-    } else {
-      return true;
-    }
-
+    return true;
   };
   $scope.check_model_setting = function () {
-    var errors = [];
-    var errorInfo = "";
-    angular.forEach(errors, function (item) {
-      errorInfo += "\n" + item;
-    });
-    if (errors.length) {
-      SweetAlert.swal('', errorInfo, 'warning');
-      return false;
-    } else {
-      return true;
-    }
+    return true;
   }
 
 
