@@ -156,6 +156,7 @@ public class DateStrDictionary extends Dictionary<String> {
         init(pattern, baseId);
     }
 
+
     @Override
     public int hashCode() {
         return 31 * baseId + pattern.hashCode();

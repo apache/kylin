@@ -158,6 +158,7 @@ public class MultipleDictionaryValueEnumeratorTest {
         @Override
         public void readFields(DataInput in) throws IOException {}
 
+
         @Override
         public boolean contains(Dictionary another) {
             return false;

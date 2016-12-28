@@ -27,10 +27,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
@@ -76,7 +74,7 @@ import org.slf4j.LoggerFactory;
  * @author sunyerui
  */
 @SuppressWarnings({ "rawtypes", "unchecked", "serial" })
-public class AppendTrieDictionary<T> extends Dictionary<T> {
+public class AppendTrieDictionary<T> extends CacheDictionary<T> {
 
     public static final byte[] HEAD_MAGIC = new byte[] { 0x41, 0x70, 0x70, 0x65, 0x63, 0x64, 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "AppendTrieDict"
     public static final int HEAD_SIZE_I = HEAD_MAGIC.length;
@@ -87,22 +85,16 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     private static final Logger logger = LoggerFactory.getLogger(AppendTrieDictionary.class);
 
     transient private String baseDir;
-    transient private int baseId;
     transient private int maxId;
     transient private int maxValueLength;
     transient private int nValues;
-    transient private BytesConverter<T> bytesConverter;
 
     volatile private TreeMap<DictSliceKey, DictSlice> dictSliceMap;
 
-    transient private boolean enableValueCache = true;
-    transient private SoftReference<HashMap> valueToIdCache;
 
     // Constructor both for build and deserialize
     public AppendTrieDictionary() {
-        if (enableValueCache) {
-            valueToIdCache = new SoftReference<>(new HashMap());
-        }
+        enableCache();
     }
 
     public void initParams(String baseDir, int baseId, int maxId, int maxValueLength, int nValues, BytesConverter bytesConverter) throws IOException {
@@ -111,7 +103,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         this.maxId = maxId;
         this.maxValueLength = maxValueLength;
         this.nValues = nValues;
-        this.bytesConverter = bytesConverter;
+        this.bytesConvert = bytesConverter;
     }
 
     public void initDictSliceMap(CachedTreeMap dictMap) throws IOException {
@@ -893,7 +885,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             } else {
                 logger.info("GlobalDict {} exist, append value", resourcePath);
                 builder = new Builder<>(resourcePath, dictToUse, dictToUse.baseDir, dictToUse.maxId, dictToUse.maxValueLength,
-                    dictToUse.nValues, dictToUse.bytesConverter, dictToUse.writeDictMap());
+                    dictToUse.nValues, dictToUse.bytesConvert, dictToUse.writeDictMap());
             }
 
             return builder;
@@ -1156,31 +1148,6 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
         return maxValueLength;
     }
 
-    @Override
-    final protected int getIdFromValueImpl(T value, int roundingFlag) {
-        if (enableValueCache && roundingFlag == 0) {
-            HashMap cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
-            if (cache != null) {
-                Integer id = null;
-                id = (Integer) cache.get(value);
-                if (id != null)
-                    return id.intValue();
-
-                byte[] valueBytes = bytesConverter.convertToBytes(value);
-                id = getIdFromValueBytes(valueBytes, 0, valueBytes.length, roundingFlag);
-
-                cache.put(value, id);
-                return id;
-            }
-        }
-        byte[] valueBytes = bytesConverter.convertToBytes(value);
-        return getIdFromValueBytes(valueBytes, 0, valueBytes.length, roundingFlag);
-    }
-
-    @Override
-    final protected T getValueFromIdImpl(int id) {
-        throw new UnsupportedOperationException("AppendTrieDictionary can't retrive value from id");
-    }
 
     @Override
     protected byte[] getValueBytesFromIdImpl(int id) {
@@ -1198,7 +1165,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             indexOut.writeInt(maxId);
             indexOut.writeInt(maxValueLength);
             indexOut.writeInt(nValues);
-            indexOut.writeUTF(bytesConverter.getClass().getName());
+            indexOut.writeUTF(bytesConvert.getClass().getName());
             dictSliceMap.write(indexOut);
             dictSliceMap.commit(keepAppend);
         }
@@ -1208,7 +1175,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
     public AppendTrieDictionary copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
         Configuration conf = new Configuration();
         AppendTrieDictionary newDict = new AppendTrieDictionary();
-        newDict.initParams(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConverter);
+        newDict.initParams(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConvert);
         newDict.initDictSliceMap((CachedTreeMap)dictSliceMap);
         logger.info("Copy AppendDict from {} to {}", this.baseDir, newDict.baseDir);
         Path srcPath = new Path(this.baseDir);
@@ -1255,6 +1222,7 @@ public class AppendTrieDictionary<T> extends Dictionary<T> {
             initDictSliceMap(dictMap);
         }
     }
+
 
     @Override
     public void dump(PrintStream out) {

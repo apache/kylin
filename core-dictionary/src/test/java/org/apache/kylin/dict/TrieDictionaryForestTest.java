@@ -58,7 +58,7 @@ public class TrieDictionaryForestTest {
         TrieDictionaryForest<String> dict = builder.build();
         assertSameBehaviorAsTrie(dict, strs, 0);
     }
-    
+
     @Test
     public void testBasicFound() {
         ArrayList<String> strs = new ArrayList<String>();
@@ -106,7 +106,7 @@ public class TrieDictionaryForestTest {
             assertEquals(expectId, dict.getIdFromValue(s));
             expectId++;
         }
-        
+
         assertSameBehaviorAsTrie(dict, strs, baseId);
     }
 
@@ -128,7 +128,7 @@ public class TrieDictionaryForestTest {
         assertEquals(255, id);
         id = dict.getIdFromValue(null, -1);
         assertEquals(255, id);
-        
+
         assertSameBehaviorAsTrie(dict, strs, 0);
     }
 
@@ -263,7 +263,6 @@ public class TrieDictionaryForestTest {
     }
 
     @Test
-    @Ignore
     public void categoryNamesTest() throws Exception {
         InputStream is = new FileInputStream("src/test/resources/dict/dw_category_grouping_names.dat");
         ArrayList<String> str = loadStrings(is);
@@ -284,19 +283,19 @@ public class TrieDictionaryForestTest {
     }
 
     @Test
-    public void emptyDictTest() throws Exception{
+    public void emptyDictTest() throws Exception {
         TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter());
         TrieDictionaryForest<String> dict = b.build();
-        try{
+        try {
             int id = dict.getIdFromValue("123", 0);
             fail("id should not exist");
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             //right
         }
-        try{
+        try {
             String value = dict.getValueFromIdImpl(123);
             fail("value should not exist");
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             //right
         }
     }
@@ -732,12 +731,6 @@ public class TrieDictionaryForestTest {
         System.out.println("compare build time.  Old trie : " + oldDictTotalBuildTime / 1000.0 + "s.New trie : " + newDictTotalBuildTime / 1000.0 + "s");
     }
 
-    @Test
-    public void queryTimeBenchmarkTest() throws Exception {
-        int count = (int) (Integer.MAX_VALUE * 0.8 / 640);
-        benchmarkStringDictionary(new RandomStrings(count));
-    }
-
     private void evaluateDataSize(ArrayList<String> list) {
         long size = 0;
         for (String str : list)
@@ -867,7 +860,6 @@ public class TrieDictionaryForestTest {
         int baseId = new Random().nextInt(100);
         TrieDictionaryForestBuilder<String> b = newDictBuilder(str, baseId, 2);
         TrieDictionaryForest<String> dict = b.build();
-        //dict.dump(System.out);
         TreeSet<String> set = new TreeSet<String>();
         for (String s : str) {
             set.add(s);
@@ -881,7 +873,7 @@ public class TrieDictionaryForestTest {
         int id = baseId;
         for (; it.hasNext(); id++) {
             String value = it.next();
-            // System.out.println("checking " + id + " <==> " + value);
+            //System.out.println("checking " + id + " <==> " + value);
 
             assertEquals(id, dict.getIdFromValue(value));
             assertEquals(value, dict.getValueFromId(id));
@@ -892,7 +884,7 @@ public class TrieDictionaryForestTest {
             for (String s : notFound) {
                 try {
                     int nullId = dict.getIdFromValue(s);
-                    System.out.println("null value id:" + nullId);
+                    //System.out.println("null value id:" + nullId);
                     fail("For not found value '" + s + "', IllegalArgumentException is expected");
                 } catch (IllegalArgumentException e) {
                     // good
@@ -938,8 +930,9 @@ public class TrieDictionaryForestTest {
     public static TrieDictionaryForestBuilder<String> newDictBuilder(Iterable<String> strs, int baseId, int treeSize) {
         TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), baseId);
         b.setMaxTrieTreeSize(treeSize);
-        for (String s : strs)
+        for (String s : strs) {
             b.addValue(s);
+        }
         return b;
     }
 
@@ -950,7 +943,7 @@ public class TrieDictionaryForestTest {
             b.addValue(strs.next());
         return b;
     }
-    
+
     private static class RandomStrings implements Iterable<String> {
         final private int size;
 
@@ -1039,7 +1032,7 @@ public class TrieDictionaryForestTest {
                 trieBuilder.addValue(s);
         }
         TrieDictionary<String> trie = trieBuilder.build(baseId);
-        
+
         assertEquals(trie.getMaxId(), dict.getMaxId());
         assertEquals(trie.getMinId(), dict.getMinId());
         assertEquals(trie.getSize(), dict.getSize());

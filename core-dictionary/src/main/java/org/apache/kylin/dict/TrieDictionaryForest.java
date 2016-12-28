@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
@@ -40,18 +41,14 @@ import org.apache.kylin.common.util.Dictionary;
  * <p>
  * Created by xiefan on 16-10-26.
  */
-public class TrieDictionaryForest<T> extends Dictionary<T> {
+public class TrieDictionaryForest<T> extends CacheDictionary<T> {
     private static final long serialVersionUID = 1L;
 
     private ArrayList<TrieDictionary<T>> trees;
 
     private ArrayList<ByteArray> valueDivide;
 
-    private ArrayList<Integer> accuOffset; //find tree
-
-    private BytesConverter<T> bytesConvert;
-
-    private int baseId;
+    private ArrayList<Integer> accuOffset;
 
     private ArrayList<ByteArray> maxValue;
 
@@ -66,6 +63,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         this.bytesConvert = bytesConverter;
         this.baseId = baseId;
         initMaxValue();
+        enableCache();
     }
 
     @Override
@@ -102,12 +100,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         return maxValue;
     }
 
-    // value --> id
-    @Override
-    protected int getIdFromValueImpl(T value, int roundingFlag) throws IllegalArgumentException {
-        byte[] valueBytes = bytesConvert.convertToBytes(value);
-        return getIdFromValueBytesImpl(valueBytes, 0, valueBytes.length, roundingFlag);
-    }
 
     @Override
     protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
@@ -148,15 +140,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         return id;
     }
 
-    @Override
-    protected T getValueFromIdImpl(int id) throws IllegalArgumentException {
-        byte[] data = getValueBytesFromIdImpl(id);
-        if (data != null) {
-            return bytesConvert.convertFromBytes(data, 0, data.length);
-        } else {
-            return null;
-        }
-    }
+
 
     @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
@@ -271,6 +255,7 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
                 trees.add(dict);
             }
             initMaxValue();
+            enableCache();
         } catch (Exception e) {
             if (e instanceof RuntimeException)
                 throw (RuntimeException) e;
@@ -380,24 +365,6 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
             byte[] b1 = bytesConvert.convertToBytes(curTreeMax);
             ByteArray ba1 = new ByteArray(b1, 0, b1.length);
             this.maxValue.add(ba1);
-        }
-    }
-
-    public static void main(String[] args) {
-        ArrayList<String> list = new ArrayList<>();
-        list.add("一");
-        list.add("二");
-        list.add("三");
-        list.add("");
-        list.add("part");
-        list.add("par");
-        list.add("partition");
-        list.add("party");
-        list.add("parties");
-        list.add("paint");
-        Collections.sort(list);
-        for (String str : list) {
-            System.out.println("found value:" + str + " index:" + lowerBound(str, list));
         }
     }
 
