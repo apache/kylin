@@ -105,15 +105,18 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
                         continue;
                     }
                     nReady++;
-                    AbstractExecutable executable = executableManager.getJob(id);
-                    String jobDesc = executable.toString();
-                    logger.info(jobDesc + " prepare to schedule");
+                    AbstractExecutable executable = null;
+                    String jobDesc = null;
                     try {
+                        executable = executableManager.getJob(id);
+                        jobDesc = executable.toString();
+                        logger.info(jobDesc + " prepare to schedule");
                         context.addRunningJob(executable);
                         jobPool.execute(new JobRunner(executable));
                         logger.info(jobDesc + " scheduled");
                     } catch (Exception ex) {
-                        context.removeRunningJob(executable);
+                        if (executable != null)
+                            context.removeRunningJob(executable);
                         logger.warn(jobDesc + " fail to schedule", ex);
                     }
                 }
