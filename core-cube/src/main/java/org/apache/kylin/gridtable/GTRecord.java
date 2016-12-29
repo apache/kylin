@@ -234,6 +234,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         return toString(info.colAll);
     }
 
+    /** toString for MemoryHungry Measure is expensive, please invoke carefully */
     public String toString(ImmutableBitSet selectedColumns) {
         Object[] values = new Object[selectedColumns.cardinality()];
         getValues(selectedColumns, values);

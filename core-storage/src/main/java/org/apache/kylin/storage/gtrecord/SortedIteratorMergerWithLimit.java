@@ -126,7 +126,7 @@ public class SortedIteratorMergerWithLimit<E extends Cloneable> extends SortedIt
 
             //TODO: remove this check when validated
             if (last != null) {
-                Preconditions.checkState(comparator.compare(last, fetched) <= 0, "Not sorted! last: " + last + " fetched: " + fetched);
+                Preconditions.checkState(comparator.compare(last, fetched) <= 0, "Not sorted!");
             }
 
             last = fetched;
