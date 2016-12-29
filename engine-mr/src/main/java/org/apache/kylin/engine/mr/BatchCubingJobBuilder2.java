@@ -84,7 +84,7 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
         // base cuboid step
         result.addTask(createBaseCuboidStep(cuboidOutputTempPath, jobId));
         // n dim cuboid steps
-        for (int i = 1; i <= groupRowkeyColumnsCount; i++) {
+        for (int i = 1; i < groupRowkeyColumnsCount; i++) {
             int dimNum = totalRowkeyColumnsCount - i;
             result.addTask(createNDimensionCuboidStep(cuboidOutputTempPath, dimNum, totalRowkeyColumnsCount, jobId));
         }
