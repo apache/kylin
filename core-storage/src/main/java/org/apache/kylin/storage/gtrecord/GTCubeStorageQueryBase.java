@@ -72,6 +72,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     @Override
     public ITupleIterator search(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
+        context.setStorageQuery(this);
 
         //deal with participant columns in subquery join
         sqlDigest.includeSubqueryJoinParticipants();
@@ -131,7 +132,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 continue;
             }
 
-            scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context, getGTStorage());
+            scanner = new CubeSegmentScanner(cubeSeg, cuboid, dimensionsD, groupsD, metrics, filterD, context);
             scanners.add(scanner);
         }
 
@@ -142,6 +143,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     }
 
     protected abstract String getGTStorage();
+    
+    protected ITupleConverter newCubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo tupleInfo) {
+        return new CubeTupleConverter(cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
+    }
 
     private void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
         for (FunctionDesc func : sqlDigest.aggregations) {

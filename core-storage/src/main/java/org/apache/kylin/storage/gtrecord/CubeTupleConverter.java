@@ -18,11 +18,10 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.Dictionary;
@@ -37,18 +36,16 @@ import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
  * convert GTRecord to tuple
  */
-public class CubeTupleConverter {
+public class CubeTupleConverter implements ITupleConverter {
 
     final CubeSegment cubeSeg;
     final Cuboid cuboid;
@@ -64,8 +61,6 @@ public class CubeTupleConverter {
     private final List<Integer> advMeasureIndexInGTValues;
 
     private final int nSelectedDims;
-
-    private final int[] dimensionIndexOnTuple;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
                               Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo) {
@@ -88,18 +83,6 @@ public class CubeTupleConverter {
         advMeasureFillers = Lists.newArrayListWithCapacity(1);
         advMeasureIndexInGTValues = Lists.newArrayListWithCapacity(1);
 
-        // dimensionIndexOnTuple is for SQL with limit
-        List<Integer> temp = Lists.newArrayList();
-        for (TblColRef dim : cuboid.getColumns()) {
-            if (tupleInfo.hasColumn(dim)) {
-                temp.add(tupleInfo.getColumnIndex(dim));
-            }
-        }
-        dimensionIndexOnTuple = new int[temp.size()];
-        for (int i = 0; i < temp.size(); i++) {
-            dimensionIndexOnTuple[i] = temp.get(i);
-        }
-        
         ////////////
 
         int i = 0;
@@ -155,44 +138,6 @@ public class CubeTupleConverter {
         }
     }
 
-    public Comparator<ITuple> getTupleDimensionComparator() {
-        return new Comparator<ITuple>() {
-            @Override
-            public int compare(ITuple o1, ITuple o2) {
-                Preconditions.checkNotNull(o1);
-                Preconditions.checkNotNull(o2);
-                for (int i = 0; i < dimensionIndexOnTuple.length; i++) {
-                    int index = dimensionIndexOnTuple[i];
-
-                    if (index == -1) {
-                        //TODO: 
-                        continue;
-                    }
-
-                    Comparable a = (Comparable) o1.getAllValues()[index];
-                    Comparable b = (Comparable) o2.getAllValues()[index];
-
-                    if (a == null && b == null) {
-                        continue;
-                    } else if (a == null) {
-                        return 1;
-                    } else if (b == null) {
-                        return -1;
-                    } else {
-                        int temp = a.compareTo(b);
-                        if (temp != 0) {
-                            return temp;
-                        } else {
-                            continue;
-                        }
-                    }
-                }
-
-                return 0;
-            }
-        };
-    }
-
     // load only needed dictionaries
     private Map<TblColRef, Dictionary<String>> buildDictionaryMap(List<TblColRef> columnsNeedDictionary) {
         Map<TblColRef, Dictionary<String>> result = Maps.newHashMap();
@@ -202,6 +147,7 @@ public class CubeTupleConverter {
         return result;
     }
 
+    @Override
     public List<IAdvMeasureFiller> translateResult(GTRecord record, Tuple tuple) {
 
         record.getValues(gtColIdx, gtValues);

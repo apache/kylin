@@ -50,7 +50,7 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
     protected final StorageContext context;
 
     protected Iterator<GTRecord> gtItr;
-    protected CubeTupleConverter cubeTupleConverter;
+    protected ITupleConverter cubeTupleConverter;
     protected Tuple next;
 
     private List<IAdvMeasureFiller> advMeasureFillers;
@@ -67,7 +67,7 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
         this.tuple = new Tuple(returnTupleInfo);
         this.context = context;
         this.gtItr = getGTItr(scanner);
-        this.cubeTupleConverter = new CubeTupleConverter(scanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
+        this.cubeTupleConverter = ((GTCubeStorageQueryBase) context.getStorageQuery()).newCubeTupleConverter(scanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
     }
 
     private Iterator<GTRecord> getGTItr(CubeSegmentScanner scanner) {
@@ -150,9 +150,5 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
         } catch (IOException e) {
             logger.error("Exception when close CubeScanner", e);
         }
-    }
-
-    public CubeTupleConverter getCubeTupleConverter() {
-        return cubeTupleConverter;
     }
 }

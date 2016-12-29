@@ -47,6 +47,7 @@ public class StorageContext {
     private boolean limitEnabled = false;
     private boolean enableCoprocessor = false;
 
+    private IStorageQuery storageQuery;
     private AtomicLong totalScanCount = new AtomicLong();
     private Cuboid cuboid;
     private boolean partialResultReturned = false;
@@ -193,4 +194,13 @@ public class StorageContext {
     public void setReusedPeriod(Range<Long> reusedPeriod) {
         this.reusedPeriod = reusedPeriod;
     }
+
+    public IStorageQuery getStorageQuery() {
+        return storageQuery;
+    }
+
+    public void setStorageQuery(IStorageQuery storageQuery) {
+        this.storageQuery = storageQuery;
+    }
+    
 }

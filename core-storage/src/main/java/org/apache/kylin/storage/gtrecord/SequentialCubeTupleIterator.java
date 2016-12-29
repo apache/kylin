@@ -19,6 +19,7 @@
 package org.apache.kylin.storage.gtrecord;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -73,8 +75,59 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
                     return input;
                 }
             });
-            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), segmentCubeTupleIterators.get(0).getCubeTupleConverter().getTupleDimensionComparator()).getIterator();
+            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), getTupleDimensionComparator(cuboid, returnTupleInfo)).getIterator();
         }
+    }
+    
+    public Comparator<ITuple> getTupleDimensionComparator(Cuboid cuboid, TupleInfo returnTupleInfo) {
+        // dimensionIndexOnTuple is for SQL with limit
+        List<Integer> temp = Lists.newArrayList();
+        for (TblColRef dim : cuboid.getColumns()) {
+            if (returnTupleInfo.hasColumn(dim)) {
+                temp.add(returnTupleInfo.getColumnIndex(dim));
+            }
+        }
+
+        final int[] dimensionIndexOnTuple = new int[temp.size()];
+        for (int i = 0; i < temp.size(); i++) {
+            dimensionIndexOnTuple[i] = temp.get(i);
+        }
+        
+        return new Comparator<ITuple>() {
+            @Override
+            public int compare(ITuple o1, ITuple o2) {
+                Preconditions.checkNotNull(o1);
+                Preconditions.checkNotNull(o2);
+                for (int i = 0; i < dimensionIndexOnTuple.length; i++) {
+                    int index = dimensionIndexOnTuple[i];
+
+                    if (index == -1) {
+                        //TODO: 
+                        continue;
+                    }
+
+                    Comparable a = (Comparable) o1.getAllValues()[index];
+                    Comparable b = (Comparable) o2.getAllValues()[index];
+
+                    if (a == null && b == null) {
+                        continue;
+                    } else if (a == null) {
+                        return 1;
+                    } else if (b == null) {
+                        return -1;
+                    } else {
+                        int temp = a.compareTo(b);
+                        if (temp != 0) {
+                            return temp;
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+
+                return 0;
+            }
+        };
     }
 
     @Override
