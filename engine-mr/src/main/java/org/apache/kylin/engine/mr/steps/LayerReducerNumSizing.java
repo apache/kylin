@@ -30,9 +30,9 @@ import org.apache.kylin.job.exception.JobException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LayerReduerNumSizing {
+public class LayerReducerNumSizing {
 
-    private static final Logger logger = LoggerFactory.getLogger(LayerReduerNumSizing.class);
+    private static final Logger logger = LoggerFactory.getLogger(LayerReducerNumSizing.class);
 
     public static void setReduceTaskNum(Job job, CubeSegment cubeSegment, double totalMapInputMB, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
         CubeDesc cubeDesc = cubeSegment.getCubeDesc();
@@ -48,10 +48,11 @@ public class LayerReduerNumSizing {
 
         if (level == -1) {
             //merge case
-            adjustedCurrentLayerSizeEst = cubeStatsReader.estimateCubeSize();
-            logger.info("adjustedCurrentLayerSizeEst: {}", adjustedCurrentLayerSizeEst);
+            double estimatedSize = cubeStatsReader.estimateCubeSize();
+            adjustedCurrentLayerSizeEst = estimatedSize > totalMapInputMB ? totalMapInputMB : estimatedSize;
+            logger.info("estimated size {}, input size {}, adjustedCurrentLayerSizeEst: {}", estimatedSize, totalMapInputMB, adjustedCurrentLayerSizeEst);
         } else if (level == 0) {
-            //base cuboid case
+            //base cuboid case TODO: the estimation could be very WRONG because it has no correction
             adjustedCurrentLayerSizeEst = cubeStatsReader.estimateLayerSize(0);
             logger.info("adjustedCurrentLayerSizeEst: {}", adjustedCurrentLayerSizeEst);
         } else {
@@ -62,10 +63,11 @@ public class LayerReduerNumSizing {
         }
 
         // number of reduce tasks
-        int numReduceTasks = (int) Math.round(adjustedCurrentLayerSizeEst / perReduceInputMB * reduceCountRatio);
+        int numReduceTasks = (int) Math.round(adjustedCurrentLayerSizeEst / perReduceInputMB * reduceCountRatio + 0.99);
 
         // adjust reducer number for cube which has DISTINCT_COUNT measures for better performance
         if (cubeDesc.hasMemoryHungryMeasures()) {
+            logger.info("Multiply reducer num by 4 to boost performance for memory hungry measures");
             numReduceTasks = numReduceTasks * 4;
         }
 

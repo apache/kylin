@@ -131,7 +131,7 @@ public class CuboidJob extends AbstractHadoopJob {
             // add metadata to distributed cache
             attachSegmentMetadataWithDict(segment, job.getConfiguration());
 
-            LayerReduerNumSizing.setReduceTaskNum(job, segment, getTotalMapInputMB(), nCuboidLevel);
+            LayerReducerNumSizing.setReduceTaskNum(job, segment, getTotalMapInputMB(), nCuboidLevel);
 
             this.deletePath(job.getConfiguration(), output);
 

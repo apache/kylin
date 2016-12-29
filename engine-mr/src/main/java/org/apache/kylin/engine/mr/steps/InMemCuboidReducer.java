@@ -80,7 +80,7 @@ public class InMemCuboidReducer extends KylinReducer<ByteArrayWritable, ByteArra
 
         for (ByteArrayWritable value : values) {
             if (vcounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-                logger.info("Handling value with ordinal: " + vcounter);
+                logger.info("Handling value with ordinal (This is not KV number!): " + vcounter);
             }
             codec.decode(value.asBuffer(), input);
             aggs.aggregate(input);

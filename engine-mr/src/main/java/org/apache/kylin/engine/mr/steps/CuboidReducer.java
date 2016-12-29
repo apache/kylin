@@ -91,7 +91,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
         for (Text value : values) {
             if (vcounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-                logger.info("Handling value with ordinal: " + vcounter);
+                logger.info("Handling value with ordinal (This is not KV number!): " + vcounter);
             }
             codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), input);
             if (cuboidLevel > 0) {
