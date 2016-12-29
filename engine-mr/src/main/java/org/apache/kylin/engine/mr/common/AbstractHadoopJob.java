@@ -451,11 +451,11 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     protected void attachTableMetadata(TableDesc table, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.add(table.getResourcePath());
-        attachKylinPropsAndMetadata(dumpList, KylinConfig.getInstanceFromEnv(), conf);
+        dumpKylinPropsAndMetadata(dumpList, KylinConfig.getInstanceFromEnv(), conf);
     }
 
     protected void attachCubeMetadata(CubeInstance cube, Configuration conf) throws IOException {
-        attachKylinPropsAndMetadata(collectCubeMetadata(cube), cube.getConfig(), conf);
+        dumpKylinPropsAndMetadata(collectCubeMetadata(cube), cube.getConfig(), conf);
     }
 
     protected void attachCubeMetadataWithDict(CubeInstance cube, Configuration conf) throws IOException {
@@ -464,14 +464,14 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         for (CubeSegment segment : cube.getSegments()) {
             dumpList.addAll(segment.getDictionaryPaths());
         }
-        attachKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
+        dumpKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
     }
 
     protected void attachSegmentMetadataWithDict(CubeSegment segment, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.addAll(collectCubeMetadata(segment.getCubeInstance()));
         dumpList.addAll(segment.getDictionaryPaths());
-        attachKylinPropsAndMetadata(dumpList, segment.getConfig(), conf);
+        dumpKylinPropsAndMetadata(dumpList, segment.getConfig(), conf);
     }
 
     private Set<String> collectCubeMetadata(CubeInstance cube) {
@@ -490,7 +490,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         return dumpList;
     }
 
-    private void attachKylinPropsAndMetadata(Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
+    protected void dumpKylinPropsAndMetadata(Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
