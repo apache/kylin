@@ -38,7 +38,9 @@ var Config = {
 
 // Angular module to load routes.
 KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $logProvider) {
-
+    //resolve http always use cache data in IE11,IE10
+    $httpProvider.defaults.headers.common['Cache-Control'] = 'no-cache';
+    $httpProvider.defaults.headers.common['Pragma'] = 'no-cache';
     // Set debug to true by default.
     if (angular.isUndefined(Config.debug) || Config.debug !== false) {
       Config.debug = true;
