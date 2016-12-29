@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
@@ -94,7 +95,7 @@ public class TableController extends BasicController {
     public Map<String, String[]> loadHiveTables(@PathVariable String tables, @PathVariable String project, @RequestBody HiveTableRequest request) throws IOException {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<String, String[]> result = new HashMap<String, String[]>();
-        String[] tableNames = tables.split(",");
+        String[] tableNames = StringUtil.splitAndTrim(tables, ",");
         try {
             String[] loaded = tableService.loadHiveTablesToProject(tableNames, project);
             result.put("result.loaded", loaded);

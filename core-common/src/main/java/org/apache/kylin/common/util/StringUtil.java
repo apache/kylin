@@ -153,4 +153,15 @@ public class StringUtil {
         }
     }
 
+    public static String[] splitAndTrim(String str, String splitBy) {
+        String[] split = str.split(splitBy);
+        ArrayList<String> r = new ArrayList<>(split.length);
+        for (String s : split) {
+            s = s.trim();
+            if (!s.isEmpty())
+                r.add(s);
+        }
+        return (String[]) r.toArray(new String[r.size()]);
+    }
+
 }
