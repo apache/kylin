@@ -278,12 +278,17 @@ KylinApp.directive('kylinPagination', function ($parse, $q) {
       });
 
       ctrl.$parsers.push(function (value) {
-        if(/\d{4}-\d{1,2}-\d{1,2}\s+(\d{1,2}:\d{1,2}:\d{1,2})/.test(value)) {
-          value=new Date(value);
+        var date;
+        if(/^\d{4}-\d{1,2}-\d{1,2}(\s+\d{1,2}:\d{1,2}:\d{1,2})?$/.test(value)) {
+          date=new Date(value);
+          if(!date||date&&!date.getTime()){
+            return value;
+          }else{
+            return date.getTime()-(60000 * date.getTimezoneOffset());
+          }
         }else{
           return value;
         }
-        return value.getTime()-(60000 * value.getTimezoneOffset());
       });
     }
   };
