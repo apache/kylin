@@ -51,7 +51,7 @@ public class HiveSourceTableLoader {
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(HiveSourceTableLoader.class);
 
-    public static Set<String> reloadHiveTables(String[] hiveTables, KylinConfig config) throws IOException {
+    public static Set<String> loadHiveTables(String[] hiveTables, KylinConfig config) throws IOException {
 
         SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
         for (String fullTableName : hiveTables) {

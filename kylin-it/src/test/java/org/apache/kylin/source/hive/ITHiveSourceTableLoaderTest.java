@@ -45,7 +45,7 @@ public class ITHiveSourceTableLoaderTest extends HBaseMetadataTestCase {
     public void test() throws IOException {
         KylinConfig config = getTestConfig();
         String[] toLoad = new String[] { "DEFAULT.TEST_KYLIN_FACT", "EDW.TEST_CAL_DT" };
-        Set<String> loaded = HiveSourceTableLoader.reloadHiveTables(toLoad, config);
+        Set<String> loaded = HiveSourceTableLoader.loadHiveTables(toLoad, config);
 
         assertTrue(loaded.size() == toLoad.length);
         for (String str : toLoad)
