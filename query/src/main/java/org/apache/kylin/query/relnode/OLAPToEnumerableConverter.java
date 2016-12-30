@@ -42,9 +42,7 @@ import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
-import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.ModelChooser;
@@ -82,10 +80,10 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         // identify model
         List<OLAPContext> contexts = listContextsHavingScan();
         Set<IRealization> candidates = ModelChooser.selectModel(contexts);
-        
+
         // identify realization for each context
         for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
-            
+
             // Context has no table scan is created by OLAPJoinRel which looks like
             //     (sub-query) as A join (sub-query) as B
             // No realization needed for such context.
