@@ -19,8 +19,8 @@ Here take two example:
 ## Overwrite default Hadoop job conf at Cube level
 The `conf/kylin_job_conf.xml` and `conf/kylin_job_conf_inmem.xml` manage the default configurations for Hadoop jobs. If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need adding a prefix `kylin.job.mr.config.override.`; These configs will be parsed out and then applied when submitting jobs. See two examples below:
 
- * If want a cube's job getting more memory from Yarn, you can define: `kylin.job.mr.config.override.mapred.map.child.java.opts=-Xmx7g` and `kylin.job.mr.config.override.mapred.map.memory.mb=8192`
- * If want a cube's job going to a different Yarn resource queue, you can define: `kylin.job.mr.config.override.mapred.job.queuename=myQueue` (note: "myQueue" is just a sample)
+ * If want a cube's job getting more memory from Yarn, you can define: `kylin.job.mr.config.override.mapreduce.map.java.opts=-Xmx7g` and `kylin.job.mr.config.override.mapreduce.map.memory.mb=8192`
+ * If want a cube's job going to a different Yarn resource queue, you can define: `kylin.job.mr.config.override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample)
 
 ## Enable compression
 
