@@ -127,6 +127,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             } else if (hasRunning) {
                 mgr.updateJobOutput(getId(), ExecutableState.RUNNING, null, null);
             } else if (hasDiscarded) {
+                setEndTime(System.currentTimeMillis());
                 mgr.updateJobOutput(getId(), ExecutableState.DISCARDED, null, null);
             } else {
                 mgr.updateJobOutput(getId(), ExecutableState.READY, null, null);
