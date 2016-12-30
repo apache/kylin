@@ -135,31 +135,9 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             if (null != tupleFilter) {
                 context.filterColumns.addAll(collectColumns(tupleFilter));
                 context.allColumns.addAll(collectColumns(tupleFilter));
-                context.filter = and(context.filter, tupleFilter);
+                context.filter = TupleFilter.and(context.filter, tupleFilter);
             }
         }
-    }
-
-    private TupleFilter and(TupleFilter f1, TupleFilter f2) {
-        if (f1 == null)
-            return f2;
-        if (f2 == null)
-            return f1;
-
-        if (f1.getOperator() == FilterOperatorEnum.AND) {
-            f1.addChild(f2);
-            return f1;
-        }
-
-        if (f2.getOperator() == FilterOperatorEnum.AND) {
-            f2.addChild(f1);
-            return f2;
-        }
-
-        LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
-        and.addChild(f1);
-        and.addChild(f2);
-        return and;
     }
 
     private Set<TblColRef> collectColumns(TupleFilter filter) {

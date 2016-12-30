@@ -322,9 +322,10 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         }
 
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType, context);
-        context.filter = this.condition.accept(visitor);
+        TupleFilter filter = this.condition.accept(visitor);
 
-        context.filterColumns = visitor.columnsInFilter;
+        context.filter = TupleFilter.and(context.filter, filter);
+        context.filterColumns.addAll(visitor.columnsInFilter);
     }
 
     @Override
