@@ -503,8 +503,8 @@ public class MetadataManager {
     public List<String> getModelsUsingTable(String tableName, String projectName) throws IOException {
         List<String> models = new ArrayList<>();
         for (DataModelDesc modelDesc : getModels(projectName)) {
-            for(TableRef tableRef : modelDesc.getAllTables()){
-                if(tableRef.getTableName().equalsIgnoreCase(tableName)){
+            for (TableRef tableRef : modelDesc.getAllTables()) {
+                if (tableRef.getTableName().equalsIgnoreCase(tableName)) {
                     models.add(modelDesc.getName());
                 }
             }
@@ -514,8 +514,8 @@ public class MetadataManager {
 
     public boolean isTableInAnyModel(String tableName) {
         for (DataModelDesc modelDesc : getModels()) {
-            for(TableRef tableRef : modelDesc.getAllTables()){
-                if(tableRef.getTableName().equalsIgnoreCase(tableName)){
+            for (TableRef tableRef : modelDesc.getAllTables()) {
+                if (tableRef.getTableName().equalsIgnoreCase(tableName)) {
                     return true;
                 }
             }

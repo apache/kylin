@@ -102,7 +102,7 @@ public class TableService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     private void unLoadHiveTable(String tableName) throws IOException {
         tableName = normalizeHiveTableName(tableName);
-        HiveSourceTableLoader.unLoadHiveTable(tableName.toUpperCase());
+        HiveSourceTableLoader.unLoadHiveTable(tableName);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -313,6 +313,6 @@ public class TableService extends BasicService {
 
     public String normalizeHiveTableName(String tableName){
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
-        return dbTableName[0] + "." + dbTableName[1];
+        return (dbTableName[0] + "." + dbTableName[1]).toUpperCase();
     }
 }
