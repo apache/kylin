@@ -34,6 +34,7 @@ import org.roaringbitmap.buffer.MutableRoaringBitmap;
 public class BitmapCounter implements Comparable<BitmapCounter> {
 
     private MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
+    private final int VERSION = 2;
 
     public BitmapCounter() {
     }
@@ -102,13 +103,49 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         bitmap.serialize(dos);
         dos.close();
         ByteBuffer bb = ByteBuffer.wrap(bos.toByteArray());
+        out.putInt(VERSION);
+        out.putInt(bos.size() + 4 + 4);
         out.put(bb);
     }
 
     public void readRegisters(ByteBuffer in) throws IOException {
+        int mark = in.position();
+        int version = in.getInt();
+
+        // keep forward compatibility
+        if (version == VERSION) {
+            @SuppressWarnings("unused")
+            int size = in.getInt();
+        } else {
+            in.position(mark);
+        }
+
         try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(in))) {
             bitmap.deserialize(is);
         }
+    }
+
+    public int peekLength(ByteBuffer in) {
+        int mark = in.position();
+        int len;
+        int version = in.getInt();
+
+        // keep forward compatibility
+        if (version == VERSION) {
+            len = in.getInt() ;
+        } else {
+            in.position(mark);
+            try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(in))) {
+                MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
+                bitmap.deserialize(is);
+                len = in.position() - mark;
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        in.position(mark);
+        return len;
     }
 
     @Override
@@ -167,22 +204,6 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
             return 1;
         else
             return -1;
-    }
-
-    public int peekLength(ByteBuffer in) {
-        int mark = in.position();
-        int len;
-
-        MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
-        try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(in))) {
-            bitmap.deserialize(is);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        len = in.position() - mark;
-        in.position(mark);
-        return len;
     }
 
     private class ByteBufferBackedInputStream extends InputStream {
