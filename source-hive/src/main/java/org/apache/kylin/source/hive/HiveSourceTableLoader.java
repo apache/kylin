@@ -76,12 +76,6 @@ public class HiveSourceTableLoader {
         return loadedTables;
     }
 
-    public static void unLoadHiveTable(String hiveTable) throws IOException {
-        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-        metaMgr.removeSourceTable(hiveTable);
-        metaMgr.removeTableExt(hiveTable);
-    }
-
     private static List<String> extractHiveTables(String database, Set<String> tables, IHiveClient hiveClient) throws IOException {
 
         List<String> loadedTables = Lists.newArrayList();
@@ -132,11 +126,11 @@ public class HiveSourceTableLoader {
             }
 
             TableExtDesc tableExtDesc = metaMgr.getTableExt(tableDesc.getIdentity());
-            tableExtDesc.setStorageLocation(hiveTableMeta.sdLocation);
-            tableExtDesc.setOwner(hiveTableMeta.owner);
-            tableExtDesc.setLastAccessTime(String.valueOf(hiveTableMeta.lastAccessTime));
-            tableExtDesc.setPartitionColumn(partitionColumnString.toString());
-            tableExtDesc.setTotalFileSize(String.valueOf(hiveTableMeta.fileSize));
+            tableExtDesc.addDataSourceProp("location", hiveTableMeta.sdLocation);
+            tableExtDesc.addDataSourceProp("owner", hiveTableMeta.owner);
+            tableExtDesc.addDataSourceProp("last_access_time", String.valueOf(hiveTableMeta.lastAccessTime));
+            tableExtDesc.addDataSourceProp("partition_column", partitionColumnString.toString());
+            tableExtDesc.addDataSourceProp("total_file_size", String.valueOf(hiveTableMeta.fileSize));
             tableExtDesc.addDataSourceProp("total_file_number", String.valueOf(hiveTableMeta.fileNum));
             tableExtDesc.addDataSourceProp("hive_inputFormat", hiveTableMeta.sdInputFormat);
             tableExtDesc.addDataSourceProp("hive_outputFormat", hiveTableMeta.sdOutputFormat);

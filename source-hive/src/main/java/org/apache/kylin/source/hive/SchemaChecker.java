@@ -32,6 +32,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -103,7 +104,10 @@ public class SchemaChecker {
                 if (cube == null || cube.allowBrokenDescriptor()) {
                     return false;
                 }
-                return cube.getModel().containsTable(fullTableName);
+                DataModelDesc model = cube.getModel();
+                if (model == null)
+                    return false;
+                return model.containsTable(fullTableName);
             }
         });
 

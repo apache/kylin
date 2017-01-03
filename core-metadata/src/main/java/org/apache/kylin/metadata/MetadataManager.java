@@ -504,7 +504,7 @@ public class MetadataManager {
         List<String> models = new ArrayList<>();
         for (DataModelDesc modelDesc : getModels(projectName)) {
             for (TableRef tableRef : modelDesc.getAllTables()) {
-                if (tableRef.getTableName().equalsIgnoreCase(tableName)) {
+                if (tableRef.getTableIdentity().equalsIgnoreCase(tableName)) {
                     models.add(modelDesc.getName());
                 }
             }
@@ -515,7 +515,7 @@ public class MetadataManager {
     public boolean isTableInAnyModel(String tableName) {
         for (DataModelDesc modelDesc : getModels()) {
             for (TableRef tableRef : modelDesc.getAllTables()) {
-                if (tableRef.getTableName().equalsIgnoreCase(tableName)) {
+                if (tableRef.getTableIdentity().equalsIgnoreCase(tableName)) {
                     return true;
                 }
             }
