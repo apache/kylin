@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
@@ -57,13 +56,17 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
 
     public TrieDictionaryForest(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, //
             ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+        init(trees, valueDivide, accuOffset, bytesConverter, baseId);
+    }
+
+    private void init(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
         this.trees = trees;
         this.valueDivide = valueDivide;
         this.accuOffset = accuOffset;
         this.bytesConvert = bytesConverter;
         this.baseId = baseId;
         initMaxValue();
-        enableCache();
+        initForestCache();
     }
 
     @Override
@@ -99,7 +102,6 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
             maxValue = Math.max(maxValue, tree.getSizeOfValue());
         return maxValue;
     }
-
 
     @Override
     protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
@@ -139,8 +141,6 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         id += baseId;
         return id;
     }
-
-
 
     @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
@@ -228,19 +228,20 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         try {
             @SuppressWarnings("unused")
             int headSize = in.readInt();
-            this.baseId = in.readInt();
+            int baseId = in.readInt();
             String converterName = in.readUTF();
+            BytesConverter<T> bytesConverter = null;
             if (converterName.isEmpty() == false)
-                this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                bytesConverter = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
             //init accuOffset
             int accuSize = in.readInt();
-            this.accuOffset = new ArrayList<>();
+            ArrayList<Integer> accuOffset = new ArrayList<>();
             for (int i = 0; i < accuSize; i++) {
                 accuOffset.add(in.readInt());
             }
             //init valueDivide
             int valueDivideSize = in.readInt();
-            this.valueDivide = new ArrayList<>();
+            ArrayList<ByteArray> valueDivide = new ArrayList<>();
             for (int i = 0; i < valueDivideSize; i++) {
                 int length = in.readInt();
                 byte[] buffer = new byte[length];
@@ -248,14 +249,13 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
                 valueDivide.add(new ByteArray(buffer, 0, buffer.length));
             }
             int treeSize = in.readInt();
-            this.trees = new ArrayList<>();
+            ArrayList<TrieDictionary<T>> trees = new ArrayList<>();
             for (int i = 0; i < treeSize; i++) {
                 TrieDictionary<T> dict = new TrieDictionary<>();
                 dict.readFields(in);
                 trees.add(dict);
             }
-            initMaxValue();
-            enableCache();
+            init(trees, valueDivide, accuOffset, bytesConverter, baseId);
         } catch (Exception e) {
             if (e instanceof RuntimeException)
                 throw (RuntimeException) e;
@@ -365,6 +365,13 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
             byte[] b1 = bytesConvert.convertToBytes(curTreeMax);
             ByteArray ba1 = new ByteArray(b1, 0, b1.length);
             this.maxValue.add(ba1);
+        }
+    }
+
+    private void initForestCache() {
+        enableCache();
+        for (TrieDictionary<T> tree : trees) { //disable duplicate cache
+            tree.disableCache();
         }
     }
 

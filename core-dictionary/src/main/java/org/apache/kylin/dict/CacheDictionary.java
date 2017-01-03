@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 abstract public class CacheDictionary<T> extends Dictionary<T> {
     private static final long serialVersionUID = 1L;
 
-    transient protected boolean enableValueCache = true;
+    transient protected boolean enableValueCache = false;
 
     transient private SoftReference<Map> valueToIdCache;
 
