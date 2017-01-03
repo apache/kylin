@@ -84,7 +84,7 @@ public class ModelService extends BasicService {
 
     public DataModelDesc createModelDesc(String projectName, DataModelDesc desc) throws IOException {
         if (getMetadataManager().getDataModelDesc(desc.getName()) != null) {
-            throw new InternalErrorException("The model named " + desc.getName() + " already exists");
+            throw new InternalErrorException("Model name " + desc.getName() + "is duplicated, could not create");
         }
         DataModelDesc createdDesc = null;
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -110,7 +110,7 @@ public class ModelService extends BasicService {
         List<CubeDesc> cubeDescs = getCubeDescManager().listAllDesc();
         for (CubeDesc cubeDesc : cubeDescs) {
             if (cubeDesc.getModelName().equals(desc.getName())) {
-                throw new InternalErrorException("Model referenced by cube,drop cubes under model and try again.");
+                throw new InternalErrorException("Model is referenced by Cube: " + cubeDesc.getName() + " , could not drop");
             }
         }
 

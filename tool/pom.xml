@@ -81,6 +81,8 @@
                             <shadedClassifierName>assembly</shadedClassifierName>
                             <artifactSet>
                                 <includes>
+                                    <!-- shade the httpcore to avoid the lower version conflict with HBase one -->
+                                    <include>org.apache.httpcomponents:httpcore</include>
                                     <include>org.apache.kylin:kylin-tool</include>
                                 </includes>
                             </artifactSet>

@@ -115,7 +115,7 @@ public class Broadcaster {
                 for (String node : config.getRestServers()) {
                     restClients.add(new RestClient(node));
                 }
-                final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size());
+                final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size(), new DaemonThreadFactory());
                 while (true) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
@@ -127,7 +127,7 @@ public class Broadcaster {
                                     try {
                                         restClient.wipeCache(broadcastEvent.getEntity(), broadcastEvent.getEvent(), broadcastEvent.getCacheKey());
                                     } catch (IOException e) {
-                                        logger.warn("Thread failed during wipe cache at " + broadcastEvent);
+                                        logger.warn("Thread failed during wipe cache at " + broadcastEvent, e);
                                     }
                                 }
                             });
@@ -228,7 +228,7 @@ public class Broadcaster {
 
         try {
             counter.incrementAndGet();
-            broadcastEvents.putFirst(new BroadcastEvent(entity, event, key));
+            broadcastEvents.putLast(new BroadcastEvent(entity, event, key));
         } catch (Exception e) {
             counter.decrementAndGet();
             logger.error("error putting BroadcastEvent", e);

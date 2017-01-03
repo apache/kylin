@@ -1,0 +1,14 @@
+{
+  "uuid" : "70a9f288-3c01-4745-a04b-5641e82d6c70",
+  "name" : "ssb_cube1",
+  "owner" : "ADMIN",
+  "cost" : 50,
+  "status" : "DISABLED",
+  "segments" : [ ],
+  "last_modified" : 1457534216410,
+  "descriptor" : "ssb_cube1",
+  "create_time_utc" : 1457444500888,
+  "size_kb" : 0,
+  "input_records_count" : 0,
+  "input_records_size" : 0
+}

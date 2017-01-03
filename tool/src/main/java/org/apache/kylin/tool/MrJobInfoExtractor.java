@@ -26,15 +26,16 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.conf.HAUtil;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.util.RMHAUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.engine.mr.HadoopUtil;
@@ -94,24 +95,24 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
     }
 
     private String getHttpResponse(String url) {
-        HttpClient client = new HttpClient();
-        String response = null;
+        DefaultHttpClient client = new DefaultHttpClient();
+        String msg = null;
         int retry_times = 0;
-        while (response == null && retry_times < HTTP_RETRY) {
+        while (msg == null && retry_times < HTTP_RETRY) {
             retry_times++;
 
-            HttpMethod get = new GetMethod(url);
+            HttpGet request = new HttpGet(url);
             try {
-                get.addRequestHeader("accept", "application/json");
-                client.executeMethod(get);
-                response = get.getResponseBodyAsString();
+                request.addHeader("accept", "application/json");
+                HttpResponse response = client.execute(request);
+                msg = EntityUtils.toString(response.getEntity());
             } catch (Exception e) {
                 logger.warn("Failed to fetch http response. Retry={}", retry_times, e);
             } finally {
-                get.releaseConnection();
+                request.releaseConnection();
             }
         }
-        return response;
+        return msg;
     }
 
     private void extractTaskCounter(String taskId, File exportDir, String taskUrl) throws IOException {

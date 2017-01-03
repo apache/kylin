@@ -124,10 +124,11 @@ public class HybridManager implements IRealizationProvider {
         }
     }
 
-    private void reloadAllHybridInstance() throws IOException {
+    public void reloadAllHybridInstance() throws IOException {
         ResourceStore store = getStore();
         List<String> paths = store.collectResourceRecursively(ResourceStore.HYBRID_RESOURCE_ROOT, ".json");
 
+        hybridMap.clear();
         logger.debug("Loading Hybrid from folder " + store.getReadableResourcePath(ResourceStore.HYBRID_RESOURCE_ROOT));
 
         for (String path : paths) {
