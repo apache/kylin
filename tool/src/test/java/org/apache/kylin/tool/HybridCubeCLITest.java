@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hybrid.HybridInstance;
