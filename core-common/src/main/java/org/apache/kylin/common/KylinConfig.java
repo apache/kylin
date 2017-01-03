@@ -187,6 +187,20 @@ public class KylinConfig extends KylinConfigBase {
         return kylinConfig;
     }
 
+    public static String getKylinConfPath() {
+        String kylinConfHome = System.getProperty(KYLIN_CONF);
+        if (!StringUtils.isEmpty(kylinConfHome)) {
+            logger.info("Use KYLIN_CONF=" + kylinConfHome);
+            return kylinConfHome;
+        }
+
+        String kylinHome = getKylinHome();
+        if (StringUtils.isEmpty(kylinHome))
+            throw new KylinConfigCannotInitException("Didn't find KYLIN_CONF or KYLIN_HOME, please set one of them");
+
+        return kylinHome + File.separator + "conf";
+    }
+
     static File getKylinPropertiesFile() {
         String kylinConfHome = System.getProperty(KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {

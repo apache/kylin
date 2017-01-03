@@ -45,6 +45,11 @@ function retrieveDependency() {
         source ${dir}/find-kafka-dependency.sh
         export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${kafka_dependency}
     fi
+
+    source ${dir}/find-spark-dependency.sh
+    export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${spark_dependency}
+
+    verbose "HBASE_CLASSPATH: ${HBASE_CLASSPATH}"
 }
 
 # start command
@@ -112,6 +117,7 @@ then
     -Dkylin.hive.dependency=${hive_dependency} \
     -Dkylin.hbase.dependency=${hbase_dependency} \
     -Dkylin.kafka.dependency=${kafka_dependency} \
+    -Dkylin.spark.dependency=${spark_dependency} \
     -Dspring.profiles.active=${spring_profile} \
     org.apache.hadoop.util.RunJar ${tomcat_root}/bin/bootstrap.jar  org.apache.catalina.startup.Bootstrap start >> ${KYLIN_HOME}/logs/kylin.out 2>&1 & echo $! > ${KYLIN_HOME}/pid &
     

@@ -47,3 +47,9 @@ if [ $? != 0 ]
 then
     quit "Failed to create $WORKING_DIR. Please make sure the user has right to access $WORKING_DIR"
 fi
+
+hadoop fs -mkdir -p $WORKING_DIR/spark-history
+if [ $? != 0 ]
+then
+    quit "Failed to create $WORKING_DIR/spark-history. Please make sure the user has right to access $WORKING_DIR"
+fi

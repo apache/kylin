@@ -61,6 +61,16 @@ abstract public class KylinConfigBase implements Serializable {
         return kylinHome;
     }
 
+    public static String getSparkHome() {
+        String sparkHome = System.getenv("SPARK_HOME");
+        if (StringUtils.isNotEmpty(sparkHome)) {
+            logger.info("SPARK_HOME was set to " + sparkHome);
+            return sparkHome;
+        }
+
+        return getKylinHome() + File.separator + "spark";
+    }
+
     // backward compatibility check happens when properties is loaded or updated
     static BackwardCompatibilityConfig BCC = new BackwardCompatibilityConfig();
 
@@ -728,23 +738,6 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
     // ENGINE.SPARK
     // ============================================================================
-
-    public String getSparkHome() {
-        String sparkHome = getOptional("kylin.engine.spark.spark-home", "spark");
-        File f = new File(sparkHome);
-        if (f.exists()) {
-            return f.getAbsolutePath();
-        } else {
-            String home = getKylinHome();
-            f = new File(home, sparkHome);
-            if (f.exists()) {
-                return f.getAbsolutePath();
-            }
-        }
-
-        throw new IllegalArgumentException("Spark home '" + sparkHome + "' does not exist, check 'kylin.engine.spark.spark-home' in kylin.properties");
-
-    }
 
     public String getSparkHadoopConfDir() {
         return getRequired("kylin.engine.spark.env.hadoop-conf-dir");
