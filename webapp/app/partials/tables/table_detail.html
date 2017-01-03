@@ -39,12 +39,16 @@
             <table class="table">
               <tbody>
               <tr>
-                <th style="width:20%">NAME</th>
+                <th style="width:20%">TABLE NAME</th>
                 <td>{{ tableModel.selectedSrcTable.name}}</td>
               </tr>
               <tr>
                 <th>Hive DATABASE</th>
                 <td>{{tableModel.selectedSrcTable.database}}</td>
+              </tr>
+              <tr>
+                <th>TABLE TYPE</th>
+                <td>{{tableModel.selectedSrcTable.table_type}}</td>
               </tr>
               <tr>
                 <th>SNAPSHOT TIME</th>
@@ -56,11 +60,11 @@
               </tr>
               <tr>
                 <th>INPUT FORMAT</th>
-                <td>{{tableModel.selectedSrcTable.exd.inputformat}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.hive_inputFormat}}</td>
               </tr>
               <tr>
                 <th>OUTPUT FORMAT</th>
-                <td>{{tableModel.selectedSrcTable.exd.outputformat}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.hive_outputFormat}}</td>
               </tr>
               <tr>
                 <th>OWNER</th>
@@ -70,11 +74,11 @@
               </tr>
               <tr>
                 <th>TOTAL FILE NUMBER</th>
-                <td>{{tableModel.selectedSrcTable.exd.totalNumberFiles}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.total_file_number}}</td>
               </tr>
               <tr>
                 <th>TOTAL FILE SIZE</th>
-                <td>{{tableModel.selectedSrcTable.exd.totalFileSize}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.total_file_size}}</td>
               </tr>
               <tr>
                 <th>PARTITIONED</th>
@@ -82,7 +86,7 @@
               </tr>
               <tr>
                 <th>PARTITION COLUMNS</th>
-                <td>{{tableModel.selectedSrcTable.exd.partitionColumns}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.partition_column}}</td>
               </tr>
               </tbody>
             </table>

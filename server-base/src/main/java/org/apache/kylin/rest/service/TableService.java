@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
@@ -91,7 +92,7 @@ public class TableService extends BasicService {
         return table;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String[] loadHiveTablesToProject(String[] tables, String project) throws IOException {
         Set<String> loaded = HiveSourceTableLoader.loadHiveTables(tables, getConfig());
         String[] result = (String[]) loaded.toArray(new String[loaded.size()]);
@@ -99,18 +100,17 @@ public class TableService extends BasicService {
         return result;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     private void unLoadHiveTable(String tableName) throws IOException {
         tableName = normalizeHiveTableName(tableName);
-        HiveSourceTableLoader.unLoadHiveTable(tableName);
+        MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
+        metaMgr.removeSourceTable(tableName);
+        metaMgr.removeTableExt(tableName);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     private void syncTableToProject(String[] tables, String project) throws IOException {
         getProjectManager().addTableDescToProject(tables, project);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     private void removeTableFromProject(String tableName, String projectName) throws IOException {
         tableName = normalizeHiveTableName(tableName);
         getProjectManager().removeTableDescFromProject(tableName, projectName);
@@ -123,6 +123,7 @@ public class TableService extends BasicService {
      * @param project
      * @return
      */
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public boolean unLoadHiveTable(String tableName, String project) {
         boolean rtn = false;
         int tableType = 0;
@@ -178,6 +179,7 @@ public class TableService extends BasicService {
      * @param project
      * @throws IOException
      */
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void addStreamingTable(TableDesc desc, String project) throws IOException {
         desc.setUuid(UUID.randomUUID().toString());
         getMetadataManager().saveSourceTable(desc);
@@ -230,11 +232,6 @@ public class TableService extends BasicService {
             rtableDesc.setCardinality(cardinality);
         }
         dataSourceProp.putAll(tableExtDesc.getDataSourceProp());
-        dataSourceProp.put("location", tableExtDesc.getStorageLocation());
-        dataSourceProp.put("owner", tableExtDesc.getOwner());
-        dataSourceProp.put("last_access_time", tableExtDesc.getLastAccessTime());
-        dataSourceProp.put("partition_column", tableExtDesc.getPartitionColumn());
-        dataSourceProp.put("total_file_size", tableExtDesc.getTotalFileSize());
         rtableDesc.setDescExd(dataSourceProp);
         return rtableDesc;
     }
@@ -277,8 +274,8 @@ public class TableService extends BasicService {
         TableDesc table = getMetadataManager().getTableDesc(tableName);
         final TableExtDesc tableExt = getMetadataManager().getTableExt(tableName);
         if (table == null) {
-            IllegalArgumentException e = new IllegalArgumentException("Cannot find table descirptor " + tableName);
-            logger.error("Cannot find table descirptor " + tableName, e);
+            IllegalArgumentException e = new IllegalArgumentException("Cannot find table descriptor " + tableName);
+            logger.error("Cannot find table descriptor " + tableName, e);
             throw e;
         }
 
