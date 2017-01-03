@@ -20,6 +20,7 @@ package org.apache.kylin.rest.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.NotFoundException;
@@ -66,4 +67,11 @@ public class BasicController {
         logger.error("", ex);
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
+
+    protected void checkRequiredArg(String fieldName, Object fieldValue) {
+        if (fieldValue == null || StringUtils.isEmpty(String.valueOf(fieldValue))) {
+            throw new BadRequestException(fieldName + " is required");
+        }
+    }
+
 }
