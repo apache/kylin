@@ -59,7 +59,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
         try {
             config = new JobEngineConfig(context.getConfig());
             List<String> toDeletePaths = getDeletePaths();
-            dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HadoopUtil.getCurrentConfiguration()));
+            dropHdfsPathOnCluster(toDeletePaths, HadoopUtil.getWorkingFileSystem());
 
             if (StringUtils.isNotEmpty(context.getConfig().getHBaseClusterFs())) {
                 dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration()));

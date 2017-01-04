@@ -42,9 +42,7 @@ public class ITHdfsOpsTest extends HBaseMetadataTestCase {
 
         this.createTestMetadata();
 
-        Configuration hconf = HadoopUtil.getCurrentConfiguration();
-
-        fileSystem = FileSystem.get(hconf);
+        fileSystem = HadoopUtil.getWorkingFileSystem();
     }
 
     @Test

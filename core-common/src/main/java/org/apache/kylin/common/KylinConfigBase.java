@@ -171,6 +171,15 @@ abstract public class KylinConfigBase implements Serializable {
         if (!root.endsWith("/")) {
             root += "/";
         }
+        
+        // make sure path qualified
+        if (!root.contains("://")) {
+            if (!root.startsWith("/"))
+                root = "hdfs:///" + root;
+            else
+                root = "hdfs://" + root;
+        }
+        
         return new StringBuffer(root).append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).append("/").toString();
     }
 

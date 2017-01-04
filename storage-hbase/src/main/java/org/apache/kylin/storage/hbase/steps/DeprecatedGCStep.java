@@ -132,8 +132,7 @@ public class DeprecatedGCStep extends AbstractExecutable {
 
         List<String> oldHdfsPaths = this.getOldHdsfPaths();
         if (oldHdfsPaths != null && oldHdfsPaths.size() > 0) {
-            Configuration hconf = HadoopUtil.getCurrentConfiguration();
-            FileSystem fileSystem = FileSystem.get(hconf);
+            FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
             for (String path : oldHdfsPaths) {
                 if (path.endsWith("*"))
                     path = path.substring(0, path.length() - 1);

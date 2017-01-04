@@ -68,8 +68,7 @@ public class ITMassInQueryTest extends KylinTestBase {
         ITKylinQueryTest.joinType = "left";
         ITKylinQueryTest.setupAll();
 
-        Configuration hconf = HadoopUtil.getCurrentConfiguration();
-        fileSystem = FileSystem.get(hconf);
+        fileSystem = HadoopUtil.getWorkingFileSystem();
 
         int sellerCount = 200;
         Random r = new Random();

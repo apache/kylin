@@ -54,7 +54,7 @@ import org.junit.Test;
  */
 public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
 
-    public static final String BASE_DIR = "/tmp/kylin_append_dict";
+    public static final String BASE_DIR = "file:///tmp/kylin_append_dict";
     public static final String RESOURCE_DIR = "/dict/append_dict_test";
 
     @Before

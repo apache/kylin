@@ -59,8 +59,8 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
             Path statisticsFilePath = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
-            FileSystem fs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
             if (!fs.exists(statisticsFilePath))
                 throw new IOException("File " + statisticsFilePath + " does not exists");
 

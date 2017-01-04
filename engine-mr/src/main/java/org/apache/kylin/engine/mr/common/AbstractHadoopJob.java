@@ -283,7 +283,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         try {
             Configuration jobConf = job.getConfiguration();
             FileSystem localfs = FileSystem.getLocal(jobConf);
-            FileSystem hdfs = FileSystem.get(jobConf);
+            FileSystem hdfs = HadoopUtil.getWorkingFileSystem(jobConf);
 
             StringBuilder jarList = new StringBuilder();
             StringBuilder fileList = new StringBuilder();
@@ -407,7 +407,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             inp = inp.trim();
             if (inp.endsWith("/*")) {
                 inp = inp.substring(0, inp.length() - 2);
-                FileSystem fs = FileSystem.get(job.getConfiguration());
+                FileSystem fs = HadoopUtil.getWorkingFileSystem(job.getConfiguration());
                 Path path = new Path(inp);
 
                 if (!exists(fs, path)) {

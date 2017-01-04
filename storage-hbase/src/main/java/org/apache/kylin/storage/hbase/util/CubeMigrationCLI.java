@@ -55,6 +55,7 @@ import org.apache.kylin.dict.DictionaryInfo;
 import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.lookup.SnapshotManager;
 import org.apache.kylin.dict.lookup.SnapshotTable;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -136,7 +137,7 @@ public class CubeMigrationCLI {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         hbaseAdmin = new HBaseAdmin(conf);
 
-        hdfsFS = FileSystem.get(new Configuration());
+        hdfsFS = HadoopUtil.getWorkingFileSystem();
 
         operations = new ArrayList<Opt>();
 

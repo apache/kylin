@@ -223,7 +223,7 @@ public class KafkaMRInput implements IMRInput {
 
         private void rmdirOnHDFS(String path) throws IOException {
             Path externalDataPath = new Path(path);
-            FileSystem fs = FileSystem.get(externalDataPath.toUri(), HadoopUtil.getCurrentConfiguration());
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
             if (fs.exists(externalDataPath)) {
                 fs.delete(externalDataPath, true);
             }

@@ -185,7 +185,7 @@ public class StorageCleanupJob extends AbstractApplication {
         JobEngineConfig engineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
 
-        FileSystem fs = FileSystem.get(conf);
+        FileSystem fs = HadoopUtil.getWorkingFileSystem(conf);
         List<String> allHdfsPathsNeedToBeDeleted = new ArrayList<String>();
         // GlobFilter filter = new
         // GlobFilter(KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory()
@@ -342,7 +342,7 @@ public class StorageCleanupJob extends AbstractApplication {
                     if (segmentId2JobId.containsKey(segmentId)) {
                         String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), segmentId2JobId.get(segmentId)) + "/" + tableToDelete;
                         Path externalDataPath = new Path(path);
-                        FileSystem fs = FileSystem.get(externalDataPath.toUri(), HadoopUtil.getCurrentConfiguration());
+                        FileSystem fs = HadoopUtil.getWorkingFileSystem();
                         if (fs.exists(externalDataPath)) {
                             fs.delete(externalDataPath, true);
                             logger.info("Hive table {}'s external path {} deleted", tableToDelete, path);

@@ -55,7 +55,7 @@ public class SequenceFileCuboidWriter extends KVGTRecordWriter {
             JobBuilderSupport jobBuilderSupport = new JobBuilderSupport(cubeSegment, "SYSTEM");
             String cuboidRoot = jobBuilderSupport.getCuboidRootPath(cubeSegment);
             Path cuboidPath = new Path(cuboidRoot);
-            FileSystem fs = HadoopUtil.getFileSystem(cuboidRoot);
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
             try {
                 if (fs.exists(cuboidPath)) {
                     fs.delete(cuboidPath, true);

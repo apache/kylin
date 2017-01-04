@@ -120,8 +120,7 @@ public class BuildCubeWithEngine {
 
         try {
             //check hdfs permission
-            Configuration hconf = HadoopUtil.getCurrentConfiguration();
-            FileSystem fileSystem = FileSystem.get(hconf);
+            FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
             String hdfsWorkingDirectory = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
             Path coprocessorDir = new Path(hdfsWorkingDirectory);
             boolean success = fileSystem.mkdirs(coprocessorDir);

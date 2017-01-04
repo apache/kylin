@@ -27,7 +27,6 @@ import java.util.NavigableSet;
 import java.util.TreeSet;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -49,6 +48,7 @@ import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.engine.mr.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,8 +201,7 @@ public class HBaseResourceStore extends ResourceStore {
         byte[] value = r.getValue(B_FAMILY, B_COLUMN);
         if (value.length == 0) {
             Path redirectPath = bigCellHDFSPath(resPath);
-            Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
-            FileSystem fileSystem = FileSystem.get(hconf);
+            FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
 
             return fileSystem.open(redirectPath);
         } else {
@@ -292,8 +291,7 @@ public class HBaseResourceStore extends ResourceStore {
 
             if (hdfsResourceExist) { // remove hdfs cell value
                 Path redirectPath = bigCellHDFSPath(resPath);
-                Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
-                FileSystem fileSystem = FileSystem.get(hconf);
+                FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
 
                 if (fileSystem.exists(redirectPath)) {
                     fileSystem.delete(redirectPath, true);
@@ -339,8 +337,7 @@ public class HBaseResourceStore extends ResourceStore {
 
     private Path writeLargeCellToHdfs(String resPath, byte[] largeColumn, HTableInterface table) throws IOException {
         Path redirectPath = bigCellHDFSPath(resPath);
-        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
-        FileSystem fileSystem = FileSystem.get(hconf);
+        FileSystem fileSystem = HadoopUtil.getWorkingFileSystem();
 
         if (fileSystem.exists(redirectPath)) {
             fileSystem.delete(redirectPath, true);
