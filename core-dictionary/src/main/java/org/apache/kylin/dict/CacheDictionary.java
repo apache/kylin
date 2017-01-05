@@ -29,8 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class CacheDictionary<T> extends Dictionary<T> {
     private static final long serialVersionUID = 1L;
 
-    protected transient boolean enableValueCache = false;
-
     private transient SoftReference<ConcurrentHashMap> valueToIdCache;
 
     private transient SoftReference<Object[]> idToValueCache;
@@ -46,7 +44,7 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
     //value --> id
     @Override
     protected final int getIdFromValueImpl(T value, int roundingFlag) {
-        if (enableValueCache && roundingFlag == 0) {
+        if (this.valueToIdCache != null && roundingFlag == 0) {
             Map cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
                 Integer id;
@@ -66,7 +64,7 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
     //id --> value
     @Override
     protected final T getValueFromIdImpl(int id) {
-        if (enableValueCache) {
+        if (this.idToValueCache != null) {
             Object[] cache = idToValueCache.get();
             if (cache != null) {
                 int seq = calcSeqNoFromId(id);
@@ -91,7 +89,6 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
     }
 
     public final void enableCache() {
-        this.enableValueCache = true;
         if (this.valueToIdCache == null)
             this.valueToIdCache = new SoftReference<>(new ConcurrentHashMap());
         if (this.idToValueCache == null)
@@ -99,7 +96,6 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
     }
 
     public final void disableCache() {
-        this.enableValueCache = false;
         this.valueToIdCache = null;
         this.idToValueCache = null;
     }
