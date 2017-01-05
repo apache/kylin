@@ -293,7 +293,7 @@ public class CubeController extends BasicController {
             }
             return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //
                     sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force, submitter);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
@@ -656,7 +656,7 @@ public class CubeController extends BasicController {
             cubeService.getCubeDescManager().updateCubeDesc(desc);
             response.setProperty("result", "success");
             response.setProperty("offsets", startOffsets.toString());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
 

@@ -112,7 +112,7 @@ public class TableController extends BasicController {
             if (request.isCalculate()) {
                 tableService.calculateCardinalityIfNotPresent(loaded, submitter);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("Failed to load Hive Table", e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
@@ -133,7 +133,7 @@ public class TableController extends BasicController {
                     unLoadFail.add(tableName);
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("Failed to unload Hive Table", e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
@@ -175,7 +175,8 @@ public class TableController extends BasicController {
     private List<String> showHiveDatabases() throws IOException {
         try {
             return tableService.getHiveDbNames();
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
     }
@@ -191,7 +192,8 @@ public class TableController extends BasicController {
     private List<String> showHiveTables(@PathVariable String database) throws IOException {
         try {
             return tableService.getHiveTableNames(database);
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e.getLocalizedMessage());
         }
     }
