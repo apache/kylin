@@ -63,16 +63,15 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         result.addTask(createBuildDictionaryStep(jobId));
 
         // Phase 3: Build Cube
-        RowKeyDesc rowKeyDesc = ((CubeSegment) seg).getCubeDesc().getRowkey();
-        final int groupRowkeyColumnsCount = ((CubeSegment) seg).getCubeDesc().getBuildLevel();
+        RowKeyDesc rowKeyDesc = seg.getCubeDesc().getRowkey();
+        final int groupRowkeyColumnsCount = seg.getCubeDesc().getBuildLevel();
         final int totalRowkeyColumnsCount = rowKeyDesc.getRowKeyColumns().length;
-        final String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, totalRowkeyColumnsCount, groupRowkeyColumnsCount);
+        final String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, groupRowkeyColumnsCount);
         // base cuboid step
-        result.addTask(createBaseCuboidStep(cuboidOutputTempPath, jobId));
+        result.addTask(createBaseCuboidStep(cuboidOutputTempPath[0], jobId));
         // n dim cuboid steps
-        for (int i = 1; i <= groupRowkeyColumnsCount; i++) {
-            int dimNum = totalRowkeyColumnsCount - i;
-            result.addTask(createNDimensionCuboidStep(cuboidOutputTempPath, dimNum, totalRowkeyColumnsCount));
+        for (int i = 1; i < groupRowkeyColumnsCount; i++) {
+            result.addTask(createNDimensionCuboidStep(cuboidOutputTempPath[i - 1], cuboidOutputTempPath[i], i));
         }
         outputSide.addStepPhase3_BuildCube(result, cuboidRootPath);
 
@@ -84,7 +83,7 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         return result;
     }
 
-    private MapReduceExecutable createBaseCuboidStep(String[] cuboidOutputTempPath, String jobId) {
+    private MapReduceExecutable createBaseCuboidStep(String cuboidOutputPath, String jobId) {
         // base cuboid job
         MapReduceExecutable baseCuboidStep = new MapReduceExecutable();
 
@@ -96,7 +95,7 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
         appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, "FLAT_TABLE"); // marks flat table input
-        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, cuboidOutputTempPath[0]);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, cuboidOutputPath);
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Base_Cuboid_Builder_" + seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_LEVEL, "0");
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
@@ -107,20 +106,20 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         return baseCuboidStep;
     }
 
-    private MapReduceExecutable createNDimensionCuboidStep(String[] cuboidOutputTempPath, int dimNum, int totalRowkeyColumnCount) {
+    private MapReduceExecutable createNDimensionCuboidStep(String parentPath, String outputPath, int level) {
         // ND cuboid job
         MapReduceExecutable ndCuboidStep = new MapReduceExecutable();
 
-        ndCuboidStep.setName(ExecutableConstants.STEP_NAME_BUILD_N_D_CUBOID + " : " + dimNum + "-Dimension");
+        ndCuboidStep.setName(ExecutableConstants.STEP_NAME_BUILD_N_D_CUBOID + " : level " + level);
         StringBuilder cmd = new StringBuilder();
 
         appendMapReduceParameters(cmd);
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
         appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
-        appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, cuboidOutputTempPath[totalRowkeyColumnCount - dimNum - 1]);
-        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, cuboidOutputTempPath[totalRowkeyColumnCount - dimNum]);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_INPUT, parentPath);
+        appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, outputPath);
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_ND-Cuboid_Builder_" + seg.getRealization().getName() + "_Step");
-        appendExecCmdParameters(cmd, BatchConstants.ARG_LEVEL, "" + (totalRowkeyColumnCount - dimNum));
+        appendExecCmdParameters(cmd, BatchConstants.ARG_LEVEL, "" + level);
 
         ndCuboidStep.setMapReduceParams(cmd.toString());
         ndCuboidStep.setMapReduceJobClass(NDCuboidJob.class);

@@ -192,14 +192,13 @@ public class JobBuilderSupport {
         return buf.append(" -").append(paraName).append(" ").append(paraValue);
     }
 
-    public String[] getCuboidOutputPaths(String cuboidRootPath, int totalRowkeyColumnCount, int groupRowkeyColumnsCount) {
-        String[] paths = new String[groupRowkeyColumnsCount + 1];
-        for (int i = 0; i <= groupRowkeyColumnsCount; i++) {
-            int dimNum = totalRowkeyColumnCount - i;
-            if (dimNum == totalRowkeyColumnCount) {
+    public String[] getCuboidOutputPaths(String cuboidRootPath, int levels) {
+        String[] paths = new String[levels];
+        for (int i = 0; i < levels; i++) {
+            if (i == 0) {
                 paths[i] = cuboidRootPath + "base_cuboid";
             } else {
-                paths[i] = cuboidRootPath + dimNum + "d_cuboid";
+                paths[i] = cuboidRootPath + "level_" + i + "_cuboid";
             }
         }
         return paths;
