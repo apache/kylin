@@ -45,7 +45,11 @@ public class DiagnosisService extends BasicService {
     }
 
     private String getDiagnosisPackageName(File destDir) {
-        for (File subDir : destDir.listFiles()) {
+        File[] files = destDir.listFiles();
+        if (files == null) {
+            throw new RuntimeException("Diagnosis package is not available in directory: " + destDir.getAbsolutePath());
+        }
+        for (File subDir : files) {
             if (subDir.isDirectory()) {
                 for (File file : subDir.listFiles()) {
                     if (file.getName().endsWith(".zip")) {

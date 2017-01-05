@@ -84,6 +84,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                 logger.warn("error get hadoop status");
                 super.onExecuteStart(executableContext);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 logger.warn("error get hadoop status");
                 super.onExecuteStart(executableContext);
             }
@@ -171,7 +172,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                         return new ExecuteResult(ExecuteResult.State.FAILED, output.toString());
                     }
                 }
-                Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000);
+                Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000L);
             }
 
             // try to kill running map-reduce job to release resources.

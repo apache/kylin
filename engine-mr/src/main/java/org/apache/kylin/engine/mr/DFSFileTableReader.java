@@ -88,7 +88,7 @@ public class DFSFileTableReader implements TableReader {
 
         try {
             for (FileStatus f : allFiles) {
-                RowReader rowReader = new SeqRowReader(HadoopUtil.getCurrentConfiguration(), fs, f.getPath().toString());
+                RowReader rowReader = new SeqRowReader(HadoopUtil.getCurrentConfiguration(), f.getPath().toString());
                 this.readerList.add(rowReader);
             }
         } catch (IOException e) {
@@ -208,7 +208,7 @@ public class DFSFileTableReader implements TableReader {
         Writable key;
         Text value;
 
-        SeqRowReader(Configuration hconf, FileSystem fs, String path) throws IOException {
+        SeqRowReader(Configuration hconf, String path) throws IOException {
             reader = new Reader(hconf, SequenceFile.Reader.file(new Path(path)));
             key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), hconf);
             value = new Text();

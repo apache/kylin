@@ -74,6 +74,7 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
 
             return ret;
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException("Error when waiting queue", e);
         }
     }
@@ -87,6 +88,7 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
         try {
             queue.put(data);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException("error when waiting queue", e);
         }
     }

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -181,7 +182,7 @@ public class TableExtDesc extends RootPersistentEntity {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ColumnStats implements Comparable<ColumnStats> {
+    public static class ColumnStats implements Comparable<ColumnStats>, Serializable {
 
         @JsonBackReference
         private TableExtDesc tableExtDesc;

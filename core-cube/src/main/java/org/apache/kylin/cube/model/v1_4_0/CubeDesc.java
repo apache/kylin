@@ -630,7 +630,8 @@ public class CubeDesc extends RootPersistentEntity {
 
         Map<String, TblColRef> cols = columnMap.get(ref.getTable());
         if (cols == null) {
-            columnMap.put(ref.getTable(), cols = new HashMap<String, TblColRef>());
+            cols = new HashMap<String, TblColRef>();
+            columnMap.put(ref.getTable(), cols);
         }
         cols.put(ref.getName(), ref);
         return ref;

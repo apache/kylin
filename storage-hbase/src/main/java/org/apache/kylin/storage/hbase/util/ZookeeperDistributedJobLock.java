@@ -141,6 +141,8 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
         } catch (Exception e) {
             logger.error("fail to get the serverName for the path: " + lockPath, e);
         }
+        if(lockServerName == null)
+            return false;
         return lockServerName.equalsIgnoreCase(serverName);
     }
 

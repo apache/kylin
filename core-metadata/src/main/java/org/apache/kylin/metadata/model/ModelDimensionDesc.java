@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.kylin.common.util.StringUtil;
@@ -28,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class ModelDimensionDesc {
+public class ModelDimensionDesc implements Serializable{
     @JsonProperty("table")
     private String table;
     @JsonProperty("columns")
@@ -58,8 +59,10 @@ public class ModelDimensionDesc {
         
         if (model != null) {
             table = model.findTable(table).getAlias();
-            for (int i = 0; i < columns.length; i++) {
-                columns[i] = model.findColumn(table, columns[i]).getName();
+            if (columns != null) {
+                for (int i = 0; i < columns.length; i++) {
+                    columns[i] = model.findColumn(table, columns[i]).getName();
+                }
             }
         }
     }

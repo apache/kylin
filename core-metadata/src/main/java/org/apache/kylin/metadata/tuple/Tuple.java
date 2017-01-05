@@ -213,7 +213,7 @@ public class Tuple implements ITuple {
         case "float":
             return Float.valueOf(strValue);
         case "boolean":
-            return Boolean.valueOf(strValue) | "1".equals(strValue); // in some extended encodings boolean might be encoded as a number
+            return Boolean.valueOf(strValue) || "1".equals(strValue); // in some extended encodings boolean might be encoded as a number
         default:
             return strValue;
         }

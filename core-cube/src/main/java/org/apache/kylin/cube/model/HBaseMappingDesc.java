@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube.model;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -33,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class HBaseMappingDesc {
+public class HBaseMappingDesc implements Serializable{
 
     @JsonProperty("column_family")
     private HBaseColumnFamilyDesc[] columnFamily;

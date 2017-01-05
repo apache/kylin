@@ -58,7 +58,7 @@ public class MemoryBudgetController {
 
     public static final MemoryBudgetController ZERO_BUDGET = new MemoryBudgetController(0);
     public static final int ONE_MB = 1024 * 1024;
-    public static final long ONE_GB = 1024 * 1024 * 1024;
+    public static final long ONE_GB = 1024 * 1024 * 1024L;
 
     private static final Logger logger = LoggerFactory.getLogger(MemoryBudgetController.class);
 
@@ -119,6 +119,7 @@ public class MemoryBudgetController {
                 try {
                     lock.wait();
                 } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                     throw new NotEnoughBudgetException(e);
                 }
             }
@@ -256,6 +257,7 @@ public class MemoryBudgetController {
                 lastMB = thisMB;
             }
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             logger.error("", e);
             return getSystemAvailMB();
         }

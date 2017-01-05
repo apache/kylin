@@ -130,7 +130,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
                 this.name = splits[0];
             }
         } else {
-            this.name = name;
+            this.name = null;
         }
     }
 

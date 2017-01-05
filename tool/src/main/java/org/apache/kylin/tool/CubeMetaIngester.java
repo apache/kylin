@@ -20,6 +20,7 @@ package org.apache.kylin.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
@@ -126,7 +127,7 @@ public class CubeMetaIngester extends AbstractApplication {
         tempFolder.mkdir();
         ZipFileUtils.decompressZipfileToDirectory(srcPath, tempFolder);
         if (tempFolder.list().length != 1) {
-            throw new IllegalStateException(tempFolder.list().toString());
+            throw new IllegalStateException(Arrays.toString(tempFolder.list()));
         }
 
         injest(tempFolder.listFiles()[0].getAbsoluteFile());

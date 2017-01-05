@@ -150,6 +150,7 @@ public class HadoopStatusGetter {
                     logger.debug("Job " + mrJobId + " check redirect url " + url + ".\n");
                 }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 logger.error(e.getMessage());
             } finally {
                 httpget.releaseConnection();
@@ -212,6 +213,7 @@ public class HadoopStatusGetter {
                     logger.debug("Job " + mrJobId + " check redirect url " + url + ".\n");
                 }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 logger.error(e.getMessage());
             } finally {
                 get.releaseConnection();

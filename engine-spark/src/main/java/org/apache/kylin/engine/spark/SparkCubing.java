@@ -167,6 +167,9 @@ public class SparkCubing extends AbstractApplication {
                 return false;
             }
         });
+        if (files == null) {
+            return;
+        }
         for (File file : files) {
             sc.addFile(file.getAbsolutePath());
         }
@@ -341,6 +344,7 @@ public class SparkCubing extends AbstractApplication {
                     Dictionary<String> dict = cubeSegment.getDictionary(col);
                     if (dict == null) {
                         System.err.println("Dictionary for " + col + " was not found.");
+                        continue;
                     }
                     dictionaryMap.put(col, dict);
                     System.out.println("col:" + col + " dictionary size:" + dict.getSize());

@@ -825,7 +825,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         Array<TblColRef> hostColArray = new Array<TblColRef>(hostCols);
         List<DeriveInfo> infoList = hostToDerivedMap.get(hostColArray);
         if (infoList == null) {
-            hostToDerivedMap.put(hostColArray, infoList = new ArrayList<DeriveInfo>());
+            infoList = new ArrayList<DeriveInfo>();
+            hostToDerivedMap.put(hostColArray, infoList);
         }
         
         // Merged duplicated derived column

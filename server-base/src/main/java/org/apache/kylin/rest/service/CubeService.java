@@ -455,6 +455,10 @@ public class CubeService extends BasicService {
             }
         }
 
+        if(toDelete == null){
+            throw new IllegalArgumentException("Cannot find segment '" + segmentName +"'");
+        }
+
         if (toDelete.getStatus() != SegmentStatusEnum.READY) {
             throw new IllegalArgumentException("Cannot delete segment '" + segmentName + "' as its status is not READY. Discard the on-going job for it.");
         }

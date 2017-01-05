@@ -205,6 +205,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             for (Thread t : threads)
                 t.join();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IOException("interrupted while waiting task and output complete", e);
         }
     }
@@ -531,6 +532,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                     try {
                         currentObject = input.take();
                     } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         throw new RuntimeException(e);
                     }
                     return currentObject != null && currentObject.size() > 0;

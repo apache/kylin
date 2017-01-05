@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.request;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -40,7 +41,7 @@ public class PrepareSqlRequest extends SQLRequest {
         this.params = params;
     }
 
-    public static class StateParam {
+    public static class StateParam implements Serializable{
         private String className;
         private String value;
 

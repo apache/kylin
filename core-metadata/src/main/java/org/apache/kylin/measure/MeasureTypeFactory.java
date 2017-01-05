@@ -142,7 +142,8 @@ abstract public class MeasureTypeFactory<T> {
             registerUDAF(factory);
             List<MeasureTypeFactory<?>> list = factories.get(funcName);
             if (list == null)
-                factories.put(funcName, list = Lists.newArrayListWithCapacity(2));
+                list = Lists.newArrayListWithCapacity(2);
+                factories.put(funcName, list);
             list.add(factory);
         }
 

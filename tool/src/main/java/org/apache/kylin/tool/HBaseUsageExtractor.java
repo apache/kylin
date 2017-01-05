@@ -51,7 +51,7 @@ import com.google.common.collect.Lists;
 
 public class HBaseUsageExtractor extends AbstractInfoExtractor {
 
-    private static final Logger logger = LoggerFactory.getLogger(CubeMetaExtractor.class);
+    private static final Logger logger = LoggerFactory.getLogger(HBaseUsageExtractor.class);
     @SuppressWarnings("static-access")
     private static final Option OPTION_CUBE = OptionBuilder.withArgName("cube").hasArg().isRequired(false).withDescription("Specify which cube to extract").create("cube");
     @SuppressWarnings("static-access")

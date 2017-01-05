@@ -80,8 +80,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
                 System.out.println("Get row " + counter + " column '" + field + "'  value: " + fieldValue);
             }
 
-            if (fieldValue != null)
-                getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
+            getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
         }
 
         counter++;

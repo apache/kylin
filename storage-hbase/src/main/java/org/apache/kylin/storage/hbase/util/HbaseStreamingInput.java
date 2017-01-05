@@ -116,6 +116,7 @@ public class HbaseStreamingInput {
                     logger.warn("There are another " + waiting + " batches waiting to be added");
                 }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 e.printStackTrace();
             }
 
@@ -166,6 +167,7 @@ public class HbaseStreamingInput {
                     logger.warn("Too many queries to handle! Blocking " + waiting + " sets of scan requests");
                 }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 e.printStackTrace();
             }
 

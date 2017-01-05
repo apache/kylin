@@ -91,7 +91,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
             return 1;
         int maxOffset = accuOffset.get(accuOffset.size() - 1);
         TrieDictionary<T> lastTree = trees.get(trees.size() - 1);
-        int sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1);
+        int sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1L);
         return sizeOfId;
     }
 

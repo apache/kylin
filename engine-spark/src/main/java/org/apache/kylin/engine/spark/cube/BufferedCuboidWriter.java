@@ -44,6 +44,7 @@ public class BufferedCuboidWriter implements SparkCuboidWriter {
         try {
             blockingQueue.put(tupleConverter.convert(cuboidId, record));
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
     }
@@ -57,6 +58,7 @@ public class BufferedCuboidWriter implements SparkCuboidWriter {
         try {
             blockingQueue.put(new Tuple2(new byte[0], new byte[0]));
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
     }
@@ -75,6 +77,7 @@ public class BufferedCuboidWriter implements SparkCuboidWriter {
                             try {
                                 current = blockingQueue.take();
                             } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
                                 throw new RuntimeException(e);
                             }
                         }

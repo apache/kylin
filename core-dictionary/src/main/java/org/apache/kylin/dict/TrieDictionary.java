@@ -107,7 +107,7 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
                 this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
 
             this.nValues = BytesUtil.readUnsigned(trieBytes, headSize + sizeChildOffset, sizeNoValuesBeneath);
-            this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
+            this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1L); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
             this.childOffsetMask = ~((long) (BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE) << ((sizeChildOffset - 1) * 8));
             this.firstByteOffset = sizeChildOffset + sizeNoValuesBeneath + 1; // the offset from begin of node to its first value byte
             enableCache();

@@ -26,7 +26,7 @@ import java.util.TimeZone;
 public class TimeUtil {
 
     private static TimeZone gmt = TimeZone.getTimeZone("GMT");
-    private static long ONE_MINUTE_TS = 60 * 1000;
+    private static long ONE_MINUTE_TS = 60 * 1000L;
     private static long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
     private static long ONE_DAY_TS = 24 * ONE_HOUR_TS;
 

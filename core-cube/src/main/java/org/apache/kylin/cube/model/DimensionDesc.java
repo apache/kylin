@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube.model;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -35,7 +36,7 @@ import com.google.common.base.Objects;
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class DimensionDesc {
+public class DimensionDesc implements Serializable {
 
     @JsonProperty("name")
     private String name;

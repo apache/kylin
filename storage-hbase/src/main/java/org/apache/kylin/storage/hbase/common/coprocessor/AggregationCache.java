@@ -29,7 +29,7 @@ import com.google.common.collect.Maps;
  */
 @SuppressWarnings("rawtypes")
 public abstract class AggregationCache {
-    static final long MEMORY_USAGE_CAP = 500 * 1024 * 1024; // 500 MB
+    static final long MEMORY_USAGE_CAP = 500 * 1024 * 1024L; // 500 MB
     static final long MEMOERY_MAX_BYTES = Runtime.getRuntime().maxMemory();
     protected final Map<AggrKey, MeasureAggregator[]> aggBufMap;
     transient int rowMemBytes;
@@ -75,7 +75,7 @@ public abstract class AggregationCache {
             }
         }
         int size = aggBufMap.size();
-        long memUsage = (40 + rowMemBytes) * size;
+        long memUsage = (40L + rowMemBytes) * size;
         if (memUsage > MEMORY_USAGE_CAP) {
             throw new RuntimeException("Kylin coprocessor memory usage goes beyond cap, (40 + " + rowMemBytes + ") * " + size + " > " + MEMORY_USAGE_CAP + ". Abort coprocessor.");
         }

@@ -60,7 +60,7 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
             byte[] data2 = o.text.getBytes();
             String str1 = new String(data1, 1, data1.length - 1);
             String str2 = new String(data2, 1, data2.length - 1);
-            if (str1 == null || str1.equals("") || str2 == null || str2.equals("")) {
+            if (str1.equals("") || str2.equals("")) {
                 //should not achieve here
                 logger.error("none numeric value!");
                 return 0;

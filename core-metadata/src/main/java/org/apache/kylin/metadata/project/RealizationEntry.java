@@ -23,10 +23,12 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.Serializable;
+
 /**
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class RealizationEntry {
+public class RealizationEntry implements Serializable{
 
     @JsonProperty("type")
     private RealizationType type;

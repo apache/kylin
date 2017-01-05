@@ -195,7 +195,7 @@ public class ColumnGenerator {
 
         private long randomMillis() {
             int secondsInYear = 3600 * 24 * 365;
-            long year = randStart + rand.nextInt(randEnd - randStart) - 1970;
+            long year = randStart + rand.nextInt(randEnd - randStart) - 1970L;
             long second = year * secondsInYear + rand.nextInt(secondsInYear);
             return second * 1000;
         }

@@ -20,6 +20,7 @@ package org.apache.kylin.source;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -59,7 +60,7 @@ public interface ReadableTable {
     // ============================================================================
 
     @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-    public class TableSignature {
+    public class TableSignature implements Serializable{
 
         @JsonProperty("path")
         private String path;

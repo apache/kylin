@@ -18,13 +18,14 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class TableRef {
+public class TableRef implements Serializable{
 
     final private DataModelDesc model;
     final private String alias;

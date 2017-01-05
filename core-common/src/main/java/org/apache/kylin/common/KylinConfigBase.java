@@ -533,10 +533,13 @@ abstract public class KylinConfigBase implements Serializable {
         File home = new File(homePath);
         SortedSet<String> files = Sets.newTreeSet();
         if (home.exists() && home.isDirectory()) {
-            for (File file : home.listFiles()) {
-                final Matcher matcher = pattern.matcher(file.getName());
-                if (matcher.matches()) {
-                    files.add(file.getAbsolutePath());
+            File[] listFiles = home.listFiles();
+            if (listFiles != null) {
+                for (File file : listFiles) {
+                    final Matcher matcher = pattern.matcher(file.getName());
+                    if (matcher.matches()) {
+                        files.add(file.getAbsolutePath());
+                    }
                 }
             }
         }

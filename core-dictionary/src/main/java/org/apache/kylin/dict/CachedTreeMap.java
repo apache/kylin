@@ -269,7 +269,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
     }
 
     public void commit(boolean keepAppend) throws IOException {
-        assert this.keepAppend & !immutable : "Only support commit method with immutable false and keepAppend true";
+        assert this.keepAppend && !immutable : "Only support commit method with immutable false and keepAppend true";
 
         Path newVersionDir = new Path(baseDir, VERSION_PREFIX + System.currentTimeMillis());
         if (keepAppend) {
@@ -312,7 +312,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         }
         String fileName = generateFileName(key);
         Path filePath = new Path(fileName);
-        try (FSDataOutputStream out = fs.create(filePath, true, BUFFER_SIZE, (short) 5, BUFFER_SIZE * 8)) {
+        try (FSDataOutputStream out = fs.create(filePath, true, BUFFER_SIZE, (short) 5, BUFFER_SIZE * 8L)) {
             value.write(out);
         } catch (Exception e) {
             logger.error(String.format("write value into %s exception: %s", fileName, e), e);
@@ -350,7 +350,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
     @Override
     public V put(K key, V value) {
-        assert keepAppend & !immutable : "Only support put method with immutable false and keepAppend true";
+        assert keepAppend && !immutable : "Only support put method with immutable false and keepAppend true";
         super.put(key, null);
         valueCache.put(key, value);
         return null;
@@ -362,7 +362,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             try {
                 return valueCache.get((K) key);
             } catch (ExecutionException e) {
-                logger.error(String.format("get value with key %s exception: ", key, e), e);
+                logger.error(String.format("get value with key %s exception: %s", key, e), e);
                 return null;
             }
         } else {
@@ -372,7 +372,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
     @Override
     public V remove(Object key) {
-        assert keepAppend & !immutable : "Only support remove method with immutable false keepAppend true";
+        assert keepAppend && !immutable : "Only support remove method with immutable false keepAppend true";
         super.remove(key);
         valueCache.invalidate(key);
         return null;
@@ -421,21 +421,21 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
             try {
                 return (V) valueCache.get(currentKey);
             } catch (ExecutionException e) {
-                logger.error(String.format("get value with key %s exception: ", currentKey, e), e);
+                logger.error(String.format("get value with key %s exception: %s", currentKey, e), e);
                 return null;
             }
         }
 
         @Override
         public void remove() {
-            assert keepAppend & !immutable : "Only support remove method with immutable false and keepAppend true";
+            assert keepAppend && !immutable : "Only support remove method with immutable false and keepAppend true";
             keyIterator.remove();
             valueCache.invalidate(currentKey);
         }
     }
 
     public FSDataOutputStream openIndexOutput() throws IOException {
-        assert keepAppend & !immutable : "Only support write method with immutable false and keepAppend true";
+        assert keepAppend && !immutable : "Only support write method with immutable false and keepAppend true";
         Path indexPath = new Path(getCurrentDir(), ".index");
         return fs.create(indexPath, true, 8 * 1024 * 1024, (short) 5, 8 * 1024 * 1024 * 8);
     }

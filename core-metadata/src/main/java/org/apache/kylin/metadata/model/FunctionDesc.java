@@ -95,7 +95,8 @@ public class FunctionDesc {
             }
         }
 
-        parameter.setColRefs(colRefs);
+        if(parameter != null)
+            parameter.setColRefs(colRefs);
     }
 
     private void reInitMeasureType() {
@@ -265,10 +266,7 @@ public class FunctionDesc {
                 if (other.parameter != null)
                     return false;
             } else {
-                if (parameter == null) {
-                    if (other.parameter != null)
-                        return false;
-                } else if (!parameter.equals(other.parameter))
+                 if (!parameter.equals(other.parameter))
                     return false;
             }
         }

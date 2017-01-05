@@ -63,7 +63,7 @@ public class BooleanDimEnc extends DimensionEncoding {
 
     // ============================================================================
 
-    private static int fixedLen = 1;
+    private int fixedLen = 1;
 
     //no-arg constructor is required for Externalizable
     public BooleanDimEnc() {

@@ -99,7 +99,7 @@ public class GTAggregateScanner implements IGTScanner {
     public static long estimateSizeOf(MeasureAggregator[] aggrs) {
         // size of array, AggregationCacheMemSizeTest reports 4 for [0], 12 for [1], 12 for [2], 20 for [3] etc..
         // Memory alignment to 8 bytes
-        long est = (aggrs.length + 1) / 2 * 8 + 4 + (4 /* extra */);
+        long est = (aggrs.length + 1) / 2 * 8L + 4 + (4 /* extra */);
         for (MeasureAggregator aggr : aggrs) {
             if (aggr != null)
                 est += aggr.getMemBytesEstimate();
@@ -110,7 +110,7 @@ public class GTAggregateScanner implements IGTScanner {
     public static long estimateSizeOf(byte[] bytes) {
         // AggregationCacheMemSizeTest reports 20 for byte[10] and 20 again for byte[16]
         // Memory alignment to 8 bytes
-        return (bytes.length + 7) / 8 * 8 + 4 + (4 /* extra */);
+        return (bytes.length + 7) / 8 * 8L + 4 + (4 /* extra */);
     }
 
     public void trackMemoryLevel(MemoryWaterLevel tracker) {
