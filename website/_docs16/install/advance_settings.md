@@ -22,6 +22,12 @@ The `conf/kylin_job_conf.xml` and `conf/kylin_job_conf_inmem.xml` manage the def
  * If want a cube's job getting more memory from Yarn, you can define: `kylin.job.mr.config.override.mapreduce.map.java.opts=-Xmx7g` and `kylin.job.mr.config.override.mapreduce.map.memory.mb=8192`
  * If want a cube's job going to a different Yarn resource queue, you can define: `kylin.job.mr.config.override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample)
 
+ ## Overwrite default Hive job conf at Cube level
+The `conf/kylin_hive_conf.xml` manage the default configurations when running Hive job (like creating intermediate flat hive table). If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need using another prefix `kylin.hive.config.override.`; These configs will be parsed out and then applied when running "hive -e" or "beeline" commands. See example below:
+
+ * If want hive goes a different Yarn resource queue, you can define: `kylin.hive.config.override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample)
+
+
 ## Enable compression
 
 By default, Kylin does not enable compression, this is not the recommend settings for production environment, but a tradeoff for new Kylin users. A suitable compression algorithm will reduce the storage overhead. But unsupported algorithm will break the Kylin job build also. There are three kinds of compression used in Kylin, HBase table compression, Hive output compression and MR jobs output compression. 
