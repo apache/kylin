@@ -162,7 +162,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
 
     public MergeGCStep createMergeGCStep() {
         MergeGCStep result = new MergeGCStep();
-        result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
+        result.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HBASE);
         result.setOldHTables(getMergingHTables());
         return result;
     }
@@ -218,7 +218,7 @@ public class HBaseMRSteps extends JobBuilderSupport {
         toDeletePaths.add(getFactDistinctColumnsPath(jobId));
 
         HDFSPathGarbageCollectionStep step = new HDFSPathGarbageCollectionStep();
-        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION);
+        step.setName(ExecutableConstants.STEP_NAME_GARBAGE_COLLECTION_HBASE);
         step.setDeletePaths(toDeletePaths);
         step.setJobId(jobId);
 

@@ -43,13 +43,13 @@ public class BatchCubingJobBuilder2 extends JobBuilderSupport {
     public BatchCubingJobBuilder2(CubeSegment newSegment, String submitter) {
         super(newSegment, submitter);
         this.inputSide = MRUtil.getBatchCubingInputSide(seg);
-        this.outputSide = MRUtil.getBatchCubingOutputSide2((CubeSegment) seg);
+        this.outputSide = MRUtil.getBatchCubingOutputSide2(seg);
     }
 
     public CubingJob build() {
         logger.info("MR_V2 new job to BUILD segment " + seg);
 
-        final CubingJob result = CubingJob.createBuildJob((CubeSegment) seg, submitter, config);
+        final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
         final String jobId = result.getId();
         final String cuboidRootPath = getCuboidRootPath(jobId);
 
