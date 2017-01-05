@@ -193,7 +193,7 @@ public class JobBuilderSupport {
     }
 
     public String[] getCuboidOutputPaths(String cuboidRootPath, int levels) {
-        String[] paths = new String[levels];
+        String[] paths = new String[levels + 1];
         for (int i = 0; i <= levels; i++) {
             if (i == 0) {
                 paths[i] = cuboidRootPath + "base_cuboid";
