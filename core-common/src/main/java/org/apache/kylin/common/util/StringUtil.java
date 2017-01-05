@@ -161,7 +161,7 @@ public class StringUtil {
             if (!s.isEmpty())
                 r.add(s);
         }
-        return (String[]) r.toArray(new String[r.size()]);
+        return r.toArray(new String[r.size()]);
     }
 
 }

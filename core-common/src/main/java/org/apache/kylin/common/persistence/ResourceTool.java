@@ -28,11 +28,14 @@ import java.util.NavigableSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ResourceTool {
 
     private static String[] includes = null;
     private static String[] excludes = null;
+    private static final Logger logger = LoggerFactory.getLogger(ResourceTool.class);
 
     public static void main(String[] args) throws IOException {
         args = StringUtil.filterSystemArgs(args);
@@ -164,7 +167,7 @@ public class ResourceTool {
                     }
                 } catch (Exception ex) {
                     System.err.println("Failed to open " + path);
-                    ex.printStackTrace();
+                    logger.error(ex.getLocalizedMessage(), ex);
                 }
             }
         } else {

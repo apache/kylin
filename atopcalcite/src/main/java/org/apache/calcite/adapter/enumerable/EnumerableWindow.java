@@ -80,6 +80,7 @@ public class EnumerableWindow extends Window implements EnumerableRel {
                 constants, rowType, groups);
     }
 
+    @Override
     public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
         return super.computeSelfCost(planner, mq)
                 .multiplyBy(EnumerableConvention.COST_MULTIPLIER);
@@ -104,6 +105,7 @@ public class EnumerableWindow extends Window implements EnumerableRel {
             this.constants = constants;
         }
 
+        @Override
         public Expression field(BlockBuilder list, int index, Type storageType) {
             if (index < actualInputFieldCount) {
                 Expression current = list.append("current", row);
@@ -113,6 +115,55 @@ public class EnumerableWindow extends Window implements EnumerableRel {
         }
     }
 
+    private void sampleOfTheGeneratedWindowedAggregate() {
+        // Here's overview of the generated code
+        // For each list of rows that have the same partitioning key, evaluate
+        // all of the windowed aggregate functions.
+
+        // builder
+        Iterator<Integer[]> iterator = null;
+
+        // builder3
+        Integer[] rows = iterator.next();
+
+        int prevStart = -1;
+        int prevEnd = -1;
+
+        for (int i = 0; i < rows.length; i++) {
+            // builder4
+            Integer row = rows[i];
+
+            int start = 0;
+            int end = 100;
+            if (start != prevStart || end != prevEnd) {
+                // builder5
+                int actualStart = 0;
+                if (start != prevStart || end < prevEnd) {
+                    // builder6
+                    // recompute
+                    actualStart = start;
+                    // implementReset
+                } else { // must be start == prevStart && end > prevEnd
+                    actualStart = prevEnd + 1;
+                }
+                prevStart = start;
+                prevEnd = end;
+
+                if (start != -1) {
+                    for (int j = actualStart; j <= end; j++) {
+                        // builder7
+                        // implementAdd
+                    }
+                }
+                // implementResult
+                // list.add(new Xxx(row.deptno, row.empid, sum, count));
+            }
+        }
+        // multiMap.clear(); // allows gc
+        // source = Linq4j.asEnumerable(list);
+    }
+
+    @Override
     public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
         final JavaTypeFactory typeFactory = implementor.getTypeFactory();
         final EnumerableRel child = (EnumerableRel) getInput();
@@ -121,7 +172,7 @@ public class EnumerableWindow extends Window implements EnumerableRel {
         Expression source_ = builder.append("source", result.block);
 
         final List<Expression> translatedConstants =
-                new ArrayList<Expression>(constants.size());
+                new ArrayList<>(constants.size());
         for (RexLiteral constant : constants) {
             translatedConstants.add(
                     RexToLixTranslator.translateLiteral(constant, constant.getType(),

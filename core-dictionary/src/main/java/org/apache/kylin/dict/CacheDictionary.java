@@ -25,20 +25,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by xiefan on 16-12-30.
  */
-abstract public class CacheDictionary<T> extends Dictionary<T> {
+public abstract class CacheDictionary<T> extends Dictionary<T> {
     private static final long serialVersionUID = 1L;
 
-    transient protected boolean enableValueCache = false;
+    protected transient boolean enableValueCache = false;
 
-    transient private SoftReference<Map> valueToIdCache;
+    private transient SoftReference<ConcurrentHashMap> valueToIdCache;
 
-    transient private SoftReference<Object[]> idToValueCache;
+    private transient SoftReference<Object[]> idToValueCache;
 
-    transient protected int baseId;
+    protected transient int baseId;
 
-    transient protected BytesConverter<T> bytesConvert;
+    protected transient BytesConverter<T> bytesConvert;
 
     public CacheDictionary() {
 
@@ -46,11 +45,11 @@ abstract public class CacheDictionary<T> extends Dictionary<T> {
 
     //value --> id
     @Override
-    final protected int getIdFromValueImpl(T value, int roundingFlag) {
+    protected final int getIdFromValueImpl(T value, int roundingFlag) {
         if (enableValueCache && roundingFlag == 0) {
             Map cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
             if (cache != null) {
-                Integer id = null;
+                Integer id;
                 id = (Integer) cache.get(value);
                 if (id != null)
                     return id.intValue();
@@ -66,7 +65,7 @@ abstract public class CacheDictionary<T> extends Dictionary<T> {
 
     //id --> value
     @Override
-    final protected T getValueFromIdImpl(int id) {
+    protected final T getValueFromIdImpl(int id) {
         if (enableValueCache) {
             Object[] cache = idToValueCache.get();
             if (cache != null) {
@@ -83,7 +82,7 @@ abstract public class CacheDictionary<T> extends Dictionary<T> {
         return bytesConvert.convertFromBytes(valueBytes, 0, valueBytes.length);
     }
 
-    final protected int calcSeqNoFromId(int id) {
+    protected final int calcSeqNoFromId(int id) {
         int seq = id - baseId;
         if (seq < 0 || seq >= getSize()) {
             throw new IllegalArgumentException("Not a valid ID: " + id);
@@ -91,15 +90,15 @@ abstract public class CacheDictionary<T> extends Dictionary<T> {
         return seq;
     }
 
-    final public void enableCache() {
+    public final void enableCache() {
         this.enableValueCache = true;
         if (this.valueToIdCache == null)
-            this.valueToIdCache = new SoftReference<Map>(new ConcurrentHashMap());
+            this.valueToIdCache = new SoftReference<>(new ConcurrentHashMap());
         if (this.idToValueCache == null)
-            this.idToValueCache = new SoftReference<Object[]>(new Object[getSize()]);
+            this.idToValueCache = new SoftReference<>(new Object[getSize()]);
     }
 
-    final public void disableCache() {
+    public final void disableCache() {
         this.enableValueCache = false;
         this.valueToIdCache = null;
         this.idToValueCache = null;
