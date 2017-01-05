@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
@@ -51,7 +52,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     private MeasureAggregators aggs;
 
     private int cuboidLevel;
-    private boolean[] needAggr;
+    private int[] needAggrMeasures;
     private Object[] input;
     private Object[] result;
     private int vcounter;
@@ -76,12 +77,21 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
         input = new Object[measuresDescs.size()];
         result = new Object[measuresDescs.size()];
-        needAggr = new boolean[measuresDescs.size()];
 
-        if (cuboidLevel > 0) {
-            for (int i = 0; i < measuresDescs.size(); i++) {
-                needAggr[i] = !measuresDescs.get(i).getFunction().getMeasureType().onlyAggrInBaseCuboid();
+        List<Integer> needAggMeasuresList = Lists.newArrayList();
+        for (int i = 0; i < measuresDescs.size(); i++) {
+            if (cuboidLevel == 0) {
+                needAggMeasuresList.add(i);
+            } else {
+                if (!measuresDescs.get(i).getFunction().getMeasureType().onlyAggrInBaseCuboid()) {
+                    needAggMeasuresList.add(i);
+                }
             }
+        }
+
+        needAggrMeasures = new int[needAggMeasuresList.size()];
+        for (int i = 0; i < needAggMeasuresList.size(); i++) {
+            needAggrMeasures[i] = needAggMeasuresList.get(i);
         }
     }
 
@@ -94,11 +104,7 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
                 logger.info("Handling value with ordinal (This is not KV number!): " + vcounter);
             }
             codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), input);
-            if (cuboidLevel > 0) {
-                aggs.aggregate(input, needAggr);
-            } else {
-                aggs.aggregate(input);
-            }
+            aggs.aggregate(input, needAggrMeasures);
         }
         aggs.collectStates(result);
 
