@@ -82,7 +82,7 @@ public class MergeCuboidJob extends CuboidJob {
             // TODO actually only dictionaries from merging segments are needed
             attachCubeMetadataWithDict(cube, job.getConfiguration());
 
-            LayerReducerNumSizing.setReduceTaskNum(job, cube.getSegmentById(segmentID), getTotalMapInputMB(), -1);
+            job.setNumReduceTasks(LayerReducerNumSizing.getReduceTaskNum(cube.getSegmentById(segmentID), getTotalMapInputMB(), -1));
 
             this.deletePath(job.getConfiguration(), output);
 

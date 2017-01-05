@@ -20,8 +20,6 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -34,7 +32,7 @@ public class LayerReducerNumSizing {
 
     private static final Logger logger = LoggerFactory.getLogger(LayerReducerNumSizing.class);
 
-    public static void setReduceTaskNum(Job job, CubeSegment cubeSegment, double totalMapInputMB, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    public static int getReduceTaskNum(CubeSegment cubeSegment, double totalMapInputMB, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
         CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         KylinConfig kylinConfig = cubeDesc.getConfig();
 
@@ -76,9 +74,7 @@ public class LayerReducerNumSizing {
         // no more than 500 reducer by default
         numReduceTasks = Math.min(kylinConfig.getHadoopJobMaxReducerNumber(), numReduceTasks);
 
-        job.setNumReduceTasks(numReduceTasks);
-
-        logger.info("Setting " + Reducer.Context.NUM_REDUCES + "=" + numReduceTasks);
+        return numReduceTasks;
     }
 
 }
