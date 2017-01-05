@@ -65,12 +65,11 @@ public class BatchCubingJobBuilder extends JobBuilderSupport {
         // Phase 3: Build Cube
         RowKeyDesc rowKeyDesc = seg.getCubeDesc().getRowkey();
         final int groupRowkeyColumnsCount = seg.getCubeDesc().getBuildLevel();
-        final int totalRowkeyColumnsCount = rowKeyDesc.getRowKeyColumns().length;
         final String[] cuboidOutputTempPath = getCuboidOutputPaths(cuboidRootPath, groupRowkeyColumnsCount);
         // base cuboid step
         result.addTask(createBaseCuboidStep(cuboidOutputTempPath[0], jobId));
         // n dim cuboid steps
-        for (int i = 1; i < groupRowkeyColumnsCount; i++) {
+        for (int i = 1; i <= groupRowkeyColumnsCount; i++) {
             result.addTask(createNDimensionCuboidStep(cuboidOutputTempPath[i - 1], cuboidOutputTempPath[i], i));
         }
         outputSide.addStepPhase3_BuildCube(result, cuboidRootPath);
