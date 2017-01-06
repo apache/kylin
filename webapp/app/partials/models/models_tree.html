@@ -41,10 +41,10 @@
   <div>
     <h3 class="text-info">Models</h3>
   </div>
+<!--{{window}}px -->
+    <div id="cube_model_trees" style="width:100%; height:250px; overflow:auto;margin-top: 20px;" class="cube_model_trees">
 
-    <div style="width:100%; height:{{window}}px; overflow:auto;margin-top: 20px;" class="cube_model_trees">
-
-        <ul class="list-group models-tree">
+        <ul class="list-group models-tree" id="models-tree">
           <li class="list-group-item" ng-repeat="model in modelsManager.models">
 
             <div class="pull-right" showonhoverparent style="display:none;" >
