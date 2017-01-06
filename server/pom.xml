@@ -229,6 +229,10 @@
                     <groupId>javax.servlet.jsp</groupId>
                     <artifactId>jsp-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>jetty-all</artifactId>
+                    <groupId>org.eclipse.jetty.aggregate</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 
