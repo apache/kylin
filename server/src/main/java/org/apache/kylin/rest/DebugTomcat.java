@@ -25,6 +25,8 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.tomcat.JarScanFilter;
+import org.apache.tomcat.JarScanType;
 import org.apache.tomcat.util.descriptor.web.ErrorPage;
 
 import java.io.File;
@@ -127,6 +129,12 @@ public class DebugTomcat {
         notFound.setLocation("/index.html");
         webContext.addErrorPage(notFound);
         webContext.addWelcomeFile("index.html");
+        webContext.getJarScanner().setJarScanFilter(new JarScanFilter() {
+            @Override
+            public boolean check(JarScanType arg0, String arg1) {
+                return false;
+            }
+        });
 
         // tomcat start
         tomcat.start();
