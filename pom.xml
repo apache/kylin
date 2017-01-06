@@ -102,7 +102,7 @@
         <cglib.version>3.2.4</cglib.version>
         <supercsv.version>2.4.0</supercsv.version>
         <cors.version>2.5</cors.version>
-        <tomcat.version>7.0.69</tomcat.version>
+        <tomcat.version>8.5.9</tomcat.version>
 
         <!-- REST Service -->
         <spring.framework.version>3.2.17.RELEASE</spring.framework.version>
