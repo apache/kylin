@@ -423,6 +423,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.job.scheduler.default", "0"));
     }
 
+    public Integer getErrorRecordThreshold() {
+        return Integer.parseInt(getOptional("kylin.job.error-record-threshold", "0"));
+    }
+
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================
