@@ -302,7 +302,7 @@
                         <i class="fa fa-pencil"></i>
                       </button>
                       <!--Remove Button -->
-                      <button class="btn btn-xs  btn-danger" ng-click="removeDictionaries(cubeMetaFrame.dictionaries, dictionaries)" ng-disabled="instance.status=='READY'">
+                      <button class="btn btn-xs  btn-danger" ng-click="removeElement(cubeMetaFrame.dictionaries, dictionaries)" ng-disabled="instance.status=='READY'">
                         <i class="fa fa-trash-o"></i>
                       </button>
                     </td>
@@ -388,6 +388,89 @@
              <button class="btn btn-link" ng-click="clearNewDictionaries()">Cancel</button>
            </div>
          </div>
+
+         <!--Edit ColumnFamily-->
+         <div class="form-group large-popover" style="overflow:auto">
+           <h3 style="margin-left:42px">Advanced ColumnFamily  <i kylinpopover placement="right" title="Advanced ColumnFamily" template="AdvancedColumnFamilyTip.html" class="fa fa-info-circle"></i></h3>
+           <div style="margin-left:42px">
+             <div class="box-body">
+               <!-- VIEW MODE -->
+               <div class="row"  ng-if="state.mode=='view'&& cubeMetaFrame.hbase_mapping.column_family.length > 0">
+                 <table class="table table-striped table-hover">
+                   <thead>
+                   <tr>
+                     <th class="col-xs-1">CF</th>
+                     <th class="col-xs-11">Measures</th>
+                   </tr>
+                   </thead>
+                   <tbody class="cube-dimension">
+                   <tr ng-repeat="colFamily in cubeMetaFrame.hbase_mapping.column_family | filter:dimState.filter track by $index">
+                     <!--ID -->
+                     <td class="col-xs-1">
+                       <b>{{colFamily.name}}</b>
+                     </td>
+                     <!--Name -->
+                     <td class="col-xs-11">
+                       <span>{{colFamily.columns[0].measure_refs}}</span>
+                     </td>
+                   </tr>
+                   </tbody>
+                 </table>
+               </div>
+
+               <!-- EDIT MODE -->
+               <div  ng-if="state.mode=='edit'" class="form-group " style="width: 100%">
+                 <table ng-if="cubeMetaFrame.hbase_mapping.column_family.length > 0"
+                        class="table table-hover">
+
+                   <tr class="row">
+                     <th class="col-xs-1">CF</th>
+                     <th class="col-xs-10">Measures</th>
+                     <th class="col-xs-1">Actions</th>
+                   </tr>
+
+                   <tr ng-repeat="colFamily in cubeMetaFrame.hbase_mapping.column_family" ng-init="rowIndex = $index" class="row">
+                     <td class="col-xs-1">
+                       <b>{{colFamily.name}}</b>
+                     </td>
+
+                     <td class="col-xs-10">
+                       <ui-select
+                         ng-if="state.mode=='edit'"
+                         style="width: 100%"
+                         autofocus="true"
+                         close-on-select="false"
+                         on-select="refreshColumnFamily(cubeMetaFrame.hbase_mapping.column_family, rowIndex, colFamily)"
+                         on-remove="refreshColumnFamily(cubeMetaFrame.hbase_mapping.column_family, rowIndex, colFamily)"
+                         ng-model="colFamily.columns[0].measure_refs"
+                         multiple>
+                         <ui-select-match placeholder="Select Measure...">{{$item}}</ui-select-match>
+                         <ui-select-choices repeat="measure in getAllMeasureNames() | filter:$select.search |assignedMeasureNames:getAssignedMeasureNames()">
+                           {{measure}}
+                         </ui-select-choices>
+                       </ui-select>
+                     </td>
+
+                     <td class="col-xs-1">
+                       <!--Remove Button -->
+                       <button class="btn btn-xs btn-info" ng-click="removeElement(cubeMetaFrame.hbase_mapping.column_family, colFamily)">
+                         <i class="fa fa-minus"></i>
+                       </button>
+                     </td>
+
+                   </tr>
+                 </table>
+               </div>
+
+               <div class="form-group" >
+                 <button class="btn btn-sm btn-info" ng-click="addColumnFamily()" ng-show="state.mode=='edit'">
+                   <i class="fa fa-plus"></i> ColumnFamily
+                 </button>
+               </div>
+
+             </div>
+           </div>
+         </div>
        </ng-form>
      </div>
    </ng-form>
@@ -417,5 +500,12 @@
 <script type="text/ng-template" id="AdvancedDictionariesTip.html">
   <div>
     <h4>Special settings for dictionaries. Leave blank by default.</h4>
+  </div>
+</script>
+
+<script type="text/ng-template" id="AdvancedColumnFamilyTip.html">
+  <div>
+    <h4>If there are more than one ultrahigh cardinality precise count distinct measures,
+        you could assign these measures to more column family.</h4>
   </div>
 </script>

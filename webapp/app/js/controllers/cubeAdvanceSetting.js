@@ -278,10 +278,83 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     $scope.isReuse=!$scope.isReuse;
   }
 
-  $scope.removeDictionaries =  function(arr,element){
+  $scope.removeElement =  function(arr,element){
     var index = arr.indexOf(element);
     if (index > -1) {
       arr.splice(index, 1);
+    }
+  };
+
+  $scope.newColFamily = function (index) {
+    return {
+        "name": "F" + index,
+        "columns": [
+          {
+            "qualifier": "M",
+            "measure_refs": []
+          }
+        ]
+      };
+  };
+
+  $scope.initColumnFamily = function () {
+    $scope.cubeMetaFrame.hbase_mapping.column_family = [];
+    var normalMeasures = [], distinctCountMeasures = [];
+    angular.forEach($scope.cubeMetaFrame.measures, function (measure, index) {
+      if (measure.function.expression === 'COUNT_DISTINCT') {
+        distinctCountMeasures.push(measure);
+      } else {
+        normalMeasures.push(measure);
+      }
+    });
+    if (normalMeasures.length > 0) {
+      var nmcf = $scope.newColFamily(1);
+      angular.forEach(normalMeasures, function (normalM, index) {
+        nmcf.columns[0].measure_refs.push(normalM.name);
+      });
+      $scope.cubeMetaFrame.hbase_mapping.column_family.push(nmcf);
+    }
+
+    if (distinctCountMeasures.length > 0) {
+      var dccf = $scope.newColFamily(2);
+      angular.forEach(distinctCountMeasures, function (dcm, index) {
+        dccf.columns[0].measure_refs.push(dcm.name);
+      });
+      $scope.cubeMetaFrame.hbase_mapping.column_family.push(dccf);
+    }
+  };
+
+  $scope.getAllMeasureNames = function () {
+    var measures = [];
+    angular.forEach($scope.cubeMetaFrame.measures, function (measure, index) {
+      measures.push(measure.name);
+    });
+    return measures;
+  };
+
+  $scope.getAssignedMeasureNames = function () {
+    var assignedMeasures = [];
+    angular.forEach($scope.cubeMetaFrame.hbase_mapping.column_family, function (colFamily, index) {
+      angular.forEach(colFamily.columns[0].measure_refs, function (measure, index) {
+        assignedMeasures.push(measure);
+      });
+    });
+    return assignedMeasures;
+  };
+
+  if ($scope.getAllMeasureNames().length != $scope.getAssignedMeasureNames().length) {
+    $scope.initColumnFamily();
+  }
+
+
+  $scope.addColumnFamily = function () {
+    var colFamily = $scope.newColFamily($scope.cubeMetaFrame.hbase_mapping.column_family.length + 1);
+    $scope.cubeMetaFrame.hbase_mapping.column_family.push(colFamily);
+  };
+
+  $scope.refreshColumnFamily = function (column_familys, index, colFamily) {
+    if (column_familys) {
+      column_familys[index] = colFamily;
     }
   };
 

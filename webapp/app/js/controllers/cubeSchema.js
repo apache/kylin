@@ -275,6 +275,19 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
           errors.push("At most one 'shard by' column is allowed.");
         }
 
+        var cfMeasures = [];
+        angular.forEach($scope.cubeMetaFrame.hbase_mapping.column_family,function(cf){
+          angular.forEach(cf.columns[0].measure_refs, function (measure, index) {
+            cfMeasures.push(measure);
+          });
+        });
+
+        var uniqCfMeasures = _.uniq(cfMeasures);
+        if(uniqCfMeasures.length != $scope.cubeMetaFrame.measures.length) {
+          errors.push("All measures need to be assigned to column family");
+        }
+
+
         var errorInfo = "";
         angular.forEach(errors,function(item){
             errorInfo+="\n"+item;
