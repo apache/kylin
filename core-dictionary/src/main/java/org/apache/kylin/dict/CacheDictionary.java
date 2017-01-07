@@ -35,7 +35,7 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
 
     protected transient int baseId;
 
-    protected transient BytesConverter<T> bytesConvert;
+    protected BytesConverter<T> bytesConvert;
 
     public CacheDictionary() {
 

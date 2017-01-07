@@ -260,7 +260,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         // aggregate to ND cuboids
         PairFlatMapFunction<Tuple2<ByteArray, Object[]>, ByteArray, Object[]> flatMapFunction = new CuboidFlatMap(vCubeSegment.getValue(), vCubeDesc.getValue(), vCuboidScheduler.getValue(), ndCuboidBuilder);
 
-        for (level = 1; level < totalLevels; level++) {
+        for (level = 1; level <= totalLevels; level++) {
             partition = estimateRDDPartitionNum(level, cubeStatsReader, kylinConfig);
             logger.info("Level " + level + " partition number: " + partition);
             allRDDs[level] = allRDDs[level - 1].flatMapToPair(flatMapFunction).reduceByKey(reducerFunction2, partition).persist(storageLevel);

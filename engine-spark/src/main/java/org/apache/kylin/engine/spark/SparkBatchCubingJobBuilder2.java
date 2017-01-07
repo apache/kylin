@@ -41,6 +41,7 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         super(newSegment, submitter);
     }
 
+    @Override
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
 
     }
