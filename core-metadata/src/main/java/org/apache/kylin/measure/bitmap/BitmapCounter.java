@@ -51,7 +51,9 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
         }
 
         if (buffer != null) {
+            @SuppressWarnings("unused")
             int version = buffer.getInt();
+            @SuppressWarnings("unused")
             int size = buffer.getInt();
             count = buffer.getInt();
 
@@ -79,7 +81,7 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
 
     public void add(int value) {
         getBitmap().add(value);
-        count = getBitmap().getCardinality();
+        count = null;
     }
 
     public void add(byte[] value) {
@@ -103,12 +105,12 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
 
     public void merge(BitmapCounter another) {
         getBitmap().or(another.getBitmap());
-        count = getBitmap().getCardinality();
+        count = null;
     }
 
     public void intersect(BitmapCounter another) {
         getBitmap().and(another.getBitmap());
-        count = getBitmap().getCardinality();
+        count = null;
     }
 
     public int getCount() {
@@ -148,7 +150,6 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
 
         // keep forward compatibility
         if (version == VERSION) {
-            @SuppressWarnings("unused")
             int size = in.getInt();
             count = in.getInt();
             in.position(mark);
@@ -258,4 +259,5 @@ public class BitmapCounter implements Comparable<BitmapCounter> {
             return len;
         }
     }
+    
 }
