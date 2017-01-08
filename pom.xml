@@ -922,19 +922,7 @@
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.7.7.201606060606</version>
-                    <configuration>
-                        <destFile>${sonar.jacoco.reportPath}</destFile>
-                        <append>true</append>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>agent</id>
-                            <goals>
-                                <goal>prepare-agent</goal>
-                            </goals>
-                        </execution>
-                    </executions>
+                    <version>0.7.8</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -1079,6 +1067,35 @@
                     </plugin>
 
                     <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <configuration>
+                            <append>true</append>
+                            <destFile>
+                                ${sonar.jacoco.reportPath}
+                            </destFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>pre-test</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <propertyName>surefireArgLine</propertyName>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>post-test</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19.1</version>
@@ -1101,11 +1118,9 @@
                                     <value>file:${project.basedir}/../build/conf/kylin-tools-log4j.properties</value>
                                 </property>
                             </systemProperties>
-                            <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar ${argLine}</argLine>
+                            <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar ${argLine} ${surefireArgLine}</argLine>
                         </configuration>
                     </plugin>
-
-
                 </plugins>
             </build>
         </profile>
