@@ -677,7 +677,8 @@ public class SqlToRelConverter {
          * 
          *   LogicalSort (optional)
          *    |- LogicalProject
-         *        |- OLAPTableScan
+         *        |- LogicalFilter (optional)
+         *            |- OLAPTableScan
          */
         LogicalProject rootPrj = null;
         LogicalSort rootSort = null;
@@ -690,11 +691,14 @@ public class SqlToRelConverter {
             return root;
         }
         
-        if (!rootPrj.getInput().getClass().getSimpleName().equals("OLAPTableScan"))
+        RelNode input = rootPrj.getInput();
+        if (!(//
+                input.getClass().getSimpleName().equals("OLAPTableScan")//
+                || (input.getClass().getSimpleName().equals("LogicalFilter") && input.getInput(0).getClass().getSimpleName().equals("OLAPTableScan"))//
+             ))
             return root;
 
-        RelNode scan = rootPrj.getInput();
-        if (rootPrj.getRowType().getFieldCount() < scan.getRowType().getFieldCount())
+        if (rootPrj.getRowType().getFieldCount() < input.getRowType().getFieldCount())
             return root;
         
         RelDataType inType = rootPrj.getRowType();
@@ -713,7 +717,7 @@ public class SqlToRelConverter {
         }
 
         RelDataType projRowType = getCluster().getTypeFactory().createStructType(projTypeBuilder);
-        rootPrj = LogicalProject.create(scan, projExp, projRowType);
+        rootPrj = LogicalProject.create(input, projExp, projRowType);
         if (rootSort != null) {
             rootSort = (LogicalSort) rootSort.copy(rootSort.getTraitSet(), rootPrj, rootSort.collation, rootSort.offset, rootSort.fetch);
         }
