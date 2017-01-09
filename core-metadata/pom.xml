@@ -24,16 +24,13 @@
     <artifactId>kylin-core-metadata</artifactId>
     <packaging>jar</packaging>
     <name>Apache Kylin - Core Metadata</name>
+    <description>Apache Kylin - Core Metadata</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
         <version>2.0.0-SNAPSHOT</version>
-
     </parent>
-
-    <properties>
-    </properties>
 
     <dependencies>
 

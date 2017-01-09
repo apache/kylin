@@ -24,7 +24,7 @@
     <artifactId>kylin-server</artifactId>
     <packaging>war</packaging>
     <name>Apache Kylin - REST Server</name>
-    <description>Kylin REST Service and RPC Server.</description>
+    <description>Kylin REST Service and RPC Server</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>

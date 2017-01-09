@@ -24,16 +24,13 @@
     <artifactId>kylin-core-job</artifactId>
     <packaging>jar</packaging>
     <name>Apache Kylin - Core Job</name>
+    <description>Apache Kylin - Core Job</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
         <version>2.0.0-SNAPSHOT</version>
-
     </parent>
-
-    <properties>
-    </properties>
 
     <dependencies>
 
