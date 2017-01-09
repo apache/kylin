@@ -104,15 +104,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
     }
 
     @Override
-    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
-
-        int result = _getIdFromValueBytesImpl(value, offset, len, roundingFlag);
-        //logger.info("{} => {}, rounding {}", bytesConvert.convertFromBytes(value, offset, len), result, roundingFlag);
-        return result;
-    }
-
-    // id = tree_inner_offset + accumulate_offset + baseId
-    protected int _getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
+    protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
         int index;
         if (trees.size() == 1) {
             index = 0;
@@ -136,27 +128,20 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
             }
         }
         TrieDictionary<T> tree = trees.get(index);
-        int id = tree.getIdFromValueBytes(value, offset, len, roundingFlag);
+        int id = tree.getIdFromValueBytesWithoutCache(value, offset, len, roundingFlag);
+        if(id == -1)
+            throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
         id = id + accuOffset.get(index);
         id += baseId;
         return id;
     }
 
     @Override
-    protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
+    protected byte[] getValueBytesFromIdWithoutCache(int id) throws IllegalArgumentException {
         int index = (trees.size() == 1) ? 0 : findIndexById(id);
         int treeInnerOffset = getTreeInnerOffset(id, index);
         TrieDictionary<T> tree = trees.get(index);
-        int size = tree.getValueBytesFromIdImpl(treeInnerOffset, returnValue, offset);
-        return size;
-    }
-
-    @Override
-    protected byte[] getValueBytesFromIdImpl(int id) throws IllegalArgumentException {
-        int index = (trees.size() == 1) ? 0 : findIndexById(id);
-        int treeInnerOffset = getTreeInnerOffset(id, index);
-        TrieDictionary<T> tree = trees.get(index);
-        byte[] result = tree.getValueBytesFromId(treeInnerOffset);
+        byte[] result = tree.getValueBytesFromIdWithoutCache(treeInnerOffset);
         return result;
     }
 

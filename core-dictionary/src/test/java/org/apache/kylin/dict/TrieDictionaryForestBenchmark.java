@@ -25,7 +25,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -123,7 +122,8 @@ public class TrieDictionaryForestBenchmark {
         int step = 1;
         for (int i = 0; i < testTimes; i++) {
             for (int j = 0; j < cardnality; j++) {
-                step |= dict.getValueBytesFromId(j).length;
+                //step |= dict.getValueBytesFromId(j).length;
+                step |= dict.getValueFromId(j).length();
             }
         }
         return System.currentTimeMillis() - startTime;
@@ -135,8 +135,7 @@ public class TrieDictionaryForestBenchmark {
         byte[] returnValue = new byte[2048];
         for (int i = 0; i < testTimes; i++) {
             for (int j = 0; j < cardnality; j++) {
-                int size = dict.getValueBytesFromId(j, returnValue, 0);
-                step |= size;
+                step |= dict.getValueFromId(j).length();
             }
         }
         return System.currentTimeMillis() - startTime;
@@ -154,16 +153,11 @@ public class TrieDictionaryForestBenchmark {
     }
 
     private long runQueryIdByValueBytes(ArrayList<String> rawData, Dictionary<String> dict, int cardnality, int testTimes) {
-        List<byte[]> testBytes = new ArrayList<>();
-        StringBytesConverter converter = new StringBytesConverter();
-        for (int i = 0; i < cardnality; i++) {
-            testBytes.add(converter.convertToBytes(rawData.get(i)));
-        }
         long startTime = System.currentTimeMillis();
         int step = 1;
         for (int i = 0; i < testTimes; i++) {
             for (int j = 0; j < cardnality; j++) {
-                step |= dict.getIdFromValueBytes(testBytes.get(j), 0, testBytes.get(j).length);
+                step |= dict.getIdFromValue(rawData.get(j));
             }
         }
         return System.currentTimeMillis() - startTime;

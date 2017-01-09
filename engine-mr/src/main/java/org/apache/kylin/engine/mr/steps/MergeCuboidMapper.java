@@ -186,8 +186,8 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
             if (this.checkNeedMerging(col)) {
                 // if dictionary on fact table column, needs rewrite
                 DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-                Dictionary<?> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(col));
-                Dictionary<?> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(col));
+                Dictionary<String> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(col));
+                Dictionary<String> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(col));
 
                 while (sourceDict.getSizeOfValue() > newKeyBodyBuf.length - bufOffset || //
                         mergedDict.getSizeOfValue() > newKeyBodyBuf.length - bufOffset || //
@@ -200,11 +200,12 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                 int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[useSplit].value, 0, splittedByteses[useSplit].length);
                 int idInMergedDict;
 
-                int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBodyBuf, bufOffset);
-                if (size < 0) {
+                //int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBodyBuf, bufOffset);
+                String v = sourceDict.getValueFromId(idInSourceDict);
+                if (v == null) {
                     idInMergedDict = mergedDict.nullId();
                 } else {
-                    idInMergedDict = mergedDict.getIdFromValueBytes(newKeyBodyBuf, bufOffset, size);
+                    idInMergedDict = mergedDict.getIdFromValue(v);
                 }
 
                 BytesUtil.writeUnsigned(idInMergedDict, newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());

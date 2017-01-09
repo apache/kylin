@@ -134,20 +134,6 @@ public class MultipleDictionaryValueEnumeratorTest {
             return "" + values[id];
         }
 
-        @Override
-        protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
-            return 0;
-        }
-
-        @Override
-        protected byte[] getValueBytesFromIdImpl(int id) {
-            return null;
-        }
-
-        @Override
-        protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-            return 0;
-        }
 
         @Override
         public void dump(PrintStream out) {}

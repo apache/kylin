@@ -131,7 +131,7 @@ public class TrieDictionaryForestBuilder<T> {
         trees.add(tree);
         int minId = tree.getMinId();
         accuOffset.add(curOffset);
-        byte[] valueBytes = tree.getValueBytesFromId(minId);
+        byte[] valueBytes = tree.getValueBytesFromIdWithoutCache(minId);
         valueDivide.add(new ByteArray(valueBytes, 0, valueBytes.length));
         curOffset += (tree.getMaxId() + 1);
     }

@@ -18,6 +18,8 @@
 
 package org.apache.kylin.measure.bitmap;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -37,8 +39,6 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 
 import com.google.common.collect.ImmutableMap;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Created by sunyerui on 15/12/10.
@@ -133,14 +133,13 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
                 Dictionary<String> mergedDict = newDicts.get(colRef);
 
                 MutableBitmapCounter retValue = new MutableBitmapCounter();
-                byte[] literal = new byte[sourceDict.getSizeOfValue()];
                 for (int id : value) {
                     int newId;
-                    int size = sourceDict.getValueBytesFromId(id, literal, 0);
-                    if (size < 0) {
+                    String v = sourceDict.getValueFromId(id);
+                    if (v == null) {
                         newId = mergedDict.nullId();
                     } else {
-                        newId = mergedDict.getIdFromValueBytes(literal, 0, size);
+                        newId = mergedDict.getIdFromValue(v);
                     }
                     retValue.add(newId);
                 }

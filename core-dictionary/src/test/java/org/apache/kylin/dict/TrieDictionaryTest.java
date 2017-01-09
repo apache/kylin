@@ -47,7 +47,7 @@ public class TrieDictionaryTest {
         int count = (int) (Integer.MAX_VALUE * 0.8 / 64);
         benchmarkStringDictionary(new RandomStrings(count));
     }
-    
+
     private static class RandomStrings implements Iterable<String> {
         final private int size;
 
@@ -55,7 +55,7 @@ public class TrieDictionaryTest {
             this.size = size;
             System.out.println("size = " + size);
         }
-        
+
         @Override
         public Iterator<String> iterator() {
             return new Iterator<String>() {
@@ -71,11 +71,11 @@ public class TrieDictionaryTest {
                 public String next() {
                     if (hasNext() == false)
                         throw new NoSuchElementException();
-                    
+
                     i++;
                     if (i % 1000000 == 0)
                         System.out.println(i);
-                    
+
                     return nextString();
                 }
 
@@ -225,7 +225,7 @@ public class TrieDictionaryTest {
         TrieDictionaryBuilder<String> b = newDictBuilder(str);
         b.stats().print();
         TrieDictionary<String> dict = b.build(0);
-        
+
         TreeSet<String> set = new TreeSet<String>();
         for (String s : str) {
             set.add(s);
@@ -282,7 +282,7 @@ public class TrieDictionaryTest {
         start = System.currentTimeMillis();
         for (int i = 0; i < times; i++) {
             for (int j = 0; j < n; j++) {
-                keep |= dict.getIdFromValueBytes(array[j], 0, array[j].length);
+                keep |= dict.getIdFromValueBytesWithoutCache(array[j], 0, array[j].length, 0);
             }
         }
         long timeValueToIdByDict = System.currentTimeMillis() - start;
@@ -304,12 +304,12 @@ public class TrieDictionaryTest {
         start = System.currentTimeMillis();
         for (int i = 0; i < times; i++) {
             for (int j = 0; j < n; j++) {
-                keep |= dict.getValueBytesFromId(j, valueBytes, 0);
+                keep |= dict.getValueBytesFromIdWithoutCache(j).length;
             }
         }
         long timeIdToValueByDict = System.currentTimeMillis() - start;
         System.out.println(timeIdToValueByDict);
-        
+
         return keep;
     }
 
@@ -350,9 +350,6 @@ public class TrieDictionaryTest {
         // test null value
         int nullId = dict.getIdFromValue(null);
         assertNull(dict.getValueFromId(nullId));
-        int nullId2 = dict.getIdFromValueBytes(null, 0, 0);
-        assertEquals(dict.getValueBytesFromId(nullId2, null, 0), -1);
-        assertEquals(nullId, nullId2);
     }
 
     private static TrieDictionary<String> testSerialize(TrieDictionary<String> dict) {

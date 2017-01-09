@@ -141,7 +141,7 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
 
 
     @Override
-    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
+    protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag) {
         int seq = lookupSeqNoFromValue(headSize, value, offset, offset + len, roundingFlag);
         int id = calcIdFromSeqNo(seq);
         if (id < 0)
@@ -236,7 +236,7 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
 
 
     @Override
-    protected byte[] getValueBytesFromIdImpl(int id) {
+    protected byte[] getValueBytesFromIdWithoutCache(int id) {
         byte[] buf = new byte[maxValueLength];
         int len = getValueBytesFromIdImpl(id, buf, 0);
 
@@ -249,7 +249,6 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
         }
     }
 
-    @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
         int seq = calcSeqNoFromId(id);
         return lookupValueFromSeqNo(headSize, seq, returnValue, offset);
@@ -425,7 +424,7 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
 
         //dict2.enableIdToValueBytesCache();
         for (int i = 0; i <= dict.getMaxId(); i++) {
-            System.out.println(Bytes.toString(dict.getValueBytesFromId(i)));
+            System.out.println(Bytes.toString(dict.getValueBytesFromIdWithoutCache(i)));
         }
     }
 }

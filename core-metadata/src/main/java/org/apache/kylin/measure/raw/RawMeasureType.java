@@ -133,17 +133,16 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
                 int valueSize = value.size();
                 byte[] newIdBuf = new byte[valueSize * mergedDict.getSizeOfId()];
-                byte[] literal = new byte[sourceDict.getSizeOfValue()];
 
                 int bufOffset = 0;
                 for (ByteArray c : value) {
                     int oldId = BytesUtil.readUnsigned(c.array(), c.offset(), c.length());
                     int newId;
-                    int size = sourceDict.getValueBytesFromId(oldId, literal, 0);
-                    if (size < 0) {
+                    String v = sourceDict.getValueFromId(oldId);
+                    if (v == null) {
                         newId = mergedDict.nullId();
                     } else {
-                        newId = mergedDict.getIdFromValueBytes(literal, 0, size);
+                        newId = mergedDict.getIdFromValue(v);
                     }
                     BytesUtil.writeUnsigned(newId, newIdBuf, bufOffset, mergedDict.getSizeOfId());
                     c.set(newIdBuf, bufOffset, mergedDict.getSizeOfId());

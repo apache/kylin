@@ -641,7 +641,7 @@ public class TrieDictionaryForestTest {
         System.out.println("max memory:" + Runtime.getRuntime().maxMemory());
         System.gc();
         Thread.currentThread().sleep(1000);
-        NumberDictionaryBuilder<String> b = new NumberDictionaryBuilder<>(new StringBytesConverter());
+        NumberDictionaryBuilder<String> b = new NumberDictionaryBuilder<>(new NumberDictionaryForestBuilder.Number2BytesConverter());
         int k = 0;
         while (true) {
             b.addValue(k + "");
@@ -820,7 +820,7 @@ public class TrieDictionaryForestTest {
         for (int i = 0; i < times; i++) {
             for (int j = 0; j < n; j++) {
                 //System.out.println("looking for value:"+new String(array[j]));
-                keep |= dict.getIdFromValueBytes(array[j], 0, array[j].length);
+                keep |= dict.getIdFromValueBytesWithoutCache(array[j], 0, array[j].length, 0);
             }
         }
         long timeValueToIdByDict = System.currentTimeMillis() - start;
@@ -845,7 +845,7 @@ public class TrieDictionaryForestTest {
         start = System.currentTimeMillis();
         for (int i = 0; i < times; i++) {
             for (int j = 0; j < n; j++) {
-                keep |= dict.getValueBytesFromId(j, valueBytes, 0);
+                keep |= dict.getValueBytesFromIdWithoutCache(j).length;
             }
         }
         long timeIdToValueByDict = System.currentTimeMillis() - start;
@@ -884,7 +884,7 @@ public class TrieDictionaryForestTest {
             for (String s : notFound) {
                 try {
                     int nullId = dict.getIdFromValue(s);
-                    //System.out.println("null value id:" + nullId);
+                    System.out.println("null value id:" + nullId);
                     fail("For not found value '" + s + "', IllegalArgumentException is expected");
                 } catch (IllegalArgumentException e) {
                     // good
@@ -905,9 +905,6 @@ public class TrieDictionaryForestTest {
         // test null value
         int nullId = dict.getIdFromValue(null);
         assertNull(dict.getValueFromId(nullId));
-        int nullId2 = dict.getIdFromValueBytes(null, 0, 0);
-        assertEquals(dict.getValueBytesFromId(nullId2, null, 0), -1);
-        assertEquals(nullId, nullId2);
     }
 
     private Map<String, Integer> rightIdMap(int baseId, ArrayList<String> strs) {

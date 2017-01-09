@@ -35,6 +35,7 @@ import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.gridtable.CubeCodeSystem;
 import org.apache.kylin.dict.NumberDictionaryBuilder;
+import org.apache.kylin.dict.NumberDictionaryForestBuilder;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.dimension.DictionaryDimEnc;
@@ -601,7 +602,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
     @SuppressWarnings("rawtypes")
     private static Dictionary newDictionaryOfInteger() {
-        NumberDictionaryBuilder<String> builder = new NumberDictionaryBuilder<>(new StringBytesConverter());
+        NumberDictionaryBuilder<String> builder = new NumberDictionaryBuilder<>(new NumberDictionaryForestBuilder.Number2BytesConverter());
         builder.addValue("10");
         builder.addValue("20");
         builder.addValue("30");

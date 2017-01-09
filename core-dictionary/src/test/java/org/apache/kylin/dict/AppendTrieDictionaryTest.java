@@ -180,7 +180,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         for (; checkIndex < firstAppend; checkIndex++) {
             String str = strList.get(checkIndex);
             byte[] bytes = converter.convertToBytes(str);
-            int id = dict.getIdFromValueBytesImpl(bytes, 0, bytes.length, 0);
+            int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
             assertNotEquals(String.format("Value %s not exist", str), -1, id);
             assertFalse(String.format("Id %d for %s should be empty, but is %s", id, str, checkMap.get(id)), checkMap.containsKey(id) && !str.equals(checkMap.get(id)));
             checkMap.put(id, str);
@@ -200,7 +200,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         for (; checkIndex < secondAppend; checkIndex++) {
             String str = strList.get(checkIndex);
             byte[] bytes = converter.convertToBytes(str);
-            int id = dict.getIdFromValueBytesImpl(bytes, 0, bytes.length, 0);
+            int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
             assertNotEquals(String.format("Value %s not exist", str), -1, id);
             if (checkIndex < firstAppend) {
                 assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
@@ -224,7 +224,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         for (; checkIndex < strList.size(); checkIndex++) {
             String str = strList.get(checkIndex);
             byte[] bytes = converter.convertToBytes(str);
-            int id = dict.getIdFromValueBytesImpl(bytes, 0, bytes.length, 0);
+            int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
             assertNotEquals(String.format("Value %s not exist", str), -1, id);
             if (checkIndex < secondAppend) {
                 assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
@@ -237,7 +237,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         if (notfound != null) {
             for (String s : notfound) {
                 byte[] bytes = converter.convertToBytes(s);
-                int id = dict.getIdFromValueBytesImpl(bytes, 0, bytes.length, 0);
+                int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
                 assertEquals(-1, id);
             }
         }
@@ -245,7 +245,7 @@ public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
         dict = testSerialize(dict, converter);
         for (String str : strList) {
             byte[] bytes = converter.convertToBytes(str);
-            int id = dict.getIdFromValueBytesImpl(bytes, 0, bytes.length, 0);
+            int id = dict.getIdFromValueBytesWithoutCache(bytes, 0, bytes.length, 0);
             assertNotEquals(String.format("Value %s not exist", str), -1, id);
             assertEquals("Except id " + id + " for " + str + " but " + checkMap.get(id), str, checkMap.get(id));
         }

@@ -227,7 +227,7 @@ public class DictionaryGenerator {
         @Override
         public void init(DictionaryInfo info, int baseId) throws IOException {
             this.baseId = baseId;
-            this.builder = new NumberDictionaryBuilder(new StringBytesConverter());
+            this.builder = new NumberDictionaryBuilder(new NumberDictionaryForestBuilder.Number2BytesConverter());
         }
         
         @Override

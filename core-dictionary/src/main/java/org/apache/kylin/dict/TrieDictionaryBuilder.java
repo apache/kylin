@@ -74,7 +74,7 @@ public class TrieDictionaryBuilder<T> {
     // ============================================================================
 
     private Node root;
-    private BytesConverter<T> bytesConverter;
+    protected BytesConverter<T> bytesConverter;
 
     public TrieDictionaryBuilder(BytesConverter<T> bytesConverter) {
         this.root = new Node(new byte[0], false);

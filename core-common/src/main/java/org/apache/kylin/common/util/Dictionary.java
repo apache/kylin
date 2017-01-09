@@ -94,8 +94,13 @@ abstract public class Dictionary<T> implements Serializable {
     final public int getIdFromValue(T value, int roundingFlag) throws IllegalArgumentException {
         if (isNullObjectForm(value))
             return nullId();
-        else
-            return getIdFromValueImpl(value, roundingFlag);
+        else {
+            int id = getIdFromValueImpl(value, roundingFlag);
+            if(id == -1){
+                throw new IllegalArgumentException("Value : " + value + "no exists");
+            }
+            return id;
+        }
     }
 
     final public boolean containsValue(T value) throws IllegalArgumentException {
@@ -136,9 +141,7 @@ abstract public class Dictionary<T> implements Serializable {
      * Convenient form of
      * <code>getIdFromValueBytes(value, offset, len, 0)</code>
      */
-    final public int getIdFromValueBytes(byte[] value, int offset, int len) throws IllegalArgumentException {
-        return getIdFromValueBytes(value, offset, len, 0);
-    }
+
 
     /**
      * A lower level API, return ID integer from raw value bytes. In case of not found 
@@ -153,31 +156,6 @@ abstract public class Dictionary<T> implements Serializable {
      *             if value is not found in dictionary and rounding is off;
      *             or if rounding cannot find a smaller or bigger ID
      */
-    final public int getIdFromValueBytes(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
-        if (isNullByteForm(value, offset, len))
-            return nullId();
-        else {
-            int id = getIdFromValueBytesImpl(value, offset, len, roundingFlag);
-            if (id == -1)
-                throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
-            return id;
-        }
-    }
-
-    protected boolean isNullByteForm(byte[] value, int offset, int len) {
-        return value == null;
-    }
-
-    abstract protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag);
-
-    final public byte[] getValueBytesFromId(int id) {
-        if (isNullId(id))
-            return BytesUtil.EMPTY_BYTE_ARRAY;
-        else
-            return getValueBytesFromIdImpl(id);
-    }
-
-    abstract protected byte[] getValueBytesFromIdImpl(int id);
 
     /**
      * A lower level API, get byte values from ID, return the number of bytes
@@ -189,14 +167,6 @@ abstract public class Dictionary<T> implements Serializable {
      * @throws IllegalArgumentException
      *             if ID is not found in dictionary
      */
-    final public int getValueBytesFromId(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
-        if (isNullId(id))
-            return -1;
-        else
-            return getValueBytesFromIdImpl(id, returnValue, offset);
-    }
-
-    abstract protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset);
 
     abstract public void dump(PrintStream out);
 

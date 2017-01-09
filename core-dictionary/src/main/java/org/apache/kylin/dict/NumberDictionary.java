@@ -175,37 +175,9 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
     }
 
     @Override
-    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
-        NumberBytesCodec codec = getCodec();
-        codec.encodeNumber(value, offset, len);
-        return super.getIdFromValueBytesImpl(codec.buf, codec.bufOffset, codec.bufLen, roundingFlag);
-    }
-
-    @Override
     protected boolean isNullObjectForm(T value) {
         return value == null || value.equals("");
     }
+    
 
-    @Override
-    protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-        NumberBytesCodec codec = getCodec();
-        codec.bufOffset = 0;
-        codec.bufLen = super.getValueBytesFromIdImpl(id, codec.buf, 0);
-        return codec.decodeNumber(returnValue, offset);
-    }
-
-
-    public static void main(String[] args) throws Exception {
-        NumberDictionaryBuilder<String> b = new NumberDictionaryBuilder<String>(new StringBytesConverter());
-        b.addValue("10");
-        b.addValue("100");
-        b.addValue("40");
-        b.addValue("7");
-        TrieDictionary<String> dict = b.build(0);
-
-        //dict.enableIdToValueBytesCache();
-        for (int i = 0; i <= dict.getMaxId(); i++) {
-            System.out.println(Bytes.toString(dict.getValueBytesFromId(i)));
-        }
-    }
 }

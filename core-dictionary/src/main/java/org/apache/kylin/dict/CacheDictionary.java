@@ -52,13 +52,13 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
                 if (id != null)
                     return id.intValue();
                 byte[] valueBytes = bytesConvert.convertToBytes(value);
-                id = getIdFromValueBytes(valueBytes, 0, valueBytes.length, roundingFlag);
+                id = getIdFromValueBytesWithoutCache(valueBytes, 0, valueBytes.length, roundingFlag);
                 cache.put(value, id);
                 return id;
             }
         }
         byte[] valueBytes = bytesConvert.convertToBytes(value);
-        return getIdFromValueBytes(valueBytes, 0, valueBytes.length, roundingFlag);
+        return getIdFromValueBytesWithoutCache(valueBytes, 0, valueBytes.length, roundingFlag);
     }
 
     //id --> value
@@ -70,13 +70,13 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
                 int seq = calcSeqNoFromId(id);
                 if (cache[seq] != null)
                     return (T) cache[seq];
-                byte[] valueBytes = getValueBytesFromIdImpl(id);
+                byte[] valueBytes = getValueBytesFromIdWithoutCache(id);
                 T value = bytesConvert.convertFromBytes(valueBytes, 0, valueBytes.length);
                 cache[seq] = value;
                 return value;
             }
         }
-        byte[] valueBytes = getValueBytesFromIdImpl(id);
+        byte[] valueBytes = getValueBytesFromIdWithoutCache(id);
         return bytesConvert.convertFromBytes(valueBytes, 0, valueBytes.length);
     }
 
@@ -99,4 +99,9 @@ public abstract class CacheDictionary<T> extends Dictionary<T> {
         this.valueToIdCache = null;
         this.idToValueCache = null;
     }
+
+    abstract protected byte[] getValueBytesFromIdWithoutCache(int id);
+
+    abstract protected int getIdFromValueBytesWithoutCache(byte[] valueBytes, int offset, int length, int roundingFlag);
+
 }

@@ -38,7 +38,6 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dict.NumberDictionary;
 import org.apache.kylin.dict.NumberDictionaryBuilder;
 import org.apache.kylin.dict.NumberDictionaryForestBuilder;
-import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.dict.TrieDictionaryForest;
 import org.apache.kylin.engine.mr.steps.SelfDefineSortableKey.TypeFlag;
 import org.junit.Ignore;
@@ -121,7 +120,7 @@ public class NumberDictionaryForestTest {
         TrieDictionaryForest<String> dict = b.build();
         dict.dump(System.out);
 
-        NumberDictionaryBuilder<String> b2 = new NumberDictionaryBuilder<>(new StringBytesConverter());
+        NumberDictionaryBuilder<String> b2 = new NumberDictionaryBuilder<>(new NumberDictionaryForestBuilder.Number2BytesConverter());
         for (String str : testData)
             b2.addValue(str);
         NumberDictionary<String> dict2 = b2.build(0);
@@ -148,22 +147,20 @@ public class NumberDictionaryForestTest {
         
         assertTrue(dict1.getSizeOfId() == dict2.getSizeOfId());
         assertTrue(dict1.getSizeOfValue() == dict2.getSizeOfValue());
-        
+
         byte[] buf = new byte[dict1.getSizeOfValue()];
-        
+
         {
-            int len = dict1.getValueBytesFromId(0, buf, 0);
-            int newId = dict2.getIdFromValueBytes(buf, 0, len);
+            int newId = dict2.getIdFromValue(dict1.getValueFromId(0));
             assertTrue(newId == 0);
         }
         {
-            int len = dict1.getValueBytesFromId(1, buf, 0);
-            int newId = dict2.getIdFromValueBytes(buf, 0, len);
+
+            int newId = dict2.getIdFromValue(dict1.getValueFromId(1));
             assertTrue(newId == 2);
         }
         {
-            int len = dict1.getValueBytesFromId(2, buf, 0);
-            int newId = dict2.getIdFromValueBytes(buf, 0, len);
+            int newId = dict2.getIdFromValue(dict1.getValueFromId(2));
             assertTrue(newId == 4);
         }
     }

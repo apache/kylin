@@ -97,6 +97,8 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         enableCache();
     }
 
+
+
     public void initParams(String baseDir, int baseId, int maxId, int maxValueLength, int nValues, BytesConverter bytesConverter) throws IOException {
         this.baseDir = baseDir;
         this.baseId = baseId;
@@ -1113,7 +1115,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
     }
 
     @Override
-    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
+    protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag) {
         if (dictSliceMap.isEmpty()) {
             return -1;
         }
@@ -1126,6 +1128,11 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         DictSlice slice = dictSliceMap.get(sliceKey);
         int id = slice.getIdFromValueBytesImpl(value, offset, len, roundingFlag);
         return id;
+    }
+
+    @Override
+    protected byte[] getValueBytesFromIdWithoutCache(int id) {
+        throw new UnsupportedOperationException("AppendTrieDictionary can't retrive value from id");
     }
 
     @Override
@@ -1148,16 +1155,6 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         return maxValueLength;
     }
 
-
-    @Override
-    protected byte[] getValueBytesFromIdImpl(int id) {
-        throw new UnsupportedOperationException("AppendTrieDictionary can't retrive value from id");
-    }
-
-    @Override
-    protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-        throw new UnsupportedOperationException("AppendTrieDictionary can't retrive value from id");
-    }
 
     public void flushIndex(CachedTreeMap dictSliceMap, boolean keepAppend) throws IOException {
         try (FSDataOutputStream indexOut = dictSliceMap.openIndexOutput()) {

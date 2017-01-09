@@ -23,6 +23,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.fail;
+
 /**
  */
 public class TimeStrDictionaryTest {
@@ -62,7 +64,12 @@ public class TimeStrDictionaryTest {
 
     @Test
     public void testIllegal() {
-        Assert.assertEquals(-1, dict.getIdFromValue("2038-01-19 03:14:07"));
+        try{
+            dict.getIdFromValue("2038-01-19 03:14:07");
+            fail("should throw exception");
+        }catch (IllegalArgumentException e){
+            //correct
+        }
     }
 
     public void encodeDecode(String origin) {
