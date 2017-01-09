@@ -35,6 +35,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -173,7 +174,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
 
         @Override
         public void run() {
-            try {
+            try (SetThreadName ignored = new SetThreadName("Job %s", executable.getId())) {
                 String segmentId = executable.getParam(SEGMENT_ID);
                 if (jobLock.lockWithName(segmentId, serverName)) {
                     logger.info(executable.toString() + " scheduled in server: " + serverName);

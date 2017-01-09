@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -137,7 +138,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         @Override
         public void run() {
-            try {
+            try (SetThreadName ignored = new SetThreadName("Job %s", executable.getId())) {
                 executable.execute(context);
                 // trigger the next step asap
                 fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
