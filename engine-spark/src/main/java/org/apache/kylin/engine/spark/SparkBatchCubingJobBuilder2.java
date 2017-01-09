@@ -70,7 +70,7 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
         sparkExecutable.setJars(jars.toString());
 
-        sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_IN_MEM_CUBE + " with Spark");
+        sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
         return sparkExecutable;
 
     }

@@ -695,6 +695,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.engine.mr.config-override.");
     }
 
+    public Map<String, String> getSparkConfigOverride() {
+        return getPropertiesByPrefix("kylin.engine.spark.config-override.");
+    }
+
     public double getDefaultHadoopJobReducerInputMB() {
         return Double.parseDouble(getOptional("kylin.engine.mr.reduce-input-mb", "500"));
     }
@@ -739,8 +743,8 @@ abstract public class KylinConfigBase implements Serializable {
     // ENGINE.SPARK
     // ============================================================================
 
-    public String getSparkHadoopConfDir() {
-        return getRequired("kylin.engine.spark.env.hadoop-conf-dir");
+    public String getHadoopConfDir() {
+        return getOptional("kylin.engine.spark.env.hadoop-conf-dir", "");
     }
 
     public String getSparkConfFile() {
@@ -764,7 +768,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public float getSparkRDDPartitionCutMB() {
-        return Float.valueOf(getOptional("kylin.engine.spark.rdd-partition-cut-mb", "200.0"));
+        return Float.valueOf(getOptional("kylin.engine.spark.rdd-partition-cut-mb", "10.0"));
     }
 
 
@@ -773,7 +777,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getSparkMaxPartition() {
-        return Integer.valueOf(getOptional("kylin.engine.spark.max-partition", "500"));
+        return Integer.valueOf(getOptional("kylin.engine.spark.max-partition", "5000"));
     }
 
     public boolean isSparkSanityCheckEnabled() {

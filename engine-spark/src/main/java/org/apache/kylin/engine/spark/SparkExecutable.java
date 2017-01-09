@@ -17,9 +17,10 @@
 */
 package org.apache.kylin.engine.spark;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.Map;
 
+import jodd.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -78,14 +79,43 @@ public class SparkExecutable extends AbstractExecutable {
         String sparkConf = config.getSparkConfFile();
         String jars = this.getParam(JARS);
 
-        String jobJar = config.getKylinJobJarPath();
+        String hadoopConf = "/etc/hadoop/conf";
+        if (StringUtil.isNotEmpty(config.getHadoopConfDir())) {
+            hadoopConf = config.getHadoopConfDir();
+        } else {
+            String hiveConf = ClassLoader.getSystemClassLoader().getResource("hive-site.xml").getFile().toString();
+            File hiveConfFile = new File(hiveConf);
+            if (hiveConfFile.exists() == true) {
+                logger.info("Locate hive-site.xml in " + hiveConfFile);
+                hadoopConf = hiveConfFile.getParent();
+            }
+        }
+        logger.info("Using " + hadoopConf + " as HADOOP_CONF_DIR");
 
+        String hbaseConf = ClassLoader.getSystemClassLoader().getResource("hbase-site.xml").getFile().toString();
+        logger.info("Get hbase-site.xml location from classpath: " + hbaseConf);
+        File hbaseConfFile = new File(hbaseConf);
+        if (hbaseConfFile.exists() == false) {
+            throw new IllegalArgumentException("Couldn't find hbase-site.xml from classpath.");
+        }
+
+        String jobJar = config.getKylinJobJarPath();
         if (StringUtils.isEmpty(jars)) {
             jars = jobJar;
         }
 
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry --properties-file %s ");
+
+        Map<String, String> sparkConfs = config.getSparkConfigOverride();
+        for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {
+            stringBuilder.append(" --conf ").append(entry.getKey()).append("==").append(entry.getValue()).append(" ");
+        }
+
+        stringBuilder.append("--files %s --jars %s %s %s");
         try {
-            String cmd = String.format("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class \"org.apache.kylin.common.util.SparkEntry\" --properties-file %s --jars %s %s %s", config.getSparkHadoopConfDir(), config.getSparkHome(), sparkConf, jars, jobJar, formatArgs());
+            String cmd = String.format(stringBuilder.toString(),
+                    hadoopConf, config.getSparkHome(), sparkConf, hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
             logger.info("cmd:" + cmd);
             final StringBuilder output = new StringBuilder();
             CliCommandExecutor exec = new CliCommandExecutor();
@@ -98,7 +128,7 @@ public class SparkExecutable extends AbstractExecutable {
                 }
             });
             return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("error run spark job:", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }

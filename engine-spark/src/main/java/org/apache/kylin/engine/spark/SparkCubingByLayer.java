@@ -144,7 +144,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final String confPath = optionsHelper.getOptionValue(OPTION_CONF_PATH);
         final String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
 
-        SparkConf conf = new SparkConf().setAppName("Cubing Application");
+        SparkConf conf = new SparkConf().setAppName("Cubing for:" + cubeName + ", segment " + segmentId);
         //serialization conf
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
         conf.set("spark.kryo.registrationRequired", "true");
@@ -249,7 +249,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         }
 
         final int totalLevels = cubeDesc.getBuildLevel();
-        JavaPairRDD<ByteArray, Object[]>[] allRDDs = new JavaPairRDD[totalLevels];
+        JavaPairRDD<ByteArray, Object[]>[] allRDDs = new JavaPairRDD[totalLevels + 1];
         int level = 0;
         int partition = estimateRDDPartitionNum(level, cubeStatsReader, kylinConfig);
 
@@ -285,6 +285,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
     }
 
     private static void saveToHDFS(final JavaPairRDD<ByteArray, Object[]> rdd, final CubeDesc cubeDesc, final String hdfsBaseLocation, int level, Configuration conf) {
+        conf.set("dfs.replication", "2");
         final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
                 rdd.mapToPair(new PairFunction<Tuple2<ByteArray, Object[]>, org.apache.hadoop.io.Text, org.apache.hadoop.io.Text>() {
                     BufferedMeasureCodec codec = new BufferedMeasureCodec(cubeDesc.getMeasures());
@@ -403,7 +404,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         Long count = rdd.mapValues(new Function<Object[], Long>() {
             @Override
             public Long call(Object[] objects) throws Exception {
-                return (Long) objects[countMeasureIndex]; // assume the first measure is COUNT(*)
+                return (Long) objects[countMeasureIndex];
             }
         }).reduce(new Function2<Tuple2<ByteArray, Long>, Tuple2<ByteArray, Long>, Tuple2<ByteArray, Long>>() {
             @Override
