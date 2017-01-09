@@ -31,9 +31,13 @@
     '$timeout', function($timeout) {
       return {
         restrict: 'E',
-        template: "<ul class=\"nav nav-list nav-pills nav-stacked abn-tree\">\n  <li ng-repeat=\"row in tree_rows | filter:{visible:true} track by row.branch.uid\" ng-animate=\"'abn-tree-animate'\" ng-class=\"'level-' + {{ row.level }} + (row.branch.selected ? ' active':'') + ' ' +row.classes.join(' ')\" class=\"abn-tree-row\"><a ng-click=\"user_clicks_branch(row.branch)\" ng-dblclick=\"user_dbClicks_branch(row.branch)\"><i ng-class=\"row.tree_icon\" class=\"indented tree-icon\"> </i><span class=\"indented tree-label\">{{ row.label }} </span></a></li>\n</ul>",
+        template: "<ul class=\"nav nav-list nav-pills nav-stacked abn-tree\">\n  <li data=\"{{row.branch.fullName}}\"  ng-repeat=\"row in tree_rows | filter:{visible:true} track by row.branch.uid\" ng-animate=\"'abn-tree-animate'\" ng-class=\"'level-' + {{ row.level }} + (row.branch.selected ? ' active':'') + ' ' +row.classes.join(' ')\" class=\"abn-tree-row\" ><a ng-click=\"user_clicks_branch(row.branch)\" ng-dblclick=\"user_dbClicks_branch(row.branch)\" style=\"width:80%;float:left;\"><i ng-class=\"row.tree_icon\" class=\"indented tree-icon\" > </i><span class=\"indented tree-label\">{{ row.label }} </span></a>  <a class=\"btn btn-xs btn-info tree-table-btn\"   ng-if=\"row.branch.data.exd&&row.level==2&&userService.hasRole('ROLE_ADMIN')&&row.branch.data.source_type==0 \" tooltip=\"UnLoad Hive Table\" tooltip-placement=\"left\" ng-click=\"unloadTable({tableName:row.branch.label,projectName:projectName})\" ><i class=\"fa fa-remove\"></i></a> <a class=\"btn btn-xs btn-success tree-table-btn\" tooltip-placement=\"left\" tooltip=\"ReLoad Hive Table\" ng-if=\"row.level==2&&userService.hasRole('ROLE_ADMIN')&&row.branch.data.source_type==0\"  ng-click=\"reloadTable({tableName:row.branch.label,projectName:projectName})\"><i class=\"fa fa-download\"></i></a> </li>\n</ul>",
         replace: true,
         scope: {
+          userService:'=',
+          reloadTable:'&',
+          unloadTable:'&',
+          projectName:'@',
           treeData: '=',
           onSelect: '&',
           onDblclick:'&',
@@ -186,7 +190,6 @@
                 return b.uid = "" + Math.random();
               }
             });
-            console.log('UIDs are set.');
             for_each_branch(function(b) {
               var child, _i, _len, _ref, _results;
               if (angular.isArray(b.children)) {
