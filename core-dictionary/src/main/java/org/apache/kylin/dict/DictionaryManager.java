@@ -108,7 +108,7 @@ public class DictionaryManager {
                 });
     }
 
-    public Dictionary<?> getDictionary(String resourcePath) throws IOException {
+    public Dictionary<String> getDictionary(String resourcePath) throws IOException {
         DictionaryInfo dictInfo = getDictionaryInfo(resourcePath);
         return dictInfo == null ? null : dictInfo.getDictionaryObject();
     }
@@ -130,7 +130,7 @@ public class DictionaryManager {
      * Save the dictionary as it is.
      * More often you should consider using its alternative trySaveNewDict to save dict space
      */
-    public DictionaryInfo forceSave(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
+    public DictionaryInfo forceSave(Dictionary<String> newDict, DictionaryInfo newDictInfo) throws IOException {
         initDictInfo(newDict, newDictInfo);
         logger.info("force to save dict directly");
         return saveNewDict(newDictInfo);
@@ -140,7 +140,7 @@ public class DictionaryManager {
      * @return may return another dict that is a super set of the input
      * @throws IOException
      */
-    public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
+    public DictionaryInfo trySaveNewDict(Dictionary<String> newDict, DictionaryInfo newDictInfo) throws IOException {
 
         initDictInfo(newDict, newDictInfo);
 
@@ -149,7 +149,7 @@ public class DictionaryManager {
             DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
             if (largestDictInfo != null) {
                 largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
-                Dictionary<?> largestDictObject = largestDictInfo.getDictionaryObject();
+                Dictionary<String> largestDictObject = largestDictInfo.getDictionaryObject();
                 if (largestDictObject.contains(newDict)) {
                     logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDictInfo.getResourcePath());
                     return largestDictInfo;
@@ -175,7 +175,7 @@ public class DictionaryManager {
         }
     }
 
-    private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<?> dict) throws IOException {
+    private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<String> dict) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         NavigableSet<String> existings = store.listResources(dictInfo.getResourceDir());
         if (existings == null)
@@ -196,7 +196,7 @@ public class DictionaryManager {
         return null;
     }
 
-    private void initDictInfo(Dictionary<?> newDict, DictionaryInfo newDictInfo) {
+    private void initDictInfo(Dictionary<String> newDict, DictionaryInfo newDictInfo) {
         newDictInfo.setCardinality(newDict.getSize());
         newDictInfo.setDictionaryObject(newDict);
         newDictInfo.setDictionaryClass(newDict.getClass().getName());
@@ -263,7 +263,7 @@ public class DictionaryManager {
             logger.info("Use one of the merging dictionaries directly");
             return dicts.get(0);
         } else {
-            Dictionary<?> newDict = DictionaryGenerator.mergeDictionaries(DataType.getType(newDictInfo.getDataType()), dicts);
+            Dictionary<String> newDict = DictionaryGenerator.mergeDictionaries(DataType.getType(newDictInfo.getDataType()), dicts);
             return trySaveNewDict(newDict, newDictInfo);
         }
     }

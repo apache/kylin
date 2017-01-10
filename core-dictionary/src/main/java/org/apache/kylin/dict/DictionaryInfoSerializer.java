@@ -61,9 +61,9 @@ public class DictionaryInfoSerializer implements Serializer<DictionaryInfo> {
         DictionaryInfo obj = JsonUtil.readValue(json, DictionaryInfo.class);
 
         if (infoOnly == false) {
-            Dictionary<?> dict;
+            Dictionary<String> dict;
             try {
-                dict = (Dictionary<?>) ClassUtil.forName(obj.getDictionaryClass(), Dictionary.class).newInstance();
+                dict = (Dictionary<String>) ClassUtil.forName(obj.getDictionaryClass(), Dictionary.class).newInstance();
             } catch (InstantiationException e) {
                 throw new RuntimeException(e);
             } catch (IllegalAccessException e) {

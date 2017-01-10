@@ -47,7 +47,7 @@ public class DictionaryInfo extends RootPersistentEntity {
     @JsonProperty("cardinality")
     private int cardinality;
 
-    transient Dictionary<?> dictionaryObject;
+    transient Dictionary<String> dictionaryObject;
 
     public DictionaryInfo() {
     }
@@ -144,11 +144,11 @@ public class DictionaryInfo extends RootPersistentEntity {
         this.dictionaryClass = dictionaryClass;
     }
 
-    public Dictionary<?> getDictionaryObject() {
+    public Dictionary<String> getDictionaryObject() {
         return dictionaryObject;
     }
 
-    public void setDictionaryObject(Dictionary<?> dictionaryObject) {
+    public void setDictionaryObject(Dictionary<String> dictionaryObject) {
         this.dictionaryObject = dictionaryObject;
     }
 

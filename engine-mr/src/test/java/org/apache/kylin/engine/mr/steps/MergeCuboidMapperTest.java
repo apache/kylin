@@ -75,7 +75,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         List<String> values = new ArrayList<>();
         values.add("eee");
         values.add("fff");
-        Dictionary<?> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()), new IterableDictionaryValueEnumerator(values));
+        Dictionary<String> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()), new IterableDictionaryValueEnumerator(values));
         dictionaryManager.trySaveNewDict(dict, newDictInfo);
         dict.dump(System.out);
 
@@ -127,7 +127,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
                 values.add("ccc");
             else
                 values.add("bbb");
-            Dictionary<?> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()), new IterableDictionaryValueEnumerator(values));
+            Dictionary<String> dict = DictionaryGenerator.buildDictionary(DataType.getType(newDictInfo.getDataType()), new IterableDictionaryValueEnumerator(values));
             dictionaryManager.trySaveNewDict(dict, newDictInfo);
             dict.dump(System.out);
 
@@ -161,7 +161,7 @@ public class MergeCuboidMapperTest extends LocalFileMetadataTestCase {
         CubeSegment newSeg = cubeManager.mergeSegments(cube, 0L, Long.MAX_VALUE, 0, 0, false);
         //        String segmentName = newSeg.getName();
 
-        final Dictionary<?> dictionary = cubeManager.getDictionary(newSeg, lfn);
+        final Dictionary<String> dictionary = cubeManager.getDictionary(newSeg, lfn);
         assertTrue(dictionary == null);
         //        ((TrieDictionary) dictionary).dump(System.out);
 
