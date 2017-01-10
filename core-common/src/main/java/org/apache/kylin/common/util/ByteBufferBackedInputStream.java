@@ -15,38 +15,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.source.kafka.util;
+
+package org.apache.kylin.common.util;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
+ * Utility to view content available in a {@link ByteBuffer} as a {@link InputStream}.
+ *
+ * <b>Not thread-safe</b>
  */
 public class ByteBufferBackedInputStream extends InputStream {
+    private final ByteBuffer buffer;
 
-    private ByteBuffer buf;
+    public ByteBufferBackedInputStream(ByteBuffer buffer) {
+        this.buffer = buffer;
+    }
 
-    public ByteBufferBackedInputStream(ByteBuffer buf) {
-        this.buf = buf;
+    @Override
+    public int available() throws IOException {
+        return buffer.remaining();
     }
 
     @Override
     public int read() throws IOException {
-        if (!buf.hasRemaining()) {
-            return -1;
-        }
-        return buf.get() & 0xFF;
+        return buffer.hasRemaining() ? (buffer.get() & 0xFF) : -1;
     }
 
     @Override
-    public int read(byte[] bytes, int off, int len) throws IOException {
-        if (!buf.hasRemaining()) {
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (len == 0) {
+            return 0;
+        }
+
+        if (!buffer.hasRemaining()) {
             return -1;
         }
 
-        len = Math.min(len, buf.remaining());
-        buf.get(bytes, off, len);
+        len = Math.min(buffer.remaining(), len);
+        buffer.get(b, off, len);
         return len;
     }
 }

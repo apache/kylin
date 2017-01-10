@@ -22,10 +22,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+import org.apache.kylin.common.util.ByteBufferBackedInputStream;
 import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 /**
@@ -82,18 +82,6 @@ public class BitmapCounter implements Comparable<BitmapCounter>, java.io.Seriali
     public void add(int value) {
         getBitmap().add(value);
         count = null;
-    }
-
-    public void add(byte[] value) {
-        add(value, 0, value.length);
-    }
-
-    public void add(byte[] value, int offset, int length) {
-        if (value == null || length == 0) {
-            return;
-        }
-
-        add(new String(value, offset, length));
     }
 
     public void add(String value) {
@@ -234,30 +222,6 @@ public class BitmapCounter implements Comparable<BitmapCounter>, java.io.Seriali
             return 1;
         else
             return -1;
-    }
-
-    private class ByteBufferBackedInputStream extends InputStream {
-        private final ByteBuffer buffer;
-
-        private ByteBufferBackedInputStream(ByteBuffer buf) {
-            buffer = buf;
-        }
-
-        @Override
-        public int read() throws IOException {
-            return buffer.hasRemaining() ? (buffer.get() & 0xFF) : -1;
-        }
-
-        @Override
-        public int read(byte[] bytes, int off, int len) throws IOException {
-            if (!buffer.hasRemaining()) {
-                return -1;
-            }
-
-            len = Math.min(len, buffer.remaining());
-            buffer.get(bytes, off, len);
-            return len;
-        }
     }
     
 }
