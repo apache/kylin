@@ -254,6 +254,4 @@ abstract public class Dictionary<T> implements Serializable {
      */
     public abstract void readFields(DataInput in) throws IOException;
 
-
-
 }

@@ -47,7 +47,7 @@ import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.Maps;
 
-@Ignore("KylinQueryTest is contained by ITCombinationTest")
+//@Ignore("KylinQueryTest is contained by ITCombinationTest")
 public class ITKylinQueryTest extends KylinTestBase {
 
     @Rule
@@ -149,7 +149,7 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/temp/sample.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_multi_model/query01.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
@@ -270,7 +270,17 @@ public class ITKylinQueryTest extends KylinTestBase {
             this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_intersect_count");
         }
     }
-
+    
+    
+    @Test
+    public void testMultiModelQuery() throws Exception {
+        if ("left".equalsIgnoreCase(joinType)) {
+            joinType = "default";
+            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_multi_model", null, true);
+            joinType = "left";
+        }
+    }
+    
     @Test
     public void testDimDistinctCountQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_dim", null, true);

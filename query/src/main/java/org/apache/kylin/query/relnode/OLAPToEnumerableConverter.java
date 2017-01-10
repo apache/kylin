@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -79,19 +80,11 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
 
         // identify model
         List<OLAPContext> contexts = listContextsHavingScan();
-        Set<IRealization> candidates = ModelChooser.selectModel(contexts);
+        IdentityHashMap<OLAPContext, Set<IRealization>> candidates = ModelChooser.selectModel(contexts);
 
         // identify realization for each context
-        for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
-
-            // Context has no table scan is created by OLAPJoinRel which looks like
-            //     (sub-query) as A join (sub-query) as B
-            // No realization needed for such context.
-            if (context.firstTableScan == null) {
-                continue;
-            }
-
-            IRealization realization = QueryRouter.selectRealization(context, candidates);
+        for (OLAPContext context : contexts) {
+            IRealization realization = QueryRouter.selectRealization(context, candidates.get(context));
             context.realization = realization;
             doAccessControl(context);
         }
@@ -115,6 +108,9 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
     }
 
     private List<OLAPContext> listContextsHavingScan() {
+        // Context has no table scan is created by OLAPJoinRel which looks like
+        //     (sub-query) as A join (sub-query) as B
+        // No realization needed for such context.
         int size = OLAPContext.getThreadLocalContexts().size();
         List<OLAPContext> result = Lists.newArrayListWithCapacity(size);
         for (int i = 0; i < size; i++) {

@@ -335,6 +335,7 @@ public class KylinTestBase {
             printInfo("Query Result from H2 - " + queryName);
             H2Connection h2Conn = new H2Connection(h2Connection, null);
             h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
+            h2Conn.getConfig().setFeature(DatabaseConfig.FEATURE_DATATYPE_WARNING, false);
             executeQuery(h2Conn, queryName, sql, needSort);
         }
     }

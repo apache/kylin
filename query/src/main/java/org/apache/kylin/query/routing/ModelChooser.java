@@ -19,6 +19,7 @@
 package org.apache.kylin.query.routing;
 
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,14 +40,39 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class ModelChooser {
 
-    // select a model that satisfies all the contexts
-    public static Set<IRealization> selectModel(List<OLAPContext> contexts) {
+    // select models for given contexts, return realization candidates for each context
+    public static IdentityHashMap<OLAPContext, Set<IRealization>> selectModel(List<OLAPContext> contexts) {
+
+        IdentityHashMap<OLAPContext, Set<IRealization>> candidates = new IdentityHashMap<>();
+
+        // attempt one model for all contexts
+        Set<IRealization> reals = attemptSelectModel(contexts);
+        if (reals != null) {
+            for (OLAPContext ctx : contexts) {
+                candidates.put(ctx, reals);
+            }
+            return candidates;
+        }
+
+        // try different model for different context
+        for (OLAPContext ctx : contexts) {
+            reals = attemptSelectModel(ImmutableList.of(ctx));
+            if (reals == null)
+                throw new NoRealizationFoundException("No model found for" + toErrorMsg(ctx));
+
+            candidates.put(ctx, reals);
+        }
+        return candidates;
+    }
+
+    private static Set<IRealization> attemptSelectModel(List<OLAPContext> contexts) {
         Map<DataModelDesc, Set<IRealization>> modelMap = makeOrderedModelMap(contexts);
 
         for (DataModelDesc model : modelMap.keySet()) {
@@ -57,17 +83,14 @@ public class ModelChooser {
                 return modelMap.get(model);
             }
         }
-
-        throw new NoRealizationFoundException("No model found for" + toErrorMsg(contexts));
+        return null;
     }
 
-    private static String toErrorMsg(List<OLAPContext> contexts) {
+    private static String toErrorMsg(OLAPContext ctx) {
         StringBuilder buf = new StringBuilder();
-        for (OLAPContext ctx : contexts) {
-            buf.append(", ").append(ctx.firstTableScan);
-            for (JoinDesc join : ctx.joins)
-                buf.append(", ").append(join);
-        }
+        buf.append(ctx.firstTableScan);
+        for (JoinDesc join : ctx.joins)
+            buf.append(", ").append(join);
         return buf.toString();
     }
 

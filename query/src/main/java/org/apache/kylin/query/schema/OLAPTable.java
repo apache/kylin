@@ -186,14 +186,14 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         //to avoid overflow we upgrade x's type to long
         //this includes checking two parts:
         //1. sum measures in cubes:
-        HashSet<ColumnDesc> updateColumns = Sets.newHashSet();
+        HashSet<ColumnDesc> upgradeCols = Sets.newHashSet();
         for (MeasureDesc m : mgr.listEffectiveMeasures(olapSchema.getProjectName(), sourceTable.getIdentity())) {
             if (m.getFunction().isSum()) {
                 FunctionDesc func = m.getFunction();
                 if (func.getReturnDataType() != func.getRewriteFieldType() && //
                         func.getReturnDataType().isBigInt() && //
                         func.getRewriteFieldType().isIntegerFamily()) {
-                    updateColumns.add(func.getParameter().getColRefs().get(0).getColumnDesc());
+                    upgradeCols.add(func.getParameter().getColRefs().get(0).getColumnDesc());
                 }
             }
         }
@@ -204,12 +204,12 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
                 for (String metricColumn : model.getMetrics()) {
                     TblColRef col = model.findColumn(metricColumn);
                     if (col.getTable().equals(sourceTable.getIdentity()) && col.getType().isIntegerFamily() && !col.getType().isBigInt())
-                        updateColumns.add(col.getColumnDesc());
+                        upgradeCols.add(col.getColumnDesc());
                 }
             }
         }
 
-        for (ColumnDesc upgrade : updateColumns) {
+        for (ColumnDesc upgrade : upgradeCols) {
             int index = tableColumns.indexOf(upgrade);
             if (index < 0) {
                 throw new IllegalStateException("Metric column " + upgrade + " is not found in the the project's columns");
