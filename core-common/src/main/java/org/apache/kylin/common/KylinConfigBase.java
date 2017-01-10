@@ -696,7 +696,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public Map<String, String> getSparkConfigOverride() {
-        return getPropertiesByPrefix("kylin.engine.spark.config-override.");
+        return getPropertiesByPrefix("kylin.engine.spark-conf.");
     }
 
     public double getDefaultHadoopJobReducerInputMB() {
@@ -745,22 +745,6 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getHadoopConfDir() {
         return getOptional("kylin.engine.spark.env.hadoop-conf-dir", "");
-    }
-
-    public String getSparkConfFile() {
-        String conf = getOptional("kylin.engine.spark.properties-file", "conf/kylin-spark-conf.properties");
-        File f = new File(conf);
-        if (f.exists()) {
-            return f.getAbsolutePath();
-        } else {
-            String home = getKylinHome();
-            f = new File(home, conf);
-            if (f.exists()) {
-                return f.getAbsolutePath();
-            }
-        }
-
-        throw new IllegalArgumentException("Spark conf properties file '" + conf + "' does not exist.");
     }
 
     public String getSparkAdditionalJars() {

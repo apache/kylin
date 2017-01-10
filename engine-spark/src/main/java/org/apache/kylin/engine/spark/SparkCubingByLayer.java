@@ -255,7 +255,10 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         // aggregate to calculate base cuboid
         allRDDs[0] = encodedBaseRDD.reduceByKey(baseCuboidReducerFunction, partition).persist(storageLevel);
-        saveToHDFS(allRDDs[0], vCubeDesc.getValue(), outputPath, 0, sc.hadoopConfiguration());
+        Configuration confOverwrite = new Configuration(sc.hadoopConfiguration());
+        confOverwrite.set("dfs.replication", "2"); // cuboid intermediate files, replication=2
+
+        saveToHDFS(allRDDs[0], vCubeDesc.getValue(), outputPath, 0, confOverwrite);
 
         // aggregate to ND cuboids
         PairFlatMapFunction<Tuple2<ByteArray, Object[]>, ByteArray, Object[]> flatMapFunction = new CuboidFlatMap(vCubeSegment.getValue(), vCubeDesc.getValue(), vCuboidScheduler.getValue(), ndCuboidBuilder);
@@ -267,7 +270,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
              if (kylinConfig.isSparkSanityCheckEnabled() == true) {
                  sanityCheck(allRDDs[level], totalCount, level, cubeStatsReader, countMeasureIndex);
             }
-            saveToHDFS(allRDDs[level], vCubeDesc.getValue(), outputPath, level, sc.hadoopConfiguration());
+            saveToHDFS(allRDDs[level], vCubeDesc.getValue(), outputPath, level, confOverwrite);
             allRDDs[level - 1].unpersist();
         }
         allRDDs[totalLevels - 1].unpersist();
@@ -285,8 +288,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
     }
 
     private static void saveToHDFS(final JavaPairRDD<ByteArray, Object[]> rdd, final CubeDesc cubeDesc, final String hdfsBaseLocation, int level, Configuration conf) {
-        conf.set("dfs.replication", "2");
-        final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
+       final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
                 rdd.mapToPair(new PairFunction<Tuple2<ByteArray, Object[]>, org.apache.hadoop.io.Text, org.apache.hadoop.io.Text>() {
                     BufferedMeasureCodec codec = new BufferedMeasureCodec(cubeDesc.getMeasures());
                     @Override

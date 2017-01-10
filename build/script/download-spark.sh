@@ -48,5 +48,6 @@ mv build/spark-${spark_version}-bin-hadoop2.6 build/spark
 rm -rf build/spark/lib/spark-examples-*
 rm -rf build/spark/examples
 rm -rf build/spark/data
-rm -rf build/spark/python
 rm -rf build/spark/R
+
+cp build/deploy/spark-defaults.conf build/spark/conf/spark-defaults.conf

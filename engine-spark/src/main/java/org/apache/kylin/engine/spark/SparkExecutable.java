@@ -76,7 +76,6 @@ public class SparkExecutable extends AbstractExecutable {
         final KylinConfig config = context.getConfig();
         Preconditions.checkNotNull(config.getSparkHome());
         Preconditions.checkNotNull(config.getKylinJobJarPath());
-        String sparkConf = config.getSparkConfFile();
         String jars = this.getParam(JARS);
 
         String hadoopConf = "/etc/hadoop/conf";
@@ -105,17 +104,17 @@ public class SparkExecutable extends AbstractExecutable {
         }
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry --properties-file %s ");
+        stringBuilder.append("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
 
         Map<String, String> sparkConfs = config.getSparkConfigOverride();
         for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {
-            stringBuilder.append(" --conf ").append(entry.getKey()).append("==").append(entry.getValue()).append(" ");
+            stringBuilder.append(" --conf ").append(entry.getKey()).append("=").append(entry.getValue()).append(" ");
         }
 
         stringBuilder.append("--files %s --jars %s %s %s");
         try {
             String cmd = String.format(stringBuilder.toString(),
-                    hadoopConf, config.getSparkHome(), sparkConf, hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
+                    hadoopConf, config.getSparkHome(), hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
             logger.info("cmd:" + cmd);
             final StringBuilder output = new StringBuilder();
             CliCommandExecutor exec = new CliCommandExecutor();
