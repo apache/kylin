@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.realization;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IStorageAware;
@@ -42,7 +43,7 @@ public interface IRealization extends IStorageAware {
     public DataModelDesc getModel();
 
     public Set<TblColRef> getAllColumns();
-    
+
     public Set<ColumnDesc> getAllColumnDescs();
 
     public List<TblColRef> getAllDimensions();
@@ -60,4 +61,6 @@ public interface IRealization extends IStorageAware {
     public long getDateRangeEnd();
 
     public boolean supportsLimitPushDown();
+
+    public KylinConfig getConfig();
 }

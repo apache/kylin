@@ -877,6 +877,10 @@ abstract public class KylinConfigBase implements Serializable {
         return udfMap;
     }
 
+    public int getQueryTimeoutSeconds() {
+        return Integer.parseInt(this.getOptional("kylin.query.timeout-seconds", "0"));
+    }
+
     // ============================================================================
     // SERVER
     // ============================================================================

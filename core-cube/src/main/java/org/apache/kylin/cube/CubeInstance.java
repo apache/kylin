@@ -178,6 +178,7 @@ public class CubeInstance extends RootPersistentEntity implements IRealization, 
         return sizeRecordSize;
     }
 
+    @Override
     public KylinConfig getConfig() {
         return config;
     }

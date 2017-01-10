@@ -120,6 +120,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         // set limit push down
         enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filter, loosenedColumnD, sqlDigest.aggregations, context);
+        // set query deadline
+        context.setDeadline(cubeInstance);
         // set cautious threshold to prevent out of memory
         setThresholdIfNecessary(dimensionsD, metrics, context);
 

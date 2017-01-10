@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.gridtable.GTScanTimeoutException;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.ITuple;
@@ -141,6 +142,10 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public ITuple next() {
+        if (scanCount % 100 == 1 && System.currentTimeMillis() > context.getDeadline()) {
+            throw new GTScanTimeoutException("Query Timeout!");
+        }
+
         // prevent the big query to make the Query Server OOM
         if (scanCount++ > SCAN_THRESHOLD) {
             throw new ScanOutOfLimitException("Scan count exceed the scan threshold: " + SCAN_THRESHOLD);

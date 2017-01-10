@@ -41,6 +41,7 @@ public class StorageContext {
     private int finalPushDownLimit = Integer.MAX_VALUE;
     private boolean hasSort = false;
     private boolean acceptPartialResult = false;
+    private long deadline;
 
     private boolean exactAggregation = false;
     private boolean needStorageAggregation = false;
@@ -123,6 +124,19 @@ public class StorageContext {
         }
     }
 
+    public long getDeadline() {
+        return this.deadline;
+    }
+
+    public void setDeadline(IRealization realization) {
+        int timeout = realization.getConfig().getQueryTimeoutSeconds() * 1000;
+        if (timeout == 0) {
+            this.deadline = Long.MAX_VALUE;
+        } else {
+            this.deadline = timeout + System.currentTimeMillis();
+        }
+    }
+
     public void markSort() {
         this.hasSort = true;
     }
@@ -202,5 +216,5 @@ public class StorageContext {
     public void setStorageQuery(IStorageQuery storageQuery) {
         this.storageQuery = storageQuery;
     }
-    
+
 }
