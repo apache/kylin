@@ -110,9 +110,10 @@ public class ResourceStoreTest {
         }
 
         // list
-        NavigableSet<String> list;
+        NavigableSet<String> list = null;
 
         list = store.listResources(dir1);
+        System.out.println(list);
         assertTrue(list.contains(path1));
         assertTrue(list.contains(path2) == false);
 
