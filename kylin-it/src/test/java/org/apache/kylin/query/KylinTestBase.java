@@ -234,7 +234,6 @@ public class KylinTestBase {
             for (int i = 0; i < columnNames.length; i++) {
                 columnNames[i] = queryTable.getTableMetaData().getColumns()[i].getColumnName();
             }
-            Arrays.sort(columnNames);
             
             queryTable = new SortedTable(queryTable, columnNames);
         }
