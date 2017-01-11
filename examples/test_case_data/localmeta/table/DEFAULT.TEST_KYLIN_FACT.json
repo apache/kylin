@@ -48,7 +48,7 @@
   }, {
     "id" : "10",
     "name" : "ITEM_COUNT",
-    "datatype" : "bigint",
+    "datatype" : "int",
     "data_gen" : "RAND"
   }, {
     "id" : "11",
