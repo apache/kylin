@@ -14,34 +14,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
+package org.apache.kylin.common.util;
 
-package org.apache.kylin.measure.bitmap;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
- * Bitmap-based distinct count UDAF, called by calcite runtime.
+ * An OutputStream whose target is a {@link ByteBuffer}.
  */
-public class BitmapDistinctCountAggFunc {
+public class ByteBufferOutputStream extends OutputStream {
+    protected final ByteBuffer buffer;
 
-    public static BitmapAggregator init() {
-        return new BitmapAggregator();
+    public ByteBufferOutputStream(ByteBuffer buffer) {
+        this.buffer = buffer;
     }
 
-    public static BitmapAggregator add(BitmapAggregator agg, Object value) {
-        agg.aggregate((BitmapCounter) value);
-        return agg;
+    @Override
+    public void write(int b) throws IOException {
+        buffer.put((byte) b);
     }
 
-    public static BitmapAggregator merge(BitmapAggregator agg, Object value) {
-        BitmapAggregator agg2 = (BitmapAggregator) value;
-        if (agg2.getState() == null) {
-            return agg;
-        }
-        return add(agg, agg2.getState());
-    }
-
-    public static long result(BitmapAggregator agg) {
-        BitmapCounter finalState = agg.getState();
-        return finalState == null ? 0 : finalState.getCount();
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+        buffer.put(b, off, len);
     }
 }

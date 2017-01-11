@@ -18,158 +18,43 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import org.apache.kylin.common.util.ByteBufferBackedInputStream;
-import org.roaringbitmap.buffer.MutableRoaringBitmap;
-
 /**
- * Created by sunyerui on 15/12/1.
+ * An implementation-agnostic bitmap type.
  */
-public class BitmapCounter implements Comparable<BitmapCounter>, java.io.Serializable {
+public interface BitmapCounter extends Iterable<Integer> {
+    /**
+     * @return cardinality of the bitmap
+     */
+    long getCount();
 
-    private MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
+    /**
+     * @return estimated memory footprint of this counter
+     */
+    int getMemBytes();
 
-    public BitmapCounter() {
-    }
+    /**
+     * @return a iterator of the ints stored in this counter.
+     */
+    Iterator<Integer> iterator();
 
-    public BitmapCounter(BitmapCounter another) {
-        merge(another);
-    }
+    /**
+     * Serialize this counter. The current counter is not modified.
+     */
+    void serialize(ByteBuffer out) throws IOException;
 
-    public void clear() {
-        bitmap.clear();
-    }
+    /**
+     * Deserialize a counter from its serialized form.
+     * <p> After deserialize, any changes to `in` should not affect the returned counter.
+     */
+    BitmapCounter deserialize(ByteBuffer in) throws IOException;
 
-    public BitmapCounter clone() {
-        BitmapCounter newCounter = new BitmapCounter();
-        newCounter.bitmap = bitmap.clone();
-        return newCounter;
-    }
-
-    public void add(int value) {
-        bitmap.add(value);
-    }
-
-    public void add(String value) {
-        if (value == null || value.isEmpty()) {
-            return;
-        }
-        add(Integer.parseInt(value));
-    }
-
-    public void merge(BitmapCounter another) {
-        this.bitmap.or(another.bitmap);
-    }
-
-    public void intersect(BitmapCounter another) {
-        this.bitmap.and(another.bitmap);
-    }
-
-    public long getCount() {
-        return this.bitmap.getCardinality();
-    }
-
-    public int getMemBytes() {
-        return this.bitmap.getSizeInBytes();
-    }
-
-    public Iterator<Integer> iterator() {
-        return bitmap.iterator();
-    }
-
-    public void writeRegisters(ByteBuffer out) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(bos);
-        bitmap.runOptimize();
-        bitmap.serialize(dos);
-        dos.close();
-        ByteBuffer bb = ByteBuffer.wrap(bos.toByteArray());
-        out.put(bb);
-    }
-
-    public void readRegisters(ByteBuffer in) throws IOException {
-        try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(in))) {
-            bitmap.deserialize(is);
-        }
-    }
-
-    @Override
-    public String toString() {
-        long count = getCount();
-        if (count <= 10) {
-            return "(" + count + ")" + bitmap.toString();
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("(").append(count).append("){");
-            int values = 0;
-            for (Integer v : bitmap) {
-                if (values++ < 10) {
-                    sb.append(v).append(",");
-                } else {
-                    sb.append("...");
-                    break;
-                }
-            }
-            sb.append("}");
-            return sb.toString();
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + bitmap.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BitmapCounter other = (BitmapCounter) obj;
-        return bitmap.equals(other.bitmap);
-    }
-
-    @Override
-    public int compareTo(BitmapCounter o) {
-        if (o == null)
-            return 1;
-
-        long e1 = this.getCount();
-        long e2 = o.getCount();
-
-        if (e1 == e2)
-            return 0;
-        else if (e1 > e2)
-            return 1;
-        else
-            return -1;
-    }
-
-    public int peekLength(ByteBuffer in) {
-        int mark = in.position();
-        int len;
-
-        MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
-        try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(in))) {
-            bitmap.deserialize(is);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        len = in.position() - mark;
-        in.position(mark);
-        return len;
-    }
+    /**
+     * @return size of the counter stored in the current position of `in`.
+     * The position field must not be modified.
+     */
+    int peekLength(ByteBuffer in);
 }

@@ -17,9 +17,6 @@
 */
 package org.apache.kylin.measure.bitmap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,10 +28,9 @@ import java.util.Map;
  *          requires an bitmap count distinct measure of uuid, and an dimension of event
  */
 public class BitmapIntersectDistinctCountAggFunc {
-    private static final Logger logger = LoggerFactory.getLogger(BitmapIntersectDistinctCountAggFunc.class);
 
     public static class RetentionPartialResult {
-        Map<Object, BitmapCounter> map;
+        Map<Object, MutableBitmapCounter> map;
         List keyList;
 
         public RetentionPartialResult() {
@@ -45,29 +41,34 @@ public class BitmapIntersectDistinctCountAggFunc {
             if (this.keyList == null) {
                 this.keyList = keyList;
             }
-            BitmapCounter counter = map.get(key);
-            if (counter == null) {
-                counter = new BitmapCounter();
-                map.put(key, counter);
+            if (this.keyList != null && this.keyList.contains(key)) {
+                MutableBitmapCounter counter = map.get(key);
+                if (counter == null) {
+                    counter = new MutableBitmapCounter();
+                    map.put(key, counter);
+                }
+                counter.orWith((ImmutableBitmapCounter) value);
             }
-            counter.merge((BitmapCounter)value);
         }
 
         public long result() {
             if (keyList == null || keyList.isEmpty()) {
                 return 0;
             }
-            BitmapCounter counter = null;
+            // if any specified key not in map, the intersection must be 0
             for (Object key : keyList) {
-                BitmapCounter c = map.get(key);
-                if (c == null) {
-                    // We have a key in filter list but not in map, meaning there's no intersect data
+                if (!map.containsKey(key)) {
                     return 0;
+                }
+            }
+            MutableBitmapCounter counter = null;
+            for (Object key : keyList) {
+                MutableBitmapCounter c = map.get(key);
+                if (counter == null) {
+                    counter = new MutableBitmapCounter();
+                    counter.orWith(c);
                 } else {
-                    if (counter == null) {
-                        counter = c.clone();
-                    }
-                    counter.intersect(c);
+                    counter.andWith(c);
                 }
             }
             return counter.getCount();

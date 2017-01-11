@@ -20,37 +20,49 @@ package org.apache.kylin.measure.bitmap;
 
 import org.apache.kylin.measure.MeasureAggregator;
 
-/**
- * Created by sunyerui on 15/12/2.
- */
 public class BitmapAggregator extends MeasureAggregator<BitmapCounter> {
 
-    private BitmapCounter sum = null;
+    private ImmutableBitmapCounter sum;
+    private boolean isMutable;
 
     @Override
     public void reset() {
         sum = null;
+        isMutable = false;
     }
 
     @Override
     public void aggregate(BitmapCounter value) {
+        ImmutableBitmapCounter v = (ImmutableBitmapCounter) value;
+
+        // Here we optimize for case when group only has 1 value. In such situation, no
+        // aggregation is needed, so we just keep a reference to the first value, saving
+        // the cost of deserialization and merging.
         if (sum == null) {
-            sum = new BitmapCounter(value);
-        } else {
-            sum.merge(value);
+            sum = v;
+            return;
         }
+
+        MutableBitmapCounter mutable;
+        if (!isMutable) {   // when aggregate the second value
+            mutable = sum.toMutable();
+            sum = mutable;
+            isMutable = true;
+        } else {    // for the third, forth, ...
+            mutable = (MutableBitmapCounter) sum;
+        }
+        mutable.orWith(v);
     }
 
     @Override
     public BitmapCounter aggregate(BitmapCounter value1, BitmapCounter value2) {
-        if (value1 == null) {
-            return new BitmapCounter(value2);
-        } else if (value2 == null) {
-            return new BitmapCounter(value1);
+        MutableBitmapCounter merged = new MutableBitmapCounter();
+        if (value1 != null) {
+            merged.orWith((ImmutableBitmapCounter) value1);
         }
-
-        BitmapCounter merged = new BitmapCounter(value1);
-        merged.merge(value2);
+        if (value2 != null) {
+            merged.orWith((ImmutableBitmapCounter) value2);
+        }
         return merged;
     }
 
@@ -61,10 +73,6 @@ public class BitmapAggregator extends MeasureAggregator<BitmapCounter> {
 
     @Override
     public int getMemBytesEstimate() {
-        if (sum == null) {
-            return Integer.MIN_VALUE;
-        } else {
-            return sum.getMemBytes();
-        }
+        return sum == null ? 0 : sum.getMemBytes();
     }
 }

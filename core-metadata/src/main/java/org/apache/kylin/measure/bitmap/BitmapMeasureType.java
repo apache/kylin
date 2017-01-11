@@ -18,8 +18,8 @@
 
 package org.apache.kylin.measure.bitmap;
 
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +37,8 @@ import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.realization.SQLDigest.SQLCall;
 
 import com.google.common.collect.ImmutableMap;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Created by sunyerui on 15/12/10.
@@ -77,11 +79,14 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
     @Override
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
-        if (FUNC_COUNT_DISTINCT.equals(functionDesc.getExpression()) == false)
-            throw new IllegalArgumentException("BitmapMeasureType func is not " + FUNC_COUNT_DISTINCT + " but " + functionDesc.getExpression());
+        checkArgument(FUNC_COUNT_DISTINCT.equals(functionDesc.getExpression()),
+                "BitmapMeasureType only support function %s, got %s", FUNC_COUNT_DISTINCT, functionDesc.getExpression());
+        checkArgument(functionDesc.getParameterCount() == 1,
+                "BitmapMeasureType only support 1 parameter, got %d", functionDesc.getParameterCount());
 
-        if (DATATYPE_BITMAP.equals(functionDesc.getReturnDataType().getName()) == false)
-            throw new IllegalArgumentException("BitmapMeasureType datatype is not " + DATATYPE_BITMAP + " but " + functionDesc.getReturnDataType().getName());
+        String returnType = functionDesc.getReturnDataType().getName();
+        checkArgument(DATATYPE_BITMAP.equals(returnType),
+                "BitmapMeasureType's return type must be %s, got %s", DATATYPE_BITMAP, returnType);
     }
 
     @Override
@@ -92,24 +97,29 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
     @Override
     public MeasureIngester<BitmapCounter> newIngester() {
         return new MeasureIngester<BitmapCounter>() {
-            BitmapCounter current = new BitmapCounter();
+            MutableBitmapCounter current = new MutableBitmapCounter();
 
             @Override
             public BitmapCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
-                BitmapCounter bitmap = current;
+                checkArgument(values.length == 1, "expect 1 value, got %s", Arrays.toString(values));
+
+                MutableBitmapCounter bitmap = current;
                 bitmap.clear();
+
+                if (values[0] == null) {
+                    return bitmap;
+                }
+
+                int id;
                 if (needDictionaryColumn(measureDesc.getFunction())) {
                     TblColRef literalCol = measureDesc.getFunction().getParameter().getColRefs().get(0);
                     Dictionary<String> dictionary = dictionaryMap.get(literalCol);
-                    if (values != null && values.length > 0 && values[0] != null) {
-                        int id = dictionary.getIdFromValue(values[0]);
-                        bitmap.add(id);
-                    }
+                    id = dictionary.getIdFromValue(values[0]);
                 } else {
-                    for (String value : values) {
-                        bitmap.add(value);
-                    }
+                    id = Integer.parseInt(values[0]);
                 }
+
+                bitmap.add(id);
                 return bitmap;
             }
 
@@ -122,11 +132,9 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
                 Dictionary<String> sourceDict = oldDicts.get(colRef);
                 Dictionary<String> mergedDict = newDicts.get(colRef);
 
-                BitmapCounter retValue = new BitmapCounter();
+                MutableBitmapCounter retValue = new MutableBitmapCounter();
                 byte[] literal = new byte[sourceDict.getSizeOfValue()];
-                Iterator<Integer> iterator = value.iterator();
-                while (iterator.hasNext()) {
-                    int id = iterator.next();
+                for (int id : value) {
                     int newId;
                     int size = sourceDict.getValueBytesFromId(id, literal, 0);
                     if (size < 0) {
@@ -141,7 +149,7 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
             @Override
             public void reset() {
-                current = new BitmapCounter();
+                current = new MutableBitmapCounter();
             }
         };
     }
@@ -174,8 +182,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
         return true;
     }
 
-    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(//
-            FUNC_COUNT_DISTINCT, BitmapDistinctCountAggFunc.class, //
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.of(
+            FUNC_COUNT_DISTINCT, BitmapDistinctCountAggFunc.class,
             FUNC_INTERSECT_COUNT_DISTINCT, BitmapIntersectDistinctCountAggFunc.class);
 
     @Override

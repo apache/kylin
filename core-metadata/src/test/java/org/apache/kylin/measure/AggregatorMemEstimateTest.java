@@ -33,7 +33,7 @@ import org.apache.kylin.measure.basic.LongMaxAggregator;
 import org.apache.kylin.measure.basic.LongMinAggregator;
 import org.apache.kylin.measure.basic.LongSumAggregator;
 import org.apache.kylin.measure.bitmap.BitmapAggregator;
-import org.apache.kylin.measure.bitmap.BitmapCounter;
+import org.apache.kylin.measure.bitmap.MutableBitmapCounter;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCAggregator;
 import org.apache.kylin.measure.hllc.HLLCounter;
@@ -104,7 +104,7 @@ public class AggregatorMemEstimateTest extends LocalFileMetadataTestCase {
         hllcAggregator.aggregate(new HLLCounter(14));
 
         BitmapAggregator bitmapAggregator = new BitmapAggregator();
-        BitmapCounter bitmapCounter = new BitmapCounter();
+        MutableBitmapCounter bitmapCounter = new MutableBitmapCounter();
         for (int i = 4000; i <= 100000; i += 2) {
             bitmapCounter.add(i);
         }

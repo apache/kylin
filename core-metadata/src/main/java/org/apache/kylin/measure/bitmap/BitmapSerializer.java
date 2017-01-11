@@ -18,54 +18,41 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
-/**
- * Created by sunyerui on 15/12/1.
- */
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
+    private static final BitmapCounter DELEGATE = new ImmutableBitmapCounter();
 
-    private ThreadLocal<BitmapCounter> current = new ThreadLocal<>();
-
+    // called by reflection
     public BitmapSerializer(DataType type) {
     }
 
     @Override
     public void serialize(BitmapCounter value, ByteBuffer out) {
         try {
-            value.writeRegisters(out);
+            value.serialize(out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private BitmapCounter current() {
-        BitmapCounter counter = current.get();
-        if (counter == null) {
-            counter = new BitmapCounter();
-            current.set(counter);
-        }
-        return counter;
     }
 
     @Override
     public BitmapCounter deserialize(ByteBuffer in) {
-        BitmapCounter counter = current();
+
         try {
-            counter.readRegisters(in);
+            return DELEGATE.deserialize(in);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return counter;
     }
 
     @Override
     public int peekLength(ByteBuffer in) {
-        return current().peekLength(in);
+        return DELEGATE.peekLength(in);
     }
 
     @Override

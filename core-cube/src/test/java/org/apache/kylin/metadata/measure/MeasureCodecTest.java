@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.measure.BufferedMeasureCodec;
-import org.apache.kylin.measure.bitmap.BitmapCounter;
+import org.apache.kylin.measure.bitmap.MutableBitmapCounter;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -34,7 +34,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * 
+ *
  */
 public class MeasureCodecTest extends LocalFileMetadataTestCase {
     @BeforeClass
@@ -58,7 +58,7 @@ public class MeasureCodecTest extends LocalFileMetadataTestCase {
         HLLCounter hllc = new HLLCounter(16);
         hllc.add("1234567");
         hllc.add("abcdefg");
-        BitmapCounter bitmap = new BitmapCounter();
+        MutableBitmapCounter bitmap = new MutableBitmapCounter();
         bitmap.add(123);
         bitmap.add(45678);
         bitmap.add(Integer.MAX_VALUE - 10);

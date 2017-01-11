@@ -18,39 +18,29 @@
 
 package org.apache.kylin.measure.bitmap;
 
+import org.junit.Test;
+import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.junit.Test;
-
-/**
- * Created by sunyerui on 15/12/31.
- */
 public class BitmapAggregatorTest {
 
     @Test
     public void testAggregator() {
-        BitmapCounter counter = new BitmapCounter();
-        counter.add(1);
-        counter.add(3333);
-        counter.add("123");
-        counter.add(123);
-        assertEquals(3, counter.getCount());
-
-        BitmapCounter counter2 = new BitmapCounter();
-        counter2.add("23456");
-        counter2.add(12273456);
-        counter2.add("4258");
-        counter2.add(123);
-        assertEquals(4, counter2.getCount());
-
         BitmapAggregator aggregator = new BitmapAggregator();
-        assertNull(aggregator.getState());
-        assertEquals(Integer.MIN_VALUE, aggregator.getMemBytesEstimate());
+        assertNull(null, aggregator.getState());
 
-        aggregator.aggregate(counter);
-        aggregator.aggregate(counter2);
-        assertEquals(6, aggregator.getState().getCount());
+        aggregator.aggregate(new ImmutableBitmapCounter(
+                ImmutableRoaringBitmap.bitmapOf(10, 20, 30, 40)
+        ));
+        assertEquals(4, aggregator.getState().getCount());
+
+        aggregator.aggregate(new ImmutableBitmapCounter(
+                ImmutableRoaringBitmap.bitmapOf(25, 30, 35, 40, 45)
+        ));
+        assertEquals(7, aggregator.getState().getCount());
+
         aggregator.reset();
         assertNull(aggregator.getState());
     }
