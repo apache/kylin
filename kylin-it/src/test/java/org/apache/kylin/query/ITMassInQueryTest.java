@@ -30,12 +30,9 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.engine.mr.HadoopUtil;
-import org.dbunit.Assertion;
-import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.ITable;
-import org.dbunit.ext.h2.H2Connection;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -144,13 +141,11 @@ public class ITMassInQueryTest extends KylinTestBase {
             sql = sql.replace("massin(test_kylin_fact.SELLER_ID,'vip_customers')", "test_kylin_fact.SELLER_ID in ( " + org.apache.commons.lang.StringUtils.join(vipSellers, ",") + ")");
             printInfo("Query Result from H2 - " + queryName);
             printInfo("Query for H2 - " + sql);
-            H2Connection h2Conn = new H2Connection(h2Connection, null);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
-            ITable h2Table = executeQuery(h2Conn, queryName, sql, needSort);
+            ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);
 
             try {
                 // compare the result
-                Assertion.assertEquals(h2Table, kylinTable);
+                assertTableEquals(h2Table, kylinTable);
             } catch (Throwable t) {
                 printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
                 throw t;

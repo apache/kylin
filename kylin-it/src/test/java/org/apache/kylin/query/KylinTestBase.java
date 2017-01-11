@@ -51,7 +51,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
-import org.dbunit.Assertion;
+import org.dbunit.DatabaseUnitException;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
@@ -229,11 +229,13 @@ public class KylinTestBase {
         sql = changeJoinType(sql, joinType);
 
         ITable queryTable = dbConn.createQueryTable(resultTableName + queryName, sql);
-        String[] columnNames = new String[queryTable.getTableMetaData().getColumns().length];
-        for (int i = 0; i < columnNames.length; i++) {
-            columnNames[i] = queryTable.getTableMetaData().getColumns()[i].getColumnName();
-        }
         if (needSort) {
+            String[] columnNames = new String[queryTable.getTableMetaData().getColumns().length];
+            for (int i = 0; i < columnNames.length; i++) {
+                columnNames[i] = queryTable.getTableMetaData().getColumns()[i].getColumnName();
+            }
+            Arrays.sort(columnNames);
+            
             queryTable = new SortedTable(queryTable, columnNames);
         }
         if (PRINT_RESULT)
@@ -333,10 +335,7 @@ public class KylinTestBase {
 
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
-            H2Connection h2Conn = new H2Connection(h2Connection, null);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
-            h2Conn.getConfig().setFeature(DatabaseConfig.FEATURE_DATATYPE_WARNING, false);
-            executeQuery(h2Conn, queryName, sql, needSort);
+            executeQuery(newH2Connection(), queryName, sql, needSort);
         }
     }
 
@@ -358,7 +357,7 @@ public class KylinTestBase {
 
             // compare the result
             Assert.assertEquals(queryName, expectRowCount, kylinTable.getRowCount());
-            // Assertion.assertEquals(expectRowCount, kylinTable.getRowCount());
+            // assertTableEquals(expectRowCount, kylinTable.getRowCount());
         }
     }
 
@@ -381,7 +380,7 @@ public class KylinTestBase {
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
             // compare the result
-            Assertion.assertEquals(expectTable, kylinTable);
+            assertTableEquals(expectTable, kylinTable);
         }
     }
 
@@ -404,9 +403,7 @@ public class KylinTestBase {
 
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
-            H2Connection h2Conn = new H2Connection(h2Connection, null);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
-            ITable h2Table = executeQuery(h2Conn, queryName, sql, needSort);
+            ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);
 
             try {
                 // compare the result
@@ -467,13 +464,10 @@ public class KylinTestBase {
 
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
-            H2Connection h2Conn = new H2Connection(h2Connection, null);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
-            ITable h2Table = executeQuery(h2Conn, queryName, sql, false);
+            ITable h2Table = executeQuery(newH2Connection(), queryName, sql, false);
 
             try {
-                HackedDbUnitAssert hackedDbUnitAssert = new HackedDbUnitAssert();
-                hackedDbUnitAssert.assertEquals(h2Table, kylinTable);
+                assertTableContains(h2Table, kylinTable);
             } catch (Throwable t) {
                 printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
                 throw t;
@@ -506,13 +500,11 @@ public class KylinTestBase {
 
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
-            H2Connection h2Conn = new H2Connection(h2Connection, null);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
-            ITable h2Table = executeQuery(h2Conn, queryName, sql, needSort);
+            ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);
 
             try {
                 // compare the result
-                Assertion.assertEquals(h2Table, kylinTable);
+                assertTableEquals(h2Table, kylinTable);
             } catch (Throwable t) {
                 printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
                 throw t;
@@ -545,13 +537,32 @@ public class KylinTestBase {
 
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
-            IDatabaseConnection h2Conn = new DatabaseConnection(h2Connection);
-            h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
-            ITable h2Table = executeDynamicQuery(h2Conn, queryName, sql, parameters, needSort);
+            ITable h2Table = executeDynamicQuery(newH2Connection(), queryName, sql, parameters, needSort);
 
             // compare the result
-            Assertion.assertEquals(h2Table, kylinTable);
+            assertTableEquals(h2Table, kylinTable);
         }
+    }
+    
+    protected void assertTableEquals(ITable h2Table, ITable kylinTable) throws DatabaseUnitException {
+        HackedDbUnitAssert dbUnit = new HackedDbUnitAssert();
+        dbUnit.hackIgnoreIntBigIntMismatch();
+        dbUnit.assertEquals(h2Table, kylinTable);
+    }
+    
+    protected void assertTableContains(ITable h2Table, ITable kylinTable) throws DatabaseUnitException {
+        HackedDbUnitAssert dbUnit = new HackedDbUnitAssert();
+        dbUnit.hackIgnoreIntBigIntMismatch();
+        dbUnit.hackCheckContains();
+        dbUnit.assertEquals(h2Table, kylinTable);
+    }
+
+    @SuppressWarnings("deprecation")
+    protected static H2Connection newH2Connection() throws DatabaseUnitException {
+        H2Connection h2Conn = new H2Connection(h2Connection, null);
+        h2Conn.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new TestH2DataTypeFactory());
+        h2Conn.getConfig().setFeature(DatabaseConfig.FEATURE_DATATYPE_WARNING, false);
+        return h2Conn;
     }
 
     protected int runSqlFile(String file) throws Exception {
