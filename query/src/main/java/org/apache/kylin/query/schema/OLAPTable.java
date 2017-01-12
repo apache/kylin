@@ -19,6 +19,8 @@
 package org.apache.kylin.query.schema;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -218,6 +220,12 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             logger.info("To avoid overflow, upgraded {}'s type from {} to {}", tableColumns.get(index), tableColumns.get(index).getType(), tableColumns.get(index).getUpgradedType());
         }
 
+        Collections.sort(tableColumns, new Comparator<ColumnDesc>() {
+            @Override
+            public int compare(ColumnDesc o1, ColumnDesc o2) {
+                return o1.getZeroBasedIndex() - o2.getZeroBasedIndex();
+            }
+        });
         return Lists.newArrayList(Iterables.concat(tableColumns, metricColumns));
     }
 
