@@ -18,7 +18,7 @@
 
 package org.apache.kylin.measure.hllc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.measure.MeasureIngester;
