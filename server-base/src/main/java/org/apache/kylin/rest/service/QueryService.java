@@ -325,6 +325,9 @@ public class QueryService extends BasicService {
         if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
             throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
         }
+        if (StringUtils.isBlank(sqlRequest.getProject())) {
+            throw new InternalErrorException("Project cannot be empty. Please select a project.");
+        }
 
         final String queryId = UUID.randomUUID().toString();
         if (sqlRequest.getBackdoorToggles() != null)

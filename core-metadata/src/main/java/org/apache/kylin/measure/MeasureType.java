@@ -39,6 +39,7 @@ import java.util.Map;
  * @param <T> the Java type of aggregation data object, e.g. HLLCounter
  */
 abstract public class MeasureType<T> implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
     /* ============================================================================
      * Define

@@ -34,6 +34,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 import com.google.common.collect.ImmutableMap;
 
 public class HLLCMeasureType extends MeasureType<HLLCounter> {
+    private static final long serialVersionUID = 1L;
 
     public static final String FUNC_COUNT_DISTINCT = FunctionDesc.FUNC_COUNT_DISTINCT;
     public static final String DATATYPE_HLLC = "hllc";
@@ -93,15 +94,26 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
     @Override
     public MeasureIngester<HLLCounter> newIngester() {
         return new MeasureIngester<HLLCounter>() {
+            private static final long serialVersionUID = 1L;
+            
             HLLCounter current = new HLLCounter(dataType.getPrecision());
 
             @Override
             public HLLCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 HLLCounter hllc = current;
                 hllc.clear();
-                for (String v : values) {
-                    if (v != null)
-                        hllc.add(v);
+                if (values.length == 1) {
+                    if (values[0] != null)
+                        hllc.add(values[0]);
+                } else {
+                    boolean allNull = true;
+                    StringBuilder buf = new StringBuilder();
+                    for (String v : values) {
+                        allNull = (allNull && v == null);
+                        buf.append(v);
+                    }
+                    if (!allNull)
+                        hllc.add(buf.toString());
                 }
                 return hllc;
             }
@@ -133,5 +145,5 @@ public class HLLCMeasureType extends MeasureType<HLLCounter> {
     public static boolean isCountDistinct(FunctionDesc func) {
         return FUNC_COUNT_DISTINCT.equalsIgnoreCase(func.getExpression());
     }
-
+    
 }

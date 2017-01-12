@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 
 abstract public class MeasureIngester<V> implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
     public static MeasureIngester<?> create(MeasureDesc measure) {
         return measure.getFunction().getMeasureType().newIngester();
