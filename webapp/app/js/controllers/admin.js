@@ -58,6 +58,32 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
     });
   }
 
+  $scope.reloadConfig = function () {
+    SweetAlert.swal({
+      title: '',
+      text: 'Are you sure to reload config',
+      type: '',
+      showCancelButton: true,
+      confirmButtonColor: '#DD6B55',
+      confirmButtonText: "Yes",
+      closeOnConfirm: true
+    }, function (isConfirm) {
+      if (isConfirm) {
+        CacheService.reloadConfig({}, function () {
+          SweetAlert.swal('Success!', 'config reload successfully', 'success');
+        }, function (e) {
+          if (e.data && e.data.exception) {
+            var message = e.data.exception;
+            var msg = !!(message) ? message : 'Failed to take action.';
+            SweetAlert.swal('Oops...', msg, 'error');
+          } else {
+            SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+          }
+        });
+      }
+    });
+  }
+  
   $scope.reloadMeta = function () {
     SweetAlert.swal({
       title: '',

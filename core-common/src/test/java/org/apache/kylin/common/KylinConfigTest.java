@@ -26,24 +26,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
-import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.kylin.common.util.HotLoadKylinPropertiesTestCase;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-public class KylinConfigTest extends LocalFileMetadataTestCase {
-    @Before
-    public void setUp() throws Exception {
-        this.createTestMetadata();
-    }
-
-    @After
-    public void after() throws Exception {
-        this.cleanupTestMetadata();
-    }
-
+public class KylinConfigTest extends HotLoadKylinPropertiesTestCase{
     @Test
     public void testMRConfigOverride() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -78,9 +66,19 @@ public class KylinConfigTest extends LocalFileMetadataTestCase {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         Map<String, String> override = Maps.newHashMap();
         KylinConfig configExt = KylinConfigExt.createInstance(config, override);
-
         assertTrue(config.properties == configExt.properties);
         config.setProperty("1234", "1234");
         assertEquals("1234", configExt.getOptional("1234"));
+    }
+
+    @Test
+    public void testPropertiesHotLoad() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        assertEquals("whoami@kylin.apache.org", config.getKylinOwner());
+
+        updateProperty("kylin.storage.hbase.owner-tag", "kylin@kylin.apache.org");
+        KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
+
+        assertEquals("kylin@kylin.apache.org", config.getKylinOwner());
     }
 }

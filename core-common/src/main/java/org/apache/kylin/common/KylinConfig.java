@@ -201,7 +201,7 @@ public class KylinConfig extends KylinConfigBase {
         return kylinHome + File.separator + "conf";
     }
 
-    static File getKylinPropertiesFile() {
+    public static File getKylinPropertiesFile() {
         String kylinConfHome = System.getProperty(KYLIN_CONF);
         if (!StringUtils.isEmpty(kylinConfHome)) {
             logger.info("Use KYLIN_CONF=" + kylinConfHome);
@@ -384,5 +384,9 @@ public class KylinConfig extends KylinConfigBase {
         //            buf.append("\t").append("at ").append(e.toString()).append("\n");
         //        }
         //        logger.info(buf.toString());
+    }
+
+    public synchronized void hotLoadKylinProperties() {
+        reloadKylinConfig(getKylinProperties());
     }
 }
