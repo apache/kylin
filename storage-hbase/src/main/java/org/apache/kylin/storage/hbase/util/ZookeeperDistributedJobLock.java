@@ -96,6 +96,8 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
      * @param serverName the hostname of job server
      *
      * @return <tt>true</tt> if the segment locked successfully
+     *
+     * @since 2.0
      */
 
     @Override
@@ -110,13 +112,13 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
                 return false;
             }
             if (zkClient.checkExists().forPath(lockPath) != null) {
-                if (hasLock(serverName, lockPath)) {
+                if (isKeepLock(serverName, lockPath)) {
                     hasLock = true;
                     logger.info(serverName + " has kept the lock for segment: " + segmentId);
                 }
             } else {
                 zkClient.create().withMode(CreateMode.EPHEMERAL).forPath(lockPath, serverName.getBytes(Charset.forName("UTF-8")));
-                if (hasLock(serverName, lockPath)) {
+                if (isKeepLock(serverName, lockPath)) {
                     hasLock = true;
                     logger.info(serverName + " lock the segment: " + segmentId + " successfully");
                 }
@@ -131,19 +133,54 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
         return true;
     }
 
-    private boolean hasLock(String serverName, String lockPath) {
-        String lockServerName = null;
+    /**
+     *
+     * Returns <tt>true</tt> if, the job server is keeping the lock for the lockPath
+     *
+     * @param serverName the hostname of job server
+     *
+     * @param lockPath the zookeeper node path of segment
+     *
+     * @return <tt>true</tt> if the job server is keeping the lock for the lockPath, otherwise
+     * <tt>false</tt>
+     *
+     * @since 2.0
+     */
+
+    private boolean isKeepLock(String serverName, String lockPath) {
         try {
             if (zkClient.checkExists().forPath(lockPath) != null) {
                 byte[] data = zkClient.getData().forPath(lockPath);
-                lockServerName = new String(data, Charset.forName("UTF-8"));
+                String lockServerName = new String(data, Charset.forName("UTF-8"));
+                return lockServerName.equalsIgnoreCase(serverName);
             }
         } catch (Exception e) {
             logger.error("fail to get the serverName for the path: " + lockPath, e);
         }
-        if(lockServerName == null)
-            return false;
-        return lockServerName.equalsIgnoreCase(serverName);
+        return false;
+    }
+
+    /**
+     *
+     * Returns <tt>true</tt> if, and only if, the segment has been locked.
+     *
+     * @param segmentId the id of segment need to release the lock.
+     *
+     * @return <tt>true</tt> if the segment has been locked, otherwise
+     * <tt>false</tt>
+     *
+     * @since 2.0
+     */
+
+    @Override
+    public boolean isHasLocked(String segmentId) {
+        String lockPath = getLockPath(segmentId);
+        try {
+            return zkClient.checkExists().forPath(lockPath) != null;
+        } catch (Exception e) {
+            logger.error("fail to get the path: " + lockPath, e);
+        }
+        return false;
     }
 
     /**
@@ -151,7 +188,9 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
      *
      * <p> the segment related zookeeper node will be deleted.
      *
-     * @param segmentId the name of segment need to release the lock
+     * @param segmentId the id of segment need to release the lock
+     *
+     * @since 2.0
      */
 
     @Override
@@ -177,7 +216,10 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
      * in order to when one job server is down, other job server can take over the running jobs.
      *
      * @param pool the threadPool watching the zookeeper node change
+     *
      * @param doWatch do the concrete action with the zookeeper node path and zookeeper node data
+     *
+     * @since 2.0
      */
 
     @Override
@@ -229,9 +271,8 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
 
     @Override
     public void unlock() {
-
     }
-    
+
     public void close() {
         try {
             childrenCache.close();

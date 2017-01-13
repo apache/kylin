@@ -19,8 +19,6 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -56,7 +54,6 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
-import org.apache.kylin.job.lock.DistributedJobLock;
 import org.apache.kylin.job.lock.JobLock;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
@@ -282,15 +279,12 @@ public class JobService extends BasicService implements InitializingBean {
                 SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
                 sourcePartition = source.parsePartitionBeforeBuild(cube, sourcePartition);
                 newSeg = getCubeManager().appendSegment(cube, sourcePartition);
-                lockSegment(newSeg.getUuid());
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter);
             } else if (buildType == CubeBuildTypeEnum.MERGE) {
                 newSeg = getCubeManager().mergeSegments(cube, startDate, endDate, startOffset, endOffset, force);
-                lockSegment(newSeg.getUuid());
                 job = EngineFactory.createBatchMergeJob(newSeg, submitter);
             } else if (buildType == CubeBuildTypeEnum.REFRESH) {
                 newSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
-                lockSegment(newSeg.getUuid());
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter);
             } else {
                 throw new JobException("invalid build type:" + buildType);
@@ -312,7 +306,6 @@ public class JobService extends BasicService implements InitializingBean {
                 }
             }
             throw e;
-
         }
 
         JobInstance jobInstance = getSingleJobInstance(job);
@@ -454,15 +447,11 @@ public class JobService extends BasicService implements InitializingBean {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) throws IOException, JobException {
-        lockSegment(job.getRelatedSegment());
-
         getExecutableManager().resumeJob(job.getId());
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void rollbackJob(JobInstance job, String stepId) throws IOException, JobException {
-        lockSegment(job.getRelatedSegment());
-
         getExecutableManager().rollbackJob(job.getId(), stepId);
     }
 
@@ -486,47 +475,15 @@ public class JobService extends BasicService implements InitializingBean {
         }
         getExecutableManager().discardJob(job.getId());
 
-        //release the segment lock when discarded the job but the job hasn't scheduled
-        releaseSegmentLock(job.getRelatedSegment());
-
         return job;
     }
-
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance pauseJob(JobInstance job) throws IOException, JobException {
         getExecutableManager().pauseJob(job.getId());
-
-        //release the segment lock when discarded the job but the job hasn't scheduled
-        releaseSegmentLock(job.getRelatedSegment());
-
         return job;
     }
 
-    private void lockSegment(String segmentId) throws JobException {
-        if (jobLock instanceof DistributedJobLock) {
-            if (!((DistributedJobLock) jobLock).lockWithName(segmentId, getServerName())) {
-                throw new JobException("Fail to get the segment lock, the segment may be building in another job server");
-            }
-        }
-    }
-
-    private void releaseSegmentLock(String segmentId) {
-        if (jobLock instanceof DistributedJobLock) {
-            ((DistributedJobLock) jobLock).unlockWithName(segmentId);
-        }
-    }
-
-    private String getServerName() {
-        String serverName = null;
-        try {
-            serverName = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            logger.error("fail to get the hostname");
-        }
-        return serverName;
-    }
-    
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs) {
         return listAllCubingJobs(cubeName, projectName, statusList, -1L, -1L, allOutputs);
     }
@@ -584,6 +541,4 @@ public class JobService extends BasicService implements InitializingBean {
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName) {
         return listAllCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), getExecutableManager().getAllOutputs());
     }
-
-
 }

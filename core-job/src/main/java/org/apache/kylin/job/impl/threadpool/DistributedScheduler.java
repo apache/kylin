@@ -195,13 +195,13 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
             }
         }
 
-        //release job lock only when the all tasks of the job finish and the job server keep the cube lock.
+        //release job lock when job state is ready or running and the job server keep the cube lock.
         private void releaseJobLock(AbstractExecutable executable) {
             if (executable instanceof DefaultChainedExecutable) {
                 String segmentId = executable.getParam(SEGMENT_ID);
                 ExecutableState state = executable.getStatus();
 
-                if (state == ExecutableState.SUCCEED || state == ExecutableState.ERROR || state == ExecutableState.DISCARDED) {
+                if (state != ExecutableState.READY && state != ExecutableState.RUNNING) {
                     if (segmentWithLocks.contains(segmentId)) {
                         logger.info(executable.toString() + " will release the lock for the segment: " + segmentId);
                         jobLock.unlockWithName(segmentId);
@@ -232,7 +232,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
                     if (executable instanceof DefaultChainedExecutable && executable.getParams().get(SEGMENT_ID).equalsIgnoreCase(segmentId) && !nodeData.equalsIgnoreCase(serverName)) {
                         try {
                             logger.warn(nodeData + " has released the lock for: " + segmentId + " but the job still running. so " + serverName + " resume the job");
-                            if (jobLock.lockWithName(segmentId, serverName)) {
+                            if (!jobLock.isHasLocked(segmentId)) {
                                 executableManager.resumeRunningJobForce(executable.getId());
                                 fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
                                 break;
@@ -302,7 +302,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
             AbstractExecutable executable = executableManager.getJob(id);
             if (output.getState() == ExecutableState.RUNNING && executable instanceof DefaultChainedExecutable) {
                 try {
-                    if (jobLock.lockWithName(executable.getParam(SEGMENT_ID), serverName)) {
+                    if (!jobLock.isHasLocked(executable.getParam(SEGMENT_ID))) {
                         executableManager.resumeRunningJobForce(executable.getId());
                         fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
                     }
