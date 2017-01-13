@@ -35,7 +35,7 @@ public class BitmapDistinctCountAggFunc {
     public static BitmapCounter add(BitmapCounter counter, Object v) {
         BitmapCounter c = (BitmapCounter) v;
         if (counter == null) {
-            return c;
+            return new BitmapCounter(c);
         } else {
             counter.merge(c);
             return counter;

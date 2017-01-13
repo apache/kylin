@@ -29,6 +29,8 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
  */
 public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
 
+    private ThreadLocal<BitmapCounter> current = new ThreadLocal<>();
+
     public BitmapSerializer(DataType type) {
     }
 
@@ -41,9 +43,18 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
         }
     }
 
+    private BitmapCounter current() {
+        BitmapCounter counter = current.get();
+        if (counter == null) {
+            counter = new BitmapCounter();
+            current.set(counter);
+        }
+        return counter;
+    }
+
     @Override
     public BitmapCounter deserialize(ByteBuffer in) {
-        BitmapCounter counter = new BitmapCounter();
+        BitmapCounter counter = current();
         try {
             counter.readRegisters(in);
         } catch (IOException e) {
@@ -54,7 +65,7 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
 
     @Override
     public int peekLength(ByteBuffer in) {
-        return new BitmapCounter().peekLength(in);
+        return current().peekLength(in);
     }
 
     @Override
