@@ -412,9 +412,10 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public Map<Integer, String> getSchedulers() {
-        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.job.scheduler.provider."));
+        Map<Integer, String> r = Maps.newLinkedHashMap();
         r.put(0, "org.apache.kylin.job.impl.threadpool.DefaultScheduler");
         r.put(2, "org.apache.kylin.job.impl.threadpool.DistributedScheduler");
+        r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.job.scheduler.provider.")));
         return r;
     }
 
@@ -427,10 +428,11 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public Map<Integer, String> getSourceEngines() {
-        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.source.provider."));
+        Map<Integer, String> r = Maps.newLinkedHashMap();
         // ref constants in ISourceAware
         r.put(0, "org.apache.kylin.source.hive.HiveSource");
         r.put(1, "org.apache.kylin.source.kafka.KafkaSource");
+        r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.source.provider.")));
         return r;
     }
 
@@ -503,11 +505,12 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public Map<Integer, String> getStorageEngines() {
-        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.storage.provider."));
+        Map<Integer, String> r = Maps.newLinkedHashMap();
         // ref constants in IStorageAware
         r.put(0, "org.apache.kylin.storage.hbase.HBaseStorage");
         r.put(1, "org.apache.kylin.storage.hybrid.HybridStorage");
         r.put(2, "org.apache.kylin.storage.hbase.HBaseStorage");
+        r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.storage.provider.")));
         return r;
     }
 
@@ -658,11 +661,12 @@ abstract public class KylinConfigBase implements Serializable {
     // ============================================================================
 
     public Map<Integer, String> getJobEngines() {
-        Map<Integer, String> r = convertKeyToInteger(getPropertiesByPrefix("kylin.engine.provider."));
+        Map<Integer, String> r = Maps.newLinkedHashMap();
         // ref constants in IEngineAware
         r.put(0, "org.apache.kylin.engine.mr.MRBatchCubingEngine");
         r.put(2, "org.apache.kylin.engine.mr.MRBatchCubingEngine2");
         r.put(4, "org.apache.kylin.engine.spark.SparkBatchCubingEngine2");
+        r.putAll(convertKeyToInteger(getPropertiesByPrefix("kylin.engine.provider.")));
         return r;
     }
 
