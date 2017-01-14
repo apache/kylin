@@ -20,9 +20,12 @@
 dir=$(dirname ${0})
 cd ${dir}/../..
 
-source build/script/functions.sh
-
 rm -rf build/spark
+
+alias md5cmd="md5sum"
+if [[ `uname -a` =~ "Darwin" ]]; then
+    alias md5cmd="md5 -q"
+fi
 
 spark_version="1.6.3"
 spark_pkg_md5="ce8a2e7529aac0f0175194061769dbd4"
@@ -32,7 +35,7 @@ then
     echo "no binary file found"
     wget --directory-prefix=build/ http://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop2.6.tgz || echo "Download spark failed"
 else
-    if [ `calMd5 build/spark-${spark_version}-bin-hadoop2.6.tgz | awk '{print $1}'` != "${spark_pkg_md5}" ]
+    if [ `md5cmd build/spark-${spark_version}-bin-hadoop2.6.tgz | awk '{print $1}'` != "${spark_pkg_md5}" ]
     then
         echo "md5 check failed"
         rm build/spark-${spark_version}-bin-hadoop2.6.tgz
@@ -40,6 +43,7 @@ else
 
     fi
 fi
+unalias md5cmd
 
 tar -zxvf build/spark-${spark_version}-bin-hadoop2.6.tgz -C build/   || { exit 1; }
 mv build/spark-${spark_version}-bin-hadoop2.6 build/spark
