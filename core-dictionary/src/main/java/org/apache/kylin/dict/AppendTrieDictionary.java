@@ -1191,7 +1191,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
 
         // init new AppendTrieDictionary
         AppendTrieDictionary newDict = new AppendTrieDictionary();
-        newDict.initParams(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConverter);
+        newDict.initParams(baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()), baseId, maxId, maxValueLength, nValues, bytesConvert);
         newDict.initDictSliceMap((CachedTreeMap) dictSliceMap);
 
         return newDict;
