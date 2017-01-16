@@ -192,17 +192,17 @@ public class ITKylinQueryTest extends KylinTestBase {
     public void testSnowflakeQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_snowflake", null, true);
     }
-    
+
     @Test
     public void testDateTimeQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_datetime", null, true);
     }
-    
+
     @Test
     public void testExtendedColumnQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_extended_column", null, true);
     }
-    
+
     @Test
     public void testLikeQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_like", null, true);
@@ -270,8 +270,7 @@ public class ITKylinQueryTest extends KylinTestBase {
             this.batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_intersect_count");
         }
     }
-    
-    
+
     @Test
     public void testMultiModelQuery() throws Exception {
         if ("left".equalsIgnoreCase(joinType)) {
@@ -280,7 +279,7 @@ public class ITKylinQueryTest extends KylinTestBase {
             joinType = "left";
         }
     }
-    
+
     @Test
     public void testDimDistinctCountQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_dim", null, true);
@@ -392,10 +391,15 @@ public class ITKylinQueryTest extends KylinTestBase {
         // compare the result
         Assert.assertEquals(expectVersion, queriedVersion);
     }
-    
+
     @Test
     public void testSelectStarColumnCount() throws Exception {
         execAndCompColumnCount("select * from test_kylin_fact limit 10", 11);
         execAndCompColumnCount("select * from test_kylin_fact", 11);
+    }
+
+    @Test
+    public void testPercentileQuery() throws Exception {
+        batchExecuteQuery("src/test/resources/query/sql_percentile");
     }
 }

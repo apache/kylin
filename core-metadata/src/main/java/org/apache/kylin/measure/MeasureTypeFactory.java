@@ -28,6 +28,7 @@ import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
+import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.measure.raw.RawMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -109,6 +110,7 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new TopNMeasureType.Factory());
         factoryInsts.add(new RawMeasureType.Factory());
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
+        factoryInsts.add(new PercentileMeasureType.Factory());
 
         logger.info("Checking custom measure types from kylin config");
 
@@ -143,7 +145,7 @@ abstract public class MeasureTypeFactory<T> {
             List<MeasureTypeFactory<?>> list = factories.get(funcName);
             if (list == null)
                 list = Lists.newArrayListWithCapacity(2);
-                factories.put(funcName, list);
+            factories.put(funcName, list);
             list.add(factory);
         }
 
