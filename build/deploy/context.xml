@@ -28,4 +28,5 @@
     <Manager pathname="" />
     -->
     <Loader loaderClass="org.apache.kylin.ext.CustomizedWebappClassloader"/>
+    <JarScanner scanClassPath="false" />
 </Context>
