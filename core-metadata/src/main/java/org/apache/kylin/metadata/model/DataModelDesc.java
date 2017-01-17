@@ -273,11 +273,16 @@ public class DataModelDesc extends RootPersistentEntity {
         if (rootFactTableRef.getTableIdentity().equals(tableIdentity))
             return rootFactTableRef;
 
+        for (TableRef fact : factTableRefs) {
+            if (fact.getTableIdentity().equals(tableIdentity))
+                return fact;
+        }
+
         for (TableRef lookup : lookupTableRefs) {
             if (lookup.getTableIdentity().equals(tableIdentity))
                 return lookup;
         }
-        throw new IllegalArgumentException("Table not found by " + tableIdentity);
+        throw new IllegalArgumentException("Table not found by " + tableIdentity + " in model " + name);
     }
 
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
