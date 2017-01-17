@@ -129,7 +129,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         }
         TrieDictionary<T> tree = trees.get(index);
         int id = tree.getIdFromValueBytesWithoutCache(value, offset, len, roundingFlag);
-        if(id == -1)
+        if (id == -1)
             throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
         id = id + accuOffset.get(index);
         id += baseId;

@@ -18,12 +18,12 @@
 
 package org.apache.kylin.dict;
 
+import static org.junit.Assert.fail;
+
 import org.apache.kylin.common.util.DateFormat;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.fail;
 
 /**
  */
@@ -64,10 +64,10 @@ public class TimeStrDictionaryTest {
 
     @Test
     public void testIllegal() {
-        try{
+        try {
             dict.getIdFromValue("2038-01-19 03:14:07");
             fail("should throw exception");
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             //correct
         }
     }

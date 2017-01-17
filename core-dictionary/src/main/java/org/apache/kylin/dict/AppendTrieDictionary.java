@@ -91,13 +91,10 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
 
     volatile private TreeMap<DictSliceKey, DictSlice> dictSliceMap;
 
-
     // Constructor both for build and deserialize
     public AppendTrieDictionary() {
         enableCache();
     }
-
-
 
     public void initParams(String baseDir, int baseId, int maxId, int maxValueLength, int nValues, BytesConverter bytesConverter) throws IOException {
         this.baseDir = baseDir;
@@ -111,8 +108,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
     public void initDictSliceMap(CachedTreeMap dictMap) throws IOException {
         int maxVersions = KylinConfig.getInstanceFromEnv().getAppendDictMaxVersions();
         long versionTTL = KylinConfig.getInstanceFromEnv().getAppendDictVersionTTL();
-        CachedTreeMap newDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(1).baseDir(baseDir)
-            .immutable(true).maxVersions(maxVersions).versionTTL(versionTTL).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
+        CachedTreeMap newDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(1).baseDir(baseDir).immutable(true).maxVersions(maxVersions).versionTTL(versionTTL).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
         newDictSliceMap.loadEntry(dictMap);
         this.dictSliceMap = newDictSliceMap;
     }
@@ -210,7 +206,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                 this.sizeChildOffset = headIn.read();
                 this.sizeOfId = headIn.read();
 
-                this.childOffsetMask = ~(((long)(BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE)) << ((sizeChildOffset - 1) * 8));
+                this.childOffsetMask = ~(((long) (BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE)) << ((sizeChildOffset - 1) * 8));
                 this.firstByteOffset = sizeChildOffset + 1; // the offset from begin of node to its first value byte
             } catch (Exception e) {
                 if (e instanceof RuntimeException)
@@ -229,7 +225,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                 if (checkFlag(nodeOffset, BIT_IS_END_OF_VALUE)) {
                     break;
                 }
-                nodeOffset = headSize + (int)(BytesUtil.readLong(trieBytes, nodeOffset, sizeChildOffset) & childOffsetMask);
+                nodeOffset = headSize + (int) (BytesUtil.readLong(trieBytes, nodeOffset, sizeChildOffset) & childOffsetMask);
                 if (nodeOffset == headSize) {
                     break;
                 }
@@ -271,7 +267,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                 }
 
                 // find a child to continue
-                int c = headSize + (int)(BytesUtil.readLong(trieBytes, n, sizeChildOffset) & childOffsetMask);
+                int c = headSize + (int) (BytesUtil.readLong(trieBytes, n, sizeChildOffset) & childOffsetMask);
                 if (c == headSize) // has no children
                     return -1;
                 byte inpByte = inp[o];
@@ -310,7 +306,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
             DictNode root = null;
             while (true) {
                 int p = n + firstByteOffset;
-                int childOffset = (int)(BytesUtil.readLong(trieBytes, n, sizeChildOffset) & childOffsetMask);
+                int childOffset = (int) (BytesUtil.readLong(trieBytes, n, sizeChildOffset) & childOffsetMask);
                 int parLen = BytesUtil.readUnsigned(trieBytes, p - 1, 1);
                 boolean isEndOfValue = checkFlag(n, BIT_IS_END_OF_VALUE);
 
@@ -357,13 +353,13 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                     lastChild = false;
                 }
                 int p = offset + firstByteOffset;
-                int childOffset = (int)(BytesUtil.readLong(trieBytes, offset, sizeChildOffset) & childOffsetMask);
+                int childOffset = (int) (BytesUtil.readLong(trieBytes, offset, sizeChildOffset) & childOffsetMask);
                 int parLen = BytesUtil.readUnsigned(trieBytes, p - 1, 1);
                 boolean isEndOfValue = checkFlag(offset, BIT_IS_END_OF_VALUE);
 
                 // Copy value overflow, the data is corrupted
                 if (trieBytes.length < p + parLen) {
-                   return false;
+                    return false;
                 }
 
                 // Check id is fine
@@ -401,7 +397,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                 throw new IllegalArgumentException("Wrong file type (magic does not match)");
 
             DataInputStream headIn = new DataInputStream(//
-                new ByteArrayInputStream(headPartial, HEAD_SIZE_I, headPartial.length - HEAD_SIZE_I));
+                    new ByteArrayInputStream(headPartial, HEAD_SIZE_I, headPartial.length - HEAD_SIZE_I));
             int headSize = headIn.readShort();
             int bodyLen = headIn.readInt();
             headIn.close();
@@ -665,8 +661,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
 
             // nValueBytes
             if (n.part.length > 255)
-                throw new RuntimeException("Value length is " + n.part.length
-                    + " and larger than 255: " + Bytes.toStringBinary(n.part));
+                throw new RuntimeException("Value length is " + n.part.length + " and larger than 255: " + Bytes.toStringBinary(n.part));
             BytesUtil.writeUnsigned(n.part.length, trieBytes, o, 1);
             o++;
 
@@ -785,7 +780,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                 int t = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeChildOffset - 1);
                 // *4 because 2 MSB of offset is used for isEndOfValue & isEndChild flag
                 // expand t to long before *4, avoiding exceed Integer.MAX_VALUE
-                if (BytesUtil.sizeForValue((long)t * 4) <= s.mbpn_sizeChildOffset - 1) {
+                if (BytesUtil.sizeForValue((long) t * 4) <= s.mbpn_sizeChildOffset - 1) {
                     s.mbpn_sizeChildOffset--;
                     s.mbpn_footprint = t;
                 } else
@@ -886,8 +881,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
                 builder = new Builder<>(resourcePath, null, dictDir, 0, 0, 0, new StringBytesConverter(), null);
             } else {
                 logger.info("GlobalDict {} exist, append value", resourcePath);
-                builder = new Builder<>(resourcePath, dictToUse, dictToUse.baseDir, dictToUse.maxId, dictToUse.maxValueLength,
-                    dictToUse.nValues, dictToUse.bytesConvert, dictToUse.writeDictMap());
+                builder = new Builder<>(resourcePath, dictToUse, dictToUse.baseDir, dictToUse.maxId, dictToUse.maxValueLength, dictToUse.nValues, dictToUse.bytesConvert, dictToUse.writeDictMap());
             }
 
             return builder;
@@ -926,8 +920,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
             int maxVersions = KylinConfig.getInstanceFromEnv().getAppendDictMaxVersions();
             long versionTTL = KylinConfig.getInstanceFromEnv().getAppendDictVersionTTL();
             // create a new cached map with baseDir
-            mutableDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(1).baseDir(baseDir)
-                .maxVersions(maxVersions).versionTTL(versionTTL).keyClazz(DictSliceKey.class).valueClazz(DictNode.class).immutable(false).build();
+            mutableDictSliceMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().maxSize(1).baseDir(baseDir).maxVersions(maxVersions).versionTTL(versionTTL).keyClazz(DictSliceKey.class).valueClazz(DictNode.class).immutable(false).build();
             if (dictMapBytes != null) {
                 ((Writable) mutableDictSliceMap).readFields(new DataInputStream(new ByteArrayInputStream(dictMapBytes)));
             }
@@ -1105,7 +1098,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
 
         public synchronized AppendTrieDictionary<T> build(int baseId) throws IOException {
             boolean keepAppend = releaseInstance(resourcePath);
-            CachedTreeMap dictSliceMap = (CachedTreeMap)mutableDictSliceMap;
+            CachedTreeMap dictSliceMap = (CachedTreeMap) mutableDictSliceMap;
             dict.initParams(baseDir, baseId, maxId, maxValueLength, nValues, bytesConverter);
             dict.flushIndex(dictSliceMap, keepAppend);
             dict.initDictSliceMap(dictSliceMap);
@@ -1154,7 +1147,6 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
     public int getSizeOfValue() {
         return maxValueLength;
     }
-
 
     public void flushIndex(CachedTreeMap dictSliceMap, boolean keepAppend) throws IOException {
         try (FSDataOutputStream indexOut = dictSliceMap.openIndexOutput()) {
@@ -1220,13 +1212,11 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
             initParams(baseDir, baseId, maxId, maxValueLength, nValues, converter);
 
             // Create instance for deserialize data, and update to map in dict
-            CachedTreeMap dictMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder()
-                .baseDir(baseDir).immutable(true).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
+            CachedTreeMap dictMap = CachedTreeMap.CachedTreeMapBuilder.newBuilder().baseDir(baseDir).immutable(true).keyClazz(DictSliceKey.class).valueClazz(DictSlice.class).build();
             dictMap.readFields(input);
             initDictSliceMap(dictMap);
         }
     }
-
 
     @Override
     public void dump(PrintStream out) {
@@ -1261,4 +1251,3 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
     }
 
 }
-

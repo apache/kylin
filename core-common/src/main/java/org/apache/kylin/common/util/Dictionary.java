@@ -94,13 +94,12 @@ abstract public class Dictionary<T> implements Serializable {
     final public int getIdFromValue(T value, int roundingFlag) throws IllegalArgumentException {
         if (isNullObjectForm(value))
             return nullId();
-        else {
-            int id = getIdFromValueImpl(value, roundingFlag);
-            if(id == -1){
-                throw new IllegalArgumentException("Value : " + value + "no exists");
-            }
-            return id;
+
+        int id = getIdFromValueImpl(value, roundingFlag);
+        if (id == -1) {
+            throw new IllegalArgumentException("Value : " + value + " not exists");
         }
+        return id;
     }
 
     final public boolean containsValue(T value) throws IllegalArgumentException {
@@ -136,37 +135,6 @@ abstract public class Dictionary<T> implements Serializable {
     }
 
     abstract protected T getValueFromIdImpl(int id);
-
-    /**
-     * Convenient form of
-     * <code>getIdFromValueBytes(value, offset, len, 0)</code>
-     */
-
-
-    /**
-     * A lower level API, return ID integer from raw value bytes. In case of not found 
-     * <p>
-     * - if roundingFlag=0, throw IllegalArgumentException; <br>
-     * - if roundingFlag<0, the closest smaller ID integer if exist; <br>
-     * - if roundingFlag>0, the closest bigger ID integer if exist. <br>
-     * <p>
-     * Bypassing the cache layer, this could be significantly slower than getIdFromValue(T value).
-     * 
-     * @throws IllegalArgumentException
-     *             if value is not found in dictionary and rounding is off;
-     *             or if rounding cannot find a smaller or bigger ID
-     */
-
-    /**
-     * A lower level API, get byte values from ID, return the number of bytes
-     * written. Bypassing the cache layer, this could be significantly slower
-     * than getIdFromValue(T value).
-     *
-     * @return size of value bytes, 0 if empty string, -1 if null
-     *
-     * @throws IllegalArgumentException
-     *             if ID is not found in dictionary
-     */
 
     abstract public void dump(PrintStream out);
 

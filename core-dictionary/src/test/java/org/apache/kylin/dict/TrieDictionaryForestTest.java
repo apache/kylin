@@ -641,7 +641,7 @@ public class TrieDictionaryForestTest {
         System.out.println("max memory:" + Runtime.getRuntime().maxMemory());
         System.gc();
         Thread.currentThread().sleep(1000);
-        NumberDictionaryBuilder<String> b = new NumberDictionaryBuilder<>(new NumberDictionaryForestBuilder.Number2BytesConverter());
+        NumberDictionaryBuilder b = new NumberDictionaryBuilder();
         int k = 0;
         while (true) {
             b.addValue(k + "");

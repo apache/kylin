@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RawMeasureType extends MeasureType<List<ByteArray>> {
+    private static final long serialVersionUID = 1L;
 
     private static final Logger logger = LoggerFactory.getLogger(RawMeasureType.class);
 
@@ -103,6 +104,8 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
     @Override
     public MeasureIngester<List<ByteArray>> newIngester() {
         return new MeasureIngester<List<ByteArray>>() {
+            private static final long serialVersionUID = 1L;
+
             //encode measure value to dictionary
             @Override
             public List<ByteArray> valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {

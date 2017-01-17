@@ -59,7 +59,7 @@ public class NumberDictionaryTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testMinMax() {
-        NumberDictionaryBuilder<String> builder = new NumberDictionaryBuilder<String>(new NumberDictionaryForestBuilder.Number2BytesConverter());
+        NumberDictionaryBuilder builder = new NumberDictionaryBuilder();
         builder.addValue("" + Long.MAX_VALUE);
         builder.addValue("" + Long.MIN_VALUE);
         NumberDictionary<String> dict = builder.build(0);
@@ -123,7 +123,7 @@ public class NumberDictionaryTest extends LocalFileMetadataTestCase {
         int n = 100;
 
         Set<BigDecimal> set = Sets.newHashSet();
-        NumberDictionaryBuilder<String> builder = new NumberDictionaryBuilder<String>(new NumberDictionaryForestBuilder.Number2BytesConverter());
+        NumberDictionaryBuilder builder = new NumberDictionaryBuilder();
         for (int i = 0; i < n; i++) {
             String num = randNumber();
             if (set.add(new BigDecimal(num))) {

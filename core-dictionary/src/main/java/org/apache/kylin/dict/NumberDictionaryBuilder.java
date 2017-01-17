@@ -25,17 +25,17 @@ package org.apache.kylin.dict;
  * @author yangli9
  */
 @Deprecated
-public class NumberDictionaryBuilder<T> extends TrieDictionaryBuilder<T> {
+public class NumberDictionaryBuilder extends TrieDictionaryBuilder<String> {
 
 
-    public NumberDictionaryBuilder(BytesConverter<T> bytesConverter) {
-        super(bytesConverter);
+    public NumberDictionaryBuilder() {
+        super(new NumberDictionaryForestBuilder.Number2BytesConverter());
     }
 
 
-    public NumberDictionary<T> build(int baseId) {
+    public NumberDictionary build(int baseId) {
         byte[] trieBytes = buildTrieBytes(baseId);
-        NumberDictionary2<T> r = new NumberDictionary2<T>(trieBytes);
+        NumberDictionary2 r = new NumberDictionary2(trieBytes);
         return r;
     }
 

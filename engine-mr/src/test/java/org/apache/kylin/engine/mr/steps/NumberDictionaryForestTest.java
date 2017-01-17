@@ -120,7 +120,7 @@ public class NumberDictionaryForestTest {
         TrieDictionaryForest<String> dict = b.build();
         dict.dump(System.out);
 
-        NumberDictionaryBuilder<String> b2 = new NumberDictionaryBuilder<>(new NumberDictionaryForestBuilder.Number2BytesConverter());
+        NumberDictionaryBuilder b2 = new NumberDictionaryBuilder();
         for (String str : testData)
             b2.addValue(str);
         NumberDictionary<String> dict2 = b2.build(0);

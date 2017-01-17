@@ -18,6 +18,8 @@
 
 package org.apache.kylin.dict;
 
+import java.io.Serializable;
+
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.dict.NumberDictionary.NumberBytesCodec;
 
@@ -26,8 +28,9 @@ import org.apache.kylin.dict.NumberDictionary.NumberBytesCodec;
  */
 public class NumberDictionaryForestBuilder extends TrieDictionaryForestBuilder<String> {
 
-    public static class Number2BytesConverter implements BytesConverter<String>, java.io.Serializable {
-
+    public static class Number2BytesConverter implements BytesConverter<String>, Serializable {
+        private static final long serialVersionUID = 1L;
+        
         static final int MAX_DIGITS_BEFORE_DECIMAL_POINT = NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT;
         static final transient ThreadLocal<NumberBytesCodec> LOCAL = new ThreadLocal<NumberBytesCodec>();
 
