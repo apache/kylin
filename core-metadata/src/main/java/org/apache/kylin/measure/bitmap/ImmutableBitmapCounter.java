@@ -34,10 +34,6 @@ public class ImmutableBitmapCounter implements BitmapCounter {
 
     protected ImmutableRoaringBitmap bitmap;
 
-    public ImmutableBitmapCounter() {
-        this(ImmutableRoaringBitmap.bitmapOf());
-    }
-
     public ImmutableBitmapCounter(ImmutableRoaringBitmap bitmap) {
         this.bitmap = bitmap;
     }

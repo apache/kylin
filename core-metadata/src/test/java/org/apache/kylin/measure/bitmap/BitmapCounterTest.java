@@ -19,7 +19,7 @@
 package org.apache.kylin.measure.bitmap;
 
 import org.junit.Test;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
+import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -29,8 +29,9 @@ public class BitmapCounterTest {
 
     @Test
     public void testBitmapCounter() {
-        ImmutableRoaringBitmap bitmap = ImmutableRoaringBitmap.bitmapOf(10, 20, 30, 1000);
-        ImmutableBitmapCounter counter = new ImmutableBitmapCounter(bitmap);
+        ImmutableBitmapCounter counter = new ImmutableBitmapCounter(
+                MutableRoaringBitmap.bitmapOf(10, 20, 30, 1000)
+        );
         assertEquals(4, counter.getCount());
         assertTrue(counter.getMemBytes() > 0);
 
@@ -59,8 +60,9 @@ public class BitmapCounterTest {
 
     @Test
     public void testToMutableBitmapCounter() {
-        ImmutableRoaringBitmap bitmap = ImmutableRoaringBitmap.bitmapOf(10, 20, 30, 1000);
-        ImmutableBitmapCounter immutable = new ImmutableBitmapCounter(bitmap);
+        ImmutableBitmapCounter immutable = new ImmutableBitmapCounter(
+                MutableRoaringBitmap.bitmapOf(10, 20, 30, 1000)
+        );
         MutableBitmapCounter mutable = new MutableBitmapCounter();
         mutable.orWith(immutable);
 

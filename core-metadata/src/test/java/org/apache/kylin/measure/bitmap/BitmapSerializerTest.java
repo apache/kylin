@@ -24,7 +24,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
+import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
@@ -47,8 +47,9 @@ public class BitmapSerializerTest extends LocalFileMetadataTestCase {
     public void testBitmapSerDe() {
         BitmapSerializer serializer = new BitmapSerializer(DataType.ANY);
 
-        ImmutableRoaringBitmap bitmap = ImmutableRoaringBitmap.bitmapOf(1, 1234, 5678, 100000);
-        ImmutableBitmapCounter counter = new ImmutableBitmapCounter(bitmap);
+        ImmutableBitmapCounter counter = new ImmutableBitmapCounter(
+                MutableRoaringBitmap.bitmapOf(1, 1234, 5678, 100000)
+        );
 
         ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
         serializer.serialize(counter, buffer);

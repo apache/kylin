@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
-    private static final BitmapCounter DELEGATE = new ImmutableBitmapCounter();
+    private static final BitmapCounter DELEGATE = new MutableBitmapCounter();
 
     // called by reflection
     public BitmapSerializer(DataType type) {

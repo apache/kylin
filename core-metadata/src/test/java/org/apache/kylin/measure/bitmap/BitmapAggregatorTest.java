@@ -19,7 +19,7 @@
 package org.apache.kylin.measure.bitmap;
 
 import org.junit.Test;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
+import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -32,12 +32,12 @@ public class BitmapAggregatorTest {
         assertNull(null, aggregator.getState());
 
         aggregator.aggregate(new ImmutableBitmapCounter(
-                ImmutableRoaringBitmap.bitmapOf(10, 20, 30, 40)
+                MutableRoaringBitmap.bitmapOf(10, 20, 30, 40)
         ));
         assertEquals(4, aggregator.getState().getCount());
 
         aggregator.aggregate(new ImmutableBitmapCounter(
-                ImmutableRoaringBitmap.bitmapOf(25, 30, 35, 40, 45)
+                MutableRoaringBitmap.bitmapOf(25, 30, 35, 40, 45)
         ));
         assertEquals(7, aggregator.getState().getCount());
 
