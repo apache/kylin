@@ -148,10 +148,19 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         GTScanRequest scanRequest;
         List<GTScanRange> scanRanges = this.planScanRanges();
         if (scanRanges != null && scanRanges.size() != 0) {
-            scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(scanRanges).setDimensions(gtDimensions).//
-                    setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs).setFilterPushDown(gtFilter).//
-                    setAllowStorageAggregation(context.isNeedStorageAggregation()).setAggCacheMemThreshold(cubeSegment.getCubeInstance().getConfig().getQueryCoprocessorMemGB()).//
-                    setStoragePushDownLimit(context.getFinalPushDownLimit()).setStorageScanRowNumThreshold(context.getThreshold()).createGTScanRequest();
+            scanRequest = new GTScanRequestBuilder()
+                .setInfo(gtInfo)
+                .setRanges(scanRanges)
+                .setDimensions(gtDimensions)
+                .setAggrGroupBy(gtAggrGroups)
+                .setAggrMetrics(gtAggrMetrics)
+                .setAggrMetricsFuncs(gtAggrFuncs)
+                .setFilterPushDown(gtFilter)
+                .setAllowStorageAggregation(context.isNeedStorageAggregation())
+                .setAggCacheMemThreshold(cubeSegment.getCubeInstance().getConfig().getQueryCoprocessorMemGB())
+                .setStoragePushDownLimit(context.getFinalPushDownLimit())
+                .setStorageScanRowNumThreshold(context.getThreshold())
+                .createGTScanRequest();
         } else {
             scanRequest = null;
         }
