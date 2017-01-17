@@ -381,11 +381,22 @@ public class GTScanRequest {
             long timeout = BytesUtil.readVLong(in);
             String storageBehavior = BytesUtil.readUTFString(in);
 
-            return new GTScanRequestBuilder().setInfo(sInfo).setRanges(sRanges).setDimensions(sColumns).//
-            setAggrGroupBy(sAggGroupBy).setAggrMetrics(sAggrMetrics).setAggrMetricsFuncs(sAggrMetricFuncs).//
-            setFilterPushDown(sGTFilter).setAllowStorageAggregation(sAllowPreAggr).setAggCacheMemThreshold(sAggrCacheGB).//
-            setStorageScanRowNumThreshold(storageScanRowNumThreshold).setStoragePushDownLimit(storagePushDownLimit).//
-            setStartTime(startTime).setTimeout(timeout).setStorageBehavior(storageBehavior).createGTScanRequest();
+            return new GTScanRequestBuilder()
+                .setInfo(sInfo)
+                .setRanges(sRanges)
+                .setDimensions(sColumns)
+                .setAggrGroupBy(sAggGroupBy)
+                .setAggrMetrics(sAggrMetrics)
+                .setAggrMetricsFuncs(sAggrMetricFuncs)
+                .setFilterPushDown(sGTFilter)
+                .setAllowStorageAggregation(sAllowPreAggr)
+                .setAggCacheMemThreshold(sAggrCacheGB)
+                .setStorageScanRowNumThreshold(storageScanRowNumThreshold)
+                .setStoragePushDownLimit(storagePushDownLimit)
+                .setStartTime(startTime)
+                .setTimeout(timeout)
+                .setStorageBehavior(storageBehavior)
+                .createGTScanRequest();
         }
 
         private void serializeGTRecord(GTRecord gtRecord, ByteBuffer out) {
