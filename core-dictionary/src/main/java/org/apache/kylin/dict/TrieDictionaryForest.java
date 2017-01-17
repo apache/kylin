@@ -51,6 +51,14 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
 
     private ArrayList<ByteArray> maxValue;
 
+    private int minId;
+
+    private int maxId;
+
+    private int sizeOfId;
+
+    private int sizeOfValue;
+
     public TrieDictionaryForest() { // default constructor for Writable interface
     }
 
@@ -65,42 +73,28 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         this.accuOffset = accuOffset;
         this.bytesConvert = bytesConverter;
         this.baseId = baseId;
-        initMaxValue();
+        initConstantValue();
         initForestCache();
     }
 
     @Override
     public int getMinId() {
-        if (trees.isEmpty())
-            return baseId;
-        return trees.get(0).getMinId() + baseId;
+        return this.minId;
     }
 
     @Override
     public int getMaxId() {
-        if (trees.isEmpty())
-            return baseId - 1;
-        int index = trees.size() - 1;
-        int id = accuOffset.get(index) + trees.get(index).getMaxId() + baseId;
-        return id;
+        return this.maxId;
     }
 
     @Override
     public int getSizeOfId() {
-        if (trees.isEmpty())
-            return 1;
-        int maxOffset = accuOffset.get(accuOffset.size() - 1);
-        TrieDictionary<T> lastTree = trees.get(trees.size() - 1);
-        int sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1L);
-        return sizeOfId;
+        return this.sizeOfId;
     }
 
     @Override
     public int getSizeOfValue() {
-        int maxValue = 0;
-        for (TrieDictionary<T> tree : trees)
-            maxValue = Math.max(maxValue, tree.getSizeOfValue());
-        return maxValue;
+        return this.sizeOfValue;
     }
 
     @Override
@@ -340,7 +334,16 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         }
     }
 
-    private void initMaxValue() throws IllegalStateException {
+    private void initConstantValue() throws IllegalStateException {
+        initMaxValueForEachTrie();
+        initMaxId();
+        initMinId();
+        initSizeOfId();
+        initSizeOfValue();
+    }
+
+    private void initMaxValueForEachTrie(){
+        //init max value
         this.maxValue = new ArrayList<>();
         if (this.trees == null || trees.isEmpty()) {
             return;
@@ -351,6 +354,40 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
             ByteArray ba1 = new ByteArray(b1, 0, b1.length);
             this.maxValue.add(ba1);
         }
+    }
+
+    private void initMaxId(){
+        if (trees.isEmpty()) {
+            this.maxId = baseId - 1;
+            return;
+        }
+        int index = trees.size() - 1;
+        this.maxId = accuOffset.get(index) + trees.get(index).getMaxId() + baseId;
+    }
+
+    private void initMinId(){
+        if (trees.isEmpty()) {
+            this.minId = baseId;
+            return;
+        }
+        this.minId = trees.get(0).getMinId() + baseId;
+    }
+
+    private void initSizeOfId(){
+        if (trees.isEmpty()){
+            this.sizeOfId = 1;
+            return;
+        }
+        int maxOffset = accuOffset.get(accuOffset.size() - 1);
+        TrieDictionary<T> lastTree = trees.get(trees.size() - 1);
+        this.sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1L);
+    }
+
+    private void initSizeOfValue(){
+        int maxValue = 0;
+        for (TrieDictionary<T> tree : trees)
+            maxValue = Math.max(maxValue, tree.getSizeOfValue());
+        this.sizeOfValue = maxValue;
     }
 
     private void initForestCache() {
