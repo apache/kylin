@@ -53,17 +53,17 @@ public class ModelChooser {
         IdentityHashMap<OLAPContext, Set<IRealization>> candidates = new IdentityHashMap<>();
 
         // attempt one model for all contexts
-        Set<IRealization> reals = attemptSelectModel(contexts);
-        if (reals != null) {
-            for (OLAPContext ctx : contexts) {
-                candidates.put(ctx, reals);
-            }
-            return candidates;
-        }
+        //        Set<IRealization> reals = attemptSelectModel(contexts);
+        //        if (reals != null) {
+        //            for (OLAPContext ctx : contexts) {
+        //                candidates.put(ctx, reals);
+        //            }
+        //            return candidates;
+        //        }
 
         // try different model for different context
         for (OLAPContext ctx : contexts) {
-            reals = attemptSelectModel(ImmutableList.of(ctx));
+            Set<IRealization> reals = attemptSelectModel(ImmutableList.of(ctx));
             if (reals == null)
                 throw new NoRealizationFoundException("No model found for" + toErrorMsg(ctx));
 

@@ -53,6 +53,7 @@ import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.JoinUnionTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
+import org.apache.calcite.rel.rules.SemiJoinRule;
 import org.apache.calcite.rel.rules.SortJoinTransposeRule;
 import org.apache.calcite.rel.rules.SortUnionTransposeRule;
 import org.apache.calcite.rel.type.RelDataType;
@@ -174,6 +175,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.removeRule(JoinUnionTransposeRule.RIGHT_UNION);
         planner.removeRule(AggregateUnionTransposeRule.INSTANCE);
         planner.removeRule(DateRangeRules.FILTER_INSTANCE);
+        planner.removeRule(SemiJoinRule.INSTANCE);
         // distinct count will be split into a separated query that is joined with the left query
         planner.removeRule(AggregateExpandDistinctAggregatesRule.INSTANCE);
 
