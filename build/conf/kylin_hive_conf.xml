@@ -88,4 +88,15 @@
         <description>Collect statistics for newly created intermediate table</description>
     </property>
 
+    <property>
+        <name>hive.merge.mapfiles</name>
+        <value>false</value>
+        <description>Disable Hive's auto merge</description>
+    </property>
+
+    <property>
+        <name>hive.merge.mapredfiles</name>
+        <value>false</value>
+        <description>Disable Hive's auto merge</description>
+    </property>
 </configuration>
