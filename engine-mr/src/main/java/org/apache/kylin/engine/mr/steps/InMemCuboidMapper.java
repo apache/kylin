@@ -94,8 +94,10 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
             dictionaryMap.put(col, cubeSegment.getDictionary(col));
         }
 
+        int taskCount = config.getCubeAlgorithmInMemConcurrentThreads();
         DoggedCubeBuilder cubeBuilder = new DoggedCubeBuilder(cube.getDescriptor(), flatDesc, dictionaryMap);
         cubeBuilder.setReserveMemoryMB(calculateReserveMB(context.getConfiguration()));
+        cubeBuilder.setConcurrentThreads(taskCount);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         future = executorService.submit(cubeBuilder.buildAsRunnable(queue, new MapContextGTRecordWriter(context, cubeDesc, cubeSegment)));

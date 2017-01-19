@@ -300,6 +300,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.cube.algorithm.inmem-split-limit", "500"));
     }
 
+    public int getCubeAlgorithmInMemConcurrentThreads() {
+        return Integer.parseInt(getOptional("kylin.cube.algorithm.inmem-concurrent-threads", "1"));
+    }
+
     public boolean isIgnoreCubeSignatureInconsistency() {
         return Boolean.parseBoolean(getOptional("kylin.cube.ignore-signature-inconsistency", "false"));
     }
@@ -744,7 +748,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getYarnStatusCheckIntervalSeconds() {
-        return Integer.parseInt(getOptional("kylin.engine.mr.yarn-check-interval-seconds", "60"));
+        return Integer.parseInt(getOptional("kylin.engine.mr.yarn-check-interval-seconds", "10"));
     }
 
     // ============================================================================

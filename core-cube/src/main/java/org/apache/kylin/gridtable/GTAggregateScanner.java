@@ -36,6 +36,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
 import org.apache.kylin.common.util.Pair;
@@ -178,11 +179,16 @@ public class GTAggregateScanner implements IGTScanner {
         final List<Dump> dumps;
         final int keyLength;
         final boolean[] compareMask;
+        boolean compareAll = true;
         final BufferedMeasureCodec measureCodec;
 
         final Comparator<byte[]> bytesComparator = new Comparator<byte[]>() {
             @Override
             public int compare(byte[] o1, byte[] o2) {
+                if (compareAll) {
+                    return Bytes.compareTo(o1, o2);
+                }
+
                 int result = 0;
                 // profiler shows this check is slow
                 // Preconditions.checkArgument(keyLength == o1.length && keyLength == o2.length);
@@ -206,6 +212,9 @@ public class GTAggregateScanner implements IGTScanner {
 
         public AggregationCache() {
             compareMask = createCompareMask();
+            for (boolean l : compareMask) {
+                compareAll = compareAll && l;
+            }
             keyLength = compareMask.length;
             dumps = Lists.newArrayList();
             aggBufMap = createBuffMap();
