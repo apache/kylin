@@ -31,11 +31,11 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -118,10 +118,9 @@ public class CachedTreeMapTest {
     public static final String workingDir = "/tmp/kylin_cachedtreemap_test/working";
 
     private static void cleanup() {
-        Configuration conf = new Configuration();
         Path basePath = new Path(baseDir);
         try {
-            FileSystem.get(basePath.toUri(), conf).delete(basePath, true);
+            HadoopUtil.getFileSystem(basePath).delete(basePath, true);
         } catch (IOException e) {}
         VALUE_WRITE_ERROR_TOGGLE = false;
     }
@@ -292,8 +291,7 @@ public class CachedTreeMapTest {
         // move version dir to base dir, to simulate the older format
         Path versionPath = new Path(map.getLatestVersion());
         Path tmpVersionPath = new Path(versionPath.getParent().getParent(), versionPath.getName());
-        Configuration conf = new Configuration();
-        FileSystem fs = FileSystem.get(versionPath.toUri(), conf);
+        FileSystem fs = HadoopUtil.getFileSystem(versionPath);
         fs.rename(versionPath, tmpVersionPath);
         fs.delete(new Path(baseDir), true);
         fs.rename(tmpVersionPath, new Path(baseDir));

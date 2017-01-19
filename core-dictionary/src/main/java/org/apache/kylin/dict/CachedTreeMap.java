@@ -38,6 +38,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,12 +146,12 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
         this.keepAppend = true;
         this.maxVersions = maxVersions;
         this.versionTTL = versionTTL;
-        this.conf = new Configuration();
+        this.conf = HadoopUtil.getCurrentConfiguration();
         if (basePath.endsWith("/")) {
             basePath = basePath.substring(0, basePath.length()-1);
         }
         this.baseDir = new Path(basePath);
-        this.fs = FileSystem.get(baseDir.toUri(), conf);
+        this.fs = HadoopUtil.getFileSystem(baseDir, conf);
         if (!fs.exists(baseDir)) {
             fs.mkdirs(baseDir);
         }
@@ -447,7 +448,7 @@ public class CachedTreeMap<K extends WritableComparable, V extends Writable> ext
 
     public static FSDataInputStream openLatestIndexInput(Configuration conf, String baseDir) throws IOException {
         Path basePath = new Path(baseDir);
-        FileSystem fs = FileSystem.get(basePath.toUri(), conf);
+        FileSystem fs = HadoopUtil.getFileSystem(basePath, conf);
         Path indexPath = new Path(getLatestVersion(conf, fs, basePath), ".index");
         return fs.open(indexPath, 8 * 1024 * 1024);
     }

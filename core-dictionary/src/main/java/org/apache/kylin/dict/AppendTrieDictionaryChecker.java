@@ -17,16 +17,16 @@
 */
 package org.apache.kylin.dict;
 
-import org.apache.hadoop.conf.Configuration;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.kylin.common.util.HadoopUtil;
 
 /**
  * Created by sunyerui on 16/11/15.
@@ -34,9 +34,8 @@ import java.util.List;
 public class AppendTrieDictionaryChecker {
 
     public boolean runChecker(String baseDir) throws IOException {
-        Configuration conf = new Configuration();
         Path basePath = new Path(baseDir);
-        FileSystem fs = FileSystem.get(basePath.toUri(), conf);
+        FileSystem fs = HadoopUtil.getFileSystem(basePath);
         List<Path> sliceList = new ArrayList<>();
         List<Path> corruptedSliceList = new ArrayList<>();
         listDictSlicePath(fs, fs.getFileStatus(basePath), sliceList);

@@ -51,6 +51,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.MetadataManager;
 import org.slf4j.Logger;
@@ -1163,20 +1164,18 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
     @Override
     public AppendTrieDictionary copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
         //copy appendDict
-        Configuration conf = new Configuration();
-
         Path base = new Path(baseDir);
-        FileSystem srcFs = FileSystem.get(base.toUri(), conf);
-        Path srcPath = CachedTreeMap.getLatestVersion(conf, srcFs, base);
+        FileSystem srcFs = HadoopUtil.getFileSystem(base);
+        Path srcPath = CachedTreeMap.getLatestVersion(HadoopUtil.getCurrentConfiguration(), srcFs, base);
         Path dstPath = new Path(srcPath.toString().replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()));
         logger.info("Copy appendDict from {} to {}", srcPath, dstPath);
 
-        FileSystem dstFs = FileSystem.get(dstPath.toUri(), conf);
+        FileSystem dstFs = HadoopUtil.getFileSystem(dstPath);
         if (dstFs.exists(dstPath)) {
             logger.info("Delete existing AppendDict {}", dstPath);
             dstFs.delete(dstPath, true);
         }
-        FileUtil.copy(FileSystem.get(srcPath.toUri(), conf), srcPath, FileSystem.get(dstPath.toUri(), conf), dstPath, false, true, conf);
+        FileUtil.copy(srcFs, srcPath, dstFs, dstPath, false, true, HadoopUtil.getCurrentConfiguration());
 
         // init new AppendTrieDictionary
         AppendTrieDictionary newDict = new AppendTrieDictionary();
@@ -1194,7 +1193,7 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
     @Override
     public void readFields(DataInput in) throws IOException {
         String baseDir = in.readUTF();
-        Configuration conf = new Configuration();
+        Configuration conf = HadoopUtil.getCurrentConfiguration();
         try (FSDataInputStream input = CachedTreeMap.openLatestIndexInput(conf, baseDir)) {
             int baseId = input.readInt();
             int maxId = input.readInt();
