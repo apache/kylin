@@ -347,7 +347,7 @@ public class ExecutableManager {
             for (AbstractExecutable task : tasks) {
                 if (task.getId().compareTo(stepId) >= 0) {
                     logger.debug("rollback task : " + task);
-                    updateJobOutput(task.getId(), ExecutableState.READY, null, null);
+                    updateJobOutput(task.getId(), ExecutableState.READY, Maps.<String, String>newHashMap(), "");
                 }
             }
         }

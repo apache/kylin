@@ -148,7 +148,7 @@ public class MapReduceExecutable extends AbstractExecutable {
             //            boolean useKerberosAuth = context.getConfig().isGetJobStatusWithKerberos();
             //            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
-            while (!isDiscarded()) {
+            while (!isDiscarded() && !isPaused()) {
 
                 JobStepStatusEnum newStatus = HadoopJobStatusChecker.checkStatus(job, output);
                 if (status == JobStepStatusEnum.KILLED) {
@@ -184,7 +184,11 @@ public class MapReduceExecutable extends AbstractExecutable {
                 }
             }
 
-            return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
+            if (isDiscarded()) {
+                return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
+            } else {
+                return new ExecuteResult(ExecuteResult.State.STOPPED, output.toString());
+            }
 
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
