@@ -26,6 +26,30 @@ import java.util.Iterator;
  * An implementation-agnostic bitmap type.
  */
 public interface BitmapCounter extends Iterable<Integer> {
+
+    /**
+     * Add the value to the bitmap (set the value to "true"), whether it already appears or not.
+     * @param value integer value
+     */
+    void add(int value);
+
+    /**
+     * In-place bitwise OR (union) operation. The current bitmap is modified.
+     * @param another other bitmap
+     */
+    void orWith(BitmapCounter another);
+
+    /**
+     * In-place bitwise AND (intersection) operation. The current bitmap is modified.
+     * @param another other bitmap
+     */
+    void andWith(BitmapCounter another);
+
+    /**
+     * reset to an empty bitmap
+     */
+    void clear();
+
     /**
      * @return cardinality of the bitmap
      */
@@ -44,13 +68,13 @@ public interface BitmapCounter extends Iterable<Integer> {
     /**
      * Serialize this counter. The current counter is not modified.
      */
-    void serialize(ByteBuffer out) throws IOException;
+    void write(ByteBuffer out) throws IOException;
 
     /**
      * Deserialize a counter from its serialized form.
      * <p> After deserialize, any changes to `in` should not affect the returned counter.
      */
-    BitmapCounter deserialize(ByteBuffer in) throws IOException;
+    void readFields(ByteBuffer in) throws IOException;
 
     /**
      * @return size of the counter stored in the current position of `in`.

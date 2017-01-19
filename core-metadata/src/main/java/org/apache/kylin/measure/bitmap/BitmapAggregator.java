@@ -21,47 +21,36 @@ package org.apache.kylin.measure.bitmap;
 import org.apache.kylin.measure.MeasureAggregator;
 
 public class BitmapAggregator extends MeasureAggregator<BitmapCounter> {
+    private static final BitmapCounterFactory bitmapFactory = RoaringBitmapCounterFactory.INSTANCE;
 
-    private ImmutableBitmapCounter sum;
-    private boolean isMutable;
+    private BitmapCounter sum;
 
     @Override
     public void reset() {
         sum = null;
-        isMutable = false;
     }
 
     @Override
     public void aggregate(BitmapCounter value) {
-        ImmutableBitmapCounter v = (ImmutableBitmapCounter) value;
-
         // Here we optimize for case when group only has 1 value. In such situation, no
         // aggregation is needed, so we just keep a reference to the first value, saving
         // the cost of deserialization and merging.
         if (sum == null) {
-            sum = v;
+            sum = value;
             return;
         }
 
-        MutableBitmapCounter mutable;
-        if (!isMutable) {   // when aggregate the second value
-            mutable = sum.toMutable();
-            sum = mutable;
-            isMutable = true;
-        } else {    // for the third, forth, ...
-            mutable = (MutableBitmapCounter) sum;
-        }
-        mutable.orWith(v);
+        sum.orWith(value);
     }
 
     @Override
     public BitmapCounter aggregate(BitmapCounter value1, BitmapCounter value2) {
-        MutableBitmapCounter merged = new MutableBitmapCounter();
+        BitmapCounter merged = bitmapFactory.newBitmap();
         if (value1 != null) {
-            merged.orWith((ImmutableBitmapCounter) value1);
+            merged.orWith(value1);
         }
         if (value2 != null) {
-            merged.orWith((ImmutableBitmapCounter) value2);
+            merged.orWith(value2);
         }
         return merged;
     }

@@ -23,38 +23,25 @@ import org.roaringbitmap.buffer.MutableRoaringBitmap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-/**
- * A thin wrapper around {@link MutableRoaringBitmap}.
- */
-public class MutableBitmapCounter extends ImmutableBitmapCounter {
+public class RoaringBitmapCounterFactory implements BitmapCounterFactory {
+    public static final BitmapCounterFactory INSTANCE = new RoaringBitmapCounterFactory();
 
-    public MutableBitmapCounter() {
-        super(new MutableRoaringBitmap());
-    }
+    private RoaringBitmapCounterFactory() {}
 
-    private MutableRoaringBitmap getBitmap() {
-        return (MutableRoaringBitmap) bitmap;
-    }
-
-    public void clear() {
-        getBitmap().clear();
-    }
-
-    public void add(int value) {
-        getBitmap().add(value);
-    }
-
-    public void orWith(ImmutableBitmapCounter another) {
-        getBitmap().or(another.bitmap);
-    }
-
-    public void andWith(ImmutableBitmapCounter another) {
-        getBitmap().and(another.bitmap);
+    @Override
+    public BitmapCounter newBitmap() {
+        return new RoaringBitmapCounter();
     }
 
     @Override
-    public void serialize(ByteBuffer out) throws IOException {
-        getBitmap().runOptimize();
-        super.serialize(out);
+    public BitmapCounter newBitmap(int... values) {
+        return new RoaringBitmapCounter(MutableRoaringBitmap.bitmapOf(values));
+    }
+
+    @Override
+    public BitmapCounter newBitmap(ByteBuffer in) throws IOException {
+        RoaringBitmapCounter counter = new RoaringBitmapCounter();
+        counter.readFields(in);
+        return counter;
     }
 }

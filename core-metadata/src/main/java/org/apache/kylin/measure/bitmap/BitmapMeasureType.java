@@ -96,18 +96,19 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
     @Override
     public MeasureIngester<BitmapCounter> newIngester() {
+        final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
+
         return new MeasureIngester<BitmapCounter>() {
-            MutableBitmapCounter current = new MutableBitmapCounter();
+            BitmapCounter current = factory.newBitmap();
 
             @Override
             public BitmapCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 checkArgument(values.length == 1, "expect 1 value, got %s", Arrays.toString(values));
 
-                MutableBitmapCounter bitmap = current;
-                bitmap.clear();
+                current.clear();
 
                 if (values[0] == null) {
-                    return bitmap;
+                    return current;
                 }
 
                 int id;
@@ -119,8 +120,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
                     id = Integer.parseInt(values[0]);
                 }
 
-                bitmap.add(id);
-                return bitmap;
+                current.add(id);
+                return current;
             }
 
             @Override
@@ -132,7 +133,7 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
                 Dictionary<String> sourceDict = oldDicts.get(colRef);
                 Dictionary<String> mergedDict = newDicts.get(colRef);
 
-                MutableBitmapCounter retValue = new MutableBitmapCounter();
+                BitmapCounter retValue = factory.newBitmap();
                 for (int id : value) {
                     int newId;
                     String v = sourceDict.getValueFromId(id);
@@ -148,7 +149,7 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
             @Override
             public void reset() {
-                current = new MutableBitmapCounter();
+                current = factory.newBitmap();
             }
         };
     }

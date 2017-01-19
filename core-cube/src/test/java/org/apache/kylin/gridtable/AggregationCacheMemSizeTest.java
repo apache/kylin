@@ -33,7 +33,9 @@ import org.apache.kylin.measure.basic.BigDecimalSumAggregator;
 import org.apache.kylin.measure.basic.DoubleSumAggregator;
 import org.apache.kylin.measure.basic.LongSumAggregator;
 import org.apache.kylin.measure.bitmap.BitmapAggregator;
-import org.apache.kylin.measure.bitmap.MutableBitmapCounter;
+import org.apache.kylin.measure.bitmap.BitmapCounter;
+import org.apache.kylin.measure.bitmap.BitmapCounterFactory;
+import org.apache.kylin.measure.bitmap.RoaringBitmapCounterFactory;
 import org.apache.kylin.measure.hllc.HLLCAggregator;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.github.jamm.MemoryMeter;
@@ -43,13 +45,14 @@ import com.google.common.base.Stopwatch;
 
 public class AggregationCacheMemSizeTest {
     private static final MemoryMeter meter = new MemoryMeter();
-    private static final MutableBitmapCounter[] bitmaps = new MutableBitmapCounter[5];
+    private static final BitmapCounterFactory bitmapFactory = RoaringBitmapCounterFactory.INSTANCE;
+    private static final BitmapCounter[] bitmaps = new BitmapCounter[5];
     private static final Random random = new Random();
 
     // consider bitmaps with variant cardinality
     static {
         for (int i = 0; i < bitmaps.length; i++) {
-            bitmaps[i] = new MutableBitmapCounter();
+            bitmaps[i] = bitmapFactory.newBitmap();
         }
 
         final int totalBits = 1_000_000;
@@ -116,7 +119,7 @@ public class AggregationCacheMemSizeTest {
     }
 
     private BitmapAggregator createBitmapAggr(boolean lowCardinality) {
-        MutableBitmapCounter counter = new MutableBitmapCounter();
+        BitmapCounter counter = bitmapFactory.newBitmap();
         counter.orWith(lowCardinality ? bitmaps[0] : bitmaps[3]);
 
         BitmapAggregator result = new BitmapAggregator();

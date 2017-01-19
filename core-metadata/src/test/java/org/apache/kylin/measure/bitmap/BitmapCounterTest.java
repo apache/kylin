@@ -19,23 +19,21 @@
 package org.apache.kylin.measure.bitmap;
 
 import org.junit.Test;
-import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class BitmapCounterTest {
+    private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
 
     @Test
     public void testBitmapCounter() {
-        ImmutableBitmapCounter counter = new ImmutableBitmapCounter(
-                MutableRoaringBitmap.bitmapOf(10, 20, 30, 1000)
-        );
+        BitmapCounter counter = factory.newBitmap(10, 20, 30, 1000);
         assertEquals(4, counter.getCount());
         assertTrue(counter.getMemBytes() > 0);
 
-        MutableBitmapCounter counter2 = new MutableBitmapCounter();
+        BitmapCounter counter2 = factory.newBitmap();
         assertEquals(0, counter2.getCount());
         counter2.add(10);
         counter2.add(30);
@@ -56,30 +54,6 @@ public class BitmapCounterTest {
 
         counter2.clear();
         assertEquals(0, counter2.getCount());
-    }
-
-    @Test
-    public void testToMutableBitmapCounter() {
-        ImmutableBitmapCounter immutable = new ImmutableBitmapCounter(
-                MutableRoaringBitmap.bitmapOf(10, 20, 30, 1000)
-        );
-        MutableBitmapCounter mutable = new MutableBitmapCounter();
-        mutable.orWith(immutable);
-
-        assertEquals(4, immutable.getCount());
-        assertEquals(4, mutable.getCount());
-        assertTrue(immutable.equals(mutable));
-        assertTrue(mutable.equals(immutable));
-
-        MutableBitmapCounter newCounter = immutable.toMutable();
-        newCounter.add(40);
-        assertEquals(4, immutable.getCount());
-        assertEquals(5, newCounter.getCount());
-
-        newCounter = mutable.toMutable();
-        newCounter.add(40);
-        assertEquals(4, mutable.getCount());
-        assertEquals(5, newCounter.getCount());
     }
 
 }

@@ -25,7 +25,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
-    private static final BitmapCounter DELEGATE = new MutableBitmapCounter();
+    private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
+    private static final BitmapCounter DELEGATE = factory.newBitmap();
 
     // called by reflection
     public BitmapSerializer(DataType type) {
@@ -34,7 +35,7 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
     @Override
     public void serialize(BitmapCounter value, ByteBuffer out) {
         try {
-            value.serialize(out);
+            value.write(out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -42,9 +43,9 @@ public class BitmapSerializer extends DataTypeSerializer<BitmapCounter> {
 
     @Override
     public BitmapCounter deserialize(ByteBuffer in) {
-
         try {
-            return DELEGATE.deserialize(in);
+            return factory.newBitmap(in);
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

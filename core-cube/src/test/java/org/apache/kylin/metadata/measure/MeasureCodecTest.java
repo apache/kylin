@@ -25,7 +25,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.measure.BufferedMeasureCodec;
-import org.apache.kylin.measure.bitmap.MutableBitmapCounter;
+import org.apache.kylin.measure.bitmap.BitmapCounter;
+import org.apache.kylin.measure.bitmap.RoaringBitmapCounterFactory;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -58,7 +59,7 @@ public class MeasureCodecTest extends LocalFileMetadataTestCase {
         HLLCounter hllc = new HLLCounter(16);
         hllc.add("1234567");
         hllc.add("abcdefg");
-        MutableBitmapCounter bitmap = new MutableBitmapCounter();
+        BitmapCounter bitmap = RoaringBitmapCounterFactory.INSTANCE.newBitmap();
         bitmap.add(123);
         bitmap.add(45678);
         bitmap.add(Integer.MAX_VALUE - 10);

@@ -28,9 +28,10 @@ import java.util.Map;
  *          requires an bitmap count distinct measure of uuid, and an dimension of event
  */
 public class BitmapIntersectDistinctCountAggFunc {
+    private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
 
     public static class RetentionPartialResult {
-        Map<Object, MutableBitmapCounter> map;
+        Map<Object, BitmapCounter> map;
         List keyList;
 
         public RetentionPartialResult() {
@@ -42,12 +43,11 @@ public class BitmapIntersectDistinctCountAggFunc {
                 this.keyList = keyList;
             }
             if (this.keyList != null && this.keyList.contains(key)) {
-                MutableBitmapCounter counter = map.get(key);
+                BitmapCounter counter = map.get(key);
                 if (counter == null) {
-                    counter = new MutableBitmapCounter();
-                    map.put(key, counter);
+                    map.put(key, counter = factory.newBitmap());
                 }
-                counter.orWith((ImmutableBitmapCounter) value);
+                counter.orWith((BitmapCounter) value);
             }
         }
 
@@ -61,11 +61,11 @@ public class BitmapIntersectDistinctCountAggFunc {
                     return 0;
                 }
             }
-            MutableBitmapCounter counter = null;
+            BitmapCounter counter = null;
             for (Object key : keyList) {
-                MutableBitmapCounter c = map.get(key);
+                BitmapCounter c = map.get(key);
                 if (counter == null) {
-                    counter = new MutableBitmapCounter();
+                    counter = factory.newBitmap();
                     counter.orWith(c);
                 } else {
                     counter.andWith(c);
