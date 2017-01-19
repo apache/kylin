@@ -12,7 +12,7 @@
   limitations under the License. See accompanying LICENSE file.
 -->
 
-<ehcache maxBytesLocalHeap="10M">>
+<ehcache maxBytesLocalHeap="256M">>
     <cache name="StorageCache"
            eternal="false"
            timeToIdleSeconds="86400"
