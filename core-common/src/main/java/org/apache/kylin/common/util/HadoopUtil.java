@@ -82,9 +82,6 @@ public class HadoopUtil {
     }
     
     public static FileSystem getFileSystem(Path path, Configuration conf) {
-        if (StringUtils.isBlank(path.toUri().getScheme()))
-            throw new IllegalArgumentException("Path must be qualified: " + path);
-        
         try {
             return path.getFileSystem(conf);
         } catch (IOException e) {
