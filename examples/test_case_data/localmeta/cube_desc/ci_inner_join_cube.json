@@ -267,16 +267,6 @@
       },
       "returntype" : "raw"
     }
-  }, {
-    "name" : "GVM_PERCENTILE",
-    "function" : {
-      "expression" : "PERCENTILE",
-      "parameter" : {
-        "type" : "column",
-        "value" : "TEST_KYLIN_FACT.PRICE"
-      },
-      "returntype" : "percentile(100)"
-    }
   } ],
   "dictionaries": [ {
     "column": "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
@@ -368,7 +358,7 @@
       "name" : "f3",
       "columns" : [ {
         "qualifier" : "m",
-        "measure_refs" : [ "TEST_EXTENDED_COLUMN", "TRANS_ID_RAW", "PRICE_RAW", "CAL_DT_RAW", "BUYER_CONTACT", "SELLER_CONTACT", "GVM_PERCENTILE" ]
+        "measure_refs" : [ "TEST_EXTENDED_COLUMN", "TRANS_ID_RAW", "PRICE_RAW", "CAL_DT_RAW", "BUYER_CONTACT", "SELLER_CONTACT" ]
       } ]
     } ]
   },
@@ -448,7 +438,7 @@
   "status_need_notify" : [ ],
   "auto_merge_time_ranges" : null,
   "retention_range" : 0,
-  "engine_type" : 2,
+  "engine_type" : 4,
   "storage_type" : 2,
   "override_kylin_properties": {
     "kylin.cube.algorithm": "LAYER"

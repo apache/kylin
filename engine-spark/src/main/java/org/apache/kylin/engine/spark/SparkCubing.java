@@ -20,10 +20,8 @@ package org.apache.kylin.engine.spark;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,17 +29,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FsShell;
@@ -84,7 +78,6 @@ import org.apache.kylin.engine.spark.util.IteratorUtils;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregators;
 import org.apache.kylin.measure.hllc.HLLCounter;
-import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
@@ -108,16 +101,12 @@ import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.hive.HiveContext;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -545,109 +534,6 @@ public class SparkCubing extends AbstractApplication {
         }
     }
 
-    public static Collection<String> getKyroClasses() {
-        Set<Class> kyroClasses = Sets.newHashSet();
-        kyroClasses.addAll(new Reflections("org.apache.kylin").getSubTypesOf(Serializable.class));
-        kyroClasses.addAll(new Reflections("org.apache.kylin.dimension").getSubTypesOf(Serializable.class));
-        kyroClasses.addAll(new Reflections("org.apache.kylin.cube").getSubTypesOf(Serializable.class));
-        kyroClasses.addAll(new Reflections("org.apache.kylin.cube.model").getSubTypesOf(Object.class));
-        kyroClasses.addAll(new Reflections("org.apache.kylin.metadata").getSubTypesOf(Object.class));
-        kyroClasses.addAll(new Reflections("org.apache.kylin.metadata.model").getSubTypesOf(Object.class));
-        kyroClasses.addAll(new Reflections("org.apache.kylin.metadata.measure").getSubTypesOf(Object.class));
-        kyroClasses.addAll(new Reflections("org.apache.kylin.metadata.datatype").getSubTypesOf(org.apache.kylin.common.util.BytesSerializer.class));
-        kyroClasses.addAll(new Reflections("org.apache.kylin.measure").getSubTypesOf(MeasureIngester.class));
-
-        kyroClasses.add(HashMap.class);
-        kyroClasses.add(org.apache.spark.sql.Row[].class);
-        kyroClasses.add(org.apache.spark.sql.Row.class);
-        kyroClasses.add(org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema.class);
-        kyroClasses.add(org.apache.spark.sql.types.StructType.class);
-        kyroClasses.add(org.apache.spark.sql.types.StructField[].class);
-        kyroClasses.add(org.apache.spark.sql.types.StructField.class);
-        kyroClasses.add(org.apache.spark.sql.types.DateType$.class);
-        kyroClasses.add(org.apache.spark.sql.types.Metadata.class);
-        kyroClasses.add(org.apache.spark.sql.types.StringType$.class);
-        kyroClasses.add(Hashing.murmur3_128().getClass());
-        kyroClasses.add(org.apache.spark.sql.execution.columnar.CachedBatch.class);
-        kyroClasses.add(Object[].class);
-        kyroClasses.add(int[].class);
-        kyroClasses.add(byte[].class);
-        kyroClasses.add(byte[][].class);
-        kyroClasses.add(String[].class);
-        kyroClasses.add(String[][].class);
-        kyroClasses.add(org.apache.spark.sql.types.Decimal.class);
-        kyroClasses.add(scala.math.BigDecimal.class);
-        kyroClasses.add(java.math.BigDecimal.class);
-        kyroClasses.add(java.math.MathContext.class);
-        kyroClasses.add(java.math.RoundingMode.class);
-        kyroClasses.add(java.util.ArrayList.class);
-        kyroClasses.add(java.util.LinkedList.class);
-        kyroClasses.add(java.util.HashSet.class);
-        kyroClasses.add(java.util.LinkedHashSet.class);
-        kyroClasses.add(java.util.LinkedHashMap.class);
-        kyroClasses.add(java.util.TreeMap.class);
-        kyroClasses.add(java.util.concurrent.ConcurrentHashMap.class);
-
-        kyroClasses.add(java.util.HashMap.class);
-        kyroClasses.add(java.util.Properties.class);
-        kyroClasses.add(org.apache.kylin.metadata.model.ColumnDesc[].class);
-        kyroClasses.add(org.apache.kylin.metadata.model.JoinTableDesc[].class);
-        kyroClasses.add(org.apache.kylin.metadata.model.TblColRef[].class);
-        kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.RealizationCapacity.class);
-        kyroClasses.add(org.apache.kylin.metadata.model.DataModelDesc.TableKind.class);
-        kyroClasses.add(org.apache.kylin.metadata.model.PartitionDesc.DefaultPartitionConditionBuilder.class);
-        kyroClasses.add(org.apache.kylin.metadata.model.PartitionDesc.PartitionType.class);
-        kyroClasses.add(org.apache.kylin.cube.model.CubeDesc.DeriveInfo.class);
-        kyroClasses.add(org.apache.kylin.cube.model.CubeDesc.DeriveType.class);
-        kyroClasses.add(org.apache.kylin.cube.model.HBaseColumnFamilyDesc[].class);
-        kyroClasses.add(org.apache.kylin.cube.model.HBaseColumnDesc[].class);
-        kyroClasses.add(org.apache.kylin.metadata.model.MeasureDesc[].class);
-        kyroClasses.add(org.apache.kylin.cube.model.RowKeyColDesc[].class);
-        kyroClasses.add(org.apache.kylin.common.util.Array.class);
-        kyroClasses.add(org.apache.kylin.metadata.model.Segments.class);
-        kyroClasses.add(org.apache.kylin.metadata.realization.RealizationStatusEnum.class);
-        kyroClasses.add(org.apache.kylin.metadata.model.SegmentStatusEnum.class);
-        kyroClasses.add(org.apache.kylin.measure.BufferedMeasureCodec.class);
-        kyroClasses.add(org.apache.kylin.cube.kv.RowKeyColumnIO.class);
-        kyroClasses.add(org.apache.kylin.measure.MeasureCodec.class);
-        kyroClasses.add(org.apache.kylin.measure.MeasureAggregator[].class);
-        kyroClasses.add(org.apache.kylin.metadata.datatype.DataTypeSerializer[].class);
-        kyroClasses.add(org.apache.kylin.cube.kv.CubeDimEncMap.class);
-        kyroClasses.add(org.apache.kylin.measure.basic.BasicMeasureType.class);
-        kyroClasses.add(org.apache.kylin.common.util.SplittedBytes[].class);
-        kyroClasses.add(org.apache.kylin.common.util.SplittedBytes.class);
-        kyroClasses.add(org.apache.kylin.cube.kv.RowKeyEncoderProvider.class);
-        kyroClasses.add(org.apache.kylin.cube.kv.RowKeyEncoder.class);
-        kyroClasses.add(org.apache.kylin.measure.basic.BigDecimalIngester.class);
-        kyroClasses.add(org.apache.kylin.dimension.DictionaryDimEnc.class);
-        kyroClasses.add(org.apache.kylin.dimension.IntDimEnc.class);
-        kyroClasses.add(org.apache.kylin.dimension.BooleanDimEnc.class);
-        kyroClasses.add(org.apache.kylin.dimension.DateDimEnc.class);
-        kyroClasses.add(org.apache.kylin.dimension.FixedLenDimEnc.class);
-        kyroClasses.add(org.apache.kylin.dimension.FixedLenHexDimEnc.class);
-        kyroClasses.add(org.apache.kylin.dimension.IntegerDimEnc.class);
-        kyroClasses.add(org.apache.kylin.dimension.OneMoreByteVLongDimEnc.class);
-        kyroClasses.add(org.apache.kylin.dimension.TimeDimEnc.class);
-        kyroClasses.add(org.apache.kylin.cube.model.AggregationGroup.HierarchyMask.class);
-        kyroClasses.add(org.apache.kylin.measure.topn.DoubleDeltaSerializer.class);
-        kyroClasses.add(org.apache.kylin.measure.topn.Counter.class);
-
-        try {
-            kyroClasses.add(Class.forName("com.google.common.collect.EmptyImmutableList"));
-        } catch (ClassNotFoundException e) {
-            logger.error("failed to load class", e);
-        }
-
-        ArrayList<String> result = Lists.newArrayList();
-        for (Class kyroClass : kyroClasses) {
-            result.add(kyroClass.getName());
-        }
-        result.add("scala.collection.immutable.Map$EmptyMap$");
-        result.add("org.apache.spark.sql.catalyst.expressions.GenericInternalRow");
-        result.add("org.apache.spark.unsafe.types.UTF8String");
-        return result;
-    }
-
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
         final String hiveTable = optionsHelper.getOptionValue(OPTION_INPUT_PATH);
@@ -658,15 +544,8 @@ public class SparkCubing extends AbstractApplication {
 
         //serialization conf
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+        conf.set("spark.kryo.registrator", "org.apache.kylin.engine.spark.KylinKryoRegistrator");
         conf.set("spark.kryo.registrationRequired", "true");
-        final Iterable<String> allClasses = Iterables.filter(Iterables.concat(Lists.newArrayList(conf.get("spark.kryo.classesToRegister", "").split(",")), getKyroClasses()), new Predicate<String>() {
-            @Override
-            public boolean apply(@Nullable String input) {
-                return input != null && input.trim().length() > 0;
-            }
-        });
-        System.out.println("kyro classes:" + allClasses.toString());
-        conf.set("spark.kryo.classesToRegister", StringUtils.join(allClasses, ","));
 
         JavaSparkContext sc = new JavaSparkContext(conf);
         HiveContext sqlContext = new HiveContext(sc.sc());

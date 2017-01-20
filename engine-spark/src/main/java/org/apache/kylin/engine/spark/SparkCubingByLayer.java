@@ -17,13 +17,10 @@
 */
 package org.apache.kylin.engine.spark;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -71,7 +68,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.Serializable;
@@ -79,7 +75,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 
-import static org.apache.kylin.engine.spark.SparkCubing.getKyroClasses;
 
 /**
  */
@@ -129,11 +124,12 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
     }
 
     private static final void prepare() {
-        final File file = new File(SparkFiles.get("kylin.properties"));
-        final String confPath = file.getParentFile().getAbsolutePath();
+        File file = new File(SparkFiles.get("kylin.properties"));
+        String confPath = file.getParentFile().getAbsolutePath();
         logger.info("conf directory:" + confPath);
         System.setProperty(KylinConfig.KYLIN_CONF, confPath);
         ClassUtil.addClasspath(confPath);
+
     }
 
     @Override
@@ -144,17 +140,11 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final String confPath = optionsHelper.getOptionValue(OPTION_CONF_PATH);
         final String outputPath = optionsHelper.getOptionValue(OPTION_OUTPUT_PATH);
 
-        SparkConf conf = new SparkConf().setAppName("Cubing for:" + cubeName + ", segment " + segmentId);
+        SparkConf conf = new SparkConf().setAppName("Cubing for:" + cubeName + " segment " + segmentId);
         //serialization conf
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+        conf.set("spark.kryo.registrator", "org.apache.kylin.engine.spark.KylinKryoRegistrator");
         conf.set("spark.kryo.registrationRequired", "true");
-        final Iterable<String> allClasses = Iterables.filter(Iterables.concat(Lists.newArrayList(conf.get("spark.kryo.classesToRegister", "").split(",")), getKyroClasses()), new Predicate<String>() {
-            @Override
-            public boolean apply(@Nullable String input) {
-                return input != null && input.trim().length() > 0;
-            }
-        });
-        conf.set("spark.kryo.classesToRegister", StringUtils.join(allClasses, ","));
 
         JavaSparkContext sc = new JavaSparkContext(conf);
         setupClasspath(sc, confPath);
@@ -176,11 +166,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final NDCuboidBuilder ndCuboidBuilder = new NDCuboidBuilder(vCubeSegment.getValue(), new RowKeyEncoderProvider(vCubeSegment.getValue()));
 
         final Broadcast<CuboidScheduler> vCuboidScheduler = sc.broadcast(new CuboidScheduler(vCubeDesc.getValue()));
-
-        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        final Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
         final int measureNum = cubeDesc.getMeasures().size();
-        final BaseCuboidBuilder baseCuboidBuilder = new BaseCuboidBuilder(kylinConfig, vCubeDesc.getValue(), vCubeSegment.getValue(), intermediateTableDesc, AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid), MeasureIngester.create(cubeDesc.getMeasures()), cubeSegment.buildDictionaryMap());
 
         int countMeasureIndex = 0;
         for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
@@ -204,12 +190,20 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         // encode with dimension encoding, transform to <ByteArray, Object[]> RDD
         final JavaPairRDD<ByteArray, Object[]> encodedBaseRDD = intermediateTable.javaRDD().mapToPair(new PairFunction<Row, ByteArray, Object[]>() {
             transient boolean initialized = false;
+            BaseCuboidBuilder baseCuboidBuilder = null;
 
             @Override
             public Tuple2<ByteArray, Object[]> call(Row row) throws Exception {
                 if (initialized == false) {
-                    prepare();
-                    initialized = true;
+                    synchronized (SparkCubingByLayer.class) {
+                        if (initialized == false) {
+                            prepare();
+                            long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
+                            Cuboid baseCuboid = Cuboid.findById(cubeDesc, baseCuboidId);
+                            baseCuboidBuilder = new BaseCuboidBuilder(kylinConfig, cubeDesc, cubeSegment, intermediateTableDesc, AbstractRowKeyEncoder.createInstance(cubeSegment, baseCuboid), MeasureIngester.create(cubeDesc.getMeasures()), cubeSegment.buildDictionaryMap());
+                            initialized = true;
+                        }
+                    }
                 }
 
                 String[] rowArray = rowToArray(row);
@@ -235,7 +229,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         });
 
         logger.info("encodedBaseRDD partition number: " + encodedBaseRDD.getNumPartitions());
-                Long totalCount = 0L;
+        Long totalCount = 0L;
         if (kylinConfig.isSparkSanityCheckEnabled()) {
             totalCount = encodedBaseRDD.count();
             logger.info("encodedBaseRDD row count: " + encodedBaseRDD.count());
@@ -267,8 +261,8 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
             partition = estimateRDDPartitionNum(level, cubeStatsReader, kylinConfig);
             logger.info("Level " + level + " partition number: " + partition);
             allRDDs[level] = allRDDs[level - 1].flatMapToPair(flatMapFunction).reduceByKey(reducerFunction2, partition).persist(storageLevel);
-             if (kylinConfig.isSparkSanityCheckEnabled() == true) {
-                 sanityCheck(allRDDs[level], totalCount, level, cubeStatsReader, countMeasureIndex);
+            if (kylinConfig.isSparkSanityCheckEnabled() == true) {
+                sanityCheck(allRDDs[level], totalCount, level, cubeStatsReader, countMeasureIndex);
             }
             saveToHDFS(allRDDs[level], vCubeDesc.getValue(), outputPath, level, confOverwrite);
             allRDDs[level - 1].unpersist();
@@ -288,17 +282,18 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
     }
 
     private static void saveToHDFS(final JavaPairRDD<ByteArray, Object[]> rdd, final CubeDesc cubeDesc, final String hdfsBaseLocation, int level, Configuration conf) {
-       final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
-                rdd.mapToPair(new PairFunction<Tuple2<ByteArray, Object[]>, org.apache.hadoop.io.Text, org.apache.hadoop.io.Text>() {
-                    BufferedMeasureCodec codec = new BufferedMeasureCodec(cubeDesc.getMeasures());
-                    @Override
-                    public Tuple2<org.apache.hadoop.io.Text, org.apache.hadoop.io.Text> call(Tuple2<ByteArray, Object[]> tuple2) throws Exception {
-                        ByteBuffer valueBuf = codec.encode(tuple2._2());
-                        byte[] encodedBytes = new byte[valueBuf.position()];
-                        System.arraycopy(valueBuf.array(), 0, encodedBytes, 0, valueBuf.position());
-                        return new Tuple2<>(new org.apache.hadoop.io.Text(tuple2._1().array()), new org.apache.hadoop.io.Text(encodedBytes));
-                    }
-                }).saveAsNewAPIHadoopFile(cuboidOutputPath, org.apache.hadoop.io.Text.class, org.apache.hadoop.io.Text.class, SequenceFileOutputFormat.class, conf);
+        final String cuboidOutputPath = BatchCubingJobBuilder2.getCuboidOutputPathsByLevel(hdfsBaseLocation, level);
+        rdd.mapToPair(new PairFunction<Tuple2<ByteArray, Object[]>, org.apache.hadoop.io.Text, org.apache.hadoop.io.Text>() {
+            BufferedMeasureCodec codec = new BufferedMeasureCodec(cubeDesc.getMeasures());
+
+            @Override
+            public Tuple2<org.apache.hadoop.io.Text, org.apache.hadoop.io.Text> call(Tuple2<ByteArray, Object[]> tuple2) throws Exception {
+                ByteBuffer valueBuf = codec.encode(tuple2._2());
+                byte[] encodedBytes = new byte[valueBuf.position()];
+                System.arraycopy(valueBuf.array(), 0, encodedBytes, 0, valueBuf.position());
+                return new Tuple2<>(new org.apache.hadoop.io.Text(tuple2._1().array()), new org.apache.hadoop.io.Text(encodedBytes));
+            }
+        }).saveAsNewAPIHadoopFile(cuboidOutputPath, org.apache.hadoop.io.Text.class, org.apache.hadoop.io.Text.class, SequenceFileOutputFormat.class, conf);
         logger.info("Persisting RDD for level " + level + " into " + cuboidOutputPath);
     }
 

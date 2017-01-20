@@ -25,7 +25,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 public class PercentileSerializer extends DataTypeSerializer<PercentileCounter> {
     // be thread-safe and avoid repeated obj creation
-    private ThreadLocal<PercentileCounter> current = new ThreadLocal<>();
+    private transient ThreadLocal<PercentileCounter> current = null;
 
     private double compression;
 
@@ -49,6 +49,10 @@ public class PercentileSerializer extends DataTypeSerializer<PercentileCounter> 
     }
 
     private PercentileCounter current() {
+        if (current == null) {
+            current = new ThreadLocal<>();
+        }
+
         PercentileCounter counter = current.get();
         if (counter == null) {
             counter = new PercentileCounter(compression);

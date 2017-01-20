@@ -178,9 +178,11 @@
         <value>false</value>
     </property>
 
+    <!--
     <property>
         <name>net.topology.script.file.name</name>
         <value>/etc/hadoop/conf/topology_script.py</value>
     </property>
 
+    -->
 </configuration>

@@ -18,6 +18,9 @@
 
 package org.apache.kylin.measure.percentile;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 
@@ -30,7 +33,7 @@ public class PercentileCounter implements Serializable {
     double compression;
     double quantileRatio;
 
-    TDigest registers;
+    transient TDigest registers;
 
     public PercentileCounter(double compression) {
         this(compression, INVALID_QUANTILE_RATIO);
@@ -93,5 +96,22 @@ public class PercentileCounter implements Serializable {
 
     public void clear() {
         reInitRegisters();
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        registers.compress();
+        int bound = registers.byteSize();
+        ByteBuffer buf = ByteBuffer.allocate(bound);
+        registers.asSmallBytes(buf);
+        out.defaultWriteObject();
+        out.writeInt(bound);
+        out.write(buf.array(), 0, bound);
+    }
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        int bound = in.readInt();
+        ByteBuffer buf = ByteBuffer.allocate(bound);
+        in.read(buf.array(), 0, bound);
+        registers = AVLTreeDigest.fromBytes(buf);
     }
 }

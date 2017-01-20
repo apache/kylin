@@ -20,11 +20,19 @@ package org.apache.kylin.measure.percentile;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.MathUtil;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -75,5 +83,44 @@ public class PercentileCounterTest {
         double expectedResult = tDigest.quantile(quantile);
 
         assertEquals(expectedResult, actualResult, 0);
+    }
+
+    @Test
+    public void testSerialization() {
+        double compression = 100;
+        double quantile = 0.5;
+        ByteArrayOutputStream os = new ByteArrayOutputStream(1024);
+        ObjectOutputStream out = null;
+        PercentileCounter origin_counter = null;
+        try {
+            out = new ObjectOutputStream(os);
+
+            origin_counter = new PercentileCounter(compression, quantile);
+            out.writeObject(origin_counter);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
+
+        InputStream is = new ByteArrayInputStream(os.toByteArray());
+        PercentileCounter serialized_counter = null;
+        ObjectInputStream in = null;
+        try {
+            in = new ObjectInputStream(is);
+            serialized_counter = (PercentileCounter)in.readObject();
+
+            Assert.assertNotNull(serialized_counter);
+            Assert.assertNotNull(serialized_counter.registers);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            IOUtils.closeQuietly(os);
+            IOUtils.closeQuietly(is);
+        }
+
     }
 }

@@ -68,6 +68,12 @@ abstract public class KylinConfigBase implements Serializable {
             return sparkHome;
         }
 
+        sparkHome = System.getProperty("SPARK_HOME");
+        if (StringUtils.isNotEmpty(sparkHome)) {
+            logger.info("SPARK_HOME was set to " + sparkHome);
+            return sparkHome;
+        }
+
         return getKylinHome() + File.separator + "spark";
     }
 
@@ -758,6 +764,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getHadoopConfDir() {
         return getOptional("kylin.engine.spark.env.hadoop-conf-dir", "");
+    }
+
+    public void setHadoopConfDir(String hadoopConfDir) {
+        setProperty("kylin.engine.spark.env.hadoop-conf-dir", hadoopConfDir);
     }
 
     public String getSparkAdditionalJars() {

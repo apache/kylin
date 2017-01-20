@@ -24,6 +24,7 @@ import org.roaringbitmap.buffer.MutableRoaringBitmap;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -31,7 +32,7 @@ import java.util.Iterator;
 /**
  * A {@link BitmapCounter} based on roaring bitmap.
  */
-public class RoaringBitmapCounter implements BitmapCounter {
+public class RoaringBitmapCounter implements BitmapCounter, Serializable {
 
     private ImmutableRoaringBitmap bitmap;
 

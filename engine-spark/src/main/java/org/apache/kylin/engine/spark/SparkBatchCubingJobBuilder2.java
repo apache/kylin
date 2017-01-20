@@ -26,7 +26,6 @@ import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.BatchCubingJobBuilder2;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.constant.ExecutableConstants;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,11 +42,6 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
 
     @Override
     protected void addLayerCubingSteps(final CubingJob result, final String jobId, final String cuboidRootPath) {
-
-    }
-
-    @Override
-    protected AbstractExecutable createInMemCubingStep(String jobId, String cuboidRootPath) {
         IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);
         final SparkExecutable sparkExecutable = new SparkExecutable();
         sparkExecutable.setClassName(SparkCubingByLayer.class.getName());
@@ -71,7 +65,11 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         sparkExecutable.setJars(jars.toString());
 
         sparkExecutable.setName(ExecutableConstants.STEP_NAME_BUILD_SPARK_CUBE);
-        return sparkExecutable;
+        result.addTask(sparkExecutable);
+    }
+
+    @Override
+    protected void addInMemCubingSteps(final CubingJob result, String jobId, String cuboidRootPath) {
 
     }
 
