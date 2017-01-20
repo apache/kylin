@@ -80,6 +80,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       $scope.updateMeasureStatus.editIndex = index;
     }
     $scope.nextParameters = [];
+    $scope.measureParamValueColumn=$scope.getCommonMetricColumns();
     $scope.newMeasure = (!!measure)? jQuery.extend(true, {},measure):CubeDescModel.createMeasure();
     if(!!measure && measure.function.parameter.next_parameter){
       $scope.nextPara.value = measure.function.parameter.next_parameter.value;
@@ -93,6 +94,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     }else{
       $scope.newMeasure.showDim=false;
     }
+    $scope.measureParamValueUpdate();
     if($scope.newMeasure.function.expression=="TOP_N"){
       $scope.convertedColumns=[];
       if($scope.newMeasure.function.configuration==null){
@@ -326,6 +328,19 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       return false;
     }
   }
+
+  $scope.measureParamValueUpdate = function(){
+    if($scope.newMeasure.function.expression !== 'EXTENDED_COLUMN' && $scope.newMeasure.showDim==true){
+       $scope.measureParamValueColumn=$scope.getAllModelDimMeasureColumns();
+    }
+    if($scope.newMeasure.function.expression !== 'EXTENDED_COLUMN' && $scope.newMeasure.showDim==false){
+       $scope.measureParamValueColumn=$scope.getCommonMetricColumns();
+    }
+    if($scope.newMeasure.function.expression == 'EXTENDED_COLUMN'){
+      $scope.measureParamValueColumn=$scope.getExtendedHostColumn();
+    }
+  }
+
   //map right return type for param
   $scope.measureReturnTypeUpdate = function(){
 
@@ -392,6 +407,9 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           break;
         case "COUNT":
           $scope.newMeasure.function.returntype = "bigint";
+          break;
+        case "PERCENTILE":
+          $scope.newMeasure.function.returntype = "percentile(100)";
           break;
         default:
           $scope.newMeasure.function.returntype = "";
