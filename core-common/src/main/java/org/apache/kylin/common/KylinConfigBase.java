@@ -193,17 +193,20 @@ abstract public class KylinConfigBase implements Serializable {
         return new StringBuffer(root).append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).append("/").toString();
     }
 
+    public String getRawHdfsWorkingDirectory() {
+        String root = getRequired("kylin.env.hdfs-working-dir");
+        if (!root.endsWith("/")) {
+            root += "/";
+        }
+        return root;
+    }
+
     // ============================================================================
     // METADATA
     // ============================================================================
 
     public String getMetadataUrl() {
         return getOptional("kylin.metadata.url");
-    }
-
-    //for hdfs resource store
-    public String getHDFSMetadataUrl() {
-        return getOptional("kylin.metadata.hdfs.url", "kylin_default_instance_hdfs@hdfs");
     }
 
     // for test only
@@ -923,6 +926,15 @@ abstract public class KylinConfigBase implements Serializable {
 
     public boolean isWebCrossDomainEnabled() {
         return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", "true"));
+    }
+
+    //zoo keeper
+    public String getZooKeeperHost() {
+        return getOptional("kylin.storage-zookeeper.host", "localhost");
+    }
+
+    public String getZooKeeperPort() {
+        return getOptional("kylin.storage-zookeeper.port", "2181");
     }
 
 }
