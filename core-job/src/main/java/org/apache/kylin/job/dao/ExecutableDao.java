@@ -64,6 +64,12 @@ public class ExecutableDao {
         return r;
     }
 
+    public static void clearCache() {
+        synchronized (CACHE) {
+            CACHE.clear();
+        }
+    }
+
     private ExecutableDao(KylinConfig config) {
         logger.info("Using metadata url: " + config);
         this.store = MetadataManager.getInstance(config).getStore();

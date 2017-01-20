@@ -282,7 +282,7 @@
                                     <value>file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</value>
                                 </property>
                             </systemProperties>
-                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
+                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M -Dkylin.server.cluster-servers=localhost:7070</argLine>
                         </configuration>
                     </plugin>
                     <plugin>

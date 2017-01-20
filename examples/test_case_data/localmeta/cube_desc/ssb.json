@@ -183,7 +183,7 @@
   "engine_type" : 2,
   "storage_type" : 2,
   "override_kylin_properties" : {
-    "kylin.hbase.default.compression.codec" : "lz4",
-    "kylin.cube.aggrgroup.isMandatoryOnlyValid" : "true"
+    "kylin.storage.hbase.compression-codec" : "lz4",
+    "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true"
   }
 }

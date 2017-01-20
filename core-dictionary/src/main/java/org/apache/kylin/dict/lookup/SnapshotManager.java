@@ -66,6 +66,12 @@ public class SnapshotManager {
         return r;
     }
 
+    public static void clearCache() {
+        synchronized (SERVICE_CACHE) {
+            SERVICE_CACHE.clear();
+        }
+    }
+
     // ============================================================================
 
     private KylinConfig config;

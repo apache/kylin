@@ -83,7 +83,7 @@ public class Broadcaster {
     }
 
     // call Broadcaster.getInstance().notifyClearAll() to clear cache
-    static void clearCache() {
+    public static void clearCache() {
         synchronized (CACHE) {
             CACHE.clear();
         }

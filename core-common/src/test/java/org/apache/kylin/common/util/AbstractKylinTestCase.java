@@ -31,12 +31,17 @@ public abstract class AbstractKylinTestCase {
     public static final String[] SERVICES_WITH_CACHE = { //
             "org.apache.kylin.cube.CubeManager", //
             "org.apache.kylin.cube.CubeDescManager", //
+            "org.apache.kylin.dict.lookup.SnapshotManager", //
+            "org.apache.kylin.dict.DictionaryManager", //
             "org.apache.kylin.storage.hybrid.HybridManager", //
             "org.apache.kylin.metadata.realization.RealizationRegistry", //
             "org.apache.kylin.metadata.project.ProjectManager", //
             "org.apache.kylin.metadata.MetadataManager", //
+            "org.apache.kylin.metadata.cachesync.Broadcaster", //
+            "org.apache.kylin.metadata.badquery.BadQueryHistoryManager", //
             "org.apache.kylin.job.impl.threadpool.DistributedScheduler", //
-            "org.apache.kylin.job.manager.ExecutableManager", //
+            "org.apache.kylin.job.execution.ExecutableManager", //
+            "org.apache.kylin.job.dao.ExecutableDao" //
     };
 
     public abstract void createTestMetadata() throws Exception;
