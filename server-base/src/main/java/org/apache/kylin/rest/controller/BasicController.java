@@ -18,11 +18,20 @@
 
 package org.apache.kylin.rest.controller;
 
-import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
+import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.response.ErrorResponse;
 import org.slf4j.Logger;
@@ -74,4 +83,17 @@ public class BasicController {
         }
     }
 
+    protected void setDownloadResponse(String downloadFile, final HttpServletResponse response) {
+        File file = new File(downloadFile);
+        try (InputStream fileInputStream = new FileInputStream(file); OutputStream output = response.getOutputStream();) {
+            response.reset();
+            response.setContentType("application/octet-stream");
+            response.setContentLength((int) (file.length()));
+            response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+            IOUtils.copyLarge(fileInputStream, output);
+            output.flush();
+        } catch (IOException e) {
+            throw new InternalErrorException("Failed to download file: " + e.getMessage(), e);
+        }
+    }
 }
