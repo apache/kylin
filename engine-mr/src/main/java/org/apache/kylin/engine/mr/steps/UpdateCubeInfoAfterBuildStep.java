@@ -80,13 +80,8 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     private void updateTimeRange(CubeSegment segment) throws IOException {
         final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
         final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
-        Path colDir = new Path(factColumnsInputPath, partitionCol.getName());
-        FileSystem fs = HadoopUtil.getFileSystem(colDir.toString());
-        Path outputFile = HadoopUtil.getFilterOnlyPath(fs, colDir, partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
-        if (outputFile == null) {
-            throw new IOException("fail to find the partition file in base dir: " + colDir);
-        }
-
+        Path outputFile = new Path(factColumnsInputPath, partitionCol.getIdentity() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
+        FileSystem fs = HadoopUtil.getFileSystem(outputFile.toString());
         FSDataInputStream is = null;
         long minValue = Long.MAX_VALUE, maxValue = Long.MIN_VALUE;
         try {
@@ -102,4 +97,5 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         segment.setDateRangeStart(minValue);
         segment.setDateRangeEnd(maxValue);
     }
+
 }

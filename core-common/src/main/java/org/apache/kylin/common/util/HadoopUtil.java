@@ -26,10 +26,8 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.Writable;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
@@ -142,18 +140,4 @@ public class HadoopUtil {
         }
     }
 
-    public static Path getFilterOnlyPath(FileSystem fs, Path baseDir, final String filter) throws IOException {
-        FileStatus[] fileStatus = fs.listStatus(baseDir, new PathFilter() {
-            @Override
-            public boolean accept(Path path) {
-                return path.getName().startsWith(filter);
-            }
-        });
-
-        if (fileStatus.length == 1) {
-            return fileStatus[0].getPath();
-        } else {
-            return null;
-        }
-    }
 }

@@ -18,20 +18,15 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import org.apache.commons.cli.Options;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ByteArray;
-import org.apache.kylin.common.util.ByteBufferBackedInputStream;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -68,27 +63,21 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
 
             @Override
             public Dictionary<String> getDictionary(TblColRef col) throws IOException {
-                Path colDir = new Path(factColumnsInputPath, col.getName());
-                FileSystem fs = HadoopUtil.getFileSystem(colDir.toString());
-
-                Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
-                if (dictFile == null) {
+                Path dictFile = new Path(factColumnsInputPath, col.getIdentity() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
+                FileSystem fs = HadoopUtil.getWorkingFileSystem();
+                if (fs.exists(dictFile) == false)
                     return null;
-                }
-
-                try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(), SequenceFile.Reader.file(dictFile))) {
-                    NullWritable key = NullWritable.get();
-                    BytesWritable value = new BytesWritable();
-                    reader.next(key, value);
-
-                    ByteBuffer buffer = new ByteArray(value.getBytes()).asBuffer();
-                    try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(buffer))) {
-                        String dictClassName = is.readUTF();
-                        Dictionary<String> dict = (Dictionary<String>) ClassUtil.newInstance(dictClassName);
-                        dict.readFields(is);
-                        logger.info("DictionaryProvider read dict from file: " + dictFile);
-                        return dict;
-                    }
+                
+                FSDataInputStream is = null;
+                try {
+                    is = fs.open(dictFile);
+                    String dictClassName = is.readUTF();
+                    Dictionary<String> dict = (Dictionary<String>) ClassUtil.newInstance(dictClassName);
+                    dict.readFields(is);
+                    logger.info("DictionaryProvider read dict from file: " + dictFile);
+                    return dict;
+                } finally {
+                    IOUtils.closeQuietly(is);
                 }
             }
         });
