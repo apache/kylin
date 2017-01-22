@@ -107,7 +107,9 @@ public class RoaringBitmapCounter implements BitmapCounter {
         if (out.remaining() < bitmap.serializedSizeInBytes()) {
             throw new BufferOverflowException();
         }
-        bitmap.serialize(new DataOutputStream(new ByteBufferOutputStream(out)));
+        try (DataOutputStream dos = new DataOutputStream(new ByteBufferOutputStream(out))) {
+            bitmap.serialize(dos);
+        }
     }
 
     @Override
