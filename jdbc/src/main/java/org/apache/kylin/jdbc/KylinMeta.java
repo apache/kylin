@@ -209,7 +209,7 @@ public class KylinMeta extends MetaImpl {
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException(e);
             }
-            columns.add(columnMetaData(name, index, field.getType()));
+            columns.add(columnMetaData(name, index, field.getType(), true));
             fields.add(field);
             fieldNames.add(fieldName);
         }

@@ -112,8 +112,8 @@
         <aspectj.version>1.8.9</aspectj.version>
 
         <!-- Calcite Version -->
-        <calcite.version>1.10.0</calcite.version>
-        <avatica.version>1.8.0</avatica.version>
+        <calcite.version>1.11.0</calcite.version>
+        <avatica.version>1.9.0</avatica.version>
 
         <!-- Sonar -->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
@@ -450,15 +450,9 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.apache.calcite</groupId>
-                <artifactId>calcite-linq4j</artifactId>
-                <version>${calcite.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.calcite.avatica</groupId>
                 <artifactId>avatica</artifactId>
                 <version>${avatica.version}</version>
-
             </dependency>
             <!-- Workaround for hive 0.14 avatica dependency -->
             <dependency>
