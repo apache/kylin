@@ -42,8 +42,12 @@ import org.apache.kylin.engine.mr.SortedColumnDFSFile;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CreateDictionaryJob extends AbstractHadoopJob {
+
+    private static final Logger logger = LoggerFactory.getLogger(CreateDictionaryJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -68,11 +72,12 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
 
             @Override
             public Dictionary<String> getDictionary(TblColRef col) throws IOException {
-                Path colDir = new Path(factColumnsInputPath, col.getName());
-                FileSystem fs = HadoopUtil.getFileSystem(colDir.toString());
+                Path colDir = new Path(factColumnsInputPath, col.getIdentity());
+                FileSystem fs = HadoopUtil.getWorkingFileSystem();
 
                 Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
                 if (dictFile == null) {
+                    logger.info("Dict for '" + col.getName() + "' not pre-built.");
                     return null;
                 }
 

@@ -128,4 +128,8 @@ public class SortedColumnDFSFile implements ReadableTable {
         return comparator;
     }
 
+    @Override
+    public String toString() {
+        return dfsPath;
+    }
 }

@@ -37,6 +37,8 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This hadoop job will scan all rows of the hive table and then calculate the cardinality on each column.
@@ -44,6 +46,7 @@ import org.apache.kylin.metadata.model.TableDesc;
  *
  */
 public class HiveColumnCardinalityJob extends AbstractHadoopJob {
+    private static final Logger logger = LoggerFactory.getLogger(HiveColumnCardinalityJob.class);
     public static final String JOB_TITLE = "Kylin Hive Column Cardinality Job";
 
     @SuppressWarnings("static-access")

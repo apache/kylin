@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
@@ -124,12 +125,14 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             // normal col
             col = columnList.get(reducerIdToColumnIndex.get(taskId));
 
+            Preconditions.checkNotNull(col);
+
             // local build dict
             isReducerLocalBuildDict = config.isReducerLocalBuildDict();
             if (cubeDesc.getDictionaryBuilderClass(col) != null) { // only works with default dictionary builder
                 isReducerLocalBuildDict = false;
             }
-            if (col != null && isReducerLocalBuildDict) {
+            if (isReducerLocalBuildDict) {
                 builder = DictionaryGenerator.newDictionaryBuilder(col.getType());
                 builder.init(null, 0);
             }
@@ -190,7 +193,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             } else {
                 byte[] keyBytes = Bytes.copy(key.getBytes(), 1, key.getLength() - 1);
                 // output written to baseDir/colName/-r-00000 (etc)
-                String fileName = col.getName() + "/";
+                String fileName = col.getIdentity() + "/";
                 mos.write(BatchConstants.CFG_OUTPUT_COLUMN, NullWritable.get(), new Text(keyBytes), fileName);
             }
         }
@@ -231,7 +234,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private void outputPartitionInfo() throws IOException, InterruptedException {
         if (col != null) {
             // output written to baseDir/colName/colName.pci-r-00000 (etc)
-            String partitionFileName = col.getName() + "/" + col.getName() + PARTITION_COL_INFO_FILE_POSTFIX;
+            String partitionFileName = col.getIdentity() + "/" + col.getName() + PARTITION_COL_INFO_FILE_POSTFIX;
 
             mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new LongWritable(timeMinValue), partitionFileName);
             mos.write(BatchConstants.CFG_OUTPUT_PARTITION, NullWritable.get(), new LongWritable(timeMaxValue), partitionFileName);
@@ -241,7 +244,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
 
     private void outputDict(TblColRef col, Dictionary<String> dict) throws IOException, InterruptedException {
         // output written to baseDir/colName/colName.rldict-r-00000 (etc)
-        String dictFileName = col.getName() + "/" + col.getName() + DICT_FILE_POSTFIX;
+        String dictFileName = col.getIdentity() + "/" + col.getName() + DICT_FILE_POSTFIX;
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); DataOutputStream outputStream = new DataOutputStream(baos);) {
             outputStream.writeUTF(dict.getClass().getName());

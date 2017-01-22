@@ -143,6 +143,10 @@ public class HadoopUtil {
     }
 
     public static Path getFilterOnlyPath(FileSystem fs, Path baseDir, final String filter) throws IOException {
+        if (fs.exists(baseDir) == false) {
+            return null;
+        }
+
         FileStatus[] fileStatus = fs.listStatus(baseDir, new PathFilter() {
             @Override
             public boolean accept(Path path) {

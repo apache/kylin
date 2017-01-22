@@ -63,11 +63,14 @@ public class DictionaryGeneratorCLI {
             if (dictProvider != null) {
                 Dictionary<String> dict = dictProvider.getDictionary(col);
                 if (dict != null) {
+                    logger.debug("Dict for '" + col.getName() + "' has already been built, save it");
                     cubeMgr.saveDictionary(cubeSeg, col, inpTable, dict);
                 } else {
+                    logger.debug("Dict for '" + col.getName() + "' not pre-built, build it from " + inpTable.toString());
                     cubeMgr.buildDictionary(cubeSeg, col, inpTable);
                 }
             } else {
+                logger.debug("Dict for '" + col.getName() + "' not pre-built, build it from " + inpTable.toString());
                 cubeMgr.buildDictionary(cubeSeg, col, inpTable);
             }
         }
