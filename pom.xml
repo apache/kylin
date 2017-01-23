@@ -450,6 +450,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>org.apache.calcite</groupId>
+                <artifactId>calcite-linq4j</artifactId>
+                <version>${calcite.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.calcite.avatica</groupId>
                 <artifactId>avatica</artifactId>
                 <version>${avatica.version}</version>
