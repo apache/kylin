@@ -40,9 +40,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
@@ -59,7 +57,6 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,8 +77,7 @@ public class StorageCleanupJob extends AbstractApplication {
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
         // get all kylin hbase tables
-        Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
-        Admin hbaseAdmin = conn.getAdmin();
+        HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
         String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
@@ -157,22 +153,22 @@ public class StorageCleanupJob extends AbstractApplication {
     }
 
     class DeleteHTableRunnable implements Callable {
-        Admin hbaseAdmin;
+        HBaseAdmin hbaseAdmin;
         String htableName;
 
-        DeleteHTableRunnable(Admin hbaseAdmin, String htableName) {
+        DeleteHTableRunnable(HBaseAdmin hbaseAdmin, String htableName) {
             this.hbaseAdmin = hbaseAdmin;
             this.htableName = htableName;
         }
 
         public Object call() throws Exception {
             logger.info("Deleting HBase table " + htableName);
-            if (hbaseAdmin.tableExists(TableName.valueOf(htableName))) {
-                if (hbaseAdmin.isTableEnabled(TableName.valueOf(htableName))) {
-                    hbaseAdmin.disableTable(TableName.valueOf(htableName));
+            if (hbaseAdmin.tableExists(htableName)) {
+                if (hbaseAdmin.isTableEnabled(htableName)) {
+                    hbaseAdmin.disableTable(htableName);
                 }
 
-                hbaseAdmin.deleteTable(TableName.valueOf(htableName));
+                hbaseAdmin.deleteTable(htableName);
                 logger.info("Deleted HBase table " + htableName);
             } else {
                 logger.info("HBase table" + htableName + " does not exist");

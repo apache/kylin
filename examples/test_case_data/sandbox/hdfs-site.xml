@@ -22,7 +22,12 @@
 
     <property>
         <name>dfs.block.access.token.enable</name>
-        <value>true</value>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>dfs.block.size</name>
+        <value>34217472</value>
     </property>
 
     <property>
@@ -46,18 +51,8 @@
     </property>
 
     <property>
-        <name>dfs.client.retry.policy.enabled</name>
-        <value>false</value>
-    </property>
-
-    <property>
         <name>dfs.cluster.administrators</name>
         <value>hdfs</value>
-    </property>
-
-    <property>
-        <name>dfs.content-summary.limit</name>
-        <value>5000</value>
     </property>
 
     <property>
@@ -73,6 +68,7 @@
     <property>
         <name>dfs.datanode.data.dir</name>
         <value>/hadoop/hdfs/data</value>
+        <final>true</final>
     </property>
 
     <property>
@@ -88,6 +84,7 @@
     <property>
         <name>dfs.datanode.failed.volumes.tolerated</name>
         <value>0</value>
+        <final>true</final>
     </property>
 
     <property>
@@ -111,18 +108,13 @@
     </property>
 
     <property>
+        <name>dfs.datanode.max.xcievers</name>
+        <value>1024</value>
+    </property>
+
+    <property>
         <name>dfs.domain.socket.path</name>
         <value>/var/lib/hadoop-hdfs/dn_socket</value>
-    </property>
-
-    <property>
-        <name>dfs.encrypt.data.transfer.cipher.suites</name>
-        <value>AES/CTR/NoPadding</value>
-    </property>
-
-    <property>
-        <name>dfs.encryption.key.provider.uri</name>
-        <value></value>
     </property>
 
     <property>
@@ -162,12 +154,7 @@
 
     <property>
         <name>dfs.namenode.accesstime.precision</name>
-        <value>0</value>
-    </property>
-
-    <property>
-        <name>dfs.namenode.audit.log.async</name>
-        <value>true</value>
+        <value>3600000</value>
     </property>
 
     <property>
@@ -201,11 +188,6 @@
     </property>
 
     <property>
-        <name>dfs.namenode.fslock.fair</name>
-        <value>false</value>
-    </property>
-
-    <property>
         <name>dfs.namenode.handler.count</name>
         <value>100</value>
     </property>
@@ -213,6 +195,7 @@
     <property>
         <name>dfs.namenode.http-address</name>
         <value>sandbox.hortonworks.com:50070</value>
+        <final>true</final>
     </property>
 
     <property>
@@ -221,13 +204,9 @@
     </property>
 
     <property>
-        <name>dfs.namenode.inode.attributes.provider.class</name>
-        <value>org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer</value>
-    </property>
-
-    <property>
         <name>dfs.namenode.name.dir</name>
         <value>/hadoop/hdfs/namenode</value>
+        <final>true</final>
     </property>
 
     <property>
@@ -236,13 +215,8 @@
     </property>
 
     <property>
-        <name>dfs.namenode.rpc-address</name>
-        <value>sandbox.hortonworks.com:8020</value>
-    </property>
-
-    <property>
         <name>dfs.namenode.safemode.threshold-pct</name>
-        <value>0.999</value>
+        <value>1.0f</value>
     </property>
 
     <property>
@@ -266,6 +240,16 @@
     </property>
 
     <property>
+        <name>dfs.nfs.exports.allowed.hosts</name>
+        <value>* rw</value>
+    </property>
+
+    <property>
+        <name>dfs.nfs3.dump.dir</name>
+        <value>/tmp/.hdfs-nfs</value>
+    </property>
+
+    <property>
         <name>dfs.permissions.enabled</name>
         <value>true</value>
     </property>
@@ -277,7 +261,7 @@
 
     <property>
         <name>dfs.replication</name>
-        <value>3</value>
+        <value>1</value>
     </property>
 
     <property>
@@ -288,26 +272,18 @@
     <property>
         <name>dfs.support.append</name>
         <value>true</value>
+        <final>true</final>
     </property>
 
     <property>
         <name>dfs.webhdfs.enabled</name>
         <value>true</value>
+        <final>true</final>
     </property>
 
     <property>
         <name>fs.permissions.umask-mode</name>
         <value>022</value>
-    </property>
-
-    <property>
-        <name>nfs.exports.allowed.hosts</name>
-        <value>* rw</value>
-    </property>
-
-    <property>
-        <name>nfs.file.dump.dir</name>
-        <value>/tmp/.hdfs-nfs</value>
     </property>
 
 </configuration>

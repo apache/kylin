@@ -46,15 +46,15 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Hadoop versions -->
-        <hadoop2.version>2.7.1</hadoop2.version>
-        <yarn.version>2.7.1</yarn.version>
+        <hadoop2.version>2.6.0</hadoop2.version>
+        <yarn.version>2.6.0</yarn.version>
 
         <!-- Hive versions -->
-        <hive.version>1.2.1</hive.version>
-        <hive-hcatalog.version>1.2.1</hive-hcatalog.version>
+        <hive.version>0.14.0</hive.version>
+        <hive-hcatalog.version>0.14.0</hive-hcatalog.version>
 
         <!-- HBase versions -->
-        <hbase-hadoop2.version>1.1.1</hbase-hadoop2.version>
+        <hbase-hadoop2.version>0.98.8-hadoop2</hbase-hadoop2.version>
 
         <!-- Kafka versions -->
         <kafka.version>0.10.1.0</kafka.version>
@@ -71,7 +71,7 @@
 
         <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
         <zookeeper.version>3.4.8</zookeeper.version>
-        <curator.version>2.7.1</curator.version>
+        <curator.version>2.6.0</curator.version>
         <jsr305.version>3.0.1</jsr305.version>
         <guava.version>14.0</guava.version>
         <jsch.version>0.1.53</jsch.version>
@@ -842,11 +842,6 @@
             <id>conjars</id>
             <url>http://conjars.org/repo/</url>
         </repository>
-
-        <repository>
-            <id>cloudera</id>
-            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-        </repository>
     </repositories>
 
     <build>
@@ -1109,106 +1104,6 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <configuration>
-                            <fork>true</fork>
-                            <meminitial>1024m</meminitial>
-                            <maxmem>2048m</maxmem>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-jamm</id>
-                                <goals>
-                                    <goal>copy</goal>
-                                </goals>
-                                <phase>generate-test-resources</phase>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>com.github.jbellis</groupId>
-                                            <artifactId>jamm</artifactId>
-                                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
-                                            <destFileName>jamm.jar</destFileName>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <configuration>
-                            <append>true</append>
-                            <destFile>
-                                ${sonar.jacoco.reportPath}
-                            </destFile>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>pre-test</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                                <configuration>
-                                    <propertyName>surefireArgLine</propertyName>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>post-test</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>report</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.19.1</version>
-                        <configuration>
-                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
-                            <excludes>
-                                <exclude>**/IT*.java</exclude>
-                            </excludes>
-                            <systemProperties>
-                                <property>
-                                    <name>buildCubeUsingProvidedData</name>
-                                    <value>false</value>
-                                </property>
-                                <property>
-                                    <name>log4j.configuration</name>
-                                    <value>file:${project.basedir}/../build/conf/kylin-tools-log4j.properties</value>
-                                </property>
-                            </systemProperties>
-                            <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar ${argLine} ${surefireArgLine}</argLine>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>cdh5.7</id>
-            <properties>
-                <hadoop2.version>2.6.0-cdh5.7.0</hadoop2.version>
-                <yarn.version>2.6.0-cdh5.7.0</yarn.version>
-                <hive.version>1.1.0-cdh5.7.0</hive.version>
-                <hive-hcatalog.version>1.1.0-cdh5.7.0</hive-hcatalog.version>
-                <hbase-hadoop2.version>1.2.0-cdh5.7.0</hbase-hadoop2.version>
-                <zookeeper.version>3.4.5-cdh5.7.0</zookeeper.version>
-            </properties>
             <build>
                 <plugins>
                     <plugin>
