@@ -1178,7 +1178,7 @@
             </build>
         </profile>
         <profile>
-            <id>cdh-5.7</id>
+            <id>cdh5.7</id>
             <properties>
                 <hadoop2.version>2.6.0-cdh5.7.0</hadoop2.version>
                 <yarn.version>2.6.0-cdh5.7.0</yarn.version>
