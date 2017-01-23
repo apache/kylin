@@ -355,6 +355,8 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       $scope.newMeasure.function.parameter.type= 'column';
       $scope.newMeasure.function.returntype = "extendedcolumn(100)";
       return;
+    }else if($scope.newMeasure.function.expression=='PERCENTILE'){
+      $scope.newMeasure.function.parameter.type= 'column';
     }else{
       $scope.nextParameterInit();
     }
