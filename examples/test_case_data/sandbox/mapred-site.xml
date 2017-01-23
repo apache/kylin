@@ -18,7 +18,7 @@
 
     <property>
         <name>io.sort.mb</name>
-        <value>128</value>
+        <value>64</value>
     </property>
 
     <property>
@@ -27,13 +27,13 @@
     </property>
 
     <property>
-        <name>mapreduce.map.memory.mb</name>
-        <value>512</value>
+        <name>mapred.job.map.memory.mb</name>
+        <value>250</value>
     </property>
 
     <property>
-        <name>mapreduce.reduce.memory.mb</name>
-        <value>512</value>
+        <name>mapred.job.reduce.memory.mb</name>
+        <value>250</value>
     </property>
 
     <property>
@@ -48,7 +48,9 @@
 
     <property>
         <name>mapreduce.admin.user.env</name>
-        <value>LD_LIBRARY_PATH=/usr/hdp/${hdp.version}/hadoop/lib/native:/usr/hdp/${hdp.version}/hadoop/lib/native/Linux-amd64-64</value>
+        <value>
+            LD_LIBRARY_PATH=/usr/hdp/${hdp.version}/hadoop/lib/native:/usr/hdp/${hdp.version}/hadoop/lib/native/Linux-amd64-64
+        </value>
     </property>
 
     <property>
@@ -58,7 +60,9 @@
 
     <property>
         <name>mapreduce.application.classpath</name>
-        <value>/tmp/kylin/*,$HADOOP_CONF_DIR,/usr/hdp/${hdp.version}/hbase/lib/hbase-common.jar,/usr/hdp/current/hive-client/conf/,$PWD/mr-framework/hadoop/share/hadoop/mapreduce/*:$PWD/mr-framework/hadoop/share/hadoop/mapreduce/lib/*:$PWD/mr-framework/hadoop/share/hadoop/common/*:$PWD/mr-framework/hadoop/share/hadoop/common/lib/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/lib/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*:/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar:/usr/hdp/${hdp.version}/hadoop/lib/snappy-java-1.0.4.1.jar:/etc/hadoop/conf/secure</value>
+        <value>
+            $PWD/mr-framework/hadoop/share/hadoop/mapreduce/*:$PWD/mr-framework/hadoop/share/hadoop/mapreduce/lib/*:$PWD/mr-framework/hadoop/share/hadoop/common/*:$PWD/mr-framework/hadoop/share/hadoop/common/lib/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/*:$PWD/mr-framework/hadoop/share/hadoop/yarn/lib/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*:$PWD/mr-framework/hadoop/share/hadoop/tools/lib/*:/usr/hdp/${hdp.version}/hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar:/etc/hadoop/conf/secure
+        </value>
     </property>
 
     <property>
@@ -77,14 +81,18 @@
     </property>
 
     <property>
+        <name>mapreduce.job.counters.max</name>
+        <value>130</value>
+    </property>
+
+    <property>
         <name>mapreduce.job.emit-timeline-data</name>
         <value>false</value>
     </property>
 
-    <!--the default value on hdp is 0.05, however for test environments we need to be conservative on resource -->
     <property>
         <name>mapreduce.job.reduce.slowstart.completedmaps</name>
-        <value>1</value>
+        <value>0.05</value>
     </property>
 
     <property>
@@ -108,13 +116,28 @@
     </property>
 
     <property>
+        <name>mapreduce.jobhistory.recovery.enable</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.recovery.store.class</name>
+        <value>org.apache.hadoop.mapreduce.v2.hs.HistoryServerLeveldbStateStoreService</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.recovery.store.leveldb.path</name>
+        <value>/hadoop/mapreduce/jhs</value>
+    </property>
+
+    <property>
         <name>mapreduce.jobhistory.webapp.address</name>
         <value>sandbox.hortonworks.com:19888</value>
     </property>
 
     <property>
         <name>mapreduce.map.java.opts</name>
-        <value>-Xmx512m</value>
+        <value>-Xmx1228m</value>
     </property>
 
     <property>
@@ -124,7 +147,7 @@
 
     <property>
         <name>mapreduce.map.memory.mb</name>
-        <value>512</value>
+        <value>1536</value>
     </property>
 
     <property>
@@ -159,7 +182,7 @@
 
     <property>
         <name>mapreduce.reduce.java.opts</name>
-        <value>-Xmx200m</value>
+        <value>-Xmx1638m</value>
     </property>
 
     <property>
@@ -169,7 +192,7 @@
 
     <property>
         <name>mapreduce.reduce.memory.mb</name>
-        <value>512</value>
+        <value>2048</value>
     </property>
 
     <property>
@@ -219,7 +242,7 @@
 
     <property>
         <name>mapreduce.task.io.sort.mb</name>
-        <value>128</value>
+        <value>859</value>
     </property>
 
     <property>
@@ -234,7 +257,7 @@
 
     <property>
         <name>yarn.app.mapreduce.am.command-opts</name>
-        <value>-Xmx512m</value>
+        <value>-Xmx819m -Dhdp.version=${hdp.version}</value>
     </property>
 
     <property>
@@ -244,7 +267,7 @@
 
     <property>
         <name>yarn.app.mapreduce.am.resource.mb</name>
-        <value>512</value>
+        <value>1024</value>
     </property>
 
     <property>

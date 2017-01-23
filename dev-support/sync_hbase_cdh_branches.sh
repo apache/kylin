@@ -37,24 +37,17 @@ trap 'error ${LINENO} ${?}' ERR
 # ============================================================================
 
 git fetch apache
-git checkout apache/$base-hbase1.x
-git format-patch -1
-git checkout apache/$base-cdh5.7
+git checkout apache/$base-hbase0.98
 git format-patch -1
 
 git checkout apache/$base
 git checkout -b tmp
 git reset apache/$base --hard
 
-git am -3 --ignore-whitespace 0001-KYLIN-1528-Create-a-branch-for-v1.5-with-HBase-1.x-A.patch
+git am -3 --ignore-whitespace 0001-KYLIN-2307-Create-a-branch-for-master-with-HBase-0.9.patch
 mvn clean compile -DskipTests
-git push apache tmp:$base-hbase1.x -f
-rm 0001-KYLIN-1528-Create-a-branch-for-v1.5-with-HBase-1.x-A.patch
-
-git am -3 --ignore-whitespace 0001-KYLIN-1672-support-kylin-on-cdh-5.7.patch
-mvn clean compile -DskipTests
-git push apache tmp:$base-cdh5.7 -f
-rm 0001-KYLIN-1672-support-kylin-on-cdh-5.7.patch
+git push apache tmp:$base-hbase0.98 -f
+rm 0001-KYLIN-2307-Create-a-branch-for-master-with-HBase-0.9.patch
 
 # clean up
 git checkout master
