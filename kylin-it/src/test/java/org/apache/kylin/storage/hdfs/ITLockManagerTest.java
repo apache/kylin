@@ -27,6 +27,8 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -58,6 +60,8 @@ public class ITLockManagerTest extends HBaseMetadataTestCase {
 
     private static final int REPETITIONS = QTY * 10;
 
+    private static final Logger logger = LoggerFactory.getLogger(ITLockManagerTest.class);
+
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
@@ -66,7 +70,7 @@ public class ITLockManagerTest extends HBaseMetadataTestCase {
         zkClient = CuratorFrameworkFactory.newClient(zkConnection, retryPolicy);
         zkClient.start();
         manager = new LockManager(kylinConfig, lockRootPath);
-        System.out.println("nodes in lock root : " + zkClient.getChildren().forPath(lockRootPath));
+        logger.info("nodes in lock root : " + zkClient.getChildren().forPath(lockRootPath));
 
     }
 
@@ -75,7 +79,7 @@ public class ITLockManagerTest extends HBaseMetadataTestCase {
         this.cleanupTestMetadata();
         zkClient.delete().deletingChildrenIfNeeded().forPath(lockRootPath);
         List<String> nodes = zkClient.getChildren().forPath("/");
-        System.out.println("nodes in zk after delete : " + nodes);
+        logger.info("nodes in zk after delete : " + nodes);
         manager.close();
     }
 
@@ -85,7 +89,7 @@ public class ITLockManagerTest extends HBaseMetadataTestCase {
         ResourceLock lock = manager.getLock("/dictionary/numberdict.json");
         lock.acquire();
         manager.releaseLock(lock);
-        System.out.println(zkClient.getChildren().forPath(lockRootPath + "/dictionary"));
+        logger.info(zkClient.getChildren().forPath(lockRootPath + "/dictionary").toString());
         List<String> nodes = zkClient.getChildren().forPath(lockRootPath + "/dictionary");
         assertEquals(1, nodes.size());
         assertEquals("numberdict.json", nodes.get(0));
@@ -193,10 +197,10 @@ public class ITLockManagerTest extends HBaseMetadataTestCase {
                 throw new IllegalStateException(clientName + " could not acquire the lock");
             }
             try {
-                System.out.println(clientName + " has the lock");
+                logger.info(clientName + " has the lock");
                 resource.use();
             } finally {
-                System.out.println(clientName + " releasing the lock");
+                logger.info(clientName + " releasing the lock");
                 lock.release(); // always release the lock in a finally block
             }
         }

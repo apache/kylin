@@ -75,6 +75,11 @@ abstract public class ResourceStore {
             } catch (Throwable e) {
                 logger.warn("Failed to load HBaseResourceStore impl class: " + e.toString());
             }
+            try {
+                knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hdfs.HDFSResourceStore", ResourceStore.class));
+            } catch (Throwable e) {
+                logger.warn("Failed to load HDFSResourceStore impl class: " + e.toString());
+            }
         }
         return knownImpl;
     }

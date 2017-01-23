@@ -82,7 +82,8 @@ public class HBaseResourceStore extends ResourceStore {
         int cut = metadataUrl.indexOf('@');
         tableNameBase = cut < 0 ? DEFAULT_TABLE_NAME : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
-
+        if (!hbaseUrl.equals("hbase"))
+            throw new IOException("Can not create HBaseResourceStore. Url not match. Url:" + hbaseUrl);
         createHTableIfNeeded(getAllInOneTableName());
     }
 

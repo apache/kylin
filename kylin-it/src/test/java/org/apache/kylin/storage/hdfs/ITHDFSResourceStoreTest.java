@@ -19,17 +19,12 @@
 package org.apache.kylin.storage.hdfs;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceStoreTest;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-
-/**
- * Created by xiefan on 17-1-10.
- */
 public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
 
     KylinConfig kylinConfig;
@@ -45,13 +40,13 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
-
     @Test
     public void testResourceStoreBasic() throws Exception {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        ResourceStore store = new HDFSResourceStore(config);
+        String oldUrl = kylinConfig.getMetadataUrl();
+        kylinConfig.setProperty("kylin.metadata.url", "kylin_default_instance@hdfs");
+        HDFSResourceStore store = new HDFSResourceStore(kylinConfig);
         ResourceStoreTest.testAStore(store);
+        kylinConfig.setProperty("kylin.metadata.url", oldUrl);
     }
-
 
 }

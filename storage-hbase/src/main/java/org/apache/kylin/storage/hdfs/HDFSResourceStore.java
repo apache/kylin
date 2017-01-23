@@ -57,12 +57,14 @@ public class HDFSResourceStore extends ResourceStore {
 
     private LockManager lockManager;
 
-    //public for test. Normal should be protected
     public HDFSResourceStore(KylinConfig kylinConfig) throws Exception {
         super(kylinConfig);
         String metadataUrl = kylinConfig.getMetadataUrl();
         int cut = metadataUrl.indexOf('@');
         String metaDirName = cut < 0 ? DEFAULT_FOLDER_NAME : metadataUrl.substring(0, cut);
+        String hdfsUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        if(!hdfsUrl.equals("hdfs"))
+            throw new IOException("Can not create HDFSResourceStore. Url not match. Url:" + hdfsUrl);
         metaDirName += "/" + DEFAULT_METADATA_FOLDER_NAME;
         logger.info("meta dir name :" + metaDirName);
         createMetaFolder(metaDirName, kylinConfig);
