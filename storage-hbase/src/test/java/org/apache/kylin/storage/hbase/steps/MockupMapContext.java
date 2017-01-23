@@ -44,10 +44,10 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
 
 /**
  * @author yangli9
- * 
+ *
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class MockupMapContext implements  MapContext {
+public class MockupMapContext implements MapContext {
 
     private Configuration hconf;
 
@@ -60,7 +60,7 @@ public class MockupMapContext implements  MapContext {
         return new WrappedMapper().getMapContext(new MockupMapContext(hconf, outKV));
     }
 
-    public MockupMapContext(Configuration hconf, Object[] outKV){
+    public MockupMapContext(Configuration hconf, Object[] outKV) {
         this.hconf = hconf;
         this.outKV = outKV;
     }
@@ -100,16 +100,15 @@ public class MockupMapContext implements  MapContext {
     }
 
     @Override
-    public void setStatus(String msg) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public String getStatus() {
         throw new NotImplementedException();
     }
 
     @Override
+    public void setStatus(String msg) {
+        throw new NotImplementedException();
+    }
+
     public float getProgress() {
         throw new NotImplementedException();
     }
@@ -224,7 +223,6 @@ public class MockupMapContext implements  MapContext {
         throw new NotImplementedException();
     }
 
-    @Override
     public boolean getTaskCleanupNeeded() {
         throw new NotImplementedException();
     }
@@ -239,7 +237,6 @@ public class MockupMapContext implements  MapContext {
         throw new NotImplementedException();
     }
 
-    @Override
     public IntegerRanges getProfileTaskRange(boolean isMap) {
         throw new NotImplementedException();
     }
@@ -316,6 +313,10 @@ public class MockupMapContext implements  MapContext {
 
     @Override
     public RawComparator<?> getCombinerKeyGroupingComparator() {
+        throw new NotImplementedException();
+    }
+
+    public boolean userClassesTakesPrecedence() {
         throw new NotImplementedException();
     }
 }
