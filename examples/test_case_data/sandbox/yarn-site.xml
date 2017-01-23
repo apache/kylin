@@ -18,7 +18,7 @@
 
     <property>
         <name>hadoop.registry.rm.enabled</name>
-        <value>true</value>
+        <value>false</value>
     </property>
 
     <property>
@@ -28,29 +28,22 @@
 
     <property>
         <name>yarn.acl.enable</name>
-        <value>true</value>
+        <value>false</value>
     </property>
 
     <property>
         <name>yarn.admin.acl</name>
-        <value>*</value>
+        <value></value>
     </property>
 
     <property>
         <name>yarn.application.classpath</name>
-        <value>
-            $HADOOP_CONF_DIR,/usr/hdp/current/hadoop-client/*,/usr/hdp/current/hadoop-client/lib/*,/usr/hdp/current/hadoop-hdfs-client/*,/usr/hdp/current/hadoop-hdfs-client/lib/*,/usr/hdp/current/hadoop-yarn-client/*,/usr/hdp/current/hadoop-yarn-client/lib/*
-        </value>
-    </property>
-
-    <property>
-        <name>yarn.authorization-provider</name>
-        <value>org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer</value>
+        <value>$HADOOP_CONF_DIR,/usr/hdp/current/hadoop-client/*,/usr/hdp/current/hadoop-client/lib/*,/usr/hdp/current/hadoop-hdfs-client/*,/usr/hdp/current/hadoop-hdfs-client/lib/*,/usr/hdp/current/hadoop-yarn-client/*,/usr/hdp/current/hadoop-yarn-client/lib/*</value>
     </property>
 
     <property>
         <name>yarn.client.nodemanager-connect.max-wait-ms</name>
-        <value>120000</value>
+        <value>60000</value>
     </property>
 
     <property>
@@ -79,11 +72,6 @@
     </property>
 
     <property>
-        <name>yarn.node-labels.enabled</name>
-        <value>false</value>
-    </property>
-
-    <property>
         <name>yarn.node-labels.fs-store.retry-policy-spec</name>
         <value>2000, 500</value>
     </property>
@@ -91,6 +79,11 @@
     <property>
         <name>yarn.node-labels.fs-store.root-dir</name>
         <value>/system/yarn/node-labels</value>
+    </property>
+
+    <property>
+        <name>yarn.node-labels.manager-class</name>
+        <value>org.apache.hadoop.yarn.server.resourcemanager.nodelabels.MemoryRMNodeLabelsManager</value>
     </property>
 
     <property>
@@ -105,17 +98,12 @@
 
     <property>
         <name>yarn.nodemanager.aux-services</name>
-        <value>mapreduce_shuffle,spark_shuffle</value>
+        <value>mapreduce_shuffle</value>
     </property>
 
     <property>
         <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
         <value>org.apache.hadoop.mapred.ShuffleHandler</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.aux-services.spark_shuffle.class</name>
-        <value>org.apache.spark.network.yarn.YarnShuffleService</value>
     </property>
 
     <property>
@@ -160,7 +148,7 @@
 
     <property>
         <name>yarn.nodemanager.health-checker.script.timeout-ms</name>
-        <value>120000</value>
+        <value>60000</value>
     </property>
 
     <property>
@@ -255,12 +243,12 @@
 
     <property>
         <name>yarn.nodemanager.resource.memory-mb</name>
-        <value>7168</value>
+        <value>9216</value>
     </property>
 
     <property>
         <name>yarn.nodemanager.resource.percentage-physical-cpu-limit</name>
-        <value>80</value>
+        <value>100</value>
     </property>
 
     <property>
@@ -349,11 +337,6 @@
     </property>
 
     <property>
-        <name>yarn.resourcemanager.scheduler.monitor.enable</name>
-        <value>false</value>
-    </property>
-
-    <property>
         <name>yarn.resourcemanager.state-store.max-completed-applications</name>
         <value>${yarn.resourcemanager.max-completed-applications}</value>
     </property>
@@ -385,7 +368,7 @@
 
     <property>
         <name>yarn.resourcemanager.webapp.https.address</name>
-        <value>sandbox.hortonworks.com:8090</value>
+        <value>localhost:8090</value>
     </property>
 
     <property>
@@ -425,7 +408,7 @@
 
     <property>
         <name>yarn.resourcemanager.zk-address</name>
-        <value>sandbox.hortonworks.com:2181</value>
+        <value>localhost:2181</value>
     </property>
 
     <property>
@@ -450,22 +433,12 @@
 
     <property>
         <name>yarn.scheduler.maximum-allocation-mb</name>
-        <value>7168</value>
-    </property>
-
-    <property>
-        <name>yarn.scheduler.maximum-allocation-vcores</name>
-        <value>3</value>
+        <value>9216</value>
     </property>
 
     <property>
         <name>yarn.scheduler.minimum-allocation-mb</name>
-        <value>1024</value>
-    </property>
-
-    <property>
-        <name>yarn.scheduler.minimum-allocation-vcores</name>
-        <value>1</value>
+        <value>1536</value>
     </property>
 
     <property>
@@ -494,41 +467,6 @@
     </property>
 
     <property>
-        <name>yarn.timeline-service.entity-group-fs-store.active-dir</name>
-        <value>/ats/active/</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.entity-group-fs-store.cleaner-interval-seconds</name>
-        <value>3600</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.entity-group-fs-store.done-dir</name>
-        <value>/ats/done/</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.entity-group-fs-store.group-id-plugin-classes</name>
-        <value>org.apache.tez.dag.history.logging.ats.TimelineCachePluginImpl</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.entity-group-fs-store.retain-seconds</name>
-        <value>604800</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.entity-group-fs-store.scan-interval-seconds</name>
-        <value>60</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.entity-group-fs-store.summary-store</name>
-        <value>org.apache.hadoop.yarn.server.timeline.RollingLevelDBTimelineStore</value>
-    </property>
-
-    <property>
         <name>yarn.timeline-service.generic-application-history.store-class</name>
         <value>org.apache.hadoop.yarn.server.applicationhistoryservice.NullApplicationHistoryStore</value>
     </property>
@@ -541,11 +479,6 @@
     <property>
         <name>yarn.timeline-service.http-authentication.type</name>
         <value>simple</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.leveldb-state-store.path</name>
-        <value>/hadoop/yarn/timeline</value>
     </property>
 
     <property>
@@ -574,23 +507,8 @@
     </property>
 
     <property>
-        <name>yarn.timeline-service.plugin.enabled</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.recovery.enabled</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.state-store-class</name>
-        <value>org.apache.hadoop.yarn.server.timeline.recovery.LeveldbTimelineStateStore</value>
-    </property>
-
-    <property>
         <name>yarn.timeline-service.store-class</name>
-        <value>org.apache.hadoop.yarn.server.timeline.EntityGroupFSTimelineStore</value>
+        <value>org.apache.hadoop.yarn.server.timeline.LeveldbTimelineStore</value>
     </property>
 
     <property>
@@ -601,11 +519,6 @@
     <property>
         <name>yarn.timeline-service.ttl-ms</name>
         <value>2678400000</value>
-    </property>
-
-    <property>
-        <name>yarn.timeline-service.version</name>
-        <value>1.5</value>
     </property>
 
     <property>

@@ -47,6 +47,16 @@
     </property>
 
     <property>
+        <name>yarn.scheduler.capacity.root.accessible-node-labels.default.capacity</name>
+        <value>-1</value>
+    </property>
+
+    <property>
+        <name>yarn.scheduler.capacity.root.accessible-node-labels.default.maximum-capacity</name>
+        <value>-1</value>
+    </property>
+
+    <property>
         <name>yarn.scheduler.capacity.root.acl_administer_queue</name>
         <value>*</value>
     </property>
@@ -54,6 +64,11 @@
     <property>
         <name>yarn.scheduler.capacity.root.capacity</name>
         <value>100</value>
+    </property>
+
+    <property>
+        <name>yarn.scheduler.capacity.root.default-node-label-expression</name>
+        <value></value>
     </property>
 
     <property>

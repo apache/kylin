@@ -30,14 +30,10 @@ import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.kylin.common.KylinConfig;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +52,9 @@ public class OrphanHBaseCleanJob extends AbstractApplication {
     Set<String> metastoreWhitelistSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
-        Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
+
         // get all kylin hbase tables
-        Admin hbaseAdmin = conn.getAdmin();
+        HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
         String tableNamePrefix = IRealizationConstants.SharedHbaseStorageLocationPrefix;
         HTableDescriptor[] tableDescriptors = hbaseAdmin.listTables(tableNamePrefix + ".*");
         List<String> allTablesNeedToBeDropped = new ArrayList<String>();
@@ -77,13 +73,12 @@ public class OrphanHBaseCleanJob extends AbstractApplication {
             // drop tables
             for (String htableName : allTablesNeedToBeDropped) {
                 logger.info("Deleting HBase table " + htableName);
-                TableName tableName = TableName.valueOf(htableName);
-                if (hbaseAdmin.tableExists(tableName)) {
-                    if (hbaseAdmin.isTableEnabled(tableName)) {
-                        hbaseAdmin.disableTable(tableName);
+                if (hbaseAdmin.tableExists(htableName)) {
+                    if (hbaseAdmin.isTableEnabled(htableName)) {
+                        hbaseAdmin.disableTable(htableName);
                     }
 
-                    hbaseAdmin.deleteTable(tableName);
+                    hbaseAdmin.deleteTable(htableName);
                     logger.info("Deleted HBase table " + htableName);
                 } else {
                     logger.info("HBase table" + htableName + " does not exist");

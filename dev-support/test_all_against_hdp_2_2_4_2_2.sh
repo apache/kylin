@@ -22,4 +22,4 @@ cd ${dir}
 cd ..
 
 mvn clean install -DskipTests 2>&1 | tee mci.log
-mvn verify -Dhdp.version=${HDP_VERSION:-"2.4.0.0-169"} -fae 2>&1 | tee mvnverify.log
+mvn verify -Dhdp.version=${HDP_VERSION:-"2.2.4.2-2"} -fae 2>&1 | tee mvnverify.log

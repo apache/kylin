@@ -32,9 +32,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -58,7 +60,6 @@ import org.apache.kylin.job.impl.threadpool.DefaultScheduler;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.apache.kylin.tool.StorageCleanupJob;
@@ -95,10 +96,10 @@ public class BuildCubeWithEngine {
             logger.error("error", e);
             exitCode = 1;
         }
-
+        
         long millis = System.currentTimeMillis() - start;
         System.out.println("Time elapsed: " + (millis / 1000) + " sec - in " + BuildCubeWithEngine.class.getName());
-
+        
         System.exit(exitCode);
     }
 
@@ -359,10 +360,10 @@ public class BuildCubeWithEngine {
 
     @SuppressWarnings("unused")
     private void checkHFilesInHBase(CubeSegment segment) throws IOException {
-        try (Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl())) {
-            String tableName = segment.getStorageLocationIdentifier();
-
-            HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(tableName, conn);
+        Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
+        String tableName = segment.getStorageLocationIdentifier();
+        try (HTable table = new HTable(conf, tableName)) {
+            HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(table);
             Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
             long totalSize = 0;
             for (Long size : sizeMap.values()) {

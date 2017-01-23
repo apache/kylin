@@ -21,11 +21,9 @@ package org.apache.kylin.storage.hbase.util;
 import java.io.IOException;
 
 import org.apache.commons.cli.Options;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.kylin.common.KylinConfig;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
@@ -40,8 +38,8 @@ public class CleanHtableCLI extends AbstractApplication {
     protected static final Logger logger = LoggerFactory.getLogger(CleanHtableCLI.class);
 
     private void clean() throws IOException {
-        Connection conn = HBaseConnection.get(KylinConfig.getInstanceFromEnv().getStorageUrl());
-        Admin hbaseAdmin = conn.getAdmin();
+        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
+        HBaseAdmin hbaseAdmin = new HBaseAdmin(conf);
 
         for (HTableDescriptor descriptor : hbaseAdmin.listTables()) {
             String name = descriptor.getNameAsString().toLowerCase();
@@ -52,7 +50,7 @@ public class CleanHtableCLI extends AbstractApplication {
                 System.out.println();
 
                 descriptor.setValue(IRealizationConstants.HTableOwner, "DL-eBay-Kylin@ebay.com");
-                hbaseAdmin.modifyTable(TableName.valueOf(descriptor.getNameAsString()), descriptor);
+                hbaseAdmin.modifyTable(descriptor.getNameAsString(), descriptor);
             }
         }
         hbaseAdmin.close();
