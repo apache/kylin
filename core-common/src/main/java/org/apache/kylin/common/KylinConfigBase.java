@@ -181,7 +181,7 @@ abstract public class KylinConfigBase implements Serializable {
         if (!root.endsWith("/")) {
             root += "/";
         }
-        
+
         // make sure path qualified
         if (!root.contains("://")) {
             if (!root.startsWith("/"))
@@ -189,7 +189,7 @@ abstract public class KylinConfigBase implements Serializable {
             else
                 root = "hdfs://" + root;
         }
-        
+
         return new StringBuffer(root).append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).append("/").toString();
     }
 
@@ -318,6 +318,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public int getMaxBuildingSegments() {
         return Integer.parseInt(getOptional("kylin.cube.max-building-segments", "10"));
+    }
+
+    public boolean allowCubeAppearInMultipleProjects() {
+        return Boolean.parseBoolean(getOptional("kylin.cube.allow-appear-in-multiple-projects", "false"));
     }
 
     // ============================================================================
@@ -766,7 +770,6 @@ abstract public class KylinConfigBase implements Serializable {
     public float getSparkRDDPartitionCutMB() {
         return Float.valueOf(getOptional("kylin.engine.spark.rdd-partition-cut-mb", "10.0"));
     }
-
 
     public int getSparkMinPartition() {
         return Integer.valueOf(getOptional("kylin.engine.spark.min-partition", "1"));
