@@ -22,13 +22,12 @@ import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.HConnection;
+import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.token.TokenUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -60,12 +59,12 @@ public class PingHBaseCLI {
         Scan scan = new Scan();
         int limit = 20;
 
-        Connection conn = null;
-        Table table = null;
+        HConnection conn = null;
+        HTableInterface table = null;
         ResultScanner scanner = null;
         try {
-            conn = ConnectionFactory.createConnection(hconf);
-            table = conn.getTable(TableName.valueOf(hbaseTable));
+            conn = HConnectionManager.createConnection(hconf);
+            table = conn.getTable(hbaseTable);
             scanner = table.getScanner(scan);
             int count = 0;
             for (Result r : scanner) {

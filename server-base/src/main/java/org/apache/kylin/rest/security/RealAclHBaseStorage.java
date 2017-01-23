@@ -21,8 +21,7 @@ package org.apache.kylin.rest.security;
 import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.QueryService;
@@ -59,11 +58,11 @@ public class RealAclHBaseStorage implements AclHBaseStorage {
     }
 
     @Override
-    public Table getTable(String tableName) throws IOException {
+    public HTableInterface getTable(String tableName) throws IOException {
         if (StringUtils.equals(tableName, aclTableName)) {
-            return HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(aclTableName));
+            return HBaseConnection.get(hbaseUrl).getTable(aclTableName);
         } else if (StringUtils.equals(tableName, userTableName)) {
-            return HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(userTableName));
+            return HBaseConnection.get(hbaseUrl).getTable(userTableName);
         } else {
             throw new IllegalStateException("getTable failed" + tableName);
         }

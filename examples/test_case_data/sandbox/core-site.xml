@@ -19,6 +19,7 @@
     <property>
         <name>fs.defaultFS</name>
         <value>hdfs://sandbox.hortonworks.com:8020</value>
+        <final>true</final>
     </property>
 
     <property>
@@ -38,7 +39,7 @@
 
     <property>
         <name>hadoop.proxyuser.falcon.groups</name>
-        <value>*</value>
+        <value>users</value>
     </property>
 
     <property>
@@ -48,7 +49,7 @@
 
     <property>
         <name>hadoop.proxyuser.hbase.groups</name>
-        <value>*</value>
+        <value>users</value>
     </property>
 
     <property>
@@ -67,23 +68,13 @@
     </property>
 
     <property>
-        <name>hadoop.proxyuser.hdfs.groups</name>
-        <value>*</value>
-    </property>
-
-    <property>
-        <name>hadoop.proxyuser.hdfs.hosts</name>
-        <value>*</value>
-    </property>
-
-    <property>
         <name>hadoop.proxyuser.hive.groups</name>
-        <value>*</value>
+        <value>users</value>
     </property>
 
     <property>
         <name>hadoop.proxyuser.hive.hosts</name>
-        <value>sandbox.hortonworks.com</value>
+        <value>*</value>
     </property>
 
     <property>
@@ -132,15 +123,8 @@
     </property>
 
     <property>
-        <name>hadoop.security.key.provider.path</name>
-        <value></value>
-    </property>
-
-    <property>
         <name>io.compression.codecs</name>
-        <value>
-            org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.SnappyCodec
-        </value>
+        <value>org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.SnappyCodec</value>
     </property>
 
     <property>

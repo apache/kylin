@@ -27,7 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import org.apache.hadoop.hbase.client.Connection;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HTable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -393,24 +395,33 @@ public class CubeService extends BasicService {
         if (htableInfoCache.containsKey(tableName)) {
             return htableInfoCache.get(tableName);
         }
-        Connection conn = HBaseConnection.get(this.getConfig().getStorageUrl());
+
+        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
+        HTable table = null;
         HBaseResponse hr = null;
         long tableSize = 0;
         int regionCount = 0;
 
-        HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(tableName, conn);
-        Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
+        try {
+            table = new HTable(hconf, tableName);
 
-        for (long s : sizeMap.values()) {
-            tableSize += s;
+            HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(table);
+            Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
+
+            for (long s : sizeMap.values()) {
+                tableSize += s;
+            }
+
+            regionCount = sizeMap.size();
+
+            // Set response.
+            hr = new HBaseResponse();
+            hr.setTableSize(tableSize);
+            hr.setRegionCount(regionCount);
+        } finally {
+            IOUtils.closeQuietly(table);
         }
 
-        regionCount = sizeMap.size();
-
-        // Set response.
-        hr = new HBaseResponse();
-        hr.setTableSize(tableSize);
-        hr.setRegionCount(regionCount);
         htableInfoCache.put(tableName, hr);
 
         return hr;
