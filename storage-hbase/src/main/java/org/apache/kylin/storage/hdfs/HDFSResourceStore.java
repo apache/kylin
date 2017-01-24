@@ -47,7 +47,7 @@ public class HDFSResourceStore extends ResourceStore {
 
     private static final long DEFAULT_ACQUIRE_LOCK_TIMEOUT = 10;
 
-    private static final String DEFAULT_FOLDER_NAME = "kylin_default_instance";
+    private static final String DEFAULT_FOLDER_NAME = "kylin_metadata";
 
     private static final String DEFAULT_METADATA_FOLDER_NAME = "hdfs_metadata";
 

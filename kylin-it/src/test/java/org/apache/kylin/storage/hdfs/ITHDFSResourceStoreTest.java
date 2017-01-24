@@ -43,7 +43,7 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
     @Test
     public void testResourceStoreBasic() throws Exception {
         String oldUrl = kylinConfig.getMetadataUrl();
-        kylinConfig.setProperty("kylin.metadata.url", "kylin_default_instance@hdfs");
+        kylinConfig.setProperty("kylin.metadata.url", "kylin_metadata@hdfs");
         HDFSResourceStore store = new HDFSResourceStore(kylinConfig);
         ResourceStoreTest.testAStore(store);
         kylinConfig.setProperty("kylin.metadata.url", oldUrl);

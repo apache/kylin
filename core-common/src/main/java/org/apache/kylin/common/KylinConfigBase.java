@@ -216,7 +216,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String getMetadataUrlPrefix() {
         String metadataUrl = getMetadataUrl();
-        String defaultPrefix = "kylin_default_instance";
+        String defaultPrefix = "kylin_metadata";
 
         if (metadataUrl.endsWith("@hbase")) {
             int cut = metadataUrl.lastIndexOf('@');
