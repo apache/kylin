@@ -930,11 +930,11 @@ abstract public class KylinConfigBase implements Serializable {
 
     //zoo keeper
     public String getZooKeeperHost() {
-        return getOptional("kylin.storage-zookeeper.host", "localhost");
+        return getOptional("kylin.storage.lock-manager-zk-host", "localhost");
     }
 
     public String getZooKeeperPort() {
-        return getOptional("kylin.storage-zookeeper.port", "2181");
+        return getOptional("kylin.storage.lock-manager-zk-port", "2181");
     }
 
 }
