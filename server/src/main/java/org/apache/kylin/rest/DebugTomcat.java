@@ -48,7 +48,7 @@ public class DebugTomcat {
                 System.setProperty("catalina.home", ".");
 
             if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
-                System.err.println("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
+                System.err.println("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
                 System.exit(1);
             }
 
