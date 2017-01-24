@@ -18,7 +18,9 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -79,6 +81,10 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
     private void updateTimeRange(CubeSegment segment) throws IOException {
         final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
+
+        if (partitionCol == null) {
+            return;
+        }
         final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
         Path colDir = new Path(factColumnsInputPath, partitionCol.getIdentity());
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
@@ -88,15 +94,19 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         }
 
         FSDataInputStream is = null;
-        long minValue = Long.MAX_VALUE, maxValue = Long.MIN_VALUE;
+        BufferedReader bufferedReader = null;
+        InputStreamReader isr = null;
+        long minValue, maxValue;
         try {
             is = fs.open(outputFile);
-            long min = is.readLong();
-            long max = is.readLong();
-            minValue = Math.min(min, minValue);
-            maxValue = Math.max(max, maxValue);
+            isr = new InputStreamReader(is);
+            bufferedReader = new BufferedReader(isr);
+            minValue = Long.parseLong(bufferedReader.readLine());
+            maxValue = Long.parseLong(bufferedReader.readLine());
         } finally {
             IOUtils.closeQuietly(is);
+            IOUtils.closeQuietly(isr);
+            IOUtils.closeQuietly(bufferedReader);
         }
         logger.info("updateTimeRange step. minValue:" + minValue + " maxValue:" + maxValue);
         segment.setDateRangeStart(minValue);
