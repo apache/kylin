@@ -741,9 +741,6 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean isReducerLocalBuildDict() {
-        if (getUHCReducerCount() != 1) {
-            return false;
-        }
         return Boolean.parseBoolean(getOptional("kylin.engine.mr.reducer-local-build-dict", "true"));
     }
 
