@@ -18,7 +18,15 @@
 
 package org.apache.kylin.storage.hdfs;
 
-import com.google.common.collect.Lists;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.NavigableSet;
+import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -32,14 +40,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.NavigableSet;
-import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
+import com.google.common.collect.Lists;
 
 public class HDFSResourceStore extends ResourceStore {
 
@@ -63,7 +64,7 @@ public class HDFSResourceStore extends ResourceStore {
         int cut = metadataUrl.indexOf('@');
         String metaDirName = cut < 0 ? DEFAULT_FOLDER_NAME : metadataUrl.substring(0, cut);
         String hdfsUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
-        if(!hdfsUrl.equals("hdfs"))
+        if (!hdfsUrl.equals("hdfs"))
             throw new IOException("Can not create HDFSResourceStore. Url not match. Url:" + hdfsUrl);
         metaDirName += "/" + DEFAULT_METADATA_FOLDER_NAME;
         logger.info("meta dir name :" + metaDirName);
@@ -245,6 +246,8 @@ public class HDFSResourceStore extends ResourceStore {
     }
 
     private Path getRealHDFSPath(String resourcePath) {
+        if (resourcePath.equals("/"))
+            return this.hdfsMetaPath;
         if (resourcePath.startsWith("/") && resourcePath.length() > 1)
             resourcePath = resourcePath.substring(1, resourcePath.length());
         return new Path(this.hdfsMetaPath, resourcePath);
