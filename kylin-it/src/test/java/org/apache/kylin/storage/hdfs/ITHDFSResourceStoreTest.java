@@ -27,8 +27,10 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStoreTest;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.storage.hbase.HBaseResourceStore;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
@@ -84,4 +86,21 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
         assertTrue(fs.exists(new Path(path)));
     }
 
+    @Ignore
+    @Test
+    public void performanceTest() throws Exception{
+        //test hdfs performance
+        String oldUrl = kylinConfig.getMetadataUrl();
+        kylinConfig.setProperty("kylin.metadata.url", "kylin_metadata@hdfs");
+        HDFSResourceStore store = new HDFSResourceStore(kylinConfig);
+        ResourceStoreTest.testPerformance(store);
+        kylinConfig.setProperty("kylin.metadata.url", oldUrl);
+
+        //test hbase
+        oldUrl = kylinConfig.getMetadataUrl();
+        kylinConfig.setProperty("kylin.metadata.url", "kylin_metadata@hbase");
+        HBaseResourceStore store2 = new HBaseResourceStore(kylinConfig);
+        ResourceStoreTest.testPerformance(store2);
+        kylinConfig.setProperty("kylin.metadata.url", oldUrl);
+    }
 }

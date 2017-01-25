@@ -30,15 +30,32 @@ import java.util.List;
 import java.util.NavigableSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Be called by LocalFileResourceStoreTest and ITHBaseResourceStoreTest.
+ * Be called by LocalFileResourceStoreTest, ITHBaseResourceStoreTest and ITHDFSResourceStoreTest.
  */
 public class ResourceStoreTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ResourceStoreTest.class);
+
+    private static final String PERFORMANCE_TEST_ROOT_PATH = "/performance";
+
+    private static final int TEST_RESOURCE_COUNT = 1000;
 
     public static void testAStore(ResourceStore store) throws IOException {
         testBasics(store);
         testGetAllResources(store);
+    }
+
+    public static void testPerformance(ResourceStore store) throws IOException {
+        logger.info("Test basic functions");
+        testAStore(store);
+        logger.info("Basic function ok. Start to test performance for class : " + store.getClass());
+        logger.info("Write metadata time : " + testWritePerformance(store));
+        logger.info("Read metadata time  " + testReadPerformance(store));
+        logger.info("Performance test end. Class : " + store.getClass());
     }
 
     private static void testGetAllResources(ResourceStore store) throws IOException {
@@ -142,6 +159,29 @@ public class ResourceStoreTest {
         assertTrue(store.exists(path2) == false);
         list = store.listResources(dir2);
         assertTrue(list == null || list.contains(path2) == false);
+    }
+
+    private static long testWritePerformance(ResourceStore store) throws IOException {
+        store.deleteResource(PERFORMANCE_TEST_ROOT_PATH);
+        StringEntity content = new StringEntity("something");
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i < TEST_RESOURCE_COUNT; i++) {
+            String resourcePath = PERFORMANCE_TEST_ROOT_PATH + "/res_" + i;
+            store.putResource(resourcePath, content, 0, StringEntity.serializer);
+        }
+        return System.currentTimeMillis() - startTime;
+    }
+
+    private static long testReadPerformance(ResourceStore store) throws IOException {
+        long startTime = System.currentTimeMillis();
+        int step = 0; //avoid compiler optimization
+        for (int i = 0; i < TEST_RESOURCE_COUNT; i++) {
+            String resourcePath = PERFORMANCE_TEST_ROOT_PATH + "/res_" + i;
+            StringEntity t = store.getResource(resourcePath, StringEntity.class, StringEntity.serializer);
+            step |= t.toString().length();
+        }
+        logger.info("step : " + step);
+        return System.currentTimeMillis() - startTime;
     }
 
     @SuppressWarnings("serial")
