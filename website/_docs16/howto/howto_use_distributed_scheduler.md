@@ -5,7 +5,7 @@ categories: howto
 permalink: /docs16/howto/howto_use_distributed_scheduler.html
 ---
 
-Since Kylin 1.6.1, Kylin support distributed job scheduler.
+Since Kylin 2.0, Kylin support distributed job scheduler.
 Which is more extensible, available and reliable than default job scheduler.
 To enable the distributed job scheduler, you need to set or update three configs in the kylin.properties:
 

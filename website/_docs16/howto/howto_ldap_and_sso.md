@@ -11,19 +11,26 @@ Kylin supports LDAP authentication for enterprise or production deployment; This
 
 #### Configure LDAP server info
 
-Firstly, provide LDAP URL, and username/password if the LDAP server is secured; The password in kylin.properties need be salted; You can run "org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES your_password" to get a hash.
+Firstly, provide LDAP URL, and username/password if the LDAP server is secured; The password in kylin.properties need be encrypted; You can run the following command to get the encrypted value (please note, the password's length should be less than 16 characters, see [KYLIN-2416](https://issues.apache.org/jira/browse/KYLIN-2416)):
+
+```
+cd $KYLIN_HOME/tomcat/webapps/kylin/WEB-INF/lib
+java -classpath kylin-server-base-1.6.0.jar:spring-beans-3.2.17.RELEASE.jar:spring-core-3.2.17.RELEASE.jar:commons-codec-1.7.jar org.apache.kylin.rest.security.PasswordPlaceholderConfigurer AES <your_password>
+```
+
+Config them in the conf/kylin.properties:
 
 ```
 ldap.server=ldap://<your_ldap_host>:<port>
 ldap.username=<your_user_name>
-ldap.password=<your_password_hash>
+ldap.password=<your_password_encrypted>
 ```
 
 Secondly, provide the user search patterns, this is by LDAP design, here is just a sample:
 
 ```
 ldap.user.searchBase=OU=UserAccounts,DC=mycompany,DC=com
-ldap.user.searchPattern=(&(AccountName={0})(memberOf=CN=MYCOMPANY-USERS,DC=mycompany,DC=com))
+ldap.user.searchPattern=(&(cn={0})(memberOf=CN=MYCOMPANY-USERS,DC=mycompany,DC=com))
 ldap.user.groupSearchBase=OU=Group,DC=mycompany,DC=com
 ```
 

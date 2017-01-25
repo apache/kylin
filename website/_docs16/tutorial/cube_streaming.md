@@ -14,15 +14,15 @@ In this tutorial, we will use Hortonworks HDP 2.2.4 Sandbox VM + Kafka v0.10.0(S
 ## Install Kafka 0.10.0.0 and Kylin
 Don't use HDP 2.2.4's build-in Kafka as it is too old, stop it first if it is running.
 {% highlight Groff markup %}
-curl -s http://mirrors.tuna.tsinghua.edu.cn/apache/kafka/0.10.0.0/kafka_2.10-0.10.0.0.tgz | tar -xz -C /usr/hdp/current/
+curl -s http://mirrors.tuna.tsinghua.edu.cn/apache/kafka/0.10.0.0/kafka_2.10-0.10.0.0.tgz | tar -xz -C /usr/local/
 
-cd /usr/hdp/current/kafka_2.10-0.10.0.0/
+cd /usr/local/kafka_2.10-0.10.0.0/
 
 bin/kafka-server-start.sh config/server.properties &
 
 {% endhighlight %}
 
-Download the Kylin v1.6 from download page, expand the tar ball in /root/ folder.
+Download the Kylin v1.6 from download page, expand the tar ball in /usr/local/ folder.
 
 ## Create sample Kafka topic and populate data
 
@@ -37,8 +37,8 @@ Created topic "kylindemo".
 Put sample data to this topic; Kylin has an utility class which can do this;
 
 {% highlight Groff markup %}
-export KAFKA_HOME=/usr/hdp/current/kafka_2.10-0.10.0.0
-export KYLIN_HOME=/root/apache-kylin-1.6.0-SNAPSHOT-bin
+export KAFKA_HOME=/usr/local/kafka_2.10-0.10.0.0
+export KYLIN_HOME=/usr/local/apache-kylin-1.6.0-bin
 
 cd $KYLIN_HOME
 ./bin/kylin.sh org.apache.kylin.source.kafka.util.KafkaSampleProducer --topic kylindemo --broker localhost:9092
