@@ -740,8 +740,8 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.engine.mr.uhc-reducer-count", "1"));
     }
 
-    public boolean isReducerLocalBuildDict() {
-        return Boolean.parseBoolean(getOptional("kylin.engine.mr.reducer-local-build-dict", "true"));
+    public boolean isBuildDictInReducerEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.engine.mr.build-dict-in-reducer", "true"));
     }
 
     public String getYarnStatusCheckUrl() {

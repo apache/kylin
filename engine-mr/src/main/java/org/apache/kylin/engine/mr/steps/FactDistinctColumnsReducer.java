@@ -78,7 +78,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
     private int rowCount = 0;
 
     //local build dict
-    private boolean isReducerLocalBuildDict;
+    private boolean buildDictInReducer;
     private IDictionaryBuilder builder;
     private long timeMaxValue = Long.MIN_VALUE;
     private long timeMinValue = Long.MAX_VALUE;
@@ -119,30 +119,29 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             isPartitionCol = true;
             col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (col == null) {
-                logger.info("Do not have partition col. This reducer will keep empty");
+                logger.info("No partition col. This reducer will do nothing");
             }
         } else {
             // normal col
             col = columnList.get(reducerIdToColumnIndex.get(taskId));
-
             Preconditions.checkNotNull(col);
 
             // local build dict
-            isReducerLocalBuildDict = config.isReducerLocalBuildDict();
+            buildDictInReducer = config.isBuildDictInReducerEnabled();
             if (cubeDesc.getDictionaryBuilderClass(col) != null) { // only works with default dictionary builder
-                isReducerLocalBuildDict = false;
+                buildDictInReducer = false;
             }
             if(config.getUHCReducerCount() > 1) {
                 int[] uhcIndex = CubeManager.getInstance(config).getUHCIndex(cubeDesc);
                 int colIndex = reducerIdToColumnIndex.get(taskId);
                 if (uhcIndex[colIndex] == 1)
-                    isReducerLocalBuildDict = false; //for UHC columns, this feature should be disabled
+                    buildDictInReducer = false; //for UHC columns, this feature should be disabled
             }
-            if (isReducerLocalBuildDict) {
+            if (buildDictInReducer) {
                 builder = DictionaryGenerator.newDictionaryBuilder(col.getType());
                 builder.init(null, 0);
             }
-            logger.info("Reducer " + taskId + " handling column " + col + ", isReducerLocalBuildDict=" + isReducerLocalBuildDict);
+            logger.info("Reducer " + taskId + " handling column " + col + ", buildDictInReducer=" + buildDictInReducer);
         }
     }
 
@@ -192,7 +191,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             timeMaxValue = Math.max(timeMaxValue, time);
         } else {
             // normal col
-            if (isReducerLocalBuildDict) {
+            if (buildDictInReducer) {
                 String value = Bytes.toString(key.getBytes(), 1, key.getLength() - 1);
                 logAFewRows(value);
                 builder.addValue(value);
@@ -228,7 +227,7 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             outputPartitionInfo();
         } else {
             // normal col
-            if (isReducerLocalBuildDict) {
+            if (buildDictInReducer) {
                 Dictionary<String> dict = builder.build();
                 outputDict(col, dict);
             }
