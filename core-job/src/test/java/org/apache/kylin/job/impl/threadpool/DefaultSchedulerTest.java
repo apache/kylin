@@ -97,7 +97,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
     @Test
     public void testDiscard() throws Exception {
         DefaultChainedExecutable job = new DefaultChainedExecutable();
-        BaseTestExecutable task1 = new SelfStopExecutable();
+        SelfStopExecutable task1 = new SelfStopExecutable();
         job.addTask(task1);
         jobService.addJob(job);
         waitForJobStatus(job.getId(), ExecutableState.RUNNING, 500);
@@ -105,8 +105,7 @@ public class DefaultSchedulerTest extends BaseSchedulerTest {
         waitForJobFinish(job.getId());
         Assert.assertEquals(ExecutableState.DISCARDED, jobService.getOutput(job.getId()).getState());
         Assert.assertEquals(ExecutableState.DISCARDED, jobService.getOutput(task1.getId()).getState());
-        Thread.sleep(5000);
-        System.out.println(job);
+        task1.waitForDoWork();
     }
 
     @SuppressWarnings("rawtypes")
