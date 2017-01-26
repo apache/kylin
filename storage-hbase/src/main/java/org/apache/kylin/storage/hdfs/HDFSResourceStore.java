@@ -46,11 +46,7 @@ public class HDFSResourceStore extends ResourceStore {
 
     private static final Logger logger = LoggerFactory.getLogger(HDFSResourceStore.class);
 
-    private static final long DEFAULT_ACQUIRE_LOCK_TIMEOUT = 10;
-
-    private static final String DEFAULT_FOLDER_NAME = "kylin_metadata";
-
-    private static final String DEFAULT_METADATA_FOLDER_NAME = "hdfs_metadata";
+    private static final long DEFAULT_ACQUIRE_LOCK_TIMEOUT = 2;
 
     private Path hdfsMetaPath;
 
@@ -62,42 +58,43 @@ public class HDFSResourceStore extends ResourceStore {
         super(kylinConfig);
         String metadataUrl = kylinConfig.getMetadataUrl();
         int cut = metadataUrl.indexOf('@');
-        String metaDirName = cut < 0 ? DEFAULT_FOLDER_NAME : metadataUrl.substring(0, cut);
-        String hdfsUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
-        if (!hdfsUrl.equals("hdfs"))
-            throw new IOException("Can not create HDFSResourceStore. Url not match. Url:" + hdfsUrl);
-        metaDirName += "/" + DEFAULT_METADATA_FOLDER_NAME;
-        logger.info("meta dir name :" + metaDirName);
-        createMetaFolder(metaDirName, kylinConfig);
+        if (cut < 0) {
+            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore: " + metadataUrl);
+        }
+        String suffix = metadataUrl.substring(cut + 1);
+        if (!suffix.equals("hdfs"))
+            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore:" + suffix);
+
+        String path = metadataUrl.substring(0, cut);
+        fs = HadoopUtil.getFileSystem(path);
+        Path metadataPath = new Path(path);
+        //creat lock manager
+        this.lockManager = new LockManager(kylinConfig, getRelativePath(metadataPath));
+        if (fs.exists(metadataPath) == false) {
+            logger.warn("Path not exist in HDFS, create it: " + path);
+            createMetaFolder(metadataPath, kylinConfig);
+        }
+
+        hdfsMetaPath = metadataPath;
+        logger.info("hdfs meta path : " + hdfsMetaPath.toString());
+
     }
 
-    private void createMetaFolder(String metaDirName, KylinConfig kylinConfig) throws Exception {
-        String hdfsWorkingDir = kylinConfig.getHdfsWorkingDirectory();
-        fs = HadoopUtil.getFileSystem(hdfsWorkingDir);
-        logger.info("hdfs working dir : " + hdfsWorkingDir);
-        Path hdfsWorkingPath = new Path(hdfsWorkingDir);
-        if (!fs.exists(hdfsWorkingPath)) {
-            throw new IOException("HDFS working dir not exist");
-        }
-        //creat lock manager
-        this.lockManager = new LockManager(kylinConfig, kylinConfig.getRawHdfsWorkingDirectory() + metaDirName);
+
+
+    private void createMetaFolder(Path metaDirName, KylinConfig kylinConfig) throws Exception {
         //create hdfs meta path
-        hdfsMetaPath = new Path(hdfsWorkingPath, metaDirName);
-        if (!fs.exists(hdfsMetaPath)) {
-            ResourceLock lock = lockManager.getLock(lockManager.getLockPath("/"));
-            try {
-                if (lock.acquire(DEFAULT_ACQUIRE_LOCK_TIMEOUT, TimeUnit.MINUTES)) {
-                    logger.info("get root lock successfully");
-                    if (!fs.exists(hdfsMetaPath)) {
-                        fs.mkdirs(hdfsMetaPath);
-                        logger.info("create hdfs meta path");
-                    }
+        ResourceLock lock = lockManager.getLock(getRelativePath(metaDirName));
+        try {
+            if (lock.acquire(DEFAULT_ACQUIRE_LOCK_TIMEOUT, TimeUnit.SECONDS)) {
+                if (!fs.exists(metaDirName)) {
+                    fs.mkdirs(metaDirName);
                 }
-            } finally {
-                lockManager.releaseLock(lock);
             }
+        } finally {
+            lockManager.releaseLock(lock);
         }
-        logger.info("hdfs meta path : " + hdfsMetaPath.toString());
+        logger.info("hdfs meta path created: " + metaDirName.toString());
     }
 
     @Override
@@ -170,7 +167,7 @@ public class HDFSResourceStore extends ResourceStore {
         ResourceLock lock = null;
         try {
             lock = lockManager.getLock(resPath);
-            lock.acquire(DEFAULT_ACQUIRE_LOCK_TIMEOUT, TimeUnit.MINUTES);
+            lock.acquire(DEFAULT_ACQUIRE_LOCK_TIMEOUT, TimeUnit.SECONDS);
             in = fs.open(p);
             long t = in.readLong();
             return t;
@@ -192,7 +189,7 @@ public class HDFSResourceStore extends ResourceStore {
         ResourceLock lock = null;
         try {
             lock = lockManager.getLock(resPath);
-            lock.acquire(DEFAULT_ACQUIRE_LOCK_TIMEOUT, TimeUnit.MINUTES);
+            lock.acquire(DEFAULT_ACQUIRE_LOCK_TIMEOUT, TimeUnit.SECONDS);
             out = fs.create(p, true);
             out.writeLong(ts);
             IOUtils.copy(content, out);
@@ -228,7 +225,7 @@ public class HDFSResourceStore extends ResourceStore {
         ResourceLock lock = null;
         try {
             lock = lockManager.getLock(resPath);
-            lock.acquire(DEFAULT_ACQUIRE_LOCK_TIMEOUT, TimeUnit.MINUTES);
+            lock.acquire(DEFAULT_ACQUIRE_LOCK_TIMEOUT, TimeUnit.SECONDS);
             Path p = getRealHDFSPath(resPath);
             if (fs.exists(p)) {
                 fs.delete(p, true);
@@ -251,6 +248,23 @@ public class HDFSResourceStore extends ResourceStore {
         if (resourcePath.startsWith("/") && resourcePath.length() > 1)
             resourcePath = resourcePath.substring(1, resourcePath.length());
         return new Path(this.hdfsMetaPath, resourcePath);
+    }
+
+    private static String getRelativePath(Path hdfsPath) {
+        String path = hdfsPath.toString();
+        int index = path.indexOf("://");
+        if (index > 0) {
+            path = path.substring(index + 3);
+        }
+
+        if (path.startsWith("/") == false) {
+            if (path.indexOf("/") > 0) {
+                path = path.substring(path.indexOf("/"));
+            } else {
+                path = "/" + path;
+            }
+        }
+        return path;
     }
 
 }

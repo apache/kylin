@@ -59,7 +59,6 @@ public class HBaseResourceStore extends ResourceStore {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseResourceStore.class);
 
-    private static final String DEFAULT_TABLE_NAME = "kylin_metadata";
     private static final String FAMILY = "f";
     private static final byte[] B_FAMILY = Bytes.toBytes(FAMILY);
     private static final String COLUMN = "c";
@@ -80,7 +79,7 @@ public class HBaseResourceStore extends ResourceStore {
         String metadataUrl = kylinConfig.getMetadataUrl();
         // split TABLE@HBASE_URL
         int cut = metadataUrl.indexOf('@');
-        tableNameBase = cut < 0 ? DEFAULT_TABLE_NAME : metadataUrl.substring(0, cut);
+        tableNameBase = cut < 0 ? DEFAULT_STORE_NAME : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
         if (!hbaseUrl.equals("hbase"))
             throw new IOException("Can not create HBaseResourceStore. Url not match. Url:" + hbaseUrl);

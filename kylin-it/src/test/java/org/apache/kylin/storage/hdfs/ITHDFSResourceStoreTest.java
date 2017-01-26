@@ -18,21 +18,28 @@
 
 package org.apache.kylin.storage.hdfs;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStoreTest;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertTrue;
+
 public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
 
     KylinConfig kylinConfig;
+    FileSystem fs;
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
         kylinConfig = KylinConfig.getInstanceFromEnv();
+        fs = HadoopUtil.getWorkingFileSystem();
     }
 
     @After
@@ -41,12 +48,37 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void testResourceStoreBasic() throws Exception {
+    public void testBasic() throws Exception {
         String oldUrl = kylinConfig.getMetadataUrl();
-        kylinConfig.setProperty("kylin.metadata.url", "kylin_metadata@hdfs");
+        String path = "/kylin/kylin_metadata/metadata";
+        kylinConfig.setProperty("kylin.metadata.url", path + "@hdfs");
         HDFSResourceStore store = new HDFSResourceStore(kylinConfig);
         ResourceStoreTest.testAStore(store);
         kylinConfig.setProperty("kylin.metadata.url", oldUrl);
+        assertTrue(fs.exists(new Path(path)));
     }
+
+    @Test
+    public void testQalifiedName() throws Exception {
+        String oldUrl = kylinConfig.getMetadataUrl();
+        String path = "hdfs:///kylin/kylin_metadata/metadata_test1";
+        kylinConfig.setProperty("kylin.metadata.url", path + "@hdfs");
+        HDFSResourceStore store = new HDFSResourceStore(kylinConfig);
+        ResourceStoreTest.testAStore(store);
+        kylinConfig.setProperty("kylin.metadata.url", oldUrl);
+        assertTrue(fs.exists(new Path(path)));
+    }
+
+    @Test
+    public void testFullQalifiedName() throws Exception {
+        String oldUrl = kylinConfig.getMetadataUrl();
+        String path = "hdfs://sandbox.hortonworks.com:8020/kylin/kylin_metadata/metadata_test2";
+        kylinConfig.setProperty("kylin.metadata.url", path + "@hdfs");
+        HDFSResourceStore store = new HDFSResourceStore(kylinConfig);
+        ResourceStoreTest.testAStore(store);
+        kylinConfig.setProperty("kylin.metadata.url", oldUrl);
+        assertTrue(fs.exists(new Path(path)));
+    }
+
 
 }

@@ -193,14 +193,6 @@ abstract public class KylinConfigBase implements Serializable {
         return new StringBuffer(root).append(StringUtils.replaceChars(getMetadataUrlPrefix(), ':', '-')).append("/").toString();
     }
 
-    public String getRawHdfsWorkingDirectory() {
-        String root = getRequired("kylin.env.hdfs-working-dir");
-        if (!root.endsWith("/")) {
-            root += "/";
-        }
-        return root;
-    }
-
     // ============================================================================
     // METADATA
     // ============================================================================

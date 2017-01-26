@@ -891,7 +891,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             func.init(model);
             allColumns.addAll(func.getParameter().getColRefs());
 
-            if (ExtendedColumnMeasureType.FUNC_RAW.equalsIgnoreCase(m.getFunction().getExpression())) {
+            if (ExtendedColumnMeasureType.FUNC_EXTENDED_COLUMN.equalsIgnoreCase(m.getFunction().getExpression())) {
                 FunctionDesc functionDesc = m.getFunction();
 
                 List<TblColRef> hosts = ExtendedColumnMeasureType.getExtendedColumnHosts(functionDesc);
