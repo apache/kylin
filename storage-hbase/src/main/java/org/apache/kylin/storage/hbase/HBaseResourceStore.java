@@ -371,4 +371,9 @@ public class HBaseResourceStore extends ResourceStore {
 
         return put;
     }
+    
+    @Override
+    public String toString() {
+        return getAllInOneTableName() + "@hbase";
+    }
 }

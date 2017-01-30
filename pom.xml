@@ -1159,10 +1159,6 @@
                             </excludes>
                             <systemProperties>
                                 <property>
-                                    <name>useSandbox</name>
-                                    <value>false</value>
-                                </property>
-                                <property>
                                     <name>buildCubeUsingProvidedData</name>
                                     <value>false</value>
                                 </property>
@@ -1262,10 +1258,6 @@
                                 <exclude>**/IT*.java</exclude>
                             </excludes>
                             <systemProperties>
-                                <property>
-                                    <name>useSandbox</name>
-                                    <value>false</value>
-                                </property>
                                 <property>
                                     <name>buildCubeUsingProvidedData</name>
                                     <value>false</value>

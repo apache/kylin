@@ -272,10 +272,6 @@
                             </excludes>
                             <systemProperties>
                                 <property>
-                                    <name>useSandbox</name>
-                                    <value>true</value>
-                                </property>
-                                <property>
                                     <name>log4j.configuration</name>
                                     <value>file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</value>
                                 </property>
@@ -298,7 +294,6 @@
                                     <classpathScope>test</classpathScope>
                                     <executable>java</executable>
                                     <arguments>
-                                        <argument>-DuseSandbox=true</argument>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
                                         <argument>-Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</argument>
@@ -320,7 +315,6 @@
                                     <classpathScope>test</classpathScope>
                                     <executable>java</executable>
                                     <arguments>
-                                        <argument>-DuseSandbox=true</argument>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
                                         <argument>-Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</argument>

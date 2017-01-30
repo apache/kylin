@@ -160,4 +160,8 @@ public class FileResourceStore extends ResourceStore {
             return new File(root, resPath);
     }
 
+    @Override
+    public String toString() {
+        return root.getAbsolutePath();
+    }
 }

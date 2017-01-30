@@ -133,22 +133,24 @@ public class ResourceTool {
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
 
+        logger.info("Copy from {} to {}", src, dst);
+        
         copyR(src, dst, path);
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
+        
+        logger.info("Copy from {} to {}", src, dst);
+        
         for (String path : paths) {
             copyR(src, dst, path);
         }
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
-
-        ResourceStore src = ResourceStore.getStore(srcConfig);
-        ResourceStore dst = ResourceStore.getStore(dstConfig);
-        copyR(src, dst, "/");
+        copy(srcConfig, dstConfig, "/");
     }
 
     public static void copyR(ResourceStore src, ResourceStore dst, String path) throws IOException {
