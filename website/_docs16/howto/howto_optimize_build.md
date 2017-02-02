@@ -91,7 +91,7 @@ Firstly, Kylin gets the row count of this intermediate table; then based on the 
 
 Secondly, Kylin runs a *"INSERT OVERWIRTE TABLE .... DISTRIBUTE BY "* HiveQL to distribute the rows among a specified number of reducers.
 
-In most cases, Kylin asks Hive to distributes the rows among reducers, then get files very closed in size. The distribute clause is "DISTRIBUTE BY RAND()".
+In most cases, Kylin asks Hive to randomly distributes the rows among reducers, then get files very closed in size. The distribute clause is "DISTRIBUTE BY RAND()".
 
 If your Cube has specified a "shard by" dimension (in Cube's "Advanced setting" page), which is a high cardinality column (like "USER\_ID"), Kylin will ask Hive to redistribute data by that column's value. Then for the rows that have the same value as this column has, they will go to the same file. This is much better than "by random",  because the data will be not only redistributed but also pre-categorized without additional cost, thus benefiting the subsequent Cube build process. Under a typical scenario, this optimization can cut off 40% building time. In this case the distribute clause will be "DISTRIBUTE BY USER_ID":
 
@@ -123,12 +123,16 @@ These two steps are lightweight and fast.
 
 ## Build Base Cuboid 
 
-This step is building the base cuboid from the intermediate table. The mapper number is equals to the reducer number of step 2; The reducer number is estimate with the cube statistics: by default use 1 reducer every 500MB output; If you observed the reducer number is small, you can set "kylin.job.mapreduce.default.reduce.input.mb" in kylin.properteis to a smaller value to get more resources, e.g: `kylin.job.mapreduce.default.reduce.input.mb=200`
+This step is building the base cuboid from the intermediate table, which is the first round MR of the "by-layer" cubing algorithm. The mapper number is equals to the reducer number of step 2; The reducer number is estimated with the cube statistics: by default use 1 reducer every 500MB output; If you observed the reducer number is small, you can set "kylin.job.mapreduce.default.reduce.input.mb" in kylin.properties to a smaller value to get more resources, e.g: `kylin.job.mapreduce.default.reduce.input.mb=200`
 
 
 ## Build N-Dimension Cuboid 
 
-These steps are the "by-layer" cubing process, each step uses the output of previous step as the input. It is similar as the "build base cuboid" step. Usually from the N-D to (N/2)-D the building is slow, because it is the cuboid explosion process: N-D has 1 Cuboid, (N-1)-D has N cuboids, (N-2)-D has N*(N-1) cuboids, etc. After (N/2)-D step, the building gets faster gradually.
+These steps are the "by-layer" cubing process, each step uses the output of previous step as the input, and then cut off one dimension to aggregate to get one child cuboid. For example, from cuboid ABCD, cut off A get BCD, cut off B get ACD etc. 
+
+Some cuboid can be aggregated from more than 1 parent cubiods, in this case, Kylin will select the minimal parent cuboid. For example, AB can be generated from ABC (id: 1110) and ABD (id: 1101), so ABD will be used as its id is smaller than ABC. Based on this, if D's cardinality is small, the aggregation will be cost-efficient. So, when you design the Cube rowkey sequence, please remember to put low cardinality dimensions to the tail position. This not only benefit the Cube build, but also benefit the Cube query as the post-aggregation follows the same rule.
+
+Usually from the N-D to (N/2)-D the building is slow, because it is the cuboid explosion process: N-D has 1 Cuboid, (N-1)-D has N cuboids, (N-2)-D has N*(N-1) cuboids, etc. After (N/2)-D step, the building gets faster gradually.
 
 
 
@@ -155,7 +159,7 @@ Please note, Kylin will automatically select the best algorithm based on the dat
 
 ## Convert Cuboid Data to HFile
 
-This step starts a MR job to convert the Cuboid files (sequence file format) into HBase's HFile format. Kylin calculates the HBase region number with the Cube statistics, by default 1 region per 5GB. The more regions got, the more reducers would be utilized. If you observe the reducer's number is small and perforamnce is poor, you can set the following parameters in "conf/kylin.properties" to smaller, as follows:
+This step starts a MR job to convert the Cuboid files (sequence file format) into HBase's HFile format. Kylin calculates the HBase region number with the Cube statistics, by default 1 region per 5GB. The more regions got, the more reducers would be utilized. If you observe the reducer's number is small and performance is poor, you can set the following parameters in "conf/kylin.properties" to smaller, as follows:
 
 ```
 kylin.hbase.region.cut=2
@@ -167,7 +171,7 @@ If you're not sure what size a region should be, contact your HBase administrato
 
 ## Load HFile to HBase Table
 
-This step uses HBase API to load the HFiles to region servers, it is lightweight and fast.
+This step uses HBase API to load the HFile to region servers, it is lightweight and fast.
 
 
 
