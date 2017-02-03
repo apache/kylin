@@ -1,12 +1,12 @@
 ---
 layout: docs16
-title:  "Advance Settings"
+title:  "Advanced Settings"
 categories: install
 permalink: /docs16/install/advance_settings.html
 ---
 
 ## Overwrite default kylin.properties at Cube level
-In `conf/kylin.properties` there are many prameters, which control/impact on Kylin's behaviors; Most parameters are global configs like security or job related; while some are Cube related; These Cube related parameters can be customized at each Cube level, so you can control the behaviors more flexibly. The GUI to do this is in the "Configuration Overwrites" step of the Cube wizard, as the screenshot below.
+In `conf/kylin.properties` there are many parameters, which control/impact on Kylin's behaviors; Most parameters are global configs like security or job related; while some are Cube related; These Cube related parameters can be customized at each Cube level, so you can control the behaviors more flexibly. The GUI to do this is in the "Configuration Overwrites" step of the Cube wizard, as the screenshot below.
 
 ![]( /images/install/overwrite_config.png)
 
