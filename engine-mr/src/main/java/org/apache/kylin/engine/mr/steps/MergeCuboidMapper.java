@@ -129,6 +129,11 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
             List<TblColRef> columns = measureType.getColumnsNeedDictionary(measureDesc.getFunction());
             boolean needReEncode = false;
             for (TblColRef col : columns) {
+                //handle the column that all records is null
+                if (sourceCubeSegment.getDictionary(col) == null) {
+                    continue;
+                }
+
                 if (!sourceCubeSegment.getDictionary(col).equals(mergedCubeSegment.getDictionary(col))) {
                     oldDicts.put(col, sourceCubeSegment.getDictionary(col));
                     newDicts.put(col, mergedCubeSegment.getDictionary(col));
@@ -249,6 +254,11 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     }
 
     private Boolean checkNeedMerging(TblColRef col) throws IOException {
+        //handle the column that all records is null
+        if (sourceCubeSegment.getDictionary(col) == null) {
+            return false;
+        }
+
         Boolean ret = dimensionsNeedDict.get(col);
         if (ret != null)
             return ret;
