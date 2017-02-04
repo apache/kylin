@@ -18,6 +18,8 @@
 
 package org.apache.kylin.storage.hbase.util;
 
+import java.lang.management.ManagementFactory;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -35,6 +37,7 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.lock.JobLock;
 import org.apache.kylin.storage.hbase.HBaseConnection;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,9 +66,14 @@ public class ZookeeperJobLock implements JobLock {
         }
 
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        this.zkClient = CuratorFrameworkFactory.newClient(zkConnectString, retryPolicy);
+        try {
+            this.zkClient = CuratorFrameworkFactory.builder().connectString(zkConnectString).retryPolicy(retryPolicy).defaultData(getIpProcess()).build();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
         this.zkClient.start();
         this.sharedLock = new InterProcessMutex(zkClient, this.scheduleID);
+
         boolean hasLock = false;
         try {
             hasLock = sharedLock.acquire(3, TimeUnit.SECONDS);
@@ -74,9 +82,20 @@ public class ZookeeperJobLock implements JobLock {
         }
         if (!hasLock) {
             logger.warn("fail to acquire lock, scheduler has not been started; maybe another kylin process is still running?");
+            try {
+                for (String node : sharedLock.getParticipantNodes()) {
+                    logger.warn("lock holder info: {}", new String(zkClient.getData().forPath(node)));
+                }
+            } catch (Exception e) {
+                logger.warn("error check participant", e);
+                if (!(e instanceof KeeperException.NoNodeException)) {
+                    throw new RuntimeException(e);
+                }
+            }
             zkClient.close();
             return false;
         }
+
         return true;
     }
 
@@ -114,5 +133,10 @@ public class ZookeeperJobLock implements JobLock {
 
     private String schedulerId() {
         return ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
+    }
+
+    private byte[] getIpProcess() throws UnknownHostException {
+        logger.info("get IP and processId: {}", ManagementFactory.getRuntimeMXBean().getName().getBytes());
+        return ManagementFactory.getRuntimeMXBean().getName().getBytes();
     }
 }
