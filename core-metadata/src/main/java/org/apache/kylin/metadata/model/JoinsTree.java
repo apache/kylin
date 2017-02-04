@@ -18,8 +18,6 @@
 
 package org.apache.kylin.metadata.model;
 
-import com.google.common.base.Preconditions;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,8 +25,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JoinsTree  implements Serializable {
+import com.google.common.base.Preconditions;
 
+public class JoinsTree  implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     final Map<String, Chain> tableChains = new LinkedHashMap<>();
 
     public JoinsTree(TableRef rootTable, List<JoinDesc> joins) {
@@ -112,7 +113,9 @@ public class JoinsTree  implements Serializable {
             return chain.join;
     }
 
-    static class Chain implements java.io.Serializable {
+    static class Chain implements Serializable {
+        private static final long serialVersionUID = 1L;
+        
         TableRef table; // pk side
         JoinDesc join;
         Chain fkSide;

@@ -20,15 +20,18 @@ package org.apache.kylin.metadata.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.JoinsTree.Chain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -294,6 +297,11 @@ public class DataModelDesc extends RootPersistentEntity {
         initJoinsTree();
         initDimensionsAndMetrics();
         initPartitionDesc();
+        
+        boolean reinit = validate();
+        if (reinit) { // model slightly changed by validate() and must init() again
+            init(config, tables);
+        }
     }
 
     private void initJoinTablesForUpgrade() {
@@ -441,6 +449,74 @@ public class DataModelDesc extends RootPersistentEntity {
             joins.add(joinTable.getJoin());
         }
         joinsTree = new JoinsTree(rootFactTableRef, joins);
+    }
+
+    private boolean validate() {
+        Set<TblColRef> mcols = new HashSet<>();
+        for (String m : metrics) {
+            mcols.add(findColumn(m));
+        }
+        
+        // validate no dup between dimensions/metrics
+        for (ModelDimensionDesc dim : dimensions) {
+            String table = dim.getTable();
+            for (String c : dim.getColumns()) {
+                TblColRef dcol = findColumn(table, c);
+                if (mcols.contains(dcol))
+                    throw new IllegalStateException(dcol + " cannot be both dimension and metrics at the same time in " + this);
+            }
+        }
+        
+        // validate PK/FK are in dimensions
+        boolean pkfkDimAmended = false;
+        for (Chain chain : joinsTree.tableChains.values()) {
+            pkfkDimAmended = validatePkFkDim(chain.join, mcols) || pkfkDimAmended;
+        }
+        return pkfkDimAmended;
+    }
+
+    private boolean validatePkFkDim(JoinDesc join, Set<TblColRef> mcols) {
+        if (join == null)
+            return false;
+        
+        boolean pkfkDimAmended = false;
+        
+        for (TblColRef c : join.getForeignKeyColumns()) {
+            if (!mcols.contains(c)) {
+                pkfkDimAmended = validatePkFkDim(c) || pkfkDimAmended;
+            }
+        }
+        for (TblColRef c : join.getPrimaryKeyColumns()) {
+            if (!mcols.contains(c)) {
+                pkfkDimAmended = validatePkFkDim(c) || pkfkDimAmended;
+            }
+        }
+        return pkfkDimAmended;
+    }
+
+    private boolean validatePkFkDim(TblColRef c) {
+        String t = c.getTableAlias();
+        ModelDimensionDesc dimDesc = null;
+        for (ModelDimensionDesc dim : dimensions) {
+            if (dim.getTable().equals(t)) {
+                dimDesc = dim;
+                break;
+            }
+        }
+        
+        if (dimDesc == null) {
+            dimDesc = new ModelDimensionDesc();
+            dimDesc.setTable(t);
+            dimDesc.setColumns(new String[0]);
+        }
+
+        if (ArrayUtils.contains(dimDesc.getColumns(), c.getName()) == false) {
+            String[] newCols = ArrayUtils.add(dimDesc.getColumns(), c.getName());
+            dimDesc.setColumns(newCols);
+            return true;
+        }
+        
+        return false;
     }
 
     /**
