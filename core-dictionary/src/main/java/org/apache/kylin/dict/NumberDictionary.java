@@ -53,6 +53,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
                 return;
             }
 
+
             if (len > buf.length) {
                 throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len) + ". Internal buffer is only " + buf.length + " bytes");
             }
@@ -104,6 +105,30 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
 
             bufOffset = start;
             bufLen = buf.length - start;
+
+            // remove 0 in tail after the decimal point
+            if (decimalPoint != end) {
+                if (negative == true) {
+                    while (buf[bufOffset + bufLen - 2] == '9' && (bufOffset + bufLen - 2 > decimalPoint)) {
+                        bufLen--;
+                    }
+
+                    if (bufOffset + bufLen - 2 == decimalPoint) {
+                        bufLen--;
+                    }
+
+                    buf[bufOffset + bufLen - 1] = ';';
+                } else {
+                    while (buf[bufOffset + bufLen - 1] == '0' && (bufOffset + bufLen - 1 > decimalPoint)) {
+                        bufLen--;
+                    }
+
+                    if (bufOffset + bufLen - 1 == decimalPoint) {
+                        bufLen--;
+                    }
+
+                }
+            }
         }
 
         int decodeNumber(byte[] returnValue, int offset) {

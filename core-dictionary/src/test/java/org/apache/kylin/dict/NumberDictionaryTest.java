@@ -91,11 +91,14 @@ public class NumberDictionaryTest extends LocalFileMetadataTestCase {
         checkCodec("-12345", "-9999999999999987654;");
         checkCodec("-12345.123", "-9999999999999987654.876;");
         checkCodec("0", "00000000000000000000");
-        checkCodec("0.0", "00000000000000000000.0");
         //test resolved jira-1800
         checkCodec("-0.0045454354354354359999999999877218", "-9999999999999999999.9954545645645645640000000000122781;");
         checkCodec("-0.009999999999877218", "-9999999999999999999.990000000000122781;");
         checkCodec("12343434372493274.438403840384023840253554345345345345", "00012343434372493274.438403840384023840253554345345345345");
+        assertEquals("00000000000000000052.57", encodeNumber("52.5700"));
+        assertEquals("00000000000000000000", encodeNumber("0.00"));
+        assertEquals("00000000000000000000", encodeNumber("0.0"));
+        assertEquals("-9999999999999987654.876;", encodeNumber("-12345.12300"));
     }
 
     private void checkCodec(String number, String code) {
