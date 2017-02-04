@@ -106,6 +106,9 @@ public class ModelChooser {
                 // one lookup table
                 String modelAlias = model.findFirstTable(firstTable.getTableIdentity()).getAlias();
                 matchUp = ImmutableMap.of(firstTable.getAlias(), modelAlias);
+            } else if (ctx.joins.size() != ctx.allTableScans.size() - 1) {
+                // has hanging tables
+                throw new NoRealizationFoundException("Please adjust the sequence of join tables and put subquery or temporary table after lookup tables. " + toErrorMsg(ctx));
             } else {
                 // normal big joins
                 if (ctx.joinsTree == null) {
