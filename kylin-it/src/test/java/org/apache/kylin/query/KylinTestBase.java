@@ -499,7 +499,9 @@ public class KylinTestBase {
 
             // execute H2
             printInfo("Query Result from H2 - " + queryName);
+            long currentTime = System.currentTimeMillis();
             ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);
+            printInfo("H2 spent " + (System.currentTimeMillis() - currentTime) + " mili-seconds.");
 
             try {
                 // compare the result
@@ -644,7 +646,7 @@ public class KylinTestBase {
         cubeConnection = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath(), props);
 
         //setup h2
-        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++), "sa", "");
+        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++) + ";CACHE_SIZE=32072;DB_CLOSE_DELAY=-1", "sa", "");
         // Load H2 Tables (inner join)
         H2Database h2DB = new H2Database(h2Connection, config);
         h2DB.loadAllTables();

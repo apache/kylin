@@ -5,17 +5,20 @@
     {
       "id": "1",
       "name": "minute_start",
-      "datatype": "timestamp"
+      "datatype": "timestamp",
+      "index": "T"
     },
     {
       "id": "2",
       "name": "hour_start",
-      "datatype": "timestamp"
+      "datatype": "timestamp",
+      "index": "T"
     },
     {
       "id": "3",
       "name": "day_start",
-      "datatype": "date"
+      "datatype": "date",
+      "index": "T"
     },
     {
       "id": "4",

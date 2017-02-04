@@ -6,12 +6,14 @@
     "id" : "1",
     "name" : "ORDER_ID",
     "datatype" : "bigint",
-    "data_gen" : "ID"
+    "data_gen" : "ID",
+    "index": "T"
   }, {
     "id" : "2",
     "name" : "BUYER_ID",
     "datatype" : "bigint",
-    "data_gen" : "RAND||10000500|10001500"
+    "data_gen" : "RAND||10000500|10001500",
+    "index": "T"
   }, {
     "id" : "3",
     "name" : "TEST_DATE_ENC",

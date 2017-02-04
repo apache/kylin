@@ -5,23 +5,28 @@
   "columns" : [ {
     "id" : "1",
     "name" : "CAL_DT",
-    "datatype" : "date"
+    "datatype" : "date",
+    "index": "T"
   }, {
     "id" : "2",
     "name" : "YEAR_BEG_DT",
-    "datatype" : "date"
+    "datatype" : "date",
+    "index": "T"
   }, {
     "id" : "3",
     "name" : "QTR_BEG_DT",
-    "datatype" : "date"
+    "datatype" : "date",
+    "index": "T"
   }, {
     "id" : "4",
     "name" : "MONTH_BEG_DT",
-    "datatype" : "date"
+    "datatype" : "date",
+    "index": "T"
   }, {
     "id" : "5",
     "name" : "WEEK_BEG_DT",
-    "datatype" : "date"
+    "datatype" : "date",
+    "index": "T"
   }, {
     "id" : "6",
     "name" : "AGE_FOR_YEAR_ID",

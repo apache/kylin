@@ -5,7 +5,8 @@
   "columns" : [ {
     "id" : "1",
     "name" : "COUNTRY",
-    "datatype" : "string"
+    "datatype" : "string",
+    "index": "T"
   }, {
     "id" : "2",
     "name" : "LATITUDE",
@@ -17,7 +18,8 @@
   }, {
     "id" : "4",
     "name" : "NAME",
-    "datatype" : "string"
+    "datatype" : "string",
+    "index": "T"
   } ],
   "database" : "DEFAULT",
   "last_modified" : 0

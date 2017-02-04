@@ -4,7 +4,8 @@
   "columns" : [ {
     "id" : "1",
     "name" : "SELLER_TYPE_CD",
-    "datatype" : "smallint"
+    "datatype" : "smallint",
+    "index": "T"
   }, {
     "id" : "2",
     "name" : "SELLER_TYPE_DESC",
@@ -16,7 +17,8 @@
   }, {
     "id" : "4",
     "name" : "SELLER_GROUP_CD",
-    "datatype" : "tinyint"
+    "datatype" : "tinyint",
+    "index": "T"
   }, {
     "id" : "5",
     "name" : "SELLER_GROUP_DESC",

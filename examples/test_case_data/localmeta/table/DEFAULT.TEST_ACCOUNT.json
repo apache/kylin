@@ -8,7 +8,8 @@
     "id" : "1",
     "name" : "ACCOUNT_ID",
     "datatype" : "bigint",
-    "data_gen" : "ID|10000000"
+    "data_gen" : "ID|10000000",
+    "index": "T"
   }, {
     "id" : "2",
     "name" : "ACCOUNT_BUYER_LEVEL",
@@ -23,7 +24,8 @@
     "id" : "4",
     "name" : "ACCOUNT_COUNTRY",
     "datatype" : "string",
-    "data_gen" : "CN|FR|GB|GE|JP|IT|RU|US"
+    "data_gen" : "CN|FR|GB|GE|JP|IT|RU|US",
+    "index": "T"
   }, {
     "id" : "5",
     "name" : "ACCOUNT_CONTACT",

@@ -49,6 +49,10 @@ public class ColumnDesc implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String dataGen;
 
+    @JsonProperty("index")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String index;
+
     // parsed from data type
     private DataType type;
     private DataType upgradedType;
@@ -155,6 +159,10 @@ public class ColumnDesc implements Serializable {
     
     public String getDataGen() {
         return dataGen;
+    }
+
+    public String getIndex() {
+        return index;
     }
 
     public void init(TableDesc table) {

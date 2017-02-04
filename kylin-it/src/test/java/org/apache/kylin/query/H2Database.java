@@ -26,8 +26,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.clearspring.analytics.util.Lists;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.MetadataManager;
@@ -103,6 +105,11 @@ public class H2Database {
         String sql = generateCreateH2TableSql(tableDesc, cvsFilePath);
         stmt.executeUpdate(sql);
 
+        List<String> createIndexStatements = generateCreateH2IndexSql(tableDesc);
+        for (String indexSql : createIndexStatements) {
+            stmt.executeUpdate(indexSql);
+        }
+
         if (tempFile != null)
             tempFile.delete();
     }
@@ -134,6 +141,22 @@ public class H2Database {
         ddl.append("AS SELECT * FROM CSVREAD('" + csvFilePath + "', '" + csvColumns + "', 'charset=UTF-8 fieldSeparator=,');");
 
         return ddl.toString();
+    }
+
+    private List<String> generateCreateH2IndexSql(TableDesc tableDesc) {
+        List<String> result = Lists.newArrayList();
+        int x = 0;
+        for (ColumnDesc col : tableDesc.getColumns()) {
+            if ("T".equalsIgnoreCase(col.getIndex())) {
+                StringBuilder ddl = new StringBuilder();
+                ddl.append("CREATE INDEX IDX_" + tableDesc.getName() + "_" + x + " ON " + tableDesc.getIdentity() + "(" + col.getName() + ")");
+                ddl.append("\n");
+                result.add(ddl.toString());
+                x++;
+            }
+        }
+
+        return result;
     }
 
     private static String getH2DataType(String javaDataType) {
