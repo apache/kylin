@@ -296,15 +296,20 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public String getConfigAsString() throws IOException {
-        File propertiesFile = getKylinPropertiesFile();
-        OrderedProperties orderedProperties = new OrderedProperties();
-        orderedProperties.load(new FileInputStream(propertiesFile));
-        orderedProperties = BCC.check(orderedProperties);
-        final StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
-            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        final File propertiesFile = getKylinPropertiesFile();
+        final InputStream is = new FileInputStream(propertiesFile);
+        try {
+            OrderedProperties orderedProperties = new OrderedProperties();
+            orderedProperties.load(is);
+            orderedProperties = BCC.check(orderedProperties);
+            final StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
+                sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+            }
+            return sb.toString();
+        } finally {
+            IOUtils.closeQuietly(is);
         }
-        return sb.toString();
     }
 
     public KylinConfig base() {
