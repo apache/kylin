@@ -87,6 +87,8 @@ public class BuildCubeWithStream {
     protected static boolean fastBuildMode = false;
     private boolean generateData = true;
 
+    private static final int BUILD_ROUND = 5;
+
     public void before() throws Exception {
         deployEnv();
 
@@ -181,8 +183,12 @@ public class BuildCubeWithStream {
         ExecutorService executorService = Executors.newCachedThreadPool();
 
         List<FutureTask<ExecutableState>> futures = Lists.newArrayList();
-        for (int i = 0; i < 5; i++) {
-            Thread.sleep(2 * 60 * 1000); // wait for new messages
+        for (int i = 0; i < BUILD_ROUND; i++) {
+            if (i == (BUILD_ROUND - 1)) {
+                // stop generating message to kafka
+                generateData = false;
+            }
+            Thread.sleep(1 * 60 * 1000); // wait for new messages
             FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
                 @Override
                 public ExecutableState call() {
@@ -202,7 +208,7 @@ public class BuildCubeWithStream {
             futures.add(futureTask);
         }
 
-        generateData = false; // stop generating message to kafka
+        generateData = false;
         executorService.shutdown();
         int succeedBuild = 0;
         for (int i = 0; i < futures.size(); i++) {
