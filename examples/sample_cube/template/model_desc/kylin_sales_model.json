@@ -76,9 +76,7 @@
   } ],
   "metrics": [
     "PRICE",
-    "ITEM_COUNT",
-    "SELLER_ID",
-    "LSTG_FORMAT_NAME"
+    "ITEM_COUNT"
   ],
   "last_modified" : 1422435345362,
   "fact_table" : "DEFAULT.KYLIN_SALES",
