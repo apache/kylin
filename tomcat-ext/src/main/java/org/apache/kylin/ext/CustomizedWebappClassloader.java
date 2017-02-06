@@ -18,14 +18,12 @@
 
 package org.apache.kylin.ext;
 
-import org.apache.catalina.loader.ParallelWebappClassLoader;
-
 /**
  * simple extension to standard ParallelWebappClassLoader
  * the only difference is that CustomizedWebappClassloader is able to delegate more packages
  * to parent classloaders
  */
-public class CustomizedWebappClassloader extends ParallelWebappClassLoader {
+public class CustomizedWebappClassloader extends WebappOrderedClassLoader {
     /**
      * Set of package names which are not allowed to be loaded from a webapp
      * class loader without delegating first.
@@ -45,7 +43,7 @@ public class CustomizedWebappClassloader extends ParallelWebappClassLoader {
      * @param name class name
      * @return true if the class should be filtered
      */
-    protected boolean filter(String name) {
+    protected boolean filter(String name, boolean isClassName) {
         if (name == null)
             return false;
 
@@ -62,7 +60,6 @@ public class CustomizedWebappClassloader extends ParallelWebappClassLoader {
                 return true;
         }
 
-        //return super.filter(name, isClassName);
-        return false;
+        return super.filter(name, isClassName);
     }
 }
