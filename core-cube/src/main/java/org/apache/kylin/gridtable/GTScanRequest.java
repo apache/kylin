@@ -253,6 +253,10 @@ public class GTScanRequest {
         return filterPushDown;
     }
 
+    public void setFilterPushDown(TupleFilter filter) {
+        filterPushDown = filter;
+    }
+
     public ImmutableBitSet getDimensions() {
         return this.getColumns().andNot(this.getAggrMetrics());
     }
