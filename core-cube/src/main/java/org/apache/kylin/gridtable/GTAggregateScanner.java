@@ -63,15 +63,20 @@ public class GTAggregateScanner implements IGTScanner {
     final String[] metricsAggrFuncs;
     final IGTScanner inputScanner;
     final AggregationCache aggrCache;
-    final long spillThreshold;
+    final long spillThreshold; // 0 means no memory control && no spill
     final int storagePushDownLimit;//default to be Int.MAX
     final long deadline;
+    final boolean spillEnabled;
 
     private int aggregatedRowCount = 0;
     private MemoryWaterLevel memTracker;
     private boolean[] aggrMask;
 
-    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, long deadline) {
+    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
+        this(inputScanner, req, Long.MAX_VALUE, true);
+    }
+
+    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, long deadline, boolean spillEnabled) {
         if (!req.hasAggregation())
             throw new IllegalStateException();
 
@@ -86,6 +91,7 @@ public class GTAggregateScanner implements IGTScanner {
         this.aggrMask = new boolean[metricsAggrFuncs.length];
         this.storagePushDownLimit = req.getStoragePushDownLimit();
         this.deadline = deadline;
+        this.spillEnabled = spillEnabled;
 
         Arrays.fill(aggrMask, true);
     }
@@ -276,10 +282,16 @@ public class GTAggregateScanner implements IGTScanner {
                 if (memTracker != null) {
                     memTracker.markHigh();
                 }
-                if (spillThreshold > 0) {
+
+                final long estMemSize = estimatedMemSize();
+                if (spillThreshold > 0 && estMemSize > spillThreshold) {
                     // spill to disk when aggBufMap used too large memory
-                    if (estimatedMemSize() > spillThreshold) {
-                        spillBuffMap();
+                    if (spillEnabled) {
+                        spillBuffMap(estMemSize);
+                        aggBufMap = createBuffMap();
+
+                    } else {
+                        throw new GTScanSelfTerminatedException("Aggregation using more than " + spillThreshold + " memory and spill is disabled");
                     }
                 }
             }
@@ -306,17 +318,13 @@ public class GTAggregateScanner implements IGTScanner {
             return true;
         }
 
-        private void spillBuffMap() throws RuntimeException {
-            if (aggBufMap.isEmpty())
-                return;
-
+        private void spillBuffMap(long estMemSize) throws RuntimeException {
             try {
-                Dump dump = new Dump(aggBufMap);
+                Dump dump = new Dump(aggBufMap, estMemSize);
                 dump.flush();
                 dumps.add(dump);
-                aggBufMap = createBuffMap();
             } catch (Exception e) {
-                throw new RuntimeException("AggregationCache spill failed: " + e.getMessage());
+                throw new RuntimeException("AggregationCache failed to spill", e);
             }
         }
 
@@ -372,9 +380,9 @@ public class GTAggregateScanner implements IGTScanner {
                 };
             } else {
                 // the spill case
-
-                logger.info("Last spill, current AggregationCache memory estimated size is: " + getEstimateSizeOfAggrCache());
-                this.spillBuffMap();
+                if (!aggBufMap.isEmpty()) {
+                    this.spillBuffMap(getEstimateSizeOfAggrCache()); // TODO allow merge in-mem map with spilled dumps
+                }
 
                 return new Iterator<GTRecord>() {
                     final DumpMerger merger = new DumpMerger(dumps);
@@ -430,12 +438,16 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         class Dump implements Iterable<Pair<byte[], byte[]>> {
-            File dumpedFile;
-            DataInputStream dis;
+            final File dumpedFile;
             SortedMap<byte[], MeasureAggregator[]> buffMap;
+            final long estMemSize;
 
-            public Dump(SortedMap<byte[], MeasureAggregator[]> buffMap) throws IOException {
+            DataInputStream dis;
+
+            public Dump(SortedMap<byte[], MeasureAggregator[]> buffMap, long estMemSize) throws IOException {
+                this.dumpedFile = File.createTempFile("KYLIN_SPILL_", ".tmp");
                 this.buffMap = buffMap;
+                this.estMemSize = estMemSize;
             }
 
             @Override
@@ -482,13 +494,13 @@ public class GTAggregateScanner implements IGTScanner {
             }
 
             public void flush() throws IOException {
+                logger.info("AggregationCache(size={} est_mem_size={} threshold={}) will spill to {}",
+                        buffMap.size(), estMemSize, spillThreshold, dumpedFile.getAbsolutePath());
+
                 if (buffMap != null) {
                     DataOutputStream dos = null;
                     Object[] aggrResult = null;
                     try {
-                        dumpedFile = File.createTempFile("KYLIN_AGGR_", ".tmp");
-
-                        logger.info("AggregationCache will dump to file: " + dumpedFile.getAbsolutePath());
                         dos = new DataOutputStream(new FileOutputStream(dumpedFile));
                         dos.writeInt(buffMap.size());
                         for (Entry<byte[], MeasureAggregator[]> entry : buffMap.entrySet()) {

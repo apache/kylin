@@ -609,6 +609,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Double.parseDouble(this.getOptional("kylin.storage.hbase.coprocessor-mem-gb", "3.0"));
     }
 
+    public boolean getQueryCoprocessorSpillEnabled() {
+        return Boolean.parseBoolean(this.getOptional("kylin.storage.hbase.coprocessor-spill-enabled", "true"));
+    }
+
     public int getQueryCoprocessorTimeoutSeconds() {
         return Integer.parseInt(this.getOptional("kylin.storage.hbase.coprocessor-timeout-seconds", "0"));
     }

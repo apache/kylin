@@ -18,6 +18,10 @@
 
 package org.apache.kylin.gridtable;
 
+/**
+ * Implementations of {@link IGTScanner} should throw {@link GTScanSelfTerminatedException} or its subclasses
+ * in cases where the scan runs out of resources (time, memory, etc) and can not be continued.
+ */
 public class GTScanSelfTerminatedException extends RuntimeException {
 
     public GTScanSelfTerminatedException(String s) {

@@ -36,6 +36,7 @@ message CubeVisitRequest {
     repeated IntList hbaseColumnsToGT = 4;
     required string kylinProperties = 5; // kylin properties
     optional string queryId = 6;
+    optional bool spillEnabled = 7 [default = true];
     message IntList {
         repeated int32 ints = 1;
     }

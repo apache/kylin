@@ -166,13 +166,13 @@ public class GTScanRequest {
      * Refer to CoprocessorBehavior for explanation
      */
     public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, long deadline) throws IOException {
-        return decorateScanner(scanner, filterToggledOn, aggrToggledOn, false, deadline);
+        return decorateScanner(scanner, filterToggledOn, aggrToggledOn, false, deadline, true);
     }
 
     /**
      * hasPreFiltered indicate the data has been filtered before scanning
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, boolean hasPreFiltered, long deadline) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, boolean hasPreFiltered, long deadline, boolean spillEnabled) throws IOException {
         IGTScanner result = scanner;
         if (!filterToggledOn) { //Skip reading this section if you're not profiling! 
             int scanned = lookAndForget(result);
@@ -194,7 +194,7 @@ public class GTScanRequest {
             } else if (this.hasAggregation()) {
                 logger.info("pre aggregating results before returning");
                 this.doingStorageAggregation = true;
-                result = new GTAggregateScanner(result, this, deadline);
+                result = new GTAggregateScanner(result, this, deadline, spillEnabled);
             } else {
                 logger.info("has no aggregation, skip it");
             }

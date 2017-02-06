@@ -51,6 +51,7 @@ import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanExceedThresholdException;
 import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
 import org.apache.kylin.gridtable.GTScanTimeoutException;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
@@ -280,7 +281,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScans.get(0).hbaseColumns, hbaseColumnsToGT, request.getRowkeyPreambleSize(), behavior.delayToggledOn());
 
             IGTScanner rawScanner = store.scan(scanReq);
-            IGTScanner finalScanner = scanReq.decorateScanner(rawScanner, behavior.filterToggledOn(), behavior.aggrToggledOn(), deadline);
+            IGTScanner finalScanner = scanReq.decorateScanner(rawScanner, behavior.filterToggledOn(), behavior.aggrToggledOn(), false, deadline, request.getSpillEnabled());
 
             ByteBuffer buffer = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
 
@@ -315,12 +316,11 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                         break;
                     }
                 }
-            } catch (GTScanTimeoutException e) {
+            } catch (GTScanSelfTerminatedException e) {
+                // the query is using too much resource, we mark it as abnormal finish instead of
+                // throwing RuntimeException to avoid client retrying RPC.
                 scanNormalComplete.setValue(false);
-                logger.info("The cube visit did not finish normally because scan timeout", e);
-            } catch (GTScanExceedThresholdException e) {
-                scanNormalComplete.setValue(false);
-                logger.info("The cube visit did not finish normally because scan num exceeds threshold", e);
+                logger.warn("Abort scan: {}", e.getMessage());
             } finally {
                 finalScanner.close();
             }
