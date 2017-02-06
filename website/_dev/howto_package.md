@@ -6,17 +6,44 @@ permalink: /development/howto_package.html
 ---
 
 ### Generate Binary Package
-{% highlight bash %}
+This document talks about how to build binary package from source code.
+
+#### Download source code
+You can download Apache Kylin source code from github repository.
+
+```
 git clone https://github.com/apache/kylin kylin
-cd kylin
-./build/script/package.sh
-{% endhighlight %}
+```
+
+#### Build Binary Package
 
 In order to generate binary package, **maven** and **npm** are pre-requisites.
 
-If you're behind a proxy server, both npm and bower need be told with the proxy info before running ./script/package.sh:
+**(Optional)** If you're behind a proxy server, both npm and bower need be told with the proxy info before running ./script/package.sh:
 
-{% highlight bash %}
+```
 export http_proxy=http://your-proxy-host:port
 npm config set proxy http://your-proxy-host:port
-{% endhighlight %}
+```
+
+##### Build Package for HBase 1.x
+```
+cd kylin
+build/script/package.sh
+```
+
+##### Build Package for CDH 5.7
+```
+cd kylin
+build/script/package.sh -P cdh 5.7
+```
+
+##### Build Package for HBase 0.98.x
+
+Source code for HBase 0.98.x is in another branch named master-hbase0.98, and you need to switch to this branch before build the package.
+
+```
+cd kylin
+git checkout master-hbase0.98
+build/script/package.sh
+```
