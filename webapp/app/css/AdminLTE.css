@@ -4801,29 +4801,3 @@ Gradient Background colors
   }
 }
 
-.abn-tree .abn-tree-row .tree-table-btn{
-    width: 4%;
-    float: right;
-    border-radius: 5px;
-    margin-right: 5px;
-    padding: 3px 16px 2px 5px;
-    color: #ffffff;
-    position:static;
-}
-.abn-tree .abn-tree-row .tree-table-btn .tooltip{
-    overflow:visible;
-}
-.abn-tree .abn-tree-row .btn-info:hover{
-   background-color:#269abc;
-}
-.abn-tree > .abn-tree-row.active > .btn-info{
-    background-color:#269abc;
-    border-left-color:#269abc;
-}
-.abn-tree .abn-tree-row .btn-success:hover{
-    background-color:#008d4c;
-}
-.abn-tree > .abn-tree-row.active > .btn-success{
-    background-color:#008d4c;
-    border-left-color:#008d4c;
-}
