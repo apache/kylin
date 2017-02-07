@@ -157,8 +157,8 @@
                             <label class="col-sm-3 control-label font-color-default"><b>Alias</b></label>
                             <div class="col-sm-6">
                               <input type="text" class="form-control " name="joinTable_alias" placeholder="Input Table Alias" ng-required="true"
-                                     ng-model="newLookup.alias"  ng-pattern="/^\w+$/">
-                              <small class="help-block red" ng-show="!lookup_form.joinTable_alias.$error.required&&lookup_form.joinTable_alias.$invalid && (lookup_form.joinTable_alias.$dirty||lookup_form.$submitted)"><i class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp; Alias is invalid.</small>
+                                     ng-model="newLookup.alias"  ng-pattern="/^[A-Z_\d]+$/">
+                              <small class="help-block red" ng-show="!lookup_form.joinTable_alias.$error.required&&lookup_form.joinTable_alias.$invalid && (lookup_form.joinTable_alias.$dirty||lookup_form.$submitted)"><i class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp; Table alias is invalid(A Combination of numbers, uppercase letters or underscores).</small>
                             </div>
                         </div>
                     </div>
