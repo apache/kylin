@@ -150,11 +150,12 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         setupClasspath(sc, confPath);
         HadoopUtil.deletePath(sc.hadoopConfiguration(), new Path(outputPath));
 
+        final KylinConfig envConfig = KylinConfig.getInstanceFromEnv();
+
         HiveContext sqlContext = new HiveContext(sc.sc());
-        final DataFrame intermediateTable = sqlContext.table(hiveTable);
+        final DataFrame intermediateTable = sqlContext.table(envConfig.getHiveDatabaseForIntermediateTable() + "." + hiveTable);
 
         System.setProperty(KylinConfig.KYLIN_CONF, confPath);
-        final KylinConfig envConfig = KylinConfig.getInstanceFromEnv();
         final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
         final CubeSegment cubeSegment = cubeInstance.getSegmentById(segmentId);
