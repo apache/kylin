@@ -60,8 +60,7 @@ then
         PID=`cat $KYLIN_HOME/pid`
         if ps -p $PID > /dev/null
         then
-          echo "Kylin is running, stop it first"
-          exit 1
+          quit "Kylin is running, stop it first"
         fi
     fi
     
@@ -81,7 +80,7 @@ then
     spring_profile=`bash ${dir}/get-properties.sh kylin.security.profile`
     if [ -z "$spring_profile" ]
     then
-        quit 'please set kylin.security.profile in kylin.properties, options are: testing, ldap, saml.'
+        quit 'Please set kylin.security.profile in kylin.properties, options are: testing, ldap, saml.'
     else
         verbose "kylin.security.profile is set to $spring_profile"
     fi
@@ -95,10 +94,7 @@ then
     kylin_rest_address_arr=(${kylin_rest_address//;/ })
     nc -z -w 5 ${kylin_rest_address_arr[0]} ${kylin_rest_address_arr[1]} 1>/dev/null 2>&1; nc_result=$?
     if [ $nc_result -eq 0 ]; then
-        echo "port ${kylin_rest_address} is not available, could not start Kylin"
-        exit 1
-    else
-        echo "port ${kylin_rest_address} is available"
+        quit "Port ${kylin_rest_address} is not available, could not start Kylin."
     fi
 
     #debug if encounter NoClassDefError
@@ -155,7 +151,7 @@ then
 
 elif [ "$1" = "diag" ]
 then
-    echo "kylin.sh diag no longer supported, use diag.sh instead"
+    echo "'kylin.sh diag' no longer supported, use diag.sh instead"
     exit 0
 
 # tool command
