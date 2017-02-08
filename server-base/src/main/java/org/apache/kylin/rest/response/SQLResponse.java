@@ -55,6 +55,8 @@ public class SQLResponse implements Serializable {
 
     protected long totalScanCount;
 
+    protected long totalScanBytes;
+
     protected boolean hitExceptionCache = false;
 
     protected boolean storageCacheUsed = false;
@@ -148,6 +150,14 @@ public class SQLResponse implements Serializable {
 
     public void setTotalScanCount(long totalScanCount) {
         this.totalScanCount = totalScanCount;
+    }
+
+    public long getTotalScanBytes() {
+        return totalScanBytes;
+    }
+
+    public void setTotalScanBytes(long totalScanBytes) {
+        this.totalScanBytes = totalScanBytes;
     }
 
     public boolean isHitExceptionCache() {

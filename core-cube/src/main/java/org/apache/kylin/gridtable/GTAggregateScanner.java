@@ -65,7 +65,6 @@ public class GTAggregateScanner implements IGTScanner {
     final AggregationCache aggrCache;
     final long spillThreshold; // 0 means no memory control && no spill
     final int storagePushDownLimit;//default to be Int.MAX
-    final long deadline;
     final boolean spillEnabled;
 
     private int aggregatedRowCount = 0;
@@ -73,10 +72,10 @@ public class GTAggregateScanner implements IGTScanner {
     private boolean[] aggrMask;
 
     public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req) {
-        this(inputScanner, req, Long.MAX_VALUE, true);
+        this(inputScanner, req, true);
     }
 
-    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, long deadline, boolean spillEnabled) {
+    public GTAggregateScanner(IGTScanner inputScanner, GTScanRequest req, boolean spillEnabled) {
         if (!req.hasAggregation())
             throw new IllegalStateException();
 
@@ -90,7 +89,6 @@ public class GTAggregateScanner implements IGTScanner {
         this.spillThreshold = (long) (req.getAggCacheMemThreshold() * MemoryBudgetController.ONE_GB);
         this.aggrMask = new boolean[metricsAggrFuncs.length];
         this.storagePushDownLimit = req.getStoragePushDownLimit();
-        this.deadline = deadline;
         this.spillEnabled = spillEnabled;
 
         Arrays.fill(aggrMask, true);
@@ -144,11 +142,6 @@ public class GTAggregateScanner implements IGTScanner {
     public Iterator<GTRecord> iterator() {
         long count = 0;
         for (GTRecord r : inputScanner) {
-
-            //check deadline
-            if (count % GTScanRequest.terminateCheckInterval == 1 && System.currentTimeMillis() > deadline) {
-                throw new GTScanTimeoutException("Timeout in GTAggregateScanner with scanned count " + count);
-            }
 
             if (getNumOfSpills() == 0) {
                 //check limit

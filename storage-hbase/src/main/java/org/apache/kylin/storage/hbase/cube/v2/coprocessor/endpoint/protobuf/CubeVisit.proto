@@ -54,6 +54,7 @@ message CubeVisitResponse {
         optional string hostname = 8;
         optional string etcMsg = 9;
         optional int32 normalComplete =10;//when time outs, normalComplete will be false
+        optional int64 scannedBytes = 11;
     }
     required bytes compressedRows = 1;
     required Stats stats = 2;

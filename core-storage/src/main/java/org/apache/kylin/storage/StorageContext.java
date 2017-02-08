@@ -50,6 +50,7 @@ public class StorageContext {
 
     private IStorageQuery storageQuery;
     private AtomicLong totalScanCount = new AtomicLong();
+    private AtomicLong totalScanBytes = new AtomicLong();
     private Cuboid cuboid;
     private boolean partialResultReturned = false;
 
@@ -159,6 +160,14 @@ public class StorageContext {
 
     public long increaseTotalScanCount(long count) {
         return this.totalScanCount.addAndGet(count);
+    }
+
+    public long getTotalScanBytes() {
+        return totalScanBytes.get();
+    }
+
+    public long increaseTotalScanBytes(long bytes) {
+        return totalScanBytes.addAndGet(bytes);
     }
 
     public boolean isAcceptPartialResult() {

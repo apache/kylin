@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
@@ -41,6 +42,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,8 +88,8 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         }
     }
 
-    public CubeHBaseScanRPC(ISegment segment, Cuboid cuboid, final GTInfo fullGTInfo) {
-        super(segment, cuboid, fullGTInfo);
+    public CubeHBaseScanRPC(ISegment segment, Cuboid cuboid, final GTInfo fullGTInfo, StorageContext context) {
+        super(segment, cuboid, fullGTInfo, context);
     }
 
     @Override
@@ -180,12 +182,15 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         final Iterator<Result> allResultsIterator = Iterators.concat(resultIterators.iterator());
 
         CellListIterator cellListIterator = new CellListIterator() {
+            long scanBytes = 0;
+
             @Override
             public void close() throws IOException {
                 for (ResultScanner scanner : scanners) {
                     scanner.close();
                 }
                 hbaseTable.close();
+                context.increaseTotalScanBytes(scanBytes);
             }
 
             @Override
@@ -195,7 +200,11 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
 
             @Override
             public List<Cell> next() {
-                return allResultsIterator.next().listCells();
+                List<Cell> result = allResultsIterator.next().listCells();
+                for (Cell cell : result) {
+                    scanBytes += CellUtil.estimatedSizeOf(cell);
+                }
+                return result;
             }
 
             @Override

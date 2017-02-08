@@ -2255,6 +2255,16 @@ public final class CubeVisitProtos {
        * </pre>
        */
       int getNormalComplete();
+
+      // optional int64 scannedBytes = 11;
+      /**
+       * <code>optional int64 scannedBytes = 11;</code>
+       */
+      boolean hasScannedBytes();
+      /**
+       * <code>optional int64 scannedBytes = 11;</code>
+       */
+      long getScannedBytes();
     }
     /**
      * Protobuf type {@code CubeVisitResponse.Stats}
@@ -2355,6 +2365,11 @@ public final class CubeVisitProtos {
               case 80: {
                 bitField0_ |= 0x00000200;
                 normalComplete_ = input.readInt32();
+                break;
+              }
+              case 88: {
+                bitField0_ |= 0x00000400;
+                scannedBytes_ = input.readInt64();
                 break;
               }
             }
@@ -2619,6 +2634,22 @@ public final class CubeVisitProtos {
         return normalComplete_;
       }
 
+      // optional int64 scannedBytes = 11;
+      public static final int SCANNEDBYTES_FIELD_NUMBER = 11;
+      private long scannedBytes_;
+      /**
+       * <code>optional int64 scannedBytes = 11;</code>
+       */
+      public boolean hasScannedBytes() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional int64 scannedBytes = 11;</code>
+       */
+      public long getScannedBytes() {
+        return scannedBytes_;
+      }
+
       private void initFields() {
         serviceStartTime_ = 0L;
         serviceEndTime_ = 0L;
@@ -2630,6 +2661,7 @@ public final class CubeVisitProtos {
         hostname_ = "";
         etcMsg_ = "";
         normalComplete_ = 0;
+        scannedBytes_ = 0L;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -2672,6 +2704,9 @@ public final class CubeVisitProtos {
         }
         if (((bitField0_ & 0x00000200) == 0x00000200)) {
           output.writeInt32(10, normalComplete_);
+        }
+        if (((bitField0_ & 0x00000400) == 0x00000400)) {
+          output.writeInt64(11, scannedBytes_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -2721,6 +2756,10 @@ public final class CubeVisitProtos {
         if (((bitField0_ & 0x00000200) == 0x00000200)) {
           size += com.google.protobuf.CodedOutputStream
             .computeInt32Size(10, normalComplete_);
+        }
+        if (((bitField0_ & 0x00000400) == 0x00000400)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt64Size(11, scannedBytes_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -2792,6 +2831,11 @@ public final class CubeVisitProtos {
           result = result && (getNormalComplete()
               == other.getNormalComplete());
         }
+        result = result && (hasScannedBytes() == other.hasScannedBytes());
+        if (hasScannedBytes()) {
+          result = result && (getScannedBytes()
+              == other.getScannedBytes());
+        }
         result = result &&
             getUnknownFields().equals(other.getUnknownFields());
         return result;
@@ -2847,6 +2891,10 @@ public final class CubeVisitProtos {
         if (hasNormalComplete()) {
           hash = (37 * hash) + NORMALCOMPLETE_FIELD_NUMBER;
           hash = (53 * hash) + getNormalComplete();
+        }
+        if (hasScannedBytes()) {
+          hash = (37 * hash) + SCANNEDBYTES_FIELD_NUMBER;
+          hash = (53 * hash) + hashLong(getScannedBytes());
         }
         hash = (29 * hash) + getUnknownFields().hashCode();
         memoizedHashCode = hash;
@@ -2977,6 +3025,8 @@ public final class CubeVisitProtos {
           bitField0_ = (bitField0_ & ~0x00000100);
           normalComplete_ = 0;
           bitField0_ = (bitField0_ & ~0x00000200);
+          scannedBytes_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000400);
           return this;
         }
 
@@ -3045,6 +3095,10 @@ public final class CubeVisitProtos {
             to_bitField0_ |= 0x00000200;
           }
           result.normalComplete_ = normalComplete_;
+          if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+            to_bitField0_ |= 0x00000400;
+          }
+          result.scannedBytes_ = scannedBytes_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -3094,6 +3148,9 @@ public final class CubeVisitProtos {
           }
           if (other.hasNormalComplete()) {
             setNormalComplete(other.getNormalComplete());
+          }
+          if (other.hasScannedBytes()) {
+            setScannedBytes(other.getScannedBytes());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -3546,6 +3603,39 @@ public final class CubeVisitProtos {
         public Builder clearNormalComplete() {
           bitField0_ = (bitField0_ & ~0x00000200);
           normalComplete_ = 0;
+          onChanged();
+          return this;
+        }
+
+        // optional int64 scannedBytes = 11;
+        private long scannedBytes_ ;
+        /**
+         * <code>optional int64 scannedBytes = 11;</code>
+         */
+        public boolean hasScannedBytes() {
+          return ((bitField0_ & 0x00000400) == 0x00000400);
+        }
+        /**
+         * <code>optional int64 scannedBytes = 11;</code>
+         */
+        public long getScannedBytes() {
+          return scannedBytes_;
+        }
+        /**
+         * <code>optional int64 scannedBytes = 11;</code>
+         */
+        public Builder setScannedBytes(long value) {
+          bitField0_ |= 0x00000400;
+          scannedBytes_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional int64 scannedBytes = 11;</code>
+         */
+        public Builder clearScannedBytes() {
+          bitField0_ = (bitField0_ & ~0x00000400);
+          scannedBytes_ = 0L;
           onChanged();
           return this;
         }
@@ -4349,20 +4439,21 @@ public final class CubeVisitProtos {
       "ze\030\003 \002(\005\0223\n\020hbaseColumnsToGT\030\004 \003(\0132\031.Cub" +
       "eVisitRequest.IntList\022\027\n\017kylinProperties" +
       "\030\005 \002(\t\022\017\n\007queryId\030\006 \001(\t\022\032\n\014spillEnabled\030" +
-      "\007 \001(\010:\004true\032\027\n\007IntList\022\014\n\004ints\030\001 \003(\005\"\321\002\n" +
+      "\007 \001(\010:\004true\032\027\n\007IntList\022\014\n\004ints\030\001 \003(\005\"\347\002\n" +
       "\021CubeVisitResponse\022\026\n\016compressedRows\030\001 \002",
       "(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeVisitResponse.St" +
-      "ats\032\372\001\n\005Stats\022\030\n\020serviceStartTime\030\001 \001(\003\022" +
+      "ats\032\220\002\n\005Stats\022\030\n\020serviceStartTime\030\001 \001(\003\022" +
       "\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scannedRowCou" +
       "nt\030\003 \001(\003\022\032\n\022aggregatedRowCount\030\004 \001(\003\022\025\n\r" +
       "systemCpuLoad\030\005 \001(\001\022\036\n\026freePhysicalMemor" +
       "ySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSize\030\007 \001(\001\022\020" +
       "\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016norm" +
-      "alComplete\030\n \001(\0052F\n\020CubeVisitService\0222\n\t" +
-      "visitCube\022\021.CubeVisitRequest\032\022.CubeVisit" +
-      "ResponseB`\nEorg.apache.kylin.storage.hba",
-      "se.cube.v2.coprocessor.endpoint.generate" +
-      "dB\017CubeVisitProtosH\001\210\001\001\240\001\001"
+      "alComplete\030\n \001(\005\022\024\n\014scannedBytes\030\013 \001(\0032F" +
+      "\n\020CubeVisitService\0222\n\tvisitCube\022\021.CubeVi" +
+      "sitRequest\032\022.CubeVisitResponseB`\nEorg.ap",
+      "ache.kylin.storage.hbase.cube.v2.coproce" +
+      "ssor.endpoint.generatedB\017CubeVisitProtos" +
+      "H\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4392,7 +4483,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitResponse_Stats_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitResponse_Stats_descriptor,
-              new java.lang.String[] { "ServiceStartTime", "ServiceEndTime", "ScannedRowCount", "AggregatedRowCount", "SystemCpuLoad", "FreePhysicalMemorySize", "FreeSwapSpaceSize", "Hostname", "EtcMsg", "NormalComplete", });
+              new java.lang.String[] { "ServiceStartTime", "ServiceEndTime", "ScannedRowCount", "AggregatedRowCount", "SystemCpuLoad", "FreePhysicalMemorySize", "FreeSwapSpaceSize", "Hostname", "EtcMsg", "NormalComplete", "ScannedBytes", });
           return null;
         }
       };

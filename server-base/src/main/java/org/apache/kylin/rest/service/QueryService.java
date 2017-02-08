@@ -276,6 +276,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Realization Names: ").append(realizationNames).append(newLine);
         stringBuilder.append("Cuboid Ids: ").append(cuboidIds).append(newLine);
         stringBuilder.append("Total scan count: ").append(response.getTotalScanCount()).append(newLine);
+        stringBuilder.append("Total scan bytes: ").append(response.getTotalScanBytes()).append(newLine);
         stringBuilder.append("Result row count: ").append(resultRowCount).append(newLine);
         stringBuilder.append("Accept Partial: ").append(request.isAcceptPartial()).append(newLine);
         stringBuilder.append("Is Partial Result: ").append(response.isPartial()).append(newLine);
@@ -580,15 +581,18 @@ public class QueryService extends BasicService {
 
         boolean isPartialResult = false;
         String cube = "";
-        StringBuilder sb = new StringBuilder("Scan count for each storageContext: ");
+        StringBuilder sb = new StringBuilder("Scan stats for each storageContext: ");
         long totalScanCount = 0;
+        long totalScanBytes = 0;
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 if (ctx.realization != null) {
                     isPartialResult |= ctx.storageContext.isPartialResultReturned();
                     cube = ctx.realization.getName();
                     totalScanCount += ctx.storageContext.getTotalScanCount();
-                    sb.append(ctx.storageContext.getTotalScanCount() + ",");
+                    totalScanBytes += ctx.storageContext.getTotalScanBytes();
+                    sb.append("{rows=").append(ctx.storageContext.getTotalScanCount()).
+                       append(" bytes=").append(ctx.storageContext.getTotalScanBytes()).append("} ");
                 }
             }
         }
@@ -596,6 +600,7 @@ public class QueryService extends BasicService {
 
         SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult);
         response.setTotalScanCount(totalScanCount);
+        response.setTotalScanBytes(totalScanBytes);
 
         return response;
     }
