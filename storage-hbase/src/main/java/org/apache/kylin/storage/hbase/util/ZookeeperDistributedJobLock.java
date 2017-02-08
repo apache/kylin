@@ -19,10 +19,7 @@
 package org.apache.kylin.storage.hbase.util;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
-
-import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
@@ -33,17 +30,11 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.lock.DistributedJobLock;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 
 /**
  * the jobLock is specially used to support distributed scheduler.
@@ -65,7 +56,7 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
     public ZookeeperDistributedJobLock(KylinConfig config) {
         this.config = config;
 
-        String zkConnectString = getZKConnectString();
+        String zkConnectString = ZookeeperUtil.getZKConnectString();
         logger.info("zk connection string:" + zkConnectString);
         if (StringUtils.isEmpty(zkConnectString)) {
             throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
@@ -241,19 +232,6 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
         } catch (Exception e) {
             logger.warn("watch the zookeeper node fail: " + e);
         }
-    }
-
-    private static String getZKConnectString() {
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
-        final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        return StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
-            @Nullable
-            @Override
-            public String apply(String input) {
-                return input + ":" + port;
-            }
-        }), ",");
     }
 
     private String getLockPath(String pathName) {

@@ -56,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 public class DeployUtil {
     private static final Logger logger = LoggerFactory.getLogger(DeployUtil.class);
@@ -139,7 +140,7 @@ public class DeployUtil {
         boolean buildCubeUsingProvidedData = Boolean.parseBoolean(System.getProperty("buildCubeUsingProvidedData"));
         if (!buildCubeUsingProvidedData) {
             System.out.println("build cube with random dataset");
-            
+
             // data is generated according to cube descriptor and saved in resource store
             MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
             DataModelDesc model = mgr.getDataModelDesc(modelName);
@@ -208,12 +209,12 @@ public class DeployUtil {
         MetadataManager metaMgr = MetadataManager.getInstance(config());
 
         // scp data files, use the data from hbase, instead of local files
-        File temp = File.createTempFile("temp", ".csv");
-        temp.createNewFile();
+        File tempDir = Files.createTempDir();
+        String tempDirAbsPath = tempDir.getAbsolutePath();
         for (String tablename : TABLE_NAMES) {
             tablename = tablename.toUpperCase();
 
-            File localBufferFile = new File(temp.getParent() + "/" + tablename + ".csv");
+            File localBufferFile = new File(tempDirAbsPath + "/" + tablename + ".csv");
             localBufferFile.createNewFile();
 
             InputStream hbaseDataStream = metaMgr.getStore().getResource("/data/" + tablename + ".csv").inputStream;
@@ -225,8 +226,7 @@ public class DeployUtil {
 
             localBufferFile.deleteOnExit();
         }
-        String tableFileDir = temp.getParent();
-        temp.delete();
+        tempDir.deleteOnExit();
 
         IHiveClient hiveClient = HiveClientFactory.getHiveClient();
         // create hive tables
@@ -238,7 +238,7 @@ public class DeployUtil {
         // load data to hive tables
         // LOAD DATA LOCAL INPATH 'filepath' [OVERWRITE] INTO TABLE tablename
         for (String tablename : TABLE_NAMES) {
-            hiveClient.executeHQL(generateLoadDataHql(tablename.toUpperCase(), tableFileDir));
+            hiveClient.executeHQL(generateLoadDataHql(tablename.toUpperCase(), tempDirAbsPath));
         }
 
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
@@ -255,7 +255,7 @@ public class DeployUtil {
 
         String dropsql = "DROP TABLE IF EXISTS " + tableDesc.getIdentity();
         String dropsql2 = "DROP VIEW IF EXISTS " + tableDesc.getIdentity();
-        
+
         StringBuilder ddl = new StringBuilder();
         ddl.append("CREATE TABLE " + tableDesc.getIdentity() + "\n");
         ddl.append("(" + "\n");

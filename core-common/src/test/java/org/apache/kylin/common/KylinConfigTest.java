@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-public class KylinConfigTest extends HotLoadKylinPropertiesTestCase{
+public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     @Test
     public void testMRConfigOverride() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
@@ -80,5 +80,20 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase{
         KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
 
         assertEquals("kylin@kylin.apache.org", config.getKylinOwner());
+    }
+
+    @Test
+    public void testGetMetadataUrlPrefix() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        final String default_metadata_prefix = "kylin_metadata";
+        
+        config.setMetadataUrl("testMetaPrefix@hbase");
+        assertEquals("testMetaPrefix", config.getMetadataUrlPrefix());
+
+        config.setMetadataUrl("testMetaPrefix@hdfs");
+        assertEquals("testMetaPrefix", config.getMetadataUrlPrefix());
+
+        config.setMetadataUrl("/kylin/temp");
+        assertEquals(default_metadata_prefix, config.getMetadataUrlPrefix());
     }
 }

@@ -36,6 +36,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kafka.common.requests.MetadataResponse;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -63,6 +67,7 @@ import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
+import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
 import org.apache.kylin.tool.StorageCleanupJob;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -84,6 +89,9 @@ public class BuildCubeWithStream {
 
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
+    private ZkConnection zkConnection;
+    private final String kafkaZkPath = "/" + UUID.randomUUID().toString();
+
     protected static boolean fastBuildMode = false;
     private boolean generateData = true;
 
@@ -128,8 +136,9 @@ public class BuildCubeWithStream {
 
     private void startEmbeddedKafka(String topicName, BrokerConfig brokerConfig) {
         //Start mock Kakfa
-        String zkConnectionStr = "sandbox:2181";
-        ZkConnection zkConnection = new ZkConnection(zkConnectionStr);
+        String zkConnectionStr = ZookeeperUtil.getZKConnectString() + kafkaZkPath;
+        System.out.println("zkConnectionStr" + zkConnectionStr);
+        zkConnection = new ZkConnection(zkConnectionStr);
         // Assert.assertEquals(ZooKeeper.States.CONNECTED, zkConnection.getZookeeperState());
         kafkaServer = new MockKafka(zkConnection, brokerConfig.getPort(), brokerConfig.getId());
         kafkaServer.start();
@@ -287,7 +296,22 @@ public class BuildCubeWithStream {
 
     public void after() {
         kafkaServer.stop();
+        cleanKafkaZkPath(kafkaZkPath);
         DefaultScheduler.destroyInstance();
+    }
+
+    private void cleanKafkaZkPath(String path) {
+        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+        CuratorFramework zkClient = CuratorFrameworkFactory.newClient(ZookeeperUtil.getZKConnectString(), retryPolicy);
+        zkClient.start();
+
+        try {
+            zkClient.delete().deletingChildrenIfNeeded().forPath(kafkaZkPath);
+        } catch (Exception e) {
+            logger.warn("Failed to delete zookeeper path: " + path, e);
+        } finally {
+            zkClient.close();
+        }
     }
 
     protected void waitForJob(String jobId) {
@@ -327,6 +351,8 @@ public class BuildCubeWithStream {
             buildCubeWithStream.before();
             buildCubeWithStream.build();
             logger.info("Build is done");
+
+            buildCubeWithStream.after();
             buildCubeWithStream.cleanup();
             logger.info("Going to exit");
         } catch (Throwable e) {
@@ -336,7 +362,7 @@ public class BuildCubeWithStream {
 
         long millis = System.currentTimeMillis() - start;
         System.out.println("Time elapsed: " + (millis / 1000) + " sec - in " + BuildCubeWithStream.class.getName());
-        
+
         System.exit(exitCode);
     }
 }

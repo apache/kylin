@@ -30,6 +30,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -114,8 +115,10 @@ public class CachedTreeMapTest {
         }
     }
 
-    public static final String baseDir = "/tmp/kylin_cachedtreemap_test/";
-    public static final String workingDir = "/tmp/kylin_cachedtreemap_test/working";
+
+    static final UUID uuid = UUID.randomUUID();
+    static final String baseDir = "/tmp/kylin_cachedtreemap_test/" + uuid;
+    static final String workingDir = baseDir + "/working";
 
     private static void cleanup() {
         Path basePath = new Path(baseDir);

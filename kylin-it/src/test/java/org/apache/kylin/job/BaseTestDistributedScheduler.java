@@ -20,9 +20,7 @@ package org.apache.kylin.job;
 
 import java.io.File;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-
-import javax.annotation.Nullable;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,8 +29,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -40,15 +36,13 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DistributedScheduler;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock;
+import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
@@ -62,8 +56,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static File localMetaDir;
 
     static final String SEGMENT_ID = "segmentId";
-    static final String segmentId1 = "segmentId1";
-    static final String segmentId2 = "segmentId2";
+    static final String segmentId1 = "seg1" + UUID.randomUUID();
+    static final String segmentId2 = "seg2" + UUID.randomUUID();
     static final String serverName1 = "serverName1";
     static final String serverName2 = "serverName2";
     static final String confDstPath1 = "target/kylin_metadata_dist_lock_test1/kylin.properties";
@@ -177,26 +171,13 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     }
 
     private static void initZk() {
-        String zkConnectString = getZKConnectString();
+        String zkConnectString = ZookeeperUtil.getZKConnectString();
         if (StringUtils.isEmpty(zkConnectString)) {
             throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
         }
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
         zkClient = CuratorFrameworkFactory.newClient(zkConnectString, retryPolicy);
         zkClient.start();
-    }
-
-    private static String getZKConnectString() {
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
-        final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        return StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
-            @Nullable
-            @Override
-            public String apply(String input) {
-                return input + ":" + port;
-            }
-        }), ",");
     }
 
     String getServerName(String cubeName) {
