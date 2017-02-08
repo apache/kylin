@@ -36,6 +36,7 @@
     <properties>
         <hdp.version/>
         <fastBuildMode/>
+        <buildCubeUsingProvidedData/>
         <engineType/>
     </properties>
 
@@ -316,6 +317,7 @@
                                     <arguments>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
+                                        <argument>-DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}</argument>
                                         <argument>-DengineType=${engineType}</argument>
                                         <argument>-Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</argument>
                                         <argument>-classpath</argument>
@@ -338,6 +340,7 @@
                                     <arguments>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
+                                        <argument>-DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}</argument>
                                         <argument>-Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</argument>
                                         <argument>-classpath</argument>
                                         <classpath/>

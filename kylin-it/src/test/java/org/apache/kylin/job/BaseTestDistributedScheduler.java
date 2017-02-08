@@ -24,6 +24,7 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 
 public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static ExecutableManager execMgr;
@@ -57,13 +59,13 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static KylinConfig kylinConfig1;
     static KylinConfig kylinConfig2;
     static CuratorFramework zkClient;
+    static File localMetaDir;
 
     static final String SEGMENT_ID = "segmentId";
     static final String segmentId1 = "segmentId1";
     static final String segmentId2 = "segmentId2";
     static final String serverName1 = "serverName1";
     static final String serverName2 = "serverName2";
-    static final String confSrcPath = "../examples/test_case_data/sandbox/kylin.properties";
     static final String confDstPath1 = "target/kylin_metadata_dist_lock_test1/kylin.properties";
     static final String confDstPath2 = "target/kylin_metadata_dist_lock_test2/kylin.properties";
 
@@ -77,14 +79,17 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         new File(confDstPath1).getParentFile().mkdirs();
         new File(confDstPath2).getParentFile().mkdirs();
         KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
+
+        localMetaDir = Files.createTempDir();
         String backup = srcConfig.getMetadataUrl();
-        srcConfig.setProperty("kylin.metadata.url", "kylin_metadata_dist_lock_test@hbase");
+        srcConfig.setProperty("kylin.metadata.url", localMetaDir.getAbsolutePath());
         srcConfig.writeProperties(new File(confDstPath1));
         srcConfig.writeProperties(new File(confDstPath2));
         srcConfig.setProperty("kylin.metadata.url", backup);
+
         kylinConfig1 = KylinConfig.createInstanceFromUri(new File(confDstPath1).getAbsolutePath());
         kylinConfig2 = KylinConfig.createInstanceFromUri(new File(confDstPath2).getAbsolutePath());
-        
+
         initZk();
 
         if (jobLock == null)
@@ -130,7 +135,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
             zkClient.close();
             zkClient = null;
         }
-        
+
+        FileUtils.deleteDirectory(localMetaDir);
         System.clearProperty("kylin.job.lock");
         staticCleanupTestMetadata();
     }
