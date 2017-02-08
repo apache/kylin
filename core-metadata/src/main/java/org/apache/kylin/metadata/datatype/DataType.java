@@ -114,7 +114,8 @@ public class DataType implements Serializable {
     public static final DataType ANY = DataType.getType("any");
 
     static {
-        MeasureTypeFactory.init();
+        //to ensure the MeasureTypeFactory class has initialized
+        MeasureTypeFactory.getUDAFs();
     }
 
     public static DataType getType(String type) {
