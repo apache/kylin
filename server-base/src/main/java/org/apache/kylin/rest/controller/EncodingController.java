@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.service.EncodingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +35,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import org.apache.kylin.rest.service.EncodingService;
 
 @Controller
 @RequestMapping(value = "/encodings")
@@ -52,7 +52,7 @@ public class EncodingController extends BasicController {
      */
     @RequestMapping(value = "valid_encodings", method = { RequestMethod.GET })
     @ResponseBody
-    public Map<String, Object> getValidEncodings() {
+    public EnvelopeResponse getValidEncodings() {
 
         Set<String> allDatatypes = Sets.newHashSet();
         allDatatypes.addAll(DataType.DATETIME_FAMILY);
@@ -65,9 +65,6 @@ public class EncodingController extends BasicController {
             datatypeValidEncodings.put(dataTypeStr, encodingService.getValidEncodings(DataType.getType(dataTypeStr)));
         }
 
-        Map<String, Object> ret = Maps.newHashMap();
-        ret.put("code", "000");
-        ret.put("data", datatypeValidEncodings);
-        return ret;
+        return new EnvelopeResponse(EnvelopeResponse.CODE_SUCCESS, datatypeValidEncodings, "");
     }
 }
