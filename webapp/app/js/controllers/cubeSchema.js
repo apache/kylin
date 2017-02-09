@@ -287,6 +287,14 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
           errors.push("All measures need to be assigned to column family");
         }
 
+        var isCFEmpty = _.some($scope.cubeMetaFrame.hbase_mapping.column_family, function(colFamily) {
+          return colFamily.columns[0].measure_refs.length == 0;
+        });
+
+        if (isCFEmpty == true) {
+          errors.push("Each column family can't not be empty");
+        }
+
 
         var errorInfo = "";
         angular.forEach(errors,function(item){

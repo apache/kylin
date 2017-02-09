@@ -453,7 +453,7 @@
 
                      <td class="col-xs-1">
                        <!--Remove Button -->
-                       <button class="btn btn-xs btn-info" ng-click="removeElement(cubeMetaFrame.hbase_mapping.column_family, colFamily)">
+                       <button ng-if="colFamily.columns[0].measure_refs.length == 0" class="btn btn-xs btn-info" ng-click="removeElement(cubeMetaFrame.hbase_mapping.column_family, colFamily)">
                          <i class="fa fa-minus"></i>
                        </button>
                      </td>

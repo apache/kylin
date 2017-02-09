@@ -342,12 +342,44 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     return assignedMeasures;
   };
 
-  if ($scope.getAllMeasureNames().length != $scope.getAssignedMeasureNames().length) {
+  $scope.rmDeprecatedMeasureNames = function () {
+    var allMeasureNames = $scope.getAllMeasureNames();
+    var tmpColumnFamily = $scope.cubeMetaFrame.hbase_mapping.column_family;
+
+    angular.forEach($scope.cubeMetaFrame.hbase_mapping.column_family, function (colFamily,index1) {
+      angular.forEach(colFamily.columns[0].measure_refs, function (measureName, index2) {
+        var allIndex = allMeasureNames.indexOf(measureName);
+        if (allIndex == -1) {
+          tmpColumnFamily[index1].columns[0].measure_refs.splice(index2, 1);
+        }
+
+        if (tmpColumnFamily[index1].columns[0].measure_refs == 0) {
+          tmpColumnFamily.splice(index1, 1);
+        }
+      });
+    });
+
+    $scope.cubeMetaFrame.hbase_mapping.column_family = tmpColumnFamily;
+  };
+
+  if ($scope.getAssignedMeasureNames().length == 0) {
     $scope.initColumnFamily();
+  } else {
+    $scope.rmDeprecatedMeasureNames();
+    if ($scope.getAllMeasureNames().length > $scope.getAssignedMeasureNames().length) {
+      $scope.initColumnFamily();
+    }
   }
 
-
   $scope.addColumnFamily = function () {
+    var isCFEmpty = _.some($scope.cubeMetaFrame.hbase_mapping.column_family, function(colFamily) {
+      return colFamily.columns[0].measure_refs.length == 0;
+    });
+
+    if (isCFEmpty === true) {
+      return;
+    }
+
     var colFamily = $scope.newColFamily($scope.cubeMetaFrame.hbase_mapping.column_family.length + 1);
     $scope.cubeMetaFrame.hbase_mapping.column_family.push(colFamily);
   };
