@@ -122,8 +122,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filter, loosenedColumnD, sqlDigest.aggregations, context);
         // set query deadline
         context.setDeadline(cubeInstance);
-        // set cautious threshold to prevent out of memory
-        setThresholdIfNecessary(dimensionsD, metrics, context);
 
         List<CubeSegmentScanner> scanners = Lists.newArrayList();
         for (CubeSegment cubeSeg : cubeInstance.getSegments(SegmentStatusEnum.READY)) {
@@ -320,32 +318,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
         for (TupleFilter child : filter.getChildren()) {
             collectColumnsRecursively(child, collector);
-        }
-    }
-
-    private void setThresholdIfNecessary(Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics, StorageContext context) {
-        boolean hasMemHungryMeasure = false;
-        for (FunctionDesc func : metrics) {
-            hasMemHungryMeasure |= func.getMeasureType().isMemoryHungry();
-        }
-
-        // need to limit the memory usage for memory hungry measures
-        if (hasMemHungryMeasure == false) {
-            return;
-        }
-
-        int rowSizeEst = dimensions.size() * 3;
-        for (FunctionDesc func : metrics) {
-            // FIXME getStorageBytesEstimate() is not appropriate as here we want size in memory (not in storage)
-            rowSizeEst += func.getReturnDataType().getStorageBytesEstimate();
-        }
-
-        long rowEst = this.cubeInstance.getConfig().getQueryMemBudget() / rowSizeEst;
-        if (rowEst > 0) {
-            logger.info("Memory budget is set to " + rowEst + " rows");
-            context.setThreshold((int) rowEst);
-        } else {
-            logger.info("Memory budget is not set.");
         }
     }
 

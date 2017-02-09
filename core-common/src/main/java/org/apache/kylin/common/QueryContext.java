@@ -18,44 +18,48 @@
 
 package org.apache.kylin.common;
 
-import java.util.Map;
-
-import com.google.common.collect.Maps;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * checkout {@link org.apache.kylin.common.debug.BackdoorToggles} for comparison
  */
 public class QueryContext {
-    private static final ThreadLocal<Map<String, String>> _queryContext = new ThreadLocal<Map<String, String>>();
 
-    public final static String KEY_QUERY_ID = "QUERY_ID";
-
-    public static String getQueryId() {
-        return getString(KEY_QUERY_ID);
-    }
-
-    public static void setQueryId(String uuid) {
-        setString(KEY_QUERY_ID, uuid);
-    }
-
-    private static void setString(String key, String value) {
-        Map<String, String> context = _queryContext.get();
-        if (context == null) {
-            Map<String, String> newMap = Maps.newHashMap();
-            newMap.put(key, value);
-            _queryContext.set(newMap);
-        } else {
-            context.put(key, value);
+    private static final ThreadLocal<QueryContext> contexts = new ThreadLocal<QueryContext>() {
+        @Override
+        protected QueryContext initialValue() {
+            return new QueryContext();
         }
+    };
+
+    private String queryId;
+    private AtomicLong scanBytes = new AtomicLong();
+
+    private QueryContext() {
+        // use QueryContext.current() instead
     }
 
-    private static String getString(String key) {
-        Map<String, String> context = _queryContext.get();
-        if (context == null) {
-            return null;
-        } else {
-            return context.get(key);
-        }
+    public static QueryContext current() {
+        return contexts.get();
     }
 
+    public static void reset() {
+        contexts.remove();
+    }
+
+    public String getQueryId() {
+        return queryId;
+    }
+
+    public void setQueryId(String queryId) {
+        this.queryId = queryId;
+    }
+
+    public long getScanBytes() {
+        return scanBytes.get();
+    }
+
+    public long addAndGetScanBytes(long delta) {
+        return scanBytes.addAndGet(delta);
+    }
 }

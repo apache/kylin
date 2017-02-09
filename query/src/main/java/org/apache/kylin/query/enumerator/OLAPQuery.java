@@ -28,8 +28,6 @@ import org.apache.kylin.query.relnode.OLAPContext;
  */
 public class OLAPQuery extends AbstractEnumerable<Object[]> implements Enumerable<Object[]> {
 
-    public static final String PROP_SCAN_THRESHOLD = "scan_threshold";
-
     public enum EnumeratorTypeEnum {
         OLAP, //finish query with Cube or II, or a combination of both
         LOOKUP_TABLE, //using a snapshot of lookup table

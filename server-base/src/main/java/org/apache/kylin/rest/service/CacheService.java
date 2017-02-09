@@ -21,7 +21,6 @@ package org.apache.kylin.rest.service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -30,11 +29,9 @@ import javax.sql.DataSource;
 import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.query.enumerator.OLAPQuery;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,9 +163,6 @@ public class CacheService extends BasicService {
             }
 
             DriverManagerDataSource ds = new DriverManagerDataSource();
-            Properties props = new Properties();
-            props.setProperty(OLAPQuery.PROP_SCAN_THRESHOLD, String.valueOf(KylinConfig.getInstanceFromEnv().getScanThreshold()));
-            ds.setConnectionProperties(props);
             ds.setDriverClassName(Driver.class.getName());
             ds.setUrl("jdbc:calcite:model=" + modelJson.getAbsolutePath());
 

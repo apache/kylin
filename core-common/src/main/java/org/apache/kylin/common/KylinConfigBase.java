@@ -613,6 +613,11 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(this.getOptional("kylin.storage.hbase.coprocessor-spill-enabled", "true"));
     }
 
+    public long getQueryCoprocessorMaxScanBytes() {
+        long value = Long.parseLong(this.getOptional("kylin.storage.hbase.coprocessor-max-scan-bytes", String.valueOf(3L * 1024 * 1024 * 1024)));
+        return value > 0 ? value : Long.MAX_VALUE;
+    }
+
     public int getQueryCoprocessorTimeoutSeconds() {
         return Integer.parseInt(this.getOptional("kylin.storage.hbase.coprocessor-timeout-seconds", "0"));
     }
@@ -807,8 +812,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.max-limit-pushdown", "10000"));
     }
 
+    @Deprecated
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan-threshold", "10000000"));
+    }
+
+    public long getQueryMaxScanBytes() {
+        long value = Long.parseLong(getOptional("kylin.query.max-scan-bytes", "0"));
+        return value > 0 ? value : Long.MAX_VALUE;
     }
 
     public int getLargeQueryThreshold() {
@@ -849,10 +860,6 @@ abstract public class KylinConfigBase implements Serializable {
 
     public long getQueryScanCountCacheThreshold() {
         return Long.parseLong(this.getOptional("kylin.query.cache-threshold-scan-count", String.valueOf(10 * 1024)));
-    }
-
-    public long getQueryMemBudget() {
-        return Long.parseLong(this.getOptional("kylin.query.memory-budget-bytes", String.valueOf(3L * 1024 * 1024 * 1024)));
     }
 
     public boolean isQuerySecureEnabled() {

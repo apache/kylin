@@ -26,7 +26,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTScanTimeoutException;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -35,7 +34,6 @@ import org.apache.kylin.metadata.tuple.ITuple;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.StorageContext;
-import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +45,6 @@ import com.google.common.collect.Lists;
 public class SequentialCubeTupleIterator implements ITupleIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(SequentialCubeTupleIterator.class);
-
-    private final int SCAN_THRESHOLD = KylinConfig.getInstanceFromEnv().getScanThreshold();
 
     protected List<CubeSegmentScanner> scanners;
     protected List<SegmentCubeTupleIterator> segmentCubeTupleIterators;
@@ -142,13 +138,8 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public ITuple next() {
-        if (scanCount % 100 == 1 && System.currentTimeMillis() > context.getDeadline()) {
+        if (scanCount++ % 100 == 1 && System.currentTimeMillis() > context.getDeadline()) {
             throw new GTScanTimeoutException("Query Timeout!");
-        }
-
-        // prevent the big query to make the Query Server OOM
-        if (scanCount++ > SCAN_THRESHOLD) {
-            throw new ScanOutOfLimitException("Scan count exceed the scan threshold: " + SCAN_THRESHOLD);
         }
 
         if (++scanCountDelta >= 1000)
@@ -179,10 +170,6 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         } catch (IOException e) {
             logger.error("Exception when close CubeScanner", e);
         }
-    }
-
-    public int getScanCount() {
-        return scanCount;
     }
 
     private void flushScanCountDelta() {

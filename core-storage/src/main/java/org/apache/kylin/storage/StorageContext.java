@@ -20,7 +20,6 @@ package org.apache.kylin.storage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.slf4j.Logger;
@@ -35,7 +34,6 @@ public class StorageContext {
     private static final Logger logger = LoggerFactory.getLogger(StorageContext.class);
 
     private String connUrl;
-    private int threshold;
     private int limit = Integer.MAX_VALUE;
     private int offset = 0;
     private int finalPushDownLimit = Integer.MAX_VALUE;
@@ -54,10 +52,6 @@ public class StorageContext {
     private Cuboid cuboid;
     private boolean partialResultReturned = false;
 
-    public StorageContext() {
-        this.threshold = KylinConfig.getInstanceFromEnv().getScanThreshold();
-    }
-
     private Range<Long> reusedPeriod;
 
     public String getConnUrl() {
@@ -66,14 +60,6 @@ public class StorageContext {
 
     public void setConnUrl(String connUrl) {
         this.connUrl = connUrl;
-    }
-
-    public int getThreshold() {
-        return threshold;
-    }
-
-    public void setThreshold(int t) {
-        threshold = t;
     }
 
     public int getLimit() {

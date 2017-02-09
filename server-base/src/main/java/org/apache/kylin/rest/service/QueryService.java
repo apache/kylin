@@ -63,6 +63,7 @@ import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.gridtable.GTScanExceedThresholdException;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
@@ -79,7 +80,6 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.rest.util.TableauInterceptor;
-import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -267,7 +267,7 @@ public class QueryService extends BasicService {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
-        stringBuilder.append("Query Id: ").append(QueryContext.getQueryId()).append(newLine);
+        stringBuilder.append("Query Id: ").append(QueryContext.current().getQueryId()).append(newLine);
         stringBuilder.append("SQL: ").append(request.getSql()).append(newLine);
         stringBuilder.append("User: ").append(user).append(newLine);
         stringBuilder.append("Success: ").append((null == response.getExceptionMessage())).append(newLine);
@@ -331,7 +331,7 @@ public class QueryService extends BasicService {
         final String queryId = UUID.randomUUID().toString();
         if (sqlRequest.getBackdoorToggles() != null)
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
-        QueryContext.setQueryId(queryId);
+        QueryContext.current().setQueryId(queryId);
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
             String sql = sqlRequest.getSql();
@@ -383,7 +383,7 @@ public class QueryService extends BasicService {
                 sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
 
                 // for exception queries, only cache ScanOutOfLimitException
-                if (queryCacheEnabled && e instanceof ScanOutOfLimitException) {
+                if (queryCacheEnabled && e instanceof GTScanExceedThresholdException) {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                     exceptionCache.put(new Element(sqlRequest, sqlResponse));
                 }
@@ -400,6 +400,7 @@ public class QueryService extends BasicService {
 
         } finally {
             BackdoorToggles.cleanToggles();
+            QueryContext.reset();
         }
     }
 

@@ -20,12 +20,9 @@ package org.apache.kylin.query.enumerator;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.calcite.DataContext;
-import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.linq4j.Enumerator;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
@@ -111,9 +108,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
     private ITupleIterator queryStorage() {
         logger.debug("query storage...");
 
-        // set connection properties
-        setConnectionProperties();
-
         // bind dynamic variables
         bindVariable(olapContext.filter);
 
@@ -156,16 +150,4 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
             }
         }
     }
-
-    private void setConnectionProperties() {
-        CalciteConnection conn = (CalciteConnection) optiqContext.getQueryProvider();
-        Properties connProps = conn.getProperties();
-
-        String propThreshold = connProps.getProperty(OLAPQuery.PROP_SCAN_THRESHOLD);
-        if (!StringUtils.isBlank(propThreshold)) {
-            int threshold = Integer.valueOf(propThreshold);
-            olapContext.storageContext.setThreshold(threshold);
-        }
-    }
-
 }

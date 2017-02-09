@@ -117,6 +117,16 @@ public final class CubeVisitProtos {
      * <code>optional bool spillEnabled = 7 [default = true];</code>
      */
     boolean getSpillEnabled();
+
+    // optional int64 maxScanBytes = 8;
+    /**
+     * <code>optional int64 maxScanBytes = 8;</code>
+     */
+    boolean hasMaxScanBytes();
+    /**
+     * <code>optional int64 maxScanBytes = 8;</code>
+     */
+    long getMaxScanBytes();
   }
   /**
    * Protobuf type {@code CubeVisitRequest}
@@ -205,6 +215,11 @@ public final class CubeVisitProtos {
             case 56: {
               bitField0_ |= 0x00000020;
               spillEnabled_ = input.readBool();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000040;
+              maxScanBytes_ = input.readInt64();
               break;
             }
           }
@@ -952,6 +967,22 @@ public final class CubeVisitProtos {
       return spillEnabled_;
     }
 
+    // optional int64 maxScanBytes = 8;
+    public static final int MAXSCANBYTES_FIELD_NUMBER = 8;
+    private long maxScanBytes_;
+    /**
+     * <code>optional int64 maxScanBytes = 8;</code>
+     */
+    public boolean hasMaxScanBytes() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional int64 maxScanBytes = 8;</code>
+     */
+    public long getMaxScanBytes() {
+      return maxScanBytes_;
+    }
+
     private void initFields() {
       gtScanRequest_ = com.google.protobuf.ByteString.EMPTY;
       hbaseRawScan_ = com.google.protobuf.ByteString.EMPTY;
@@ -960,6 +991,7 @@ public final class CubeVisitProtos {
       kylinProperties_ = "";
       queryId_ = "";
       spillEnabled_ = true;
+      maxScanBytes_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1010,6 +1042,9 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeBool(7, spillEnabled_);
       }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeInt64(8, maxScanBytes_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1046,6 +1081,10 @@ public final class CubeVisitProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(7, spillEnabled_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(8, maxScanBytes_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1102,6 +1141,11 @@ public final class CubeVisitProtos {
         result = result && (getSpillEnabled()
             == other.getSpillEnabled());
       }
+      result = result && (hasMaxScanBytes() == other.hasMaxScanBytes());
+      if (hasMaxScanBytes()) {
+        result = result && (getMaxScanBytes()
+            == other.getMaxScanBytes());
+      }
       result = result &&
           getUnknownFields().equals(other.getUnknownFields());
       return result;
@@ -1142,6 +1186,10 @@ public final class CubeVisitProtos {
       if (hasSpillEnabled()) {
         hash = (37 * hash) + SPILLENABLED_FIELD_NUMBER;
         hash = (53 * hash) + hashBoolean(getSpillEnabled());
+      }
+      if (hasMaxScanBytes()) {
+        hash = (37 * hash) + MAXSCANBYTES_FIELD_NUMBER;
+        hash = (53 * hash) + hashLong(getMaxScanBytes());
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1271,6 +1319,8 @@ public final class CubeVisitProtos {
         bitField0_ = (bitField0_ & ~0x00000020);
         spillEnabled_ = true;
         bitField0_ = (bitField0_ & ~0x00000040);
+        maxScanBytes_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -1332,6 +1382,10 @@ public final class CubeVisitProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.spillEnabled_ = spillEnabled_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.maxScanBytes_ = maxScanBytes_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1395,6 +1449,9 @@ public final class CubeVisitProtos {
         }
         if (other.hasSpillEnabled()) {
           setSpillEnabled(other.getSpillEnabled());
+        }
+        if (other.hasMaxScanBytes()) {
+          setMaxScanBytes(other.getMaxScanBytes());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1985,6 +2042,39 @@ public final class CubeVisitProtos {
       public Builder clearSpillEnabled() {
         bitField0_ = (bitField0_ & ~0x00000040);
         spillEnabled_ = true;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 maxScanBytes = 8;
+      private long maxScanBytes_ ;
+      /**
+       * <code>optional int64 maxScanBytes = 8;</code>
+       */
+      public boolean hasMaxScanBytes() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional int64 maxScanBytes = 8;</code>
+       */
+      public long getMaxScanBytes() {
+        return maxScanBytes_;
+      }
+      /**
+       * <code>optional int64 maxScanBytes = 8;</code>
+       */
+      public Builder setMaxScanBytes(long value) {
+        bitField0_ |= 0x00000080;
+        maxScanBytes_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 maxScanBytes = 8;</code>
+       */
+      public Builder clearMaxScanBytes() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        maxScanBytes_ = 0L;
         onChanged();
         return this;
       }
@@ -4433,27 +4523,27 @@ public final class CubeVisitProtos {
     java.lang.String[] descriptorData = {
       "\npstorage-hbase/src/main/java/org/apache" +
       "/kylin/storage/hbase/cube/v2/coprocessor" +
-      "/endpoint/protobuf/CubeVisit.proto\"\357\001\n\020C" +
+      "/endpoint/protobuf/CubeVisit.proto\"\205\002\n\020C" +
       "ubeVisitRequest\022\025\n\rgtScanRequest\030\001 \002(\014\022\024" +
       "\n\014hbaseRawScan\030\002 \002(\014\022\032\n\022rowkeyPreambleSi" +
       "ze\030\003 \002(\005\0223\n\020hbaseColumnsToGT\030\004 \003(\0132\031.Cub" +
       "eVisitRequest.IntList\022\027\n\017kylinProperties" +
       "\030\005 \002(\t\022\017\n\007queryId\030\006 \001(\t\022\032\n\014spillEnabled\030" +
-      "\007 \001(\010:\004true\032\027\n\007IntList\022\014\n\004ints\030\001 \003(\005\"\347\002\n" +
-      "\021CubeVisitResponse\022\026\n\016compressedRows\030\001 \002",
-      "(\014\022\'\n\005stats\030\002 \002(\0132\030.CubeVisitResponse.St" +
-      "ats\032\220\002\n\005Stats\022\030\n\020serviceStartTime\030\001 \001(\003\022" +
-      "\026\n\016serviceEndTime\030\002 \001(\003\022\027\n\017scannedRowCou" +
-      "nt\030\003 \001(\003\022\032\n\022aggregatedRowCount\030\004 \001(\003\022\025\n\r" +
-      "systemCpuLoad\030\005 \001(\001\022\036\n\026freePhysicalMemor" +
-      "ySize\030\006 \001(\001\022\031\n\021freeSwapSpaceSize\030\007 \001(\001\022\020" +
-      "\n\010hostname\030\010 \001(\t\022\016\n\006etcMsg\030\t \001(\t\022\026\n\016norm" +
-      "alComplete\030\n \001(\005\022\024\n\014scannedBytes\030\013 \001(\0032F" +
-      "\n\020CubeVisitService\0222\n\tvisitCube\022\021.CubeVi" +
-      "sitRequest\032\022.CubeVisitResponseB`\nEorg.ap",
-      "ache.kylin.storage.hbase.cube.v2.coproce" +
-      "ssor.endpoint.generatedB\017CubeVisitProtos" +
-      "H\001\210\001\001\240\001\001"
+      "\007 \001(\010:\004true\022\024\n\014maxScanBytes\030\010 \001(\003\032\027\n\007Int" +
+      "List\022\014\n\004ints\030\001 \003(\005\"\347\002\n\021CubeVisitResponse",
+      "\022\026\n\016compressedRows\030\001 \002(\014\022\'\n\005stats\030\002 \002(\0132" +
+      "\030.CubeVisitResponse.Stats\032\220\002\n\005Stats\022\030\n\020s" +
+      "erviceStartTime\030\001 \001(\003\022\026\n\016serviceEndTime\030" +
+      "\002 \001(\003\022\027\n\017scannedRowCount\030\003 \001(\003\022\032\n\022aggreg" +
+      "atedRowCount\030\004 \001(\003\022\025\n\rsystemCpuLoad\030\005 \001(" +
+      "\001\022\036\n\026freePhysicalMemorySize\030\006 \001(\001\022\031\n\021fre" +
+      "eSwapSpaceSize\030\007 \001(\001\022\020\n\010hostname\030\010 \001(\t\022\016" +
+      "\n\006etcMsg\030\t \001(\t\022\026\n\016normalComplete\030\n \001(\005\022\024" +
+      "\n\014scannedBytes\030\013 \001(\0032F\n\020CubeVisitService" +
+      "\0222\n\tvisitCube\022\021.CubeVisitRequest\032\022.CubeV",
+      "isitResponseB`\nEorg.apache.kylin.storage" +
+      ".hbase.cube.v2.coprocessor.endpoint.gene" +
+      "ratedB\017CubeVisitProtosH\001\210\001\001\240\001\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4465,7 +4555,7 @@ public final class CubeVisitProtos {
           internal_static_CubeVisitRequest_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_CubeVisitRequest_descriptor,
-              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "KylinProperties", "QueryId", "SpillEnabled", });
+              new java.lang.String[] { "GtScanRequest", "HbaseRawScan", "RowkeyPreambleSize", "HbaseColumnsToGT", "KylinProperties", "QueryId", "SpillEnabled", "MaxScanBytes", });
           internal_static_CubeVisitRequest_IntList_descriptor =
             internal_static_CubeVisitRequest_descriptor.getNestedTypes().get(0);
           internal_static_CubeVisitRequest_IntList_fieldAccessorTable = new

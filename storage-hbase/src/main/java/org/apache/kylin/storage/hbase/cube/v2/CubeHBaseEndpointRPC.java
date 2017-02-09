@@ -43,6 +43,7 @@ import org.apache.kylin.common.util.LoggableCachedThreadPool;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTInfo;
+import org.apache.kylin.gridtable.GTScanExceedThresholdException;
 import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
 import org.apache.kylin.gridtable.IGTScanner;
@@ -106,6 +107,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     @SuppressWarnings("checkstyle:methodlength")
     @Override
     public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
+        final QueryContext queryContext = QueryContext.current();
 
         Pair<Short, Short> shardNumAndBaseShard = getShardNumAndBaseShard();
         short shardNum = shardNumAndBaseShard.getFirst();
@@ -160,11 +162,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
         builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
         builder.setKylinProperties(kylinConfig.getConfigAsString());
-        final String queryId = QueryContext.getQueryId();
+        final String queryId = queryContext.getQueryId();
         if (queryId != null) {
             builder.setQueryId(queryId);
         }
         builder.setSpillEnabled(cubeSeg.getConfig().getQueryCoprocessorSpillEnabled());
+        builder.setMaxScanBytes(cubeSeg.getConfig().getQueryCoprocessorMaxScanBytes());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {
@@ -199,9 +202,14 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                         if (region == null)
                                             return;
 
-                                        context.increaseTotalScanBytes(result.getStats().getScannedBytes());
+                                        final long scanBytes = result.getStats().getScannedBytes();
+                                        context.increaseTotalScanBytes(scanBytes);
                                         totalScannedCount.addAndGet(result.getStats().getScannedRowCount());
                                         logger.info(logHeader + getStatsString(region, result));
+
+                                        if (queryContext.addAndGetScanBytes(scanBytes) > cubeSeg.getConfig().getQueryMaxScanBytes()) {
+                                            throw new GTScanExceedThresholdException("Query scanned " + queryContext.getScanBytes() + " bytes exceeds threshold " + cubeSeg.getConfig().getQueryMaxScanBytes());
+                                        }
 
                                         if (result.getStats().getNormalComplete() != 1) {
                                             abnormalFinish[0] = true;

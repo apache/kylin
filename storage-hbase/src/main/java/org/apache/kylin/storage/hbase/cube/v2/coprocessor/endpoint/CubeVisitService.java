@@ -297,8 +297,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             ResourceTrackingCellListIterator cellListIterator = new ResourceTrackingCellListIterator(
                     allCellLists,
-                    scanReq.getStorageScanRowNumThreshold(),
-                    Long.MAX_VALUE,
+                    scanReq.getStorageScanRowNumThreshold(), // for old client (scan threshold)
+                    request.getMaxScanBytes() == 0 ? Long.MAX_VALUE : request.getMaxScanBytes(), // for new client
                     scanReq.getTimeout());
 
             IGTStore store = new HBaseReadonlyStore(cellListIterator, scanReq, hbaseRawScans.get(0).hbaseColumns, hbaseColumnsToGT, request.getRowkeyPreambleSize(), behavior.delayToggledOn());
