@@ -64,6 +64,7 @@ import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -570,10 +571,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%d) doesn't match dimensions columns count (%d)", rowkey.getRowKeyColumns().length, dimCols.size());
 
         initDictionaryDesc();
-
-        for (TblColRef col : allColumns) {
-            allColumnDescs.add(col.getColumnDesc());
-        }
+        amendAllColumns();
     }
 
     public void validateAggregationGroups() {
@@ -956,6 +954,35 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
         }
         return false;
+    }
+
+    private void amendAllColumns() {
+        // make sure all PF/FK are included, thus become exposed to calcite later
+        Set<TableRef> tables = collectTablesOnJoinChain(allColumns);
+        for (TableRef t : tables) {
+            JoinDesc join = model.getJoinByPKSide(t);
+            if (join != null) {
+                allColumns.addAll(Arrays.asList(join.getForeignKeyColumns()));
+                allColumns.addAll(Arrays.asList(join.getPrimaryKeyColumns()));
+            }
+        }
+        
+        for (TblColRef col : allColumns) {
+            allColumnDescs.add(col.getColumnDesc());
+        }
+    }
+
+    private Set<TableRef> collectTablesOnJoinChain(Set<TblColRef> columns) {
+        Set<TableRef> result = new HashSet<>();
+        for (TblColRef col : columns) {
+            TableRef t = col.getTableRef();
+            while (t != null) {
+                result.add(t);
+                JoinDesc join = model.getJoinByPKSide(t);
+                t = join == null ? null : join.getFKSide();
+            }
+        }
+        return result;
     }
 
     public long getRetentionRange() {
