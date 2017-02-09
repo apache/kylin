@@ -166,13 +166,20 @@ public class GTScanRequest {
      * Refer to CoprocessorBehavior for explanation
      */
     public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, long deadline) throws IOException {
+        return decorateScanner(scanner, filterToggledOn, aggrToggledOn, false, deadline);
+    }
+
+    /**
+     * hasPreFiltered indicate the data has been filtered before scanning
+     */
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, boolean hasPreFiltered, long deadline) throws IOException {
         IGTScanner result = scanner;
         if (!filterToggledOn) { //Skip reading this section if you're not profiling! 
             int scanned = lookAndForget(result);
             return new EmptyGTScanner(scanned);
         } else {
 
-            if (this.hasFilterPushDown()) {
+            if (this.hasFilterPushDown() && !hasPreFiltered) {
                 result = new GTFilterScanner(result, this);
             }
 
