@@ -202,6 +202,7 @@ KylinApp
           });
         }
       });
+      return out;
     }
   }).filter('assignedMeasureNames', function ($filter) {
     //return the measures that haven't assign to column family
