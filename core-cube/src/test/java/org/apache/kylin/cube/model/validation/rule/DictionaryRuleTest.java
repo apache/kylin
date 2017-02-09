@@ -19,6 +19,7 @@
 package org.apache.kylin.cube.model.validation.rule;
 
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_DUPLICATE_DICTIONARY_COLUMN;
+import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_BUILDER_BOTH_EMPTY;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_REUSE_BUILDER_BOTH_SET;
 import static org.apache.kylin.cube.model.validation.rule.DictionaryRule.ERROR_TRANSITIVE_REUSE;
@@ -91,10 +92,16 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
                 DictionaryDesc.create("lstg_site_id", "SELLER_ID", null),
                 DictionaryDesc.create("price", "lstg_site_id", null));
     }
-    
+
+    @Test
+    public void testBadDesc5() throws IOException {
+        testDictionaryDesc(ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE,
+                DictionaryDesc.create("CATEG_LVL2_NAME", null, GlobalDictionaryBuilder.class.getName()));
+    }
+
     @Test
     public void testGoodDesc2() throws IOException {
-        testDictionaryDesc(null, DictionaryDesc.create("lstg_site_id", null, GlobalDictionaryBuilder.class.getName()));
+        testDictionaryDesc(null, DictionaryDesc.create("SELLER_ID", null, GlobalDictionaryBuilder.class.getName()));
     }
 
     private void testDictionaryDesc(String expectMessage, DictionaryDesc... descs) throws IOException {
