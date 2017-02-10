@@ -79,7 +79,7 @@
               </div>
             </div>
           </div>
-          <!--Partition Time Column-->
+<!--          &lt;!&ndash;Partition Time Column&ndash;&gt;
           <div class="form-group" ng-if="partitionColumn.hasSeparateTimeColumn == true">
             <div class="row middle-popover">
               <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Time Column</b>  <i kylinpopover placement="right" title="Partition Time Column" template="partitionTimeTip.html" class="fa fa-info-circle"></i></label>
@@ -90,16 +90,40 @@
                         ng-if="state.mode=='edit'"
                         data-placement=""
                         ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonTimeColumns(modelsManager.selectedModel.fact_table)" >
-                  <option value="">--Select Partition Column--</option>
+                  <option value="">&#45;&#45;Select Partition Column&#45;&#45;</option>
                 </select>
-                <!--<small class="text-info" ng-show="state.mode=='edit'">(Column Type should be TIME Type)</small>-->
+                &lt;!&ndash;<small class="text-info" ng-show="state.mode=='edit'">(Column Type should be TIME Type)</small>&ndash;&gt;
 
                       <span ng-if="state.mode=='view'">
                           {{!!(modelsManager.selectedModel.partition_desc.partition_time_column)?modelsManager.selectedModel.partition_desc.partition_time_column: ''}}</span>
               </div>
             </div>
-          </div>
+          </div>-->
 
+          <!--Partition Time Column-->
+          <div class="form-group" ng-if="partitionColumn.hasSeparateTimeColumn == true">
+            <div class="row middle-popover">
+              <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default align-right"><b>Partition Time Column </b> <i kylinpopover placement="right" ng-title="Partition Time Column" template="partitionTimeTip.html" class="fa fa-info-circle"></i> </label>
+              <div class="col-xs-12 col-sm-6">
+                <select style="width: 49%" chosen
+                        ng-model="selectedTablesForPartitionTime.fact"
+                        ng-if="state.mode=='edit'"
+                        data-placement=""
+                        ng-options="alias as alias for alias in availableFactTables" >
+                  <option value="">--Select Partition Table--</option>
+                </select>
+                <select style="width: 49%" chosen
+                        ng-model="modelsManager.selectedModel.partition_desc.partition_time_column"
+                        ng-if="state.mode=='edit'"
+                        data-placement=""
+                        ng-options="selectedTablesForPartitionTime.fact+'.'+columns.name as columns.name for columns in getPartitonTimeColumns(selectedTablesForPartitionTime.fact,modelsManager.selectedModel.partition_desc.partition_date_column)">
+                  <option value="">--Select Partition Column--</option>
+                </select>
+                <span ng-if="state.mode=='view'">
+                      {{!!(modelsManager.selectedModel.partition_desc.partition_time_column)?modelsManager.selectedModel.partition_desc.partition_time_column: ''}}</span>
+              </div>
+            </div>
+          </div>
           <!--Time Format-->
           <div class="form-group" ng-if="partitionColumn.hasSeparateTimeColumn == true">
             <div class="row">

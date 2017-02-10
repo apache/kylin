@@ -33,17 +33,6 @@ KylinApp.controller('ModelSchemaCtrl', function ($scope, QueryService, UserServi
     $scope.state = {mode: "view"};
   }
 
-  if(!$scope.partitionColumn){
-    $scope.partitionColumn ={
-      "hasSeparateTimeColumn" : false
-    }
-  }
-
-  if($scope.state.mode !== "edit" && $scope.modelsManager.selectedModel.partition_desc.partition_time_column){
-    $scope.partitionColumn.hasSeparateTimeColumn = true;
-  }
-
-
 
   $scope.wizardSteps = [
     {title: 'Model Info', src: 'partials/modelDesigner/model_info.html', isComplete: false, form: 'model_info_form'},

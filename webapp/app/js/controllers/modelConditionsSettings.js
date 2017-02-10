@@ -25,14 +25,18 @@
 KylinApp.controller('ModelConditionsSettingsCtrl', function ($scope, $modal,MetaModel,modelsManager,VdmUtil) {
   $scope.modelsManager = modelsManager;
   $scope.availableFactTables = [];
-  $scope.selectedTables={fact:VdmUtil.getNameSpaceAliasName($scope.modelsManager.selectedModel.partition_desc.partition_date_column)}
-  $scope.availableFactTables.push(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table));
-  var joinTable = $scope.modelsManager.selectedModel.lookups;
-  for (var j = 0; j < joinTable.length; j++) {
-    if(joinTable[j].kind=='FACT'){
-      $scope.availableFactTables.push(joinTable[j].alias);
+  $scope.initSetting = function (){
+    $scope.selectedTables={fact:VdmUtil.getNameSpaceAliasName($scope.modelsManager.selectedModel.partition_desc.partition_date_column)}
+    $scope.selectedTablesForPartitionTime={fact:VdmUtil.getNameSpaceAliasName($scope.modelsManager.selectedModel.partition_desc.partition_time_column)}
+    $scope.availableFactTables.push(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table));
+    var joinTable = $scope.modelsManager.selectedModel.lookups;
+    for (var j = 0; j < joinTable.length; j++) {
+      if(joinTable[j].kind=='FACT'){
+        $scope.availableFactTables.push(joinTable[j].alias);
+      }
     }
   }
+
   $scope.isFormatEdit = {editable:false};
   var judgeFormatEditable = function(dateColumn){
     if(dateColumn == null){
@@ -61,6 +65,21 @@ KylinApp.controller('ModelConditionsSettingsCtrl', function ($scope, $modal,Meta
     return;
 
   };
+
+  $scope.getPartitonColumns = function(alias){
+    var columns = _.filter($scope.getColumnsByAlias(alias),function(column){
+      return column.datatype==="date"||column.datatype==="timestamp"||column.datatype==="string"||column.datatype.startsWith("varchar")||column.datatype==="bigint"||column.datatype==="int"||column.datatype==="integer";
+    });
+    return columns;
+  };
+
+  $scope.getPartitonTimeColumns = function(tableName,filterColumn){
+    var columns = _.filter($scope.getColumnsByAlias(tableName),function(column){
+      return (column.datatype==="time"||column.datatype==="timestamp"||column.datatype==="string"||column.datatype.startsWith("varchar"))&&(tableName+'.'+column.name!=filterColumn);
+    });
+    return columns;
+  };
+
   $scope.partitionChange = function (dateColumn) {
     judgeFormatEditable(dateColumn);
   };
@@ -68,14 +87,13 @@ KylinApp.controller('ModelConditionsSettingsCtrl', function ($scope, $modal,Meta
       "hasSeparateTimeColumn" : false
   }
 
-  if (($scope.state.mode=='edit')&&($scope.isEdit = !!$scope.route.params)) {
-    if($scope.modelsManager.selectedModel.partition_desc.partition_time_column){
-      $scope.partitionColumn.hasSeparateTimeColumn = true;
-    }
+  if ($scope.state.mode=='edit'){
+    $scope.initSetting();
     judgeFormatEditable($scope.modelsManager.selectedModel.partition_desc.partition_date_column);
   }
-
-
+  if($scope.modelsManager.selectedModel.partition_desc.partition_time_column){
+    $scope.partitionColumn.hasSeparateTimeColumn = true;
+  }
   $scope.toggleHasSeparateColumn = function(){
     if($scope.partitionColumn.hasSeparateTimeColumn == false){
       $scope.modelsManager.selectedModel.partition_desc.partition_time_column = null;

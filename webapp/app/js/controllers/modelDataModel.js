@@ -269,8 +269,14 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
           break;
         }
       }
-      if($scope.aliasName.indexOf($scope.newLookup.alias)!=-1&&$scope.aliasName[$scope.lookupState.editingIndex+1] != $scope.newLookup.alias){
-        errors.push("Table Alias ["+$scope.newLookup.alias+"] already exist!");
+      if($scope.aliasName.indexOf($scope.newLookup.alias)!=-1){
+        if($scope.lookupState.editingIndex==-1){
+           errors.push("Table Alias ["+$scope.newLookup.alias+"] already exist!");
+        }else{
+          if($scope.aliasName[$scope.lookupState.editingIndex+1] != $scope.newLookup.alias){
+            errors.push("Table Alias ["+$scope.newLookup.alias+"] already exist!");
+          }
+        }
       }
       var errorInfo = "";
       angular.forEach(errors,function(item){
