@@ -50,7 +50,7 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException {
+    synchronized protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException {
         String[] names = file(folderPath).list();
         if (names == null) // not a directory
             return null;
@@ -64,13 +64,13 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected boolean existsImpl(String resPath) throws IOException {
+    synchronized protected boolean existsImpl(String resPath) throws IOException {
         File f = file(resPath);
         return f.exists() && f.isFile(); // directory is not considered a resource
     }
 
     @Override
-    protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
+    synchronized protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
         NavigableSet<String> resources = listResources(folderPath);
         if (resources == null)
             return Collections.emptyList();
@@ -95,7 +95,7 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected RawResource getResourceImpl(String resPath) throws IOException {
+    synchronized protected RawResource getResourceImpl(String resPath) throws IOException {
         File f = file(resPath);
         if (f.exists() && f.isFile()) {
             if (f.length() == 0) {
@@ -108,7 +108,7 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected long getResourceTimestampImpl(String resPath) throws IOException {
+    synchronized protected long getResourceTimestampImpl(String resPath) throws IOException {
         File f = file(resPath);
         if (f.exists() && f.isFile())
             return f.lastModified();
@@ -117,7 +117,7 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
+    synchronized protected void putResourceImpl(String resPath, InputStream content, long ts) throws IOException {
         File f = file(resPath);
         f.getParentFile().mkdirs();
         FileOutputStream out = new FileOutputStream(f);
@@ -131,7 +131,7 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
+    synchronized protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
         File f = file(resPath);
         if ((f.exists() && f.lastModified() != oldTS) || (f.exists() == false && oldTS != 0))
             throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but found " + f.lastModified());
@@ -143,13 +143,13 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    protected void deleteResourceImpl(String resPath) throws IOException {
+    synchronized protected void deleteResourceImpl(String resPath) throws IOException {
         File f = file(resPath);
         f.delete();
     }
 
     @Override
-    protected String getReadableResourcePathImpl(String resPath) {
+    synchronized protected String getReadableResourcePathImpl(String resPath) {
         return file(resPath).toString();
     }
 
