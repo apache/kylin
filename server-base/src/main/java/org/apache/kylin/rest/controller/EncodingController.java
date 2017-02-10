@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.rest.response.EnvelopeResponse;
+import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.EncodingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,6 @@ public class EncodingController extends BasicController {
             datatypeValidEncodings.put(dataTypeStr, encodingService.getValidEncodings(DataType.getType(dataTypeStr)));
         }
 
-        return new EnvelopeResponse(EnvelopeResponse.CODE_SUCCESS, datatypeValidEncodings, "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, datatypeValidEncodings, "");
     }
 }

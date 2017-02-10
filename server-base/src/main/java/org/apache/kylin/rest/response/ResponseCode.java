@@ -18,19 +18,13 @@
 
 package org.apache.kylin.rest.response;
 
-public class EnvelopeResponse {
-
-    public String code;
-    public Object data;
-    public String msg;
-
-    //only for child
-    protected EnvelopeResponse() {
-    }
-
-    public EnvelopeResponse(String code, Object data, String msg) {
-        this.code = code;
-        this.data = data;
-        this.msg = msg;
-    }
+/**
+ * It's not HTTP return code!
+ * It represents code for business states
+ * each API can specify different semantics to each code
+ * 000 and 999 are reserved
+ */
+public class ResponseCode {
+    public final static String CODE_SUCCESS = "000";
+    public final static String CODE_UNDEFINED = "999";
 }
