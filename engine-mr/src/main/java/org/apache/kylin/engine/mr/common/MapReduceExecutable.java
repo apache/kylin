@@ -202,14 +202,14 @@ public class MapReduceExecutable extends AbstractExecutable {
     private void readCounters(final HadoopCmdOutput hadoopCmdOutput, final Map<String, String> info) {
         hadoopCmdOutput.updateJobCounter();
         info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
-        info.put(ExecutableConstants.SOURCE_RECORDS_SIZE, hadoopCmdOutput.getHdfsBytesRead());
+        info.put(ExecutableConstants.SOURCE_RECORDS_SIZE, hadoopCmdOutput.getRawInputBytesRead());
         info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
 
         String saveAs = getParam(KEY_COUNTER_SAVEAS);
         if (saveAs != null) {
             String[] saveAsNames = saveAs.split(",");
             saveCounterAs(hadoopCmdOutput.getMapInputRecords(), saveAsNames, 0, info);
-            saveCounterAs(hadoopCmdOutput.getHdfsBytesRead(), saveAsNames, 1, info);
+            saveCounterAs(hadoopCmdOutput.getRawInputBytesRead(), saveAsNames, 1, info);
             saveCounterAs(hadoopCmdOutput.getHdfsBytesWritten(), saveAsNames, 2, info);
         }
     }
@@ -242,10 +242,6 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     public void setMapReduceParams(String param) {
         setParam(KEY_PARAMS, param);
-    }
-
-    public String getCounterSaveAs() {
-        return getParam(KEY_COUNTER_SAVEAS);
     }
 
     public void setCounterSaveAs(String value) {

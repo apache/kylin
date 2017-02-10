@@ -29,10 +29,10 @@ public class FactDistinctColumnPartitioner extends Partitioner<SelfDefineSortabl
     @Override
     public int getPartition(SelfDefineSortableKey skey, Text value, int numReduceTasks) {
         Text key = skey.getText();
-        if (key.getBytes()[0] == FactDistinctHiveColumnsMapper.MARK_FOR_HLL) {
+        if (key.getBytes()[0] == FactDistinctColumnsMapper.MARK_FOR_HLL) {
             // the last reducer is for merging hll
             return numReduceTasks - 1;
-        } else if (key.getBytes()[0] == FactDistinctHiveColumnsMapper.MARK_FOR_PARTITION_COL) {
+        } else if (key.getBytes()[0] == FactDistinctColumnsMapper.MARK_FOR_PARTITION_COL) {
             // the last but one reducer is for partition col
             return numReduceTasks - 2;
         } else {

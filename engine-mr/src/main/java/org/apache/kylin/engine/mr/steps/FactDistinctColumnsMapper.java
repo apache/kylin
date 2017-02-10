@@ -41,9 +41,11 @@ import com.google.common.hash.Hashing;
 
 /**
  */
-public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, Object> {
+public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, Object> {
 
-    private static final Logger logger = LoggerFactory.getLogger(FactDistinctHiveColumnsMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsMapper.class);
+    
+    public static enum RawDataCounter { BYTES };
 
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
@@ -130,6 +132,8 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
     @Override
     public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         String[] row = flatTableInputFormat.parseMapperInput(record);
+        
+        context.getCounter(RawDataCounter.BYTES).increment(countSizeInBytes(row));
 
         for (int i = 0; i < factDictCols.size(); i++) {
             String fieldValue = row[dictionaryColumnIndex[i]];
@@ -179,6 +183,34 @@ public class FactDistinctHiveColumnsMapper<KEYIN> extends FactDistinctColumnsMap
             }
         }
         rowCount++;
+    }
+
+    private long countSizeInBytes(String[] row) {
+        int size = 0;
+        for (String s : row) {
+            size += s == null ? 1 : utf8Length(s);
+            size++; // delimiter
+        }
+        return size;
+    }
+    
+    // calculating length in UTF-8 of Java String without actually encoding it
+    public static int utf8Length(CharSequence sequence) {
+        int count = 0;
+        for (int i = 0, len = sequence.length(); i < len; i++) {
+            char ch = sequence.charAt(i);
+            if (ch <= 0x7F) {
+                count++;
+            } else if (ch <= 0x7FF) {
+                count += 2;
+            } else if (Character.isHighSurrogate(ch)) {
+                count += 4;
+                ++i;
+            } else {
+                count += 3;
+            }
+        }
+        return count;
     }
 
     private void putRowKeyToHLL(String[] row) {

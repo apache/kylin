@@ -140,7 +140,7 @@ public class FactDistinctColumnsJob extends AbstractHadoopJob {
         IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
         flatTableInputFormat.configureJob(job);
 
-        job.setMapperClass(FactDistinctHiveColumnsMapper.class);
+        job.setMapperClass(FactDistinctColumnsMapper.class);
         job.setCombinerClass(FactDistinctColumnsCombiner.class);
         job.setMapOutputKeyClass(SelfDefineSortableKey.class);
         job.setMapOutputValueClass(Text.class);

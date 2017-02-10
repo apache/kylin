@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.kylin.engine.mr.steps.FactDistinctColumnsMapper.RawDataCounter;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +68,7 @@ public class HadoopCmdOutput {
 
     private String mapInputRecords;
     private String hdfsBytesWritten;
-    private String hdfsBytesRead;
+    private String rawInputBytesRead;
 
     public String getMapInputRecords() {
         return mapInputRecords;
@@ -77,8 +78,8 @@ public class HadoopCmdOutput {
         return hdfsBytesWritten;
     }
 
-    public String getHdfsBytesRead() {
-        return hdfsBytesRead;
+    public String getRawInputBytesRead() {
+        return rawInputBytesRead;
     }
 
     public void updateJobCounter() {
@@ -95,7 +96,7 @@ public class HadoopCmdOutput {
 
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
             hdfsBytesWritten = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue());
-            hdfsBytesRead = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_READ").getValue());
+            rawInputBytesRead = String.valueOf(counters.findCounter(RawDataCounter.BYTES).getValue());
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());
