@@ -29,7 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.debug.BackdoorToggles;
-import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
+import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
@@ -124,12 +124,12 @@ public class ITKylinQueryTest extends KylinTestBase {
 
                 System.out.println(e.getMessage());
 
-                if (findRoot(e) instanceof GTScanSelfTerminatedException) {
+                if (findRoot(e) instanceof KylinTimeoutException) {
                     //expected
                     continue;
                 }
             }
-            throw new RuntimeException("Expecting GTScanTimeoutException");
+            throw new RuntimeException("Expecting KylinTimeoutException");
         }
     }
 

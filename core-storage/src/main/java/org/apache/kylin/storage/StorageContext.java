@@ -47,8 +47,7 @@ public class StorageContext {
     private boolean enableCoprocessor = false;
 
     private IStorageQuery storageQuery;
-    private AtomicLong totalScanCount = new AtomicLong();
-    private AtomicLong totalScanBytes = new AtomicLong();
+    private AtomicLong processedRowCount = new AtomicLong();
     private Cuboid cuboid;
     private boolean partialResultReturned = false;
 
@@ -140,20 +139,12 @@ public class StorageContext {
         return cuboid;
     }
 
-    public long getTotalScanCount() {
-        return totalScanCount.get();
+    public long getProcessedRowCount() {
+        return processedRowCount.get();
     }
 
-    public long increaseTotalScanCount(long count) {
-        return this.totalScanCount.addAndGet(count);
-    }
-
-    public long getTotalScanBytes() {
-        return totalScanBytes.get();
-    }
-
-    public long increaseTotalScanBytes(long bytes) {
-        return totalScanBytes.addAndGet(bytes);
+    public long increaseProcessedRowCount(long count) {
+        return processedRowCount.addAndGet(count);
     }
 
     public boolean isAcceptPartialResult() {

@@ -59,6 +59,7 @@ class testQuery(unittest.TestCase):
             del actual_result['duration']
             del actual_result['hitExceptionCache']
             del actual_result['storageCacheUsed']
+            del actual_result['totalScanCount']
             del actual_result['totalScanBytes']
 
             expect_result = json.loads(open(sql_file[:-4] + '.json').read().strip())

@@ -21,7 +21,7 @@ package org.apache.kylin.common;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * checkout {@link org.apache.kylin.common.debug.BackdoorToggles} for comparison
+ * Holds per query information and statistics.
  */
 public class QueryContext {
 
@@ -33,7 +33,8 @@ public class QueryContext {
     };
 
     private String queryId;
-    private AtomicLong scanBytes = new AtomicLong();
+    private AtomicLong scannedRows = new AtomicLong();
+    private AtomicLong scannedBytes = new AtomicLong();
 
     private QueryContext() {
         // use QueryContext.current() instead
@@ -55,11 +56,19 @@ public class QueryContext {
         this.queryId = queryId;
     }
 
-    public long getScanBytes() {
-        return scanBytes.get();
+    public long getScannedRows() {
+        return scannedRows.get();
     }
 
-    public long addAndGetScanBytes(long delta) {
-        return scanBytes.addAndGet(delta);
+    public long addAndGetScannedRows(long deltaRows) {
+        return scannedRows.addAndGet(deltaRows);
+    }
+
+    public long getScannedBytes() {
+        return scannedBytes.get();
+    }
+
+    public long addAndGetScannedBytes(long deltaBytes) {
+        return scannedBytes.addAndGet(deltaBytes);
     }
 }

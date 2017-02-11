@@ -54,11 +54,21 @@ message CubeVisitResponse {
         optional double freeSwapSpaceSize = 7;
         optional string hostname = 8;
         optional string etcMsg = 9;
-        optional int32 normalComplete =10;//when time outs, normalComplete will be false
+        optional int32 normalComplete =10;
         optional int64 scannedBytes = 11;
+    }
+    enum ErrorType {
+        UNKNOWN_TYPE = 0;
+        TIMEOUT = 1;
+        RESOURCE_LIMIT_EXCEEDED = 2;
+    }
+    message ErrorInfo {
+        required ErrorType type = 1;
+        required string message = 2;
     }
     required bytes compressedRows = 1;
     required Stats stats = 2;
+    optional ErrorInfo errorInfo = 3; // should be set when stats.normalComplete == false
 }
 
 service CubeVisitService {

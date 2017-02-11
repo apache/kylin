@@ -57,13 +57,13 @@ import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.gridtable.GTScanExceedThresholdException;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
@@ -328,10 +328,12 @@ public class QueryService extends BasicService {
             throw new InternalErrorException("Project cannot be empty. Please select a project.");
         }
 
-        final String queryId = UUID.randomUUID().toString();
         if (sqlRequest.getBackdoorToggles() != null)
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
-        QueryContext.current().setQueryId(queryId);
+
+        final QueryContext queryContext = QueryContext.current();
+        final String queryId = UUID.randomUUID().toString();
+        queryContext.setQueryId(queryId);
 
         try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
             String sql = sqlRequest.getSql();
@@ -372,6 +374,8 @@ public class QueryService extends BasicService {
 
                 } else {
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+                    sqlResponse.setTotalScanCount(0);
+                    sqlResponse.setTotalScanBytes(0);
                 }
 
                 checkQueryAuth(sqlResponse);
@@ -381,9 +385,10 @@ public class QueryService extends BasicService {
                 String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
 
                 sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
+                sqlResponse.setTotalScanCount(queryContext.getScannedRows());
+                sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
 
-                // for exception queries, only cache ScanOutOfLimitException
-                if (queryCacheEnabled && e instanceof GTScanExceedThresholdException) {
+                if (queryCacheEnabled && e.getCause() != null && e.getCause() instanceof ResourceLimitExceededException) {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                     exceptionCache.put(new Element(sqlRequest, sqlResponse));
                 }
@@ -582,26 +587,21 @@ public class QueryService extends BasicService {
 
         boolean isPartialResult = false;
         String cube = "";
-        StringBuilder sb = new StringBuilder("Scan stats for each storageContext: ");
-        long totalScanCount = 0;
-        long totalScanBytes = 0;
+        StringBuilder sb = new StringBuilder("Processed rows for each storageContext: ");
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 if (ctx.realization != null) {
                     isPartialResult |= ctx.storageContext.isPartialResultReturned();
                     cube = ctx.realization.getName();
-                    totalScanCount += ctx.storageContext.getTotalScanCount();
-                    totalScanBytes += ctx.storageContext.getTotalScanBytes();
-                    sb.append("{rows=").append(ctx.storageContext.getTotalScanCount()).
-                       append(" bytes=").append(ctx.storageContext.getTotalScanBytes()).append("} ");
+                    sb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
                 }
             }
         }
         logger.info(sb.toString());
 
         SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult);
-        response.setTotalScanCount(totalScanCount);
-        response.setTotalScanBytes(totalScanBytes);
+        response.setTotalScanCount(QueryContext.current().getScannedRows());
+        response.setTotalScanBytes(QueryContext.current().getScannedBytes());
 
         return response;
     }

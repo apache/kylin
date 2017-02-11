@@ -31,7 +31,6 @@ import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.Coprocessor;
@@ -44,16 +43,15 @@ import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.exceptions.KylinTimeoutException;
+import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.gridtable.GTRecord;
-import org.apache.kylin.gridtable.GTScanExceedThresholdException;
 import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
-import org.apache.kylin.gridtable.GTScanTimeoutException;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.gridtable.StorageSideBehavior;
@@ -165,13 +163,13 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         @Override
         public boolean hasNext() {
             if (rowCount > rowCountLimit) {
-                throw new GTScanExceedThresholdException("Number of rows scanned exceeds threshold " + rowCountLimit);
+                throw new ResourceLimitExceededException("scanned row count exceeds threshold " + rowCountLimit);
             }
             if (rowBytes > bytesLimit) {
-                throw new GTScanExceedThresholdException("Scanned " + rowBytes + " bytes exceeds threshold " + bytesLimit);
+                throw new ResourceLimitExceededException("scanned bytes " + rowBytes + " exceeds threshold " + bytesLimit);
             }
             if ((rowCount % GTScanRequest.terminateCheckInterval == 1) && System.currentTimeMillis() > deadline) {
-                throw new GTScanTimeoutException("Scan timeout after " + timeout + " ms");
+                throw new KylinTimeoutException("coprocessor timeout after " + timeout + " ms");
             }
             return delegate.hasNext();
         }
@@ -231,6 +229,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
         StringBuilder sb = new StringBuilder();
         byte[] allRows;
         String debugGitTag = "";
+
+        CubeVisitProtos.CubeVisitResponse.ErrorInfo errorInfo = null;
 
         String queryId = request.hasQueryId() ? request.getQueryId() : "UnknownId";
         try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
@@ -292,7 +292,6 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                 scanReq.disableAggCacheMemCheck(); // disable mem check if so told
             }
 
-            final MutableBoolean scanNormalComplete = new MutableBoolean(true);
             final long storagePushDownLimit = scanReq.getStoragePushDownLimit();
 
             ResourceTrackingCellListIterator cellListIterator = new ResourceTrackingCellListIterator(
@@ -332,11 +331,18 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                         break;
                     }
                 }
-            } catch (GTScanSelfTerminatedException e) {
-                // the query is using too much resource, we mark it as abnormal finish instead of
-                // throwing RuntimeException to avoid client retrying RPC.
-                scanNormalComplete.setValue(false);
-                logger.warn("Abort scan: {}", e.getMessage());
+            } catch (KylinTimeoutException e) {
+                logger.info("Abort scan: {}", e.getMessage());
+                errorInfo = CubeVisitProtos.CubeVisitResponse.ErrorInfo.newBuilder()
+                        .setType(CubeVisitProtos.CubeVisitResponse.ErrorType.TIMEOUT)
+                        .setMessage(e.getMessage())
+                        .build();
+            } catch (ResourceLimitExceededException e) {
+                logger.info("Abort scan: {}", e.getMessage());
+                errorInfo = CubeVisitProtos.CubeVisitResponse.ErrorInfo.newBuilder()
+                        .setType(CubeVisitProtos.CubeVisitResponse.ErrorType.RESOURCE_LIMIT_EXCEEDED)
+                        .setMessage(e.getMessage())
+                        .build();
             } finally {
                 finalScanner.close();
             }
@@ -347,7 +353,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
 
             //outputStream.close() is not necessary
             byte[] compressedAllRows;
-            if (scanNormalComplete.booleanValue()) {
+            if (errorInfo == null) {
                 allRows = outputStream.toByteArray();
             } else {
                 allRows = new byte[0];
@@ -370,6 +376,9 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             sb.append(" debugGitTag:" + debugGitTag);
 
             CubeVisitProtos.CubeVisitResponse.Builder responseBuilder = CubeVisitProtos.CubeVisitResponse.newBuilder();
+            if (errorInfo != null) {
+                responseBuilder.setErrorInfo(errorInfo);
+            }
             done.run(responseBuilder.//
                     setCompressedRows(HBaseZeroCopyByteString.wrap(compressedAllRows)).//too many array copies 
                     setStats(CubeVisitProtos.CubeVisitResponse.Stats.newBuilder().
@@ -383,9 +392,8 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
                             setFreeSwapSpaceSize(freeSwapSpaceSize).
                             setHostname(InetAddress.getLocalHost().getHostName()).
                             setEtcMsg(sb.toString()).
-                            setNormalComplete(scanNormalComplete.booleanValue() ? 1 : 0).build())
-                    .//
-                    build());
+                            setNormalComplete(errorInfo == null ? 1 : 0).build())
+                    .build());
 
         } catch (IOException ioe) {
             logger.error(ioe.toString(), ioe);

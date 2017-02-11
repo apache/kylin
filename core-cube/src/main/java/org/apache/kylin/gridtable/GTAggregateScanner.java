@@ -35,6 +35,7 @@ import java.util.SortedMap;
 import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -278,14 +279,11 @@ public class GTAggregateScanner implements IGTScanner {
 
                 final long estMemSize = estimatedMemSize();
                 if (spillThreshold > 0 && estMemSize > spillThreshold) {
-                    // spill to disk when aggBufMap used too large memory
-                    if (spillEnabled) {
-                        spillBuffMap(estMemSize);
-                        aggBufMap = createBuffMap();
-
-                    } else {
-                        throw new GTScanSelfTerminatedException("Aggregation using more than " + spillThreshold + " memory and spill is disabled");
+                    if (!spillEnabled) {
+                        throw new ResourceLimitExceededException("aggregation's memory consumption " + estMemSize + " exceeds threshold " + spillThreshold);
                     }
+                    spillBuffMap(estMemSize); // spill to disk
+                    aggBufMap = createBuffMap();
                 }
             }
 
