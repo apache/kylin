@@ -26,8 +26,8 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringSplitter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -46,9 +46,11 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private ColumnDesc[] columns;
     @JsonProperty("source_type")
     private int sourceType = ISourceAware.ID_HIVE;
+    @JsonProperty("whole_scan")
+    private boolean wholeScan = true;
     @JsonProperty("table_type")
     private String tableType;
-    
+
     @JsonProperty("data_gen")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String dataGen;
@@ -101,7 +103,15 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         }
         return identity;
     }
-    
+
+    public void setWholeScan(boolean wholeScan) {
+        this.wholeScan = wholeScan;
+    }
+
+    public boolean getWholeScan() {
+        return this.wholeScan;
+    }
+
     public boolean isView() {
         return TABLE_TYPE_VIRTUAL_VIEW.equals(tableType);
     }

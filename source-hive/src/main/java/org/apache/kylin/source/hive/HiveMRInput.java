@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -57,10 +56,12 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
+
 public class HiveMRInput implements IMRInput {
 
     public static String getTableNameForHCat(TableDesc table) {
-        String tableName = table.isView() ? table.getMaterializedName() : table.getName();
+        String tableName = (table.isView() || !table.getWholeScan()) ? table.getMaterializedName() : table.getName();
         return String.format("%s.%s", table.getDatabase(), tableName).toUpperCase();
     }
 
