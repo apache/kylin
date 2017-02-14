@@ -256,7 +256,7 @@
                                     </td>
                                     <!--Column Encoding -->
                                     <td>
-                                      <select ng-if="state.mode=='edit'"
+                                      <select ng-if="state.mode=='edit'" style="width: 100%"
                                               chosen ng-model="groupby_column.encoding"
                                               ng-change="refreshGroupBy(convertedColumns,$index,groupby_column)"
                                               ng-options="dt.value as dt.name for dt in getEncodings(groupby_column.name)">

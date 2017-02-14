@@ -84,21 +84,6 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
       }
       return resultValue;
     },
-    getFilterObjectListByAndFilterVal:function(objList,key,value,matchkey,matchval){
-       var len=objList&&objList.length|| 0,newArr=[];
-       for(var i=0;i<len;i++){
-          if(!key||value===objList[i][key]||(angular.isArray(value)&&value.indexOf(objList[i][key])>-1)){
-             if(matchkey){
-               if(matchval==objList[i][matchkey]||(angular.isArray(matchval)&&value.indexOf(objList[i][matchkey])>-1)){
-                 newArr.push(objList[i])
-               }
-             }else{
-               newArr.push(objList[i])
-             }
-          }
-       }
-      return newArr;
-    },
     getFilterObjectListByOrFilterVal:function(objList,key,val,orKey,orVal){
       var len=objList&&objList.length|| 0,newArr=[];
       for(var i=0;i<len;i++){
@@ -108,7 +93,7 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
       }
       return newArr;
     },
-    removeFilterObjectList:function(objList,key,val,orKey,orVal){
+    removeFilterObjectList:function(objList,key,val){
       var len=objList&&objList.length|| 0,newArr=[];
       for(var i=0;i<len;i++){
         if(key&&val!=objList[i][key]){
@@ -141,6 +126,26 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
       }
       return angular.toJson(filterData(newObj),true);
     },
+    getObjectList:function(objList,key,valueList){
+      var len=objList&&objList.length|| 0,newArr=[];
+      for(var i=0;i<len;i++){
+        if(angular.isArray(valueList)&&valueList.indexOf(objList[i][key])>-1){
+          newArr.push(objList[i]);
+        }
+      }
+      return newArr;
+    },
+    getObjValFromLikeKey:function(obj,key){
+      if(!key){
+        return [];
+      }
+      for(var i in obj){
+        if(key.startsWith(i)){
+          return angular.copy(obj[i]);
+        }
+      }
+      return [];
+    },
     removeNameSpace:function(str){
       if(str){
          return str.replace(/([^.\s]+\.)+/,'');
@@ -162,5 +167,8 @@ KylinApp.factory('VdmUtil', function ($modal, $timeout, $location, $anchorScroll
         return '';
       }
     },
+    isNotExtraKey:function(obj,key){
+      return obj&&key&&key!="$promise"&&key!='$resolved'&&obj.hasOwnProperty(key);
+    }
   }
 });

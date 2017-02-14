@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
+KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log,EncodingService,tableConfig) {
 
 
     var _this = this;
@@ -26,6 +26,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
    //for tables in cubeDesigner
     this.selectProjectTables = [];
     this.columnNameTypeMap = {};
+    this.columnTypeEncodingMap={};
 
     this.initTables = function(){
         this.selectProjectTables = [];
@@ -48,7 +49,30 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
       this.selectedSrcDb = [];
       this.selectedSrcTable = {};
     };
+    this.getcolumnNameTypeMap=function(callback){
+      var param = {
+        ext: true,
+        project:ProjectModel.selectedProject
+      };
+      if(angular.equals({}, _this.columnNameTypeMap)) {
+        TableService.list(param, function (tables) {
 
+          angular.forEach(tables, function (table) {
+            angular.forEach(table.columns, function (column) {
+              var tableName=table.database+"."+table.name;
+              _this.columnNameTypeMap[tableName+'.'+column.name] = column.datatype;
+            });
+          });
+          if(typeof  callback=='function'){
+            callback(_this.columnNameTypeMap);
+          }
+        });
+      }else{
+        if(typeof  callback=='function'){
+          callback(_this.columnNameTypeMap);
+        }
+      }
+    }
     this.aceSrcTbLoaded = function (forceLoad) {
         _this.selectedSrcDb = [];
         _this.loading = true;
@@ -69,7 +93,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
       TableService.list(param, function (tables) {
             var tableMap = [];
             angular.forEach(tables, function (table) {
-
+              var tableName=table.database+"."+table.name;
                 var tableData = [];
 
                 if (!tableMap[table.database]) {
@@ -82,7 +106,7 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
                         column.cardinality = null;
                     }
                     column.id = parseInt(column.id);
-                  _this.columnNameTypeMap[column.name] = column.datatype;
+                  _this.columnNameTypeMap[tableName+'.'+column.name] = column.datatype;
                 });
                 tableMap[table.database].push(table);
             });
@@ -153,7 +177,26 @@ KylinApp.service('TableModel', function(ProjectModel,$q,TableService,$log) {
 
         return defer.promise;
     };
+    this.getColumnTypeEncodingMap=function(){
+      var _this=this;
+      var defer = $q.defer();
+      if(!angular.equals({},_this.columnTypeEncodingMap)){
+        defer.resolve(_this.columnTypeEncodingMap);
+      }
+      EncodingService.getEncodingMap({},{},function(result){
+        if(result&&result.data){
+          _this.columnTypeEncodingMap=result.data;
+        }else{
+          _this.columnTypeEncodingMap=tableConfig.columnTypeEncodingMap;
+        }
+        defer.resolve(_this.columnTypeEncodingMap);
+      },function(){
+        _this.columnTypeEncodingMap=tableConfig.columnTypeEncodingMap;
+        defer.resolve(_this.columnTypeEncodingMap);
+      })
 
+      return defer.promise;
+    }
     this.getColumnType = function(_column,_table){
         var columns = _this.getColumnsByTable(_table);
         var type;

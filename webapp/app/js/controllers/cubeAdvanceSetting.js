@@ -18,41 +18,34 @@
 
 'use strict';
 
-KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,cubesManager,CubeDescModel,SweetAlert) {
+KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfig,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil) {
   $scope.cubesManager = cubesManager;
-  $scope.getTypeVersion=function(typename){
-    var searchResult=/\s*\(v(\d+)\)/.exec(typename);
-    if(searchResult&&searchResult.length){
-      return searchResult.length&&searchResult[1]||1;
-    }else{
-      return 1;
-    }
-  }
-  $scope.removeVersion=function(typename){
-    if(typename){
-      return typename.replace(/\s*\(v\d+\)/g,"");
-    }
-    return "";
-  }
-  var needLengthKeyList=['fixed_length','fixed_length_hex','int','integer'];
-  //rowkey
+
+  var needLengthKeyList=cubeConfig.needSetLengthEncodingList;
   $scope.convertedRowkeys = [];
   angular.forEach($scope.cubeMetaFrame.rowkey.rowkey_columns,function(item){
     item.encoding=$scope.removeVersion(item.encoding);
-    var _encoding = item.encoding;
-    var _valueLength ;
+    var _valueLength;
+    var tableName=VdmUtil.getNameSpaceTopName(item.column);
+    var databaseName=$scope.getDatabaseByColumnName(item.column);
     var baseKey=item.encoding.replace(/:\d+/,'');
-    if(needLengthKeyList.indexOf(baseKey)!=-1){
+    if(needLengthKeyList.indexOf(baseKey)>-1){
       var result=/:(\d+)/.exec(item.encoding);
       _valueLength=result?result[1]:0;
     }
-    _encoding=baseKey;
+    var _encoding=baseKey;
     var rowkeyObj = {
       column:item.column,
-      encoding:_encoding+(item.encoding_version?"  (v"+item.encoding_version+")":"  (v1)"),
+      encoding:_encoding+(item.encoding_version?"[v"+item.encoding_version+"]":"[v1]"),
+      encodingName:_encoding,
       valueLength:_valueLength,
       isShardBy:item.isShardBy,
-      encoding_version:item.encoding_version||1
+      encoding_version:item.encoding_version||1,
+      table:tableName,
+      database:databaseName
+    }
+    if(item.index){
+      rowkeyObj.index=item.index;
     }
     $scope.convertedRowkeys.push(rowkeyObj);
 

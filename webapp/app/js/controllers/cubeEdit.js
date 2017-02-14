@@ -39,81 +39,99 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     return;
   }
 
-
+  $scope.getTypeVersion=function(typename){
+    var searchResult=/\[v(\d+)\]/.exec(typename);
+    if(searchResult&&searchResult.length){
+      return searchResult.length&&searchResult[1]||1;
+    }else{
+      return 1;
+    }
+  }
+  $scope.removeVersion=function(typename){
+    if(typename){
+      return typename.replace(/\[v\d+\]/g,"");
+    }
+    return "";
+  }
   //init encoding list
   $scope.store = {
-    supportedEncoding:[]
+    supportedEncoding:[],
+    encodingMaps:{}
   }
+  TableModel.getColumnTypeEncodingMap().then(function(data){
+    $scope.store.encodingMaps=data;
+  });
   CubeService.getValidEncodings({}, function (encodings) {
     if(encodings){
-      delete encodings.$promise;
-      delete encodings.$resolved;
       for(var i in encodings)
-        if(encodings.hasOwnProperty(i)){
+        if(VdmUtil.isNotExtraKey(encodings,i)){
           var value = i
           var name = value;
-          var typeVersion=+encodings[i];
-          if(value=="int"){
-            name = "int (deprecated)";
-          }
-          if(/\d+/.test(""+typeVersion)&&typeVersion>1){
-              for(var s=1;s<=typeVersion;s++){
-                $scope.store.supportedEncoding.push({
-                  "name":name+" (v"+s+","+(s==typeVersion&&typeVersion>1?"suggest)":")"),
-                  "value":value+"  (v"+s+")",
-                  "version":typeVersion,
-                  "baseValue":value,
-                  "suggest":s==typeVersion
-
-                });
+          var typeVersion=+encodings[i]||1;
+          var suggest=false,selecttips='';
+          if(/\d+/.test(""+typeVersion)&&typeVersion>=1){
+            for(var s=1;s<=typeVersion;s++){
+              if(s==typeVersion){
+                suggest=true;
               }
-          }else {
-            $scope.store.supportedEncoding.push({
-              "name": name,
-              "value": value+"  (v1)",
-              "encoding_version":1,
-              "version":typeVersion,
-              "baseValue":value,
-              "suggest":true
-            });
+              if(value=="int"){
+                name = "int (deprecated)";
+                suggest=false;
+              }
+              if(typeVersion>1){
+                selecttips="(v"+s;
+                if(s==typeVersion){
+                  selecttips=",suggest)"
+                }
+                selecttips=')';
+              }
+              $scope.store.supportedEncoding.push({
+                "name":name+selecttips,
+                "value":value+"[v"+s+"]",
+                "version":typeVersion,
+                "baseValue":value,
+                "suggest":suggest
+              });
+            }
           }
         }
-      }
+    }
   },function(e){
     $scope.store.supportedEncoding = $scope.cubeConfig.encodings;
   })
-  $scope.createFilter=function(type){
-     if(type.indexOf("varchar")==-1){
-       return ['fixed_length_hex'];
-     }else if(type!="date"){
-       return ['date'];
-     }else if(type!="time"&&type!="datetime"&&type!="timestamp"){
-       return ['time'];
-     }else{
-       return [];
-     }
+
+  $scope.getDatabaseByColumnName=function(column){
+    return  VdmUtil.getNameSpaceTopName($scope.aliasTableMap[VdmUtil.getNameSpaceTopName(column)])
+  }
+  $scope.getColumnTypeByAliasName=function(column){
+    return TableModel.columnNameTypeMap[$scope.aliasTableMap[VdmUtil.getNameSpaceTopName(column)]+'.'+VdmUtil.removeNameSpace(column)];
   }
   $scope.getEncodings =function (name){
     var filterName=name;
-    var type = TableModel.columnNameTypeMap[filterName]||'';
+    var columnType= $scope.getColumnTypeByAliasName(filterName);
+    var matchList=VdmUtil.getObjValFromLikeKey($scope.store.encodingMaps,columnType);
     var encodings =$scope.store.supportedEncoding,filterEncoding;
-    var filerList=$scope.createFilter(type);
     if($scope.isEdit){
-      if($scope.cubeMetaFrame.rowkey.rowkey_columns&&name){
-        for(var s=0;s<$scope.cubeMetaFrame.rowkey.rowkey_columns.length;s++){
-          if(filterName==$scope.cubeMetaFrame.rowkey.rowkey_columns[s].column){
-            var version=$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding_version;
-            filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'value',$scope.cubeMetaFrame.rowkey.rowkey_columns[s].encoding.replace(/:\d+/,"")+(version?"  (v"+version+")":"  (v1)"),'suggest',true)
+      var rowkey_columns=$scope.cubeMetaFrame.rowkey.rowkey_columns;
+      if(rowkey_columns&&filterName){
+        for(var s=0;s<rowkey_columns.length;s++){
+          var database=$scope.getDatabaseByColumnName(rowkey_columns[s].column);
+          if(filterName==rowkey_columns[s].column){
+            var version=rowkey_columns[s].encoding_version;
+            var noLenEncoding=rowkey_columns[s].encoding.replace(/:\d+/,"");
+            filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'value',noLenEncoding+(version?"[v"+version+"]":"[v1]"),'suggest',true)
+            matchList.push(noLenEncoding);
+            filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList);
+            break;
           }
         }
       }else{
         filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest',true);
+        filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList)
       }
     }else{
       filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest',true);
-    }
-    for(var f=0;f<filerList.length;f++){
-      filterEncoding=VdmUtil.removeFilterObjectList(filterEncoding,'baseValue',filerList[f]);
+      filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList)
     }
     return filterEncoding;
   }
@@ -782,6 +800,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     };
     if (newValue) {
       TableModel.initTables();
+      TableModel.getcolumnNameTypeMap();
       TableService.list(param, function (tables) {
         angular.forEach(tables, function (table) {
           table.name = table.database + "." + table.name;
