@@ -190,7 +190,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
         // encode with dimension encoding, transform to <ByteArray, Object[]> RDD
         final JavaPairRDD<ByteArray, Object[]> encodedBaseRDD = intermediateTable.javaRDD().mapToPair(new PairFunction<Row, ByteArray, Object[]>() {
-            transient boolean initialized = false;
+            volatile transient boolean initialized = false;
             BaseCuboidBuilder baseCuboidBuilder = null;
 
             @Override
