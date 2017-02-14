@@ -171,6 +171,12 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
+    public static void setKylinConfigInEnvIfMissing(String propsInStr) throws IOException {
+        Properties props = new Properties();
+        props.load(new StringReader(propsInStr));
+        setKylinConfigInEnvIfMissing(props);
+    }
+
     public static KylinConfig createKylinConfig(String propsInStr) throws IOException {
         Properties props = new Properties();
         props.load(new StringReader(propsInStr));
