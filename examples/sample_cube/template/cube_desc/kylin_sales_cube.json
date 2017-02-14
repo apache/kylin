@@ -159,7 +159,7 @@
           "next_parameter" : null
         }
       },
-      "returntype" : "topn(100)"
+      "returntype" : "topn(100, 6)"
     }
   } ],
   "rowkey" : {

@@ -182,7 +182,7 @@
           "value" : "TEST_KYLIN_FACT.SELLER_ID"
         }
       },
-      "returntype" : "topn(100)",
+      "returntype" : "topn(100, 4)",
       "configuration": {"topn.encoding.SELLER_ID" : "int:4"}
     }
   }, {

@@ -186,6 +186,7 @@ public class DataType implements Serializable {
             precision = 19;
             scale = 4;
         }
+
     }
 
     private String replaceLegacy(String str) {
