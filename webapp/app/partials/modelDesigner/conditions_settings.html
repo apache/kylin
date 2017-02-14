@@ -79,27 +79,6 @@
               </div>
             </div>
           </div>
-<!--          &lt;!&ndash;Partition Time Column&ndash;&gt;
-          <div class="form-group" ng-if="partitionColumn.hasSeparateTimeColumn == true">
-            <div class="row middle-popover">
-              <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Partition Time Column</b>  <i kylinpopover placement="right" title="Partition Time Column" template="partitionTimeTip.html" class="fa fa-info-circle"></i></label>
-              <div class="col-xs-12 col-sm-6">
-
-                <select style="width: 100%" chosen data-placeholder="e.g. DEFAULT.TEST_KYLIN_FACT.CAL_DT"
-                        ng-model="modelsManager.selectedModel.partition_desc.partition_time_column"
-                        ng-if="state.mode=='edit'"
-                        data-placement=""
-                        ng-options="modelsManager.selectedModel.fact_table+'.'+columns.name as modelsManager.selectedModel.fact_table+'.'+columns.name for columns in getPartitonTimeColumns(modelsManager.selectedModel.fact_table)" >
-                  <option value="">&#45;&#45;Select Partition Column&#45;&#45;</option>
-                </select>
-                &lt;!&ndash;<small class="text-info" ng-show="state.mode=='edit'">(Column Type should be TIME Type)</small>&ndash;&gt;
-
-                      <span ng-if="state.mode=='view'">
-                          {{!!(modelsManager.selectedModel.partition_desc.partition_time_column)?modelsManager.selectedModel.partition_desc.partition_time_column: ''}}</span>
-              </div>
-            </div>
-          </div>-->
-
           <!--Partition Time Column-->
           <div class="form-group" ng-if="partitionColumn.hasSeparateTimeColumn == true">
             <div class="row middle-popover">

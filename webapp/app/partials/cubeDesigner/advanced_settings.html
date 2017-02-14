@@ -268,7 +268,24 @@
               </div>
           </div>
         </div>
-        <div class="form-group large-popover" style="overflow:auto">
+        <!--Cube Engine-->
+        <div class="form-group large-popover" style="margin-bottom:30px;">
+          <h3 style="margin-left:42px;margin-bottom:30px;">Cube Engine  <i kylinpopover placement="right" title="Cube Engine" template="CubeEngineTip.html" class="fa fa-info-circle"></i></h3>
+          <div class="row" style="margin-left:42px">
+            <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default"><b>Engine Type :</b></label>
+            <div class="col-xs-12 col-sm-6">
+              <select style="width: 100%" chosen
+                      ng-model="cubeMetaFrame.engine_type"
+                      ng-if="state.mode=='edit'"  ng-disabled="instance.segments.length>0"
+                      ng-options="et.value as et.name for et in cubeConfig.engineType">
+                <option value="">--Select Engine Type--</option>
+              </select>
+              <span ng-if="state.mode=='view'&&cubeMetaFrame.engine_type==2">MapReduce</span>
+              <span ng-if="state.mode=='view'&&cubeMetaFrame.engine_type==4">Spark(Beta)</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group large-popover">
           <h3 style="margin-left:42px">Advanced Dictionaries  <i kylinpopover placement="right" title="Advanced Dictionaries" template="AdvancedDictionariesTip.html" class="fa fa-info-circle"></i></h3>
           <div style="margin-left:42px">
             <div class="box-body">
@@ -388,9 +405,8 @@
              <button class="btn btn-link" ng-click="clearNewDictionaries()">Cancel</button>
            </div>
          </div>
-
          <!--Edit ColumnFamily-->
-         <div class="form-group large-popover" style="overflow:auto">
+         <div class="form-group large-popover" >
            <h3 style="margin-left:42px">Advanced ColumnFamily  <i kylinpopover placement="right" title="Advanced ColumnFamily" template="AdvancedColumnFamilyTip.html" class="fa fa-info-circle"></i></h3>
            <div style="margin-left:42px">
              <div class="box-body">
@@ -436,9 +452,7 @@
 
                      <td class="col-xs-10">
                        <ui-select
-                         ng-if="state.mode=='edit'"
                          style="width: 100%"
-                         autofocus="true"
                          close-on-select="false"
                          on-select="refreshColumnFamily(cubeMetaFrame.hbase_mapping.column_family, rowIndex, colFamily)"
                          on-remove="refreshColumnFamily(cubeMetaFrame.hbase_mapping.column_family, rowIndex, colFamily)"
@@ -507,5 +521,12 @@
   <div>
     <h4>If there are more than one ultrahigh cardinality precise count distinct measures,
         you could assign these measures to more column family.</h4>
+  </div>
+</script>
+<script type="text/ng-template" id="CubeEngineTip.html" >
+  <div>
+    <h4>
+       Select cube engine for building cube.
+    </h4>
   </div>
 </script>
