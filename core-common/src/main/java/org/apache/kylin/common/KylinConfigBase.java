@@ -329,6 +329,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.cube.allow-appear-in-multiple-projects", "false"));
     }
 
+    public boolean allowModelDimensionMetricsOverlap() {
+        return Boolean.parseBoolean(getOptional("kylin.model.allow-dimension-metrics-overlap", "false"));
+    }
+
     // ============================================================================
     // JOB
     // ============================================================================

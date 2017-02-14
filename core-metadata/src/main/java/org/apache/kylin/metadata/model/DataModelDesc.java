@@ -216,7 +216,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public void setFilterCondition(String filterCondition) {
         this.filterCondition = filterCondition;
     }
-    
+
     public PartitionDesc getPartitionDesc() {
         return partitionDesc;
     }
@@ -297,7 +297,7 @@ public class DataModelDesc extends RootPersistentEntity {
         initJoinsTree();
         initDimensionsAndMetrics();
         initPartitionDesc();
-        
+
         boolean reinit = validate();
         if (reinit) { // model slightly changed by validate() and must init() again
             init(config, tables);
@@ -456,17 +456,19 @@ public class DataModelDesc extends RootPersistentEntity {
         for (String m : metrics) {
             mcols.add(findColumn(m));
         }
-        
-        // validate no dup between dimensions/metrics
-        for (ModelDimensionDesc dim : dimensions) {
-            String table = dim.getTable();
-            for (String c : dim.getColumns()) {
-                TblColRef dcol = findColumn(table, c);
-                if (mcols.contains(dcol))
-                    throw new IllegalStateException(dcol + " cannot be both dimension and metrics at the same time in " + this);
+
+        if (!KylinConfig.getInstanceFromEnv().allowModelDimensionMetricsOverlap()) {
+            // validate no dup between dimensions/metrics
+            for (ModelDimensionDesc dim : dimensions) {
+                String table = dim.getTable();
+                for (String c : dim.getColumns()) {
+                    TblColRef dcol = findColumn(table, c);
+                    if (mcols.contains(dcol))
+                        throw new IllegalStateException(dcol + " cannot be both dimension and metrics at the same time in " + this);
+                }
             }
         }
-        
+
         // validate PK/FK are in dimensions
         boolean pkfkDimAmended = false;
         for (Chain chain : joinsTree.tableChains.values()) {
@@ -478,9 +480,9 @@ public class DataModelDesc extends RootPersistentEntity {
     private boolean validatePkFkDim(JoinDesc join, Set<TblColRef> mcols) {
         if (join == null)
             return false;
-        
+
         boolean pkfkDimAmended = false;
-        
+
         for (TblColRef c : join.getForeignKeyColumns()) {
             if (!mcols.contains(c)) {
                 pkfkDimAmended = validatePkFkDim(c) || pkfkDimAmended;
@@ -503,7 +505,7 @@ public class DataModelDesc extends RootPersistentEntity {
                 break;
             }
         }
-        
+
         if (dimDesc == null) {
             dimDesc = new ModelDimensionDesc();
             dimDesc.setTable(t);
@@ -515,7 +517,7 @@ public class DataModelDesc extends RootPersistentEntity {
             dimDesc.setColumns(newCols);
             return true;
         }
-        
+
         return false;
     }
 
