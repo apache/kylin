@@ -60,8 +60,8 @@ import com.google.common.collect.Sets;
 
 public class HiveMRInput implements IMRInput {
 
-    public static String getTableNameForHCat(TableDesc table) {
-        String tableName = (table.isView() || !table.getWholeScan()) ? table.getMaterializedName() : table.getName();
+    public static String getTableNameForHCat(TableDesc table, boolean isPartial) {
+        String tableName = (table.isView() || isPartial) ? table.getMaterializedName() : table.getName();
         return String.format("%s.%s", table.getDatabase(), tableName).toUpperCase();
     }
 
@@ -72,7 +72,12 @@ public class HiveMRInput implements IMRInput {
 
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
-        return new HiveTableInputFormat(getTableNameForHCat(table));
+        return new HiveTableInputFormat(getTableNameForHCat(table, false));
+    }
+
+    @Override
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, boolean isPartial) {
+        return new HiveTableInputFormat(getTableNameForHCat(table, isPartial));
     }
 
     @Override

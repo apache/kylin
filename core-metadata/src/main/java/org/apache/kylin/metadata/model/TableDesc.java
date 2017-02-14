@@ -46,8 +46,6 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     private ColumnDesc[] columns;
     @JsonProperty("source_type")
     private int sourceType = ISourceAware.ID_HIVE;
-    @JsonProperty("whole_scan")
-    private boolean wholeScan = true;
     @JsonProperty("table_type")
     private String tableType;
 
@@ -102,14 +100,6 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             identity = String.format("%s.%s", this.getDatabase().toUpperCase(), this.getName()).toUpperCase();
         }
         return identity;
-    }
-
-    public void setWholeScan(boolean wholeScan) {
-        this.wholeScan = wholeScan;
-    }
-
-    public boolean getWholeScan() {
-        return this.wholeScan;
     }
 
     public boolean isView() {

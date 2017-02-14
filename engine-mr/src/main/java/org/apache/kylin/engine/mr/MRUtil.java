@@ -47,8 +47,16 @@ public class MRUtil {
         return getTableInputFormat(getTableDesc(tableName));
     }
 
+    public static IMRTableInputFormat getTableInputFormat(String tableName, boolean isPartial) {
+        return getTableInputFormat(getTableDesc(tableName), isPartial);
+    }
+
     public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc) {
         return SourceFactory.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc);
+    }
+
+    public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc, boolean isPartial) {
+        return SourceFactory.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc, isPartial);
     }
 
     private static TableDesc getTableDesc(String tableName) {

@@ -68,7 +68,7 @@ public class KafkaMRInput implements IMRInput {
 
     @Override
     public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-        this.cubeSegment = (CubeSegment)flatDesc.getSegment();
+        this.cubeSegment = (CubeSegment) flatDesc.getSegment();
         return new BatchCubingInputSide(cubeSegment);
     }
 
@@ -85,6 +85,11 @@ public class KafkaMRInput implements IMRInput {
         });
 
         return new KafkaTableInputFormat(cubeSegment, columns, kafkaConfig, null);
+    }
+
+    @Override
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, boolean isPartial) {
+        return getTableInputFormat(table);
     }
 
     @Override
