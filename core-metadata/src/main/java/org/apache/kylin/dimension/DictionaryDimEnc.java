@@ -36,6 +36,8 @@ public class DictionaryDimEnc extends DimensionEncoding {
 
     public static final String ENCODING_NAME = "dict";
 
+    public static final int MAX_ENCODING_LENGTH = 4; // won't exceed integer's length
+
     // ============================================================================
 
     // could use a lazy loading trick here, to prevent loading all dictionaries of a segment at once

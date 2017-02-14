@@ -254,7 +254,7 @@ public class CubeDescManager {
                     String encoding = configuration.get(TopNMeasureType.CONFIG_ENCODING_PREFIX + parameter.getValue());
                     String encodingVersionStr = configuration.get(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + parameter.getValue());
                     if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
-                        keyLength += 6; // estimation for dict encoding
+                        keyLength += DictionaryDimEnc.MAX_ENCODING_LENGTH; // estimation for dict encoding
                     } else {
                         // non-dict encoding
                         int encodingVersion = 1;
