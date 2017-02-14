@@ -191,8 +191,17 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
             if (this.checkNeedMerging(col)) {
                 // if dictionary on fact table column, needs rewrite
                 DictionaryManager dictMgr = DictionaryManager.getInstance(config);
-                Dictionary<String> sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(col));
                 Dictionary<String> mergedDict = dictMgr.getDictionary(mergedCubeSegment.getDictResPath(col));
+
+                Dictionary<String> sourceDict;
+                // handle the column that all records is null
+                if (sourceCubeSegment.getDictionary(col) == null) {
+                    BytesUtil.writeUnsigned(mergedDict.nullId(), newKeyBodyBuf, bufOffset, mergedDict.getSizeOfId());
+                    bufOffset += mergedDict.getSizeOfId();
+                    continue;
+                } else {
+                    sourceDict = dictMgr.getDictionary(sourceCubeSegment.getDictResPath(col));
+                }
 
                 while (sourceDict.getSizeOfValue() > newKeyBodyBuf.length - bufOffset || //
                         mergedDict.getSizeOfValue() > newKeyBodyBuf.length - bufOffset || //
@@ -254,11 +263,6 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
     }
 
     private Boolean checkNeedMerging(TblColRef col) throws IOException {
-        //handle the column that all records is null
-        if (sourceCubeSegment.getDictionary(col) == null) {
-            return false;
-        }
-
         Boolean ret = dimensionsNeedDict.get(col);
         if (ret != null)
             return ret;
