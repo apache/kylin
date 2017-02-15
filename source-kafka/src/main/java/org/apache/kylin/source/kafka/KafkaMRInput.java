@@ -74,6 +74,11 @@ public class KafkaMRInput implements IMRInput {
 
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
+       return getTableInputFormat(table, true);
+    }
+
+    @Override
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, boolean isFullTable) {
         KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
         KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(table.getIdentity());
         List<TblColRef> columns = Lists.transform(Arrays.asList(table.getColumns()), new Function<ColumnDesc, TblColRef>() {
@@ -85,11 +90,6 @@ public class KafkaMRInput implements IMRInput {
         });
 
         return new KafkaTableInputFormat(cubeSegment, columns, kafkaConfig, null);
-    }
-
-    @Override
-    public IMRTableInputFormat getTableInputFormat(TableDesc table, boolean isPartial) {
-        return getTableInputFormat(table);
     }
 
     @Override
