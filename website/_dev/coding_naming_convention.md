@@ -42,6 +42,7 @@ For Kylin configuration names (those in `kylin.properties`)
   - kylin.source.kafka
   - kylin.storage
   - kylin.storage.hbase
+  - kylin.storage.partition
   - kylin.query
   - kylin.security
   - kylin.server
