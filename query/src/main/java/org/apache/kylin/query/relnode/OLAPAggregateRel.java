@@ -279,7 +279,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
         // only rewrite the innermost aggregation
-        if (!this.afterAggregate) {
+        boolean hasRealization = (null != this.context.realization);
+        if (hasRealization && !this.afterAggregate) {
             translateAggregation();
             buildRewriteFieldsAndMetricsColumns();
         }
@@ -287,7 +288,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         implementor.visitChild(this, getInput());
 
         // only rewrite the innermost aggregation
-        if (!this.afterAggregate) {
+        if (hasRealization && !this.afterAggregate) {
             // rewrite the aggCalls
             this.rewriteAggCalls = new ArrayList<AggregateCall>(aggCalls.size());
             for (int i = 0; i < this.aggCalls.size(); i++) {

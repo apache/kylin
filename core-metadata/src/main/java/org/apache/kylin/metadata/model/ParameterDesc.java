@@ -34,6 +34,7 @@ import com.google.common.collect.Sets;
 
 /**
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ParameterDesc implements Serializable {
 
