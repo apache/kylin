@@ -26,5 +26,7 @@ public interface BitmapCounterFactory {
 
     BitmapCounter newBitmap(int... values);
 
+    BitmapCounter newBitmap(long counter);
+
     BitmapCounter newBitmap(ByteBuffer in) throws IOException;
 }

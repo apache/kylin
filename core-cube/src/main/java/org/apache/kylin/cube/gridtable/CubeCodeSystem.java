@@ -177,4 +177,8 @@ public class CubeCodeSystem implements IGTCodeSystem {
         return result;
     }
 
+    @Override
+    public DataTypeSerializer<?> getSerializer(int col) {
+        return serializers[col];
+    }
 }

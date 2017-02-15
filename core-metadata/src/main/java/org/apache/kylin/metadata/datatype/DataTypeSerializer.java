@@ -89,6 +89,19 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T>, java.
         throw new UnsupportedOperationException();
     }
 
+    /** If the query is exactAggregation and has some memory hungry measures,
+     * we could directly return final result to speed up the query.
+     * If the DataTypeSerializer support this,
+     * which should override the getFinalResult method, besides that, the deserialize and peekLength method should also support it, like {@link org.apache.kylin.measure.bitmap.BitmapSerializer} */
+    public boolean supportDirectReturnResult() {
+        return false;
+    }
+
+    /** An optional method that converts a expensive buffer to lightweight buffer containing final result (for memory hungry measures) */
+    public ByteBuffer getFinalResult(ByteBuffer in) {
+        throw new UnsupportedOperationException();
+    }
+
     /** Convert from obj to string */
     public String toString(T value) {
         if (value == null)

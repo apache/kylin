@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.measure.MeasureAggregator;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
 public interface IGTCodeSystem {
 
@@ -62,4 +63,6 @@ public interface IGTCodeSystem {
     /** Return aggregators for metrics */
     MeasureAggregator<?>[] newMetricsAggregators(ImmutableBitSet columns, String[] aggrFunctions);
 
+    /** Return specific DataTypeSerializer */
+    DataTypeSerializer<?> getSerializer(int col);
 }

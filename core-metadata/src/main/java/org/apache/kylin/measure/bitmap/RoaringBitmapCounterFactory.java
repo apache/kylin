@@ -40,6 +40,11 @@ public class RoaringBitmapCounterFactory implements BitmapCounterFactory, Serial
     }
 
     @Override
+    public BitmapCounter newBitmap(long counter) {
+        return new RoaringBitmapCounter(counter);
+    }
+
+    @Override
     public BitmapCounter newBitmap(ByteBuffer in) throws IOException {
         RoaringBitmapCounter counter = new RoaringBitmapCounter();
         counter.readFields(in);

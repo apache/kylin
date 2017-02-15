@@ -38,6 +38,7 @@ message CubeVisitRequest {
     optional string queryId = 6;
     optional bool spillEnabled = 7 [default = true];
     optional int64 maxScanBytes = 8; // must be positive
+    optional bool isExactAggregate = 9 [default = false];
     message IntList {
         repeated int32 ints = 1;
     }

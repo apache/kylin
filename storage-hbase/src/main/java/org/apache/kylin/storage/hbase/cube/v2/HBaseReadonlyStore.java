@@ -20,6 +20,7 @@ package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -44,18 +45,19 @@ public class HBaseReadonlyStore implements IGTStore {
     private List<List<Integer>> hbaseColumnsToGT;
     private int rowkeyPreambleSize;
     private boolean withDelay = false;
-
+    private boolean isExactAggregation;
 
     /**
      * @param withDelay is for test use
      */
-    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT, int rowkeyPreambleSize, boolean withDelay) {
+    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT, int rowkeyPreambleSize, boolean withDelay, boolean isExactAggregation) {
         this.cellListIterator = cellListIterator;
         this.info = gtScanRequest.getInfo();
         this.hbaseColumns = hbaseColumns;
         this.hbaseColumnsToGT = hbaseColumnsToGT;
         this.rowkeyPreambleSize = rowkeyPreambleSize;
         this.withDelay = withDelay;
+        this.isExactAggregation = isExactAggregation;
     }
 
     @Override
@@ -132,6 +134,12 @@ public class HBaseReadonlyStore implements IGTStore {
                             buf = byteBuffer(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength());
                             oneRecord.loadColumns(hbaseColumnsToGT.get(i), buf);
                         }
+
+
+                        if (isExactAggregation && getDirectReturnResultColumns().size() > 0) {
+                            trimGTRecord(oneRecord);
+                        }
+
                         return oneRecord;
 
                     }
@@ -143,6 +151,27 @@ public class HBaseReadonlyStore implements IGTStore {
 
                     private ByteBuffer byteBuffer(byte[] array, int offset, int length) {
                         return ByteBuffer.wrap(array, offset, length);
+                    }
+
+                    private List<Integer> getDirectReturnResultColumns() {
+                        List<Integer> columns = new ArrayList<>();
+                        for (int i = 0; i < info.getColumnCount(); i++) {
+                            if (info.getCodeSystem().getSerializer(i).supportDirectReturnResult()) {
+                                columns.add(i);
+                            }
+                        }
+                        return columns;
+                    }
+
+                    private void trimGTRecord(GTRecord record) {
+                        List<Integer> directReturnResultColumns = getDirectReturnResultColumns();
+                        for (Integer i : directReturnResultColumns) {
+                            ByteBuffer recordBuffer = record.get(i).asBuffer();
+                            if (recordBuffer!= null) {
+                                ByteBuffer trimmedBuffer = info.getCodeSystem().getSerializer(i).getFinalResult(recordBuffer);
+                                record.loadColumns(i, trimmedBuffer);
+                            }
+                        }
                     }
 
                 };
