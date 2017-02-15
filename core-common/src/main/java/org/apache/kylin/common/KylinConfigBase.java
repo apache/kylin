@@ -614,11 +614,11 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public boolean getQueryCoprocessorSpillEnabled() {
-        return Boolean.parseBoolean(this.getOptional("kylin.storage.hbase.coprocessor-spill-enabled", "true"));
+        return Boolean.parseBoolean(this.getOptional("kylin.storage.partition.aggr-spill-enabled", "true"));
     }
 
-    public long getQueryCoprocessorMaxScanBytes() {
-        long value = Long.parseLong(this.getOptional("kylin.storage.hbase.coprocessor-max-scan-bytes", String.valueOf(3L * 1024 * 1024 * 1024)));
+    public long getPartitionMaxScanBytes() {
+        long value = Long.parseLong(this.getOptional("kylin.storage.partition.max-scan-bytes", String.valueOf(3L * 1024 * 1024 * 1024)));
         return value > 0 ? value : Long.MAX_VALUE;
     }
 
