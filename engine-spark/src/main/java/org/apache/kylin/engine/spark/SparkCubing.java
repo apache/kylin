@@ -544,7 +544,7 @@ public class SparkCubing extends AbstractApplication {
         kyroClasses.add(Object[].class);
         kyroClasses.add(org.apache.spark.sql.types.StringType$.class);
         kyroClasses.add(Hashing.murmur3_128().getClass());
-        kyroClasses.add(org.apache.spark.sql.columnar.CachedBatch.class);
+        kyroClasses.add(org.apache.spark.sql.execution.columnar.CachedBatch.class);
         kyroClasses.add(byte[][].class);
         kyroClasses.add(org.apache.spark.sql.types.Decimal.class);
         kyroClasses.add(scala.math.BigDecimal.class);
