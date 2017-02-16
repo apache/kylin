@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig) {
+KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig,modelsManager) {
   $scope.num=0;
   $scope.convertedColumns=[];
   $scope.groupby=[];
@@ -31,7 +31,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   $scope.initUpdateMeasureStatus();
   var needLengthKeyList=cubeConfig.needSetLengthEncodingList;
   $scope.getEncodings =function (name){
-    var columnType = $scope.getColumnTypeByAliasName(name);
+    var columnType = modelsManager.getColumnTypeByColumnName(name);
     var encodings =$scope.store.supportedEncoding,filterEncoding=[];
     var matchList=VdmUtil.getObjValFromLikeKey($scope.store.encodingMaps,columnType);
     if($scope.isEdit) {

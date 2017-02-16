@@ -39,7 +39,20 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
 
     $scope.allCubes = [];
 
-
+    $scope.getTypeVersion=function(typename){
+      var searchResult=/\[v(\d+)\]/.exec(typename);
+      if(searchResult&&searchResult.length){
+        return searchResult.length&&searchResult[1]||1;
+      }else{
+        return 1;
+      }
+    }
+    $scope.removeVersion=function(typename){
+      if(typename){
+        return typename.replace(/\[v\d+\]/g,"");
+      }
+      return "";
+    }
   // ~ init
     if (!$scope.state) {
         $scope.state = {mode: "view"};

@@ -22,13 +22,12 @@
 KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, CubeService, loadingRequest, SweetAlert, $log, cubeConfig, CubeDescModel, MetaModel, TableModel, ModelDescService, modelsManager, cubesManager, ProjectModel, StreamingModel, StreamingService,VdmUtil) {
   $scope.cubeConfig = cubeConfig;
   $scope.metaModel = {};
-  $scope.tableAliasMap={};
-  $scope.aliasTableMap={};
-  $scope.aliasName=[];
-  $scope.availableFactTables = [];
-  $scope.availableLookupTables = [];
   $scope.modelsManager = modelsManager;
-
+  $scope.tableAliasMap=$scope.modelsManager.tableAliasMap;
+  $scope.aliasTableMap=$scope.modelsManager.aliasTableMap;
+  $scope.availableFactTables =$scope.modelsManager.availableFactTables;
+  $scope.availableLookupTables =$scope.modelsManager.availableLookupTables;
+  $scope.aliasName=$scope.modelsManager.aliasName;
   //add or edit ?
   var absUrl = $location.absUrl();
   $scope.cubeMode = absUrl.indexOf("/cubes/add") != -1 ? 'addNewCube' : absUrl.indexOf("/cubes/edit") != -1 ? 'editExistCube' : 'default';
@@ -39,20 +38,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     return;
   }
 
-  $scope.getTypeVersion=function(typename){
-    var searchResult=/\[v(\d+)\]/.exec(typename);
-    if(searchResult&&searchResult.length){
-      return searchResult.length&&searchResult[1]||1;
-    }else{
-      return 1;
-    }
-  }
-  $scope.removeVersion=function(typename){
-    if(typename){
-      return typename.replace(/\[v\d+\]/g,"");
-    }
-    return "";
-  }
+
   //init encoding list
   $scope.store = {
     supportedEncoding:[],
@@ -108,7 +94,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   }
   $scope.getEncodings =function (name){
     var filterName=name;
-    var columnType= $scope.getColumnTypeByAliasName(filterName);
+    var columnType= modelsManager.getColumnTypeByColumnName(filterName);
     var matchList=VdmUtil.getObjValFromLikeKey($scope.store.encodingMaps,columnType);
     var encodings =$scope.store.supportedEncoding,filterEncoding;
     if($scope.isEdit){
@@ -324,18 +310,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
         if (!modelsManager.getModels().length) {
           ModelDescService.query({model_name: $scope.cubeMetaFrame.model_name}, function (_model) {
             $scope.metaModel.model = _model;
-            var rootFactTable = VdmUtil.removeNameSpace($scope.metaModel.model.fact_table);
-            $scope.aliasName.push(rootFactTable);
-            $scope.aliasTableMap[rootFactTable]=$scope.metaModel.model.fact_table;
-            $scope.tableAliasMap[$scope.metaModel.model.fact_table]=rootFactTable;
-            angular.forEach($scope.metaModel.model.lookups,function(joinTable){
-              if(!joinTable.alias){
-                joinTable.alias=VdmUtil.removeNameSpace(joinTable.table);
-              }
-              $scope.aliasTableMap[joinTable.alias]=joinTable.table;
-              $scope.tableAliasMap[joinTable.table]=joinTable.alias;
-              $scope.aliasName.push(joinTable.alias);
-            });
+            $scope.modelsManager.initAliasMapByModelSchema($scope.metaModel);
           });
         }
         $scope.state.cubeSchema = angular.toJson($scope.cubeMetaFrame, true);
