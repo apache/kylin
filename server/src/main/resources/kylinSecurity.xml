@@ -89,6 +89,7 @@
 							<constructor-arg index="1" value="${ldap.user.groupSearchBase}" />
 							<constructor-arg index="2" value="${acl.adminRole}" />
 							<constructor-arg index="3" value="${acl.defaultRole}" />
+							<constructor-arg index="4" value="${ldap.user.groupSearchFilter}" />
 						</bean>
 					</constructor-arg>
 				</bean>
@@ -116,6 +117,7 @@
 							<constructor-arg index="1" value="${ldap.service.groupSearchBase}" />
 							<constructor-arg index="2" value="${acl.adminRole}" />
 							<constructor-arg index="3" value="${acl.defaultRole}" />
+							<constructor-arg index="4" value="${ldap.service.groupSearchFilter}" />
 						</bean>
 					</constructor-arg>
 				</bean>
