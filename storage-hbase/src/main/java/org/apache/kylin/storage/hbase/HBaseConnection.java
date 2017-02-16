@@ -149,7 +149,8 @@ public class HBaseConnection {
         addHBaseClusterNNHAConfiguration(conf);
 
         // support hbase using a different FS
-        String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
+        KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
+        String hbaseClusterFs = kylinConf.getHBaseClusterFs();
         if (StringUtils.isNotEmpty(hbaseClusterFs)) {
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
         }
@@ -162,11 +163,10 @@ public class HBaseConnection {
             conf.set("hbase.fs.tmp.dir", "/tmp");
         }
 
-        // reduce rpc retry
-        conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
-        conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
-        conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
-        // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
+        // set RPC timeout
+        if (kylinConf.getQueryCoprocessorTimeoutSeconds() > 0) {
+            conf.set(HConstants.HBASE_RPC_TIMEOUT_KEY, "" + (1000 * kylinConf.getQueryCoprocessorTimeoutSeconds()));
+        }
 
         return conf;
     }

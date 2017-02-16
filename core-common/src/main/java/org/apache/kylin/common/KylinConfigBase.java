@@ -553,7 +553,6 @@ abstract public class KylinConfigBase implements Serializable {
 
     private static final Pattern COPROCESSOR_JAR_NAME_PATTERN = Pattern.compile("kylin-coprocessor-(.+)\\.jar");
     private static final Pattern JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-job-(.+)\\.jar");
-    private static final Pattern SPARK_JOB_JAR_NAME_PATTERN = Pattern.compile("kylin-engine-spark-(.+)\\.jar");
 
     public String getCoprocessorLocalJar() {
         final String coprocessorJar = getOptional("kylin.storage.hbase.coprocessor-local-jar");
