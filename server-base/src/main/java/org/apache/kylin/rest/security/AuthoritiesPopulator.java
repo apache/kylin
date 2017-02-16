@@ -21,6 +21,7 @@ package org.apache.kylin.rest.security;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.rest.constant.Constant;
 import org.springframework.ldap.core.ContextSource;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,7 +33,6 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
  * 
  */
 public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
-
     String adminRole;
     SimpleGrantedAuthority adminRoleAsAuthority;
 
@@ -48,9 +48,28 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
      */
     public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole, String defaultRole) {
         super(contextSource, groupSearchBase);
+        
         this.adminRole = adminRole;
         this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
-
+        if (defaultRole.contains(Constant.ROLE_MODELER))
+            this.defaultAuthorities.add(modelerAuthority);
+        if (defaultRole.contains(Constant.ROLE_ANALYST))
+            this.defaultAuthorities.add(analystAuthority);
+    }
+    
+    /**
+     * @param contextSource
+     * @param groupSearchBase
+     */
+    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole, String defaultRole, String groupSearchFilter) {
+        super(contextSource, groupSearchBase);
+        
+        if (!StringUtils.isBlank(groupSearchFilter)){
+            setGroupSearchFilter(groupSearchFilter);
+        }
+        
+        this.adminRole = adminRole;
+        this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
         if (defaultRole.contains(Constant.ROLE_MODELER))
             this.defaultAuthorities.add(modelerAuthority);
         if (defaultRole.contains(Constant.ROLE_ANALYST))
