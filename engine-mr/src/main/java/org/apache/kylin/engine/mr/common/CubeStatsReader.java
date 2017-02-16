@@ -201,7 +201,7 @@ public class CubeStatsReader {
         KylinConfig kylinConf = cubeSegment.getConfig();
 
         long mask = Long.highestOneBit(baseCuboidId);
-        long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
+        long parentCuboidIdActualLength = (long)Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & cuboidId) > 0) {
                 rowkeyLength += rowKeyColumnLength.get(i); //colIO.getColumnLength(columnList.get(i));

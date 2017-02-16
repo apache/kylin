@@ -22,7 +22,6 @@ source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 source ${dir}/check-env.sh "if-not-yet"
 job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
 
-echo "Going to create sample tables in hive..."
 cd ${KYLIN_HOME}/sample_cube/data
 
 echo "Loading sample data into HDFS tmp path: /tmp/kylin/sample_cube/data"
@@ -30,12 +29,17 @@ hadoop fs -mkdir -p /tmp/kylin/sample_cube/data
 hadoop fs -put * /tmp/kylin/sample_cube/data/
 
 hive_client_mode=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.client`
+sample_database=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.database-for-flat-table`
+echo "Going to create sample tables in hive to database "$sample_database" by "$hive_client_mode
 if [ "${hive_client_mode}" == "beeline" ]
 then
     beeline_params=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
-    beeline ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+    beeline ${beeline_params} -e "CREATE DATABASE IF NOT EXISTS "$sample_database
+#### Caution: hard code the beeline parameter by appending sample database.
+    beeline ${beeline_params}"/"$sample_database -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 else
-    hive -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+    hive -e "CREATE DATABASE IF NOT EXISTS "$sample_database
+    hive --database ${sample_database} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 fi
 
 echo "Sample hive tables are created successfully; Going to create sample cube..."
@@ -54,6 +58,12 @@ cp -rf ${KYLIN_HOME}/sample_cube/template/* ${KYLIN_HOME}/sample_cube/metadata
 
 sed -i "s/%default_storage_type%/${default_storage_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
 sed -i "s/%default_engine_type%/${default_engine_type}/g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
+sed -i "s/DEFAULT./${sample_database}./g" ${KYLIN_HOME}/sample_cube/metadata/cube_desc/kylin_sales_cube.json
+sed -i "s/DEFAULT./${sample_database}./g" ${KYLIN_HOME}/sample_cube/metadata/model_desc/kylin_sales_model.json
+sed -i "s/DEFAULT./${sample_database}./g" ${KYLIN_HOME}/sample_cube/metadata/project/learn_kylin.json
+
+cd ${KYLIN_HOME}/sample_cube/metadata/table
+ls -1 DEFAULT.KYLIN_*.json|sed "s/\(DEFAULT\)\(.*\)\.json/mv & ${sample_database}\2.json/"|sh -v
 
 cd ${KYLIN_HOME}
 hbase org.apache.hadoop.util.RunJar ${job_jar} org.apache.kylin.common.persistence.ResourceTool upload ${KYLIN_HOME}/sample_cube/metadata  || { exit 1; }

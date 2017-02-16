@@ -81,7 +81,7 @@ public class SchemaChecker {
                 buf.append("- ").append(reason).append("\n");
             }
 
-            return new CheckResult(false, format("Found %d issue(s) with '%s':\n%s Please disable and purge related cube(s) first", reasons.size(), tableName, buf.toString()));
+            return new CheckResult(false, format("Found %d issue(s) with '%s':%n%s Please disable and purge related cube(s) first", reasons.size(), tableName, buf.toString()));
         }
     }
 

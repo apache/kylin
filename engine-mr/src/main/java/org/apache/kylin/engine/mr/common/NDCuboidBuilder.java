@@ -67,7 +67,7 @@ public class NDCuboidBuilder implements Serializable {
         long mask = Long.highestOneBit(parentCuboid.getId());
         long parentCuboidId = parentCuboid.getId();
         long childCuboidId = childCuboid.getId();
-        long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
+        long parentCuboidIdActualLength = (long)Long.SIZE - Long.numberOfLeadingZeros(parentCuboid.getId());
         int index = rowKeySplitter.getBodySplitOffset(); // skip shard and cuboidId
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & parentCuboidId) > 0) {// if the this bit position equals
