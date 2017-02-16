@@ -18,6 +18,7 @@
 
 package org.apache.kylin.dict;
 
+import static org.apache.kylin.dict.Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -44,7 +45,7 @@ import com.google.common.collect.Sets;
  */
 public class NumberDictionaryTest extends LocalFileMetadataTestCase {
 
-    NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec(NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT);
+    Number2BytesConverter.NumberBytesCodec codec = new Number2BytesConverter.NumberBytesCodec(MAX_DIGITS_BEFORE_DECIMAL_POINT);
     Random rand = new Random();
 
     @Before

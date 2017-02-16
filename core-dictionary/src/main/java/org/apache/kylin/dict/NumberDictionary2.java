@@ -22,9 +22,8 @@ package org.apache.kylin.dict;
  * This class uses MAX_DIGITS_BEFORE_DECIMAL_POINT (=19) instead of legacy (=16).
  */
 @SuppressWarnings("serial")
+@Deprecated
 public class NumberDictionary2<T> extends NumberDictionary<T> {
-
-    static transient ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
 
     // ============================================================================
 
@@ -36,13 +35,5 @@ public class NumberDictionary2<T> extends NumberDictionary<T> {
         super(trieBytes);
     }
 
-    protected NumberBytesCodec getCodec() {
-        NumberBytesCodec codec = localCodec.get();
-        if (codec == null) {
-            codec = new NumberBytesCodec(MAX_DIGITS_BEFORE_DECIMAL_POINT);
-            localCodec.set(codec);
-        }
-        return codec;
-    }
 
 }

@@ -29,7 +29,7 @@ public class NumberDictionaryBuilder extends TrieDictionaryBuilder<String> {
 
 
     public NumberDictionaryBuilder() {
-        super(new NumberDictionaryForestBuilder.Number2BytesConverter());
+        super(new Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT));
     }
 
 
