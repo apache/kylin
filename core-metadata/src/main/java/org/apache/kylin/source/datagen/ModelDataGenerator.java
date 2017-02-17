@@ -166,7 +166,7 @@ public class ModelDataGenerator {
         }
 
         for (String db : dbs) {
-            out.print("CREATE DATABASE IF NOT EXISTS " + db + ";\n");
+            out.print("CREATE DATABASE IF NOT EXISTS " + normHiveIdentifier(db) + ";\n");
         }
         out.print("\n");
     }
@@ -176,9 +176,9 @@ public class ModelDataGenerator {
             if (t.isView())
                 continue;
             
-            out.print("DROP TABLE IF EXISTS " + t.getIdentity() + ";\n");
+            out.print("DROP TABLE IF EXISTS " + normHiveIdentifier(t.getIdentity()) + ";\n");
 
-            out.print("CREATE TABLE " + t.getIdentity() + "(" + "\n");
+            out.print("CREATE TABLE " + normHiveIdentifier(t.getIdentity()) + "(" + "\n");
 
             for (int i = 0; i < t.getColumns().length; i++) {
                 ColumnDesc col = t.getColumns()[i];
@@ -186,7 +186,7 @@ public class ModelDataGenerator {
                 if (i > 0) {
                     out.print(",");
                 }
-                out.print(col.getName() + " " + hiveType(col.getType()) + "\n");
+                out.print(normHiveIdentifier(col.getName()) + " " + hiveType(col.getType()) + "\n");
             }
 
             out.print(")" + "\n");
@@ -194,6 +194,10 @@ public class ModelDataGenerator {
             out.print("STORED AS TEXTFILE" + ";\n");
             out.print("\n");
         }
+    }
+
+    private String normHiveIdentifier(String orig) {
+        return "`" + orig + "`";
     }
 
     private String hiveType(DataType type) {
@@ -213,7 +217,7 @@ public class ModelDataGenerator {
                 continue;
             }
             
-            out.print("LOAD DATA LOCAL INPATH '" + t.getIdentity() + ".csv' OVERWRITE INTO TABLE " + t.getIdentity() + ";\n");
+            out.print("LOAD DATA LOCAL INPATH '" + t.getIdentity() + ".csv' OVERWRITE INTO TABLE " + normHiveIdentifier(t.getIdentity()) + ";\n");
         }
     }
 
