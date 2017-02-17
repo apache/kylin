@@ -440,6 +440,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public int getBuildLevel() {
+        if (aggregationGroups.size() <= 0)
+            throw new IllegalStateException("AggregationGroup size is: " + aggregationGroups.size() + ", there should be at least one AggregationGroup!");
         return Collections.max(Collections2.transform(aggregationGroups, new Function<AggregationGroup, Integer>() {
             @Nullable
             @Override
@@ -554,7 +556,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         initMeasureColumns();
 
         rowkey.init(this);
-        
+
         validateAggregationGroups(); // check if aggregation group is valid
         for (AggregationGroup agg : this.aggregationGroups) {
             agg.init(this, rowkey);
@@ -752,13 +754,13 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 }
                 initDerivedMap(dimColArray, DeriveType.LOOKUP, join, derivedCols, derivedExtra);
             }
-            
+
             if (join != null) {
                 allColumns.addAll(Arrays.asList(join.getForeignKeyColumns()));
                 allColumns.addAll(Arrays.asList(join.getPrimaryKeyColumns()));
             }
         }
-        
+
         // PK-FK derive the other side
         Set<TblColRef> realDimensions = new HashSet<>(listDimensionColumnsExcludingDerived(true));
         for (JoinTableDesc joinTable : model.getJoinTables()) {
@@ -777,7 +779,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
         }
     }
-    
+
     private String[][] splitDerivedColumnAndExtra(String[] derived) {
         String[] cols = new String[derived.length];
         String[] extra = new String[derived.length];
@@ -810,7 +812,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 i--;
             }
         }
-        
+
         if (derivedCols.length == 0)
             return;
 
@@ -826,7 +828,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             infoList = new ArrayList<DeriveInfo>();
             hostToDerivedMap.put(hostColArray, infoList);
         }
-        
+
         // Merged duplicated derived column
         List<TblColRef> whatsLeft = new ArrayList<>();
         for (TblColRef derCol : derivedCols) {
@@ -966,7 +968,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 allColumns.addAll(Arrays.asList(join.getPrimaryKeyColumns()));
             }
         }
-        
+
         for (TblColRef col : allColumns) {
             allColumnDescs.add(col.getColumnDesc());
         }
@@ -1142,7 +1144,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         return null;
     }
-    
+
     /** Get a column which can be used to cluster the source table.
      * To reduce memory footprint in base cuboid for global dict */
     // TODO handle more than one ultra high cardinality columns use global dict in one cube

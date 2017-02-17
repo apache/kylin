@@ -327,10 +327,10 @@ public class CubeController extends BasicController {
                 throw new InternalErrorException("Cannot find cube '" + cubeName + "'");
             }
 
-//            if (cube.getSegments() != null && cube.getBuildingSegments().size() > 0) {
-//                int num = cube.getBuildingSegments().size();
-//                throw new InternalErrorException("Cannot purge cube '" + cubeName + "' as there is " + num + " building " + (num > 1 ? "segment(s)." : "segment. Discard the related job first."));
-//            }
+            //            if (cube.getSegments() != null && cube.getBuildingSegments().size() > 0) {
+            //                int num = cube.getBuildingSegments().size();
+            //                throw new InternalErrorException("Cannot purge cube '" + cubeName + "' as there is " + num + " building " + (num > 1 ? "segment(s)." : "segment. Discard the related job first."));
+            //            }
 
             return cubeService.purgeCube(cube);
         } catch (Exception e) {
@@ -426,6 +426,7 @@ public class CubeController extends BasicController {
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
 
         CubeDesc desc = deserializeCubeDesc(cubeRequest);
+
         if (desc == null) {
             cubeRequest.setMessage("CubeDesc is null.");
             return cubeRequest;
@@ -439,6 +440,10 @@ public class CubeController extends BasicController {
             logger.info("Invalid Cube name {}, only letters, numbers and underline supported.", name);
             throw new BadRequestException("Invalid Cube name, only letters, numbers and underline supported.");
         }
+
+        int aggSize = desc.getAggregationGroups().size();
+        if (aggSize <= 0)
+            throw new IllegalStateException("AggregationGroup size is: " + aggSize + ", there should be at least one AggregationGroup!");
 
         try {
             desc.setUuid(UUID.randomUUID().toString());
