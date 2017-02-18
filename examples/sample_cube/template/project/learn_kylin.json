@@ -11,7 +11,9 @@
   "tables": [
     "DEFAULT.KYLIN_SALES",
     "DEFAULT.KYLIN_CAL_DT",
-    "DEFAULT.KYLIN_CATEGORY_GROUPINGS"
+    "DEFAULT.KYLIN_CATEGORY_GROUPINGS",
+    "DEFAULT.KYLIN_ACCOUNT",
+    "DEFAULT.KYLIN_COUNTRY"
   ],
   "models": [
     "kylin_sales_model"
