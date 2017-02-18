@@ -113,7 +113,7 @@ public class JoinsTree  implements Serializable {
             return chain.join;
     }
 
-    static class Chain implements Serializable {
+    public static class Chain implements Serializable {
         private static final long serialVersionUID = 1L;
         
         TableRef table; // pk side

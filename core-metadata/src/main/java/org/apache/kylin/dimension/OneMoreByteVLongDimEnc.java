@@ -26,13 +26,14 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
  * not being used yet, prepared for future
  */
-public class OneMoreByteVLongDimEnc extends DimensionEncoding {
+public class OneMoreByteVLongDimEnc extends DimensionEncoding implements Serializable{
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(OneMoreByteVLongDimEnc.class);

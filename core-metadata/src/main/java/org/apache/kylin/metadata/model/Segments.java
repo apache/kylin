@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,7 +28,7 @@ import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Segments<T extends ISegment> extends ArrayList<T> {
+public class Segments<T extends ISegment> extends ArrayList<T> implements Serializable{
 
     private static final long serialVersionUID = 1L;
 

@@ -77,7 +77,7 @@ public class HLLDistinctCountAggFunc {
     }
 
     @SuppressWarnings("serial")
-    private static class FixedValueHLLCMockup extends HLLCounter {
+    public static class FixedValueHLLCMockup extends HLLCounter {
 
         private Long value = null;
 

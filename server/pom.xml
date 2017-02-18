@@ -233,6 +233,10 @@
                     <artifactId>jetty-all</artifactId>
                     <groupId>org.eclipse.jetty.aggregate</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>calcite-core</artifactId>
+                    <groupId>org.apache.calcite</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 

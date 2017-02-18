@@ -17,7 +17,6 @@
 */
 package org.apache.kylin.engine.spark;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
@@ -72,6 +71,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -333,7 +333,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         }
     }
 
-    private static final java.lang.Iterable<Tuple2<ByteArray, Object[]>> EMTPY_ITERATOR = Lists.newArrayListWithCapacity(0);
+    private static final java.lang.Iterable<Tuple2<ByteArray, Object[]>> EMTPY_ITERATOR = new ArrayList(0);
 
     class CuboidFlatMap implements PairFlatMapFunction<Tuple2<ByteArray, Object[]>, ByteArray, Object[]> {
 
@@ -370,7 +370,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
                 return EMTPY_ITERATOR;
             }
 
-            List<Tuple2<ByteArray, Object[]>> tuples = Lists.newArrayListWithCapacity(myChildren.size());
+            List<Tuple2<ByteArray, Object[]>> tuples = new ArrayList(myChildren.size());
             for (Long child : myChildren) {
                 Cuboid childCuboid = Cuboid.findById(cubeDesc, child);
                 Pair<Integer, ByteArray> result = ndCuboidBuilder.buildKey(parentCuboid, childCuboid, rowKeySplitter.getSplitBuffers());

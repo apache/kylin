@@ -97,7 +97,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
-    public enum DeriveType {
+    public enum DeriveType implements java.io.Serializable{
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
 

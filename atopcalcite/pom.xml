@@ -43,6 +43,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- It should be avatica(the shaded one), not avatica-core, since the inconsistency protobuf dependency with Hadoop -->
         <dependency>
             <groupId>org.apache.calcite.avatica</groupId>
             <artifactId>avatica</artifactId>

@@ -18,10 +18,12 @@
 
 package org.apache.kylin.dimension;
 
+import java.io.Serializable;
+
 /**
  * This encoding is meant to be IDENTICAL to DateStrDictionary for 100% backward compatibility.
  */
-public class DateDimEnc extends AbstractDateDimEnc {
+public class DateDimEnc extends AbstractDateDimEnc implements Serializable{
     private static final long serialVersionUID = 1L;
 
     public static final int ID_9999_12_31 = 3652426;

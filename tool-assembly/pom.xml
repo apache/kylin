@@ -21,36 +21,53 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kylin-jdbc</artifactId>
+    <artifactId>kylin-tool-assembly</artifactId>
+    <name>Apache Kylin - Tool Assembly</name>
     <packaging>jar</packaging>
-    <name>Apache Kylin - JDBC Driver</name>
-    <description>Kylin JDBC Driver on Calcite Avatica</description>
+    <description>Apache Kylin - Tool Assembly</description>
 
     <parent>
-        <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
+        <groupId>org.apache.kylin</groupId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <properties>
-        <shadeBase>org.apache.kylin.jdbc.shaded</shadeBase>
+        <shadeBase>org.apache.kylin.tool.shaded</shadeBase>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.calcite.avatica</groupId>
-            <artifactId>avatica-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-tool</artifactId>
         </dependency>
 
+        <!-- As KylinConfigCLI will be called before Hbase/Hive/Hadoop dependency loaded, has to define the following as compile in tool -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -65,34 +82,37 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>assembly</shadedClassifierName>
                             <artifactSet>
-                                <excludes>
-                                    <exclude>org.slf4j:jcl-over-slf4j:*</exclude>
-                                </excludes>
+                                <includes>
+                                    <!-- shade the httpcore to avoid the lower version conflict with HBase one -->
+                                    <include>org.apache.httpcomponents:httpcore</include>
+                                    <include>org.slf4j:slf4j-api</include>
+                                    <include>org.slf4j:slf4j-log4j12</include>
+                                    <include>log4j:log4j</include>
+                                    <include>commons-io:commons-io</include>
+                                    <include>commons-lang:commons-lang</include>
+                                    <include>com.google.guava:guava</include>
+                                    <include>org.apache.kylin:*</include>
+                                </includes>
                             </artifactSet>
-
                             <relocations>
                                 <relocation>
-                                    <pattern>org.apache.calcite</pattern>
-                                    <shadedPattern>${shadeBase}.org.apache.calcite</shadedPattern>
+                                    <pattern>com.google.common</pattern>
+                                    <shadedPattern>${shadeBase}.com.google.common</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.fasterxml.jackson</pattern>
-                                    <shadedPattern>${shadeBase}.com.fasterxml.jackson</shadedPattern>
+                                    <pattern>org.apache.commons.io</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.io</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.google.protobuf</pattern>
-                                    <shadedPattern>${shadeBase}.com.google.protobuf</shadedPattern>
+                                    <pattern>org.apache.commons.lang</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.lang</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.http</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.http</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.apache.commons</pattern>
-                                    <shadedPattern>${shadeBase}.org.apache.commons</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>

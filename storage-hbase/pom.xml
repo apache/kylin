@@ -32,8 +32,11 @@
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
-    <dependencies>
+    <properties>
+        <shadeBase>org.apache.kylin.coprocessor.shaded</shadeBase>
+    </properties>
 
+    <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-mr</artifactId>
@@ -119,14 +122,20 @@
                                     <include>org.apache.kylin:kylin-core-metadata</include>
                                     <include>org.apache.kylin:kylin-core-dictionary</include>
                                     <include>org.apache.kylin:kylin-core-cube</include>
-                                    <include>com.ning:compress-lzf</include>
                                     <include>org.roaringbitmap:RoaringBitmap</include>
                                     <include>com.tdunning:t-digest</include>
-                                    <!-- below for inverted index only -->
-                                    <include>com.n3twork.druid:extendedset</include>
-                                    <include>org.apache.commons:commons-lang3</include>
                                 </includes>
                             </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.tdunning</pattern>
+                                    <shadedPattern>${shadeBase}.com.tdunning</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.roaringbitmap</pattern>
+                                    <shadedPattern>${shadeBase}.org.roaringbitmap</shadedPattern>
+                                </relocation>
+                            </relocations>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>

@@ -34,7 +34,7 @@ import java.io.Serializable;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class PartitionDesc implements Serializable {
 
-    public static enum PartitionType {
+    public static enum PartitionType implements Serializable{
         APPEND, //
         UPDATE_INSERT // not used since 0.7.1
     }

@@ -38,7 +38,7 @@ function retrieveDependency() {
         source ${dir}/setenv.sh
     fi
 
-    export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
+    export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
     export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
     if [ -n "$KAFKA_HOME" ]
     then
@@ -103,7 +103,7 @@ then
     # KYLIN_EXTRA_START_OPTS is for customized settings, checkout bin/setenv.sh
     hbase ${KYLIN_EXTRA_START_OPTS} \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
-    -Dlog4j.configuration=kylin-server-log4j.properties \
+    -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-server-log4j.properties \
     -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true \
     -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=true \
     -Djava.endorsed.dirs=${tomcat_root}/endorsed  \
@@ -165,8 +165,10 @@ then
         then source ${dir}/setenv-tool.sh
     fi
 
+    hbase_original=${HBASE_CLASSPATH}
+    export HBASE_CLASSPATH=${hbase_original}:${KYLIN_HOME}/tool/*
     exec hbase ${KYLIN_EXTRA_START_OPTS} -Dkylin.hive.dependency=${hive_dependency} -Dkylin.hbase.dependency=${hbase_dependency} -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties "$@"
-
+    export HBASE_CLASSPATH=${hbase_original}
 else
     quit "Usage: 'kylin.sh [-v] start' or 'kylin.sh [-v] stop'"
 fi

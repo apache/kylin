@@ -21,6 +21,7 @@ package org.apache.kylin.dimension;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -43,7 +44,7 @@ import com.google.common.base.Preconditions;
  * <p>
  * Due to these limitations hex representation of hash values(with no padding, better with even characters) is more suitable
  */
-public class FixedLenHexDimEnc extends DimensionEncoding {
+public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable{
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(FixedLenHexDimEnc.class);

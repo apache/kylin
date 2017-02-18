@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -48,11 +49,11 @@ import com.google.common.collect.Sets;
 public class DataModelDesc extends RootPersistentEntity {
     private static final Logger logger = LoggerFactory.getLogger(DataModelDesc.class);
 
-    public static enum TableKind {
+    public static enum TableKind implements Serializable{
         FACT, LOOKUP
     }
 
-    public static enum RealizationCapacity {
+    public static enum RealizationCapacity implements Serializable{
         SMALL, MEDIUM, LARGE
     }
 

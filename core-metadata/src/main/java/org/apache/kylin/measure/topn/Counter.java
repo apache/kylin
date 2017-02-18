@@ -22,13 +22,14 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 
 /**
  * Modified from Counter.java in https://github.com/addthis/stream-lib
  * 
  * @param <T>
  */
-public class Counter<T> implements Externalizable {
+public class Counter<T> implements Externalizable, Serializable{
 
     protected T item;
     protected double count;

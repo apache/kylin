@@ -55,15 +55,34 @@
 
         <!-- HBase versions -->
         <hbase-hadoop2.version>1.1.1</hbase-hadoop2.version>
+
+        <!-- Kafka versions -->
         <kafka.version>0.10.1.0</kafka.version>
 
-        <!-- Hadoop deps, keep compatible with hadoop2.version -->
+        <!-- Spark versions -->
+        <spark.version>1.6.3</spark.version>
+        <kryo.version>4.0.0</kryo.version>
+        <!--
+        <reflections.version>0.9.10</reflections.version>
+        -->
+
+        <!-- Calcite Version -->
+        <calcite.version>1.11.0</calcite.version>
+        <avatica.version>1.9.0</avatica.version>
+
+        <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
         <zookeeper.version>3.4.6</zookeeper.version>
         <curator.version>2.7.1</curator.version>
-        <jackson.version>2.2.4</jackson.version>
         <jsr305.version>3.0.1</jsr305.version>
         <guava.version>14.0</guava.version>
+        <jsch.version>0.1.53</jsch.version>
         <commons-cli.version>1.2</commons-cli.version>
+        <commons-lang.version>2.6</commons-lang.version>
+        <commons-io.version>2.5</commons-io.version>
+        <commons-math3.version>3.6.1</commons-math3.version>
+
+        <!-- Calcite deps, keep compatible with calcite.version -->
+        <jackson.version>2.6.3</jackson.version>
 
         <!-- Test Dependency versions -->
         <antlr.version>3.4</antlr.version>
@@ -75,26 +94,16 @@
         <jamm.version>0.3.1</jamm.version>
 
         <!-- Commons -->
-        <commons-lang.version>2.6</commons-lang.version>
         <commons-lang3.version>3.4</commons-lang3.version>
         <commons-collections.version>3.2.2</commons-collections.version>
-        <commons-io.version>2.5</commons-io.version>
         <commons-daemon.version>1.0.15</commons-daemon.version>
         <commons-email.version>1.4</commons-email.version>
-        <commons-math3.version>3.6.1</commons-math3.version>
-
-        <!-- Spark -->
-        <spark.version>1.6.3</spark.version>
 
         <!-- Utility -->
         <log4j.version>1.2.17</log4j.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <reflections.version>0.9.10</reflections.version>
-        <jsch.version>0.1.53</jsch.version>
         <xerces.version>2.11.0</xerces.version>
         <xalan.version>2.7.2</xalan.version>
-        <extendedset.version>1.3.4</extendedset.version>
-        <kryo.version>4.0.0</kryo.version>
         <ehcache.version>2.10.2.2.21</ehcache.version>
         <apache-httpclient.version>4.2.5</apache-httpclient.version>
         <roaring.version>0.6.18</roaring.version>
@@ -110,10 +119,6 @@
         <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
         <opensaml.version>2.6.4</opensaml.version>
         <aspectj.version>1.8.9</aspectj.version>
-
-        <!-- Calcite Version -->
-        <calcite.version>1.11.0</calcite.version>
-        <avatica.version>1.9.0</avatica.version>
 
         <!-- Sonar -->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
@@ -279,6 +284,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.kylin</groupId>
+                <artifactId>kylin-tool-assembly</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kylin</groupId>
                 <artifactId>kylin-it</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -390,6 +400,66 @@
                 <version>${hadoop2.version}</version>
                 <optional>true</optional>
             </dependency>
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${zookeeper.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-framework</artifactId>
+                <version>${curator.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-recipes</artifactId>
+                <version>${curator.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>${jsch.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-cli</groupId>
+                <artifactId>commons-cli</artifactId>
+                <version>${commons-cli.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${commons-lang.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-math3</artifactId>
+                <version>${commons-math3.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+                <scope>provided</scope>
+            </dependency>
 
             <!-- HBase2 dependencies -->
             <dependency>
@@ -461,6 +531,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.calcite.avatica</groupId>
+                <artifactId>avatica-core</artifactId>
+                <version>${avatica.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.calcite.avatica</groupId>
                 <artifactId>avatica</artifactId>
                 <version>${avatica.version}</version>
             </dependency>
@@ -476,22 +551,38 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
             <!-- Spark dependency -->
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-core_2.10</artifactId>
                 <version>${spark.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-sql_2.10</artifactId>
                 <version>${spark.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-hive_2.10</artifactId>
                 <version>${spark.version}</version>
+                <scope>provided</scope>
             </dependency>
+            <dependency>
+                <groupId>com.esotericsoftware</groupId>
+                <artifactId>kryo-shaded</artifactId>
+                <version>${kryo.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Kafka dependency -->
             <dependency>
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka_2.10</artifactId>
@@ -500,26 +591,6 @@
             </dependency>
 
             <!-- Other dependencies -->
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.zookeeper</groupId>
-                <artifactId>zookeeper</artifactId>
-                <version>${zookeeper.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-cli</groupId>
-                <artifactId>commons-cli</artifactId>
-                <version>${commons-cli.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-lang</groupId>
-                <artifactId>commons-lang</artifactId>
-                <version>${commons-lang.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
@@ -531,20 +602,14 @@
                 <version>${commons-collections.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-math3</artifactId>
-                <version>${commons-math3.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${commons-io.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>commons-daemon</groupId>
                 <artifactId>commons-daemon</artifactId>
                 <version>${commons-daemon.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-email</artifactId>
+                <version>${commons-email.version}</version>
             </dependency>
 
             <!-- Logging -->
@@ -571,40 +636,18 @@
                 <version>${slf4j.version}</version>
             </dependency>
 
+            <!-- Test -->
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-email</artifactId>
-                <version>${commons-email.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.findbugs</groupId>
-                <artifactId>jsr305</artifactId>
-                <version>${jsr305.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.reflections</groupId>
-                <artifactId>reflections</artifactId>
-                <version>${reflections.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.jcraft</groupId>
-                <artifactId>jsch</artifactId>
-                <version>${jsch.version}</version>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.dbunit</groupId>
                 <artifactId>dbunit</artifactId>
                 <version>${dbunit.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
@@ -615,6 +658,7 @@
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
                 <version>${h2.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>xerces</groupId>
@@ -627,30 +671,9 @@
                 <version>${xalan.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.n3twork.druid</groupId>
-                <artifactId>extendedset</artifactId>
-                <version>${extendedset.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.esotericsoftware</groupId>
-                <artifactId>kryo-shaded</artifactId>
-                <version>${kryo.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.github.jbellis</groupId>
                 <artifactId>jamm</artifactId>
                 <version>${jamm.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.curator</groupId>
-                <artifactId>curator-framework</artifactId>
-                <version>${curator.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.curator</groupId>
-                <artifactId>curator-recipes</artifactId>
-                <version>${curator.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
@@ -1036,6 +1059,7 @@
         <module>jdbc</module>
         <module>assembly</module>
         <module>tool</module>
+        <module>tool-assembly</module>
         <module>kylin-it</module>
         <module>tomcat-ext</module>
     </modules>

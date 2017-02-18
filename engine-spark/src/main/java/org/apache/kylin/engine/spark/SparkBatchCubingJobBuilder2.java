@@ -18,8 +18,8 @@
 
 package org.apache.kylin.engine.spark;
 
-import org.apache.hadoop.util.ClassUtil;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.EngineFactory;
@@ -53,13 +53,14 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
 
         StringBuilder jars = new StringBuilder();
 
-        StringUtil.appendWithSeparator(jars, findJar("org.htrace.HTraceConfiguration")); // htrace-core.jar
-        StringUtil.appendWithSeparator(jars, findJar("org.apache.htrace.Trace")); // htrace-core.jar
-        StringUtil.appendWithSeparator(jars, findJar("org.cloudera.htrace.HTraceConfiguration")); // htrace-core.jar
-        StringUtil.appendWithSeparator(jars, findJar("org.apache.hadoop.hbase.client.HConnection")); // hbase-client.jar
-        StringUtil.appendWithSeparator(jars, findJar("org.apache.hadoop.hbase.HBaseConfiguration")); // hbase-common.jar
-        StringUtil.appendWithSeparator(jars, findJar("org.apache.hadoop.hbase.util.ByteStringer")); // hbase-protocol.jar
-        StringUtil.appendWithSeparator(jars, findJar("com.yammer.metrics.core.Gauge")); // metrics-core.jar
+        StringUtil.appendWithSeparator(jars, findJar("org.htrace.HTraceConfiguration", null)); // htrace-core.jar
+        StringUtil.appendWithSeparator(jars, findJar("org.apache.htrace.Trace", null)); // htrace-core.jar
+        StringUtil.appendWithSeparator(jars, findJar("org.cloudera.htrace.HTraceConfiguration", null)); // htrace-core.jar
+        StringUtil.appendWithSeparator(jars, findJar("org.apache.hadoop.hbase.client.HConnection", null)); // hbase-client.jar
+        StringUtil.appendWithSeparator(jars, findJar("org.apache.hadoop.hbase.HBaseConfiguration", null)); // hbase-common.jar
+        StringUtil.appendWithSeparator(jars, findJar("org.apache.hadoop.hbase.util.ByteStringer", null)); // hbase-protocol.jar
+        StringUtil.appendWithSeparator(jars, findJar("com.yammer.metrics.core.Gauge", null)); // metrics-core.jar
+        StringUtil.appendWithSeparator(jars, findJar("com.google.common.collect.Maps", "guava")); //guava.jar
 
         StringUtil.appendWithSeparator(jars, seg.getConfig().getSparkAdditionalJars());
         sparkExecutable.setJars(jars.toString());
@@ -73,9 +74,9 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
 
     }
 
-    private String findJar(String className) {
+    private String findJar(String className, String perferLibraryName) {
         try {
-            return ClassUtil.findContainingJar(Class.forName(className));
+            return ClassUtil.findContainingJar(Class.forName(className), perferLibraryName);
         } catch (ClassNotFoundException e) {
             logger.warn("failed to locate jar for class " + className + ", ignore it", e);
         }

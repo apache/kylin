@@ -218,7 +218,7 @@ abstract public class MeasureTypeFactory<T> {
     }
 
     @SuppressWarnings("rawtypes")
-    private static class NeedRewriteOnlyMeasureType extends MeasureType {
+    public static class NeedRewriteOnlyMeasureType extends MeasureType {
 
         private Boolean needRewrite;
 

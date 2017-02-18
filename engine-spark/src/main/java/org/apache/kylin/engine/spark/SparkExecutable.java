@@ -20,8 +20,7 @@ package org.apache.kylin.engine.spark;
 import java.io.File;
 import java.util.Map;
 
-import jodd.util.StringUtil;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Logger;
@@ -30,8 +29,6 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 /**
  */
@@ -74,12 +71,16 @@ public class SparkExecutable extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final KylinConfig config = context.getConfig();
-        Preconditions.checkNotNull(config.getSparkHome());
-        Preconditions.checkNotNull(config.getKylinJobJarPath());
+        if (config.getSparkHome() == null) {
+            throw new NullPointerException();
+        }
+        if (config.getKylinJobJarPath() == null) {
+            throw new NullPointerException();
+        }
         String jars = this.getParam(JARS);
 
         String hadoopConf = "/etc/hadoop/conf";
-        if (StringUtil.isNotEmpty(config.getHadoopConfDir())) {
+        if (StringUtils.isNotEmpty(config.getHadoopConfDir())) {
             hadoopConf = config.getHadoopConfDir();
         } else {
             String hiveConf = ClassLoader.getSystemClassLoader().getResource("hive-site.xml").getFile().toString();
@@ -104,7 +105,7 @@ public class SparkExecutable extends AbstractExecutable {
         }
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
+        stringBuilder.append("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.engine.spark.util.SparkEntry ");
 
         Map<String, String> sparkConfs = config.getSparkConfigOverride();
         for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {

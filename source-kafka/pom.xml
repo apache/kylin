@@ -35,23 +35,19 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-mr</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-common</artifactId>
-        </dependency>
-
+        <!-- Provided -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.10</artifactId>
-            <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
+
         <!-- Env & Test -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -76,9 +72,5 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
-
-
     </dependencies>
-
 </project>
