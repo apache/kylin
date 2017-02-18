@@ -44,6 +44,8 @@ Connectivity and APIs
 6. [Connect from MS Excel and PowerBI](tutorial/powerbi.html)
 7. [Connect from Tableau 8](tutorial/tableau.html)
 8. [Connect from Tableau 9](tutorial/tableau_91.html)
+9. [Connect from SQuirreL](tutorial/squirrel.html)
+10. [Connect from Apache Flink](tutorial/flink.html)
 
 Operations
 ------------  

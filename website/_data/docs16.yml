@@ -45,6 +45,8 @@
   - tutorial/tableau_91
   - tutorial/powerbi
   - tutorial/odbc
+  - tutorial/flink
+  - tutorial/squirrel
 
 - title: How To
   docs:
