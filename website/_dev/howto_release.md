@@ -420,8 +420,14 @@ After publish the release, you need generate the binary packages and then put th
 
 * Git checkout the tag for current release; 
 * Make a binary package by refering to [this doc](howto_package.html);
-* Sign the generated binary package with gpg, e.g,: "gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz"
-* Generate the md5 file for the binary package, e.g,: "md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5"
+* Sign the generated binary package with gpg, e.g,:
+{% highlight bash %}
+gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin-1.5.0-bin.tar.gz
+{% endhighlight %}
+* Generate the md5 file for the binary package, e.g,:
+{% highlight bash %}
+md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5
+{% endhighlight %}
 * Move the binary package, the signature file and the md5 fileto the svn release folder for this version;
 * For different Hadoop/HBase version, you may need repeat the above steps;
 * Add the files and then commit the svn changes. 

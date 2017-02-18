@@ -35,7 +35,7 @@ build/script/package.sh
 ##### Build Package for CDH 5.7
 ```
 cd kylin
-build/script/package.sh -P cdh 5.7
+build/script/package.sh -P cdh5.7
 ```
 
 ##### Build Package for HBase 0.98.x
