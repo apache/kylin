@@ -209,12 +209,12 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
             String aggOutName;
-            if (aggFunc.needRewriteField()) {
+            if (aggFunc != null && aggFunc.needRewriteField()) {
                 aggOutName = aggFunc.getRewriteFieldName();
             } else {
                 AggregateCall aggCall = this.rewriteAggCalls.get(i);
                 int index = aggCall.getArgList().get(0);
-                aggOutName = aggFunc.getExpression() + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity() + "_";
+                aggOutName = getSqlFuncName(aggCall) + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity() + "_";
             }
             TblColRef aggOutCol = TblColRef.newInnerColumn(aggOutName, TblColRef.InnerDataTypeEnum.LITERAL);
             columns.add(aggOutCol);
