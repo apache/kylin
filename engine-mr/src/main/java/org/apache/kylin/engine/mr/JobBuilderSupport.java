@@ -45,6 +45,8 @@ public class JobBuilderSupport {
     final protected CubeSegment seg;
     final protected String submitter;
 
+    final public static String LayeredCuboidFolderPrefix = "level_";
+
     public JobBuilderSupport(CubeSegment seg, String submitter) {
         Preconditions.checkNotNull(seg, "segment cannot be null");
         this.config = new JobEngineConfig(seg.getConfig());
@@ -195,9 +197,9 @@ public class JobBuilderSupport {
 
     public static String getCuboidOutputPathsByLevel(String cuboidRootPath, int level) {
         if (level == 0) {
-            return cuboidRootPath + "base_cuboid";
+            return cuboidRootPath + LayeredCuboidFolderPrefix + "base_cuboid";
         } else {
-            return cuboidRootPath + "level_" + level + "_cuboid";
+            return cuboidRootPath + LayeredCuboidFolderPrefix + level + "_cuboid";
         }
     }
 
