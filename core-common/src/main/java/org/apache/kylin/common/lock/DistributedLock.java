@@ -16,15 +16,22 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.job.lock;
+package org.apache.kylin.common.lock;
 
-/**
- * Among a Kylin cluster, usually only one node runs as the job engine and does the scheduling of build jobs.
- * This interface is for such negotiation. 
- */
-public interface JobLock {
-    
-    boolean lockJobEngine();
+import java.io.Closeable;
+import java.util.concurrent.Executor;
 
-    void unlockJobEngine();
+public interface DistributedLock extends Closeable {
+
+    boolean lockPath(String lockPath, String lockClient);
+
+    boolean isPathLocked(String lockPath);
+
+    void unlockPath(String lockPath, String lockClient);
+
+    Closeable watchPath(String watchPath, Executor watchExecutor, Watcher process);
+
+    public interface Watcher {
+        void process(String path, String data);
+    }
 }
