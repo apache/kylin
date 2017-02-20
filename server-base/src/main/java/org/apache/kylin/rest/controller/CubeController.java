@@ -441,10 +441,6 @@ public class CubeController extends BasicController {
             throw new BadRequestException("Invalid Cube name, only letters, numbers and underline supported.");
         }
 
-        int aggSize = desc.getAggregationGroups().size();
-        if (aggSize <= 0)
-            throw new IllegalStateException("AggregationGroup size is: " + aggSize + ", there should be at least one AggregationGroup!");
-
         try {
             desc.setUuid(UUID.randomUUID().toString());
             String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
