@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
@@ -44,8 +45,10 @@ import com.google.common.hash.Hashing;
 public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(FactDistinctColumnsMapper.class);
-    
-    public static enum RawDataCounter { BYTES };
+
+    public static enum RawDataCounter {
+        BYTES
+    };
 
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
@@ -132,7 +135,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     @Override
     public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         String[] row = flatTableInputFormat.parseMapperInput(record);
-        
+
         context.getCounter(RawDataCounter.BYTES).increment(countSizeInBytes(row));
 
         for (int i = 0; i < factDictCols.size(); i++) {
@@ -188,29 +191,10 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     private long countSizeInBytes(String[] row) {
         int size = 0;
         for (String s : row) {
-            size += s == null ? 1 : utf8Length(s);
+            size += s == null ? 1 : StringUtil.utf8Length(s);
             size++; // delimiter
         }
         return size;
-    }
-    
-    // calculating length in UTF-8 of Java String without actually encoding it
-    public static int utf8Length(CharSequence sequence) {
-        int count = 0;
-        for (int i = 0, len = sequence.length(); i < len; i++) {
-            char ch = sequence.charAt(i);
-            if (ch <= 0x7F) {
-                count++;
-            } else if (ch <= 0x7FF) {
-                count += 2;
-            } else if (Character.isHighSurrogate(ch)) {
-                count += 4;
-                ++i;
-            } else {
-                count += 3;
-            }
-        }
-        return count;
     }
 
     private void putRowKeyToHLL(String[] row) {
