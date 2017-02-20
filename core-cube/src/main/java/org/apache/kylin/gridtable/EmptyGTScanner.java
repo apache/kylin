@@ -22,20 +22,13 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class EmptyGTScanner implements IGTScanner {
-    private long reportScannedRowCount;
 
-    public EmptyGTScanner(long reportScannedRowCount) {
-        this.reportScannedRowCount = reportScannedRowCount;
+    public EmptyGTScanner() {
     }
 
     @Override
     public GTInfo getInfo() {
         return null;
-    }
-
-    @Override
-    public long getScannedRowCount() {
-        return reportScannedRowCount;
     }
 
     @Override

@@ -45,26 +45,19 @@ public class StorageResponseGTScatter implements IGTScanner {
     private IPartitionStreamer partitionStreamer;
     private Iterator<byte[]> blocks;
     private ImmutableBitSet columns;
-    private long totalScannedCount;
     private int storagePushDownLimit = -1;
 
-    public StorageResponseGTScatter(GTInfo info, IPartitionStreamer partitionStreamer, ImmutableBitSet columns, long totalScannedCount, int storagePushDownLimit) {
+    public StorageResponseGTScatter(GTInfo info, IPartitionStreamer partitionStreamer, ImmutableBitSet columns, int storagePushDownLimit) {
         this.info = info;
         this.partitionStreamer = partitionStreamer;
         this.blocks = partitionStreamer.asByteArrayIterator();
         this.columns = columns;
-        this.totalScannedCount = totalScannedCount;
         this.storagePushDownLimit = storagePushDownLimit;
     }
 
     @Override
     public GTInfo getInfo() {
         return info;
-    }
-
-    @Override
-    public long getScannedRowCount() {
-        return totalScannedCount;
     }
 
     @Override

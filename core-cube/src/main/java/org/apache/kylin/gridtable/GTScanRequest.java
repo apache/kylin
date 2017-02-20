@@ -42,7 +42,7 @@ import com.google.common.collect.Sets;
 public class GTScanRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(GTScanRequest.class);
-    
+
     //it's not necessary to increase the checkInterval to very large because the check cost is not high
     //changing it might break org.apache.kylin.query.ITKylinQueryTest.testTimeoutQuery()
     public static final int terminateCheckInterval = 100;
@@ -175,8 +175,8 @@ public class GTScanRequest {
     public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, boolean hasPreFiltered, boolean spillEnabled) throws IOException {
         IGTScanner result = scanner;
         if (!filterToggledOn) { //Skip reading this section if you're not profiling! 
-            int scanned = lookAndForget(result);
-            return new EmptyGTScanner(scanned);
+            lookAndForget(result);
+            return new EmptyGTScanner();
         } else {
 
             if (this.hasFilterPushDown() && !hasPreFiltered) {
@@ -184,9 +184,8 @@ public class GTScanRequest {
             }
 
             if (!aggrToggledOn) {//Skip reading this section if you're not profiling! 
-                long scanned = result.getScannedRowCount();
                 lookAndForget(result);
-                return new EmptyGTScanner(scanned);
+                return new EmptyGTScanner();
             }
 
             if (!this.isAllowStorageAggregation()) {

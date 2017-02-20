@@ -23,7 +23,6 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.DataFormatException;
 
@@ -146,8 +145,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
         logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", shardNum, cuboidBaseShard, rawScans.size());
 
-        final AtomicLong totalScannedCount = new AtomicLong(0);
-
         // KylinConfig: use env instance instead of CubeSegment, because KylinConfig will share among queries
         // for different cubes until redeployment of coprocessor jar.
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
@@ -205,7 +202,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                         Stats stats = result.getStats();
                                         queryContext.addAndGetScannedRows(stats.getScannedRowCount());
                                         queryContext.addAndGetScannedBytes(stats.getScannedBytes());
-                                        totalScannedCount.addAndGet(stats.getScannedRowCount());
 
                                         // if any other region has responded with error, skip further processing
                                         if (regionErrorHolder.get() != null) {
@@ -249,7 +245,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
             });
         }
 
-        return new StorageResponseGTScatter(fullGTInfo, new DummyPartitionStreamer(epResultItr), scanRequest.getColumns(), totalScannedCount.get(), scanRequest.getStoragePushDownLimit());
+        return new StorageResponseGTScatter(fullGTInfo, new DummyPartitionStreamer(epResultItr), scanRequest.getColumns(), scanRequest.getStoragePushDownLimit());
     }
 
     private ByteString serializeGTScanReq(GTScanRequest scanRequest) {
@@ -317,14 +313,14 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         CubeVisitResponse.ErrorInfo errorInfo = response.getErrorInfo();
 
         switch (errorInfo.getType()) {
-            case UNKNOWN_TYPE:
-                return new RuntimeException("Coprocessor aborts: " + errorInfo.getMessage());
-            case TIMEOUT:
-                return new KylinTimeoutException(errorInfo.getMessage());
-            case RESOURCE_LIMIT_EXCEEDED:
-                return new ResourceLimitExceededException("Coprocessor resource limit exceeded: " + errorInfo.getMessage());
-            default:
-                throw new AssertionError("Unknown error type: " + errorInfo.getType());
+        case UNKNOWN_TYPE:
+            return new RuntimeException("Coprocessor aborts: " + errorInfo.getMessage());
+        case TIMEOUT:
+            return new KylinTimeoutException(errorInfo.getMessage());
+        case RESOURCE_LIMIT_EXCEEDED:
+            return new ResourceLimitExceededException("Coprocessor resource limit exceeded: " + errorInfo.getMessage());
+        default:
+            throw new AssertionError("Unknown error type: " + errorInfo.getType());
         }
     }
 }

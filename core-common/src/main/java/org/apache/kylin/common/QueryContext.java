@@ -49,7 +49,7 @@ public class QueryContext {
     }
 
     public String getQueryId() {
-        return queryId;
+        return queryId == null ? "" : queryId;
     }
 
     public void setQueryId(String queryId) {

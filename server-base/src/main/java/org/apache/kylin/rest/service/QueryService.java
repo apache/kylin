@@ -361,14 +361,16 @@ public class QueryService extends BasicService {
                     sqlResponse = query(sqlRequest);
 
                     long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
-                    long scancountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
+                    long scanCountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
+                    long scanBytesThreshold = kylinConfig.getQueryScanBytesCacheThreshold();
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                     logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
                             String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()), String.valueOf(sqlResponse.getTotalScanCount()));
-                    if (checkCondition(queryCacheEnabled, "query cache is disabled") && //
-                            checkCondition(!sqlResponse.getIsException(), "query has exception") && //
-                            checkCondition(sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold, "query is too lightweight with duration: {} ({}), scan count: {} ({})", sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(), scancountThreshold) && // 
-                            checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(), "query response is too large: {} ({})", sqlResponse.getResults().size(), kylinConfig.getLargeQueryThreshold())) {
+                    if (checkCondition(queryCacheEnabled, "query cache is disabled") //
+                            && checkCondition(!sqlResponse.getIsException(), "query has exception") //
+                            && checkCondition(sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scanCountThreshold || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
+                                    "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})", sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(), scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
+                            && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(), "query response is too large: {} ({})", sqlResponse.getResults().size(), kylinConfig.getLargeQueryThreshold())) {
                         cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                     }
 

@@ -74,21 +74,6 @@ public class ITKylinQueryTest extends KylinTestBase {
         clean();
     }
 
-    protected String getQueryFolderPrefix() {
-        return "";
-    }
-
-    protected Throwable findRoot(Throwable throwable) {
-        while (true) {
-            if (throwable.getCause() != null) {
-                throwable = throwable.getCause();
-            } else {
-                break;
-            }
-        }
-        return throwable;
-    }
-
     @Test
     public void testTimeoutQuery() throws Exception {
         try {
@@ -121,9 +106,6 @@ public class ITKylinQueryTest extends KylinTestBase {
             try {
                 runSQL(sqlFile, false, false);
             } catch (SQLException e) {
-
-                System.out.println(e.getMessage());
-
                 if (findRoot(e) instanceof KylinTimeoutException) {
                     //expected
                     continue;

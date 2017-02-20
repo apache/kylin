@@ -37,7 +37,7 @@ message CubeVisitRequest {
     required string kylinProperties = 5; // kylin properties
     optional string queryId = 6;
     optional bool spillEnabled = 7 [default = true];
-    optional int64 maxScanBytes = 8; // 0 means no limit
+    optional int64 maxScanBytes = 8; // must be positive
     message IntList {
         repeated int32 ints = 1;
     }

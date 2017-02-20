@@ -106,11 +106,6 @@ public class GTSimpleMemStore implements IGTStore {
             }
 
             @Override
-            public long getScannedRowCount() {
-                return count;
-            }
-
-            @Override
             public void close() throws IOException {
             }
 

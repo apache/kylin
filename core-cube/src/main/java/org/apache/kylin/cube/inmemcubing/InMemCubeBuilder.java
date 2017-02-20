@@ -564,10 +564,5 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         public GTInfo getInfo() {
             return info;
         }
-
-        @Override
-        public long getScannedRowCount() {
-            return 0L;
-        }
     }
 }

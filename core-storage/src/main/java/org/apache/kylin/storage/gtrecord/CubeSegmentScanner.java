@@ -96,11 +96,6 @@ public class CubeSegmentScanner implements IGTScanner {
         return scanRequest == null ? null : scanRequest.getInfo();
     }
 
-    @Override
-    public long getScannedRowCount() {
-        return scanner.getScannedRowCount();
-    }
-
     public CubeSegment getSegment() {
         return this.cubeSeg;
     }

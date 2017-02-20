@@ -18,6 +18,10 @@
 
 package org.apache.kylin.storage.gtrecord;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
+
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.EmptyGTScanner;
 import org.apache.kylin.gridtable.GTInfo;
@@ -29,10 +33,6 @@ import org.apache.kylin.metadata.model.ISegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
-
 public class ScannerWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(ScannerWorker.class);
@@ -41,7 +41,7 @@ public class ScannerWorker {
     public ScannerWorker(ISegment segment, Cuboid cuboid, GTScanRequest scanRequest, String gtStorage) {
         if (scanRequest == null) {
             logger.info("Segment {} will be skipped", segment);
-            internal = new EmptyGTScanner(0);
+            internal = new EmptyGTScanner();
             return;
         }
 
@@ -62,9 +62,4 @@ public class ScannerWorker {
     public void close() throws IOException {
         internal.close();
     }
-
-    public long getScannedRowCount() {
-        return internal.getScannedRowCount();
-    }
-
 }

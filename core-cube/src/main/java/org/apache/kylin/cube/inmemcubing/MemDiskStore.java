@@ -277,12 +277,6 @@ public class MemDiskStore implements IGTStore, Closeable {
         public GTInfo getInfo() {
             return info;
         }
-
-        @Override
-        public long getScannedRowCount() {
-            return count;
-        }
-
     }
 
     private class Writer implements IGTWriter {

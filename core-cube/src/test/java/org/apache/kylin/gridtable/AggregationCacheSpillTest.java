@@ -68,11 +68,6 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
             }
 
             @Override
-            public long getScannedRowCount() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
             public void close() throws IOException {
             }
 
@@ -106,11 +101,6 @@ public class AggregationCacheSpillTest extends LocalFileMetadataTestCase {
             @Override
             public GTInfo getInfo() {
                 return INFO;
-            }
-
-            @Override
-            public long getScannedRowCount() {
-                throw new UnsupportedOperationException();
             }
 
             @Override

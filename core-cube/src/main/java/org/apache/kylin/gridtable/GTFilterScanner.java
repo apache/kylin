@@ -63,11 +63,6 @@ public class GTFilterScanner implements IGTScanner {
     }
 
     @Override
-    public long getScannedRowCount() {
-        return inputScanner.getScannedRowCount();
-    }
-
-    @Override
     public void close() throws IOException {
         inputScanner.close();
     }

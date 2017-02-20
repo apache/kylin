@@ -93,31 +93,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
 
     @Override
     public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
-        final IGTScanner scanner = getGTScannerInternal(scanRequest);
-
-        return new IGTScanner() {
-            @Override
-            public GTInfo getInfo() {
-                return scanner.getInfo();
-            }
-
-            @Override
-            public long getScannedRowCount() {
-                long sum = 0;
-                sum += scanner.getScannedRowCount();
-                return sum;
-            }
-
-            @Override
-            public void close() throws IOException {
-                scanner.close();
-            }
-
-            @Override
-            public Iterator<GTRecord> iterator() {
-                return scanner.iterator();
-            }
-        };
+        return getGTScannerInternal(scanRequest);
     }
 
     //for non-sharding cases it will only return one byte[] with not shard at beginning
@@ -226,11 +202,6 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             @Override
             public GTInfo getInfo() {
                 return fullGTInfo;
-            }
-
-            @Override
-            public long getScannedRowCount() {
-                return decorateScanner.getScannedRowCount();
             }
 
             @Override

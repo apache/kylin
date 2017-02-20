@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
  * It is desinged to run in hadoop CLI, both in sandbox or in real hadoop environment
  */
 public class SandboxMetastoreCLI {
-
     private static final Logger logger = LoggerFactory.getLogger(SandboxMetastoreCLI.class);
 
     public static void main(String[] args) throws Exception {

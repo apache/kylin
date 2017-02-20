@@ -18,7 +18,6 @@
 
 package org.apache.kylin.gridtable;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -53,7 +52,6 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
 
         GTBuilder builder = rebuild(table);
         IGTScanner scanner = scan(table);
-        assertEquals(builder.getWrittenRowCount(), scanner.getScannedRowCount());
     }
 
     @Test
@@ -64,7 +62,6 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
 
         GTBuilder builder = rebuild(table);
         IGTScanner scanner = scan(table);
-        assertEquals(builder.getWrittenRowCount(), scanner.getScannedRowCount());
     }
 
     @Test
@@ -75,7 +72,6 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
 
         GTBuilder builder = rebuild(table);
         IGTScanner scanner = scanAndAggregate(table);
-        assertEquals(builder.getWrittenRowCount(), scanner.getScannedRowCount());
     }
 
     @Test
@@ -86,7 +82,6 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
 
         rebuildViaAppend(table);
         IGTScanner scanner = scan(table);
-        assertEquals(10, scanner.getScannedRowCount());
     }
 
     private IGTScanner scan(GridTable table) throws IOException {
@@ -101,12 +96,11 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
             System.out.println(r);
         }
         scanner.close();
-        System.out.println("Scanned Row Count: " + scanner.getScannedRowCount());
         return scanner;
     }
 
     private IGTScanner scanAndAggregate(GridTable table) throws IOException {
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(0, 2)).setAggrMetrics(setOf(3, 4)).setAggrMetricsFuncs(new String[]{"count", "sum"}).setFilterPushDown(null).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(0, 2)).setAggrMetrics(setOf(3, 4)).setAggrMetricsFuncs(new String[] { "count", "sum" }).setFilterPushDown(null).createGTScanRequest();
         IGTScanner scanner = table.scan(req);
         int i = 0;
         for (GTRecord r : scanner) {
@@ -135,7 +129,6 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
             System.out.println(r);
         }
         scanner.close();
-        System.out.println("Scanned Row Count: " + scanner.getScannedRowCount());
         return scanner;
     }
 

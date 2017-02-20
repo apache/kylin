@@ -692,4 +692,19 @@ public class KylinTestBase {
         return OLAPContext.getThreadLocalContexts().iterator().next();
     }
 
+    protected String getQueryFolderPrefix() {
+        return "";
+    }
+
+    protected Throwable findRoot(Throwable throwable) {
+        while (true) {
+            if (throwable.getCause() != null) {
+                throwable = throwable.getCause();
+            } else {
+                break;
+            }
+        }
+        return throwable;
+    }
+
 }

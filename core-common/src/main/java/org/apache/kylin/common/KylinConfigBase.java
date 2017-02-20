@@ -826,7 +826,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int getLargeQueryThreshold() {
-        return Integer.parseInt(getOptional("kylin.query.large-query-threshold", String.valueOf((int) (getScanThreshold() * 0.1))));
+        return Integer.parseInt(getOptional("kylin.query.large-query-threshold", String.valueOf(1000000)));
     }
 
     public int getDerivedInThreshold() {
@@ -863,6 +863,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public long getQueryScanCountCacheThreshold() {
         return Long.parseLong(this.getOptional("kylin.query.cache-threshold-scan-count", String.valueOf(10 * 1024)));
+    }
+
+    public long getQueryScanBytesCacheThreshold() {
+        return Long.parseLong(this.getOptional("kylin.query.cache-threshold-scan-bytes", String.valueOf(1024 * 1024)));
     }
 
     public boolean isQuerySecureEnabled() {
