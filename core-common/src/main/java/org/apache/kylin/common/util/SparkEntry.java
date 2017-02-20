@@ -15,11 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kylin.engine.spark.util;
+package org.apache.kylin.common.util;
 
 import org.apache.commons.lang.StringUtils;
-
-import org.apache.kylin.common.util.AbstractApplication;
 
 /**
  */
@@ -36,7 +34,7 @@ public final class SparkEntry {
         final String className = args[1];
         final Object o = Class.<AbstractApplication> forName(className).newInstance();
         if (!(o instanceof AbstractApplication)) {
-            throw new IllegalArgumentException(String.valueOf(className + " is not a subClass of AbstractSparkApplication"));
+            throw new IllegalArgumentException(String.valueOf(className + " is not a subClass of AbstractApplication"));
         }
         String[] appArgs = new String[args.length - 2];
         for (int i = 2; i < args.length; i++) {
