@@ -37,7 +37,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
@@ -161,11 +160,6 @@ public class HBaseConnection {
         }
         if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
             conf.set("hbase.fs.tmp.dir", "/tmp");
-        }
-
-        // set RPC timeout
-        if (kylinConf.getQueryCoprocessorTimeoutSeconds() > 0) {
-            conf.set(HConstants.HBASE_RPC_TIMEOUT_KEY, "" + (1000 * kylinConf.getQueryCoprocessorTimeoutSeconds()));
         }
 
         return conf;
