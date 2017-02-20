@@ -101,6 +101,11 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
 
     this.initAliasMapByModelSchema=function(metaModel){
       var rootFactTable = VdmUtil.removeNameSpace(metaModel.model.fact_table);
+      this.tableAliasMap={};
+      this.aliasTableMap={};
+      this.availableFactTables=[];
+      this.availableLookupTables=[];
+      this.aliasName=[];
       this.availableFactTables.push(rootFactTable);
       this.aliasName.push(rootFactTable);
       this.aliasTableMap[rootFactTable]=metaModel.model.fact_table;
@@ -125,6 +130,9 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
     }
     this.getColumnTypeByColumnName=function(column){
       return TableModel.columnNameTypeMap[this.aliasTableMap[VdmUtil.getNameSpaceTopName(column)]+'.'+VdmUtil.removeNameSpace(column)];
+    }
+    this.getColumnsByAlias=function(alias){
+      return TableModel.getColumnsByTable(this.aliasTableMap[alias]);
     }
 
 });

@@ -177,7 +177,7 @@
                             </div>
                         </div>
                     </div>
-                    <div  ng-if="availableLookupTables.indexOf(newDimension.table)!=-1">
+                    <div  ng-if="modelsManager.availableLookupTables.indexOf(newDimension.table)!=-1">
                         <div  class="row">
                             <label class="control-label col-xs-12 col-sm-3 no-padding-right font-color-default">
                                 <b>Type</b>
@@ -217,7 +217,7 @@
                         <div class="box-body">
                           <ul class="list-unstyled columns-region">
                               <!--FactTable-->
-                              <div ng-repeat="table in availableFactTables track by $index"   class="panel-default " >
+                              <div ng-repeat="table in modelsManager.availableFactTables track by $index"   class="panel-default " >
                                 <h4>{{table}}&nbsp;[FactTable]</h4>
                                 <table class="table table-striped table-hover ng-scope">
                                   <tr >
@@ -243,7 +243,7 @@
                                 </table>
                               </div>
                               <!--LookUp Table-->
-                              <div ng-repeat="table in availableLookupTables track by $index"  class="panel-default" >
+                              <div ng-repeat="table in modelsManager.availableLookupTables track by $index"  class="panel-default" >
                                 <h4>{{table}}&nbsp;[LookupTable]</h4>
                                 <table class="table table-striped table-hover ng-scope">
                                   <tr class="row" >

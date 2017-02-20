@@ -23,11 +23,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
   $scope.cubeConfig = cubeConfig;
   $scope.metaModel = {};
   $scope.modelsManager = modelsManager;
-  $scope.tableAliasMap=$scope.modelsManager.tableAliasMap;
-  $scope.aliasTableMap=$scope.modelsManager.aliasTableMap;
-  $scope.availableFactTables =$scope.modelsManager.availableFactTables;
-  $scope.availableLookupTables =$scope.modelsManager.availableLookupTables;
-  $scope.aliasName=$scope.modelsManager.aliasName;
+
   //add or edit ?
   var absUrl = $location.absUrl();
   $scope.cubeMode = absUrl.indexOf("/cubes/add") != -1 ? 'addNewCube' : absUrl.indexOf("/cubes/edit") != -1 ? 'editExistCube' : 'default';
@@ -86,41 +82,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.store.supportedEncoding = $scope.cubeConfig.encodings;
   })
 
-  $scope.getDatabaseByColumnName=function(column){
-    return  VdmUtil.getNameSpaceTopName($scope.aliasTableMap[VdmUtil.getNameSpaceTopName(column)])
-  }
-  $scope.getColumnTypeByAliasName=function(column){
-    return TableModel.columnNameTypeMap[$scope.aliasTableMap[VdmUtil.getNameSpaceTopName(column)]+'.'+VdmUtil.removeNameSpace(column)];
-  }
-  $scope.getEncodings =function (name){
-    var filterName=name;
-    var columnType= modelsManager.getColumnTypeByColumnName(filterName);
-    var matchList=VdmUtil.getObjValFromLikeKey($scope.store.encodingMaps,columnType);
-    var encodings =$scope.store.supportedEncoding,filterEncoding;
-    if($scope.isEdit){
-      var rowkey_columns=$scope.cubeMetaFrame.rowkey.rowkey_columns;
-      if(rowkey_columns&&filterName){
-        for(var s=0;s<rowkey_columns.length;s++){
-          var database=$scope.getDatabaseByColumnName(rowkey_columns[s].column);
-          if(filterName==rowkey_columns[s].column){
-            var version=rowkey_columns[s].encoding_version;
-            var noLenEncoding=rowkey_columns[s].encoding.replace(/:\d+/,"");
-            filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'value',noLenEncoding+(version?"[v"+version+"]":"[v1]"),'suggest',true)
-            matchList.push(noLenEncoding);
-            filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList);
-            break;
-          }
-        }
-      }else{
-        filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest',true);
-        filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList)
-      }
-    }else{
-      filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest',true);
-      filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList)
-    }
-    return filterEncoding;
-  }
   $scope.getColumnsByAlias = function (alias) {
     var temp = [];
     angular.forEach(TableModel.selectProjectTables, function (table) {
@@ -145,7 +106,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     if (!alias) {
       return [];
     }
-    var tableColumns = $scope.getColumnsByAlias(alias);
+    var tableColumns = $scope.modelsManager.getColumnsByAlias(alias);
     var tableDim = _.find($scope.metaModel.model.dimensions, function (dimension) {
       return dimension.table == alias
     });
@@ -229,7 +190,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     var me_columns = [];
     //add cube dimension column for specific measure
     angular.forEach($scope.cubeMetaFrame.dimensions,function(dimension,index){
-      if($scope.availableFactTables.indexOf(dimension.table)==-1){
+      if($scope.modelsManager.availableFactTables.indexOf(dimension.table)==-1){
         return;
       }
       if(dimension.column && dimension.derived == null){
@@ -261,23 +222,14 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
            me_columns.push(measure.function.parameter.value);
          }
     });
-
-    var unique = []
-
-    angular.forEach(me_columns, function (column) {
-        if (unique.indexOf(column) === -1) {
-          unique.push(column);
-        }
-      });
-
-      return unique;
+    return distinct_array(me_columns);
 
   };
 
 
 
   $scope.getColumnType = function (_column, alias) {
-    var columns = $scope.getColumnsByAlias(alias);
+    var columns = $scope.modelsManager.getColumnsByAlias(alias);
     var type;
     angular.forEach(columns, function (column) {
       if (_column === column.name) {
