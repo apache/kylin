@@ -95,9 +95,9 @@ public class MergeDictionaryStep extends AbstractExecutable {
     /**
      * For the new segment, we need to create dictionaries for it, too. For
      * those dictionaries on fact table, create it by merging underlying
-     * dictionaries For those dictionaries on lookup table, just copy it from
-     * any one of the merging segments, it's guaranteed to be consistent(checked
-     * in CubeSegmentValidator)
+     * dictionaries. For those dictionaries on lookup table, just copy them from
+     * the latest one of the merging segments( https://issues.apache.org/jira/browse/KYLIN-2457),
+     * which is reasonable under the assumption that lookup tables would be either static or incremental.
      *
      * @param cube
      * @param newSeg
@@ -135,9 +135,9 @@ public class MergeDictionaryStep extends AbstractExecutable {
             }
             mergeDictionaries(dictMgr, newSeg, dictInfos, col);
         }
-
+        CubeSegment lastSeg = mergingSegments.get(mergingSegments.size() - 1);
         for (TblColRef col : colsNeedCopyDict) {
-            String path = mergingSegments.get(0).getDictResPath(col);
+            String path = lastSeg.getDictResPath(col);
             newSeg.putDictResPath(col, path);
         }
     }
@@ -151,9 +151,9 @@ public class MergeDictionaryStep extends AbstractExecutable {
     }
 
     /**
-     * make snapshots for the new segment by copying from one of the underlying
-     * merging segments. it's guaranteed to be consistent(checked in
-     * CubeSegmentValidator)
+     * make snapshots for the new segment by copying from the latest one of the underlying
+     * merging segments. It's guaranteed to be consistent under the assumption that lookup tables
+     * would be either static or incremental.
      *
      * @param cube
      * @param newSeg
