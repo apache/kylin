@@ -183,6 +183,12 @@ public final class OrderedProperties implements Serializable {
         return new LinkedHashSet<Map.Entry<String, String>>(properties.entrySet());
     }
 
+    public void putAll(OrderedProperties others) {
+        for (Map.Entry<String, String> each : others.entrySet()) {
+            properties.put(each.getKey(), each.getValue());
+        }
+    }
+
     /**
      * See {@link Properties#load(InputStream)}.
      */

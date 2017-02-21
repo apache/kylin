@@ -20,6 +20,7 @@ package org.apache.kylin.common;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +44,6 @@ import org.slf4j.LoggerFactory;
 public class KylinConfig extends KylinConfigBase {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(KylinConfig.class);
-
 
     /** Kylin properties file name */
     public static final String KYLIN_CONF_PROPERTIES_FILE = "kylin.properties";
@@ -182,11 +182,11 @@ public class KylinConfig extends KylinConfigBase {
         props.load(new StringReader(propsInStr));
         return createKylinConfig(props);
     }
-    
+
     public static KylinConfig createKylinConfig(KylinConfig another) {
         return createKylinConfig(another.getAllProperties());
     }
-    
+
     public static KylinConfig createKylinConfig(Properties prop) {
         KylinConfig kylinConfig = new KylinConfig();
         kylinConfig.reloadKylinConfig(prop);
@@ -225,31 +225,58 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public static Properties getKylinProperties() {
+        Properties conf = new Properties();
+        try {
+            OrderedProperties orderedProperties = getKylinOrderedProperties();
+            for (Map.Entry<String, String> each: orderedProperties.entrySet()) {
+                conf.put(each.getKey(), each.getValue());
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return conf;
+    }
+
+    public static OrderedProperties getKylinOrderedProperties() throws FileNotFoundException {
         File propFile = getKylinPropertiesFile();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
             throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
         }
-        Properties conf = new Properties();
+
+        final InputStream is = new FileInputStream(propFile);
         try {
-            FileInputStream is = new FileInputStream(propFile);
-            conf.load(is);
-            IOUtils.closeQuietly(is);
-            conf = BCC.check(conf);
+            OrderedProperties orderedProperties = new OrderedProperties();
+            orderedProperties.load(is);
+            orderedProperties = BCC.check(orderedProperties);
 
             File propOverrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
             if (propOverrideFile.exists()) {
                 FileInputStream ois = new FileInputStream(propOverrideFile);
-                Properties propOverride = new Properties();
-                propOverride.load(ois);
-                IOUtils.closeQuietly(ois);
-                conf.putAll(BCC.check(propOverride));
+                try {
+                    OrderedProperties propOverride = new OrderedProperties();
+                    propOverride.load(ois);
+                    orderedProperties.putAll(BCC.check(propOverride));
+                } finally {
+                    IOUtils.closeQuietly(ois);
+                }
             }
+            return orderedProperties;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(is);
         }
+    }
 
-        return conf;
+    public static String getConfigAsString() throws IOException {
+        OrderedProperties orderedProperties = getKylinOrderedProperties();
+        final StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        }
+        return sb.toString();
     }
 
     /**
@@ -298,23 +325,6 @@ public class KylinConfig extends KylinConfigBase {
             getAllProperties().store(fos, file.getAbsolutePath());
         } finally {
             IOUtils.closeQuietly(fos);
-        }
-    }
-
-    public String getConfigAsString() throws IOException {
-        final File propertiesFile = getKylinPropertiesFile();
-        final InputStream is = new FileInputStream(propertiesFile);
-        try {
-            OrderedProperties orderedProperties = new OrderedProperties();
-            orderedProperties.load(is);
-            orderedProperties = BCC.check(orderedProperties);
-            final StringBuilder sb = new StringBuilder();
-            for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
-                sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
-            }
-            return sb.toString();
-        } finally {
-            IOUtils.closeQuietly(is);
         }
     }
 
