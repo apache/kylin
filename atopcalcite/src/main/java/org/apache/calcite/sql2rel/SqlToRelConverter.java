@@ -16,6 +16,25 @@
  */
 package org.apache.calcite.sql2rel;
 
+import static org.apache.calcite.sql.SqlUtil.stripAs;
+import static org.apache.calcite.util.Static.RESOURCE;
+
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.AbstractList;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.apache.calcite.avatica.util.Spaces;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.Convention;
@@ -159,6 +178,7 @@ import org.apache.calcite.util.NumberUtil;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.trace.CalciteTrace;
+import org.slf4j.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -169,27 +189,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.slf4j.Logger;
-
-import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.util.AbstractList;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import static org.apache.calcite.sql.SqlUtil.stripAs;
-import static org.apache.calcite.util.Static.RESOURCE;
 
 /*
  * The code has synced with calcite. Hope one day, we could remove the hardcode override point.
@@ -602,7 +601,7 @@ public class SqlToRelConverter {
          *   LogicalSort (optional)
          *    |- LogicalProject
          *        |- LogicalFilter (optional)
-         *            |- OLAPTableScan
+         *            |- OLAPTableScan or LogicalJoin
          */
         LogicalProject rootPrj = null;
         LogicalSort rootSort = null;
@@ -617,8 +616,8 @@ public class SqlToRelConverter {
 
         RelNode input = rootPrj.getInput();
         if (!(//
-                input.getClass().getSimpleName().equals("OLAPTableScan")//
-                || (input.getClass().getSimpleName().equals("LogicalFilter") && input.getInput(0).getClass().getSimpleName().equals("OLAPTableScan"))//
+                isAmong(input, "OLAPTableScan", "LogicalJoin")//
+                || (isAmong(input, "LogicalFilter") && isAmong(input.getInput(0), "OLAPTableScan", "LogicalJoin"))//
              ))
             return root;
 
@@ -652,6 +651,15 @@ public class SqlToRelConverter {
         validator.setValidatedNodeType(query, validRowType);
 
         return root;
+    }
+
+    private boolean isAmong(RelNode rel, String... names) {
+        String simpleName = rel.getClass().getSimpleName();
+        for (String n : names) {
+            if (simpleName.equals(n))
+                return true;
+        }
+        return false;
     }
 
     private static boolean isStream(SqlNode query) {
