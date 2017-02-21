@@ -21,6 +21,7 @@ package org.apache.kylin.cube;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -48,7 +49,6 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -103,7 +103,6 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
-    @Ignore ("To enable spark in IT, the inner cube removed the percentile measure, so ignore this test")
     @Test
     public void testCiCube() {
         CubeDescManager mgr = CubeDescManager.getInstance(getTestConfig());
@@ -122,10 +121,14 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
             assertArrayEquals(ld.getDerived(), id.getDerived());
         }
         
-        assertEquals(lc.getMeasures().size(), ic.getMeasures().size());
-        for (int i = 0, n = lc.getMeasures().size(); i < n; i++) {
-            MeasureDesc lm = lc.getMeasures().get(i);
-            MeasureDesc im = ic.getMeasures().get(i);
+        // To enable spark in IT, the inner cube removed the percentile measure, so ignore that particular measure
+        List<MeasureDesc> lcMeasures = dropPercentile(lc.getMeasures());
+        List<MeasureDesc> icMeasures = ic.getMeasures();
+        
+        assertEquals(lcMeasures.size(), icMeasures.size());
+        for (int i = 0, n = lcMeasures.size(); i < n; i++) {
+            MeasureDesc lm = lcMeasures.get(i);
+            MeasureDesc im = icMeasures.get(i);
             assertEquals(lm.getName(), im.getName());
             assertEquals(lm.getFunction().getFullExpression(), im.getFunction().getFullExpression());
             assertEquals(lm.getFunction().getReturnType(), im.getFunction().getReturnType());
@@ -140,8 +143,24 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
             assertArrayEquals(lag.getSelectRule().hierarchy_dims, iag.getSelectRule().hierarchy_dims);
             assertArrayEquals(lag.getSelectRule().joint_dims, iag.getSelectRule().joint_dims);
         }
+        
+        assertEquals(lc.listAllColumnDescs().size(), ic.listAllColumnDescs().size());
+        assertEquals(lc.listAllColumns().size(), ic.listAllColumns().size());
+        
+        // test KYLIN-2440
+        assertTrue(lc.listAllColumns().contains(lc.getModel().findColumn("SELLER_ACCOUNT.ACCOUNT_ID")));
+        assertTrue(ic.listAllColumns().contains(ic.getModel().findColumn("SELLER_ACCOUNT.ACCOUNT_ID")));
     }
     
+    private List<MeasureDesc> dropPercentile(List<MeasureDesc> measures) {
+        ArrayList<MeasureDesc> result = new ArrayList<>();
+        for (MeasureDesc m : measures) {
+            if (!m.getFunction().getExpression().toUpperCase().contains("PERCENTILE"))
+                result.add(m);
+        }
+        return result;
+    }
+
     @Test
     public void testGoodInit() throws Exception {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
