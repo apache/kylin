@@ -23,15 +23,28 @@ package org.apache.kylin.dict;
  */
 public class NumberDictionaryForestBuilder extends TrieDictionaryForestBuilder<String> {
 
+    // keep this class for backward compatibility
+    public static class Number2BytesConverter extends org.apache.kylin.dict.Number2BytesConverter {
+        private static final long serialVersionUID = 1L;
+
+        public Number2BytesConverter() {
+            super();
+        }
+
+        public Number2BytesConverter(int maxDigitsBeforeDecimalPoint) {
+            super(maxDigitsBeforeDecimalPoint);
+        }
+    }
+
     public NumberDictionaryForestBuilder() {
-        super(new Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT));
+        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT));
     }
 
     public NumberDictionaryForestBuilder(int baseId) {
-        super(new Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0);
+        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0);
     }
 
     public NumberDictionaryForestBuilder(int baseId, int maxTrieSizeMB) {
-        super(new Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0, maxTrieSizeMB);
+        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0, maxTrieSizeMB);
     }
 }
