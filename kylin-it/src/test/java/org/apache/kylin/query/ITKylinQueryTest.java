@@ -210,7 +210,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testVerifyCountQuery() throws Exception {
-        verifyResultRowCount(getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount");
+        verifyResultRowColCount(getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount");
     }
 
     @Test
@@ -390,13 +390,6 @@ public class ITKylinQueryTest extends KylinTestBase {
 
         // compare the result
         Assert.assertEquals(expectVersion, queriedVersion);
-    }
-
-    @Test
-    public void testSelectStarColumnCount() throws Exception {
-        execAndCompColumnCount("select * from test_kylin_fact limit 10", 11);
-        execAndCompColumnCount("select * from test_kylin_fact", 11);
-        execAndCompColumnCount("select * from     test_kylin_fact left join edw.test_cal_dt on test_kylin_fact.cal_dt = edw.test_cal_dt.CAL_DT    limit 10", 13);
     }
 
     @Test

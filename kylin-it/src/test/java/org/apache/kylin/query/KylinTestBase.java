@@ -46,6 +46,7 @@ import java.util.logging.LogManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
@@ -233,7 +234,7 @@ public class KylinTestBase {
             for (int i = 0; i < columnNames.length; i++) {
                 columnNames[i] = queryTable.getTableMetaData().getColumns()[i].getColumnName();
             }
-            
+
             queryTable = new SortedTable(queryTable, columnNames);
         }
         if (PRINT_RESULT)
@@ -337,7 +338,7 @@ public class KylinTestBase {
         }
     }
 
-    protected void verifyResultRowCount(String queryFolder) throws Exception {
+    protected void verifyResultRowColCount(String queryFolder) throws Exception {
         printInfo("---------- verify result count in folder: " + queryFolder);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
@@ -346,7 +347,9 @@ public class KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             File expectResultFile = new File(sqlFile.getParent(), sqlFile.getName() + ".expected");
-            int expectRowCount = Integer.parseInt(Files.readFirstLine(expectResultFile, Charset.defaultCharset()));
+            Pair<Integer, Integer> pair = getExpectedRowAndCol(expectResultFile);
+            int expectRowCount = pair.getFirst();
+            int expectColCount = pair.getSecond();
 
             // execute Kylin
             printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
@@ -354,9 +357,27 @@ public class KylinTestBase {
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
             // compare the result
-            Assert.assertEquals(queryName, expectRowCount, kylinTable.getRowCount());
-            // assertTableEquals(expectRowCount, kylinTable.getRowCount());
+            if (expectRowCount >= 0)
+                Assert.assertEquals(queryName, expectRowCount, kylinTable.getRowCount());
+
+            if (expectColCount >= 0)
+                Assert.assertEquals(queryName, expectColCount, kylinTable.getTableMetaData().getColumns().length);
         }
+    }
+
+    private Pair<Integer, Integer> getExpectedRowAndCol(File expectResultFile) throws IOException {
+        List<String> lines = Files.readLines(expectResultFile, Charset.forName("UTF-8"));
+        int row = -1;
+        int col = -1;
+        try {
+            row = Integer.parseInt(lines.get(0).trim());
+        } catch (Exception ex) {
+        }
+        try {
+            col = Integer.parseInt(lines.get(1).trim());
+        } catch (Exception ex) {
+        }
+        return Pair.newPair(row, col);
     }
 
     protected void verifyResultContent(String queryFolder) throws Exception {
@@ -370,7 +391,7 @@ public class KylinTestBase {
             File expectResultFile = new File(sqlFile.getParent(), sqlFile.getName() + ".expected.xml");
             IDataSet expect = new FlatXmlDataSetBuilder().build(expectResultFile);
             // Get expected table named "expect". FIXME Only support default table name
-            ITable expectTable = expect.getTable("expect");   
+            ITable expectTable = expect.getTable("expect");
 
             // execute Kylin
             printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
@@ -421,13 +442,13 @@ public class KylinTestBase {
     protected void execAndCompColumnCount(String input, int expectedColumnCount) throws Exception {
         printInfo("---------- test column count: " + input);
         Set<String> sqlSet = ImmutableSet.of(input);
-        
+
         for (String sql : sqlSet) {
             // execute Kylin
             printInfo("Query Result from Kylin - " + sql);
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, sql, sql, false);
-            
+
             try {
                 // compare the result
                 Assert.assertEquals(expectedColumnCount, kylinTable.getTableMetaData().getColumns().length);
@@ -437,7 +458,7 @@ public class KylinTestBase {
             }
         }
     }
-    
+
     protected void execLimitAndValidate(String queryFolder) throws Exception {
         printInfo("---------- test folder: " + new File(queryFolder).getAbsolutePath());
 
@@ -543,13 +564,13 @@ public class KylinTestBase {
             assertTableEquals(h2Table, kylinTable);
         }
     }
-    
+
     protected void assertTableEquals(ITable h2Table, ITable kylinTable) throws DatabaseUnitException {
         HackedDbUnitAssert dbUnit = new HackedDbUnitAssert();
         dbUnit.hackIgnoreIntBigIntMismatch();
         dbUnit.assertEquals(h2Table, kylinTable);
     }
-    
+
     protected void assertTableContains(ITable h2Table, ITable kylinTable) throws DatabaseUnitException {
         HackedDbUnitAssert dbUnit = new HackedDbUnitAssert();
         dbUnit.hackIgnoreIntBigIntMismatch();
