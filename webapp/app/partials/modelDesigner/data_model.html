@@ -130,13 +130,12 @@
                     <ng-form name="lookup_form">
                       <div class="form-group">
                         <div class="row">
-                          <div class="col-xs-9">
+                          <div class="col-xs-12">
                             <div>
                               <select chosen ng-model="newLookup.joinTable" class="col-sm-4"
                                       ng-options="table as table for table in aliasName"
                                       name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true"
-                                      data-placeholder="Join Table Name"
                                       class="chosen-select">
                                 <option value=""> &#45;&#45; From Table &#45;&#45; </option>
                               </select>
@@ -150,7 +149,6 @@
                                       ng-options="table.name as VdmUtil.removeNameSpace(table.name) for table in tableModel.selectProjectTables"
                                       name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true"  ng-change="changeJoinTable()"
-                                      data-placeholder="Lookup Table Name"
                                       class="chosen-select">
                                 <option value=""> &#45;&#45; Select Lookup Table &#45;&#45; </option>
                               </select>
@@ -160,8 +158,8 @@
                       </div>
                     <div class="form-group">
                         <div class="row">
-                            <label class="col-sm-3 control-label font-color-default"><b>Alias</b></label>
-                            <div class="col-sm-6">
+                            <label class="col-sm-6 control-label font-color-default" ><b style="float:right">Table Alias :</b></label>
+                            <div class="col-sm-5">
                               <input type="text" class="form-control " name="joinTable_alias" placeholder="Input Table Alias" ng-required="true"
                                      ng-model="newLookup.alias"  ng-pattern="/^[A-Z_\d]+$/">
                               <small class="help-block red" ng-show="!lookup_form.joinTable_alias.$error.required&&lookup_form.joinTable_alias.$invalid && (lookup_form.joinTable_alias.$dirty||lookup_form.$submitted)"><i class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp; Table alias is invalid(A Combination of numbers, uppercase letters or underscores).</small>
@@ -171,8 +169,8 @@
                     <!--Table Type-->
                     <div class="form-group">
                         <div class="row">
-                          <label class="col-sm-3"></label>
-                          <div class="col-sm-6">
+                          <label class="col-sm-6"></label>
+                          <div class="col-sm-5">
                             <label>
                               <input type="checkbox" ng-model="newLookup.kind" ng-true-value="FACT" ng-false-value="LOOKUP" >&nbsp;Is Limited
                             </label>
@@ -182,7 +180,7 @@
                     </div>
                     <div class="form-group">
                         <div class="row">
-                            <div class="col-xs-9">
+                            <div class="col-xs-12">
                                 <div ng-repeat="joinIndex in [] | range: newLookup.join.primary_key.length">
                                     <div>
                                         <select style="width: 45%" chosen data-placeholder="JoinTable Column"
