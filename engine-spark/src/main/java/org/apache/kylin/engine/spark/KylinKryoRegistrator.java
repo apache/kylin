@@ -18,13 +18,14 @@
 
 package org.apache.kylin.engine.spark;
 
-import com.esotericsoftware.kryo.Kryo;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.apache.spark.serializer.KryoRegistrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import com.esotericsoftware.kryo.Kryo;
 
 /**
  * Registor for registering classes and serializers to Kryo
@@ -163,7 +164,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.dict.DictionaryInfo.class);
         kyroClasses.add(org.apache.kylin.dict.NumberDictionary.class);
         kyroClasses.add(org.apache.kylin.dict.NumberDictionary2.class);
-        kyroClasses.add(org.apache.kylin.dict.NumberDictionaryForestBuilder.Number2BytesConverter.class);
+        kyroClasses.add(org.apache.kylin.dict.Number2BytesConverter.class);
         kyroClasses.add(org.apache.kylin.dict.StringBytesConverter.class);
         kyroClasses.add(org.apache.kylin.dict.TimeStrDictionary.class);
         kyroClasses.add(org.apache.kylin.dict.TrieDictionary.class);
