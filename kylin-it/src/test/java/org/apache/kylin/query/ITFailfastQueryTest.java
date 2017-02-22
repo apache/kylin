@@ -67,7 +67,7 @@ public class ITFailfastQueryTest extends KylinTestBase {
     public void testPartitionExceedMaxScanBytes() throws Exception {
         String key = "kylin.storage.partition.max-scan-bytes";
         long saved = KylinConfig.getInstanceFromEnv().getPartitionMaxScanBytes();
-        KylinConfig.getInstanceFromEnv().setProperty(key, "18000");//very low threshold 
+        KylinConfig.getInstanceFromEnv().setProperty(key, "1000");//very low threshold 
 
         boolean meetExpectedException = false;
         try {
@@ -96,7 +96,7 @@ public class ITFailfastQueryTest extends KylinTestBase {
     public void testPartitionNotExceedMaxScanBytes() throws Exception {
         String key = "kylin.storage.partition.max-scan-bytes";
         long saved = KylinConfig.getInstanceFromEnv().getPartitionMaxScanBytes();
-        KylinConfig.getInstanceFromEnv().setProperty(key, "20000");//enough threshold 
+        KylinConfig.getInstanceFromEnv().setProperty(key, "100000");//enough threshold 
 
         try {
             String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql/query01.sql";
@@ -111,7 +111,7 @@ public class ITFailfastQueryTest extends KylinTestBase {
     public void testQueryExceedMaxScanBytes() throws Exception {
         String key = "kylin.query.max-scan-bytes";
         long saved = KylinConfig.getInstanceFromEnv().getQueryMaxScanBytes();
-        KylinConfig.getInstanceFromEnv().setProperty(key, "30000");//very low threshold 
+        KylinConfig.getInstanceFromEnv().setProperty(key, "1000");//very low threshold 
 
         boolean meetExpectedException = false;
         try {
@@ -140,7 +140,7 @@ public class ITFailfastQueryTest extends KylinTestBase {
     public void testQueryNotExceedMaxScanBytes() throws Exception {
         String key = "kylin.query.max-scan-bytes";
         long saved = KylinConfig.getInstanceFromEnv().getQueryMaxScanBytes();
-        KylinConfig.getInstanceFromEnv().setProperty(key, "40000");//enough threshold 
+        KylinConfig.getInstanceFromEnv().setProperty(key, "100000");//enough threshold 
 
         try {
             String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql/query01.sql";
