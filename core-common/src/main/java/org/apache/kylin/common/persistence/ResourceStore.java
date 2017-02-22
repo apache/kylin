@@ -70,18 +70,14 @@ abstract public class ResourceStore {
 
     private static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
 
-    private static ArrayList<Class<? extends ResourceStore>> getKnownImpl() {
+    private static ArrayList<Class<? extends ResourceStore>> getKnownImpl(KylinConfig kylinConfig) {
         if (knownImpl.isEmpty()) {
             knownImpl.add(FileResourceStore.class);
             try {
-                knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hbase.HBaseResourceStore", ResourceStore.class));
+                String implName = kylinConfig.getResourceStoreImpl();
+                knownImpl.add(ClassUtil.forName(implName, ResourceStore.class));
             } catch (Throwable e) {
                 logger.warn("Failed to load HBaseResourceStore impl class: " + e.toString());
-            }
-            try {
-                knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hdfs.HDFSResourceStore", ResourceStore.class));
-            } catch (Throwable e) {
-                logger.warn("Failed to load HDFSResourceStore impl class: " + e.toString());
             }
         }
         return knownImpl;
@@ -90,7 +86,7 @@ abstract public class ResourceStore {
     private static ResourceStore createResourceStore(KylinConfig kylinConfig) {
         List<Throwable> es = new ArrayList<Throwable>();
         logger.info("Using metadata url " + kylinConfig.getMetadataUrl() + " for resource store");
-        for (Class<? extends ResourceStore> cls : getKnownImpl()) {
+        for (Class<? extends ResourceStore> cls : getKnownImpl(kylinConfig)) {
             try {
                 return cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
             } catch (Throwable e) {

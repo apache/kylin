@@ -957,4 +957,9 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.storage.lock-manager-zk-port", "2181");
     }
 
+    //ResourceStore Impl
+    public String getResourceStoreImpl() {
+        return getOptional("kylin.metadata.default-resource-store-impl", "org.apache.kylin.storage.hbase.HBaseResourceStore");
+    }
+
 }
