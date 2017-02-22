@@ -704,7 +704,6 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     $scope.metaModel.model = modelsManager.getModel(newValue);
     if($scope.metaModel.model){
       $scope.modelsManager.initAliasMapByModelSchema($scope.metaModel);
-      cubesManager.init();
       $scope.cubeMetaFrame=CubeDescModel.createNew({
         model_name:newValue
       })
