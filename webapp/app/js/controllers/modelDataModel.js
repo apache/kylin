@@ -94,6 +94,15 @@ KylinApp.controller('ModelDataModelCtrl', function ($location,$scope, $modal,cub
         };
     };
 
+    $scope.$watch('newLookup.alias',function(newValue,oldValue){
+      if(!newValue){
+        return;
+      }else{
+        for(var i=0;i<$scope.newLookup.join.primary_key.length;i++){
+          $scope.newLookup.join.primary_key[i] = $scope.newLookup.join.primary_key[i].replace(oldValue+'.',newValue+'.');
+        }
+      }
+    });
     $scope.editLookup = function (lookup) {
         $scope.lookupState.editingIndex = lookupList.indexOf(lookup);
         $scope.lookupState.editing = true;

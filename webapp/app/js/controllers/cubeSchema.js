@@ -78,11 +78,11 @@ KylinApp.controller('CubeSchemaCtrl', function ($scope, QueryService, UserServic
                 suggest=false;
               }
               if(typeVersion>1){
-                selecttips="(v"+s;
+                selecttips=" (v"+s;
                 if(s==typeVersion){
-                  selecttips=",suggest)"
+                  selecttips+=",suggest"
                 }
-                selecttips=')';
+                selecttips+=')';
               }
               $scope.store.supportedEncoding.push({
                 "name":name+selecttips,

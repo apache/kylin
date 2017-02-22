@@ -21,7 +21,7 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
   this.cubeMetaFrame = {};
 
   //
-  this.createNew = function () {
+  this.createNew = function (defaultPara) {
     var cubeMeta = {
       "name": "",
       "model_name": "",
@@ -62,7 +62,7 @@ KylinApp.service('CubeDescModel', function (kylinConfig) {
       "override_kylin_properties":{}
     };
 
-    return cubeMeta;
+    return angular.extend(cubeMeta,defaultPara) ;
   };
 
   this.createMeasure = function () {

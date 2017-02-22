@@ -40,47 +40,7 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
     supportedEncoding:[],
     encodingMaps:{}
   }
-  TableModel.getColumnTypeEncodingMap().then(function(data){
-    $scope.store.encodingMaps=data;
-  });
-  CubeService.getValidEncodings({}, function (encodings) {
-    if(encodings){
-      for(var i in encodings)
-        if(VdmUtil.isNotExtraKey(encodings,i)){
-          var value = i
-          var name = value;
-          var typeVersion=+encodings[i]||1;
-          var suggest=false,selecttips='';
-          if(/\d+/.test(""+typeVersion)&&typeVersion>=1){
-            for(var s=1;s<=typeVersion;s++){
-              if(s==typeVersion){
-                suggest=true;
-              }
-              if(value=="int"){
-                name = "int (deprecated)";
-                suggest=false;
-              }
-              if(typeVersion>1){
-                selecttips="(v"+s;
-                if(s==typeVersion){
-                  selecttips=",suggest)"
-                }
-                selecttips=')';
-              }
-              $scope.store.supportedEncoding.push({
-                "name":name+selecttips,
-                "value":value+"[v"+s+"]",
-                "version":typeVersion,
-                "baseValue":value,
-                "suggest":suggest
-              });
-            }
-          }
-        }
-    }
-  },function(e){
-    $scope.store.supportedEncoding = $scope.cubeConfig.encodings;
-  })
+
 
   $scope.getColumnsByAlias = function (alias) {
     var temp = [];
@@ -742,6 +702,13 @@ KylinApp.controller('CubeEditCtrl', function ($scope, $q, $routeParams, $locatio
       return;
     }
     $scope.metaModel.model = modelsManager.getModel(newValue);
+    if($scope.metaModel.model){
+      $scope.modelsManager.initAliasMapByModelSchema($scope.metaModel);
+      cubesManager.init();
+      $scope.cubeMetaFrame=CubeDescModel.createNew({
+        model_name:newValue
+      })
+    }
     if(!$scope.metaModel.model){
       return;
     }
