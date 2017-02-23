@@ -44,18 +44,22 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
 @Ignore("KylinQueryTest is contained by ITCombinationTest")
 public class ITKylinQueryTest extends KylinTestBase {
 
+    private static final Logger logger = LoggerFactory.getLogger(ITKylinQueryTest.class);
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @BeforeClass
     public static void setUp() throws Exception {
-        printInfo("setUp in ITKylinQueryTest");
+        logger.info("setUp in ITKylinQueryTest");
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.HYBRID, 0);
         priorities.put(RealizationType.CUBE, 0);
@@ -69,7 +73,7 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        printInfo("tearDown in ITKylinQueryTest");
+        logger.info("tearDown in ITKylinQueryTest");
         Candidate.restorePriorities();
         clean();
     }
@@ -127,11 +131,10 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     }
 
-    @Ignore
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_multi_model/query01.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount/query03.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
@@ -301,12 +304,12 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testInvalidQuery() throws Exception {
 
-        printInfo("-------------------- Test Invalid Query --------------------");
+        logger.info("-------------------- Test Invalid Query --------------------");
         String queryFolder = getQueryFolderPrefix() + "src/test/resources/query/sql_invalid";
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
         for (File sqlFile : sqlFiles) {
             String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
-            printInfo("Testing Query " + queryName);
+            logger.info("Testing Query " + queryName);
             String sql = getTextFromFile(sqlFile);
             IDatabaseConnection cubeConn = new DatabaseConnection(cubeConnection);
             try {
@@ -359,13 +362,13 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testVersionQuery() throws Exception {
         String expectVersion = KylinVersion.getCurrentVersion().toString();
-        printInfo("---------- verify expect version: " + expectVersion);
+        logger.info("---------- verify expect version: " + expectVersion);
 
         String queryName = "QueryKylinVersion";
         String sql = "SELECT VERSION() AS version";
 
         // execute Kylin
-        printInfo("Query Result from Kylin - " + queryName);
+        logger.info("Query Result from Kylin - " + queryName);
         IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
         ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
         String queriedVersion = String.valueOf(kylinTable.getValue(0, "version"));

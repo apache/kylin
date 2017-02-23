@@ -29,12 +29,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import org.slf4j.LoggerFactory;
+
 /**
  */
 public class ClassUtil {
 
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ClassUtil.class);
+
     public static void addClasspath(String path) {
-        System.out.println("Adding path " + path + " to class path");
+        logger.info("Adding path " + path + " to class path");
         File file = new File(path);
 
         try {

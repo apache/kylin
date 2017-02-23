@@ -31,17 +31,21 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
 public class ITFailfastQueryTest extends KylinTestBase {
+
+    private static final Logger logger = LoggerFactory.getLogger(ITFailfastQueryTest.class);
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @BeforeClass
     public static void setUp() throws Exception {
-        printInfo("setUp in ITFailfastQueryTest");
+        logger.info("setUp in ITFailfastQueryTest");
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.HYBRID, 0);
         priorities.put(RealizationType.CUBE, 0);
@@ -58,7 +62,7 @@ public class ITFailfastQueryTest extends KylinTestBase {
 
     @AfterClass
     public static void tearDown() throws Exception {
-        printInfo("tearDown in ITFailfastQueryTest");
+        logger.info("tearDown in ITFailfastQueryTest");
         Candidate.restorePriorities();
         clean();
     }

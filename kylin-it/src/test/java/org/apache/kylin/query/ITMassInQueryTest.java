@@ -39,12 +39,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
 /**
  */
 public class ITMassInQueryTest extends KylinTestBase {
+
+    private static final Logger logger = LoggerFactory.getLogger(ITMassInQueryTest.class);
 
     FileSystem fileSystem;
     Set<Long> vipSellers;
@@ -100,7 +104,7 @@ public class ITMassInQueryTest extends KylinTestBase {
     }
 
     protected void run(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
-        printInfo("---------- test folder: " + queryFolder);
+        logger.info("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
@@ -112,7 +116,7 @@ public class ITMassInQueryTest extends KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             // execute Kylin
-            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
             printResult(kylinTable);
@@ -121,7 +125,7 @@ public class ITMassInQueryTest extends KylinTestBase {
     }
 
     protected void compare(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
-        printInfo("---------- test folder: " + queryFolder);
+        logger.info("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
@@ -133,21 +137,21 @@ public class ITMassInQueryTest extends KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             // execute Kylin
-            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
 
             // execute H2
             sql = sql.replace("massin(test_kylin_fact.SELLER_ID,'vip_customers')", "test_kylin_fact.SELLER_ID in ( " + org.apache.commons.lang.StringUtils.join(vipSellers, ",") + ")");
-            printInfo("Query Result from H2 - " + queryName);
-            printInfo("Query for H2 - " + sql);
+            logger.info("Query Result from H2 - " + queryName);
+            logger.info("Query for H2 - " + sql);
             ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);
 
             try {
                 // compare the result
                 assertTableEquals(h2Table, kylinTable);
             } catch (Throwable t) {
-                printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
+                logger.info("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
                 throw t;
             }
         }

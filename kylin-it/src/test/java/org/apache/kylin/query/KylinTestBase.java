@@ -32,7 +32,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,6 +64,8 @@ import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.ext.h2.H2Connection;
 import org.dbunit.ext.h2.H2DataTypeFactory;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -73,6 +74,7 @@ import com.google.common.io.Files;
  */
 public class KylinTestBase {
 
+    private static final Logger logger = LoggerFactory.getLogger(KylinTestBase.class);
     public static boolean PRINT_RESULT = false;
 
     class ObjectArray {
@@ -181,10 +183,6 @@ public class KylinTestBase {
         return parameters;
     }
 
-    protected static void printInfo(String info) {
-        System.out.println(new Timestamp(System.currentTimeMillis()) + " - " + info);
-    }
-
     protected static void printResult(ITable resultTable) throws DataSetException {
         StringBuilder sb = new StringBuilder();
 
@@ -251,10 +249,10 @@ public class KylinTestBase {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            printInfo("start running...");
+            logger.info("start running...");
             statement = cubeConnection.createStatement();
             resultSet = statement.executeQuery(sql);
-            printInfo("stop running...");
+            logger.info("stop running...");
 
             return output(resultSet, needDisplay);
         } finally {
@@ -319,13 +317,13 @@ public class KylinTestBase {
 
         String ret = StringUtils.join(tokens, " ");
         ret = ret.replaceAll(specialStr, System.getProperty("line.separator"));
-        System.out.println("The actual sql executed is: " + ret);
+        logger.info("The actual sql executed is: " + ret);
 
         return ret;
     }
 
     protected void execQueryUsingH2(String queryFolder, boolean needSort) throws Exception {
-        printInfo("---------- Running H2 queries: " + queryFolder);
+        logger.info("---------- Running H2 queries: " + queryFolder);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
         for (File sqlFile : sqlFiles) {
@@ -333,13 +331,13 @@ public class KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             // execute H2
-            printInfo("Query Result from H2 - " + queryName);
+            logger.info("Query Result from H2 - " + queryName);
             executeQuery(newH2Connection(), queryName, sql, needSort);
         }
     }
 
     protected void verifyResultRowColCount(String queryFolder) throws Exception {
-        printInfo("---------- verify result count in folder: " + queryFolder);
+        logger.info("---------- verify result count in folder: " + queryFolder);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
         for (File sqlFile : sqlFiles) {
@@ -352,7 +350,7 @@ public class KylinTestBase {
             int expectColCount = pair.getSecond();
 
             // execute Kylin
-            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
@@ -381,7 +379,7 @@ public class KylinTestBase {
     }
 
     protected void verifyResultContent(String queryFolder) throws Exception {
-        printInfo("---------- verify result content in folder: " + queryFolder);
+        logger.info("---------- verify result content in folder: " + queryFolder);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
         for (File sqlFile : sqlFiles) {
@@ -394,7 +392,7 @@ public class KylinTestBase {
             ITable expectTable = expect.getTable("expect");
 
             // execute Kylin
-            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
 
@@ -404,7 +402,7 @@ public class KylinTestBase {
     }
 
     protected void execAndCompResultSize(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
-        printInfo("---------- test folder: " + queryFolder);
+        logger.info("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
@@ -416,19 +414,19 @@ public class KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             // execute Kylin
-            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
 
             // execute H2
-            printInfo("Query Result from H2 - " + queryName);
+            logger.info("Query Result from H2 - " + queryName);
             ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);
 
             try {
                 // compare the result
                 Assert.assertEquals(h2Table.getRowCount(), kylinTable.getRowCount());
             } catch (Throwable t) {
-                printInfo("execAndCompResultSize failed on: " + sqlFile.getAbsolutePath());
+                logger.info("execAndCompResultSize failed on: " + sqlFile.getAbsolutePath());
                 throw t;
             }
 
@@ -440,12 +438,12 @@ public class KylinTestBase {
     }
 
     protected void execAndCompColumnCount(String input, int expectedColumnCount) throws Exception {
-        printInfo("---------- test column count: " + input);
+        logger.info("---------- test column count: " + input);
         Set<String> sqlSet = ImmutableSet.of(input);
 
         for (String sql : sqlSet) {
             // execute Kylin
-            printInfo("Query Result from Kylin - " + sql);
+            logger.info("Query Result from Kylin - " + sql);
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, sql, sql, false);
 
@@ -453,14 +451,14 @@ public class KylinTestBase {
                 // compare the result
                 Assert.assertEquals(expectedColumnCount, kylinTable.getTableMetaData().getColumns().length);
             } catch (Throwable t) {
-                printInfo("execAndCompColumnCount failed on: " + sql);
+                logger.info("execAndCompColumnCount failed on: " + sql);
                 throw t;
             }
         }
     }
 
     protected void execLimitAndValidate(String queryFolder) throws Exception {
-        printInfo("---------- test folder: " + new File(queryFolder).getAbsolutePath());
+        logger.info("---------- test folder: " + new File(queryFolder).getAbsolutePath());
 
         int appendLimitQueries = 0;
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
@@ -477,18 +475,18 @@ public class KylinTestBase {
             }
 
             // execute Kylin
-            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, queryName, sqlWithLimit, false);
 
             // execute H2
-            printInfo("Query Result from H2 - " + queryName);
+            logger.info("Query Result from H2 - " + queryName);
             ITable h2Table = executeQuery(newH2Connection(), queryName, sql, false);
 
             try {
                 assertTableContains(h2Table, kylinTable);
             } catch (Throwable t) {
-                printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
+                logger.info("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
                 throw t;
             }
 
@@ -497,11 +495,11 @@ public class KylinTestBase {
                 zeroResultQueries.add(sql);
             }
         }
-        printInfo("Queries appended with limit: " + appendLimitQueries);
+        logger.info("Queries appended with limit: " + appendLimitQueries);
     }
 
     protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
-        printInfo("---------- test folder: " + new File(queryFolder).getAbsolutePath());
+        logger.info("---------- test folder: " + new File(queryFolder).getAbsolutePath());
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
@@ -513,21 +511,21 @@ public class KylinTestBase {
             String sql = getTextFromFile(sqlFile);
 
             // execute Kylin
-            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
 
             // execute H2
-            printInfo("Query Result from H2 - " + queryName);
+            logger.info("Query Result from H2 - " + queryName);
             long currentTime = System.currentTimeMillis();
             ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);
-            printInfo("H2 spent " + (System.currentTimeMillis() - currentTime) + " mili-seconds.");
+            logger.info("H2 spent " + (System.currentTimeMillis() - currentTime) + " mili-seconds.");
 
             try {
                 // compare the result
                 assertTableEquals(h2Table, kylinTable);
             } catch (Throwable t) {
-                printInfo("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
+                logger.info("execAndCompQuery failed on: " + sqlFile.getAbsolutePath());
                 throw t;
             }
 
@@ -539,7 +537,7 @@ public class KylinTestBase {
     }
 
     protected void execAndCompDynamicQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
-        printInfo("---------- test folder: " + queryFolder);
+        logger.info("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
@@ -552,12 +550,12 @@ public class KylinTestBase {
             List<String> parameters = getParameterFromFile(sqlFile);
 
             // execute Kylin
-            printInfo("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
+            logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
             ITable kylinTable = executeDynamicQuery(kylinConn, queryName, sql, parameters, needSort);
 
             // execute H2
-            printInfo("Query Result from H2 - " + queryName);
+            logger.info("Query Result from H2 - " + queryName);
             ITable h2Table = executeDynamicQuery(newH2Connection(), queryName, sql, parameters, needSort);
 
             // compare the result
@@ -598,7 +596,7 @@ public class KylinTestBase {
         }
 
         String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
-        printInfo("Testing Query " + queryName);
+        logger.info("Testing Query " + queryName);
         String sql = getTextFromFile(sqlFile);
         if (explain) {
             sql = "explain plan for " + sql;
@@ -651,7 +649,7 @@ public class KylinTestBase {
             }
             count++;
         }
-        printInfo(sb.toString());
+        logger.info(sb.toString());
         return count;
     }
 

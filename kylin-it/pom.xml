@@ -18,7 +18,8 @@
 -->
 
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -241,6 +242,18 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- log dependency -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Spark dependency -->
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -294,10 +307,14 @@
                             <systemProperties>
                                 <property>
                                     <name>log4j.configuration</name>
-                                    <value>file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</value>
+                                    <value>
+                                        file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                    </value>
                                 </property>
                             </systemProperties>
-                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M -Dkylin.server.cluster-servers=localhost:7070</argLine>
+                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M
+                                -Dkylin.server.cluster-servers=localhost:7070
+                            </argLine>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -317,12 +334,17 @@
                                     <arguments>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
-                                        <argument>-DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}</argument>
+                                        <argument>
+                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                        </argument>
                                         <argument>-DengineType=${engineType}</argument>
-                                        <argument>-Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</argument>
+                                        <argument>
+                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        </argument>
                                         <argument>-classpath</argument>
                                         <classpath/>
-                                        <argument>org.apache.kylin.provision.BuildCubeWithEngine</argument>
+                                        <argument>org.apache.kylin.provision.BuildCubeWithEngine
+                                        </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>
                                 </configuration>
@@ -340,11 +362,16 @@
                                     <arguments>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
-                                        <argument>-DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}</argument>
-                                        <argument>-Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties</argument>
+                                        <argument>
+                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                        </argument>
+                                        <argument>
+                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        </argument>
                                         <argument>-classpath</argument>
                                         <classpath/>
-                                        <argument>org.apache.kylin.provision.BuildCubeWithStream</argument>
+                                        <argument>org.apache.kylin.provision.BuildCubeWithStream
+                                        </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>
                                 </configuration>

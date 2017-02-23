@@ -30,6 +30,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
@@ -38,6 +40,8 @@ import com.google.common.collect.Maps;
 @RunWith(Parameterized.class)
 public class ITCombinationTest extends ITKylinQueryTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(ITCombinationTest.class);
+
     @BeforeClass
     public static void setUp() throws SQLException {
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
@@ -45,12 +49,12 @@ public class ITCombinationTest extends ITKylinQueryTest {
         priorities.put(RealizationType.CUBE, 0);
         Candidate.setPriorities(priorities);
 
-        printInfo("setUp in ITCombinationTest");
+        logger.info("setUp in ITCombinationTest");
     }
 
     @AfterClass
     public static void tearDown() {
-        printInfo("tearDown in ITCombinationTest");
+        logger.info("tearDown in ITCombinationTest");
         clean();
         Candidate.restorePriorities();
     }
@@ -70,7 +74,7 @@ public class ITCombinationTest extends ITKylinQueryTest {
 
     public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine) throws Exception {
 
-        printInfo("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle + ", query engine: " + queryEngine);
+        logger.info("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle + ", query engine: " + queryEngine);
 
         ITKylinQueryTest.clean();
 
