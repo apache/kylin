@@ -18,7 +18,9 @@
 
 package org.apache.kylin.source.hive;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -27,12 +29,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
+import org.apache.kylin.common.util.DBUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.kylin.common.util.DBUtils;
 
 public class BeelineHiveClient implements IHiveClient {
 
@@ -45,7 +48,7 @@ public class BeelineHiveClient implements IHiveClient {
             throw new IllegalArgumentException("BeelineParames cannot be empty");
         }
         String[] splits = StringUtils.split(beelineParams);
-        String url = null, username = null, password = null;
+        String url = null, username = null, password = null, pwdFilePath = null;
         for (int i = 0; i < splits.length; i++) {
             if ("-u".equals(splits[i])) {
                 url = stripQuotes(splits[i + 1]);
@@ -55,6 +58,14 @@ public class BeelineHiveClient implements IHiveClient {
             }
             if ("-p".equals(splits[i])) {
                 password = stripQuotes(splits[i + 1]);
+            }
+            if ("-w".equals(splits[i])) {
+                pwdFilePath = stripQuotes(splits[i + 1]);
+                try {
+                    password = StringUtils.trim(FileUtils.readFileToString(new File(pwdFilePath), Charset.defaultCharset()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
         this.init(url, username, password);
