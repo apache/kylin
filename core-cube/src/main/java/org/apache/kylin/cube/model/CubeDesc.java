@@ -529,7 +529,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.errors.clear();
 
         checkArgument(StringUtils.isNotBlank(name), "CubeDesc name is blank");
-        checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc(%s) has blank modelName", name);
+        checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc (%s) has blank model name", name);
 
         // note CubeDesc.name == CubeInstance.name
         List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
@@ -571,7 +571,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived(true);
-        checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%d) doesn't match dimensions columns count (%d)", rowkey.getRowKeyColumns().length, dimCols.size());
+        checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%s) doesn't match dimensions columns count (%s)", rowkey.getRowKeyColumns().length, dimCols.size());
 
         initDictionaryDesc();
         amendAllColumns();
@@ -857,15 +857,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     private TblColRef initDimensionColRef(DimensionDesc dim, String colName) {
         TblColRef col = model.findColumn(dim.getTable(), colName);
-
-        // always use FK instead PK, FK could be shared by more than one lookup tables
-        JoinDesc join = dim.getJoin();
-        if (join != null) {
-            int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), col);
-            if (idx >= 0) {
-                col = join.getForeignKeyColumns()[idx];
-            }
-        }
         return initDimensionColRef(col);
     }
 

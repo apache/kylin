@@ -64,7 +64,7 @@ public class SSHClient {
     public void scpFileToRemote(String localFile, String remoteTargetDirectory) throws Exception {
         FileInputStream fis = null;
         try {
-            System.out.println("SCP file " + localFile + " to " + remoteTargetDirectory);
+            logger.info("SCP file " + localFile + " to " + remoteTargetDirectory);
 
             Session session = newJSchSession();
             session.connect();
@@ -149,7 +149,7 @@ public class SSHClient {
     public void scpFileToLocal(String rfile, String lfile) throws Exception {
         FileOutputStream fos = null;
         try {
-            System.out.println("SCP remote file " + rfile + " to local " + lfile);
+            logger.info("SCP remote file " + rfile + " to local " + lfile);
 
             String prefix = null;
             if (new File(lfile).isDirectory()) {
@@ -205,8 +205,6 @@ public class SSHClient {
                     }
                 }
 
-                //System.out.println("filesize="+filesize+", file="+file);
-
                 // send '\0'
                 buf[0] = 0;
                 out.write(buf, 0, 1);
@@ -259,7 +257,7 @@ public class SSHClient {
 
     public SSHClientOutput execCommand(String command, int timeoutSeconds, Logger logAppender) throws Exception {
         try {
-            System.out.println("[" + username + "@" + hostname + "] Execute command: " + command);
+            logger.info("[" + username + "@" + hostname + "] Execute command: " + command);
 
             StringBuffer text = new StringBuffer();
             int exitCode = -1;
@@ -311,7 +309,7 @@ public class SSHClient {
                     if (in.available() > 0)
                         continue;
                     exitCode = channel.getExitStatus();
-                    System.out.println("[" + username + "@" + hostname + "] Command exit-status: " + exitCode);
+                    logger.info("[" + username + "@" + hostname + "] Command exit-status: " + exitCode);
 
                     break;
                 }
@@ -364,10 +362,10 @@ public class SSHClient {
                 sb.append((char) c);
             } while (c != '\n');
             if (b == 1) { // error
-                System.out.print(sb.toString());
+                logger.error(sb.toString());
             }
             if (b == 2) { // fatal error
-                System.out.print(sb.toString());
+                logger.error(sb.toString());
             }
         }
         return b;
