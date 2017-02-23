@@ -62,7 +62,7 @@ public class BeelineHiveClient implements IHiveClient {
             if ("-w".equals(splits[i])) {
                 pwdFilePath = stripQuotes(splits[i + 1]);
                 try {
-                    password = StringUtils.trim(FileUtils.readFileToString(new File(pwdFilePath), Charset.defaultCharset()));
+                    password = StringUtils.trim(FileUtils.readFileToString(new File(pwdFilePath), Charset.defaultCharset())); 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
