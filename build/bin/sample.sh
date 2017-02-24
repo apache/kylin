@@ -18,15 +18,22 @@
 #
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/find-hadoop-conf-dir.sh
 
 source ${dir}/check-env.sh "if-not-yet"
 job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
 
 cd ${KYLIN_HOME}/sample_cube/data
 
+if [ -z "${kylin_hadoop_conf_dir}" ]; then
+    hadoop_conf_param=
+else
+    hadoop_conf_param="--config ${kylin_hadoop_conf_dir}"
+fi
+
 echo "Loading sample data into HDFS tmp path: /tmp/kylin/sample_cube/data"
-hadoop fs -mkdir -p /tmp/kylin/sample_cube/data
-hadoop fs -put * /tmp/kylin/sample_cube/data/
+hadoop ${hadoop_conf_param} fs -mkdir -p /tmp/kylin/sample_cube/data
+hadoop ${hadoop_conf_param} fs -put * /tmp/kylin/sample_cube/data/
 
 hive_client_mode=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.client`
 sample_database=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.database-for-flat-table`
@@ -45,7 +52,7 @@ else
 fi
 
 echo "Sample hive tables are created successfully; Going to create sample cube..."
-hadoop fs -rm -r /tmp/kylin/sample_cube
+hadoop ${hadoop_conf_param} fs -rm -r /tmp/kylin/sample_cube
 
 # set engine type and storage type to cube desc
 default_engine_type=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.engine.default`
