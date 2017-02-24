@@ -773,12 +773,9 @@ abstract public class KylinConfigBase implements Serializable {
     // ENGINE.SPARK
     // ============================================================================
 
-    public String getHadoopConfDir() {
-        return getOptional("kylin.engine.spark.env.hadoop-conf-dir", "");
-    }
 
-    public void setHadoopConfDir(String hadoopConfDir) {
-        setProperty("kylin.engine.spark.env.hadoop-conf-dir", hadoopConfDir);
+    public String getHadoopConfDir() {
+        return getOptional("kylin.env.hadoop-conf-dir", "");
     }
 
     public String getSparkAdditionalJars() {

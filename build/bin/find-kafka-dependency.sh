@@ -22,15 +22,17 @@ source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 kafka_home=
 
 echo Retrieving kafka dependency...
+
+if [ -z "$KAFKA_HOME" ]
+then
+    verbose "Couldn't find kafka home. If you want to enable streaming processing, Please set KAFKA_HOME to the path which contains kafka dependencies."
+    return
+fi
+
 if [ -n "$KAFKA_HOME" ]
 then
     verbose "KAFKA_HOME is set to: $KAFKA_HOME, use it to locate kafka dependencies."
     kafka_home=$KAFKA_HOME
-fi
-
-if [ -z "$KAFKA_HOME" ]
-then
-    quit "Couldn't find kafka home. Please set KAFKA_HOME to the path which contains kafka dependencies."
 fi
 
 # works for kafka 9+

@@ -79,19 +79,22 @@ public class SparkExecutable extends AbstractExecutable {
         }
         String jars = this.getParam(JARS);
 
-        String hadoopConf = "/etc/hadoop/conf";
-        if (StringUtils.isNotEmpty(config.getHadoopConfDir())) {
-            hadoopConf = config.getHadoopConfDir();
-        } else {
-            String hiveConf = ClassLoader.getSystemClassLoader().getResource("hive-site.xml").getFile().toString();
-            File hiveConfFile = new File(hiveConf);
-            if (hiveConfFile.exists() == true) {
-                logger.info("Locate hive-site.xml in " + hiveConfFile);
-                hadoopConf = hiveConfFile.getParent();
-            }
+        //hadoop conf dir
+        String hadoopConf = null;
+        hadoopConf = System.getProperty("kylin.hadoop.conf.dir");
+
+        if (StringUtils.isEmpty(hadoopConf)) {
+            throw new RuntimeException("kylin_hadoop_conf_dir is empty, check if there's error in the output of 'kylin.sh start'");
+        }
+
+        File hiveConfFile = new File(hadoopConf, "hive-site.xml");
+        if (!hiveConfFile.exists()) {
+            throw new RuntimeException("Cannot find hive-site.xml in kylin_hadoop_conf_dir: " + hadoopConf + //
+                    ". In order to enable spark cubing, you must set kylin.env.hadoop-conf-dir to a dir which contains at least core-site.xml, hdfs-site.xml, hive-site.xml, mapred-site.xml, yarn-site.xml");
         }
         logger.info("Using " + hadoopConf + " as HADOOP_CONF_DIR");
 
+        //hbase-site.xml
         String hbaseConf = ClassLoader.getSystemClassLoader().getResource("hbase-site.xml").getFile().toString();
         logger.info("Get hbase-site.xml location from classpath: " + hbaseConf);
         File hbaseConfFile = new File(hbaseConf);
@@ -114,8 +117,7 @@ public class SparkExecutable extends AbstractExecutable {
 
         stringBuilder.append("--files %s --jars %s %s %s");
         try {
-            String cmd = String.format(stringBuilder.toString(),
-                    hadoopConf, config.getSparkHome(), hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
+            String cmd = String.format(stringBuilder.toString(), hadoopConf, config.getSparkHome(), hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
             logger.info("cmd:" + cmd);
             final StringBuilder output = new StringBuilder();
             CliCommandExecutor exec = new CliCommandExecutor();

@@ -19,9 +19,10 @@
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
+echo Retrieving Spark dependency...
+
 spark_home=
 
-verbose Retrieving Spark dependency...
 if [ -n "$SPARK_HOME" ]
 then
     verbose "SPARK_HOME is set to: $SPARK_HOME, use it to locate Spark dependencies."

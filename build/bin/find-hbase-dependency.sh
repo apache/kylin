@@ -19,6 +19,8 @@
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 
+echo Retrieving hbase dependency...
+
 hbase_classpath=`hbase classpath`
 
 # special handling for Amazon EMR, to prevent re-init of hbase-setenv
