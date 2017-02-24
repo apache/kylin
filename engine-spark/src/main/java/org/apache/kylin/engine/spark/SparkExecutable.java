@@ -71,7 +71,7 @@ public class SparkExecutable extends AbstractExecutable {
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final KylinConfig config = context.getConfig();
-        if (config.getSparkHome() == null) {
+        if (KylinConfig.getSparkHome() == null) {
             throw new NullPointerException();
         }
         if (config.getKylinJobJarPath() == null) {
@@ -117,7 +117,7 @@ public class SparkExecutable extends AbstractExecutable {
 
         stringBuilder.append("--files %s --jars %s %s %s");
         try {
-            String cmd = String.format(stringBuilder.toString(), hadoopConf, config.getSparkHome(), hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
+            String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(), hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
             logger.info("cmd:" + cmd);
             final StringBuilder output = new StringBuilder();
             CliCommandExecutor exec = new CliCommandExecutor();
