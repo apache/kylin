@@ -35,6 +35,7 @@ import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
@@ -139,7 +140,8 @@ public class CubeMigrationCheckCLI {
         List<String> segFullNameList = Lists.newArrayList();
 
         CubeInstance cube = CubeManager.getInstance(dstCfg).getCube(cubeName);
-        addHTableNamesForCube(cube, segFullNameList);
+        if (cube.getDescriptor().getStorageType() == IStorageAware.ID_SHARDED_HBASE)
+            addHTableNamesForCube(cube, segFullNameList);
 
         check(segFullNameList);
     }
