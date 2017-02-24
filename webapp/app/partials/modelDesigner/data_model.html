@@ -131,8 +131,8 @@
                       <div class="form-group">
                         <div class="row">
                           <div class="col-xs-12 form-group">
-                              <select chosen ng-model="newLookup.joinTable" class="chosen-select col-sm-5"
-                                      ng-options="table as table for table in aliasName"
+                              <select chosen ng-model="newLookup.joinTable" class="chosen-select "
+                                      style="width:45%;" ng-options="table as table for table in aliasName"
                                       name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true">
                                 <option value=""> &#45;&#45; From Table &#45;&#45; </option>
@@ -142,7 +142,7 @@
                         <div class="row">
                           <div class="col-xs-12 form-group">
                               <!--Join Type-->
-                              <select class="chosen-select col-sm-5"  chosen ng-init="newLookup.join.type='inner'"  ng-model="newLookup.join.type"
+                              <select class="chosen-select " style="width:45%;" chosen ng-init="newLookup.join.type='inner'"  ng-model="newLookup.join.type"
                                             ng-options="joinType.value as joinType.name+'  Join' for joinType in cubeConfig.joinTypes">
                                 <option value=""></option>
                               </select>
@@ -150,18 +150,18 @@
                         </div>
                         <div class="row">
                           <div class="col-xs-12 form-group">
-                              <select chosen ng-model="newLookup.table" class="chosen-select col-sm-5"
+                              <select chosen ng-model="newLookup.table" class="chosen-select" style="width:45%;"
                                       ng-options="table.name as VdmUtil.removeNameSpace(table.name) for table in tableModel.selectProjectTables"
                                       name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true"  ng-change="changeJoinTable()">
                                 <option value=""> &#45;&#45; Select Lookup Table &#45;&#45; </option>
                               </select>
-                              <div class="chosen-select col-sm-6" style="float:right;padding-left:0;">
+                              <div  style="float:right;padding-left:0;width:45%">
                                 <input type="text" class="form-control " name="joinTable_alias" placeholder="Input Table Alias" ng-required="true"
                                      ng-model="newLookup.alias"  ng-pattern="/^[A-Z_\d]+$/">
                                 <small class="help-block red" ng-show="!lookup_form.joinTable_alias.$error.required&&lookup_form.joinTable_alias.$invalid && (lookup_form.joinTable_alias.$dirty||lookup_form.$submitted)"><i class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp; Table alias is invalid(A Combination of numbers, uppercase letters or underscores).</small>
                               </div>
-                              <span class="col-sm-1 font-color-default" style="float:right;font-size:large;line-height: 30px;"><b>AS</b></span>
+                              <span class=" font-color-default" style="float:right;font-size:large;line-height: 30px;width:10%;text-align:center"><b>AS</b></span>
                           </div>
                         </div>
                       </div>
