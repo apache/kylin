@@ -33,6 +33,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -89,7 +90,7 @@ public class CubeManager implements IRealizationProvider {
     private static final Logger logger = LoggerFactory.getLogger(CubeManager.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, CubeManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeManager>();
+    private static final ConcurrentMap<KylinConfig, CubeManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeManager>();
 
     public static CubeManager getInstance(KylinConfig config) {
         CubeManager r = CACHE.get(config);

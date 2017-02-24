@@ -19,6 +19,7 @@
 package org.apache.kylin.common.util;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
@@ -64,7 +65,7 @@ public class MemoryBudgetController {
 
     // all budget numbers are in MB
     private final int totalBudgetMB;
-    private final ConcurrentHashMap<MemoryConsumer, ConsumerEntry> booking = new ConcurrentHashMap<MemoryConsumer, ConsumerEntry>();
+    private final ConcurrentMap<MemoryConsumer, ConsumerEntry> booking = new ConcurrentHashMap<MemoryConsumer, ConsumerEntry>();
     private int totalReservedMB;
     private final ReentrantLock lock = new ReentrantLock();
 

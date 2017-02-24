@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -72,7 +73,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     private DistributedJobLock jobLock;
 
     private static final Logger logger = LoggerFactory.getLogger(DistributedScheduler.class);
-    private static final ConcurrentHashMap<KylinConfig, DistributedScheduler> CACHE = new ConcurrentHashMap<KylinConfig, DistributedScheduler>();
+    private static final ConcurrentMap<KylinConfig, DistributedScheduler> CACHE = new ConcurrentHashMap<KylinConfig, DistributedScheduler>();
     //keep all segments having running job
     private final Set<String> segmentWithLocks = new CopyOnWriteArraySet<>();
     private volatile boolean initialized = false;

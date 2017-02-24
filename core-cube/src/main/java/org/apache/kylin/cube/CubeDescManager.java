@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -63,7 +64,7 @@ public class CubeDescManager {
     public static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, CubeDescManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeDescManager>();
+    private static final ConcurrentMap<KylinConfig, CubeDescManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeDescManager>();
 
     public static CubeDescManager getInstance(KylinConfig config) {
         CubeDescManager r = CACHE.get(config);
@@ -103,14 +104,14 @@ public class CubeDescManager {
         logger.info("Initializing CubeDescManager with config " + config);
         this.config = config;
         this.cubeDescMap = new CaseInsensitiveStringCache<CubeDesc>(config, "cube_desc");
-        
+
         // touch lower level metadata before registering my listener
         reloadAllCubeDesc();
         Broadcaster.getInstance(config).registerListener(new CubeDescSyncListener(), "cube_desc");
     }
-    
+
     private class CubeDescSyncListener extends Broadcaster.Listener {
-        
+
         @Override
         public void onClearAll(Broadcaster broadcaster) throws IOException {
             clearCache();
@@ -122,7 +123,7 @@ public class CubeDescManager {
             for (IRealization real : ProjectManager.getInstance(config).listAllRealizations(project)) {
                 if (real instanceof CubeInstance) {
                     String descName = ((CubeInstance) real).getDescName();
-                    reloadCubeDescLocal(descName);        
+                    reloadCubeDescLocal(descName);
                 }
             }
         }
@@ -132,12 +133,12 @@ public class CubeDescManager {
             String cubeDescName = cacheKey;
             CubeDesc cubeDesc = getCubeDesc(cubeDescName);
             String modelName = cubeDesc == null ? null : cubeDesc.getModel().getName();
-            
+
             if (event == Event.DROP)
                 removeLocalCubeDesc(cubeDescName);
             else
                 reloadCubeDescLocal(cubeDescName);
-            
+
             for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByModel(modelName)) {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
             }
@@ -236,7 +237,6 @@ public class CubeDescManager {
 
         return cubeDesc;
     }
-
 
     /**
      * if there is some change need be applied after getting a cubeDesc from front-end, do it here

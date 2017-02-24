@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -59,7 +60,7 @@ public class DictionaryManager {
     private static final DictionaryInfo NONE_INDICATOR = new DictionaryInfo();
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, DictionaryManager> CACHE = new ConcurrentHashMap<KylinConfig, DictionaryManager>();
+    private static final ConcurrentMap<KylinConfig, DictionaryManager> CACHE = new ConcurrentHashMap<KylinConfig, DictionaryManager>();
 
     public static DictionaryManager getInstance(KylinConfig config) {
         DictionaryManager r = CACHE.get(config);

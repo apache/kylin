@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -47,7 +48,7 @@ public class HybridManager implements IRealizationProvider {
     private static final Logger logger = LoggerFactory.getLogger(HybridManager.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, HybridManager> CACHE = new ConcurrentHashMap<KylinConfig, HybridManager>();
+    private static final ConcurrentMap<KylinConfig, HybridManager> CACHE = new ConcurrentHashMap<KylinConfig, HybridManager>();
 
     public static HybridManager getInstance(KylinConfig config) {
         HybridManager r = CACHE.get(config);
