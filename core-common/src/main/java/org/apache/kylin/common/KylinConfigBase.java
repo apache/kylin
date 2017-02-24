@@ -389,7 +389,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getHiveDependencyFilterList() {
-        return this.getOptional("kylin.job.dependency-filter-list", "[^,]*hive-exec[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-metastore[0-9.-]+[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[0-9.-]+[^,]*?\\.jar");
+        return this.getOptional("kylin.job.dependency-filter-list", "[^,]*hive-exec[^,]*?\\.jar" + "|" + "[^,]*hive-metastore[^,]*?\\.jar" + "|" + "[^,]*hive-hcatalog-core[^,]*?\\.jar");
     }
 
     public boolean isMailEnabled() {
