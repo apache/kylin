@@ -78,7 +78,7 @@ public class SparkBatchCubingJobBuilder2 extends BatchCubingJobBuilder2 {
         try {
             return ClassUtil.findContainingJar(Class.forName(className), perferLibraryName);
         } catch (ClassNotFoundException e) {
-            logger.warn("failed to locate jar for class " + className + ", ignore it", e);
+            logger.warn("failed to locate jar for class " + className + ", ignore it");
         }
 
         return "";
