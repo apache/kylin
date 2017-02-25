@@ -8,6 +8,8 @@ title: 下载
 
 ## 2.0.0 beta
 
+注意 2.0.0 beta 并不是一个正式发行版，它只是一个正式发行前的预览版本。
+
 - 这是最新的 Apache Kylin，包括 Spark 构建引擎和运行 TPC-H 基准测试的能力。[查看更多信息](/cn/blog/2017/02/25/v2.0.0-beta-ready/)。
 - 源代码: https://github.com/apache/kylin/tree/kylin-2.0.0-beta
 - 二进制包下载:

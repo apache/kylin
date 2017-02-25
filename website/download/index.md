@@ -9,6 +9,8 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 ## 2.0.0 beta
 
+Note the 2.0.0 beta is not an official release, but a beta build aims for preview and getting feedback.
+
 - This is the most powerful build ever that features Spark cubing and runs TPC-H queries. [Read more here](/blog/2017/02/25/v2.0.0-beta-ready/).
 - Source code is at https://github.com/apache/kylin/tree/kylin-2.0.0-beta
 - Binary download:
