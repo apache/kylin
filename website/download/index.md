@@ -11,7 +11,7 @@ You can verify the download by following these [procedures](https://www.apache.o
 
 Note the 2.0.0 beta is not an official release, but a beta build aims for preview and getting feedback.
 
-- This is the most powerful build ever that features Spark cubing and runs TPC-H queries. [Read more here](/blog/2017/02/25/v2.0.0-beta-ready/).
+- This is the most powerful build ever that features **Spark Cubing**, **Snowflake Data Model** and runs **TPC-H Benchmark**. [Read more here](/blog/2017/02/25/v2.0.0-beta-ready/).
 - Source code is at https://github.com/apache/kylin/tree/kylin-2.0.0-beta
 - Binary download:
   - for HBase 0.98 (includes HDP 2.2, CDH 5.2/5.3) - [apache-kylin-2.0.0-beta-hbase098.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta/apache-kylin-2.0.0-beta-hbase098.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta/apache-kylin-2.0.0-beta-hbase098.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta/apache-kylin-2.0.0-beta-hbase098.tar.gz.md5)\]
