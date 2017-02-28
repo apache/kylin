@@ -20,6 +20,7 @@ package org.apache.kylin.storage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ public class StorageContext {
 
     private String connUrl;
     private int limit = Integer.MAX_VALUE;
+    private boolean overlookOuterLimit = false;
     private int offset = 0;
     private int finalPushDownLimit = Integer.MAX_VALUE;
     private boolean hasSort = false;
@@ -62,7 +64,15 @@ public class StorageContext {
     }
 
     public int getLimit() {
-        return limit;
+        if (overlookOuterLimit) {
+            return limit;
+        } else {
+            return Math.min(limit, BackdoorToggles.getStatementMaxRows());
+        }
+    }
+
+    public void setOverlookOuterLimit() {
+        this.overlookOuterLimit = true;
     }
 
     public void setLimit(int l) {
@@ -79,10 +89,6 @@ public class StorageContext {
 
     public void setOffset(int offset) {
         this.offset = offset;
-    }
-
-    public void enableLimit() {
-        this.limitEnabled = true;
     }
 
     public boolean isLimitEnabled() {

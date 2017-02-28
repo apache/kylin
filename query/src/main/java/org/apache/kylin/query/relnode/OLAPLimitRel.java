@@ -91,6 +91,8 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
             }
 
             context.afterLimit = true;
+        } else {
+            this.context.storageContext.setOverlookOuterLimit();
         }
     }
 
