@@ -32,6 +32,7 @@ import org.apache.kylin.dict.DictionaryProvider;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -77,15 +78,24 @@ public class DictionaryGeneratorCLI {
 
         // snapshot
         Set<String> toSnapshot = Sets.newHashSet();
+        Set<TableRef> toCheckLookup = Sets.newHashSet();
         for (DimensionDesc dim : cubeSeg.getCubeDesc().getDimensions()) {
             TableRef table = dim.getTableRef();
-            if (cubeSeg.getModel().isLookupTable(table))
+            if (cubeSeg.getModel().isLookupTable(table)) {
                 toSnapshot.add(table.getTableIdentity());
+                toCheckLookup.add(table);
+            }
         }
 
         for (String tableIdentity : toSnapshot) {
             logger.info("Building snapshot of " + tableIdentity);
             cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity);
+        }
+        
+        for (TableRef lookup : toCheckLookup) {
+            logger.info("Checking snapshot of " + lookup);
+            JoinDesc join = cubeSeg.getModel().getJoinsTree().getJoinByPKSide(lookup);
+            cubeMgr.getLookupTable(cubeSeg, join);
         }
     }
 
