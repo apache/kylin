@@ -19,12 +19,14 @@
 package org.apache.kylin.tool;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -76,6 +78,12 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
 
     @SuppressWarnings("static-access")
+    private static final Option OPTION_STORAGE_TYPE = OptionBuilder.withArgName("storageEngine").hasArg().isRequired(false).withDescription("Specify the storage type to overwrite. Default is empty, keep origin.").create("storageEngine");
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_ENGINE_TYPE = OptionBuilder.withArgName("typeEngine").hasArg().isRequired(false).withDescription("Specify the engine type to overwrite. Default is empty, keep origin.").create("typeEngine");
+
+    @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info. Default true").create("includeSegments");
 
     @SuppressWarnings("static-access")
@@ -102,6 +110,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private boolean includeJobs;
     private boolean includeSegmentDetails;
     private boolean onlyJobOutput;
+    private String storageType = null;
+    private String engineType = null;
 
     private Set<String> requiredResources = Sets.newLinkedHashSet();
     private Set<String> optionalResources = Sets.newLinkedHashSet();
@@ -123,6 +133,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_JOB);
         options.addOption(OPTION_INCLUDE_SEGMENT_DETAILS);
         options.addOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT);
+        options.addOption(OPTION_STORAGE_TYPE);
+        options.addOption(OPTION_ENGINE_TYPE);
     }
 
     @Override
@@ -131,6 +143,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : false;
         includeSegmentDetails = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENT_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENT_DETAILS)) : false;
         onlyJobOutput = optionsHelper.hasOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_ONLY_JOB_OUTPUT)) : true;
+        storageType = optionsHelper.hasOption(OPTION_STORAGE_TYPE) ? optionsHelper.getOptionValue(OPTION_STORAGE_TYPE): null;
+        engineType = optionsHelper.hasOption(OPTION_ENGINE_TYPE) ? optionsHelper.getOptionValue(OPTION_ENGINE_TYPE): null;
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         metadataManager = MetadataManager.getInstance(kylinConfig);
@@ -184,6 +198,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         }
 
         executeExtraction(exportDir.getAbsolutePath());
+        engineOverwrite(new File(exportDir.getAbsolutePath()));
     }
 
     private void executeExtraction(String dest) {
@@ -223,6 +238,32 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         } catch (Exception e) {
             throw new RuntimeException("Exception", e);
         }
+    }
+
+    private void engineOverwrite(File dest) throws IOException {
+        if (engineType != null || storageType != null) {
+            for (File f : dest.listFiles()) {
+                if (f.isDirectory()) {
+                    engineOverwrite(f);
+                } else {
+                    engineOverwriteInternal(f);
+                }
+            }
+        }
+    }
+
+    private void engineOverwriteInternal(File f) throws IOException {
+        List<String> lines = FileUtils.readLines(f, "UTF-8");
+        for (int i = 0, n = lines.size(); i < n; i++) {
+            String l = lines.get(i);
+            if (l.contains("\"engine_type\"")) {
+                lines.set(i, "  \"engine_type\" : " + engineType + ",");
+            }
+            if (l.contains("\"storage_type\"")) {
+                lines.set(i, "  \"storage_type\" : " + storageType + ",");
+            }
+        }
+        FileUtils.writeLines(f, "UTF-8", lines);
     }
 
     private IRealization getRealization(RealizationEntry realizationEntry) {
