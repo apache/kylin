@@ -64,7 +64,7 @@ public class StorageContext {
     }
 
     public int getLimit() {
-        if (overlookOuterLimit || BackdoorToggles.getStatementMaxRows() == null) {
+        if (overlookOuterLimit || BackdoorToggles.getStatementMaxRows() == null || BackdoorToggles.getStatementMaxRows() == 0) {
             return limit;
         } else {
             return Math.min(limit, BackdoorToggles.getStatementMaxRows());
