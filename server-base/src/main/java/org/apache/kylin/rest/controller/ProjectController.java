@@ -236,7 +236,19 @@ public class ProjectController extends BasicController {
         try {
 
             ProjectInstance project = projectService.getProjectManager().getProject(projectName);
-            projectService.deleteProject(projectName, project);
+            
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            //check if the operator own the project
+            if (StringUtils.equals(project.getName(), "learn_kylin")) {
+                projectService.deleteProject(projectName, project);
+            } else {
+                if (!StringUtils.isEmpty(project.getOwner()) && StringUtils.equals(project.getOwner(), auth.getName())) {
+                    projectService.deleteProject(projectName, project);
+                } else {
+                    throw new InternalErrorException("The Project must be deleted by project owner");
+                }
+            }
+
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException("Failed to delete project. " + " Caused by: " + e.getMessage(), e);
