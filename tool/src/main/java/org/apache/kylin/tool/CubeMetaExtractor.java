@@ -23,10 +23,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -60,6 +61,9 @@ import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -78,10 +82,10 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_STORAGE_TYPE = OptionBuilder.withArgName("storageEngine").hasArg().isRequired(false).withDescription("Specify the storage type to overwrite. Default is empty, keep origin.").create("storageEngine");
+    private static final Option OPTION_STORAGE_TYPE = OptionBuilder.withArgName("storageType").hasArg().isRequired(false).withDescription("Specify the storage type to overwrite. Default is empty, keep origin.").create("storageType");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_ENGINE_TYPE = OptionBuilder.withArgName("typeEngine").hasArg().isRequired(false).withDescription("Specify the engine type to overwrite. Default is empty, keep origin.").create("typeEngine");
+    private static final Option OPTION_ENGINE_TYPE = OptionBuilder.withArgName("engineType").hasArg().isRequired(false).withDescription("Specify the engine type to overwrite. Default is empty, keep origin.").create("engineType");
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info. Default true").create("includeSegments");
@@ -143,8 +147,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : false;
         includeSegmentDetails = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENT_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENT_DETAILS)) : false;
         onlyJobOutput = optionsHelper.hasOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_ONLY_JOB_OUTPUT)) : true;
-        storageType = optionsHelper.hasOption(OPTION_STORAGE_TYPE) ? optionsHelper.getOptionValue(OPTION_STORAGE_TYPE): null;
-        engineType = optionsHelper.hasOption(OPTION_ENGINE_TYPE) ? optionsHelper.getOptionValue(OPTION_ENGINE_TYPE): null;
+        storageType = optionsHelper.hasOption(OPTION_STORAGE_TYPE) ? optionsHelper.getOptionValue(OPTION_STORAGE_TYPE) : null;
+        engineType = optionsHelper.hasOption(OPTION_ENGINE_TYPE) ? optionsHelper.getOptionValue(OPTION_ENGINE_TYPE) : null;
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         metadataManager = MetadataManager.getInstance(kylinConfig);
@@ -253,17 +257,25 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     }
 
     private void engineOverwriteInternal(File f) throws IOException {
-        List<String> lines = FileUtils.readLines(f, "UTF-8");
-        for (int i = 0, n = lines.size(); i < n; i++) {
-            String l = lines.get(i);
-            if (l.contains("\"engine_type\"")) {
-                lines.set(i, "  \"engine_type\" : " + engineType + ",");
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(f);
+            boolean replaced = false;
+            if (engineType != null && rootNode.get("engine_type") != null) {
+                ((ObjectNode) rootNode).put("engine_type", Integer.parseInt(engineType));
+                replaced = true;
             }
-            if (l.contains("\"storage_type\"")) {
-                lines.set(i, "  \"storage_type\" : " + storageType + ",");
+            if (storageType != null && rootNode.get("storage_type") != null) {
+                ((ObjectNode) rootNode).put("storage_type", Integer.parseInt(storageType));
+                replaced = true;
             }
+            if (replaced) {
+                objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+                objectMapper.writeValue(f, rootNode);
+            }
+        } catch (JsonProcessingException ex) {
+            logger.info("cannot parse file {}", f);
         }
-        FileUtils.writeLines(f, "UTF-8", lines);
     }
 
     private IRealization getRealization(RealizationEntry realizationEntry) {
