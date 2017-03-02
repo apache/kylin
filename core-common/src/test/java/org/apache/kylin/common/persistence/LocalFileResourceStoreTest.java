@@ -38,8 +38,7 @@ public class LocalFileResourceStoreTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testFileStore() throws Exception {
-        ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-        ResourceStoreTest.testAStore(store);
+        ResourceStoreTest.testAStore("org.apache.kylin.common.persistence.FileResourceStore", "", KylinConfig.getInstanceFromEnv());
     }
 
 }

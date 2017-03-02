@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.NavigableSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +44,30 @@ public class ResourceStoreTest {
 
     private static final String PERFORMANCE_TEST_ROOT_PATH = "/performance";
 
-    private static final int TEST_RESOURCE_COUNT = 1000;
+    private static final int TEST_RESOURCE_COUNT = 100;
 
-    public static void testAStore(ResourceStore store) throws IOException {
+    public static void testAStore(String storeName, String url, KylinConfig kylinConfig) throws Exception {
+        String oldUrl = replaceMetadataUrl(kylinConfig, url);
+        testAStore(getStoreByName(storeName, kylinConfig));
+        replaceMetadataUrl(kylinConfig, oldUrl);
+    }
+
+    public static void testPerformance(String storeName, String url, KylinConfig kylinConfig) throws Exception {
+        String oldUrl = replaceMetadataUrl(kylinConfig, url);
+        testPerformance(getStoreByName(storeName, kylinConfig));
+        replaceMetadataUrl(kylinConfig, oldUrl);
+    }
+
+    public static String mockUrl(String tag, KylinConfig kylinConfig) {
+        return kylinConfig.getMetadataUrlPrefix() + "@" + tag;
+    }
+
+    private static void testAStore(ResourceStore store) throws IOException {
         testBasics(store);
         testGetAllResources(store);
     }
 
-    public static void testPerformance(ResourceStore store) throws IOException {
+    private static void testPerformance(ResourceStore store) throws IOException {
         logger.info("Test basic functions");
         testAStore(store);
         logger.info("Basic function ok. Start to test performance for class : " + store.getClass());
@@ -227,6 +245,18 @@ public class ResourceStoreTest {
         public String toString() {
             return str;
         }
+    }
+
+    public static String replaceMetadataUrl(KylinConfig kylinConfig, String newUrl) {
+        String oldUrl = kylinConfig.getMetadataUrl();
+        kylinConfig.setProperty("kylin.metadata.url", newUrl);
+        return oldUrl;
+    }
+
+    private static ResourceStore getStoreByName(String storeName, KylinConfig kylinConfig) throws Exception {
+        Class<? extends ResourceStore> cls = ClassUtil.forName(storeName, ResourceStore.class);
+        ResourceStore store = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
+        return store;
     }
 
 }

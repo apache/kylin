@@ -33,8 +33,11 @@ public class ResourceLock {
         this.lock = lock;
     }
 
-    public boolean acquire(long time, TimeUnit unit) throws Exception {
-        return lock.acquire(time, unit);
+    public void acquire(long time, TimeUnit unit) throws Exception {
+        boolean success = lock.acquire(time, unit);
+        if(!success){
+            throw new IllegalStateException("Fail to get Zookeeper lock");
+        }
     }
 
     public void acquire() throws Exception{

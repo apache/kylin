@@ -193,9 +193,7 @@ public class ITLockManagerTest extends HBaseMetadataTestCase {
 
         public void doWork(long time, TimeUnit unit) throws Exception {
             ResourceLock lock = lockManager.getLock(lockPath);
-            if (!lock.acquire(time, unit)) {
-                throw new IllegalStateException(clientName + " could not acquire the lock");
-            }
+            lock.acquire(time, unit);
             try {
                 logger.info(clientName + " has the lock");
                 resource.use();

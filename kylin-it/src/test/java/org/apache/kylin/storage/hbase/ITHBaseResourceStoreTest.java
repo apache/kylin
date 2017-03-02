@@ -26,7 +26,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.ResourceStoreTest;
 import org.apache.kylin.common.persistence.ResourceStoreTest.StringEntity;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -36,9 +35,12 @@ import org.junit.Test;
 
 public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
 
+    private KylinConfig kylinConfig;
+
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
+        kylinConfig = KylinConfig.getInstanceFromEnv();
     }
 
     @After
@@ -48,8 +50,8 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
 
     @Test
     public void testHBaseStore() throws Exception {
-        ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-        ResourceStoreTest.testAStore(store);
+        String storeName = "org.apache.kylin.storage.hbase.HBaseResourceStore";
+        ResourceStoreTest.testAStore(storeName, ResourceStoreTest.mockUrl("hbase", kylinConfig), kylinConfig);
     }
 
     @Test
@@ -57,7 +59,8 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
         String path = "/cube/_test_large_cell.json";
         String largeContent = "THIS_IS_A_LARGE_CELL";
         StringEntity content = new StringEntity(largeContent);
-        HBaseResourceStore store = (HBaseResourceStore) ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+        String oldUrl = ResourceStoreTest.replaceMetadataUrl(kylinConfig, ResourceStoreTest.mockUrl("hbase", kylinConfig));
+        HBaseResourceStore store = new HBaseResourceStore(KylinConfig.getInstanceFromEnv());
         Configuration hconf = store.getConnection().getConfiguration();
         int origSize = Integer.parseInt(hconf.get("hbase.client.keyvalue.maxsize", "10485760"));
 
@@ -81,6 +84,7 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
             in.close();
 
             store.deleteResource(path);
+            ResourceStoreTest.replaceMetadataUrl(kylinConfig, oldUrl);
         } finally {
             hconf.set("hbase.client.keyvalue.maxsize", "" + origSize);
             store.deleteResource(path);

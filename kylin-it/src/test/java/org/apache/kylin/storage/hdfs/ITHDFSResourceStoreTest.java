@@ -27,7 +27,6 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStoreTest;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.storage.hbase.HBaseResourceStore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -35,9 +34,11 @@ import org.junit.Test;
 
 public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
 
-    KylinConfig kylinConfig;
-    FileSystem fs;
-    String workingDir;
+    private KylinConfig kylinConfig;
+
+    private FileSystem fs;
+
+    private String workingDir;
 
     @Before
     public void setup() throws Exception {
@@ -78,29 +79,21 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
     }
 
     private void doTestWithPath(String path) throws Exception {
-        String oldUrl = kylinConfig.getMetadataUrl();
-        kylinConfig.setProperty("kylin.metadata.url", path + "@hdfs");
-        HDFSResourceStore store = new HDFSResourceStore(kylinConfig);
-        ResourceStoreTest.testAStore(store);
-        kylinConfig.setProperty("kylin.metadata.url", oldUrl);
+        String storeName = "org.apache.kylin.storage.hdfs.HDFSResourceStore";
+        ResourceStoreTest.testAStore(storeName, ResourceStoreTest.mockUrl("hdfs", kylinConfig), kylinConfig);
         assertTrue(fs.exists(new Path(path)));
     }
 
     @Ignore
     @Test
-    public void performanceTest() throws Exception{
+    public void performanceTest() throws Exception {
+
         //test hdfs performance
-        String oldUrl = kylinConfig.getMetadataUrl();
-        kylinConfig.setProperty("kylin.metadata.url", "kylin_metadata@hdfs");
-        HDFSResourceStore store = new HDFSResourceStore(kylinConfig);
-        ResourceStoreTest.testPerformance(store);
-        kylinConfig.setProperty("kylin.metadata.url", oldUrl);
+        String hdfsStoreName = "org.apache.kylin.storage.hdfs.HDFSResourceStore";
+        ResourceStoreTest.testPerformance(hdfsStoreName, ResourceStoreTest.mockUrl("hdfs", kylinConfig), kylinConfig);
 
         //test hbase
-        oldUrl = kylinConfig.getMetadataUrl();
-        kylinConfig.setProperty("kylin.metadata.url", "kylin_metadata@hbase");
-        HBaseResourceStore store2 = new HBaseResourceStore(kylinConfig);
-        ResourceStoreTest.testPerformance(store2);
-        kylinConfig.setProperty("kylin.metadata.url", oldUrl);
+        String hbaseStoreName = "org.apache.kylin.storage.hbase.HBaseResourceStore.HBaseResourceStore";
+        ResourceStoreTest.testPerformance(hbaseStoreName, ResourceStoreTest.mockUrl("hbase", kylinConfig), kylinConfig);
     }
 }

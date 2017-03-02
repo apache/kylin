@@ -954,8 +954,25 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     //ResourceStore Impl
-    public String getResourceStoreImpl() {
+    /*public String getResourceStoreImpl() {
         return getOptional("kylin.metadata.default-resource-store-impl", "org.apache.kylin.storage.hbase.HBaseResourceStore");
+    }*/
+
+    public Map<String, String> getResourceStoreImpls() {
+        Map<String, String> r = Maps.newLinkedHashMap();
+        // ref constants in ISourceAware
+        r.put("", "org.apache.kylin.common.persistence.FileResourceStore");
+        r.put("hbase", "org.apache.kylin.storage.hbase.HBaseResourceStore");
+        r.put("hdfs", "org.apache.kylin.storage.hdfs.HDFSResourceStore");
+        r.putAll(getPropertiesByPrefix("kylin.resource.store.provider."));
+        return r;
+    }
+
+    public String getResourceStoreImpl() {
+        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        int cut = metadataUrl.indexOf('@');
+        String key = cut < 0 ? "" : metadataUrl.substring(0, cut);
+        return getResourceStoreImpls().get(key);
     }
 
 }

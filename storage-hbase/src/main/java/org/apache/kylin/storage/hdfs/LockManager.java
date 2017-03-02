@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class LockManager {
@@ -75,14 +76,14 @@ public class LockManager {
         return new ResourceLock(lockPath, lock);
     }
 
-    public void releaseLock(ResourceLock lock) {
+    public void releaseLock(ResourceLock lock) throws IOException {
         try {
             if (lock != null)
                 lock.release();
         } catch (Exception e) {
-            logger.error("Fail to release lock");
-            e.printStackTrace();
+            throw new IOException("Fail to release lock", e);
         }
+
     }
 
     private static String getZKConnectString(KylinConfig kylinConfig) {
