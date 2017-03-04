@@ -163,7 +163,12 @@ public class ModelChooser {
         TreeMap<DataModelDesc, Set<IRealization>> result = Maps.newTreeMap(new Comparator<DataModelDesc>() {
             @Override
             public int compare(DataModelDesc o1, DataModelDesc o2) {
-                return costs.get(o1).compareTo(costs.get(o2));
+                RealizationCost c1 = costs.get(o1);
+                RealizationCost c2 = costs.get(o2);
+                int comp = c1.compareTo(c2);
+                if (comp == 0)
+                    comp = o1.getName().compareTo(o2.getName());
+                return comp;
             }
         });
         result.putAll(models);
