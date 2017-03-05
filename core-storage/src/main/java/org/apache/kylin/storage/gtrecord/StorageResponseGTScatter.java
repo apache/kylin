@@ -28,6 +28,7 @@ import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,11 +70,11 @@ public class StorageResponseGTScatter implements IGTScanner {
     @Override
     public Iterator<GTRecord> iterator() {
         Iterator<Iterator<GTRecord>> shardSubsets = Iterators.transform(blocks, new EndpointResponseGTScatterFunc());
-        if (storagePushDownLimit != Integer.MAX_VALUE) {
-            logger.info("Using SortedIteratorMergerWithLimit to merge partitions");
+        if (StorageContext.mergeSortPartitionResults(storagePushDownLimit)) {
+            logger.info("Using SortedIteratorMergerWithLimit to merge partition results");
             return new SortedIteratorMergerWithLimit<GTRecord>(shardSubsets, storagePushDownLimit, GTRecord.getPrimaryKeyComparator()).getIterator();
         } else {
-            logger.info("Using Iterators.concat to merge partitions");
+            logger.info("Using Iterators.concat to merge partition results");
             return Iterators.concat(shardSubsets);
         }
     }

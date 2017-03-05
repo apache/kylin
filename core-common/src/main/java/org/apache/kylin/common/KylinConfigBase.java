@@ -773,7 +773,6 @@ abstract public class KylinConfigBase implements Serializable {
     // ENGINE.SPARK
     // ============================================================================
 
-
     public String getHadoopConfDir() {
         return getOptional("kylin.env.hadoop-conf-dir", "");
     }
@@ -815,6 +814,10 @@ abstract public class KylinConfigBase implements Serializable {
     @Deprecated
     public int getScanThreshold() {
         return Integer.parseInt(getOptional("kylin.query.scan-threshold", "10000000"));
+    }
+
+    public int getMergeSortPartitionResultsMinLimit() {
+        return Integer.parseInt(getOptional("kylin.query.merge-sort-partition-results.min-limit", "100"));
     }
 
     public long getQueryMaxScanBytes() {

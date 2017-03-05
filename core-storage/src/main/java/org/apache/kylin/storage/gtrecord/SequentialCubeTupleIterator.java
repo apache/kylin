@@ -24,8 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -37,7 +35,6 @@ import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -64,19 +61,15 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context));
         }
 
-        if (!context.isLimitEnabled()) {
-            //normal case
-            tupleIterator = Iterators.concat(segmentCubeTupleIterators.iterator());
-        } else {
+        if (context.mergeSortPartitionResults()) {
             //query with limit
-            Iterator<Iterator<ITuple>> transformed = Iterators.transform(segmentCubeTupleIterators.iterator(), new Function<SegmentCubeTupleIterator, Iterator<ITuple>>() {
-                @Nullable
-                @Override
-                public Iterator<ITuple> apply(@Nullable SegmentCubeTupleIterator input) {
-                    return input;
-                }
-            });
+            logger.info("Using SortedIteratorMergerWithLimit to merge segment results");
+            Iterator<Iterator<ITuple>> transformed = (Iterator<Iterator<ITuple>>) (Iterator<?>) segmentCubeTupleIterators.iterator();
             tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), getTupleDimensionComparator(cuboid, returnTupleInfo)).getIterator();
+        } else {
+            //normal case
+            logger.info("Using Iterators.concat to merge segment results");
+            tupleIterator = Iterators.concat(segmentCubeTupleIterators.iterator());
         }
     }
 

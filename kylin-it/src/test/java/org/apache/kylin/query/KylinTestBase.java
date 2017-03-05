@@ -682,7 +682,7 @@ public class KylinTestBase {
 
     protected boolean checkFinalPushDownLimit() {
         OLAPContext context = getFirstOLAPContext();
-        return context.storageContext.isLimitEnabled();
+        return context.storageContext.isLimitPushDownEnabled();
 
     }
 

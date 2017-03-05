@@ -20,9 +20,11 @@ package org.apache.kylin.storage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,6 @@ public class StorageContext {
 
     private boolean exactAggregation = false;
     private boolean needStorageAggregation = false;
-    private boolean limitEnabled = false;
     private boolean enableCoprocessor = false;
 
     private IStorageQuery storageQuery;
@@ -63,16 +64,14 @@ public class StorageContext {
         this.connUrl = connUrl;
     }
 
-    public int getLimit() {
+    //the limit here correspond to the limit concept in SQL
+    //also take into consideration Statement.setMaxRows in JDBC
+    private int getLimit() {
         if (overlookOuterLimit || BackdoorToggles.getStatementMaxRows() == null || BackdoorToggles.getStatementMaxRows() == 0) {
             return limit;
         } else {
             return Math.min(limit, BackdoorToggles.getStatementMaxRows());
         }
-    }
-
-    public void setOverlookOuterLimit() {
-        this.overlookOuterLimit = true;
     }
 
     public void setLimit(int l) {
@@ -83,6 +82,12 @@ public class StorageContext {
         }
     }
 
+    //outer limit is sth like Statement.setMaxRows in JDBC
+    public void setOverlookOuterLimit() {
+        this.overlookOuterLimit = true;
+    }
+
+    //the offset here correspond to the offset concept in SQL
     public int getOffset() {
         return offset;
     }
@@ -91,8 +96,18 @@ public class StorageContext {
         this.offset = offset;
     }
 
-    public boolean isLimitEnabled() {
-        return this.limitEnabled;
+    /**
+     * in contrast to the limit in SQL concept, "limit push down" means
+     * whether the limit is effective in storage level. Some queries are not possible 
+     * to leverage limit clause, checkout 
+     * {@link GTCubeStorageQueryBase#enableStorageLimitIfPossible(org.apache.kylin.cube.cuboid.Cuboid, java.util.Collection, java.util.Set, java.util.Collection, org.apache.kylin.metadata.filter.TupleFilter, java.util.Set, java.util.Collection, org.apache.kylin.storage.StorageContext)}
+     */
+    public boolean isLimitPushDownEnabled() {
+        return isValidPushDownLimit(finalPushDownLimit);
+    }
+
+    public static boolean isValidPushDownLimit(int finalPushDownLimit) {
+        return finalPushDownLimit < Integer.MAX_VALUE && finalPushDownLimit > 0;
     }
 
     public int getFinalPushDownLimit() {
@@ -101,7 +116,7 @@ public class StorageContext {
 
     public void setFinalPushDownLimit(IRealization realization) {
 
-        if (this.getLimit() == Integer.MAX_VALUE) {
+        if (!isValidPushDownLimit(this.getLimit())) {
             return;
         }
 
@@ -110,10 +125,18 @@ public class StorageContext {
         if (!realization.supportsLimitPushDown()) {
             logger.warn("Not enabling limit push down because cube storage type not supported");
         } else {
-            this.limitEnabled = true;
             this.finalPushDownLimit = tempPushDownLimit;
-            logger.info("Enable limit: " + tempPushDownLimit);
+            logger.info("Enable limit (storage push down limit) :" + tempPushDownLimit);
         }
+    }
+
+    public boolean mergeSortPartitionResults() {
+        return mergeSortPartitionResults(finalPushDownLimit);
+    }
+
+    public static boolean mergeSortPartitionResults(int finalPushDownLimit) {
+        return isValidPushDownLimit(finalPushDownLimit) && //
+                (finalPushDownLimit > KylinConfig.getInstanceFromEnv().getMergeSortPartitionResultsMinLimit());
     }
 
     public long getDeadline() {
