@@ -4,14 +4,14 @@ title:  Build Cube with Spark (beta)
 categories: tutorial
 permalink: /docs16/tutorial/cube_spark.html
 ---
-Kylin v2.0 introduces the Spark cube engine, it uses Apache Spark to replace MapReduce in the build cube step; You can check [this blog](/blog/2017/02/23/by-layer-spark-cubing/) for the high level design. The current document uses the sample cube to demo how to try the new engine.
+Kylin v2.0 introduces the Spark cube engine, it uses Apache Spark to replace MapReduce in the build cube step; You can check [this blog](/blog/2017/02/23/by-layer-spark-cubing/) for an overall picture. The current document uses the sample cube to demo how to try the new engine.
 
 ## Preparation
-To finish this tutorial, you need a Hadoop environment which has Kylin v2.0.0 or above installed. Here we will use Hortonworks HDP 2.4 Sandbox VM, the Hadoop platform as well as HBase has already been started. 
+To finish this tutorial, you need a Hadoop environment which has Kylin v2.0.0 or above installed. Here we will use Hortonworks HDP 2.4 Sandbox VM, the Hadoop components as well as Hive/HBase has already been started. 
 
 ## Install Kylin v2.0.0 beta
 
-Download the Kylin v2.0.0 beta for HBase 1.x from Kylin's download page, and then uncompress the tar ball in */usr/local/* folder:
+Download the Kylin v2.0.0 beta for HBase 1.x from Kylin's download page, and then uncompress the tar ball into */usr/local/* folder:
 
 {% highlight Groff markup %}
 
@@ -24,7 +24,7 @@ export KYLIN_HOME=/usr/local/apache-kylin-2.0.0-SNAPSHOT-bin
 
 ## Prepare "kylin.env.hadoop-conf-dir"
 
-To run Spark on Yarn, need specify *HADOOP_CONF_DIR* environment variable, which is the directory that contains the (client side) configuration files for the Hadoop cluster. In many Hadoop distributions these files are in "/etc/hadoop/conf"; But Kylin not only need access HDFS, Hive, but also HBase, so the default path might not have all necessary files. In this case, you need create a new directory and then copying or linking all the client files (core-site.xml, yarn-site.xml, hive-site.xml and hbase-site.xml) there. In HDP 2.4, there is a conflict between hive-tez and Spark, so need change the default engine from *tez* to *mr* when copy for Kylin.
+To run Spark on Yarn, need specify **HADOOP_CONF_DIR** environment variable, which is the directory that contains the (client side) configuration files for Hadoop. In many Hadoop distributions the directory is "/etc/hadoop/conf"; But Kylin not only need access HDFS, Yarn and Hive, but also HBase, so the default directory might not have all necessary files. In this case, you need create a new directory and then copying or linking those client files (core-site.xml, yarn-site.xml, hive-site.xml and hbase-site.xml) there. In HDP 2.4, there is a conflict between hive-tez and Spark, so need change the default engine from "tez" to "mr" when copy for Kylin.
 
 {% highlight Groff markup %}
 
@@ -33,23 +33,23 @@ ln -s /etc/hadoop/conf/core-site.xml $KYLIN_HOME/hadoop-conf/core-site.xml
 ln -s /etc/hadoop/conf/yarn-site.xml $KYLIN_HOME/hadoop-conf/yarn-site.xml 
 ln -s /etc/hbase/2.4.0.0-169/0/hbase-site.xml $KYLIN_HOME/hadoop-conf/hbase-site.xml 
 cp /etc/hive/2.4.0.0-169/0/hive-site.xml $KYLIN_HOME/hadoop-conf/hive-site.xml 
-vi $KYLIN_HOME/hadoop-conf/hive-site.xml (change "hive.execution.engine" from "tez" to "mr")
+vi $KYLIN_HOME/hadoop-conf/hive-site.xml (change "hive.execution.engine" value from "tez" to "mr")
 
 {% endhighlight %}
 
-Now, let Kylin know this directory with "kylin.env.hadoop-conf-dir" in kylin.properties:
+Now, let Kylin know this directory with property "kylin.env.hadoop-conf-dir" in kylin.properties:
 
 {% highlight Groff markup %}
 kylin.env.hadoop-conf-dir=/usr/local/apache-kylin-2.0.0-SNAPSHOT-bin/hadoop-conf
 {% endhighlight %}
 
-If this property wasn't set, Kylin will use the directory that "hive-site.xml" locates in; as that folder usually has no "hbase-site.xml", will get HBase/ZK connection error in Spark.
+If this property isn't set, Kylin will use the directory that "hive-site.xml" locates in; while that folder may have no "hbase-site.xml", will get HBase/ZK connection error in Spark.
 
 ## Check Spark configuration
 
-Kylin embedes a Spark binary (v1.6.3) in $KYLIN_HOME/spark, all the Spark configurations can be managed in $KYLIN_HOME/conf/kylin.properties with prefix *"kylin.engine.spark-conf."*. These properties will be extracted and applied when runs Spark; E.g, if you configure "kylin.engine.spark-conf.spark.executor.memory=4G", Kylin will use "--conf spark.executor.memory=4G" as parameter when execute "spark-submit".
+Kylin embedes a Spark binary (v1.6.3) in $KYLIN_HOME/spark, all the Spark configurations can be managed in $KYLIN_HOME/conf/kylin.properties with prefix *"kylin.engine.spark-conf."*. These properties will be extracted and applied when runs submit Spark job; E.g, if you configure "kylin.engine.spark-conf.spark.executor.memory=4G", Kylin will use "--conf spark.executor.memory=4G" as parameter when execute "spark-submit".
 
-Before you run Spark cubing, suggest take a look on these configurations and do customization according to your cluster. Below is the default configurations, which is also the minimal config for sandbox (1 executor with 1GB memory); usually in a normal cluster, need much more executors and each has at least 4GB memory and 2 cores:
+Before you run Spark cubing, suggest take a look on these configurations and do customization according to your cluster. Below is the default configurations, which is also the minimal config for a sandbox (1 executor with 1GB memory); usually in a normal cluster, need much more executors and each has at least 4GB memory and 2 cores:
 
 {% highlight Groff markup %}
 kylin.engine.spark-conf.spark.master=yarn
@@ -73,7 +73,7 @@ kylin.engine.spark-conf.spark.history.fs.logDirectory=hdfs\:///kylin/spark-histo
 
 For running on Hortonworks platform, need specify "hdp.version" as Java options for Yarn containers, so please uncommment the last three lines in kylin.properties. 
 
-Besides, in order to avoid repeatedly uploading Spark assembly jar to Yarn, you can manually do that once, and then specify the jar's HDFS location; Please note, the HDFS location need be the full qualified name.
+Besides, in order to avoid repeatedly uploading Spark assembly jar to Yarn, you can manually do that once, and then configure the jar's HDFS location; Please note, the HDFS location need be full qualified name.
 
 {% highlight Groff markup %}
 hadoop fs -mkdir -p /kylin/spark/
@@ -88,7 +88,7 @@ kylin.engine.spark-conf.spark.yarn.am.extraJavaOptions=-Dhdp.version=current
 kylin.engine.spark-conf.spark.executor.extraJavaOptions=-Dhdp.version=current
 {% endhighlight %}
 
-All the "kylin.engine.spark-conf.*" parameters can be overwritten at Cube level, this gives more flexibility to user.
+All the "kylin.engine.spark-conf.*" parameters can be overwritten at Cube or Project level, this gives more flexibility to the user.
 
 ## Create and modify sample cube
 
@@ -110,12 +110,12 @@ Click "Next" to the "Configuration Overwrites" page, click "+Property" to add pr
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/2_overwrite_partition.png)
 
-The sample cube has two memory hungry measures: a "COUNT DISTINCT" and a "TOPN(100)"; Their size estimation can be inaccurate especially when the source data is small. The estimized size is much larger than the real size, that causes much more RDD partitions be splitted than expected. Here 100 is a more reasonable number. Click "Next" and "Save" to save the cube.
+The sample cube has two memory hungry measures: a "COUNT DISTINCT" and a "TOPN(100)"; Their size estimation can be inaccurate when the source data is small: the estimized size is much larger than the real size, that causes much more RDD partitions be splitted, which slows down the build. Here 100 is a more reasonable number for it. Click "Next" and "Save" to save the cube.
 
 
 ## Build Cube with Spark
 
-Click "Build", select current date as the end date to proceed. Kylin generates a build job in the "Monitor" page, in which the 7th step is the Spark cubing. The job engine starts to execute the steps in sequence. 
+Click "Build", select current date as the build end date. Kylin generates a build job in the "Monitor" page, in which the 7th step is the Spark cubing. The job engine starts to execute the steps in sequence. 
 
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/2_job_with_spark.png)
@@ -123,7 +123,7 @@ Click "Build", select current date as the end date to proceed. Kylin generates a
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/3_spark_cubing_step.png)
 
-When Kylin executes this step, you can monitor the status in Yarn resource manager. Click the "Application Master" link will open Spark web UI, it shows much more detailed information.
+When Kylin executes this step, you can monitor the status in Yarn resource manager. Click the "Application Master" link will open Spark web UI, it shows the progress of each stage and the detailed information.
 
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/4_job_on_rm.png)
@@ -134,7 +134,7 @@ When Kylin executes this step, you can monitor the status in Yarn resource manag
 
 After all steps be successfully executed, the Cube becomes "Ready" and you can query it as normal.
 
-## Trouble shotting
+## Troubleshooting
 
 When getting error, you should check "logs/kylin.log" firstly. There has the full Spark command that Kylin executes, e.g:
 
@@ -143,11 +143,11 @@ When getting error, you should check "logs/kylin.log" firstly. There has the ful
 
 {% endhighlight %}
 
-You can copy the cmd to execute manually in shell and then tunning the parameters quickly; During the execution, you can access Yarn resource manager to see the resource allocation status and the Spark web GUI. If the job has already finished, you can check the history info in Spark history server. 
+You can copy the cmd to execute manually in shell and then tunning the parameters quickly; During the execution, you can access Yarn resource manager to check more. If the job has already finished, you can check the history info in Spark history server. 
 
-As Kylin outputs the history to "hdfs:///kylin/spark-history", you need start Spark history server on that folder, or change to your existing Spark history server's location in conf/kylin.properties with "kylin.engine.spark-conf.spark.eventLog.dir" and "kylin.engine.spark-conf.spark.history.fs.logDirectory".
+By default Kylin outputs the history to "hdfs:///kylin/spark-history", you need start Spark history server on that directory, or change to use your existing Spark history server's event directory in conf/kylin.properties with parameter "kylin.engine.spark-conf.spark.eventLog.dir" and "kylin.engine.spark-conf.spark.history.fs.logDirectory".
 
-This command will start a Spark history server instance on Kylin's output folder, before run it making sure you have stopped the existing Spark history server from Ambari:
+The following command will start a Spark history server instance on Kylin's output directory, before run it making sure you have stopped the existing Spark history server in sandbox:
 
 {% highlight Groff markup %}
 $KYLIN_HOME/spark/sbin/start-history-server.sh hdfs://sandbox.hortonworks.com:8020/kylin/spark-history 
@@ -157,10 +157,10 @@ In web browser, access "http://sandbox:18080" it shows the job history:
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/9_spark_history.png)
 
-Click a specific Cube job, there you will see the detail runtime information, that is very helpful for trouble shooting and performance tunning.
+Click a specific job, there you will see the detail runtime information, that is very helpful for trouble shooting and performance tunning.
 
 ## Go further
 
-If you're a Kylin administrator but new to Spark, suggest you check [Spark document](https://spark.apache.org/docs/1.6.3/), and then update your configurations accordingly. Spark's performance relies on Cluster's memory and CPU resource, while Kylin's Cube build is a heavy task when have a huge dataset and complex data model, which may exceed your cluster's capacity and then cause OutOfMemory error, so please use it carefully. For Cube which has many dimensions (>10) or has memory hungry measures (Count Distinct, TOPN), suggest using the MapReduce engine. 
+If you're a Kylin administrator but new to Spark, suggest you go through [Spark document](https://spark.apache.org/docs/1.6.3/), and don't forget to update the configurations accordingly. Spark's performance relies on Cluster's memory and CPU resource, while Kylin's Cube build is a heavy task when having a complex data model and a huge dataset to build at one time. If your cluster can not match the requirement, kinds of error like "OutOfMemorry" will be thrown in executors, so please use the new engine properly. For Cube which has many combinations (e.g, a full cube with more than 12 dimensions), UHC, or memory hungry measures (Count Distinct, Top-N), suggest to keep using the MapReduce engine. If your Cube model is simple, all measures are SUM/MIN/MAX/COUNT, source data is small to medium scale, Spark engine would be a good choice. Besides, Streaming build isn't supported in Spark engine so far (KYLIN-2484).
 
-Please send your questions, feedbacks to dev@kylin.apache.org.
+Now this engine is in public beta; If you have any question, comment, or bug fixe, welcome to discuss in dev@kylin.apache.org.
