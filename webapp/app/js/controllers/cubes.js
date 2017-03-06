@@ -304,28 +304,43 @@ KylinApp.controller('CubesCtrl', function ($scope, $q, $routeParams, $location, 
           if(table && table.source_type == 1){
             cube.streaming = true;
           }
-
           // for streaming cube build tip
           if(cube.streaming){
-            $modal.open({
-              templateUrl: 'streamingBuild.html',
-              controller: streamingBuildCtrl,
-              resolve: {
-                cube: function () {
-                  return cube;
-                },
-                metaModel:function(){
-                  return $scope.metaModel;
-                },
-                buildType: function () {
-                  return 'BUILD';
-                },
-                scope:function(){
+            SweetAlert.swal({
+              title: '',
+              text: "Are you sure to start the build?",
+              type: '',
+              showCancelButton: true,
+              confirmButtonColor: '#DD6B55',
+              confirmButtonText: "Yes",
+              closeOnConfirm: true
+            }, function(isConfirm) {
+              if(isConfirm){
+                loadingRequest.show();
+                CubeService.rebuildStreamingCube(
+                  {
+                    cubeId: cube.name
+                  },
+                  {
+                    sourceOffsetStart:0,
+                    sourceOffsetEnd:'9223372036854775807',
+                    buildType:'BUILD'
+                  }, function (job) {
+                    loadingRequest.hide();
+                    SweetAlert.swal('Success!', 'Rebuild job was submitted successfully', 'success');
+                  },function(e){
 
-                  return $scope;
-                }
+                    loadingRequest.hide();
+                    if(e.data&& e.data.exception){
+                      var message =e.data.exception;
+                      var msg = !!(message) ? message : 'Failed to take action.';
+                      SweetAlert.swal('Oops...', msg, 'error');
+                    }else{
+                      SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+                    }
+                  });
               }
-            });
+            })
             return;
           }
 
