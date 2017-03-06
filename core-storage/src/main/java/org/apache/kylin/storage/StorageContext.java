@@ -20,7 +20,6 @@ package org.apache.kylin.storage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -135,8 +134,7 @@ public class StorageContext {
     }
 
     public static boolean mergeSortPartitionResults(int finalPushDownLimit) {
-        return isValidPushDownLimit(finalPushDownLimit) && //
-                (finalPushDownLimit > KylinConfig.getInstanceFromEnv().getMergeSortPartitionResultsMinLimit());
+        return isValidPushDownLimit(finalPushDownLimit);
     }
 
     public long getDeadline() {

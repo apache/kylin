@@ -816,10 +816,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.query.scan-threshold", "10000000"));
     }
 
-    public int getMergeSortPartitionResultsMinLimit() {
-        return Integer.parseInt(getOptional("kylin.query.merge-sort-partition-results.min-limit", "100"));
-    }
-
     public long getQueryMaxScanBytes() {
         long value = Long.parseLong(getOptional("kylin.query.max-scan-bytes", "0"));
         return value > 0 ? value : Long.MAX_VALUE;
