@@ -193,7 +193,7 @@ import com.google.common.collect.Maps;
 /*
  * The code has synced with calcite. Hope one day, we could remove the hardcode override point.
  * OVERRIDE POINT:
- * - getInSubqueryThreshold(), was `20`, now `Integer.MAX_VALUE`
+ * - DEFAULT_IN_SUB_QUERY_THRESHOLD, was `20`, now `Integer.MAX_VALUE`
  * - isTrimUnusedFields(), override to false
  * - AggConverter.translateAgg(...), skip column reading for COUNT(COL), for https://jirap.corp.ebay.com/browse/KYLIN-104
  * - convertQuery(), call hackSelectStar() at the end
@@ -217,7 +217,8 @@ public class SqlToRelConverter {
 
     /** Size of the smallest IN list that will be converted to a semijoin to a
      * static table. */
-    public static final int DEFAULT_IN_SUB_QUERY_THRESHOLD = 20;
+    /* OVERRIDE POINT */
+    public static final int DEFAULT_IN_SUB_QUERY_THRESHOLD = Integer.MAX_VALUE;
 
     @Deprecated // to be removed before 2.0
     public static final int DEFAULT_IN_SUBQUERY_THRESHOLD =
@@ -1017,7 +1018,7 @@ public class SqlToRelConverter {
         scope.getValidator().deriveType(scope, e);
         return e;
     }
-        
+
     /**
      * Converts a WHERE clause.
      *
@@ -1532,9 +1533,7 @@ public class SqlToRelConverter {
      */
     @Deprecated // to be removed before 2.0
     protected int getInSubqueryThreshold() {
-        //return config.getInSubQueryThreshold();
-         /* OVERRIDE POINT */
-        return Integer.MAX_VALUE;
+        return config.getInSubQueryThreshold();
     }
 
     /**
