@@ -32,7 +32,7 @@ Tutorial
 4. [Web Interface](tutorial/web.html)
 5. [SQL reference: by Apache Calcite](http://calcite.apache.org/docs/reference.html)
 6. [Build Cube with Streaming Data (beta)](tutorial/cube_streaming.html)
-6. [Build Cube with Spark engine (v2.0 beta)](/tutorial/cube_spark.html)
+6. [Build Cube with Spark engine (v2.0 beta)](tutorial/cube_spark.html)
 
 
 Connectivity and APIs
