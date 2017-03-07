@@ -62,8 +62,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     private static final Logger logger = LoggerFactory.getLogger(GTCubeStorageQueryBase.class);
 
-    private final CubeInstance cubeInstance;
-    private final CubeDesc cubeDesc;
+    protected final CubeInstance cubeInstance;
+    protected final CubeDesc cubeDesc;
 
     public GTCubeStorageQueryBase(CubeInstance cube) {
         this.cubeInstance = cube;
@@ -148,7 +148,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         return new CubeTupleConverter(cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
     }
 
-    private void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
+    protected void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
         for (FunctionDesc func : sqlDigest.aggregations) {
             if (!func.isDimensionAsMetric()) {
                 // use the FunctionDesc from cube desc as much as possible, that has more info such as HLLC precision
@@ -174,7 +174,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         return aggrFunc;
     }
 
-    private Set<TblColRef> expandDerived(Collection<TblColRef> cols, Set<TblColRef> derivedPostAggregation) {
+    protected Set<TblColRef> expandDerived(Collection<TblColRef> cols, Set<TblColRef> derivedPostAggregation) {
         Set<TblColRef> expanded = Sets.newHashSet();
         for (TblColRef col : cols) {
             if (cubeDesc.hasHostColumn(col)) {
@@ -253,7 +253,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     }
 
     @SuppressWarnings("unchecked")
-    private TupleFilter translateDerived(TupleFilter filter, Set<TblColRef> collector) {
+    protected TupleFilter translateDerived(TupleFilter filter, Set<TblColRef> collector) {
         if (filter == null)
             return filter;
 
@@ -366,7 +366,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         }
     }
 
-    private void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
+    protected void notifyBeforeStorageQuery(SQLDigest sqlDigest) {
         Map<String, List<MeasureDesc>> map = Maps.newHashMap();
         for (MeasureDesc measure : cubeDesc.getMeasures()) {
             MeasureType<?> measureType = measure.getFunction().getMeasureType();
