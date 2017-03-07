@@ -157,10 +157,10 @@ In web browser, access "http://sandbox:18080" it shows the job history:
 
    ![](/images/tutorial/2.0/Spark-Cubing-Tutorial/9_spark_history.png)
 
-Click a specific job, there you will see the detail runtime information, that is very helpful for trouble shooting and performance tunning.
+Click a specific job, there you will see the detail runtime information, that is very helpful for trouble shooting and performance tuning.
 
 ## Go further
 
-If you're a Kylin administrator but new to Spark, suggest you go through [Spark document](https://spark.apache.org/docs/1.6.3/), and don't forget to update the configurations accordingly. Spark's performance relies on Cluster's memory and CPU resource, while Kylin's Cube build is a heavy task when having a complex data model and a huge dataset to build at one time. If your cluster can not match the requirement, kinds of error like "OutOfMemorry" will be thrown in executors, so please use the new engine properly. For Cube which has many combinations (e.g, a full cube with more than 12 dimensions), UHC, or memory hungry measures (Count Distinct, Top-N), suggest to keep using the MapReduce engine. If your Cube model is simple, all measures are SUM/MIN/MAX/COUNT, source data is small to medium scale, Spark engine would be a good choice. Besides, Streaming build isn't supported in Spark engine so far (KYLIN-2484).
+If you're a Kylin administrator but new to Spark, suggest you go through [Spark documents](https://spark.apache.org/docs/1.6.3/), and don't forget to update the configurations accordingly. Spark's performance relies on Cluster's memory and CPU resource, while Kylin's Cube build is a heavy task when having a complex data model and a huge dataset to build at one time. If your cluster resource couldn't fulfill, errors like "OutOfMemorry" will be thrown in Spark executors, so please use it properly. For Cube which has UHC dimension, many combinations (e.g, a full cube with more than 12 dimensions), or memory hungry measures (Count Distinct, Top-N), suggest to use the MapReduce engine. If your Cube model is simple, all measures are SUM/MIN/MAX/COUNT, source data is small to medium scale, Spark engine would be a good choice. Besides, Streaming build isn't supported in this engine so far (KYLIN-2484).
 
-Now this engine is in public beta; If you have any question, comment, or bug fixe, welcome to discuss in dev@kylin.apache.org.
+Now the Spark engine is in public beta; If you have any question, comment, or bug fix, welcome to discuss in dev@kylin.apache.org.
