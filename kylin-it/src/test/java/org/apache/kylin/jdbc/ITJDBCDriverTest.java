@@ -28,6 +28,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -37,6 +38,8 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -46,9 +49,12 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     private static Server server = null;
     private static SystemPropertiesOverride sysPropsOverride = new SystemPropertiesOverride();
+    private static final int PORT = new Random().nextInt(100) + 37070;
+    private static final Logger logger = LoggerFactory.getLogger(ITJDBCDriverTest.class);
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+        logger.info("random jetty port: " + PORT);
         sysPropsOverride.override("spring.profiles.active", "testing");
         sysPropsOverride.override("catalina.home", "."); // resources/log4j.properties ref ${catalina.home}
         staticCreateTestMetadata();
@@ -74,7 +80,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     protected static void startJetty() throws Exception {
 
-        server = new Server(7070);
+        server = new Server(PORT);
 
         WebAppContext context = new WebAppContext();
         context.setDescriptor("../server/src/main/webapp/WEB-INF/web.xml");
@@ -94,7 +100,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
         Properties info = new Properties();
         info.put("user", "ADMIN");
         info.put("password", "KYLIN");
-        Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
+        Connection conn = driver.connect("jdbc:kylin://localhost:" + PORT + "/default", info);
 
         return conn;
     }
@@ -261,7 +267,6 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
         conn.close();
 
     }
-
 
     @Test
     public void testResultSetWithMaxRows() throws Exception {

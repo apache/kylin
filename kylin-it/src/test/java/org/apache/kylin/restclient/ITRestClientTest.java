@@ -18,6 +18,13 @@
 
 package org.apache.kylin.restclient;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Random;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpResponse;
 import org.apache.kylin.common.restclient.RestClient;
@@ -30,12 +37,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.HashMap;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
  */
 public class ITRestClientTest extends HBaseMetadataTestCase {
@@ -46,7 +47,7 @@ public class ITRestClientTest extends HBaseMetadataTestCase {
 
     private static final String HOST = "localhost";
 
-    private static final int PORT = 7070;
+    private static final int PORT = new Random().nextInt(100) + 37070;
 
     private static final String USERNAME = "ADMIN";
 
@@ -60,6 +61,7 @@ public class ITRestClientTest extends HBaseMetadataTestCase {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+        logger.info("random jetty port: " + PORT);
         sysPropsOverride.override("spring.profiles.active", "testing");
         sysPropsOverride.override("catalina.home", "."); // resources/log4j.properties ref ${catalina.home}
         staticCreateTestMetadata();
@@ -113,7 +115,7 @@ public class ITRestClientTest extends HBaseMetadataTestCase {
 
     protected static void startJetty() throws Exception {
 
-        server = new Server(7070);
+        server = new Server(PORT);
 
         WebAppContext context = new WebAppContext();
         context.setDescriptor("../server/src/main/webapp/WEB-INF/web.xml");
