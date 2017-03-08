@@ -46,15 +46,15 @@ public class ResourceStoreTest {
 
     private static final int TEST_RESOURCE_COUNT = 100;
 
-    public static void testAStore(String storeName, String url, KylinConfig kylinConfig) throws Exception {
+    public static void testAStore(String url, KylinConfig kylinConfig) throws Exception {
         String oldUrl = replaceMetadataUrl(kylinConfig, url);
-        testAStore(getStoreByName(storeName, kylinConfig));
+        testAStore(getStoreByName(kylinConfig.getResourceStoreImpl(), kylinConfig));
         replaceMetadataUrl(kylinConfig, oldUrl);
     }
 
-    public static void testPerformance(String storeName, String url, KylinConfig kylinConfig) throws Exception {
+    public static void testPerformance(String url, KylinConfig kylinConfig) throws Exception {
         String oldUrl = replaceMetadataUrl(kylinConfig, url);
-        testPerformance(getStoreByName(storeName, kylinConfig));
+        testPerformance(getStoreByName(kylinConfig.getResourceStoreImpl(), kylinConfig));
         replaceMetadataUrl(kylinConfig, oldUrl);
     }
 

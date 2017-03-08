@@ -79,8 +79,7 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
     }
 
     private void doTestWithPath(String path) throws Exception {
-        String storeName = "org.apache.kylin.storage.hdfs.HDFSResourceStore";
-        ResourceStoreTest.testAStore(storeName, ResourceStoreTest.mockUrl("hdfs", kylinConfig), kylinConfig);
+        ResourceStoreTest.testAStore(ResourceStoreTest.mockUrl("hdfs", kylinConfig), kylinConfig);
         assertTrue(fs.exists(new Path(path)));
     }
 
@@ -90,10 +89,10 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
 
         //test hdfs performance
         String hdfsStoreName = "org.apache.kylin.storage.hdfs.HDFSResourceStore";
-        ResourceStoreTest.testPerformance(hdfsStoreName, ResourceStoreTest.mockUrl("hdfs", kylinConfig), kylinConfig);
+        ResourceStoreTest.testPerformance(ResourceStoreTest.mockUrl("hdfs", kylinConfig), kylinConfig);
 
         //test hbase
         String hbaseStoreName = "org.apache.kylin.storage.hbase.HBaseResourceStore.HBaseResourceStore";
-        ResourceStoreTest.testPerformance(hbaseStoreName, ResourceStoreTest.mockUrl("hbase", kylinConfig), kylinConfig);
+        ResourceStoreTest.testPerformance(ResourceStoreTest.mockUrl("hbase", kylinConfig), kylinConfig);
     }
 }

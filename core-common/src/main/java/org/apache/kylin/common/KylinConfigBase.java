@@ -971,7 +971,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getResourceStoreImpl() {
         String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
         int cut = metadataUrl.indexOf('@');
-        String key = cut < 0 ? "" : metadataUrl.substring(0, cut);
+        String key = cut < 0 ? "" : metadataUrl.substring(cut + 1);
         return getResourceStoreImpls().get(key);
     }
 

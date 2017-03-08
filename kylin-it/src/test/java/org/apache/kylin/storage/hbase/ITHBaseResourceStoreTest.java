@@ -51,7 +51,7 @@ public class ITHBaseResourceStoreTest extends HBaseMetadataTestCase {
     @Test
     public void testHBaseStore() throws Exception {
         String storeName = "org.apache.kylin.storage.hbase.HBaseResourceStore";
-        ResourceStoreTest.testAStore(storeName, ResourceStoreTest.mockUrl("hbase", kylinConfig), kylinConfig);
+        ResourceStoreTest.testAStore(ResourceStoreTest.mockUrl("hbase", kylinConfig), kylinConfig);
     }
 
     @Test
