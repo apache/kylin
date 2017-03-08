@@ -485,7 +485,7 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs) {
-        return listAllCubingJobs(cubeName, projectName, statusList, -1L, -1L, allOutputs);
+        return listAllCubingJobs(cubeName, projectName, statusList, 0L, Long.MAX_VALUE, allOutputs);
     }
 
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs) {
