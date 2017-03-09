@@ -105,6 +105,7 @@
     }
   ],
   "metrics": [
+    "edw.test_cal_dt.cal_dt",
     "PRICE",
     "ITEM_COUNT"
   ],

@@ -453,21 +453,19 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     private boolean validate() {
+
+        // ensure no dup between dimensions/metrics
+        for (ModelDimensionDesc dim : dimensions) {
+            String table = dim.getTable();
+            for (String c : dim.getColumns()) {
+                TblColRef dcol = findColumn(table, c);
+                metrics = ArrayUtils.removeElement(metrics, dcol.getIdentity());
+            }
+        }
+
         Set<TblColRef> mcols = new HashSet<>();
         for (String m : metrics) {
             mcols.add(findColumn(m));
-        }
-
-        if (!KylinConfig.getInstanceFromEnv().allowModelDimensionMetricsOverlap()) {
-            // validate no dup between dimensions/metrics
-            for (ModelDimensionDesc dim : dimensions) {
-                String table = dim.getTable();
-                for (String c : dim.getColumns()) {
-                    TblColRef dcol = findColumn(table, c);
-                    if (mcols.contains(dcol))
-                        throw new IllegalStateException(dcol + " cannot be both dimension and metrics at the same time in " + this);
-                }
-            }
         }
 
         // validate PK/FK are in dimensions

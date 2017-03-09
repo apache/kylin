@@ -19,7 +19,9 @@
 package org.apache.kylin.metadata.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.MetadataManager;
@@ -38,6 +40,15 @@ public class DataModelDescTest extends LocalFileMetadataTestCase {
     @After
     public void after() throws Exception {
         this.cleanupTestMetadata();
+    }
+    
+    @Test
+    public void testNoDupColInDimAndMeasure() {
+        DataModelDesc model = MetadataManager.getInstance(getTestConfig()).getDataModelDesc("test_kylin_inner_join_model_desc");
+        String[] metrics = model.getMetrics();
+        TblColRef col = model.findColumn("edw.test_cal_dt.cal_dt");
+        assertTrue(metrics.length == 2);
+        assertTrue(ArrayUtils.contains(metrics, col.getIdentity()) == false);
     }
 
     @Test
