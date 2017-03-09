@@ -18,6 +18,7 @@
 
 package org.apache.kylin.common;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -38,6 +39,8 @@ public class QueryContext {
 
     private QueryContext() {
         // use QueryContext.current() instead
+        
+        queryId = UUID.randomUUID().toString();
     }
 
     public static QueryContext current() {

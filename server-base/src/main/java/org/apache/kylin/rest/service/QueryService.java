@@ -41,7 +41,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
@@ -237,7 +236,7 @@ public class QueryService extends BasicService {
 
     public void logQuery(final SQLRequest request, final SQLResponse response) {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
-        final Set<String> realizationNames = new HashSet<String>();
+        final List<String> realizationNames = new LinkedList<>();
         final Set<Long> cuboidIds = new HashSet<Long>();
         float duration = response.getDuration() / (float) 1000;
         boolean storageCacheUsed = response.isStorageCacheUsed();
@@ -251,8 +250,7 @@ public class QueryService extends BasicService {
                 }
 
                 if (ctx.realization != null) {
-                    String realizationName = ctx.realization.getName();
-                    realizationNames.add(realizationName);
+                    realizationNames.add(ctx.realization.getCanonicalName());
                 }
 
             }
@@ -332,10 +330,8 @@ public class QueryService extends BasicService {
             BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
 
         final QueryContext queryContext = QueryContext.current();
-        final String queryId = UUID.randomUUID().toString();
-        queryContext.setQueryId(queryId);
 
-        try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
+        try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
             logger.info("Using project: " + project);
@@ -431,7 +427,7 @@ public class QueryService extends BasicService {
         return response;
     }
 
-    private void checkQueryAuth(SQLResponse sqlResponse) throws AccessDeniedException {
+    protected void checkQueryAuth(SQLResponse sqlResponse) throws AccessDeniedException {
         if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
             checkAuthorization(sqlResponse.getCube());
         }
