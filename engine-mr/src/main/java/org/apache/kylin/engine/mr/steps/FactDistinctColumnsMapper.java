@@ -48,7 +48,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
 
     public static enum RawDataCounter {
         BYTES
-    };
+    }
 
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
@@ -153,8 +153,13 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
             }
 
             tmpbuf.clear();
+            byte[] valueBytes = Bytes.toBytes(fieldValue);
+            int size = valueBytes.length + 1;
+            if (size >= tmpbuf.capacity()) {
+                tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
+            }
             tmpbuf.put(Bytes.toBytes(reducerIndex)[3]);
-            tmpbuf.put(Bytes.toBytes(fieldValue));
+            tmpbuf.put(valueBytes);
             outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
             sortableKey.setText(outputKey);
             //judge type
@@ -176,8 +181,13 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                 String fieldValue = row[partitionColumnIndex];
                 if (fieldValue != null) {
                     tmpbuf.clear();
+                    byte[] valueBytes = Bytes.toBytes(fieldValue);
+                    int size = valueBytes.length + 1;
+                    if (size >= tmpbuf.capacity()) {
+                        tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
+                    }
                     tmpbuf.put(MARK_FOR_PARTITION_COL);
-                    tmpbuf.put(Bytes.toBytes(fieldValue));
+                    tmpbuf.put(valueBytes);
                     outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
                     sortableKey.setText(outputKey);
                     sortableKey.setTypeId((byte) 0);
@@ -242,5 +252,13 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                 context.write(sortableKey, outputValue);
             }
         }
+    }
+
+    private int countNewSize(int oldSize, int dataSize) {
+        int newSize = oldSize * 2;
+        while (newSize < dataSize) {
+            newSize = newSize * 2;
+        }
+        return newSize;
     }
 }
