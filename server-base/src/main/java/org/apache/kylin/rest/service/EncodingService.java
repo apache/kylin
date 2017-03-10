@@ -16,7 +16,6 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.rest.service;
 
 import java.util.List;
@@ -44,8 +43,8 @@ public class EncodingService extends BasicService {
         } else if (dataType.isDateTimeFamily()) {
             return Lists.newArrayList(DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME);
         } else if (dataType.isStringFamily()) {
-            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME, FixedLenDimEnc.ENCODING_NAME, //
-                FixedLenHexDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
+            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME, FixedLenDimEnc.ENCODING_NAME, //
+                    FixedLenHexDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
         } else {
             throw new IllegalArgumentException("can't provide valid encodings for datatype:" + dataType);
         }
