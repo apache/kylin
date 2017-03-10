@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.security;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -51,12 +52,12 @@ public class PasswordPlaceholderConfigurer extends PropertyPlaceholderConfigurer
     /**
      * The PasswordPlaceholderConfigurer will read Kylin properties as the Spring resource
      */
-    public PasswordPlaceholderConfigurer() {
+    public PasswordPlaceholderConfigurer() throws IOException {
         Resource[] resources = new Resource[1];
         //Properties prop = KylinConfig.getKylinProperties();
         Properties prop = getAllKylinProperties();
         StringWriter writer = new StringWriter();
-        prop.list(new PrintWriter(writer));
+        prop.store(new PrintWriter(writer), "kylin properties");
         String propString = writer.getBuffer().toString();
         IOUtils.closeQuietly(writer);
         InputStream is = IOUtils.toInputStream(propString, Charset.defaultCharset());
