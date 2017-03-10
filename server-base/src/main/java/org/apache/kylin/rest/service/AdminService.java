@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -27,6 +28,7 @@ import java.util.TreeMap;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigBase;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -94,7 +96,7 @@ public class AdminService extends BasicService {
         logger.debug("Get Kylin Runtime Config");
 
         try {
-            return KylinConfig.getInstanceFromEnv().getConfigAsString();
+            return getAllConfigAsString();
         } catch (IOException e) {
             throw new InternalErrorException("Failed to get Kylin Runtime Config", e);
         }
@@ -109,5 +111,34 @@ public class AdminService extends BasicService {
         } catch (Exception e) {
             throw new InternalErrorException(e.getMessage(), e);
         }
+    }
+
+    private String getAllConfigAsString() throws IOException {
+        Properties allProps;
+        try {
+            KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+            Method getAllMethod = KylinConfigBase.class.getDeclaredMethod("getAllProperties");
+            getAllMethod.setAccessible(true);
+            allProps = (Properties) getAllMethod.invoke(kylinConfig);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        OrderedProperties orderedProperties = KylinConfig.getKylinOrderedProperties();
+
+        final StringBuilder sb = new StringBuilder();
+
+        for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
+            String key = entry.getKey().toString();
+            String value = entry.getValue().toString();
+            if (!orderedProperties.containsProperty(key)) {
+                orderedProperties.setProperty(key, value);
+            } else if (!orderedProperties.getProperty(key).equalsIgnoreCase(value))
+                orderedProperties.setProperty(key, value);
+        }
+        for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
+            sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
+        }
+        return sb.toString();
     }
 }
