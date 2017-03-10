@@ -183,7 +183,7 @@
         }
       },
       "returntype" : "topn(100, 4)",
-      "configuration": {"topn.encoding.SELLER_ID" : "int:4"}
+      "configuration": {"topn.encoding.TEST_KYLIN_FACT.SELLER_ID" : "int:4"}
     }
   }, {
     "name" : "TEST_COUNT_DISTINCT_BITMAP",
