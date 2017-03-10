@@ -18,10 +18,6 @@
 
 package org.apache.kylin.dimension;
 
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -29,20 +25,23 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+
 public class AbstractDateDimEnc extends DimensionEncoding {
     private static final long serialVersionUID = 1L;
 
-    interface IMillisCodec extends Serializable {
-        long millisToCode(long millis);
+    interface IValueCodec extends Serializable {
+        long valueToCode(String value);
 
-        long codeToMillis(long code);
+        String codeToValue(long code);
     }
 
     // ============================================================================
     private int fixedLen;
-    private IMillisCodec codec;
+    private IValueCodec codec;
 
-    protected AbstractDateDimEnc(int fixedLen, IMillisCodec codec) {
+    protected AbstractDateDimEnc(int fixedLen, IValueCodec codec) {
         this.fixedLen = fixedLen;
         this.codec = codec;
     }
@@ -59,8 +58,7 @@ public class AbstractDateDimEnc extends DimensionEncoding {
             return;
         }
 
-        long millis = DateFormat.stringToMillis(value);
-        long code = codec.millisToCode(millis);
+        long code = codec.valueToCode(value);
         BytesUtil.writeLong(code, output, outputOffset, fixedLen);
     }
 
@@ -74,8 +72,7 @@ public class AbstractDateDimEnc extends DimensionEncoding {
         if (code < 0)
             throw new IllegalArgumentException();
 
-        long millis = codec.codeToMillis(code);
-        return String.valueOf(millis);
+        return codec.codeToValue(code);
     }
 
     @Override
@@ -137,7 +134,7 @@ public class AbstractDateDimEnc extends DimensionEncoding {
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         this.fixedLen = in.readInt();
-        this.codec = (IMillisCodec) in.readObject();
+        this.codec = (IValueCodec) in.readObject();
     }
 
 }

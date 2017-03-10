@@ -20,10 +20,13 @@ package org.apache.kylin.dimension;
 
 import java.io.Serializable;
 
+import org.apache.kylin.common.util.DateFormat;
+import org.apache.kylin.metadata.datatype.DataType;
+
 /**
  * This encoding is meant to be IDENTICAL to DateStrDictionary for 100% backward compatibility.
  */
-public class DateDimEnc extends AbstractDateDimEnc implements Serializable{
+public class DateDimEnc extends AbstractDateDimEnc implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static final int ID_9999_12_31 = 3652426;
@@ -38,24 +41,47 @@ public class DateDimEnc extends AbstractDateDimEnc implements Serializable{
 
         @Override
         public DimensionEncoding createDimensionEncoding(String encodingName, String[] args) {
-            return new DateDimEnc();
+            return new DateDimEnc(args);
         }
     };
 
+    private static class DateDimValueCodec implements IValueCodec {
+
+        private static final long serialVersionUID = 1L;
+        private DataType datatype = null;
+
+        public DateDimValueCodec(String[] args) {
+            if (args != null && args.length == 1) {
+                datatype = DataType.getType(args[0]);
+            }
+        }
+
+        @Override
+        public long valueToCode(String value) {
+            //if data type is integer, DateFormat.stringToMillis recognizes format like "20001010"
+            long millis = DateFormat.stringToMillis(value);
+
+            return getNumOfDaysSince0000FromMillis(millis);
+        }
+
+        @Override
+        public String codeToValue(long code) {
+            long millisFromNumOfDaysSince0000 = getMillisFromNumOfDaysSince0000(code);
+            if (datatype != null && datatype.isIntegerFamily()) {
+                return DateFormat.formatToCompactDateStr(millisFromNumOfDaysSince0000);
+            } else {
+                return String.valueOf(millisFromNumOfDaysSince0000);
+            }
+        }
+    }
+
+    //keep this for ser/der
     public DateDimEnc() {
-        super(3, new IMillisCodec() {
-            private static final long serialVersionUID = 1L;
+        super(3, new DateDimValueCodec(null));
+    }
 
-            @Override
-            public long millisToCode(long millis) {
-                return getNumOfDaysSince0000FromMillis(millis);
-            }
-
-            @Override
-            public long codeToMillis(long code) {
-                return getMillisFromNumOfDaysSince0000(code);
-            }
-        });
+    public DateDimEnc(String[] args) {
+        super(3, new DateDimValueCodec(args));
     }
 
     public static long getNumOfDaysSince0000FromMillis(long millis) {
@@ -67,6 +93,20 @@ public class DateDimEnc extends AbstractDateDimEnc implements Serializable{
     public static long getMillisFromNumOfDaysSince0000(long n) {
         long millis = ((long) n - 719530) * 86400000;
         return millis;
+    }
+
+    public static String[] replaceEncodingArgs(String encoding, String[] encodingArgs, String encodingName, DataType type) {
+        // https://issues.apache.org/jira/browse/KYLIN-2495
+        if (DateDimEnc.ENCODING_NAME.equals(encodingName)) {
+            if (type.isIntegerFamily()) {
+                if (encodingArgs.length != 0) {
+                    throw new IllegalArgumentException("Date encoding should not specify arguments: " + encoding);
+                }
+                return new String[] { type.toString() };
+            }
+        }
+
+        return encodingArgs;
     }
 
 }

@@ -86,10 +86,9 @@ public class RowKeyColDesc implements java.io.Serializable {
                 encoding = encodingName = TimeDimEnc.ENCODING_NAME;
             }
         }
-        //        if (DateDimEnc.ENCODING_NAME.equals(encodingName) && type.isDate() == false)
-        //            throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply date encoding");
-        //        if (TimeDimEnc.ENCODING_NAME.equals(encodingName) && type.isTimeFamily() == false)
-        //            throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply time encoding");
+
+        encodingArgs = DateDimEnc.replaceEncodingArgs(encoding, encodingArgs, encodingName, type);
+        
         if (encodingName.startsWith(FixedLenDimEnc.ENCODING_NAME) && (type.isIntegerFamily() || type.isNumberFamily()))
             throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply fixed_length encoding");
     }

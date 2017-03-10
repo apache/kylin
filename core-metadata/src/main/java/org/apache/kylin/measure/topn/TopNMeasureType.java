@@ -24,10 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.dimension.DateDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
@@ -46,6 +46,8 @@ import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
@@ -154,7 +156,6 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                 topNCounter.offer(key, counter);
                 return topNCounter;
             }
-
 
             @Override
             public TopNCounter<ByteArray> reEncodeDictionary(TopNCounter<ByteArray> value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
@@ -424,7 +425,12 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     }
                 }
                 Object[] encodingConf = DimensionEncoding.parseEncodingConf(encoding);
-                dimensionEncodings[i] = DimensionEncodingFactory.create((String) encodingConf[0], (String[]) encodingConf[1], encodingVersion);
+                String encodingName = (String) encodingConf[0];
+                String[] encodingArgs = (String[]) encodingConf[1];
+
+                encodingArgs = DateDimEnc.replaceEncodingArgs(encoding, encodingArgs, encodingName, literalCols.get(i).getType());
+                
+                dimensionEncodings[i] = DimensionEncodingFactory.create(encodingName, encodingArgs, encodingVersion);
             }
         }
 
