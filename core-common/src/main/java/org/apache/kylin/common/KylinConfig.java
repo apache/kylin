@@ -228,7 +228,7 @@ public class KylinConfig extends KylinConfigBase {
         Properties conf = new Properties();
         try {
             OrderedProperties orderedProperties = getKylinOrderedProperties();
-            for (Map.Entry<String, String> each: orderedProperties.entrySet()) {
+            for (Map.Entry<String, String> each : orderedProperties.entrySet()) {
                 conf.put(each.getKey(), each.getValue());
             }
         } catch (FileNotFoundException e) {
@@ -238,7 +238,7 @@ public class KylinConfig extends KylinConfigBase {
         return conf;
     }
 
-    public static OrderedProperties getKylinOrderedProperties() throws FileNotFoundException {
+    private static OrderedProperties getKylinOrderedProperties() throws FileNotFoundException {
         File propFile = getKylinPropertiesFile();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
@@ -270,9 +270,21 @@ public class KylinConfig extends KylinConfigBase {
         }
     }
 
-    public static String getConfigAsString() throws IOException {
-        OrderedProperties orderedProperties = getKylinOrderedProperties();
+    public String getConfigAsString() throws IOException {
+        Properties allProps = getAllProperties();
+        OrderedProperties orderedProperties = KylinConfig.getKylinOrderedProperties();
+
         final StringBuilder sb = new StringBuilder();
+
+        for (Map.Entry<Object, Object> entry : allProps.entrySet()) {
+            String key = entry.getKey().toString();
+            String value = entry.getValue().toString();
+            if (!orderedProperties.containsProperty(key)) {
+                orderedProperties.setProperty(key, value);
+            } else if (!orderedProperties.getProperty(key).equalsIgnoreCase(value)) {
+                orderedProperties.setProperty(key, value);
+            }
+        }
         for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
             sb.append(entry.getKey() + "=" + entry.getValue()).append('\n');
         }
