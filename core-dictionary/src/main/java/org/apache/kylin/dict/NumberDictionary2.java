@@ -18,6 +18,8 @@
 
 package org.apache.kylin.dict;
 
+import org.apache.kylin.common.util.ClassUtil;
+
 /**
  * This class uses MAX_DIGITS_BEFORE_DECIMAL_POINT (=19) instead of legacy (=16).
  */
@@ -35,5 +37,10 @@ public class NumberDictionary2<T> extends NumberDictionary<T> {
         super(trieBytes);
     }
 
+    @Override
+    protected void setConverterByName(String converterName) throws Exception {
+        converterName = "org.apache.kylin.dict.Number2BytesConverter";
+        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+    }
 
 }

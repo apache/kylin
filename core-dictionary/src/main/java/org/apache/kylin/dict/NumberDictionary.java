@@ -19,6 +19,8 @@
 package org.apache.kylin.dict;
 
 
+import org.apache.kylin.common.util.ClassUtil;
+
 /**
  * @author yangli9
  * 
@@ -32,6 +34,7 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
 
     public NumberDictionary() { // default constructor for Writable interface
         super();
+
     }
 
     public NumberDictionary(byte[] trieBytes) {
@@ -42,6 +45,13 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
     protected boolean isNullObjectForm(T value) {
         return value == null || value.equals("");
     }
-    
+
+    @Override
+    protected void setConverterByName(String converterName) throws Exception {
+        converterName = "org.apache.kylin.dict.Number2BytesConverter";
+        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+        ((Number2BytesConverter)this.bytesConvert).setMaxDigitsBeforeDecimalPoint(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT_LEGACY);
+    }
+
 
 }

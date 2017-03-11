@@ -42,21 +42,21 @@ import com.google.common.base.Preconditions;
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
  * int IDs.
- * 
+ * <p>
  * With Trie the memory footprint of the mapping is kinda minimized at the cost
  * CPU, if compared to HashMap of ID Arrays. Performance test shows Trie is
  * roughly 10 times slower, so there's a cache layer overlays on top of Trie and
  * gracefully fall back to Trie using a weak reference.
- * 
+ * <p>
  * The implementation is thread-safe.
- * 
+ *
  * @author yangli9
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class TrieDictionary<T> extends CacheDictionary<T> {
     private static final long serialVersionUID = 1L;
 
-    public static final byte[] MAGIC = new byte[] { 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "TrieDict"
+    public static final byte[] MAGIC = new byte[]{0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74}; // "TrieDict"
     public static final int MAGIC_SIZE_I = MAGIC.length;
 
     public static final int BIT_IS_LAST_CHILD = 0x80;
@@ -104,7 +104,7 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
 
             String converterName = headIn.readUTF();
             if (converterName.isEmpty() == false)
-                this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                setConverterByName(converterName);
 
             this.nValues = BytesUtil.readUnsigned(trieBytes, headSize + sizeChildOffset, sizeNoValuesBeneath);
             this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1L); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
@@ -117,6 +117,10 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
             else
                 throw new RuntimeException(e);
         }
+    }
+
+    protected void setConverterByName(String converterName) throws Exception {
+        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
     }
 
     @Override
@@ -151,19 +155,14 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
 
     /**
      * returns a code point from [0, nValues), preserving order of value
-     * 
-     * @param n
-     *            -- the offset of current node
-     * @param inp
-     *            -- input value bytes to lookup
-     * @param o
-     *            -- offset in the input value bytes matched so far
-     * @param inpEnd
-     *            -- end of input
-     * @param roundingFlag
-     *            -- =0: return -1 if not found
-     *            -- <0: return closest smaller if not found, return -1
-     *            -- >0: return closest bigger if not found, return nValues
+     *
+     * @param n            -- the offset of current node
+     * @param inp          -- input value bytes to lookup
+     * @param o            -- offset in the input value bytes matched so far
+     * @param inpEnd       -- end of input
+     * @param roundingFlag -- =0: return -1 if not found
+     *                     -- <0: return closest smaller if not found, return -1
+     *                     -- >0: return closest bigger if not found, return nValues
      */
     private int lookupSeqNoFromValue(int n, byte[] inp, int o, int inpEnd, int roundingFlag) {
         if (o == inpEnd) // special 'empty' value
@@ -257,13 +256,10 @@ public class TrieDictionary<T> extends CacheDictionary<T> {
     /**
      * returns a code point from [0, nValues), preserving order of value, or -1
      * if not found
-     * 
-     * @param n
-     *            -- the offset of current node
-     * @param seq
-     *            -- the code point under track
-     * @param returnValue
-     *            -- where return value is written to
+     *
+     * @param n           -- the offset of current node
+     * @param seq         -- the code point under track
+     * @param returnValue -- where return value is written to
      */
     private int lookupValueFromSeqNo(int n, int seq, byte[] returnValue, int offset) {
         int o = offset;

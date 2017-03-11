@@ -53,6 +53,10 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
         this.maxDigitsBeforeDecimalPoint = maxDigitsBeforeDecimalPoint;
     }
 
+    public void setMaxDigitsBeforeDecimalPoint(int maxDigitsBeforeDecimalPoint) {
+        this.maxDigitsBeforeDecimalPoint = maxDigitsBeforeDecimalPoint;
+    }
+
     @Override
     public byte[] convertToBytes(String v) {
         NumberBytesCodec codec = getCodec(this.maxDigitsBeforeDecimalPoint);
