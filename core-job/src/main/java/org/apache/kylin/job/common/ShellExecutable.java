@@ -83,6 +83,10 @@ public class ShellExecutable extends AbstractExecutable {
         private static final Pattern PATTERN_HIVE_APP_ID_URL = Pattern.compile("Starting Job = (.*?), Tracking URL = (.*)");
         private static final Pattern PATTERN_HIVE_BYTES_WRITTEN = Pattern.compile("(?:HD|MAPR)FS Read: (\\d+) HDFS Write: (\\d+) SUCCESS");
 
+        // spark
+        private static final Pattern PATTERN_SPARK_APP_ID = Pattern.compile("Submitted application (.*?)");
+        private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("tracking URL: (.*)");
+
         @Override
         public void log(String message) {
             Matcher matcher = PATTERN_APP_ID.matcher(message);
@@ -135,6 +139,19 @@ public class ShellExecutable extends AbstractExecutable {
                 // String hdfsRead = matcher.group(1);
                 String hdfsWritten = matcher.group(2);
                 info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hdfsWritten);
+            }
+
+            // spark
+            matcher = PATTERN_SPARK_APP_ID.matcher(message);
+            if (matcher.find()) {
+                String app_id = matcher.group(1);
+                info.put(ExecutableConstants.YARN_APP_ID, app_id);
+            }
+
+            matcher = PATTERN_SPARK_APP_URL.matcher(message);
+            if (matcher.find()) {
+                String trackingUrl = matcher.group(1);
+                info.put(ExecutableConstants.YARN_APP_URL, trackingUrl);
             }
         }
 
