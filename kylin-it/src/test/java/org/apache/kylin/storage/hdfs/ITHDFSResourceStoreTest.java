@@ -18,15 +18,10 @@
 
 package org.apache.kylin.storage.hdfs;
 
-import static junit.framework.TestCase.assertTrue;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStoreTest;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -36,16 +31,10 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
 
     private KylinConfig kylinConfig;
 
-    private FileSystem fs;
-
-    private String workingDir;
-
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
         kylinConfig = KylinConfig.getInstanceFromEnv();
-        fs = HadoopUtil.getWorkingFileSystem();
-        workingDir = getHdfsWorkingDirWithoutScheme(kylinConfig);
     }
 
     @After
@@ -53,46 +42,17 @@ public class ITHDFSResourceStoreTest extends HBaseMetadataTestCase {
         this.cleanupTestMetadata();
     }
 
-    private String getHdfsWorkingDirWithoutScheme(KylinConfig kylinConfig) {
-        String hdfsWorkingDir = kylinConfig.getHdfsWorkingDirectory();
-        int thirdIndex = StringUtils.ordinalIndexOf(hdfsWorkingDir, "/", 3);
-        int fourthIndex = StringUtils.ordinalIndexOf(hdfsWorkingDir, "/", 5);
-        return hdfsWorkingDir.substring(thirdIndex, fourthIndex);
-    }
-
     @Test
     public void testBasic() throws Exception {
-        String path = workingDir + "/metadata_test1";
-        doTestWithPath(path);
-    }
-
-    @Test
-    public void testQalifiedName() throws Exception {
-        String path = "hdfs://" + workingDir + "/metadata_test2";
-        doTestWithPath(path);
-    }
-
-    @Test
-    public void testFullQalifiedName() throws Exception {
-        String path = fs.getUri() + workingDir + "/metadata_test3";
-        doTestWithPath(path);
-    }
-
-    private void doTestWithPath(String path) throws Exception {
         ResourceStoreTest.testAStore(ResourceStoreTest.mockUrl("hdfs", kylinConfig), kylinConfig);
-        assertTrue(fs.exists(new Path(path)));
     }
 
     @Ignore
     @Test
     public void performanceTest() throws Exception {
-
         //test hdfs performance
-        String hdfsStoreName = "org.apache.kylin.storage.hdfs.HDFSResourceStore";
         ResourceStoreTest.testPerformance(ResourceStoreTest.mockUrl("hdfs", kylinConfig), kylinConfig);
-
         //test hbase
-        String hbaseStoreName = "org.apache.kylin.storage.hbase.HBaseResourceStore.HBaseResourceStore";
         ResourceStoreTest.testPerformance(ResourceStoreTest.mockUrl("hbase", kylinConfig), kylinConfig);
     }
 }
