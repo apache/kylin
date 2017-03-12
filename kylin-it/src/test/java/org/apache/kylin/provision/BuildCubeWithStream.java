@@ -93,7 +93,8 @@ public class BuildCubeWithStream {
     private final String kafkaZkPath = "/" + UUID.randomUUID().toString();
 
     protected static boolean fastBuildMode = false;
-    private boolean generateData = true;
+    private volatile boolean generateData = true;
+    private volatile boolean generateDataDone = false;
 
     private static final int BUILD_ROUND = 5;
 
@@ -182,11 +183,12 @@ public class BuildCubeWithStream {
                     try {
                         generateStreamData(dateStart, dateEnd, rand.nextInt(100));
                         dateStart = dateEnd;
-                        sleep(rand.nextInt(rand.nextInt(100 * 1000))); // wait random time
+                        sleep(rand.nextInt(rand.nextInt(50)) * 1000); // wait random time
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
+                generateDataDone = true;
             }
         }).start();
         ExecutorService executorService = Executors.newCachedThreadPool();
@@ -197,7 +199,14 @@ public class BuildCubeWithStream {
                 // stop generating message to kafka
                 generateData = false;
             }
-            Thread.sleep(1 * 60 * 1000); // wait for new messages
+            int waittime = 0;
+            while (generateDataDone == false && waittime < 100) {
+                Thread.sleep(1000);
+                waittime++;
+            }
+            if (generateDataDone == false) {
+                throw new IllegalStateException("Timeout when wait all messages be sent to Kafka"); // ensure all messages have been flushed.
+            }
             FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
                 @Override
                 public ExecutableState call() {
