@@ -17,20 +17,16 @@
 */
 package org.apache.kylin.engine.mr.steps;
 
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.WritableComparable;
-import org.apache.kylin.metadata.datatype.DataType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-/**
- * Created by xiefan on 16-11-1.
- */
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.kylin.metadata.datatype.DataType;
+
 public class SelfDefineSortableKey implements WritableComparable<SelfDefineSortableKey> {
+
     public enum TypeFlag {
         NONE_NUMERIC_TYPE,
         INTEGER_FAMILY_TYPE,
@@ -39,51 +35,48 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
 
     private byte typeId; //non-numeric(0000 0000) int(0000 0001) other numberic(0000 0010)
 
-    private Text text;
+    private Text rawKey;
 
-    private static final Logger logger = LoggerFactory.getLogger(SelfDefineSortableKey.class);
+    private Object keyInObj;
 
     public SelfDefineSortableKey() {
     }
 
-    public SelfDefineSortableKey(byte typeId, Text text) {
+    public SelfDefineSortableKey(Text key, DataType type) {
+        init(key, getTypeIdByDatatype(type));
+    }
+
+    public void init(Text key, byte typeId) {
         this.typeId = typeId;
-        this.text = text;
+        this.rawKey = key;
+        if (isNumberFamily()) {
+            String valueStr = new String(key.getBytes(), 1, key.getLength() - 1);
+            if (isIntegerFamily()) {
+                this.keyInObj = Long.parseLong(valueStr);
+            } else {
+                this.keyInObj = Double.parseDouble(valueStr);
+            }
+        } else {
+            this.keyInObj = key;
+        }
+    }
+
+
+    public void init(Text key, DataType type) {
+        init(key, getTypeIdByDatatype(type));
     }
 
     @Override
     public int compareTo(SelfDefineSortableKey o) {
-        if (!o.isNumberFamily()) {
-            return this.text.compareTo(o.text);
+        if (this.typeId != o.typeId)
+            throw new IllegalStateException("Error. Incompatible types");
+        if (!isNumberFamily()) {
+            return ((Text) this.keyInObj).compareTo(((Text) o.keyInObj));
         } else {
-            byte[] data1 = this.text.getBytes();
-            byte[] data2 = o.text.getBytes();
-            String str1 = new String(data1, 1, data1.length - 1);
-            String str2 = new String(data2, 1, data2.length - 1);
-            if (str1.equals("") || str2.equals("")) {
-                //should not achieve here
-                logger.error("none numeric value!");
-                return 0;
-            }
-            if (o.isIntegerFamily()) { //integer type
-                try {
-                    Long num1 = Long.parseLong(str1);
-                    Long num2 = Long.parseLong(str2);
-                    return num1.compareTo(num2);
-                } catch (NumberFormatException e) {
-                    logger.error("NumberFormatException when parse integer family number.str1:" + str1 + " str2:" + str2);
-                    e.printStackTrace();
-                    return 0;
-                }
-            } else { //other numeric type
-                try {
-                    Double num1 = Double.parseDouble(str1);
-                    Double num2 = Double.parseDouble(str2);
-                    return num1.compareTo(num2);
-                } catch (NumberFormatException e) {
-                    logger.error("NumberFormatException when parse doul family number.str1:" + str1 + " str2:" + str2);
-                    return 0;
-                }
+            if (isIntegerFamily()) {
+                return Long.compare((Long) this.keyInObj, (Long) o.keyInObj);
+            } else {
+                return Double.compare((Double) this.keyInObj, (Double) o.keyInObj);
             }
         }
     }
@@ -91,14 +84,15 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
     @Override
     public void write(DataOutput dataOutput) throws IOException {
         dataOutput.writeByte(typeId);
-        text.write(dataOutput);
+        rawKey.write(dataOutput);
     }
 
     @Override
     public void readFields(DataInput dataInput) throws IOException {
         this.typeId = dataInput.readByte();
-        this.text = new Text();
-        text.readFields(dataInput);
+        Text inputKey = new Text();
+        inputKey.readFields(dataInput);
+        init(inputKey, typeId);
     }
 
     public short getTypeId() {
@@ -106,7 +100,7 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
     }
 
     public Text getText() {
-        return text;
+        return rawKey;
     }
 
     public boolean isNumberFamily() {
@@ -119,25 +113,21 @@ public class SelfDefineSortableKey implements WritableComparable<SelfDefineSorta
         return (typeId == TypeFlag.INTEGER_FAMILY_TYPE.ordinal());
     }
 
-    public boolean isOtherNumericFamily() {
-        return (typeId == TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
-    }
 
-    public void setTypeIdByDatatype(DataType type) {
+    public byte getTypeIdByDatatype(DataType type) {
         if (!type.isNumberFamily()) {
-            this.typeId = (byte) TypeFlag.NONE_NUMERIC_TYPE.ordinal();
+            return (byte) TypeFlag.NONE_NUMERIC_TYPE.ordinal();
         } else if (type.isIntegerFamily()) {
-            this.typeId = (byte) TypeFlag.INTEGER_FAMILY_TYPE.ordinal();
+            return (byte) TypeFlag.INTEGER_FAMILY_TYPE.ordinal();
         } else {
-            this.typeId = (byte) TypeFlag.DOUBLE_FAMILY_TYPE.ordinal();
+            return (byte) TypeFlag.DOUBLE_FAMILY_TYPE.ordinal();
         }
     }
-    
+
     public void setTypeId(byte typeId) {
         this.typeId = typeId;
     }
 
-    public void setText(Text text) {
-        this.text = text;
-    }
 }
+
+

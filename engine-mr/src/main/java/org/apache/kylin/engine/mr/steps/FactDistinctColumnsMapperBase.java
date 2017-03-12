@@ -54,7 +54,7 @@ abstract public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends Kyli
     protected IMRTableInputFormat flatTableInputFormat;
 
     protected Text outputKey = new Text();
-    protected SelfDefineSortableKey sortableKey = new SelfDefineSortableKey();
+    //protected SelfDefineSortableKey sortableKey = new SelfDefineSortableKey();
     protected Text outputValue = new Text();
     protected int errorRecordCounter = 0;
 

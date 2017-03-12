@@ -42,7 +42,7 @@ public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYI
     final public void reduce(KEYIN key, Iterable<VALUEIN> values, Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         try {
             if (reduceCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-                logger.info("Accepting Mapper Key with ordinal: " + reduceCounter);
+                logger.info("Accepting Reducer Key with ordinal: " + reduceCounter);
             }
 
             doReduce(key, values, context);
