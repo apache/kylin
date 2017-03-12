@@ -29,7 +29,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.BufferedLogger;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
@@ -40,6 +39,7 @@ import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JoinedFlatTable;
+import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -246,7 +246,7 @@ public class HiveMRInput implements IMRInput {
     }
 
     public static class RedistributeFlatHiveTableStep extends AbstractExecutable {
-        private final BufferedLogger stepLogger = new BufferedLogger(logger);
+        private final PatternedLogger stepLogger = new PatternedLogger(logger);
 
         private long computeRowCount(String database, String table) throws Exception {
             IHiveClient hiveClient = HiveClientFactory.getHiveClient();
@@ -265,6 +265,8 @@ public class HiveMRInput implements IMRInput {
             stepLogger.log(cmd);
 
             Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
+            getManager().addJobInfo(getId(), stepLogger.getInfo());
+
             if (response.getFirst() != 0) {
                 throw new RuntimeException("Failed to redistribute flat hive table");
             }

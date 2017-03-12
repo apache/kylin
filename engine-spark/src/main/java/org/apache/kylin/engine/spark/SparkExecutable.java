@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.CliCommandExecutor;
-import org.apache.kylin.common.util.Logger;
+import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -118,22 +118,17 @@ public class SparkExecutable extends AbstractExecutable {
         stringBuilder.append("--files %s --jars %s %s %s");
         try {
             String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(), hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
-            logger.info("cmd:" + cmd);
-            final StringBuilder output = new StringBuilder();
+            logger.info("cmd: " + cmd);
             CliCommandExecutor exec = new CliCommandExecutor();
-            exec.execute(cmd, new Logger() {
-                @Override
-                public void log(String message) {
-                    output.append(message);
-                    output.append("\n");
-                    logger.info(message);
-                }
-            });
-            return new ExecuteResult(ExecuteResult.State.SUCCEED, output.toString());
+            PatternedLogger patternedLogger = new PatternedLogger(logger);
+            exec.execute(cmd, patternedLogger);
+            getManager().addJobInfo(getId(), patternedLogger.getInfo());
+            return new ExecuteResult(ExecuteResult.State.SUCCEED, patternedLogger.getBufferedLog());
         } catch (Exception e) {
             logger.error("error run spark job:", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
+
 
 }
