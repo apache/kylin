@@ -183,7 +183,7 @@ public class BuildCubeWithStream {
                     try {
                         generateStreamData(dateStart, dateEnd, rand.nextInt(100));
                         dateStart = dateEnd;
-                        sleep(rand.nextInt(rand.nextInt(50)) * 1000); // wait random time
+                        sleep(rand.nextInt(rand.nextInt(30)) * 1000); // wait random time
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -206,6 +206,8 @@ public class BuildCubeWithStream {
                 if (generateDataDone == false) {
                     throw new IllegalStateException("Timeout when wait all messages be sent to Kafka"); // ensure all messages have been flushed.
                 }
+            } else {
+                Thread.sleep(30 * 1000); // wait for new messages
             }
 
             FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
@@ -290,8 +292,8 @@ public class BuildCubeWithStream {
 
     protected void deployEnv() throws IOException {
         DeployUtil.overrideJobJarLocations();
-        //        DeployUtil.initCliWorkDir();
-        //        DeployUtil.deployMetadata();
+        //                DeployUtil.initCliWorkDir();
+        //                DeployUtil.deployMetadata();
     }
 
     public static void beforeClass() throws Exception {
