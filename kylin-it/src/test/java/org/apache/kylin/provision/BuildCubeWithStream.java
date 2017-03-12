@@ -198,15 +198,16 @@ public class BuildCubeWithStream {
             if (i == (BUILD_ROUND - 1)) {
                 // stop generating message to kafka
                 generateData = false;
+                int waittime = 0;
+                while (generateDataDone == false && waittime < 100) {
+                    Thread.sleep(1000);
+                    waittime++;
+                }
+                if (generateDataDone == false) {
+                    throw new IllegalStateException("Timeout when wait all messages be sent to Kafka"); // ensure all messages have been flushed.
+                }
             }
-            int waittime = 0;
-            while (generateDataDone == false && waittime < 100) {
-                Thread.sleep(1000);
-                waittime++;
-            }
-            if (generateDataDone == false) {
-                throw new IllegalStateException("Timeout when wait all messages be sent to Kafka"); // ensure all messages have been flushed.
-            }
+
             FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
                 @Override
                 public ExecutableState call() {
