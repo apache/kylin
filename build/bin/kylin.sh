@@ -116,7 +116,9 @@ then
     echo ""
     echo "A new Kylin instance is started by $USER. To stop it, run 'kylin.sh stop'"
     echo "Check the log at ${KYLIN_HOME}/logs/kylin.log"
-    echo "Web UI is at http://<hostname>:7070/kylin"
+    kylin_server_port=`sed -n "s/<Connector port=\"\(.*\)\" protocol=\"HTTP\/1.1\"/\1/"p ${KYLIN_HOME}/tomcat/conf/server.xml`
+    kylin_server_port=`echo ${kylin_server_port}` #ignore white space
+    echo "Web UI is at http://<hostname>:${kylin_server_port}/kylin"
     exit 0
 
 # stop command
