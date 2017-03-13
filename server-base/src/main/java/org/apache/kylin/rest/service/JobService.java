@@ -318,7 +318,7 @@ public class JobService extends BasicService implements InitializingBean {
 
     private void checkCubeDescSignature(CubeInstance cube) {
         if (!cube.getDescriptor().checkSignature())
-            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor());
+            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor() + ", if it's right after a upgrade, please try 'Edit CubeDesc' to delete the 'signature' field. Or use 'bin/metastore.sh refresh-cube-signature' to batch refresh all cubes' signatures");
     }
 
     public JobInstance getJobInstance(String uuid) throws IOException, JobException {

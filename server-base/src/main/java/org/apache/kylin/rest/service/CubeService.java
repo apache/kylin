@@ -337,7 +337,7 @@ public class CubeService extends BasicService {
         }
 
         if (cube.getSegments(SegmentStatusEnum.READY).size() == 0) {
-            throw new InternalErrorException("Cube " + cubeName + " dosen't contain any READY segment");
+            throw new InternalErrorException("Cube " + cubeName + " doesn't contain any READY segment");
         }
 
         final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
@@ -345,7 +345,7 @@ public class CubeService extends BasicService {
             throw new JobException("Enable is not allowed with a running job.");
         }
         if (!cube.getDescriptor().checkSignature()) {
-            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor());
+            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor() + ", if it's right after a upgrade, please try 'Edit CubeDesc' to delete the 'signature' field. Or use 'bin/metastore.sh refresh-cube-signature' to batch refresh all cubes' signatures");
         }
 
         try {
@@ -444,8 +444,8 @@ public class CubeService extends BasicService {
             }
         }
 
-        if(toDelete == null){
-            throw new IllegalArgumentException("Cannot find segment '" + segmentName +"'");
+        if (toDelete == null) {
+            throw new IllegalArgumentException("Cannot find segment '" + segmentName + "'");
         }
 
         if (toDelete.getStatus() != SegmentStatusEnum.READY) {
