@@ -59,7 +59,7 @@ echo "context.xml overwritten..."
 if [ -z "$version" ]
 then
     echo 'version not set'
-    version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\['`
+    version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version |  grep -E '^[0-9]+\.[0-9]+\.[0-9]+' `
 fi
 echo "version ${version}"
 export version
