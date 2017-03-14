@@ -44,22 +44,29 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 
 public class MrJobInfoExtractor extends AbstractInfoExtractor {
-    private String mrJobId;
-    private String jobUrlPrefix;
-
     private static final Logger logger = LoggerFactory.getLogger(MrJobInfoExtractor.class);
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_COUNTERS = OptionBuilder.withArgName("includeCounters").hasArg().isRequired(false).withDescription("Specify whether to include mr task counters to extract. Default false.").create("includeCounters");
+    private static final Option OPTION_INCLUDE_COUNTERS = OptionBuilder.withArgName("includeCounters").hasArg().isRequired(false).withDescription("Specify whether to include mr task counters to extract. Default true.").create("includeCounters");
 
-    private final int HTTP_RETRY = 3;
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_MR_JOB_ID = OptionBuilder.withArgName("mrJobId").hasArg().isRequired(false).withDescription("Specify MR Job Id").create("mrJobId");
 
-    public MrJobInfoExtractor(String mrJobId) {
-        this.mrJobId = mrJobId;
-        String historyServerUrl = getRestCheckUrl();
-        this.jobUrlPrefix = historyServerUrl + "/ws/v1/history/mapreduce/jobs/" + mrJobId;
+    private static final int HTTP_RETRY = 3;
+
+    public MrJobInfoExtractor() {
+        packageType = "MR";
+
+        options.addOption(OPTION_INCLUDE_COUNTERS);
+        options.addOption(OPTION_MR_JOB_ID);
+    }
+
+    public static void main(String[] args) {
+        MrJobInfoExtractor extractor = new MrJobInfoExtractor();
+        extractor.execute(args);
     }
 
     private String getRestCheckUrl() {
@@ -84,13 +91,11 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
         if (StringUtils.isEmpty(rmWebHost)) {
             return null;
         }
-        if (rmWebHost.startsWith("http://") || rmWebHost.startsWith("https://")) {
-            //do nothing
-        } else {
+        if (!rmWebHost.startsWith("http://") && !rmWebHost.startsWith("https://")) {
             rmWebHost = "http://" + rmWebHost;
         }
         Matcher m = pattern.matcher(rmWebHost);
-        m.matches();
+        Preconditions.checkArgument(m.matches(), "Yarn master URL not found.");
         return m.group(1) + m.group(2) + ":19888";
     }
 
@@ -115,19 +120,17 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
         return msg;
     }
 
-    private void extractTaskCounter(String taskId, File exportDir, String taskUrl) throws IOException {
+    private void extractTaskCounter(String taskId, File exportDir, String taskUrl, String id) throws IOException {
         try {
             String response = getHttpResponse(taskUrl + taskId + "/counters");
-            FileUtils.writeStringToFile(new File(exportDir, taskId + ".json"), response, Charset.defaultCharset());
+            FileUtils.writeStringToFile(new File(exportDir, id + "_" + taskId + ".json"), response, Charset.defaultCharset());
         } catch (Exception e) {
             logger.warn("Failed to get task counters rest response" + e);
         }
     }
 
-    private void extractJobConf(File exportDir) throws IOException {
+    private void extractJobConf(File exportDir, String jobUrlPrefix) throws IOException {
         try {
-            String jobResponse = getHttpResponse(jobUrlPrefix);
-            JsonNode job = new ObjectMapper().readTree(jobResponse).path("job").get("state");
             String confUrl = jobUrlPrefix + "/conf/";
             String response = getHttpResponse(confUrl);
             FileUtils.writeStringToFile(new File(exportDir, "job_conf.json"), response, Charset.defaultCharset());
@@ -139,32 +142,70 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         try {
-            boolean includeTaskCounter = optionsHelper.hasOption(OPTION_INCLUDE_COUNTERS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_COUNTERS)) : false;
+            boolean includeTaskCounter = optionsHelper.hasOption(OPTION_INCLUDE_COUNTERS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_COUNTERS)) : true;
+            String mrJobId = optionsHelper.getOptionValue(OPTION_MR_JOB_ID);
+            String jobUrlPrefix = getRestCheckUrl() + "/ws/v1/history/mapreduce/jobs/" + mrJobId;
+
             if (includeTaskCounter) {
-                extractTaskCounters(exportDir);
+                extractTaskCounters(exportDir, jobUrlPrefix);
             }
-            extractJobConf(exportDir);
+            extractJobCounters(exportDir, jobUrlPrefix);
+            extractJobConf(exportDir, jobUrlPrefix);
         } catch (Exception e) {
             logger.warn("Failed to get mr tasks rest response.", e);
         }
     }
 
-    private void extractTaskCounters(File exportDir) {
+    private void extractJobCounters(File exportDir, String jobUrlPrefix) {
+        String url = jobUrlPrefix + "/counters";
+        String response = getHttpResponse(url);
+        try {
+            File counterDir = new File(exportDir, "counters");
+            FileUtils.forceMkdir(counterDir);
+            FileUtils.writeStringToFile(new File(exportDir, "job_counters.json"), response, Charset.defaultCharset());
+        } catch (Exception e) {
+            logger.warn("Failed to get mr counters rest response.", e);
+        }
+    }
+
+    private void extractTaskCounters(File exportDir, String jobUrlPrefix) {
         try {
             String tasksUrl = jobUrlPrefix + "/tasks/";
             String tasksResponse = getHttpResponse(tasksUrl);
             JsonNode tasks = new ObjectMapper().readTree(tasksResponse).path("tasks").path("task");
 
+            // find the max map and reduce duation
             String maxReduceId = null;
             String maxMapId = null;
             long maxMapElapsedTime = 0L;
             long maxReduceElapsedTime = 0L;
 
+            // find the min map and reduce duration
+            String minReduceId = null;
+            String minMapId = null;
+            long minMapElapsedTime = Integer.MAX_VALUE;
+            long minReduceElapsedTime = Integer.MAX_VALUE;
+
+            // find a normal map and reduce duration (the first one)
+            String normReduceId = null;
+            String normMapId = null;
+            long normMapElapsedTime = 0;
+            long normReduceElapsedTime = 0;
             for (JsonNode node : tasks) {
                 if (node.get("type").textValue().equals("MAP")) {
                     if (node.get("elapsedTime").longValue() >= maxMapElapsedTime) {
                         maxMapElapsedTime = node.get("elapsedTime").longValue();
                         maxMapId = node.get("id").textValue();
+                    }
+
+                    if (node.get("elapsedTime").longValue() <= minMapElapsedTime) {
+                        minMapElapsedTime = node.get("elapsedTime").longValue();
+                        minMapId = node.get("id").textValue();
+                    }
+
+                    if (normMapElapsedTime == 0) {
+                        normMapElapsedTime = node.get("elapsedTime").longValue();
+                        normMapId = node.get("id").textValue();
                     }
                 }
                 if (node.get("type").textValue().equals("REDUCE")) {
@@ -172,14 +213,28 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
                         maxReduceElapsedTime = node.get("elapsedTime").longValue();
                         maxReduceId = node.get("id").textValue();
                     }
+
+                    if (node.get("elapsedTime").longValue() <= minReduceElapsedTime) {
+                        minReduceElapsedTime = node.get("elapsedTime").longValue();
+                        minReduceId = node.get("id").textValue();
+                    }
+
+                    if (normReduceElapsedTime == 0) {
+                        normReduceElapsedTime = node.get("elapsedTime").longValue();
+                        normReduceId = node.get("id").textValue();
+                    }
                 }
             }
             File counterDir = new File(exportDir, "counters");
             FileUtils.forceMkdir(counterDir);
-            extractTaskCounter(maxMapId, counterDir, tasksUrl);
-            extractTaskCounter(maxReduceId, counterDir, tasksUrl);
+            extractTaskCounter(maxMapId, counterDir, tasksUrl, "max");
+            extractTaskCounter(maxReduceId, counterDir, tasksUrl, "max");
+            extractTaskCounter(minMapId, counterDir, tasksUrl, "min");
+            extractTaskCounter(minReduceId, counterDir, tasksUrl, "min");
+            extractTaskCounter(normMapId, counterDir, tasksUrl, "norm");
+            extractTaskCounter(normReduceId, counterDir, tasksUrl, "norm");
         } catch (Exception e) {
-            logger.warn("Failed to get mr tasks rest response" + e);
+            logger.warn("Failed to get mr tasks rest response.", e);
         }
     }
 }
