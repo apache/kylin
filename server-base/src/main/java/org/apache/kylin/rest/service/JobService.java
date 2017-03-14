@@ -187,7 +187,7 @@ public class JobService extends BasicService implements InitializingBean {
     private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList, final long timeStartInMillis, final long timeEndInMillis) {
         Set<ExecutableState> states = convertStatusEnumToStates(statusList);
         final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs(timeStartInMillis, timeEndInMillis);
-        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, timeStartInMillis, timeEndInMillis, allOutputs)).transform(new Function<CubingJob, JobInstance>() {
+        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, timeStartInMillis, timeEndInMillis, allOutputs, false)).transform(new Function<CubingJob, JobInstance>() {
             @Override
             public JobInstance apply(CubingJob cubingJob) {
                 return parseToJobInstance(cubingJob, allOutputs);
@@ -198,7 +198,7 @@ public class JobService extends BasicService implements InitializingBean {
     private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList) {
         Set<ExecutableState> states = convertStatusEnumToStates(statusList);
         final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs();
-        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, allOutputs)).transform(new Function<CubingJob, JobInstance>() {
+        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, allOutputs, false)).transform(new Function<CubingJob, JobInstance>() {
             @Override
             public JobInstance apply(CubingJob cubingJob) {
                 return parseToJobInstance(cubingJob, allOutputs);
@@ -484,11 +484,11 @@ public class JobService extends BasicService implements InitializingBean {
         return job;
     }
 
-    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs) {
-        return listAllCubingJobs(cubeName, projectName, statusList, 0L, Long.MAX_VALUE, allOutputs);
+    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs, final boolean bEqual) {
+        return listAllCubingJobs(cubeName, projectName, statusList, 0L, Long.MAX_VALUE, allOutputs, bEqual);
     }
 
-    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs) {
+    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs, final boolean bEqual) {
         List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllAbstractExecutables(timeStartInMillis, timeEndInMillis, CubingJob.class)).filter(new Predicate<AbstractExecutable>() {
             @Override
             public boolean apply(AbstractExecutable executable) {
@@ -499,7 +499,10 @@ public class JobService extends BasicService implements InitializingBean {
                     String executableCubeName = CubingExecutableUtil.getCubeName(executable.getParams());
                     if (executableCubeName == null)
                         return true;
-                    return executableCubeName.contains(cubeName);
+                    if (bEqual)
+                        return executableCubeName.equalsIgnoreCase(cubeName);
+                    else
+                        return executableCubeName.contains(cubeName);
                 } else {
                     return false;
                 }
@@ -534,11 +537,15 @@ public class JobService extends BasicService implements InitializingBean {
         return results;
     }
 
+    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final boolean bEqual) {
+        return listAllCubingJobs(cubeName, projectName, statusList, getExecutableManager().getAllOutputs(), bEqual);
+    }
+
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
-        return listAllCubingJobs(cubeName, projectName, statusList, getExecutableManager().getAllOutputs());
+        return listAllCubingJobs(cubeName, projectName, statusList, getExecutableManager().getAllOutputs(), false);
     }
 
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName) {
-        return listAllCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), getExecutableManager().getAllOutputs());
+        return listAllCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), getExecutableManager().getAllOutputs(), false);
     }
 }
