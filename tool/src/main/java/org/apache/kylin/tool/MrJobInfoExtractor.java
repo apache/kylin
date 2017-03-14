@@ -150,6 +150,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
                 extractTaskCounters(exportDir, jobUrlPrefix);
             }
             extractJobCounters(exportDir, jobUrlPrefix);
+            extractJobTasks(exportDir, jobUrlPrefix);
             extractJobConf(exportDir, jobUrlPrefix);
         } catch (Exception e) {
             logger.warn("Failed to get mr tasks rest response.", e);
@@ -160,9 +161,17 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
         String url = jobUrlPrefix + "/counters";
         String response = getHttpResponse(url);
         try {
-            File counterDir = new File(exportDir, "counters");
-            FileUtils.forceMkdir(counterDir);
             FileUtils.writeStringToFile(new File(exportDir, "job_counters.json"), response, Charset.defaultCharset());
+        } catch (Exception e) {
+            logger.warn("Failed to get mr counters rest response.", e);
+        }
+    }
+
+    private void extractJobTasks(File exportDir, String jobUrlPrefix) {
+        String url = jobUrlPrefix + "/tasks";
+        String response = getHttpResponse(url);
+        try {
+            FileUtils.writeStringToFile(new File(exportDir, "job_tasks.json"), response, Charset.defaultCharset());
         } catch (Exception e) {
             logger.warn("Failed to get mr counters rest response.", e);
         }
