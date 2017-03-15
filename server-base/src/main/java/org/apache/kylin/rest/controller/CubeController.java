@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -361,10 +360,7 @@ public class CubeController extends BasicController {
         CubeDesc cubeDesc = cube.getDescriptor();
         CubeDesc newCubeDesc = CubeDesc.getCopyOf(cubeDesc);
 
-        KylinConfig config = cubeService.getConfig();
         newCubeDesc.setName(newCubeName);
-        newCubeDesc.setEngineType(config.getDefaultCubeEngine());
-        newCubeDesc.setStorageType(config.getDefaultStorageEngine());
 
         CubeInstance newCube;
         try {
