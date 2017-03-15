@@ -345,7 +345,7 @@ public class CubeService extends BasicService {
             throw new JobException("Enable is not allowed with a running job.");
         }
         if (!cube.getDescriptor().checkSignature()) {
-            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor() + ", if it's right after a upgrade, please try 'Edit CubeDesc' to delete the 'signature' field. Or use 'bin/metastore.sh refresh-cube-signature' to batch refresh all cubes' signatures");
+            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor() + ", if it's right after a upgrade, please try 'Edit CubeDesc' to delete the 'signature' field. Or use 'bin/metastore.sh refresh-cube-signature' to batch refresh all cubes' signatures, then reload metadata to take effect");
         }
 
         try {
