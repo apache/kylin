@@ -78,7 +78,7 @@ public class CubeSegmentScanner implements IGTScanner {
         }
         scanRequest = scanRangePlanner.planScanRequest();
         String gtStorage = ((GTCubeStorageQueryBase) context.getStorageQuery()).getGTStorage();
-        scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest, gtStorage);
+        scanner = new ScannerWorker(cubeSeg, cuboid, scanRequest, gtStorage, context);
     }
 
     @Override
@@ -96,8 +96,7 @@ public class CubeSegmentScanner implements IGTScanner {
         return scanRequest == null ? null : scanRequest.getInfo();
     }
 
-    public CubeSegment getSegment() {
-        return this.cubeSeg;
+    public GTScanRequest getScanRequest() {
+        return scanRequest;
     }
-
 }

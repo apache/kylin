@@ -19,8 +19,9 @@ package org.apache.kylin.common.util;
 
 import java.nio.ByteBuffer;
 import java.util.BitSet;
+import java.util.Iterator;
 
-public class ImmutableBitSet {
+public class ImmutableBitSet implements Iterable<Integer> {
 
     public static final ImmutableBitSet EMPTY = new ImmutableBitSet(new BitSet());
 
@@ -168,4 +169,30 @@ public class ImmutableBitSet {
             return new ImmutableBitSet(bitSet);
         }
     };
+
+    /**
+     * Iterate over the positions of true value.
+     * @return the iterator
+     */
+    @Override
+    public Iterator<Integer> iterator() {
+        return new Iterator<Integer>() {
+            int index = 0;
+
+            @Override
+            public boolean hasNext() {
+                return index < arr.length;
+            }
+
+            @Override
+            public Integer next() {
+                return arr[index++];
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
 }

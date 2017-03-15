@@ -45,7 +45,6 @@ import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureAggregators;
-import org.apache.kylin.metadata.datatype.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +62,7 @@ public class GTAggregateScanner implements IGTScanner {
     final ImmutableBitSet metrics;
     final String[] metricsAggrFuncs;
     final IGTScanner inputScanner;
+    final BufferedMeasureCodec measureCodec;
     final AggregationCache aggrCache;
     final long spillThreshold; // 0 means no memory control && no spill
     final int storagePushDownLimit;//default to be Int.MAX
@@ -86,6 +86,7 @@ public class GTAggregateScanner implements IGTScanner {
         this.metrics = req.getAggrMetrics();
         this.metricsAggrFuncs = req.getAggrMetricsFuncs();
         this.inputScanner = inputScanner;
+        this.measureCodec = req.createMeasureCodec();
         this.aggrCache = new AggregationCache();
         this.spillThreshold = (long) (req.getAggCacheMemThreshold() * MemoryBudgetController.ONE_GB);
         this.aggrMask = new boolean[metricsAggrFuncs.length];
@@ -175,7 +176,6 @@ public class GTAggregateScanner implements IGTScanner {
         final int keyLength;
         final boolean[] compareMask;
         boolean compareAll = true;
-        final BufferedMeasureCodec measureCodec;
 
         final Comparator<byte[]> bytesComparator = new Comparator<byte[]>() {
             @Override
@@ -213,18 +213,6 @@ public class GTAggregateScanner implements IGTScanner {
             keyLength = compareMask.length;
             dumps = Lists.newArrayList();
             aggBufMap = createBuffMap();
-            measureCodec = createMeasureCodec();
-        }
-
-        private BufferedMeasureCodec createMeasureCodec() {
-            DataType[] types = new DataType[metrics.trueBitCount()];
-            for (int i = 0; i < types.length; i++) {
-                types[i] = info.getColumnType(metrics.trueBitAt(i));
-            }
-
-            BufferedMeasureCodec result = new BufferedMeasureCodec(types);
-            result.setBufferSize(info.getMaxColumnLength(metrics));
-            return result;
         }
 
         private boolean[] createCompareMask() {

@@ -28,10 +28,8 @@ import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
-import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -43,7 +41,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * convert GTRecord to tuple
+ * Convert Object[] (decoded GTRecord) to tuple
  */
 public class CubeTupleConverter implements ITupleConverter {
 
@@ -54,7 +52,6 @@ public class CubeTupleConverter implements ITupleConverter {
 
     private final int[] gtColIdx;
     private final int[] tupleIdx;
-    private final Object[] gtValues;
     private final MeasureType<?>[] measureTypes;
 
     private final List<IAdvMeasureFiller> advMeasureFillers;
@@ -63,19 +60,16 @@ public class CubeTupleConverter implements ITupleConverter {
     private final int nSelectedDims;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
-                              Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo) {
+                              Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, int[] gtColIdx,
+                              TupleInfo returnTupleInfo) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
+        this.gtColIdx = gtColIdx;
         this.tupleInfo = returnTupleInfo;
         this.derivedColFillers = Lists.newArrayList();
 
-        List<TblColRef> cuboidDims = cuboid.getColumns();
-        CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
-
         nSelectedDims = selectedDimensions.size();
-        gtColIdx = new int[selectedDimensions.size() + selectedMetrics.size()];
         tupleIdx = new int[selectedDimensions.size() + selectedMetrics.size()];
-        gtValues = new Object[selectedDimensions.size() + selectedMetrics.size()];
 
         // measure types don't have this many, but aligned length make programming easier
         measureTypes = new MeasureType[selectedDimensions.size() + selectedMetrics.size()];
@@ -89,21 +83,11 @@ public class CubeTupleConverter implements ITupleConverter {
 
         // pre-calculate dimension index mapping to tuple
         for (TblColRef dim : selectedDimensions) {
-            int dimIndex = mapping.getIndexOf(dim);
-            gtColIdx[i] = dimIndex;
             tupleIdx[i] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
-
-            //            if (tupleIdx[iii] == -1) {
-            //                throw new IllegalStateException("dim not used in tuple:" + dim);
-            //            }
-
             i++;
         }
 
         for (FunctionDesc metric : selectedMetrics) {
-            int metricIndex = mapping.getIndexOf(metric);
-            gtColIdx[i] = metricIndex;
-
             if (metric.needRewrite()) {
                 String rewriteFieldName = metric.getRewriteFieldName();
                 tupleIdx[i] = tupleInfo.hasField(rewriteFieldName) ? tupleInfo.getFieldIndex(rewriteFieldName) : -1;
@@ -126,7 +110,7 @@ public class CubeTupleConverter implements ITupleConverter {
         }
 
         // prepare derived columns and filler
-        Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cuboid.getCubeDesc().getHostToDerivedInfo(cuboidDims, null);
+        Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cuboid.getCubeDesc().getHostToDerivedInfo(cuboid.getColumns(), null);
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
             TblColRef[] hostCols = entry.getKey().data;
             for (DeriveInfo deriveInfo : entry.getValue()) {
@@ -148,9 +132,8 @@ public class CubeTupleConverter implements ITupleConverter {
     }
 
     @Override
-    public List<IAdvMeasureFiller> translateResult(GTRecord record, Tuple tuple) {
-
-        record.getValues(gtColIdx, gtValues);
+    public List<IAdvMeasureFiller> translateResult(Object[] gtValues, Tuple tuple) {
+        assert gtValues.length == gtColIdx.length;
 
         // dimensions
         for (int i = 0; i < nSelectedDims; i++) {

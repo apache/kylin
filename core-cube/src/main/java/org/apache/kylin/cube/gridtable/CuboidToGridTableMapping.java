@@ -140,9 +140,27 @@ public class CuboidToGridTableMapping {
         return i == null ? -1 : i.intValue();
     }
 
+    public int[] getDimIndexes(Collection<TblColRef> dims) {
+        int[] result = new int[dims.size()];
+        int i = 0;
+        for (TblColRef dim : dims) {
+            result[i++] = getIndexOf(dim);
+        }
+        return result;
+    }
+
     public int getIndexOf(FunctionDesc metric) {
         Integer r = metrics2gt.get(metric);
         return r == null ? -1 : r;
+    }
+
+    public int[] getMetricsIndexes(Collection<FunctionDesc> metrics) {
+        int[] result = new int[metrics.size()];
+        int i = 0;
+        for (FunctionDesc metric : metrics) {
+            result[i++] = getIndexOf(metric);
+        }
+        return result;
     }
 
     public List<TblColRef> getCuboidDimensionsInGTOrder() {

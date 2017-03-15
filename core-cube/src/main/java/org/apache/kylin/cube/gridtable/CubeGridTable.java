@@ -18,29 +18,11 @@
 
 package org.apache.kylin.cube.gridtable;
 
-import java.util.Map;
-
-import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.cube.kv.CubeDimEncMap;
-import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.gridtable.GTInfo;
-import org.apache.kylin.metadata.model.TblColRef;
 
 public class CubeGridTable {
-
-    public static GTInfo newGTInfo(CubeSegment cubeSeg, long cuboidId) {
-        Cuboid cuboid = Cuboid.findById(cubeSeg.getCubeDesc(), cuboidId);
-        return newGTInfo(cuboid, new CubeDimEncMap(cubeSeg));
-    }
-
-    public static GTInfo newGTInfo(CubeDesc cubeDesc, long cuboidId, Map<TblColRef, Dictionary<String>> dictionaryMap) {
-        Cuboid cuboid = Cuboid.findById(cubeDesc, cuboidId);
-        return newGTInfo(cuboid, new CubeDimEncMap(cubeDesc, dictionaryMap));
-    }
-
     public static GTInfo newGTInfo(Cuboid cuboid, IDimensionEncodingMap dimEncMap) {
         CuboidToGridTableMapping mapping = new CuboidToGridTableMapping(cuboid);
 

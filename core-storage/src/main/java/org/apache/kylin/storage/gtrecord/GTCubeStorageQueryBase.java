@@ -26,15 +26,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.RawQueryLastHacker;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -120,6 +123,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         // set limit push down
         enableStorageLimitIfPossible(cuboid, groups, derivedPostAggregation, groupsD, filter, loosenedColumnD, sqlDigest.aggregations, context);
+        // set whether to aggregate results from multiple partitions
+        enableStreamAggregateIfBeneficial(cuboid, groupsD, context);
         // set query deadline
         context.setDeadline(cubeInstance);
 
@@ -144,8 +149,8 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     protected abstract String getGTStorage();
     
-    protected ITupleConverter newCubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo tupleInfo) {
-        return new CubeTupleConverter(cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
+    protected ITupleConverter newCubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, int[] gtColIdx, TupleInfo tupleInfo) {
+        return new CubeTupleConverter(cubeSeg, cuboid, selectedDimensions, selectedMetrics, gtColIdx, tupleInfo);
     }
 
     protected void buildDimensionsAndMetrics(SQLDigest sqlDigest, Collection<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
@@ -363,6 +368,35 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
         if (possible) {
             context.setFinalPushDownLimit(cubeInstance);
+        }
+    }
+
+    private void enableStreamAggregateIfBeneficial(Cuboid cuboid, Set<TblColRef> groupsD, StorageContext context) {
+        CubeDesc cubeDesc = cuboid.getCubeDesc();
+        boolean enabled = cubeDesc.getConfig().isStreamAggregateEnabled();
+
+        Set<TblColRef> shardByInGroups = Sets.newHashSet();
+        for (TblColRef col : cubeDesc.getShardByColumns()) {
+            if (groupsD.contains(col)) {
+                shardByInGroups.add(col);
+            }
+        }
+        if (!shardByInGroups.isEmpty()) {
+            enabled = false;
+            logger.debug("Aggregate partition results is not beneficial because shard by columns in groupD: " + shardByInGroups);
+        }
+
+        if (!context.isNeedStorageAggregation()) {
+            enabled = false;
+            logger.debug("Aggregate partition results is not beneficial because no storage aggregation");
+        }
+
+        if (enabled) {
+            CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
+            ImmutableBitSet cols = mapping.makeGridTableColumns(groupsD);
+
+            context.enableStreamAggregate();
+            context.setGroupKeyComparator(GTRecord.getComparator(cols));
         }
     }
 
