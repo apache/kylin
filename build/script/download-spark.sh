@@ -53,5 +53,3 @@ rm -rf build/spark/lib/spark-examples-*
 rm -rf build/spark/examples
 rm -rf build/spark/data
 rm -rf build/spark/R
-
-cp build/deploy/spark-defaults.conf build/spark/conf/spark-defaults.conf
