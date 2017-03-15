@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 
+import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.junit.Assert;
@@ -44,6 +45,6 @@ public class JobServiceTest extends ServiceTestBase {
         Assert.assertNotNull(jobService.getMetadataManager());
         Assert.assertNotNull(cacheService.getOLAPDataSource(ProjectInstance.DEFAULT_PROJECT_NAME));
         Assert.assertNull(jobService.getJobInstance("job_not_exist"));
-        Assert.assertNotNull(jobService.listAllJobs(null, null, null));
+        Assert.assertNotNull(jobService.searchJobs(null, null, null, 0, 0, JobTimeFilterEnum.ALL));
     }
 }

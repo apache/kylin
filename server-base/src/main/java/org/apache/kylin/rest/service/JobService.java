@@ -138,74 +138,6 @@ public class JobService extends BasicService implements InitializingBean {
         }));
     }
 
-    public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue, final JobTimeFilterEnum timeFilter) throws IOException, JobException {
-        Integer limit = (null == limitValue) ? 30 : limitValue;
-        Integer offset = (null == offsetValue) ? 0 : offsetValue;
-        List<JobInstance> jobs = listAllJobs(cubeName, projectName, statusList, timeFilter);
-        Collections.sort(jobs);
-
-        if (jobs.size() <= offset) {
-            return Collections.emptyList();
-        }
-
-        if ((jobs.size() - offset) < limit) {
-            return jobs.subList(offset, jobs.size());
-        }
-
-        return jobs.subList(offset, offset + limit);
-    }
-
-    public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
-        return listCubeJobInstance(cubeName, projectName, statusList, timeStartInMillis, Long.MAX_VALUE);
-    }
-
-    @Deprecated
-    public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue) throws IOException, JobException {
-        Integer limit = (null == limitValue) ? 30 : limitValue;
-        Integer offset = (null == offsetValue) ? 0 : offsetValue;
-        List<JobInstance> jobs = listAllJobs(cubeName, projectName, statusList);
-        Collections.sort(jobs);
-
-        if (jobs.size() <= offset) {
-            return Collections.emptyList();
-        }
-
-        if ((jobs.size() - offset) < limit) {
-            return jobs.subList(offset, jobs.size());
-        }
-
-        return jobs.subList(offset, offset + limit);
-    }
-
-    public List<JobInstance> listAllJobs(final String cubeName, final String projectName, final List<JobStatusEnum> statusList) {
-        return listCubeJobInstance(cubeName, projectName, statusList);
-    }
-
-    private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList, final long timeStartInMillis, final long timeEndInMillis) {
-        Set<ExecutableState> states = convertStatusEnumToStates(statusList);
-        final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs(timeStartInMillis, timeEndInMillis);
-        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, timeStartInMillis, timeEndInMillis, allOutputs, false)).transform(new Function<CubingJob, JobInstance>() {
-            @Override
-            public JobInstance apply(CubingJob cubingJob) {
-                return parseToJobInstance(cubingJob, allOutputs);
-            }
-        }));
-    }
-
-    private List<JobInstance> listCubeJobInstance(final String cubeName, final String projectName, List<JobStatusEnum> statusList) {
-        Set<ExecutableState> states = convertStatusEnumToStates(statusList);
-        final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs();
-        return Lists.newArrayList(FluentIterable.from(listAllCubingJobs(cubeName, projectName, states, allOutputs, false)).transform(new Function<CubingJob, JobInstance>() {
-            @Override
-            public JobInstance apply(CubingJob cubingJob) {
-                return parseToJobInstance(cubingJob, allOutputs);
-            }
-        }));
-    }
-
     private Set<ExecutableState> convertStatusEnumToStates(List<JobStatusEnum> statusList) {
         Set<ExecutableState> states;
         if (statusList == null || statusList.isEmpty()) {
@@ -484,11 +416,44 @@ public class JobService extends BasicService implements InitializingBean {
         return job;
     }
 
-    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final Map<String, Output> allOutputs, final boolean bEqual) {
-        return listAllCubingJobs(cubeName, projectName, statusList, 0L, Long.MAX_VALUE, allOutputs, bEqual);
+    /**
+     * currently only support substring match
+     * @return
+     */
+    public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue, final JobTimeFilterEnum timeFilter) throws IOException, JobException {
+        Integer limit = (null == limitValue) ? 30 : limitValue;
+        Integer offset = (null == offsetValue) ? 0 : offsetValue;
+        List<JobInstance> jobs = searchJobs(cubeNameSubstring, projectName, statusList, timeFilter);
+        Collections.sort(jobs);
+
+        if (jobs.size() <= offset) {
+            return Collections.emptyList();
+        }
+
+        if ((jobs.size() - offset) < limit) {
+            return jobs.subList(offset, jobs.size());
+        }
+
+        return jobs.subList(offset, offset + limit);
     }
 
-    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs, final boolean bEqual) {
+    private List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
+
+        long timeEndInMillis = Long.MAX_VALUE;
+        Set<ExecutableState> states = convertStatusEnumToStates(statusList);
+        final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs(timeStartInMillis, timeEndInMillis);
+        return Lists.newArrayList(FluentIterable.from(searchCubingJobs(cubeNameSubstring, projectName, states, timeStartInMillis, timeEndInMillis, allOutputs, false)).transform(new Function<CubingJob, JobInstance>() {
+            @Override
+            public JobInstance apply(CubingJob cubingJob) {
+                return parseToJobInstance(cubingJob, allOutputs);
+            }
+        }));
+    }
+
+    public List<CubingJob> searchCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs, final boolean cubeNameExactMatch) {
         List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllAbstractExecutables(timeStartInMillis, timeEndInMillis, CubingJob.class)).filter(new Predicate<AbstractExecutable>() {
             @Override
             public boolean apply(AbstractExecutable executable) {
@@ -499,7 +464,7 @@ public class JobService extends BasicService implements InitializingBean {
                     String executableCubeName = CubingExecutableUtil.getCubeName(executable.getParams());
                     if (executableCubeName == null)
                         return true;
-                    if (bEqual)
+                    if (cubeNameExactMatch)
                         return executableCubeName.equalsIgnoreCase(cubeName);
                     else
                         return executableCubeName.contains(cubeName);
@@ -537,15 +502,12 @@ public class JobService extends BasicService implements InitializingBean {
         return results;
     }
 
-    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, final boolean bEqual) {
-        return listAllCubingJobs(cubeName, projectName, statusList, getExecutableManager().getAllOutputs(), bEqual);
-    }
-
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
-        return listAllCubingJobs(cubeName, projectName, statusList, getExecutableManager().getAllOutputs(), false);
+        return searchCubingJobs(cubeName, projectName, statusList, 0L, Long.MAX_VALUE, getExecutableManager().getAllOutputs(), true);
     }
 
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName) {
-        return listAllCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), getExecutableManager().getAllOutputs(), false);
+        return searchCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), 0L, Long.MAX_VALUE, getExecutableManager().getAllOutputs(), true);
     }
+
 }
