@@ -52,14 +52,14 @@ then
 
     if [ ${#patient} -eq 36 ]; then
         hbase ${KYLIN_EXTRA_START_OPTS} \
-        -Dlog4j.configuration=kylin-tool-log4j.properties \
+        -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
         -Dcatalina.home=${tomcat_root} \
         org.apache.kylin.tool.JobDiagnosisInfoCLI \
         -jobId $patient \
         -destDir $destDir || exit 1
     else
         hbase ${KYLIN_EXTRA_START_OPTS} \
-        -Dlog4j.configuration=kylin-server-log4j.properties \
+        -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
         -Dcatalina.home=${tomcat_root} \
         org.apache.kylin.tool.DiagnosisInfoCLI \
         -project -all \
