@@ -65,6 +65,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -172,6 +173,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
             String projectNames = optionsHelper.getOptionValue(OPTION_PROJECT);
             for (String projectName : projectNames.split(",")) {
                 ProjectInstance projectInstance = projectManager.getProject(projectName);
+                Preconditions.checkNotNull(projectInstance, "Project " + projectName + " does not exist.");
                 requireProject(projectInstance);
             }
         } else if (optionsHelper.hasOption(OPTION_CUBE)) {
@@ -202,9 +204,6 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     }
 
     private void requireProject(ProjectInstance projectInstance) throws IOException {
-        if (projectInstance == null) {
-            throw new IllegalArgumentException("Project " + projectInstance.getName() + " does not exist");
-        }
         addRequired(projectInstance.getResourcePath());
         List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
         for (RealizationEntry realizationEntry : realizationEntries) {
