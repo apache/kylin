@@ -116,6 +116,12 @@ curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8"
 }
 ```
 
+#### Curl Example
+
+```
+curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/json" -d '{ "sql":"select count(*) from TEST_KYLIN_FACT", "project":"learn_kylin" }' http://localhost:7070/kylin/api/query
+```
+
 #### Response Body
 * columnMetas - Column metadata information of result set.
 * results - Data set of result.
@@ -207,12 +213,6 @@ curl -X PUT --user ADMIN:KYLIN -H "Content-Type: application/json;charset=utf-8"
    "duration":3451,
    "partial":false
 }
-```
-
-#### Curl Example
-
-```
-curl -X POST -H "Authorization: Basic XXXXXXXXX" -H "Content-Type: application/json" -d '{ "sql":"select count(*) from TEST_KYLIN_FACT", "project":"learn_kylin" }' http://localhost:7070/kylin/api/query
 ```
 
 
@@ -655,6 +655,11 @@ Get descriptor for specified cube instance.
 * startTime - `required` `long` Start timestamp of data to build, e.g. 1388563200000 for 2014-1-1
 * endTime - `required` `long` End timestamp of data to build
 * buildType - `required` `string` Supported build type: 'BUILD', 'MERGE', 'REFRESH'
+
+#### Curl Example
+```
+curl -X PUT -H "Authorization: Basic XXXXXXXXX" -H 'Content-Type: application/json' -d '{"startTime":'1423526400000', "endTime":'1423526400', "buildType":"BUILD"}' http://<host>:<port>/kylin/api/cubes/{cubeName}/build
+```
 
 #### Response Sample
 ```
