@@ -31,20 +31,6 @@
       }
     },
     {
-      "table": "DEFAULT.TEST_ACCOUNT",
-      "alias": "SELLER_ACCOUNT",
-      "kind": "FACT",
-      "join": {
-        "type": "INNER",
-        "primary_key": [
-          "SELLER_ACCOUNT.ACCOUNT_ID"
-        ],
-        "foreign_key": [
-          "TEST_KYLIN_FACT.SELLER_ID"
-        ]
-      }
-    },
-    {
       "table": "EDW.TEST_CAL_DT",
       "join": {
         "type": "INNER",
@@ -117,6 +103,20 @@
         ],
         "foreign_key": [
           "SELLER_ACCOUNT.ACCOUNT_COUNTRY"
+        ]
+      }
+    },
+    {
+      "table": "DEFAULT.TEST_ACCOUNT",
+      "alias": "SELLER_ACCOUNT",
+      "kind": "FACT",
+      "join": {
+        "type": "INNER",
+        "primary_key": [
+          "SELLER_ACCOUNT.ACCOUNT_ID"
+        ],
+        "foreign_key": [
+          "TEST_KYLIN_FACT.SELLER_ID"
         ]
       }
     }

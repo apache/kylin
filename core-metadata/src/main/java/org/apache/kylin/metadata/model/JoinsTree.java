@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -59,7 +60,7 @@ public class JoinsTree  implements Serializable {
         }
 
         // Width-first build tree (tableChains)
-        Queue<Chain> chainBuff = Queues.newArrayDeque();
+        Queue<Chain> chainBuff = new ArrayDeque<Chain>();
         chainBuff.add(new Chain(rootTable, null, null));
         int chainCount = 0;
         while (!chainBuff.isEmpty()) {
