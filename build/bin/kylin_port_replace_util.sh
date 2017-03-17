@@ -31,6 +31,7 @@ else
 fi
 
 #variables
+TOMCAT_INIT_FILE="${KYLIN_HOME}/tomcat/conf/server.xml.init"
 TOMCAT_BACKUP_FILE="${KYLIN_HOME}/tomcat/conf/server.xml.backup"
 TOMCAT_CONFIG_FILE="${KYLIN_HOME}/tomcat/conf/server.xml"
 KYLIN_CONFIG_FILE="${KYLIN_HOME}/conf/kylin.properties"
@@ -49,6 +50,15 @@ then
         exit 1
     fi
 
+
+    #backup tomccat file
+    if [ ! -f ${TOMCAT_BACKUP_FILE} ]; then
+        cp -f ${TOMCAT_CONFIG_FILE} ${TOMCAT_BACKUP_FILE}
+    fi
+
+    #force reset
+    cp -f ${TOMCAT_INIT_FILE} ${TOMCAT_CONFIG_FILE} #reset if exist
+
     #back or reset
     if [ ! -f ${KYLIN_BACKUP_FILE} ]; then  #backup if not exist
         cp -f ${KYLIN_CONFIG_FILE} ${KYLIN_BACKUP_FILE}
@@ -56,11 +66,6 @@ then
         cp -r ${KYLIN_BACKUP_FILE} ${KYLIN_CONFIG_FILE} #reset if exist
     fi
 
-    if [ ! -f ${TOMCAT_BACKUP_FILE} ]; then  #backup if not exist
-        cp -f ${TOMCAT_CONFIG_FILE} ${TOMCAT_BACKUP_FILE}
-    else
-        cp -r ${TOMCAT_BACKUP_FILE} ${TOMCAT_CONFIG_FILE} #reset if exist
-    fi
 
     #replace ports in kylin.properties
     new_kylin_port=`expr ${KYLIN_DEFAULT_PORT} + ${OFFSET}`
