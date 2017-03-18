@@ -19,17 +19,13 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
-import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class JoinsTree implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -44,41 +40,11 @@ public class JoinsTree implements Serializable {
                 Preconditions.checkState(col.isQualified());
         }
 
-        // Walk through joins to build FK table to joins mapping
-        HashMap<String, List<JoinDesc>> fkJoinMap = Maps.newHashMap();
-        int joinCount = 0;
+        tableChains.put(rootTable.getAlias(), new Chain(rootTable, null, null));
         for (JoinDesc join : joins) {
-            joinCount++;
-            String fkSideAlias = join.getFKSide().getAlias();
-            if (fkJoinMap.containsKey(fkSideAlias)) {
-                fkJoinMap.get(fkSideAlias).add(join);
-            } else {
-                List<JoinDesc> joinDescList = Lists.newArrayList(join);
-                fkJoinMap.put(fkSideAlias, joinDescList);
-            }
-        }
-
-        // Width-first build tree (tableChains)
-        Queue<Chain> chainBuff = new ArrayDeque<Chain>();
-        chainBuff.add(new Chain(rootTable, null, null));
-        int chainCount = 0;
-        while (!chainBuff.isEmpty()) {
-            Chain chain = chainBuff.poll();
-            String pkSideAlias = chain.table.getAlias();
-            chainCount++;
-            tableChains.put(pkSideAlias, chain);
-
-            // this round pk side is next round's fk side
-            if (fkJoinMap.containsKey(pkSideAlias)) {
-                for (JoinDesc join : fkJoinMap.get(pkSideAlias)) {
-                    chainBuff.add(new Chain(join.getPKSide(), join, chain));
-                }
-            }
-        }
-
-        // if join count not match (chain count - 1), there must be some join not take effect
-        if (joinCount != (chainCount - 1)) {
-            throw new IllegalArgumentException("There's some illegal Joins, please check your model");
+            TableRef pkSide = join.getPKSide();
+            Chain fkSide = tableChains.get(join.getFKSide().getAlias());
+            tableChains.put(pkSide.getAlias(), new Chain(pkSide, join, fkSide));
         }
     }
 

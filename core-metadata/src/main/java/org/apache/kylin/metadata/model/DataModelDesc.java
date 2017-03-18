@@ -19,11 +19,13 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -49,11 +51,11 @@ import com.google.common.collect.Sets;
 public class DataModelDesc extends RootPersistentEntity {
     private static final Logger logger = LoggerFactory.getLogger(DataModelDesc.class);
 
-    public static enum TableKind implements Serializable{
+    public static enum TableKind implements Serializable {
         FACT, LOOKUP
     }
 
-    public static enum RealizationCapacity implements Serializable{
+    public static enum RealizationCapacity implements Serializable {
         SMALL, MEDIUM, LARGE
     }
 
@@ -295,6 +297,7 @@ public class DataModelDesc extends RootPersistentEntity {
         initJoinTablesForUpgrade();
         initTableAlias(tables);
         initJoinColumns();
+        reorderJoins(tables);
         initJoinsTree();
         initDimensionsAndMetrics();
         initPartitionDesc();
@@ -450,6 +453,42 @@ public class DataModelDesc extends RootPersistentEntity {
             joins.add(joinTable.getJoin());
         }
         joinsTree = new JoinsTree(rootFactTableRef, joins);
+    }
+
+    private void reorderJoins(Map<String, TableDesc> tables) {
+        if (joinTables.length == 0) {
+            return;
+        }
+
+        Map<String, List<JoinTableDesc>> fkMap = Maps.newHashMap();
+        for (JoinTableDesc joinTable : joinTables) {
+            JoinDesc join = joinTable.getJoin();
+            String fkSideName = join.getFKSide().getAlias();
+            if (fkMap.containsKey(fkSideName)) {
+                fkMap.get(fkSideName).add(joinTable);
+            } else {
+                List<JoinTableDesc> joinTableList = Lists.newArrayList();
+                joinTableList.add(joinTable);
+                fkMap.put(fkSideName, joinTableList);
+            }
+        }
+
+        JoinTableDesc[] orderedJoinTables = new JoinTableDesc[joinTables.length];
+        int orderedIndex = 0;
+
+        Queue<JoinTableDesc> joinTableBuff = new ArrayDeque<JoinTableDesc>();
+        TableDesc rootDesc = tables.get(rootFactTable);
+        joinTableBuff.addAll(fkMap.get(rootDesc.getName()));
+        while (!joinTableBuff.isEmpty()) {
+            JoinTableDesc head = joinTableBuff.poll();
+            orderedJoinTables[orderedIndex++] = head;
+            String headAlias = head.getJoin().getPKSide().getAlias();
+            if (fkMap.containsKey(headAlias)) {
+                joinTableBuff.addAll(fkMap.get(headAlias));
+            }
+        }
+
+        joinTables = orderedJoinTables;
     }
 
     private boolean validate() {
