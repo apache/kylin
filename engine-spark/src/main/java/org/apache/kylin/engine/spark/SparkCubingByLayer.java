@@ -77,22 +77,23 @@ import java.util.List;
 
 
 /**
+ * Spark application to build cube with the "by-layer" algorithm. Only support source data from Hive; Metadata in HBase.
  */
 public class SparkCubingByLayer extends AbstractApplication implements Serializable {
 
     protected static final Logger logger = LoggerFactory.getLogger(SparkCubingByLayer.class);
 
-    public static final Option OPTION_INPUT_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("Hive Intermediate Table").create("hiveTable");
     public static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg().isRequired(true).withDescription("Cube Name").create(BatchConstants.ARG_CUBE_NAME);
     public static final Option OPTION_SEGMENT_ID = OptionBuilder.withArgName("segment").hasArg().isRequired(true).withDescription("Cube Segment Id").create("segmentId");
     public static final Option OPTION_CONF_PATH = OptionBuilder.withArgName("confPath").hasArg().isRequired(true).withDescription("Configuration Path").create("confPath");
     public static final Option OPTION_OUTPUT_PATH = OptionBuilder.withArgName(BatchConstants.ARG_OUTPUT).hasArg().isRequired(true).withDescription("Cube output path").create(BatchConstants.ARG_OUTPUT);
+    public static final Option OPTION_INPUT_TABLE = OptionBuilder.withArgName("hiveTable").hasArg().isRequired(true).withDescription("Hive Intermediate Table").create("hiveTable");
 
     private Options options;
 
     public SparkCubingByLayer() {
         options = new Options();
-        options.addOption(OPTION_INPUT_PATH);
+        options.addOption(OPTION_INPUT_TABLE);
         options.addOption(OPTION_CUBE_NAME);
         options.addOption(OPTION_SEGMENT_ID);
         options.addOption(OPTION_CONF_PATH);
@@ -134,7 +135,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
 
     @Override
     protected void execute(OptionsHelper optionsHelper) throws Exception {
-        final String hiveTable = optionsHelper.getOptionValue(OPTION_INPUT_PATH);
+        final String hiveTable = optionsHelper.getOptionValue(OPTION_INPUT_TABLE);
         final String cubeName = optionsHelper.getOptionValue(OPTION_CUBE_NAME);
         final String segmentId = optionsHelper.getOptionValue(OPTION_SEGMENT_ID);
         final String confPath = optionsHelper.getOptionValue(OPTION_CONF_PATH);
@@ -154,7 +155,7 @@ public class SparkCubingByLayer extends AbstractApplication implements Serializa
         final KylinConfig envConfig = KylinConfig.getInstanceFromEnv();
 
         HiveContext sqlContext = new HiveContext(sc.sc());
-        final DataFrame intermediateTable = sqlContext.table(envConfig.getHiveDatabaseForIntermediateTable() + "." + hiveTable);
+        final DataFrame intermediateTable = sqlContext.table(hiveTable);
 
         final CubeInstance cubeInstance = CubeManager.getInstance(envConfig).getCube(cubeName);
         final CubeDesc cubeDesc = cubeInstance.getDescriptor();
