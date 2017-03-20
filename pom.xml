@@ -806,8 +806,7 @@
     <dependencies>
 
         <!-- the logging dependencies are inherited by all modules for their generality
-            log4j and slf4j-log4j12 test scope only for UT/IT use
-        -->
+            log4j and slf4j-log4j12 test scope only for UT/IT use -->
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
