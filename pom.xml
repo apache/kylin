@@ -62,9 +62,8 @@
         <!-- Spark versions -->
         <spark.version>1.6.3</spark.version>
         <kryo.version>4.0.0</kryo.version>
-        <!--
-        <reflections.version>0.9.10</reflections.version>
-        -->
+        
+        <!-- <reflections.version>0.9.10</reflections.version> -->
 
         <!-- Calcite Version -->
         <calcite.version>1.11.0</calcite.version>
