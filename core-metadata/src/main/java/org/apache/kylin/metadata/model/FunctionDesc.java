@@ -18,22 +18,26 @@
 
 package org.apache.kylin.metadata.model;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureTypeFactory;
 import org.apache.kylin.measure.basic.BasicMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -48,7 +52,7 @@ public class FunctionDesc implements Serializable {
         r.returnDataType = DataType.getType(returnType);
         return r;
     }
-    
+
     public static final String FUNC_SUM = "SUM";
     public static final String FUNC_MIN = "MIN";
     public static final String FUNC_MAX = "MAX";
@@ -95,7 +99,7 @@ public class FunctionDesc implements Serializable {
             }
         }
 
-        if(parameter != null)
+        if (parameter != null)
             parameter.setColRefs(colRefs);
     }
 
@@ -140,6 +144,8 @@ public class FunctionDesc implements Serializable {
             return getParameter().getValue();
         } else if (isCount()) {
             return "_KY_" + "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
+        } else if (isCountDistinct()) {
+            return "_KY_" + getFullExpressionInAlphabetOrder().replaceAll("[(),. ]", "_");
         } else {
             return "_KY_" + getFullExpression().replaceAll("[(),. ]", "_");
         }
@@ -193,6 +199,25 @@ public class FunctionDesc implements Serializable {
         if (parameter != null) {
             sb.append(parameter.getValue());
         }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    /**
+     * Parameters' name appears in alphabet order.
+     * This method is used for funcs whose parameters appear in arbitrary order
+     */
+    public String getFullExpressionInAlphabetOrder() {
+        StringBuilder sb = new StringBuilder(expression);
+        sb.append("(");
+        ParameterDesc localParam = parameter;
+        List<String> flatParams = Lists.newArrayList();
+        while (localParam != null) {
+            flatParams.add(localParam.getValue());
+            localParam = localParam.getNextParameter();
+        }
+        Collections.sort(flatParams);
+        sb.append(Joiner.on(",").join(flatParams));
         sb.append(")");
         return sb.toString();
     }
@@ -264,13 +289,20 @@ public class FunctionDesc implements Serializable {
                 return false;
         } else if (!expression.equals(other.expression))
             return false;
-        // NOTE: don't check the parameter of count()
-        if (isCount() == false) {
+        if (isCountDistinct()) {
+            // for count distinct func, param's order doesn't matter
             if (parameter == null) {
                 if (other.parameter != null)
                     return false;
             } else {
-                 if (!parameter.equals(other.parameter))
+                return parameter.equalInArbitraryOrder(other.parameter);
+            }
+        } else if (!isCount()) { // NOTE: don't check the parameter of count()
+            if (parameter == null) {
+                if (other.parameter != null)
+                    return false;
+            } else {
+                if (!parameter.equals(other.parameter))
                     return false;
             }
         }

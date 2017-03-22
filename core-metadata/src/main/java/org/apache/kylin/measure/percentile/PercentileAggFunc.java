@@ -18,7 +18,9 @@
 
 package org.apache.kylin.measure.percentile;
 
-public class PercentileAggFunc {
+import org.apache.kylin.measure.ParamAsMeasureCount;
+
+public class PercentileAggFunc implements ParamAsMeasureCount{
     public static PercentileCounter init() {
         return null;
     }
@@ -40,5 +42,10 @@ public class PercentileAggFunc {
 
     public static double result(PercentileCounter counter) {
         return counter == null ? 0L : counter.getResultEstimate();
+    }
+
+    @Override
+    public int getParamAsMeasureCount() {
+        return 1;
     }
 }
