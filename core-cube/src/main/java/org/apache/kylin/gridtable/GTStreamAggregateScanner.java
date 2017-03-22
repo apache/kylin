@@ -18,6 +18,7 @@
 
 package org.apache.kylin.gridtable;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 import org.apache.kylin.GTForwardingScanner;
@@ -38,11 +39,10 @@ public class GTStreamAggregateScanner extends GTForwardingScanner {
     private final GTScanRequest req;
     private final Comparator<GTRecord> keyComparator;
 
-    public GTStreamAggregateScanner(IGTScanner delegated,
-            GTScanRequest req, Comparator<GTRecord> keyComparator) {
+    public GTStreamAggregateScanner(IGTScanner delegated, GTScanRequest scanRequest) {
         super(delegated);
-        this.req = req;
-        this.keyComparator = keyComparator;
+        this.req = Preconditions.checkNotNull(scanRequest, "scanRequest");
+        this.keyComparator = GTRecord.getComparator(scanRequest.getAggrGroupBy());
     }
 
     @Override
@@ -172,14 +172,22 @@ public class GTStreamAggregateScanner extends GTForwardingScanner {
     private class StreamMergeValuesIterator extends AbstractStreamMergeIterator<Object[]> {
 
         private int[] gtDimsIdx;
-        private int[] gtMetricsIdx;
+        private int[] gtMetricsIdx; // specify which metric to return and their order
+        private int[] aggIdx; // specify the ith returning metric's aggStates index
+
         private Object[] result; // avoid object creation
 
         StreamMergeValuesIterator(Iterator<GTRecord> input, int[] gtDimsIdx, int[] gtMetricsIdx) {
             super(input);
             this.gtDimsIdx = gtDimsIdx;
             this.gtMetricsIdx = gtMetricsIdx;
-            result = new Object[gtDimsIdx.length + gtMetricsIdx.length];
+            this.aggIdx = new int[gtMetricsIdx.length];
+            for (int i = 0; i < aggIdx.length; i++) {
+                int metricIdx = gtMetricsIdx[i];
+                aggIdx[i] = metrics.trueBitIndexOf(metricIdx);
+            }
+
+            this.result = new Object[gtDimsIdx.length + gtMetricsIdx.length];
         }
 
         private void decodeAndSetDimensions(GTRecord record) {
@@ -202,8 +210,8 @@ public class GTStreamAggregateScanner extends GTForwardingScanner {
         protected Object[] finalizeResult(GTRecord record, Object[] aggStates) {
             decodeAndSetDimensions(record);
             // set metrics
-            for (int i = 0; i < gtMetricsIdx.length; i++) {
-                result[gtDimsIdx.length + i] = aggStates[i];
+            for (int i = 0; i < aggIdx.length; i++) {
+                result[gtDimsIdx.length + i] = aggStates[aggIdx[i]];
             }
             return result;
         }

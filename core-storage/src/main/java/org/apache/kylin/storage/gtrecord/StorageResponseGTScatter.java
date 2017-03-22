@@ -44,7 +44,7 @@ public class StorageResponseGTScatter implements IGTScanner {
     private IPartitionStreamer partitionStreamer;
     private final Iterator<byte[]> blocks;
     private final ImmutableBitSet columns;
-    private final StorageContext context;
+    private final ImmutableBitSet groupByDims;
     private final boolean needSorted; // whether scanner should return sorted records
 
     public StorageResponseGTScatter(GTScanRequest scanRequest, IPartitionStreamer partitionStreamer, StorageContext context) {
@@ -52,7 +52,7 @@ public class StorageResponseGTScatter implements IGTScanner {
         this.partitionStreamer = partitionStreamer;
         this.blocks = partitionStreamer.asByteArrayIterator();
         this.columns = scanRequest.getColumns();
-        this.context = context;
+        this.groupByDims = scanRequest.getAggrGroupBy();
         this.needSorted = (context.getFinalPushDownLimit() != Integer.MAX_VALUE) || context.isStreamAggregateEnabled();
     }
 
@@ -74,13 +74,16 @@ public class StorageResponseGTScatter implements IGTScanner {
             partitionResults.add(new PartitionResultIterator(blocks.next(), info, columns));
         }
 
+        if (partitionResults.size() == 1) {
+            return partitionResults.get(0);
+        }
+
         if (!needSorted) {
             logger.debug("Using Iterators.concat to merge partition results");
             return Iterators.concat(partitionResults.iterator());
         }
 
-        logger.debug("Using PartitionResultMerger to merge partition results");
-        PartitionResultMerger merger = new PartitionResultMerger(partitionResults, info, context.getGroupKeyComparator());
-        return merger.iterator();
+        logger.debug("Using SortMergedPartitionResultIterator to merge partition results");
+        return new SortMergedPartitionResultIterator(partitionResults, info, GTRecord.getComparator(groupByDims));
     }
 }

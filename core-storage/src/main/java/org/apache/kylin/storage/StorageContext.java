@@ -18,12 +18,10 @@
 
 package org.apache.kylin.storage;
 
-import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
-import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
 import org.slf4j.Logger;
@@ -49,9 +47,7 @@ public class StorageContext {
     private boolean exactAggregation = false;
     private boolean needStorageAggregation = false;
     private boolean enableCoprocessor = false;
-
     private boolean enableStreamAggregate = false;
-    private Comparator<GTRecord> groupKeyComparator;
 
     private IStorageQuery storageQuery;
     private AtomicLong processedRowCount = new AtomicLong();
@@ -241,13 +237,5 @@ public class StorageContext {
 
     public void enableStreamAggregate() {
         this.enableStreamAggregate = true;
-    }
-
-    public Comparator<GTRecord> getGroupKeyComparator() {
-        return groupKeyComparator;
-    }
-
-    public void setGroupKeyComparator(Comparator<GTRecord> groupKeyComparator) {
-        this.groupKeyComparator = groupKeyComparator;
     }
 }

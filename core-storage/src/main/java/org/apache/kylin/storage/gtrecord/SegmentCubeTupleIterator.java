@@ -90,8 +90,8 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
             final Iterator<GTRecord> records, final GTScanRequest scanRequest,
             final int[] gtDimsIdx, final int[] gtMetricsIdx) {
 
-        boolean singlePartitionResult = records instanceof PartitionResultIterator;
-        if (context.isStreamAggregateEnabled() && !singlePartitionResult) {
+        boolean hasMultiplePartitions = records instanceof SortMergedPartitionResultIterator;
+        if (hasMultiplePartitions && context.isStreamAggregateEnabled()) {
             // input records are ordered, leverage stream aggregator to produce possibly fewer records
             IGTScanner inputScanner = new IGTScanner() {
                 public GTInfo getInfo() {
@@ -104,8 +104,7 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
                     return records;
                 }
             };
-            GTStreamAggregateScanner aggregator = new GTStreamAggregateScanner(
-                    inputScanner, scanRequest, context.getGroupKeyComparator());
+            GTStreamAggregateScanner aggregator = new GTStreamAggregateScanner(inputScanner, scanRequest);
             return aggregator.valuesIterator(gtDimsIdx, gtMetricsIdx);
         }
 
