@@ -17,6 +17,8 @@
 */
 package org.apache.kylin.measure.bitmap;
 
+import org.apache.kylin.measure.ParamAsMeasureCount;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +29,13 @@ import java.util.Map;
  * Example: intersect_count(uuid, event, array['A', 'B', 'C']), meaning find the count of uuid in all A/B/C 3 bitmaps
  *          requires an bitmap count distinct measure of uuid, and an dimension of event
  */
-public class BitmapIntersectDistinctCountAggFunc {
+public class BitmapIntersectDistinctCountAggFunc implements ParamAsMeasureCount {
     private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
+
+    @Override
+    public int getParamAsMeasureCount() {
+        return -2;
+    }
 
     public static class RetentionPartialResult {
         Map<Object, BitmapCounter> map;
