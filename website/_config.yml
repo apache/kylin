@@ -61,10 +61,14 @@ collections:
   docs15:
     output: true
   docs15-cn:
-    output: true   
+    output: true
   docs16:
     output: true
   docs16-cn:
-    output: true     
+    output: true
+  docs20:
+    output: true
+  docs20-cn:
+    output: true
   dev:
-    output: true  
+    output: true

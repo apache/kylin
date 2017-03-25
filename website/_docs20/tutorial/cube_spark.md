@@ -1,8 +1,8 @@
 ---
-layout: docs16
+layout: docs20
 title:  Build Cube with Spark (beta)
 categories: tutorial
-permalink: /docs16/tutorial/cube_spark.html
+permalink: /docs20/tutorial/cube_spark.html
 ---
 Kylin v2.0 introduces the Spark cube engine, it uses Apache Spark to replace MapReduce in the build cube step; You can check [this blog](/blog/2017/02/23/by-layer-spark-cubing/) for an overall picture. The current document uses the sample cube to demo how to try the new engine.
 

@@ -1,8 +1,8 @@
 ---
-layout: docs16
+layout: docs20
 title: Overview
 categories: docs
-permalink: /docs16/index.html
+permalink: /docs20/index.html
 ---
 
 Welcome to Apache Kylin™: Extreme OLAP Engine for Big Data
@@ -12,6 +12,7 @@ Apache Kylin™ is an open source Distributed Analytics Engine designed to provi
 
 Document of prior versions: 
 
+* [v1.6.x document](/docs16/)
 * [v1.5.x document](/docs15/)
 * [v1.3.x document](/docs/) 
 
@@ -31,7 +32,8 @@ Tutorial
 3. [Cube Build and Job Monitoring](tutorial/cube_build_job.html)
 4. [Web Interface](tutorial/web.html)
 5. [SQL reference: by Apache Calcite](http://calcite.apache.org/docs/reference.html)
-6. [Build Cube with Streaming Data (beta)](tutorial/cube_streaming.html)
+6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
+7. [Build Cube with Spark Engine (beta)](tutorial/cube_spark.html)
 
 
 Connectivity and APIs
