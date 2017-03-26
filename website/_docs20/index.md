@@ -34,6 +34,8 @@ Tutorial
 5. [SQL reference: by Apache Calcite](http://calcite.apache.org/docs/reference.html)
 6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
 7. [Build Cube with Spark Engine (beta)](tutorial/cube_spark.html)
+8. [Kylin Cube build tuning step by step](tutorial/cube_build_performance.html)
+
 
 
 Connectivity and APIs
@@ -48,6 +50,7 @@ Connectivity and APIs
 8. [Connect from Tableau 9](tutorial/tableau_91.html)
 9. [Connect from SQuirreL](tutorial/squirrel.html)
 10. [Connect from Apache Flink](tutorial/flink.html)
+11. [Connect from Apache Hue](tutorial/hue.html)
 
 Operations
 ------------  

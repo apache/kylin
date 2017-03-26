@@ -48,6 +48,8 @@
   - tutorial/odbc
   - tutorial/flink
   - tutorial/squirrel
+  - tutorial/cube_build_performance
+  - tutorial/hue
 
 - title: How To
   docs:
