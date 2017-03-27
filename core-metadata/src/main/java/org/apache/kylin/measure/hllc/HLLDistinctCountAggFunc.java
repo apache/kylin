@@ -102,7 +102,7 @@ public class HLLDistinctCountAggFunc {
         }
 
         @Override
-        protected void add(long hash) {
+        public void add(long hash) {
             throw new UnsupportedOperationException();
         }
 
