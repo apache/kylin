@@ -37,15 +37,11 @@ import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
-import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.SchedulerFactory;
-import org.apache.kylin.job.common.ShellExecutable;
 import org.apache.kylin.job.constant.JobStatusEnum;
-import org.apache.kylin.job.constant.JobStepStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.JobException;
@@ -59,6 +55,7 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.util.JobInfoConverter;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
@@ -275,106 +272,14 @@ public class JobService extends BasicService implements InitializingBean {
         result.setSubmitter(cubeJob.getSubmitter());
         result.setUuid(cubeJob.getId());
         result.setType(CubeBuildTypeEnum.BUILD);
-        result.setStatus(parseToJobStatus(job.getStatus()));
+        result.setStatus(JobInfoConverter.parseToJobStatus(job.getStatus()));
         result.setMrWaiting(cubeJob.getMapReduceWaitTime() / 1000);
         result.setDuration(cubeJob.getDuration() / 1000);
         for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
             AbstractExecutable task = cubeJob.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i, getExecutableManager().getOutput(task.getId())));
+            result.addStep(JobInfoConverter.parseToJobStep(task, i, getExecutableManager().getOutput(task.getId())));
         }
         return result;
-    }
-
-    private JobInstance parseToJobInstance(AbstractExecutable job, Map<String, Output> outputs) {
-        if (job == null) {
-            return null;
-        }
-        Preconditions.checkState(job instanceof CubingJob, "illegal job type, id:" + job.getId());
-        CubingJob cubeJob = (CubingJob) job;
-        Output output = outputs.get(job.getId());
-        final JobInstance result = new JobInstance();
-        result.setName(job.getName());
-        result.setRelatedCube(CubingExecutableUtil.getCubeName(cubeJob.getParams()));
-        result.setRelatedSegment(CubingExecutableUtil.getSegmentId(cubeJob.getParams()));
-        result.setLastModified(output.getLastModified());
-        result.setSubmitter(cubeJob.getSubmitter());
-        result.setUuid(cubeJob.getId());
-        result.setType(CubeBuildTypeEnum.BUILD);
-        result.setStatus(parseToJobStatus(output.getState()));
-        result.setMrWaiting(AbstractExecutable.getExtraInfoAsLong(output, CubingJob.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
-        result.setExecStartTime(AbstractExecutable.getStartTime(output));
-        result.setExecEndTime(AbstractExecutable.getEndTime(output));
-        result.setDuration(AbstractExecutable.getDuration(result.getExecStartTime(), result.getExecEndTime()) / 1000);
-        for (int i = 0; i < cubeJob.getTasks().size(); ++i) {
-            AbstractExecutable task = cubeJob.getTasks().get(i);
-            result.addStep(parseToJobStep(task, i, outputs.get(task.getId())));
-        }
-        return result;
-    }
-
-    private JobInstance.JobStep parseToJobStep(AbstractExecutable task, int i, Output stepOutput) {
-        Preconditions.checkNotNull(stepOutput);
-        JobInstance.JobStep result = new JobInstance.JobStep();
-        result.setId(task.getId());
-        result.setName(task.getName());
-        result.setSequenceID(i);
-        result.setStatus(parseToJobStepStatus(stepOutput.getState()));
-        for (Map.Entry<String, String> entry : stepOutput.getExtra().entrySet()) {
-            if (entry.getKey() != null && entry.getValue() != null) {
-                result.putInfo(entry.getKey(), entry.getValue());
-            }
-        }
-        result.setExecStartTime(AbstractExecutable.getStartTime(stepOutput));
-        result.setExecEndTime(AbstractExecutable.getEndTime(stepOutput));
-        if (task instanceof ShellExecutable) {
-            result.setExecCmd(((ShellExecutable) task).getCmd());
-        }
-        if (task instanceof MapReduceExecutable) {
-            result.setExecCmd(((MapReduceExecutable) task).getMapReduceParams());
-            result.setExecWaitTime(AbstractExecutable.getExtraInfoAsLong(stepOutput, MapReduceExecutable.MAP_REDUCE_WAIT_TIME, 0L) / 1000);
-        }
-        if (task instanceof HadoopShellExecutable) {
-            result.setExecCmd(((HadoopShellExecutable) task).getJobParams());
-        }
-        return result;
-    }
-
-    private JobStatusEnum parseToJobStatus(ExecutableState state) {
-        switch (state) {
-        case READY:
-            return JobStatusEnum.PENDING;
-        case RUNNING:
-            return JobStatusEnum.RUNNING;
-        case ERROR:
-            return JobStatusEnum.ERROR;
-        case DISCARDED:
-            return JobStatusEnum.DISCARDED;
-        case SUCCEED:
-            return JobStatusEnum.FINISHED;
-        case STOPPED:
-            return JobStatusEnum.STOPPED;
-        default:
-            throw new RuntimeException("invalid state:" + state);
-        }
-    }
-
-    private JobStepStatusEnum parseToJobStepStatus(ExecutableState state) {
-        switch (state) {
-        case READY:
-            return JobStepStatusEnum.PENDING;
-        case RUNNING:
-            return JobStepStatusEnum.RUNNING;
-        case ERROR:
-            return JobStepStatusEnum.ERROR;
-        case DISCARDED:
-            return JobStepStatusEnum.DISCARDED;
-        case SUCCEED:
-            return JobStepStatusEnum.FINISHED;
-        case STOPPED:
-            return JobStepStatusEnum.STOPPED;
-        default:
-            throw new RuntimeException("invalid state:" + state);
-        }
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
@@ -448,7 +353,7 @@ public class JobService extends BasicService implements InitializingBean {
         return Lists.newArrayList(FluentIterable.from(searchCubingJobs(cubeNameSubstring, projectName, states, timeStartInMillis, timeEndInMillis, allOutputs, false)).transform(new Function<CubingJob, JobInstance>() {
             @Override
             public JobInstance apply(CubingJob cubingJob) {
-                return parseToJobInstance(cubingJob, allOutputs);
+                return JobInfoConverter.parseToJobInstance(cubingJob, allOutputs);
             }
         }));
     }
