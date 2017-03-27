@@ -24,13 +24,13 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.hadoop.io.Text;
-import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.hllc.HLLCounter;
+import org.apache.kylin.measure.hllc.RegisterType;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -62,7 +62,8 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     private HashFunction hf = null;
     private int rowCount = 0;
     private int samplingPercentage;
-    private ByteArray[] row_hashcodes = null;
+    //private ByteArray[] row_hashcodes = null;
+    private long[] rowHashCodesLong = null;
     private ByteBuffer tmpbuf;
     private static final Text EMPTY_TEXT = new Text();
     public static final byte MARK_FOR_PARTITION_COL = (byte) 0xFE;
@@ -92,14 +93,11 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
 
             allCuboidsHLL = new HLLCounter[cuboidIds.length];
             for (int i = 0; i < cuboidIds.length; i++) {
-                allCuboidsHLL[i] = new HLLCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision());
+                allCuboidsHLL[i] = new HLLCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision(), RegisterType.DENSE);
             }
 
-            hf = Hashing.murmur3_32();
-            row_hashcodes = new ByteArray[nRowKey];
-            for (int i = 0; i < nRowKey; i++) {
-                row_hashcodes[i] = new ByteArray();
-            }
+            hf = Hashing.murmur3_128();
+            rowHashCodesLong = new long[nRowKey];
 
             TblColRef partitionColRef = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (partitionColRef != null) {
@@ -211,26 +209,23 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     }
 
     private void putRowKeyToHLL(String[] row) {
-
         //generate hash for each row key column
         for (int i = 0; i < nRowKey; i++) {
             Hasher hc = hf.newHasher();
             String colValue = row[intermediateTableDesc.getRowKeyColumnIndexes()[i]];
-            if (colValue != null) {
-                row_hashcodes[i].set(hc.putString(colValue).hash().asBytes());
-            } else {
-                row_hashcodes[i].set(hc.putInt(0).hash().asBytes());
-            }
+            if (colValue == null)
+                colValue = "0";
+            byte[] bytes = hc.putString(colValue).hash().asBytes();
+            rowHashCodesLong[i] = (Bytes.toLong(bytes) + i);//add column ordinal to the hash value to distinguish between (a,b) and (b,a)
         }
 
         // user the row key column hash to get a consolidated hash for each cuboid
         for (int i = 0, n = allCuboidsBitSet.length; i < n; i++) {
-            Hasher hc = hf.newHasher();
+            long value = 0;
             for (int position = 0; position < allCuboidsBitSet[i].length; position++) {
-                hc.putBytes(row_hashcodes[allCuboidsBitSet[i][position]].array());
+                value += rowHashCodesLong[allCuboidsBitSet[i][position]];
             }
-
-            allCuboidsHLL[i].add(hc.hash().asBytes());
+            allCuboidsHLL[i].addHashDirectly(value);
         }
     }
 
