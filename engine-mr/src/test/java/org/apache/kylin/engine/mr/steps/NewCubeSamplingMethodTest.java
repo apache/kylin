@@ -47,7 +47,7 @@ public class NewCubeSamplingMethodTest {
 
     private long baseCuboidId;
 
-    private final int rowCount = 100000;
+    private final int rowCount = 500000;
 
     @Before
     public void setup() {
@@ -146,7 +146,7 @@ public class NewCubeSamplingMethodTest {
                     for (int position = 0; position < row.size(); position++) {
                         value += valueHashLong[position];
                     }
-                    counter.add(value);
+                    counter.addLongWithoutHash(value);
                 }
                 long estimate = counter.getCountEstimate();
                 System.out.println("new method finished. Estimate cardinality : " + estimate + ". Error rate : " + countErrorRate(estimate, realCardinality));
@@ -238,7 +238,7 @@ public class NewCubeSamplingMethodTest {
             for (int position = 0; position < allCuboidsBitSet[i].length; position++) {
                 value += hashValuesLong[allCuboidsBitSet[i][position]];
             }
-            cuboidCounters[i].add(value);
+            cuboidCounters[i].addLongWithoutHash(value);
         }
     }
 

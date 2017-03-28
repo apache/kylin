@@ -99,7 +99,11 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         add(hashFunc.hashBytes(value, offset, length).asLong());
     }
 
-    public void add(long hash) {
+    public void addLongWithoutHash(long hash){
+        add(hash);
+    }
+
+    protected void add(long hash) {
         int bucketMask = m - 1;
         int bucket = (int) (hash & bucketMask);
         int firstOnePos = Long.numberOfLeadingZeros(hash | bucketMask) + 1;

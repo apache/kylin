@@ -213,9 +213,10 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
         for (int i = 0; i < nRowKey; i++) {
             Hasher hc = hf.newHasher();
             String colValue = row[intermediateTableDesc.getRowKeyColumnIndexes()[i]];
-            String hashStr = (colValue == null) ? (i + "0") : (i + colValue);
-            byte[] bytes = hc.putString(hashStr).hash().asBytes();
-            rowHashCodesLong[i] = Bytes.toLong(bytes);
+            if (colValue == null)
+                colValue = "0";
+            byte[] bytes = hc.putString(colValue).hash().asBytes();
+            rowHashCodesLong[i] = (Bytes.toLong(bytes) + i);
         }
 
         // user the row key column hash to get a consolidated hash for each cuboid
@@ -224,7 +225,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
             for (int position = 0; position < allCuboidsBitSet[i].length; position++) {
                 value += rowHashCodesLong[allCuboidsBitSet[i][position]];
             }
-            allCuboidsHLL[i].add(value);
+            allCuboidsHLL[i].addLongWithoutHash(value);
         }
     }
 
