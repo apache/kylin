@@ -31,7 +31,7 @@ For other hadoop distribution, basically start the hadoop cluster, make sure HDF
 ## Environment on the dev machine
 
 
-### Install maven
+### Install Maven
 
 The latest maven can be found at <http://maven.apache.org/download.cgi>, we create a symbolic so that `mvn` can be run anywhere.
 
@@ -40,6 +40,31 @@ cd ~
 wget http://xenia.sote.hu/ftp/mirrors/www.apache.org/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz
 tar -xzvf apache-maven-3.2.5-bin.tar.gz
 ln -s /root/apache-maven-3.2.5/bin/mvn /usr/bin/mvn
+{% endhighlight %}
+
+### Install Spark
+
+Manually install spark-1.6.3-bin-hadoop2.6 in a local folder like /usr/local/spark
+
+{% highlight Groff markup %}
+wget -O /tmp/spark-1.6.3-bin-hadoop2.6.tgz http://d3kbcqa49mib13.cloudfront.net/spark-1.6.3-bin-hadoop2.6.tgz
+cd /usr/local
+tar -zxvf /tmp/spark-1.6.3-bin-hadoop2.6.tgz
+ln -s spark-1.6.3-bin-hadoop2.6 spark
+{% endhighlight %}
+
+Upload the spark-assembly jar to HDFS as /kylin/spark/spark-assembly-1.6.3-hadoop2.6.0.jar (avoid repeatedly uploading the jar to HDFS):
+
+{% highlight Groff markup %}
+hadoop fs -mkdir /kylin/spark/
+hadoop fs -put /usr/local/spark/lib/spark-assembly-1.6.3-hadoop2.6.0.jar /kylin/spark/
+{% endhighlight %}
+
+Create local temp folder for hbase client (if it doesn't exist):
+
+{% highlight Groff markup %}
+mkdir -p /hadoop/hbase/local/jars
+chmod 777 /hadoop/hbase/local/jars
 {% endhighlight %}
 
 ### Compile
