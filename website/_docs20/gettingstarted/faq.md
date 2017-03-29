@@ -6,9 +6,9 @@ permalink: /docs20/gettingstarted/faq.html
 since: v0.6.x
 ---
 
-#### 1. "bin/find-hive-dependency.sh" can locate hive/hcat jars in local, but Kylin reports error like "java.lang.NoClassDefFoundError: org/apache/hive/hcatalog/mapreduce/HCatInputFormat"
+#### 1. "bin/find-hive-dependency.sh" can locate hive/hcat jars in local, but Kylin reports error like "java.lang.NoClassDefFoundError: org/apache/hive/hcatalog/mapreduce/HCatInputFormat" or "java.lang.NoClassDefFoundError: org/apache/hadoop/hive/ql/session/SessionState"
 
-  * Kylin need many dependent jars (hadoop/hive/hcat/hbase/kafka) on classpath to work, but Kylin doesn't ship them. It will seek these jars from your local machine by running commands like `hbase classpath`, `hive -e set` etc. The founded jars' path will be appended to the environment variable *HBASE_CLASSPATH* (Kylin uses `hbase` shell command to start up, which will read this). But in some Hadoop distribution (like EMR 5.0), the `hbase` shell doesn't keep the origin `HBASE_CLASSPATH` value, that causes the "NoClassDefFoundError".
+  * Kylin need many dependent jars (hadoop/hive/hcat/hbase/kafka) on classpath to work, but Kylin doesn't ship them. It will seek these jars from your local machine by running commands like `hbase classpath`, `hive -e set` etc. The founded jars' path will be appended to the environment variable *HBASE_CLASSPATH* (Kylin uses `hbase` shell command to start up, which will read this). But in some Hadoop distribution (like AWS EMR 5.0), the `hbase` shell doesn't keep the origin `HBASE_CLASSPATH` value, that causes the "NoClassDefFoundError".
 
   * To fix this, find the hbase shell script (in hbase/bin folder), and search *HBASE_CLASSPATH*, check whether it overwrite the value like :
 
