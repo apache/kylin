@@ -114,7 +114,7 @@ public class CacheService extends BasicService {
 
     protected void cleanDataCache(String project) {
         if (cacheManager != null) {
-            logger.info("cleaning cache for project" + project + " (currently remove all entries)");
+            logger.info("cleaning cache for project " + project + " (currently remove all entries)");
             cacheManager.getCache(QueryService.SUCCESS_QUERY_CACHE).removeAll();
             cacheManager.getCache(QueryService.EXCEPTION_QUERY_CACHE).removeAll();
         } else {
