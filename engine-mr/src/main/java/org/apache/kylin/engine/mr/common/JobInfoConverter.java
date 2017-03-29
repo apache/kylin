@@ -16,14 +16,12 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.engine.mr.common;
 
 import java.util.Map;
 
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
-import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.common.ShellExecutable;
