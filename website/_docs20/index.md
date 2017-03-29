@@ -34,7 +34,7 @@ Tutorial
 5. [SQL reference: by Apache Calcite](http://calcite.apache.org/docs/reference.html)
 6. [Build Cube with Streaming Data](tutorial/cube_streaming.html)
 7. [Build Cube with Spark Engine (beta)](tutorial/cube_spark.html)
-8. [Kylin Cube build tuning step by step](tutorial/cube_build_performance.html)
+8. [Cube Build Tuning Step by Step](tutorial/cube_build_performance.html)
 
 
 

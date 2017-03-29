@@ -1,32 +1,26 @@
 ---
 layout: docs20
-title: Kylin Cube build tuning step by step
+title: Cube Build Tuning Step by Step
 categories: tutorial
 permalink: /docs20/tutorial/cube_build_performance.html
 ---
- *This tutorial is an example step by step about how to optimize build of cube*
+ *This tutorial is an example step by step about how to optimize build of cube.* 
  
- *Thanks to ShaoFeng Shi for help*
-
-
-
-
-Try to optimize a very simple Cube, with 1 Dim and 1 Fact table (Date Dimension)
+In this scenario we're trying to optimize a very simple Cube, with 1 fact and 1 lookup table (Date Dimension). Before do a real tunning, please get an overall understanding about Cube build process from [Optimize Cube Build](/docs20/howto/howto_optimize_build.html)
 
 ![]( /images/tutorial/2.0/cube_build_performance/01.png)
-
 
 The baseline is:
 
 * One Measure: Balance, calculate always Max, Min and Count
 * All Dim_date (10 items) will be used as dimensions 
 * Input is a Hive CSV external table 
-* Output is a Cube in HBase with out compression 
+* Output is a Cube in HBase without compression 
 
 With this configuration, the results are: 13 min to build a cube of 20 Mb  (Cube_01)
 
-### Cube_02: Reduce cardinality
-To make the first improvement, use Joint and Hierarchy on Dimensions to reduce the cardinality.
+### Cube_02: Reduce combinations
+To make the first improvement, use Joint and Hierarchy on Dimensions to reduce the combinations (number of cuboids).
 
 Put together all ID and Text of: Month, Week, Weekday and Quarter using Joint Dimension
 
@@ -37,26 +31,23 @@ Define Id_date and Year as a Hierarchy Dimension
 
 This reduces the size down to 0.72MB and time to 5 min
 
-
-
 [Kylin 2149](https://issues.apache.org/jira/browse/KYLIN-2149), ideally, these Hierarchies can be defined also:
 * Id_weekday > Id_date
 * Id_Month > Id_date
 * Id_Quarter > Id_date
 * Id_week > Id_date
 
-But for now, it isn’t possible to use Joint and hierarchy together in one Dim   :(
+But for now, it impossible to use Joint and Hierarchy together for one dimension.
 
 
-### Cube_03: Compress output Cube
+### Cube_03: Compress output
 To make the next improvement, compress HBase Cube with Snappy:
 
 ![alt text](/images/tutorial/2.0/cube_build_performance/03.png)
 
-Another option is to Now we can try compress HBase Cube with Gzip:
+Another option is Gzip:
 
 ![alt text](/images/tutorial/2.0/cube_build_performance/04.png)
-
 
 
 The results of compression output are:
@@ -78,10 +69,9 @@ Group detailed times by concepts :
 
 67 % is used to build / process flat table and respect 30% to build the cube
 
-A lot of time is used in the first steps! 
+A lot of time is used in the first steps.
 
 This time distribution is typical in a cube with few measures and few dim (or very optimized)
-
 
 
 Try to use ORC Format and compression on Hive input table (Snappy):
@@ -89,7 +79,7 @@ Try to use ORC Format and compression on Hive input table (Snappy):
 ![]( /images/tutorial/2.0/cube_build_performance/08.png)
 
 
-The time in the first three stree steps (Flat Table) has been improved by half  :)
+The time in the first three stree steps (Flat Table) has been improved by half.
 
 Other columnar formats can be tested:
 
@@ -99,7 +89,7 @@ Other columnar formats can be tested:
 * ORC
 * ORC compressed with Snappy
 
-But the results are worse than when using Sequence file …
+But the results are worse than when using Sequence file.
 
 See comments about this here: [Shaofengshi in MailList](http://apache-kylin.74782.x6.nabble.com/Kylin-Performance-td6713.html#a6767)
 
@@ -107,14 +97,13 @@ The second strep is to redistribute Flat Hive table:
 
 ![]( /images/tutorial/2.0/cube_build_performance/20.png)
 
-
 Is a simple row count, two approximations can be made
 * If it doesn’t need to be accurate, the rows of the fact table can be counted→ this can be performed in parallel with Step 1 (and 99% of the time it will be accurate)
 
 ![]( /images/tutorial/2.0/cube_build_performance/21.png)
 
 
-* See comments about this from Shaofengshi in MailList . In the future versions (Kylin 2265 v2.0), this steps will be implemented using Hive table statistics.
+* In the future versions (KYLIN-2165 v2.0), this steps will be implemented using Hive table statistics.
 
 
 
@@ -140,6 +129,7 @@ WHERE (ID_DATE >= '2016-12-08' AND ID_DATE < '2016-12-23')
 {% endhighlight %}
 
 The problem here, is that, Hive in only using 1 Map to create Flat Table. It is important to lets go to change this behavior. The solution is to partition DIM and FACT in the same columns
+
 * Option 1: Use id_date as a partition column on Hive table. This has a big problem: the Hive metastore is meant for few a hundred of partitions and not thousands (In [Hive 9452](https://issues.apache.org/jira/browse/HIVE-9452) there is an idea to solve this but it isn’t finished yet)
 * Option 2: Generate a new column for this purpose like Monthslot.
 
@@ -217,10 +207,9 @@ How can the performance of Map – Reduce be improved? The easy way is to increa
 * yarn.nodemanager.resource.memory-mb = 15 GB
 * yarn.scheduler.maximum-allocation-mb = 8 GB
 * yarn.nodemanager.resource.cpu-vcores = 8 cores
-With this config our max theoreticaleorical grade of parallelismelist is 8. However, t , but this has a problem: “Timed out after 3600 secs”
+With this config our max theoreticaleorical grade of parallelismelist is 8. However, but this has a problem: “Timed out after 3600 secs”
 
 ![]( /images/tutorial/2.0/cube_build_performance/26.png)
-
 
 
 The parameter mapreduce.task.timeout  (1 hour by default) define max time that Application Master (AM) can happen with out ACK of Yarn Container. Once this time passes, AM kill the container and retry the same 4 times (with the same result)
@@ -243,7 +232,7 @@ During a normal “Build Cube” step you will see similars messages on YARN log
 ![]( /images/tutorial/2.0/cube_build_performance/28.png)
 
 
-If you don’t see this periodically, perhaps you have a bottleneck in the memory
+If you don’t see this periodically, perhaps you have a bottleneck in the memory.
 
 
 
@@ -263,8 +252,7 @@ In our case we define 3 Aggregations Groups:
 
 ![]( /images/tutorial/2.0/cube_build_performance/31.png)
 
-	
-	
+
 
 Compare without / with AGGs:
 
@@ -272,15 +260,6 @@ Compare without / with AGGs:
 
 
 Now it uses 3% more of time to build the cube and 0.6% of space, but queries by currency or Carteras_Desc will be much faster.
-
-
-
-
-
-
-**__For any suggestions, feel free to contact me__**
-
-**__Thanks, Alberto__**
 
 
 
