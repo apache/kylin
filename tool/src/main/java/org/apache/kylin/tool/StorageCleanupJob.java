@@ -46,6 +46,7 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.AbstractApplication;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
@@ -57,7 +58,6 @@ import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.source.hive.HiveClientFactory;
-import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.source.hive.IHiveClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,9 +276,14 @@ public class StorageCleanupJob extends AbstractApplication {
                 sb.append(jobId).append("(").append(state).append("), ");
             }
 
-            String segmentId = getSegmentIdFromJobId(jobId);
-            if (segmentId != null) {//some jobs are not cubing jobs 
-                segmentId2JobId.put(segmentId, jobId);
+            try {
+                String segmentId = getSegmentIdFromJobId(jobId);
+                if (segmentId != null) {//some jobs are not cubing jobs 
+                    segmentId2JobId.put(segmentId, jobId);
+                }
+            } catch (Exception ex) {
+                logger.warn("Failed to find segment ID from job ID " + jobId + ", ignore it");
+                // some older version job metadata may fail to read, ignore it
             }
         }
         logger.info("Working jobIDs: " + workingJobList);
