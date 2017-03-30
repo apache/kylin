@@ -50,30 +50,41 @@ public class KylinConfig extends KylinConfigBase {
     public static final String KYLIN_CONF = "KYLIN_CONF";
 
     // static cached instances
-    private static KylinConfig ENV_INSTANCE = null;
+    private static KylinConfig SYS_ENV_INSTANCE = null;
+
+    // thread-local instances, will override SYS_ENV_INSTANCE
+    private static final transient ThreadLocal<KylinConfig> THREAD_ENV_INSTANCE = new ThreadLocal<>();
 
     public static KylinConfig getInstanceFromEnv() {
         synchronized (KylinConfig.class) {
-            if (ENV_INSTANCE == null) {
+            KylinConfig config = THREAD_ENV_INSTANCE.get();
+            if (config != null) {
+                return config;
+            }
+
+            if (SYS_ENV_INSTANCE == null) {
                 try {
-                    KylinConfig config = new KylinConfig();
+                    config = new KylinConfig();
                     config.reloadKylinConfig(getKylinProperties());
 
                     logger.info("Initialized a new KylinConfig from getInstanceFromEnv : " + System.identityHashCode(config));
-                    ENV_INSTANCE = config;
+                    SYS_ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalStateException("Failed to find KylinConfig ", e);
                 }
             }
-            return ENV_INSTANCE;
+            return SYS_ENV_INSTANCE;
         }
     }
 
     //Only used in test cases!!! 
     public static void destroyInstance() {
-        logger.info("Destory KylinConfig");
-        dumpStackTrace();
-        ENV_INSTANCE = null;
+        synchronized (KylinConfig.class) {
+            logger.info("Destroy KylinConfig");
+            dumpStackTrace();
+            SYS_ENV_INSTANCE = null;
+            THREAD_ENV_INSTANCE.remove();
+        }
     }
 
     public enum UriType {
@@ -158,12 +169,12 @@ public class KylinConfig extends KylinConfigBase {
 
     public static void setKylinConfigInEnvIfMissing(Properties prop) {
         synchronized (KylinConfig.class) {
-            if (ENV_INSTANCE == null) {
+            if (SYS_ENV_INSTANCE == null) {
                 try {
                     KylinConfig config = new KylinConfig();
                     config.reloadKylinConfig(prop);
-                    logger.info("Resetting ENV_INSTANCE by a input stream: " + System.identityHashCode(config));
-                    ENV_INSTANCE = config;
+                    logger.info("Resetting SYS_ENV_INSTANCE by a input stream: " + System.identityHashCode(config));
+                    SYS_ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalStateException("Failed to find KylinConfig ", e);
                 }
@@ -175,6 +186,10 @@ public class KylinConfig extends KylinConfigBase {
         Properties props = new Properties();
         props.load(new StringReader(propsInStr));
         setKylinConfigInEnvIfMissing(props);
+    }
+
+    public static void setKylinConfigThreadLocal(KylinConfig config) {
+        THREAD_ENV_INSTANCE.set(config);
     }
 
     public static KylinConfig createKylinConfig(String propsInStr) throws IOException {

@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.kylin.common.util.HotLoadKylinPropertiesTestCase;
 import org.junit.Test;
@@ -86,7 +87,7 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
     public void testGetMetadataUrlPrefix() {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         final String default_metadata_prefix = "kylin_metadata";
-        
+
         config.setMetadataUrl("testMetaPrefix@hbase");
         assertEquals("testMetaPrefix", config.getMetadataUrlPrefix());
 
@@ -95,5 +96,33 @@ public class KylinConfigTest extends HotLoadKylinPropertiesTestCase {
 
         config.setMetadataUrl("/kylin/temp");
         assertEquals(default_metadata_prefix, config.getMetadataUrlPrefix());
+    }
+
+    @Test
+    public void testThreadLocalOverride() {
+        final String metadata1 = "meta1";
+        final String metadata2 = "meta2";
+
+        // set system KylinConfig
+        KylinConfig sysConfig = KylinConfig.getInstanceFromEnv();
+        sysConfig.setMetadataUrl(metadata1);
+
+        assertEquals(metadata1, KylinConfig.getInstanceFromEnv().getMetadataUrl());
+
+        // test thread-local override
+        KylinConfig threadConfig = KylinConfig.createKylinConfig(new Properties());
+        threadConfig.setMetadataUrl(metadata2);
+        KylinConfig.setKylinConfigThreadLocal(threadConfig);
+
+        assertEquals(metadata2, KylinConfig.getInstanceFromEnv().getMetadataUrl());
+
+        // other threads still use system KylinConfig
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Started new thread.");
+                assertEquals(metadata1, KylinConfig.getInstanceFromEnv().getMetadataUrl());
+            }
+        }).start();
     }
 }
