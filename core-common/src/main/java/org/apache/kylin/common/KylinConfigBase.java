@@ -392,6 +392,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.job.notification-enabled", "false"));
     }
 
+    public boolean isStarttlsEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.job.notification-mail-enable-starttls", "false"));
+    }
+
+    public String getSmtpPort() {
+        return getOptional("kylin.job.notification-mail-port", "25");
+    }
+
     public String getMailHost() {
         return getOptional("kylin.job.notification-mail-host", "");
     }
