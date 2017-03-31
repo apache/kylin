@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.kylin.GTForwardingScanner;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -33,17 +34,16 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-public class GTFilterScanner implements IGTScanner {
+public class GTFilterScanner extends GTForwardingScanner {
 
-    final private IGTScanner inputScanner;
     final private TupleFilter filter;
     final private IFilterCodeSystem<ByteArray> filterCodeSystem;
     final private IEvaluatableTuple oneTuple; // avoid instance creation
 
     private GTRecord next = null;
 
-    public GTFilterScanner(IGTScanner inputScanner, GTScanRequest req) throws IOException {
-        this.inputScanner = inputScanner;
+    public GTFilterScanner(IGTScanner delegated, GTScanRequest req) throws IOException {
+        super(delegated);
         this.filter = req.getFilterPushDown();
         this.filterCodeSystem = GTUtil.wrap(getInfo().codeSystem.getComparator());
         this.oneTuple = new IEvaluatableTuple() {
@@ -53,25 +53,15 @@ public class GTFilterScanner implements IGTScanner {
             }
         };
 
-        if (TupleFilter.isEvaluableRecursively(filter) == false)
+        if (!TupleFilter.isEvaluableRecursively(filter))
             throw new IllegalArgumentException();
-    }
-
-    @Override
-    public GTInfo getInfo() {
-        return inputScanner.getInfo();
-    }
-
-    @Override
-    public void close() throws IOException {
-        inputScanner.close();
     }
 
     @Override
     public Iterator<GTRecord> iterator() {
         return new Iterator<GTRecord>() {
 
-            private Iterator<GTRecord> inputIterator = inputScanner.iterator();
+            private Iterator<GTRecord> inputIterator = delegated.iterator();
             private FilterResultCache resultCache = new FilterResultCache(getInfo(), filter);
 
             @Override

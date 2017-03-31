@@ -21,7 +21,6 @@ package org.apache.kylin.gridtable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -46,18 +45,21 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         }
         this.info = info;
     }
-
-    public GTRecord(GTRecord other) {
-        this.info = other.info;
-        this.cols = new ByteArray[info.getColumnCount()];
-        for (int i = 0; i < other.cols.length; i++) {
-            this.cols[i] = other.cols[i].copy();
+    
+    @Override
+    public GTRecord clone() { // deep copy
+        ByteArray[] cols = new ByteArray[this.cols.length];
+        for (int i = 0; i < cols.length; i++) {
+            cols[i] = this.cols[i].copy();
         }
+        return new GTRecord(this.info, cols);
     }
 
-    @Override
-    public Object clone() {
-        return new GTRecord(this);
+    public void shallowCopyFrom(GTRecord source) {
+        assert info == source.info;
+        for (int i = 0; i < cols.length; i++) {
+            cols[i].set(source.cols[i]);
+        }
     }
 
     public GTInfo getInfo() {
@@ -106,30 +108,28 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
     /** decode and return the values of this record */
     public Object[] getValues(ImmutableBitSet selectedCols, Object[] result) {
         assert selectedCols.cardinality() == result.length;
-
         for (int i = 0; i < selectedCols.trueBitCount(); i++) {
-            int c = selectedCols.trueBitAt(i);
-            if (cols[c] == null || cols[c].array() == null) {
-                result[i] = null;
-            } else {
-                result[i] = info.codeSystem.decodeColumnValue(c, cols[c].asBuffer());
-            }
+            result[i] = decodeValue(selectedCols.trueBitAt(i));
         }
         return result;
     }
+
 
     /** decode and return the values of this record */
     public Object[] getValues(int[] selectedColumns, Object[] result) {
         assert selectedColumns.length <= result.length;
         for (int i = 0; i < selectedColumns.length; i++) {
-            int c = selectedColumns[i];
-            if (cols[c].array() == null) {
-                result[i] = null;
-            } else {
-                result[i] = info.codeSystem.decodeColumnValue(c, cols[c].asBuffer());
-            }
+            result[i] = decodeValue(selectedColumns[i]);
         }
         return result;
+    }
+
+    public Object decodeValue(int c) {
+        ByteArray col = cols[c];
+        if (col != null && col.array() != null) {
+            return info.codeSystem.decodeColumnValue(c, col.asBuffer());
+        }
+        return null;
     }
 
     public int sizeOf(ImmutableBitSet selectedCols) {
@@ -198,19 +198,13 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         return compareToInternal(o, info.colAll);
     }
 
-    public int compareToOnPrimaryKey(GTRecord o) {
-        return compareToInternal(o, info.primaryKey);
-    }
-
-    public static Comparator<GTRecord> getPrimaryKeyComparator() {
+    public static Comparator<GTRecord> getComparator(final ImmutableBitSet participateCols) {
         return new Comparator<GTRecord>() {
-            @Override
             public int compare(GTRecord o1, GTRecord o2) {
                 if (o1 == null || o2 == null) {
                     throw new IllegalStateException("Cannot handle null");
                 }
-
-                return o1.compareToOnPrimaryKey(o2);
+                return o1.compareToInternal(o2, participateCols);
             }
         };
     }
@@ -287,26 +281,14 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         loadColumns(info.colBlocks[c], buf);
     }
 
-    /** change pointers to point to data in given buffer, UNLIKE deserialize */
-    public void loadColumns(ImmutableBitSet selectedCols, ByteBuffer buf) {
-        int pos = buf.position();
-        for (int i = 0; i < selectedCols.trueBitCount(); i++) {
-            int c = selectedCols.trueBitAt(i);
-            int len = info.codeSystem.codeLength(c, buf);
-            cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
-            pos += len;
-            buf.position(pos);
-        }
-    }
-
-    /** change pointers to point to data in given buffer, UNLIKE deserialize
-     *  unlike loadColumns(ImmutableBitSet selectedCols, ByteBuffer buf), this
-     *  method allows to defined specific columns(in order) to load
+    /**
+     * Change pointers to point to data in given buffer, UNLIKE deserialize
+     * @param selectedCols positions of column to load
+     * @param buf buffer containing continuous data of selected columns
      */
-    public void loadColumns(List<Integer> selectedCols, ByteBuffer buf) {
+    public void loadColumns(Iterable<Integer> selectedCols, ByteBuffer buf) {
         int pos = buf.position();
-        for (int i = 0; i < selectedCols.size(); i++) {
-            int c = selectedCols.get(i);
+        for (int c : selectedCols) {
             int len = info.codeSystem.codeLength(c, buf);
             cols[c].set(buf.array(), buf.arrayOffset() + pos, len);
             pos += len;

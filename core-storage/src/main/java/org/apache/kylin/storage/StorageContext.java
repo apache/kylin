@@ -47,6 +47,7 @@ public class StorageContext {
     private boolean exactAggregation = false;
     private boolean needStorageAggregation = false;
     private boolean enableCoprocessor = false;
+    private boolean enableStreamAggregate = false;
 
     private IStorageQuery storageQuery;
     private AtomicLong processedRowCount = new AtomicLong();
@@ -230,4 +231,11 @@ public class StorageContext {
         this.storageQuery = storageQuery;
     }
 
+    public boolean isStreamAggregateEnabled() {
+        return enableStreamAggregate;
+    }
+
+    public void enableStreamAggregate() {
+        this.enableStreamAggregate = true;
+    }
 }

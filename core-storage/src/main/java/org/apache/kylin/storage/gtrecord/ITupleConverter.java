@@ -20,11 +20,10 @@ package org.apache.kylin.storage.gtrecord;
 
 import java.util.List;
 
-import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.tuple.Tuple;
 
 public interface ITupleConverter {
 
-    public List<IAdvMeasureFiller> translateResult(GTRecord record, Tuple tuple);
+    public List<IAdvMeasureFiller> translateResult(Object[] gtValues, Tuple tuple);
 }

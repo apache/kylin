@@ -60,7 +60,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         merge(another);
     }
 
-    HLLCounter(int p, RegisterType type) {
+    public HLLCounter(int p, RegisterType type) {
         this(p, type, Hashing.murmur3_128());
     }
 
@@ -99,6 +99,10 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         add(hashFunc.hashBytes(value, offset, length).asLong());
     }
 
+    public void addHashDirectly(long hash){
+        add(hash);
+    }
+
     protected void add(long hash) {
         int bucketMask = m - 1;
         int bucket = (int) (hash & bucketMask);
@@ -126,7 +130,7 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
     }
 
     private void toDenseIfNeeded() {
-        if (register instanceof SparseRegister) {
+        if (register.getRegisterType() == RegisterType.SPARSE) {
             if (isDense(register.getSize())) {
                 register = ((SparseRegister) register).toDense(p);
             }
@@ -137,36 +141,36 @@ public class HLLCounter implements Serializable, Comparable<HLLCounter> {
         assert this.p == another.p;
         assert this.hashFunc == another.hashFunc;
         switch (register.getRegisterType()) {
-        case SINGLE_VALUE:
-            switch (another.getRegisterType()) {
             case SINGLE_VALUE:
-                if (register.getSize() > 0 && another.register.getSize() > 0) {
-                    register = ((SingleValueRegister) register).toSparse();
-                } else {
-                    SingleValueRegister sr = (SingleValueRegister) another.register;
-                    if (sr.getSize() > 0)
-                        register.set(sr.getSingleValuePos(), sr.getValue());
-                    return;
+                switch (another.getRegisterType()) {
+                    case SINGLE_VALUE:
+                        if (register.getSize() > 0 && another.register.getSize() > 0) {
+                            register = ((SingleValueRegister) register).toSparse();
+                        } else {
+                            SingleValueRegister sr = (SingleValueRegister) another.register;
+                            if (sr.getSize() > 0)
+                                register.set(sr.getSingleValuePos(), sr.getValue());
+                            return;
+                        }
+                        break;
+                    case SPARSE:
+                        register = ((SingleValueRegister) register).toSparse();
+                        break;
+                    case DENSE:
+                        register = ((SingleValueRegister) register).toDense(this.p);
+                        break;
+                    default:
+                        break;
                 }
+
                 break;
             case SPARSE:
-                register = ((SingleValueRegister) register).toSparse();
-                break;
-            case DENSE:
-                register = ((SingleValueRegister) register).toDense(this.p);
+                if (another.getRegisterType() == RegisterType.DENSE) {
+                    register = ((SparseRegister) register).toDense(p);
+                }
                 break;
             default:
                 break;
-            }
-
-            break;
-        case SPARSE:
-            if (another.getRegisterType() == RegisterType.DENSE) {
-                register = ((SparseRegister) register).toDense(p);
-            }
-            break;
-        default:
-            break;
         }
         register.merge(another.register);
         toDenseIfNeeded();

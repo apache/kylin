@@ -810,6 +810,10 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.valueOf(getOptional("kylin.query.skip-empty-segments", "true"));
     }
 
+    public boolean isStreamAggregateEnabled() {
+        return Boolean.parseBoolean(getOptional("kylin.query.stream-aggregate-enabled", "true"));
+    }
+
     @Deprecated //Limit is good even it's large. This config is meaning less since we already have scan threshold 
     public int getStoragePushDownLimitMax() {
         return Integer.parseInt(getOptional("kylin.query.max-limit-pushdown", "10000"));

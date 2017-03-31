@@ -479,8 +479,15 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             return true;
         }
 
-        if (KylinVersion.getCurrentVersion().isCompatibleWith(new KylinVersion(getVersion())) && !KylinVersion.getCurrentVersion().isSignatureCompatibleWith(new KylinVersion(getVersion()))) {
-            logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), getVersion());
+        KylinVersion cubeVersion = new KylinVersion(getVersion());
+        KylinVersion kylinVersion = KylinVersion.getCurrentVersion();
+        if (!kylinVersion.isCompatibleWith(cubeVersion)) {
+            logger.info("checkSignature on {} is skipped as the its version {} is different from kylin version {}", getName(), cubeVersion, kylinVersion);
+            return true;
+        }
+        
+        if (kylinVersion.isCompatibleWith(cubeVersion) && !kylinVersion.isSignatureCompatibleWith(cubeVersion)) {
+            logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), cubeVersion);
             return true;
         }
 

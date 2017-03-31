@@ -24,8 +24,14 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import com.google.common.collect.UnmodifiableIterator;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
+import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GTScanRequest;
+import org.apache.kylin.gridtable.GTStreamAggregateScanner;
+import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -49,7 +55,7 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
     protected final Tuple tuple;
     protected final StorageContext context;
 
-    protected Iterator<GTRecord> gtItr;
+    protected Iterator<Object[]> gtValues;
     protected ITupleConverter cubeTupleConverter;
     protected Tuple next;
 
@@ -66,12 +72,61 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
         this.tupleInfo = returnTupleInfo;
         this.tuple = new Tuple(returnTupleInfo);
         this.context = context;
-        this.gtItr = getGTItr(scanner);
-        this.cubeTupleConverter = ((GTCubeStorageQueryBase) context.getStorageQuery()).newCubeTupleConverter(scanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, tupleInfo);
+
+        CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
+        int[] gtDimsIdx = mapping.getDimIndexes(selectedDimensions);
+        int[] gtMetricsIdx = mapping.getMetricsIndexes(selectedMetrics);
+        // gtColIdx = gtDimsIdx + gtMetricsIdx
+        int[] gtColIdx = new int[gtDimsIdx.length + gtMetricsIdx.length];
+        System.arraycopy(gtDimsIdx, 0, gtColIdx, 0, gtDimsIdx.length);
+        System.arraycopy(gtMetricsIdx, 0, gtColIdx, gtDimsIdx.length, gtMetricsIdx.length);
+
+        this.gtValues = getGTValuesIterator(scanner.iterator(), scanner.getScanRequest(), gtDimsIdx, gtMetricsIdx);
+        this.cubeTupleConverter = ((GTCubeStorageQueryBase) context.getStorageQuery()).newCubeTupleConverter(
+                scanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, gtColIdx, tupleInfo);
     }
 
-    private Iterator<GTRecord> getGTItr(CubeSegmentScanner scanner) {
-        return scanner.iterator();
+    private Iterator<Object[]> getGTValuesIterator(
+            final Iterator<GTRecord> records, final GTScanRequest scanRequest,
+            final int[] gtDimsIdx, final int[] gtMetricsIdx) {
+
+        boolean hasMultiplePartitions = records instanceof SortMergedPartitionResultIterator;
+        if (hasMultiplePartitions && context.isStreamAggregateEnabled()) {
+            // input records are ordered, leverage stream aggregator to produce possibly fewer records
+            IGTScanner inputScanner = new IGTScanner() {
+                public GTInfo getInfo() {
+                    return scanRequest.getInfo();
+                }
+
+                public void close() throws IOException {}
+
+                public Iterator<GTRecord> iterator() {
+                    return records;
+                }
+            };
+            GTStreamAggregateScanner aggregator = new GTStreamAggregateScanner(inputScanner, scanRequest);
+            return aggregator.valuesIterator(gtDimsIdx, gtMetricsIdx);
+        }
+
+        // simply decode records
+        return new UnmodifiableIterator<Object[]>() {
+            Object[] result = new Object[gtDimsIdx.length + gtMetricsIdx.length];
+
+            public boolean hasNext() {
+                return records.hasNext();
+            }
+
+            public Object[] next() {
+                GTRecord record = records.next();
+                for (int i = 0; i < gtDimsIdx.length; i++) {
+                    result[i] = record.decodeValue(gtDimsIdx[i]);
+                }
+                for (int i = 0; i < gtMetricsIdx.length; i++) {
+                    result[gtDimsIdx.length + i] = record.decodeValue(gtMetricsIdx[i]);
+                }
+                return result;
+            }
+        };
     }
 
     @Override
@@ -91,13 +146,13 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
         }
 
         // now we have a GTRecord
-        if (!gtItr.hasNext()) {
+        if (!gtValues.hasNext()) {
             return false;
         }
-        GTRecord curRecord = gtItr.next();
+        Object[] gtValues = this.gtValues.next();
 
         // translate into tuple
-        advMeasureFillers = cubeTupleConverter.translateResult(curRecord, tuple);
+        advMeasureFillers = cubeTupleConverter.translateResult(gtValues, tuple);
 
         // the simple case
         if (advMeasureFillers == null) {
