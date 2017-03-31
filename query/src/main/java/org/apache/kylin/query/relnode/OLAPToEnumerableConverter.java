@@ -74,6 +74,12 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
 
     @Override
     public Result implement(EnumerableRelImplementor enumImplementor, Prefer pref) {
+        if (System.getProperty("calcite.debug") != null) {
+            String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+            System.out.println("EXECUTION PLAN BEFORE REWRITE");
+            System.out.println(dumpPlan);
+        }
+        
         // post-order travel children
         OLAPRel.OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
         olapImplementor.visitChild(getInput(), this);

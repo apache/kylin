@@ -175,7 +175,8 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.removeRule(JoinUnionTransposeRule.RIGHT_UNION);
         planner.removeRule(AggregateUnionTransposeRule.INSTANCE);
         planner.removeRule(DateRangeRules.FILTER_INSTANCE);
-        planner.removeRule(SemiJoinRule.INSTANCE);
+        planner.removeRule(SemiJoinRule.JOIN);
+        planner.removeRule(SemiJoinRule.PROJECT);
         // distinct count will be split into a separated query that is joined with the left query
         planner.removeRule(AggregateExpandDistinctAggregatesRule.INSTANCE);
 
