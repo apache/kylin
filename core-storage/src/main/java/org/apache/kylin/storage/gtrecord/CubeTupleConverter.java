@@ -18,6 +18,8 @@
 
 package org.apache.kylin.storage.gtrecord;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,27 +27,33 @@ import java.util.Set;
 
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.Dictionary;
-import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
+import org.apache.kylin.dict.lookup.SnapshotManager;
+import org.apache.kylin.dict.lookup.SnapshotTable;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.MeasureType.IAdvMeasureFiller;
+import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.Tuple;
 import org.apache.kylin.metadata.tuple.TupleInfo;
+import org.apache.kylin.source.ReadableTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-/**
- * convert GTRecord to tuple
- */
 public class CubeTupleConverter implements ITupleConverter {
+
+    private static final Logger logger = LoggerFactory.getLogger(CubeTupleConverter.class);
 
     final CubeSegment cubeSeg;
     final Cuboid cuboid;
@@ -63,7 +71,7 @@ public class CubeTupleConverter implements ITupleConverter {
     private final int nSelectedDims;
 
     public CubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, //
-                              Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo) {
+            Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo) {
         this.cubeSeg = cubeSeg;
         this.cuboid = cuboid;
         this.tupleInfo = returnTupleInfo;
@@ -92,11 +100,6 @@ public class CubeTupleConverter implements ITupleConverter {
             int dimIndex = mapping.getIndexOf(dim);
             gtColIdx[i] = dimIndex;
             tupleIdx[i] = tupleInfo.hasColumn(dim) ? tupleInfo.getColumnIndex(dim) : -1;
-
-            //            if (tupleIdx[iii] == -1) {
-            //                throw new IllegalStateException("dim not used in tuple:" + dim);
-            //            }
-
             i++;
         }
 
@@ -209,55 +212,54 @@ public class CubeTupleConverter implements ITupleConverter {
             return null;
 
         switch (deriveInfo.type) {
-            case LOOKUP:
-                return new IDerivedColumnFiller() {
-                    CubeManager cubeMgr = CubeManager.getInstance(cubeSeg.getCubeInstance().getConfig());
-                    LookupStringTable lookupTable = cubeMgr.getLookupTable(cubeSeg, deriveInfo.join);
-                    int[] derivedColIdx = initDerivedColIdx();
-                    Array<String> lookupKey = new Array<String>(new String[hostTmpIdx.length]);
+        case LOOKUP:
+            return new IDerivedColumnFiller() {
+                LookupStringTable lookupTable = getLookupTable(cubeSeg, deriveInfo.join);
+                int[] derivedColIdx = initDerivedColIdx();
+                Array<String> lookupKey = new Array<String>(new String[hostTmpIdx.length]);
 
-                    private int[] initDerivedColIdx() {
-                        int[] idx = new int[deriveInfo.columns.length];
-                        for (int i = 0; i < idx.length; i++) {
-                            idx[i] = deriveInfo.columns[i].getColumnDesc().getZeroBasedIndex();
-                        }
-                        return idx;
+                private int[] initDerivedColIdx() {
+                    int[] idx = new int[deriveInfo.columns.length];
+                    for (int i = 0; i < idx.length; i++) {
+                        idx[i] = deriveInfo.columns[i].getColumnDesc().getZeroBasedIndex();
+                    }
+                    return idx;
+                }
+
+                @Override
+                public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
+                    for (int i = 0; i < hostTmpIdx.length; i++) {
+                        lookupKey.data[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
                     }
 
-                    @Override
-                    public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
-                        for (int i = 0; i < hostTmpIdx.length; i++) {
-                            lookupKey.data[i] = CubeTupleConverter.toString(gtValues[hostTmpIdx[i]]);
-                        }
+                    String[] lookupRow = lookupTable.getRow(lookupKey);
 
-                        String[] lookupRow = lookupTable.getRow(lookupKey);
-
-                        if (lookupRow != null) {
-                            for (int i = 0; i < derivedTupleIdx.length; i++) {
-                                if (derivedTupleIdx[i] >= 0) {
-                                    String value = lookupRow[derivedColIdx[i]];
-                                    tuple.setDimensionValue(derivedTupleIdx[i], value);
-                                }
+                    if (lookupRow != null) {
+                        for (int i = 0; i < derivedTupleIdx.length; i++) {
+                            if (derivedTupleIdx[i] >= 0) {
+                                String value = lookupRow[derivedColIdx[i]];
+                                tuple.setDimensionValue(derivedTupleIdx[i], value);
                             }
-                        } else {
-                            for (int i = 0; i < derivedTupleIdx.length; i++) {
-                                if (derivedTupleIdx[i] >= 0) {
-                                    tuple.setDimensionValue(derivedTupleIdx[i], null);
-                                }
+                        }
+                    } else {
+                        for (int i = 0; i < derivedTupleIdx.length; i++) {
+                            if (derivedTupleIdx[i] >= 0) {
+                                tuple.setDimensionValue(derivedTupleIdx[i], null);
                             }
                         }
                     }
-                };
-            case PK_FK:
-                return new IDerivedColumnFiller() {
-                    @Override
-                    public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
-                        // composite keys are split, so only copy [0] is enough, see CubeDesc.initDimensionColumns()
-                        tuple.setDimensionValue(derivedTupleIdx[0], CubeTupleConverter.toString(gtValues[hostTmpIdx[0]]));
-                    }
-                };
-            default:
-                throw new IllegalArgumentException();
+                }
+            };
+        case PK_FK:
+            return new IDerivedColumnFiller() {
+                @Override
+                public void fillDerivedColumns(Object[] gtValues, Tuple tuple) {
+                    // composite keys are split, so only copy [0] is enough, see CubeDesc.initDimensionColumns()
+                    tuple.setDimensionValue(derivedTupleIdx[0], CubeTupleConverter.toString(gtValues[hostTmpIdx[0]]));
+                }
+            };
+        default:
+            throw new IllegalArgumentException();
         }
     }
 
@@ -269,6 +271,42 @@ public class CubeTupleConverter implements ITupleConverter {
                 return i;
         }
         return -1;
+    }
+
+    public LookupStringTable getLookupTable(CubeSegment cubeSegment, JoinDesc join) {
+        long ts = System.currentTimeMillis();
+
+        MetadataManager metaMgr = MetadataManager.getInstance(cubeSeg.getCubeInstance().getConfig());
+        SnapshotManager snapshotMgr = SnapshotManager.getInstance(cubeSeg.getCubeInstance().getConfig());
+
+        String tableName = join.getPKSide().getTableIdentity();
+        String[] pkCols = join.getPrimaryKey();
+        String snapshotResPath = cubeSegment.getSnapshotResPath(tableName);
+        if (snapshotResPath == null)
+            throw new IllegalStateException("No snaphot for table '" + tableName + "' found on cube segment" + cubeSegment.getCubeInstance().getName() + "/" + cubeSegment);
+
+        try {
+            SnapshotTable snapshot = snapshotMgr.getSnapshotTable(snapshotResPath);
+            TableDesc tableDesc = metaMgr.getTableDesc(tableName);
+            EnhancedStringLookupTable enhancedStringLookupTable = new EnhancedStringLookupTable(tableDesc, pkCols, snapshot);
+            logger.info("Time to get lookup up table for {} is {} ", join.getPKSide().getTableName(), (System.currentTimeMillis() - ts));
+            return enhancedStringLookupTable;
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to load lookup table " + tableName + " from snapshot " + snapshotResPath, e);
+        }
+    }
+
+    private static class EnhancedStringLookupTable extends LookupStringTable {
+
+        public EnhancedStringLookupTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
+            super(tableDesc, keyColumns, table);
+        }
+
+        @Override
+        protected void init() throws IOException {
+            this.data = new HashMap<>();
+            super.init();
+        }
     }
 
     private static String toString(Object o) {
