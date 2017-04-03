@@ -204,7 +204,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         for (RexNode operand : call.getOperands()) {
             translateRexNode(operand, inputColumnRowType, fieldName, sourceCollector);
         }
-        return TblColRef.newInnerColumn(fieldName, InnerDataTypeEnum.LITERAL);
+        return TblColRef.newInnerColumn(fieldName, InnerDataTypeEnum.LITERAL, call.toString());
     }
 
     @Override

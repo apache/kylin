@@ -262,9 +262,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 }
                 for (Integer index : aggCall.getArgList().subList(0, columnsCount)) {
                     TblColRef column = inputColumnRowType.getColumnByIndex(index);
-                    if (!column.isInnerColumn()) {
-                        columns.add(column);
-                    }
+                    columns.add(column);
                 }
                 if (!columns.isEmpty()) {
                     parameter = ParameterDesc.newInstance(columns.toArray(new TblColRef[columns.size()]));
