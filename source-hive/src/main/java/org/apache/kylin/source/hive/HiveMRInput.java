@@ -107,6 +107,8 @@ public class HiveMRInput implements IMRInput {
         @Override
         public void configureJob(Job job) {
             try {
+                job.getConfiguration().addResource("hive-site.xml");
+                
                 HCatInputFormat.setInput(job, dbName, tableName);
                 job.setInputFormatClass(HCatInputFormat.class);
 
