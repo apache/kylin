@@ -19,12 +19,9 @@
 package org.apache.kylin.source.hive;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.IncompleteArgumentException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -60,8 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
-
-import javax.el.MethodNotFoundException;
 
 public class HiveMRInput implements IMRInput {
 
