@@ -19,8 +19,10 @@
 package org.apache.kylin.metadata;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +32,10 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
+import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
@@ -47,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Serves (and caches) metadata for Kylin instance.
@@ -207,11 +212,7 @@ public class MetadataManager {
             result.setUuid(UUID.randomUUID().toString());
             result.setLastModified(0);
             result.init();
-            try {
-                saveTableExt(result);
-            } catch (IOException ex) {
-                logger.warn("Failed to save TableExt", ex);
-            }
+            srcTableExdMap.put(result.getName(), result);
         }
         return result;
     }
@@ -224,9 +225,14 @@ public class MetadataManager {
         tableExt.init();
 
         String path = tableExt.getResourcePath();
-        getStore().putResource(path, tableExt, TABLE_EXT_SERIALIZER);
 
-        srcTableExdMap.put(tableExt.getName(), tableExt);
+        ResourceStore store = getStore();
+
+        TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
+        if (t != null && t.getName() == null)
+            store.deleteResource(path);
+
+        store.putResource(path, tableExt, TABLE_EXT_SERIALIZER);
     }
 
     public void removeTableExt(String tableName) throws IOException {
@@ -387,22 +393,52 @@ public class MetadataManager {
     private TableExtDesc reloadTableExtAt(String path) throws IOException {
         ResourceStore store = getStore();
         TableExtDesc t = store.getResource(path, TableExtDesc.class, TABLE_EXT_SERIALIZER);
+
         if (t == null) {
             return null;
         }
-        t.init();
 
-        String name = t.getName();
-
-        // remove old json
-        if (name == null) {
-            getStore().deleteResource(path);
-            return null;
+        // convert old tableExt json to new one
+        if (t.getName() == null) {
+            t = convertOldTableExtToNewer(path);
         }
 
-        srcTableExdMap.putLocal(name, t);
+        t.init();
 
+        srcTableExdMap.putLocal(t.getName(), t);
         return t;
+    }
+
+    private TableExtDesc convertOldTableExtToNewer(String path) throws IOException {
+        Map<String, String> attrs = Maps.newHashMap();
+
+        ResourceStore store = getStore();
+        RawResource res = store.getResource(path);
+
+        InputStream is = res.inputStream;
+
+        try {
+            attrs.putAll(JsonUtil.readValue(is, HashMap.class));
+        } finally {
+            if (is != null)
+                is.close();
+        }
+
+        String cardinality = attrs.get(MetadataConstants.TABLE_EXD_CARDINALITY);
+
+        // parse table identity from file name
+        String file = path;
+        if (file.indexOf("/") > -1) {
+            file = file.substring(file.lastIndexOf("/") + 1);
+        }
+        String tableIdentity = file.substring(0, file.length() - MetadataConstants.FILE_SURFIX.length()).toUpperCase();
+        TableExtDesc result = new TableExtDesc();
+        result.setName(tableIdentity);
+        result.setUuid(UUID.randomUUID().toString());
+        result.setLastModified(0);
+        result.init();
+        result.setCardinality(cardinality);
+        return result;
     }
 
     private void reloadAllExternalFilter() throws IOException {

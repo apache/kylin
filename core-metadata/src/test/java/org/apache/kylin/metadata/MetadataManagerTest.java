@@ -23,10 +23,16 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
@@ -51,7 +57,7 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
-    
+
     @Test
     public void testCiModel() {
         MetadataManager mgr = getInstance(getTestConfig());
@@ -59,7 +65,7 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
         DataModelDesc im = mgr.getDataModelDesc("ci_inner_join_model");
         assertSnowflakeQuality(lm);
         assertSnowflakeQuality(im);
-        
+
         // check inner/left models are identical apart from the left/inner difference
         assertEquals(lm.getJoinTables().length, im.getJoinTables().length);
         for (int i = 0, n = im.getJoinTables().length; i < n; i++) {
@@ -73,7 +79,7 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
             assertTrue(lt.getJoin().isLeftJoin());
             assertTrue(it.getJoin().isInnerJoin());
         }
-        
+
         assertEquals(lm.getDimensions().size(), im.getDimensions().size());
         for (int i = 0, n = im.getDimensions().size(); i < n; i++) {
             ModelDimensionDesc ld = lm.getDimensions().get(i);
@@ -81,10 +87,10 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
             assertEquals(ld.getTable(), id.getTable());
             assertArrayEquals(ld.getColumns(), id.getColumns());
         }
-        
+
         assertArrayEquals(lm.getMetrics(), im.getMetrics());
     }
-    
+
     private void assertSnowflakeQuality(DataModelDesc model) {
         Assert.assertNotNull(model);
         try {
@@ -93,7 +99,7 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
         } catch (IllegalArgumentException ex) {
             // excepted
         }
-        
+
         Assert.assertNotNull(model.findTable("BUYER_COUNTRY"));
         Assert.assertNotNull(model.findTable("SELLER_COUNTRY"));
         Assert.assertNotNull(model.findColumn("BUYER_COUNTRY.NAME"));
@@ -147,5 +153,28 @@ public class MetadataManagerTest extends LocalFileMetadataTestCase {
         Assert.assertEquals(1, columnStatsList1.size());
 
         getInstance(getTestConfig()).removeTableExt("TEST.TEST_TABLE");
+    }
+
+    @Test
+    public void testTableExtCompatibility() throws IOException {
+        String tableName = "TEST.TEST_TABLE";
+        Map<String, String> oldTableExt = new HashMap<>();
+        oldTableExt.put(MetadataConstants.TABLE_EXD_CARDINALITY, "1,2,3,4");
+        mockUpOldTableExtJson(tableName, oldTableExt);
+        TableExtDesc tableExtDesc = getInstance(getTestConfig()).getTableExt(tableName);
+        Assert.assertEquals("1,2,3,4,", tableExtDesc.getCardinality());
+        getInstance(getTestConfig()).removeTableExt(tableName);
+    }
+
+    private void mockUpOldTableExtJson(String tableId, Map<String, String> tableExdProperties) throws IOException {
+        String path = TableDesc.concatExdResourcePath(tableId);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        JsonUtil.writeValueIndent(os, tableExdProperties);
+        os.flush();
+        InputStream is = new ByteArrayInputStream(os.toByteArray());
+        getStore().putResource(path, is, System.currentTimeMillis());
+        os.close();
+        is.close();
     }
 }
