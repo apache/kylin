@@ -448,6 +448,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.job.error-record-threshold", "0"));
     }
 
+    public boolean isAdvancedFlatTableUsed() {
+        return Boolean.parseBoolean(getOptional("kylin.job.use-advanced-flat-table", "false"));
+    }
+
+    public String getAdvancedFlatTableClass() {
+        return getOptional("kylin.job.advanced-flat-table.class");
+    }
+
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================
