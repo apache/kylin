@@ -104,7 +104,7 @@ public class ProjectService extends BasicService {
         return projects.subList(coffset, coffset + climit);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
     public void deleteProject(String projectName, ProjectInstance project) throws IOException {
         getProjectManager().dropProject(projectName);
 
