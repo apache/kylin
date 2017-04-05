@@ -26,7 +26,7 @@ Note the 2.0.0 beta is not an official release, but a beta build aims for previe
 * Binary download:
   * for HBase 0.98 (includes HDP 2.2, CDH 5.2/5.3) - [apache-kylin-1.6.0-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-bin.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-bin.tar.gz.md5)\]
   * for HBase 1.x (includes HDP 2.3/2.4, EMR 5.0) - [apache-kylin-1.6.0-hbase1.x-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-hbase1.x-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-hbase1.x-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-hbase1.x-bin.tar.gz.md5)\]
-  * for CDH 5.5/5.7/5.8 - [apache-kylin-1.6.0-cdh5.7-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-cdh5.7-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-cdh5.7-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-cdh5.7-bin.tar.gz.md5)\]
+  * for CDH 5.7/5.8 - [apache-kylin-1.6.0-cdh5.7-bin.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-cdh5.7-bin.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-cdh5.7-bin.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-1.6.0/apache-kylin-1.6.0-cdh5.7-bin.tar.gz.md5)\]
 
 
 ## Previous Release
