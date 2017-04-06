@@ -127,12 +127,11 @@ public class HiveMRInput implements IMRInput {
 
     public static class BatchCubingInputSide implements IMRBatchCubingInputSide {
 
-        final JobEngineConfig conf;
+        JobEngineConfig conf;
         final IJoinedFlatTableDesc flatDesc;
         String hiveViewIntermediateTables = "";
 
         public BatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-            this.conf = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
             this.flatDesc = flatDesc;
         }
 
@@ -140,6 +139,7 @@ public class HiveMRInput implements IMRInput {
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
             final KylinConfig kylinConfig = CubeManager.getInstance(conf.getConfig()).getCube(cubeName).getConfig();
+            this.conf = new JobEngineConfig(kylinConfig);
 
             // create flat table first, then count and redistribute
             jobFlow.addTask(createFlatHiveTableStep(conf, flatDesc, jobFlow.getId(), cubeName));
