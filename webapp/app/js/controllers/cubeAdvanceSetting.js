@@ -339,18 +339,19 @@ KylinApp.controller('CubeAdvanceSettingCtrl', function ($scope, $modal,cubeConfi
     var allMeasureNames = $scope.getAllMeasureNames();
     var tmpColumnFamily = $scope.cubeMetaFrame.hbase_mapping.column_family;
 
-    angular.forEach($scope.cubeMetaFrame.hbase_mapping.column_family, function (colFamily,index1) {
-      angular.forEach(colFamily.columns[0].measure_refs, function (measureName, index2) {
-        var allIndex = allMeasureNames.indexOf(measureName);
+    for(var j=0;j<$scope.cubeMetaFrame.hbase_mapping.column_family.length; j++) {
+      for (var i=0;i<$scope.cubeMetaFrame.hbase_mapping.column_family[j].columns[0].measure_refs.length; i++){
+        var allIndex = allMeasureNames.indexOf($scope.cubeMetaFrame.hbase_mapping.column_family[j].columns[0].measure_refs[i]);
         if (allIndex == -1) {
-          tmpColumnFamily[index1].columns[0].measure_refs.splice(index2, 1);
+          tmpColumnFamily[j].columns[0].measure_refs.splice(i, 1);
+          i--
         }
-
-        if (tmpColumnFamily[index1].columns[0].measure_refs == 0) {
-          tmpColumnFamily.splice(index1, 1);
-        }
-      });
-    });
+      }
+      if (tmpColumnFamily[j].columns[0].measure_refs.length == 0) {
+        tmpColumnFamily.splice(j, 1);
+        j--
+      }
+    }
 
     $scope.cubeMetaFrame.hbase_mapping.column_family = tmpColumnFamily;
   };
