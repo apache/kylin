@@ -138,7 +138,7 @@ public class HiveMRInput implements IMRInput {
         @Override
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
-            final KylinConfig kylinConfig = CubeManager.getInstance(conf.getConfig()).getCube(cubeName).getConfig();
+            final KylinConfig kylinConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName).getConfig();
             this.conf = new JobEngineConfig(kylinConfig);
 
             // create flat table first, then count and redistribute
