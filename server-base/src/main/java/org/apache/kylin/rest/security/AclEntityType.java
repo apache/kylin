@@ -14,29 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
+*/
 package org.apache.kylin.rest.security;
 
-import java.io.IOException;
-
-import org.apache.hadoop.hbase.client.Table;
-
 /**
+ * Created by xiefan on 17-4-14.
  */
-@Deprecated  //use ResourceStore interface instead.
-public interface AclHBaseStorage {
+public interface AclEntityType {
+    static final String CUBE_INSTANCE = "CubeInstance";
 
-    String ACL_INFO_FAMILY = "i";
-    String ACL_ACES_FAMILY = "a";
-    String ACL_TABLE_NAME = "_acl";
+    static final String DATA_MODEL_DESC = "DataModelDesc";
 
-    String USER_AUTHORITY_FAMILY = "a";
-    String USER_TABLE_NAME = "_user";
-    String USER_AUTHORITY_COLUMN = "c";
+    static final String JOB_INSTANCE = "JobInstance";
 
-    String prepareHBaseTable(Class<?> clazz) throws IOException;
-
-    Table getTable(String tableName) throws IOException;
-
+    static final String PROJECT_INSTANCE = "ProjectInstance";
 }
