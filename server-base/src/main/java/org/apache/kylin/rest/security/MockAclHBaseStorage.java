@@ -18,17 +18,18 @@
 
 package org.apache.kylin.rest.security;
 
-import java.io.IOException;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.service.AclService;
+import org.apache.kylin.rest.service.AclServiceOld;
 import org.apache.kylin.rest.service.QueryService;
-import org.apache.kylin.rest.service.UserService;
+import org.apache.kylin.rest.service.UserServiceOld;
+
+import java.io.IOException;
 
 /**
  */
+@Deprecated
 public class MockAclHBaseStorage implements AclHBaseStorage {
 
     private static final String aclTableName = "MOCK-ACL-TABLE";
@@ -53,10 +54,10 @@ public class MockAclHBaseStorage implements AclHBaseStorage {
             return realAcl.prepareHBaseTable(clazz);
         }
 
-        if (clazz == AclService.class) {
+        if (clazz == AclServiceOld.class) {
             mockedAclTable = new MockHTable(aclTableName, ACL_INFO_FAMILY, ACL_ACES_FAMILY);
             return aclTableName;
-        } else if (clazz == UserService.class) {
+        } else if (clazz == UserServiceOld.class) {
             mockedUserTable = new MockHTable(userTableName, USER_AUTHORITY_FAMILY, QueryService.USER_QUERY_FAMILY);
             return userTableName;
         } else {

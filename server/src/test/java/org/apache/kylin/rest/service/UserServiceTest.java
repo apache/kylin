@@ -58,4 +58,5 @@ public class UserServiceTest extends ServiceTestBase {
 
         Assert.assertTrue(userService.listUserAuthorities().contains(Constant.ROLE_ADMIN));
     }
+
 }
