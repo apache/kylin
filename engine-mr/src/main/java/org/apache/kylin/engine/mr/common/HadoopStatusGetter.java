@@ -43,10 +43,11 @@ import org.apache.http.client.params.AuthPolicy;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  */
@@ -68,8 +69,8 @@ public class HadoopStatusGetter {
         String response = useKerberosAuth ? getHttpResponseWithKerberosAuth(url) : getHttpResponse(url);
         logger.debug("Hadoop job " + mrJobId + " status : " + response);
         JsonNode root = new ObjectMapper().readTree(response);
-        RMAppState state = RMAppState.valueOf(root.findValue("state").getTextValue());
-        FinalApplicationStatus finalStatus = FinalApplicationStatus.valueOf(root.findValue("finalStatus").getTextValue());
+        RMAppState state = RMAppState.valueOf(root.findValue("state").textValue());
+        FinalApplicationStatus finalStatus = FinalApplicationStatus.valueOf(root.findValue("finalStatus").textValue());
         return Pair.of(state, finalStatus);
     }
 
@@ -84,12 +85,12 @@ public class HadoopStatusGetter {
         System.setProperty("java.security.krb5.conf", krb5ConfigPath);
         System.setProperty("sun.security.krb5.debug", "true");
         System.setProperty("javax.security.auth.useSubjectCredsOnly", "false");
-        
+
         DefaultHttpClient client = new DefaultHttpClient();
         AuthSchemeRegistry authSchemeRegistry = new AuthSchemeRegistry();
         authSchemeRegistry.register(AuthPolicy.SPNEGO, new SPNegoSchemeFactory(skipPortAtKerberosDatabaseLookup));
         client.setAuthSchemes(authSchemeRegistry);
-        
+
         BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         Credentials useJaasCreds = new Credentials() {
             public String getPassword() {
@@ -102,7 +103,7 @@ public class HadoopStatusGetter {
         };
         credentialsProvider.setCredentials(new AuthScope(null, -1, null), useJaasCreds);
         client.setCredentialsProvider(credentialsProvider);
-        
+
         String response = null;
         while (response == null) {
             if (url.startsWith("https://")) {
