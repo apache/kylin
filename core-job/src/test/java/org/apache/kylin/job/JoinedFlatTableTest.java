@@ -22,13 +22,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.EngineFactory;
-import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.junit.After;
 import org.junit.Before;
@@ -77,7 +75,7 @@ public class JoinedFlatTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testGenerateInsertSql() throws IOException {
-        String sqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc, new JobEngineConfig(KylinConfig.getInstanceFromEnv()));
+        String sqls = JoinedFlatTable.generateInsertDataStatement(flatTableDesc);
         System.out.println(sqls);
 
         int length = sqls.length();
