@@ -6,24 +6,31 @@ permalink: /docs20/howto/howto_upgrade.html
 since: v1.5.1
 ---
 
-Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistended in Hadoop (HBase and HDFS), so the upgrade is relatively easy and user doesn't need worry about data loss. The upgrade can be performed in the following steps:
+Running as a Hadoop client, Apache Kylin's metadata and Cube data are persistended in Hadoop (HBase and HDFS), so the upgrade is relatively easy and user does not need worry about data loss. The upgrade can be performed in the following steps:
 
-* Download the new Apache Kylin binary package for your Hadoop version from Kylin's download page;
-* Uncompress the new version Kylin package to a new folder, e.g, /usr/local/kylin/apache-kylin-1.6.0/ (directly overwrite old instance is not recommended);
-* Copy the configuration files (`$KYLIN_HOME/conf/*`) from old instance (e.g /usr/local/kylin/apache-kylin-1.5.4/) to the new instance's `conf` folder if you have customized configurations; It is recommended to do a compare and merge since there might be new parameters introduced. If you have modified tomcat configuration ($KYLIN_HOME/tomcat/conf/), also remember to do the same.
-* Stop the current Kylin instance with `./bin/kylin.sh stop`;
-* Set the `KYLIN_HOME` env variable to the new instance's installation folder. If you have set `KYLIN_HOME` in `~/.bash_profile` or other scripts, remember to update them as well.
-* Start the new Kylin instance with `$KYLIN_HOME/bin/kylin start`; After be started, login Kylin web to check whether your cubes can be loaded correctly.
+* Download the new Apache Kylin binary package for your Hadoop version from Kylin download page.
+* Unpack the new version Kylin package to a new folder, e.g, /usr/local/kylin/apache-kylin-2.0.0/ (directly overwrite old instance is not recommended).
+* Merge the old configuration files (`$KYLIN_HOME/conf/*`) into the new ones. It is not recommended to overwrite the new configuration files, although that works in most cases. If you have modified tomcat configuration ($KYLIN_HOME/tomcat/conf/), do the same for it.
+* Stop the current Kylin instance with `bin/kylin.sh stop`
+* Set the `KYLIN_HOME` env variable to the new installation folder. If you have set `KYLIN_HOME` in `~/.bash_profile` or other scripts, remember to update them as well.
+* Start the new Kylin instance with `$KYLIN_HOME/bin/kylin start`. After be started, login Kylin web to check whether your cubes can be loaded correctly.
 * [Upgrade coprocessor](howto_update_coprocessor.html) to ensure the HBase region servers use the latest Kylin coprocessor.
 * Verify your SQL queries can be performed successfully.
 
 Below are versions specific guides:
 
+## Upgrade from v1.6.0 to v2.0.0
+
+Kylin v2.0.0 can read v1.6.0 metadata directly. Please follow the common upgrade steps above.
+
+Configuration names in `kylin.properties` have changed since v2.0.0. While the old property names still work, it is recommended to use the new property names as they follow [the naming convention](/development/coding_naming_convention.html) and are easier to understand. There is [a mapping from the old properties to the new properties](https://github.com/apache/kylin/blob/2.0.x/core-common/src/main/resources/kylin-backward-compatibility.properties).
+
 ## Upgrade from v1.5.4 to v1.6.0
-Kylin v1.5.4 and v1.6.0 are compitible in metadata; Please follow the common upgrade steps above.
+
+Kylin v1.5.4 and v1.6.0 are compatible in metadata. Please follow the common upgrade steps above.
 
 ## Upgrade from v1.5.3 to v1.5.4
-Kylin v1.5.3 and v1.5.4 are compitible in metadata; Please follow the common upgrade steps above.
+Kylin v1.5.3 and v1.5.4 are compatible in metadata. Please follow the common upgrade steps above.
 
 ## Upgrade from 1.5.2 to v1.5.3
 Kylin v1.5.3 metadata is compitible with v1.5.2, your cubes don't need rebuilt, as usual, some actions need to be performed:
