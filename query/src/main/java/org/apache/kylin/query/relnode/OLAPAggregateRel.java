@@ -345,8 +345,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     }
 
     private void buildRewriteFieldsAndMetricsColumns() {
-        fillbackOptimizedColumn();
-
         ColumnRowType inputColumnRowType = ((OLAPRel) getInput()).getColumnRowType();
         RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
         for (int i = 0; i < this.aggregations.size(); i++) {
@@ -382,22 +380,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (TblColRef col : colRefs) {
             if (col.isInnerColumn() == false)
                 this.context.groupByColumns.add(col);
-        }
-    }
-
-    private void fillbackOptimizedColumn() {
-        // some aggcall will be optimized out in sub-query (e.g. tableau generated sql), we need to fill them back
-        RelDataType inputAggRow = getInput().getRowType();
-        RelDataType outputAggRow = getRowType();
-        if (inputAggRow.getFieldCount() != outputAggRow.getFieldCount()) {
-            for (RelDataTypeField inputField : inputAggRow.getFieldList()) {
-                String inputFieldName = inputField.getName();
-                // constant columns(starts with $) should not be added to context.
-                if (!inputFieldName.startsWith("$") && outputAggRow.getField(inputFieldName, true, false) == null) {
-                    TblColRef column = this.columnRowType.getColumnByIndex(inputField.getIndex());
-                    this.context.metricsColumns.add(column);
-                }
-            }
         }
     }
 
