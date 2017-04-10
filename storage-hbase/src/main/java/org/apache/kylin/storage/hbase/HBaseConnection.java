@@ -196,10 +196,13 @@ public class HBaseConnection {
         conf.setStrings(JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE, nameServices.toArray(new String[0]));
     }
 
-    public static String makeQualifiedPathInHBaseCluster(String path) {
+    public static String makeQualifiedPathInHBaseCluster(String inPath) {
+        Path path = new Path(inPath);
+        path = Path.getPathWithoutSchemeAndAuthority(path);
+        
         try {
             FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
-            return fs.makeQualified(new Path(path)).toString();
+            return fs.makeQualified(path).toString();
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot create FileSystem from current hbase cluster conf", e);
         }
