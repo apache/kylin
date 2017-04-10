@@ -130,9 +130,9 @@
                     <ng-form name="lookup_form">
                       <div class="form-group">
                         <div class="row">
-                          <div class="col-xs-12 form-group">
+                          <div class="col-xs-6 form-group">
                               <select chosen ng-model="newLookup.joinTable" class="chosen-select "
-                                      style="width:45%;" ng-options="table as table for table in aliasName"
+                                      style="width:100%;" ng-options="table as table for table in aliasName"
                                       name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true">
                                 <option value=""> &#45;&#45; From Table &#45;&#45; </option>
@@ -140,28 +140,30 @@
                           </div>
                         </div>
                         <div class="row">
-                          <div class="col-xs-12 form-group">
+                          <div class="col-xs-6 form-group">
                               <!--Join Type-->
-                              <select class="chosen-select " style="width:45%;" chosen ng-init="newLookup.join.type='inner'"  ng-model="newLookup.join.type"
+                              <select class="chosen-select " style="width:100%;" chosen ng-init="newLookup.join.type='inner'"  ng-model="newLookup.join.type"
                                             ng-options="joinType.value as joinType.name+'  Join' for joinType in cubeConfig.joinTypes">
                                 <option value=""></option>
                               </select>
                           </div>
                         </div>
                         <div class="row">
-                          <div class="col-xs-12 form-group">
-                              <select chosen ng-model="newLookup.table" class="chosen-select" style="width:45%;"
+                          <div class="col-sm-6 form-group">
+                              <select chosen ng-model="newLookup.table" class="chosen-select" style="width:100%"
                                       ng-options="table.name as VdmUtil.removeNameSpace(table.name) for table in tableModel.selectProjectTables"
                                       name="table_name"  ng-disabled="lookupState.editing"
                                       ng-required="true"  ng-change="changeJoinTable()">
                                 <option value=""> &#45;&#45; Select Lookup Table &#45;&#45; </option>
                               </select>
-                              <div  style="float:right;padding-left:0;width:45%">
+                          </div>
+                          <div class="col-sm-1 form-group" style="text-align:center">
+                            <span class=" font-color-default" style="font-size:large;line-height: 30px;"><b>AS</b></span>
+                          </div>
+                          <div class="col-sm-5 form-group" >
                                 <input type="text" class="form-control " name="joinTable_alias" placeholder="Input Table Alias" ng-required="true"
                                      ng-model="newLookup.alias"  ng-pattern="/^[A-Z_\d]+$/">
                                 <small class="help-block red" ng-show="!lookup_form.joinTable_alias.$error.required&&lookup_form.joinTable_alias.$invalid && (lookup_form.joinTable_alias.$dirty||lookup_form.$submitted)"><i class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp; Table alias is invalid(A Combination of numbers, uppercase letters or underscores).</small>
-                              </div>
-                              <span class=" font-color-default" style="float:right;font-size:large;line-height: 30px;width:10%;text-align:center"><b>AS</b></span>
                           </div>
                         </div>
                       </div>
@@ -170,7 +172,7 @@
                         <div class="row">
                           <div class="col-sm-5" >
                             <label>
-                              <input type="checkbox" ng-model="newLookup.kind" ng-true-value="FACT" ng-false-value="LOOKUP" >&nbsp;Is Limited
+                              <input type="checkbox" ng-model="newLookup.kind" ng-true-value="FACT" ng-false-value="LOOKUP" >&nbsp;Skip snapshot for this lookup table.
                             </label>
                             <i class="fa fa-info-circle" kylinpopover="" placement="right" title="" template="isLimited.html"></i>
                           </div>
@@ -239,8 +241,8 @@
             </div>
         </div>
         <div class="modal-footer">
+            <button class="btn" ng-click="cancel()">Cancel</button>
             <button class="btn btn-primary" ng-disabled="lookup_form.$invalid || !newLookup.join.primary_key.length" ng-click="checkLookupForm()?ok():''">OK</button>
-            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </script>
 </div>
