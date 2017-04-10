@@ -420,6 +420,7 @@ public class DeployCoprocessorCLI {
 
     private static Path getCoprocessorHDFSDir(FileSystem fileSystem, KylinConfig config) throws IOException {
         String hdfsWorkingDirectory = config.getHdfsWorkingDirectory();
+        hdfsWorkingDirectory = HBaseConnection.makeQualifiedPathInHBaseCluster(hdfsWorkingDirectory);
         Path coprocessorDir = new Path(hdfsWorkingDirectory, "coprocessor");
         fileSystem.mkdirs(coprocessorDir);
         return coprocessorDir;
