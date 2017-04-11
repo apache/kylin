@@ -62,8 +62,9 @@ public class HiveCmdBuilder {
             break;
         case BEELINE:
             BufferedWriter bw = null;
+            File tmpHql = null;
             try {
-                File tmpHql = File.createTempFile("beeline_", ".hql");
+                tmpHql = File.createTempFile("beeline_", ".hql");
                 bw = new BufferedWriter(new FileWriter(tmpHql));
                 for (String statement : statements) {
                     bw.write(statement);
@@ -77,13 +78,20 @@ public class HiveCmdBuilder {
                 buf.append(tmpHql.getAbsolutePath());
                 buf.append(";exit $ret_code");
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("The SQL to execute in beeline: \n" + FileUtils.readFileToString(tmpHql, Charset.defaultCharset()));
-                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
                 IOUtils.closeQuietly(bw);
+
+                if (tmpHql != null && logger.isDebugEnabled()) {
+                    String hql = null;
+                    try {
+                        hql = FileUtils.readFileToString(tmpHql, Charset.defaultCharset());
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                    logger.debug("The SQL to execute in beeline: \n" + hql);
+                }
             }
             break;
         default:
