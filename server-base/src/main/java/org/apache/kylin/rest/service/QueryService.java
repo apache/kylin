@@ -65,6 +65,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
@@ -76,7 +77,6 @@ import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
-import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -447,7 +447,7 @@ public class QueryService extends BasicService {
             return fakeResponse;
         }
 
-        String correctedSql = QueryUtil.massageSql(sqlRequest);
+        String correctedSql = QueryUtil.massageSql(sqlRequest.getSql(), sqlRequest.getLimit(), sqlRequest.getOffset());
         if (!correctedSql.equals(sqlRequest.getSql())) {
             logger.info("The corrected query: " + correctedSql);
 

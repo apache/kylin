@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.query.util;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.util.QueryUtil.IQueryTransformer;
 
 /**
  * from (a join b on a.x = b.y) join c
@@ -34,7 +33,7 @@ import org.apache.kylin.rest.util.QueryUtil.IQueryTransformer;
  * 
  * we'll find such pattern and remove the parentheses
  */
-public class CognosParenthesesEscape implements IQueryTransformer {
+public class CognosParenthesesEscape implements QueryUtil.IQueryTransformer {
 
     private static final String S0 = "\\s*";
     private static final String S1 = "\\s";

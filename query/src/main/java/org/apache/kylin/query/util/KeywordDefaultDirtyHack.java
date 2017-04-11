@@ -16,11 +16,9 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.query.util;
 
-import org.apache.kylin.rest.util.QueryUtil.IQueryTransformer;
-
-public class KeywordDefaultDirtyHack implements IQueryTransformer {
+public class KeywordDefaultDirtyHack implements QueryUtil.IQueryTransformer {
 
     @Override
     public String transform(String sql) {

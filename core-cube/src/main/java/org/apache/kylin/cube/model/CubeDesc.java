@@ -97,7 +97,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
-    public enum DeriveType implements java.io.Serializable{
+    public enum DeriveType implements java.io.Serializable {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
 
@@ -485,7 +485,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             logger.info("checkSignature on {} is skipped as the its version {} is different from kylin version {}", getName(), cubeVersion, kylinVersion);
             return true;
         }
-        
+
         if (kylinVersion.isCompatibleWith(cubeVersion) && !kylinVersion.isSignatureCompatibleWith(cubeVersion)) {
             logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), cubeVersion);
             return true;
@@ -530,6 +530,17 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         } catch (NoSuchAlgorithmException | JsonProcessingException e) {
             throw new RuntimeException("Failed to calculate signature");
         }
+    }
+
+    public void deInit() {
+        config = null;
+        model = null;
+        allColumns = new LinkedHashSet<>();
+        allColumnDescs = new LinkedHashSet<>();
+        dimensionColumns = new LinkedHashSet<>();
+        derivedToHostMap = Maps.newHashMap();
+        hostToDerivedMap = Maps.newHashMap();
+        extendedColumnToHosts = Maps.newHashMap();
     }
 
     public void init(KylinConfig config) {

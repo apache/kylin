@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.util;
+package org.apache.kylin.query.util;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.rest.request.SQLRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,25 +36,26 @@ public class QueryUtil {
     protected static final Logger logger = LoggerFactory.getLogger(QueryUtil.class);
 
     private static List<IQueryTransformer> queryTransformers;
-    
+
     public interface IQueryTransformer {
         String transform(String sql);
     }
 
-    public static String massageSql(SQLRequest sqlRequest) {
-        String sql = sqlRequest.getSql();
+    public static String massageSql(String sql) {
+        return massageSql(sql, 0, 0);
+    }
+
+    public static String massageSql(String sql, int limit, int offset) {
         sql = sql.trim();
         sql = sql.replace("\r", " ").replace("\n", System.getProperty("line.separator"));
-        
+
         while (sql.endsWith(";"))
             sql = sql.substring(0, sql.length() - 1);
 
-        int limit = sqlRequest.getLimit();
         if (limit > 0 && !sql.toLowerCase().contains("limit")) {
             sql += ("\nLIMIT " + limit);
         }
 
-        int offset = sqlRequest.getOffset();
         if (offset > 0 && !sql.toLowerCase().contains("offset")) {
             sql += ("\nOFFSET " + offset);
         }
@@ -73,7 +73,7 @@ public class QueryUtil {
     private static void initQueryTransformers() {
         List<IQueryTransformer> transformers = Lists.newArrayList();
         transformers.add(new DefaultQueryTransformer());
-        
+
         String[] classes = KylinConfig.getInstanceFromEnv().getQueryTransformers();
         for (String clz : classes) {
             try {
@@ -95,10 +95,10 @@ public class QueryUtil {
         private static final Pattern PTN_GROUP_BY = Pattern.compile(S1 + "GROUP" + SM + "BY" + S1, Pattern.CASE_INSENSITIVE);
         private static final Pattern PTN_HAVING_COUNT_GREATER_THAN_ZERO = Pattern.compile(S1 + "HAVING" + SM + "[(]?" + S0 + "COUNT" + S0 + "[(]" + S0 + "1" + S0 + "[)]" + S0 + ">" + S0 + "0" + S0 + "[)]?", Pattern.CASE_INSENSITIVE);
         private static final Pattern PTN_SUM_1 = Pattern.compile(S0 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S0, Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_NOT_EQ = Pattern.compile(S0 + "!="+ S0, Pattern.CASE_INSENSITIVE);
+        private static final Pattern PTN_NOT_EQ = Pattern.compile(S0 + "!=" + S0, Pattern.CASE_INSENSITIVE);
         private static final Pattern PTN_INTERVAL = Pattern.compile("interval" + SM + "(floor\\()([\\d\\.]+)(\\))" + SM + "(second|minute|hour|day|month|year)", Pattern.CASE_INSENSITIVE);
         private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}", Pattern.CASE_INSENSITIVE);
-        
+
         @Override
         public String transform(String sql) {
             Matcher m;
@@ -151,7 +151,7 @@ public class QueryUtil {
 
             return sql;
         }
-        
+
     }
 
     public static String makeErrorMsgUserFriendly(Throwable e) {
