@@ -63,9 +63,9 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, java.io.Se
 
     protected String makeTableName(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         if (cubeSegment == null) {
-            return "kylin_intermediate_" + cubeDesc.getName();
+            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase();
         } else {
-            return "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getUuid().replaceAll("-", "_");
+            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase() + "_" + cubeSegment.getUuid().replaceAll("-", "_");
         }
     }
 

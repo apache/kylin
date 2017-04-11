@@ -97,7 +97,6 @@ public class QueryUtil {
         private static final Pattern PTN_SUM_1 = Pattern.compile(S0 + "SUM" + S0 + "[(]" + S0 + "[1]" + S0 + "[)]" + S0, Pattern.CASE_INSENSITIVE);
         private static final Pattern PTN_NOT_EQ = Pattern.compile(S0 + "!="+ S0, Pattern.CASE_INSENSITIVE);
         private static final Pattern PTN_INTERVAL = Pattern.compile("interval" + SM + "(floor\\()([\\d\\.]+)(\\))" + SM + "(second|minute|hour|day|month|year)", Pattern.CASE_INSENSITIVE);
-        private static final Pattern PTN_CONCAT = Pattern.compile("concat\\(.+?\\)");//non-greedy
         private static final Pattern PTN_HAVING_ESCAPE_FUNCTION = Pattern.compile("\\{fn" + "(.*?)" + "\\}", Pattern.CASE_INSENSITIVE);
         
         @Override
@@ -149,20 +148,6 @@ public class QueryUtil {
                 int value = (int) Math.floor(Double.valueOf(m.group(2)));
                 sql = sql.substring(0, m.start(1)) + "'" + value + "'" + sql.substring(m.end(3));
             }
-
-            //according to https://issues.apache.org/jira/browse/CALCITE-1375,
-            //{fn concat('a','b')} will succeed but concat('a','b') will fail 
-            StringBuilder sb = new StringBuilder();
-            while (true) {
-                m = PTN_CONCAT.matcher(sql);
-                if (!m.find())
-                    break;
-
-                sb.append(sql.substring(0, m.start()) + "{fn " + m.group(0) + " }");
-                sql = sql.substring(m.end());
-            }
-            String temp = sb.toString() + sql;
-            sql = "".equals(temp) ? sql : temp;
 
             return sql;
         }

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.gtrecord;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.ImmutableBitSet;
@@ -69,21 +70,22 @@ public class StorageResponseGTScatter implements IGTScanner {
 
     @Override
     public Iterator<GTRecord> iterator() {
-        List<PartitionResultIterator> partitionResults = Lists.newArrayList();
-        while (blocks.hasNext()) {
-            partitionResults.add(new PartitionResultIterator(blocks.next(), info, columns));
+        Iterator<PartitionResultIterator> iterators = Iterators.transform(blocks, new Function<byte[], PartitionResultIterator>() {
+            public PartitionResultIterator apply(byte[] input) {
+                return new PartitionResultIterator(input, info, columns);
+            }
+        });
+
+        if (!needSorted) {
+            logger.debug("Using Iterators.concat to pipeline partition results");
+            return Iterators.concat(iterators);
         }
 
+        List<PartitionResultIterator> partitionResults = Lists.newArrayList(iterators);
         if (partitionResults.size() == 1) {
             return partitionResults.get(0);
         }
-
-        if (!needSorted) {
-            logger.debug("Using Iterators.concat to merge partition results");
-            return Iterators.concat(partitionResults.iterator());
-        }
-
-        logger.debug("Using SortMergedPartitionResultIterator to merge partition results");
+        logger.debug("Using SortMergedPartitionResultIterator to merge {} partition results", partitionResults.size());
         return new SortMergedPartitionResultIterator(partitionResults, info, GTRecord.getComparator(groupByDims));
     }
 }

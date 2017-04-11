@@ -19,7 +19,6 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,6 +40,7 @@ import com.google.common.collect.Sets;
 
 /**
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class FunctionDesc implements Serializable {
 
@@ -90,17 +90,13 @@ public class FunctionDesc implements Serializable {
         expression = expression.toUpperCase();
         returnDataType = DataType.getType(returnType);
 
-        ArrayList<TblColRef> colRefs = Lists.newArrayList();
         for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
             if (p.isColumnType()) {
                 TblColRef colRef = model.findColumn(p.getValue());
                 p.setValue(colRef.getIdentity());
-                colRefs.add(colRef);
+                p.setColRef(colRef);
             }
         }
-
-        if (parameter != null)
-            parameter.setColRefs(colRefs);
     }
 
     private void reInitMeasureType() {

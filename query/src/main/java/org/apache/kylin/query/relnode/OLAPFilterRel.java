@@ -20,7 +20,6 @@ package org.apache.kylin.query.relnode;
 
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +59,7 @@ import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.ConstantTupleFilter;
 import org.apache.kylin.metadata.filter.DynamicTupleFilter;
 import org.apache.kylin.metadata.filter.ExtractTupleFilter;
+import org.apache.kylin.metadata.filter.FilterOptimizeTransformer;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
@@ -69,6 +69,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  */
@@ -77,13 +78,10 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
     private static class TupleFilterVisitor extends RexVisitorImpl<TupleFilter> {
 
         private final ColumnRowType inputRowType;
-        private final OLAPContext context;
-        private final Set<TblColRef> columnsInFilter = new HashSet<>();
 
-        public TupleFilterVisitor(ColumnRowType inputRowType, OLAPContext context) {
+        public TupleFilterVisitor(ColumnRowType inputRowType) {
             super(true);
             this.inputRowType = inputRowType;
-            this.context = context;
         }
 
         @Override
@@ -228,10 +226,6 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         @Override
         public TupleFilter visitInputRef(RexInputRef inputRef) {
             TblColRef column = inputRowType.getColumnByIndex(inputRef.getIndex());
-            if (!column.isInnerColumn()) {
-                context.allColumns.add(column);
-                columnsInFilter.add(column);
-            }
             ColumnTupleFilter filter = new ColumnTupleFilter(column);
             return filter;
         }
@@ -321,11 +315,20 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             return;
         }
 
-        TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType, context);
+        TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType);
         TupleFilter filter = this.condition.accept(visitor);
+        // optimize the filter, the optimization has to be segment-irrelevant
+        new FilterOptimizeTransformer().transform(filter);
+        Set<TblColRef> filterColumns = Sets.newHashSet();
+        TupleFilter.collectColumns(filter, filterColumns);
+        for (TblColRef tblColRef : filterColumns) {
+            if (!tblColRef.isInnerColumn()) {
+                context.allColumns.add(tblColRef);
+                context.filterColumns.add(tblColRef);
+            }
+        }
 
         context.filter = TupleFilter.and(context.filter, filter);
-        context.filterColumns.addAll(visitor.columnsInFilter);
     }
 
     @Override

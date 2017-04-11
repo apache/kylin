@@ -51,12 +51,6 @@ public class QueryUtilTest extends LocalFileMetadataTestCase {
             String s = QueryUtil.massageSql(sqlRequest);
             Assert.assertEquals("select ( date '2001-09-28' + interval '2' month) from test_kylin_fact group by ( date '2001-09-28' + interval '2' month)", s);
         }
-        {
-            SQLRequest sqlRequest = new SQLRequest();
-            sqlRequest.setSql("select concat(\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\",\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\") concat(\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\",\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\") ()");
-            String s = QueryUtil.massageSql(sqlRequest);
-            Assert.assertEquals("select {fn concat(\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\",\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\") } {fn concat(\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\",\"TEST_KYLIN_FACT\".\"LSTG_FORMAT_NAME\") } ()", s);
-        }
     }
 
     @Test

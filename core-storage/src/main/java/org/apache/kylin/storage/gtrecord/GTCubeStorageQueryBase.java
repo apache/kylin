@@ -154,7 +154,7 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     }
 
     protected abstract String getGTStorage();
-    
+
     protected ITupleConverter newCubeTupleConverter(CubeSegment cubeSeg, Cuboid cuboid, Set<TblColRef> selectedDimensions, Set<FunctionDesc> selectedMetrics, int[] gtColIdx, TupleInfo tupleInfo) {
         return new CubeTupleConverter(cubeSeg, cuboid, selectedDimensions, selectedMetrics, gtColIdx, tupleInfo);
     }

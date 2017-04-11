@@ -54,12 +54,18 @@ public class TblColRef implements Serializable {
 
     // used by projection rewrite, see OLAPProjectRel
     public static TblColRef newInnerColumn(String columnName, InnerDataTypeEnum dataType) {
+        return newInnerColumn(columnName, dataType, null);
+    }
+    
+    // used by projection rewrite, see OLAPProjectRel
+    public static TblColRef newInnerColumn(String columnName, InnerDataTypeEnum dataType, String parserDescription) {
         ColumnDesc column = new ColumnDesc();
         column.setName(columnName);
         TableDesc table = new TableDesc();
         column.setTable(table);
         TblColRef colRef = new TblColRef(column);
         colRef.markInnerColumn(dataType);
+        colRef.parserDescription = parserDescription;
         return colRef;
     }
     
@@ -101,6 +107,7 @@ public class TblColRef implements Serializable {
     private TableRef table;
     private ColumnDesc column;
     private String identity;
+    private String parserDescription;
 
     TblColRef(ColumnDesc column) {
         this.column = column;
@@ -198,6 +205,9 @@ public class TblColRef implements Serializable {
 
     @Override
     public String toString() {
+        if (isInnerColumn() && parserDescription != null)
+            return parserDescription;
+        
         String alias = table == null ? "UNKNOWN_MODEL" : table.getAlias();
         String tableName = column.getTable() == null ? "NULL" : column.getTable().getName();
         String tableIdentity = column.getTable() == null ? "NULL" : column.getTable().getIdentity();

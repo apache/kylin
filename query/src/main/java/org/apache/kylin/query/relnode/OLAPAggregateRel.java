@@ -209,12 +209,12 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
             String aggOutName;
-            if (aggFunc.needRewriteField()) {
+            if (aggFunc != null && aggFunc.needRewriteField()) {
                 aggOutName = aggFunc.getRewriteFieldName();
             } else {
                 AggregateCall aggCall = this.rewriteAggCalls.get(i);
                 int index = aggCall.getArgList().get(0);
-                aggOutName = aggFunc.getExpression() + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity() + "_";
+                aggOutName = getSqlFuncName(aggCall) + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity() + "_";
             }
             TblColRef aggOutCol = TblColRef.newInnerColumn(aggOutName, TblColRef.InnerDataTypeEnum.LITERAL);
             columns.add(aggOutCol);
@@ -262,9 +262,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
                 }
                 for (Integer index : aggCall.getArgList().subList(0, columnsCount)) {
                     TblColRef column = inputColumnRowType.getColumnByIndex(index);
-                    if (!column.isInnerColumn()) {
-                        columns.add(column);
-                    }
+                    columns.add(column);
                 }
                 if (!columns.isEmpty()) {
                     parameter = ParameterDesc.newInstance(columns.toArray(new TblColRef[columns.size()]));
@@ -279,7 +277,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
         // only rewrite the innermost aggregation
-        if (!this.afterAggregate) {
+        boolean hasRealization = (null != this.context.realization);
+        if (hasRealization && !this.afterAggregate) {
             translateAggregation();
             buildRewriteFieldsAndMetricsColumns();
         }
@@ -287,7 +286,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         implementor.visitChild(this, getInput());
 
         // only rewrite the innermost aggregation
-        if (!this.afterAggregate) {
+        if (hasRealization && !this.afterAggregate) {
             // rewrite the aggCalls
             this.rewriteAggCalls = new ArrayList<AggregateCall>(aggCalls.size());
             for (int i = 0; i < this.aggCalls.size(); i++) {

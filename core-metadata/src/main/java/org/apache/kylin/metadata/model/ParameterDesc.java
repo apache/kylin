@@ -20,6 +20,7 @@ package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -28,12 +29,11 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 /**
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class ParameterDesc implements Serializable {
 
@@ -48,7 +48,7 @@ public class ParameterDesc implements Serializable {
             TblColRef col = (TblColRef) obj;
             r.type = FunctionDesc.PARAMETER_TYPE_COLUMN;
             r.value = col.getIdentity();
-            r.colRefs = ImmutableList.of(col);
+            r.colRef = col;
         } else {
             r.type = FunctionDesc.PARAMETER_TYPE_CONSTANT;
             r.value = (String) obj;
@@ -56,12 +56,6 @@ public class ParameterDesc implements Serializable {
 
         if (objs.length >= 2) {
             r.nextParameter = newInstance(Arrays.copyOfRange(objs, 1, objs.length));
-            if (r.nextParameter.colRefs.size() > 0) {
-                if (r.colRefs.isEmpty())
-                    r.colRefs = r.nextParameter.colRefs;
-                else
-                    r.colRefs = ImmutableList.copyOf(Iterables.concat(r.colRefs, r.nextParameter.colRefs));
-            }
         }
         return r;
     }
@@ -75,7 +69,8 @@ public class ParameterDesc implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private ParameterDesc nextParameter;
 
-    private List<TblColRef> colRefs = ImmutableList.of();
+    private TblColRef colRef = null;
+    private List<TblColRef> allColRefsIncludingNexts = null;
     private Set<PlainParameter> plainParameters = null;
 
     // Lazy evaluation
@@ -101,13 +96,28 @@ public class ParameterDesc implements Serializable {
     void setValue(String value) {
         this.value = value;
     }
-
-    public List<TblColRef> getColRefs() {
-        return colRefs;
+    
+    public TblColRef getColRef() {
+        return colRef;
     }
 
-    void setColRefs(List<TblColRef> colRefs) {
-        this.colRefs = colRefs;
+    void setColRef(TblColRef colRef) {
+        this.colRef = colRef;
+    }
+
+    public List<TblColRef> getColRefs() {
+        if (allColRefsIncludingNexts == null) {
+            List<TblColRef> all = new ArrayList<>(2);
+            ParameterDesc p = this;
+            while (p != null) {
+                if (p.isColumnType())
+                    all.add(p.getColRef());
+                
+                p = p.nextParameter;
+            }
+            allColRefsIncludingNexts = all;
+        }
+        return allColRefsIncludingNexts;
     }
 
     public ParameterDesc getNextParameter() {
@@ -131,17 +141,12 @@ public class ParameterDesc implements Serializable {
             return false;
 
         ParameterDesc p = this, q = that;
-        int refi = 0, refj = 0;
         for (; p != null && q != null; p = p.nextParameter, q = q.nextParameter) {
             if (p.isColumnType()) {
                 if (q.isColumnType() == false)
                     return false;
-                if (refi >= this.colRefs.size() || refj >= that.colRefs.size())
+                if (this.getColRef().equals(that.getColRef()) == false)
                     return false;
-                if (this.colRefs.get(refi).equals(that.colRefs.get(refj)) == false)
-                    return false;
-                refi++;
-                refj++;
             } else {
                 if (q.isColumnType() == true)
                     return false;
@@ -170,13 +175,14 @@ public class ParameterDesc implements Serializable {
     @Override
     public int hashCode() {
         int result = type != null ? type.hashCode() : 0;
-        result = 31 * result + (colRefs != null ? colRefs.hashCode() : 0);
+        result = 31 * result + (colRef != null ? colRef.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "ParameterDesc [type=" + type + ", value=" + value + ", nextParam=" + nextParameter + "]";
+        String thisStr = isColumnType() ? colRef.toString() : value;
+        return nextParameter == null ? thisStr : thisStr + "," + nextParameter.toString();
     }
 
     /**
@@ -200,11 +206,9 @@ public class ParameterDesc implements Serializable {
         static Set<PlainParameter> createFromParameterDesc(ParameterDesc parameterDesc) {
             Set<PlainParameter> result = Sets.newHashSet();
             ParameterDesc local = parameterDesc;
-            List<TblColRef> totalColRef = parameterDesc.colRefs;
-            Integer colIndex = 0;
             while (local != null) {
                 if (local.isColumnType()) {
-                    result.add(createSingleColumnParameter(local, totalColRef.get(colIndex++)));
+                    result.add(createSingleColumnParameter(local));
                 } else {
                     result.add(createSingleValueParameter(local));
                 }
@@ -220,11 +224,11 @@ public class ParameterDesc implements Serializable {
             return single;
         }
 
-        static PlainParameter createSingleColumnParameter(ParameterDesc parameterDesc, TblColRef colRef) {
+        static PlainParameter createSingleColumnParameter(ParameterDesc parameterDesc) {
             PlainParameter single = new PlainParameter();
             single.type = parameterDesc.type;
             single.value = parameterDesc.value;
-            single.colRef = colRef;
+            single.colRef = parameterDesc.colRef;
             return single;
         }
 

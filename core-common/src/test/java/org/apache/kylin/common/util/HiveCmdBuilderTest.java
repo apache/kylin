@@ -34,6 +34,7 @@ public class HiveCmdBuilderTest {
 
     @Before
     public void setup() {
+        System.setProperty("log4j.configuration", "file:../build/conf/kylin-tools-log4j.properties");
         System.setProperty("KYLIN_CONF", LocalFileMetadataTestCase.LOCALMETA_TEST_DATA);
     }
 
