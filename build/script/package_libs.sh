@@ -70,7 +70,7 @@ EOF
 git rev-parse HEAD >> build/commit_SHA1
 
 echo "package libraries"
-mvn clean install -DskipTests	 || { exit 1; }
+mvn clean package -DskipTests	 || { exit 1; }
 
 echo "copy libraries"
 rm -rf build/lib

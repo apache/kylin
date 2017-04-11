@@ -21,5 +21,5 @@ dir=$(dirname ${0})
 cd ${dir}
 cd ..
 
-mvn clean install -DskipTests 2>&1 | tee mci.log
+mvn clean package -DskipTests 2>&1 | tee mci.log
 mvn verify -Dhdp.version=${HDP_VERSION:-"2.4.0.0-169"} -fae 2>&1 | tee mvnverify.log

@@ -49,7 +49,7 @@ fi
 echo "kylin version: ${version}"
 
 echo "package libraries"
-mvn clean install -DskipTests	 || { exit 1; }
+mvn clean package -DskipTests	 || { exit 1; }
 
 echo "copy libraries"
 rm -rf build/tool
