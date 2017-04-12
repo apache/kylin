@@ -98,8 +98,57 @@ then
     quit "hcatalog lib not found"
 fi
 
+function checkFileExist()
+{
+    files=$1
+    misFiles=0
+    outputMissFiles=
+    for file in ${files//:/ }
+    do
+        let allFiles++
+        if [ ! -f "${file}" ]; then
+            outputMissFiles=${outputMissFiles}${file}", "
+            let misFiles++
+        fi
+    done
+    ratio=`echo "scale=3; ${misFiles}/${allFiles}" | bc`
+    [[ `echo "$ratio < 0.01" | bc ` -eq 1 ]] || quit "A couple of hive jars can't be found: ${outputMisFiles}!"
+}
 
-hive_lib=`find -L "$(dirname $hive_exec_path)" -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
+function validateDirectory()
+{
+    conf_path=$1
+    [[ -d "${conf_path}" ]] || quit "${conf_path} doesn't exist!"
+    unit=${conf_path: -1}
+    [[ "${unit}" == "/" ]] || conf_path=${conf_path}"/"
+
+    find="false"
+    filelist=`ls ${conf_path}`
+    for file in $filelist
+    do
+        if [ "${file}" == "hive-site.xml" ]
+        then
+            find="true"
+            break
+        fi
+    done
+    [[ "${find}" == "true" ]] || quit "ERROR, no hive-site.xml found under dir: ${conf_path}!"
+}
+
+if [ -z "$HIVE_LIB" ]
+then
+    verbose "HIVE_LIB is not set, try to retrieve hive lib from hive_exec_path"
+    hive_lib_dir="$(dirname $hive_exec_path)"
+else
+    hive_lib_dir="$HIVE_LIB"
+fi
+hive_lib=`find -L ${hive_lib_dir} -name '*.jar' ! -name '*calcite*' -printf '%p:' | sed 's/:$//'`
+
+validateDirectory ${hive_conf_path}
+checkFileExist ${hive_lib}
+checkFileExist ${hcatalog}
+
 hive_dependency=${hive_conf_path}:${hive_lib}:${hcatalog}
 verbose "hive dependency: $hive_dependency"
 export hive_dependency
+
