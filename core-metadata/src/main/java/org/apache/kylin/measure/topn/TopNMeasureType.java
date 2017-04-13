@@ -221,7 +221,11 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         int start = (functionDesc.getParameter().isColumnType() == true) ? 1 : 0;
         for (int i = start; i < allCols.size(); i++) {
             TblColRef tblColRef = allCols.get(i);
-            String encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getName());
+            String encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getIdentity());
+            if (StringUtils.isEmpty(encoding)) {
+                // for backward compatibility
+                encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getName());
+            }
             if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
                 columnsNeedDict.add(tblColRef);
             }
