@@ -31,3 +31,8 @@ __Companies & Organizations__
 	* Apache Kylin has been introduced as an OLAP engine for the data platform at NetEase, powering data analysis for various products & business with great performance.
 * [glispa](https://www.glispa.com/)  
 	* glispa is using Apache Kylin as an OLAP component within its data management platform. It enabled us to meet latency requirements for real time analytics over big amounts of data. That helps our data scientists and analysts make sense of the DMP's incomprehensible data in a quick ad-hoc manner.
+* [iQIYI](http://www.iqiyi.com/)  
+    * Apache Kylin is used as part of iQIYI's big data analytics platform. It powers various OLAP scenarios with great performance and simplifies the procedure of data processing.
+* [Meizu](https://www.meizu.com)  
+    * Meizu Technology has successfully adopted Apache Kylin in its statistical analysis platform and self-service analysis platform, to overcome the performance bottleneck of traditional RDBMS on huge amount of data. 
+
