@@ -33,7 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-public class KylinVersion {
+public class KylinVersion implements Comparable {
     private static final String COMMIT_SHA1_v15 = "commit_SHA1";
     private static final String COMMIT_SHA1_v13 = "commit.sha1";
 
@@ -65,12 +65,34 @@ public class KylinVersion {
     public String toString() {
         return "" + major + "." + minor + "." + revision;
     }
+    
+    @Override
+    public int compareTo(Object o) {
+        KylinVersion v = (KylinVersion) o;
+        int comp;
+        
+        comp = this.major - v.major;
+        if (comp != 0)
+            return comp;
+        
+        comp = this.minor - v.minor;
+        if (comp != 0)
+            return comp;
+        
+        comp = this.revision - v.revision;
+        if (comp != 0)
+            return comp;
+        
+        return (this.isSnapshot ? 0 : 1) - (v.isSnapshot ? 0 : 1);
+    }
 
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
     private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("2.0.0");
 
+    private static final KylinVersion VERSION_200 = new KylinVersion("2.0.0");
+    
     private static final Set<KylinVersion> SIGNATURE_INCOMPATIBLE_REVISIONS = new HashSet<KylinVersion>();
 
     /**
@@ -100,6 +122,14 @@ public class KylinVersion {
         return CURRENT_KYLIN_VERSION;
     }
 
+    public static boolean isBefore200(String ver) {
+        return new KylinVersion(ver).compareTo(VERSION_200) < 0;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println(isBefore200("2.0.0"));
+    }
+    
     public boolean isCompatibleWith(KylinVersion v) {
         KylinVersion current = CURRENT_KYLIN_VERSION;
         if (current.major != v.major || current.minor != v.minor) {
@@ -135,10 +165,6 @@ public class KylinVersion {
         return !signatureIncompatible;
     }
 
-    public static void main(String[] args) {
-        System.out.println(getKylinClientInformation());
-    }
-
     public static String getKylinClientInformation() {
         StringBuilder buf = new StringBuilder();
 
@@ -172,4 +198,5 @@ public class KylinVersion {
             return StringUtils.EMPTY;
         }
     }
+
 }
