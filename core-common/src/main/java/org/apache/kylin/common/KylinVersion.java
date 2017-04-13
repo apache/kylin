@@ -33,7 +33,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-public class KylinVersion {
+public class KylinVersion implements Comparable {
     private static final String COMMIT_SHA1_v15 = "commit_SHA1";
     private static final String COMMIT_SHA1_v13 = "commit.sha1";
 
@@ -66,22 +66,44 @@ public class KylinVersion {
         return "" + major + "." + minor + "." + revision;
     }
 
+    @Override
+    public int compareTo(Object o) {
+        KylinVersion v = (KylinVersion) o;
+        int comp;
+
+        comp = this.major - v.major;
+        if (comp != 0)
+            return comp;
+
+        comp = this.minor - v.minor;
+        if (comp != 0)
+            return comp;
+
+        comp = this.revision - v.revision;
+        if (comp != 0)
+            return comp;
+
+        return (this.isSnapshot ? 0 : 1) - (v.isSnapshot ? 0 : 1);
+    }
+
     /**
      * Require MANUAL updating kylin version per ANY upgrading.
      */
     private static final KylinVersion CURRENT_KYLIN_VERSION = new KylinVersion("2.0.0");
 
+    private static final KylinVersion VERSION_200 = new KylinVersion("2.0.0");
+
     private static final Set<KylinVersion> SIGNATURE_INCOMPATIBLE_REVISIONS = new HashSet<KylinVersion>();
 
     /**
-     * 1.5.1 is actually compatible with 1.5.0's cube. However the "calculate signature" method in 1.5.1 code base somehow 
-     * gives different signature values for 1.5.0 cubes. To prevent from users having to take care of this mess, as people 
-     * usually won't expect to take lots of efforts for small upgrade (from 1.5.0 to 1.5.1), a special list of 
+     * 1.5.1 is actually compatible with 1.5.0's cube. However the "calculate signature" method in 1.5.1 code base somehow
+     * gives different signature values for 1.5.0 cubes. To prevent from users having to take care of this mess, as people
+     * usually won't expect to take lots of efforts for small upgrade (from 1.5.0 to 1.5.1), a special list of
      * SIGNATURE_INCOMPATIBLE_REVISIONS is introduced to silently take care of such legacy cubes.
-     * 
+     *
      * We should NEVER add new stuff to SIGNATURE_INCOMPATIBLE_REVISIONS. "calculate signature" should always return consistent values
      * to compatible versions. If it's impossible to maintain consistent signatures between upgrade, we should increase the minor version,
-     * e.g. it's better to skip 1.5.1 and use 1.6.0 as the next release version to 1.5.0, or even to use 2.0.0, as people tends to accept 
+     * e.g. it's better to skip 1.5.1 and use 1.6.0 as the next release version to 1.5.0, or even to use 2.0.0, as people tends to accept
      * doing more (e.g. Having to use sth like a metastore upgrade tool when upgrading Kylin)
      */
     static {
@@ -98,6 +120,14 @@ public class KylinVersion {
      */
     public static KylinVersion getCurrentVersion() {
         return CURRENT_KYLIN_VERSION;
+    }
+
+    public static boolean isBefore200(String ver) {
+        return new KylinVersion(ver).compareTo(VERSION_200) < 0;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getKylinClientInformation());
     }
 
     public boolean isCompatibleWith(KylinVersion v) {
@@ -135,10 +165,6 @@ public class KylinVersion {
         return !signatureIncompatible;
     }
 
-    public static void main(String[] args) {
-        System.out.println(getKylinClientInformation());
-    }
-
     public static String getKylinClientInformation() {
         StringBuilder buf = new StringBuilder();
 
@@ -172,4 +198,5 @@ public class KylinVersion {
             return StringUtils.EMPTY;
         }
     }
+
 }

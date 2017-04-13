@@ -875,6 +875,19 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     private TblColRef initDimensionColRef(DimensionDesc dim, String colName) {
         TblColRef col = model.findColumn(dim.getTable(), colName);
+
+        // for backward compatibility
+        if (KylinVersion.isBefore200(getVersion())) {
+            // always use FK instead PK, FK could be shared by more than one lookup tables
+            JoinDesc join = dim.getJoin();
+            if (join != null) {
+                int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), col);
+                if (idx >= 0) {
+                    col = join.getForeignKeyColumns()[idx];
+                }
+            }
+        }
+        
         return initDimensionColRef(col);
     }
 
