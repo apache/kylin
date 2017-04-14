@@ -69,7 +69,7 @@ public class TopNMeasureTypeTest extends LocalFileMetadataTestCase {
         assertTrue(colsNeedDict != null && colsNeedDict.size() == 1);
 
         TblColRef sellerColRef = topSellerMeasure.getFunction().getParameter().getColRefs().get(1);
-        topSellerMeasure.getFunction().getConfiguration().put(TopNMeasureType.CONFIG_ENCODING_PREFIX + sellerColRef.getName(), "int:6");
+        topSellerMeasure.getFunction().getConfiguration().put(TopNMeasureType.CONFIG_ENCODING_PREFIX + sellerColRef.getIdentity(), "int:6");
         colsNeedDict = measureType.getColumnsNeedDictionary(topSellerMeasure.getFunction());
 
         assertTrue(colsNeedDict.size() == 0);
