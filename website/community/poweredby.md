@@ -37,7 +37,8 @@ __Companies & Organizations__
     * Meizu Technology has successfully adopted Apache Kylin in its statistical analysis platform and self-service analysis platform, to overcome the performance bottleneck of traditional RDBMS on huge amount of data. 
 * [Sohu](https://www.sohu.com)   (_NASDAQ: SOHU_)
     * In Sohu, Apache Kylin is running as the analytics engine on Hadoop, serving multiple business domains including advertisement analysis, traffic forecast, etc.
-* [Gome](https://www.gome.com.cn/)   (_NASDAQ: SOHU_)
-    * Apache Kylin provides a perfect solution for Gome's online Operation Advisor. It improved not only the analysis performance, but also the productivity. We adopted Kylin in both T+1 batch procesing and real time analysis. It is the best OLAP solution in our scenario.
+* [Gome](https://www.gome.com.cn/)  
+    * Apache Kylin provides a perfect solution for Gome's online Operation Advisor. It improved not only the analysis performance, but also the productivity. We adopted Kylin in both T+1 batch procesing and real time analysis. It is the best OLAP solution in our scenario.    
+* [LeEco](http://www.leeco.com/)  
+    * Apache kylin has been used as a part of OLAP engine and data query engine for big data platform at LeEco, which is powering various big data business, such as stream media data and cloud data.
     
-
