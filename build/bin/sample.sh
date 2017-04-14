@@ -44,8 +44,13 @@ if [ "${hive_client_mode}" == "beeline" ]
 then
     beeline_params=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
     beeline ${beeline_params} -e "CREATE DATABASE IF NOT EXISTS "$sample_database
-    hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\)'`
-    beeline_params=${beeline_params//${hive2_url}/${hive2_url}/${sample_database}}
+    hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\/\)'`
+    if [ -z ${hive2_url} ]; then
+        hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\)'`
+        beeline_params=${beeline_params/${hive2_url}/${hive2_url}/${sample_database}}
+    else
+        beeline_params=${beeline_params/${hive2_url}/${hive2_url}${sample_database}}
+    fi
     beeline ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 else
     hive -e "CREATE DATABASE IF NOT EXISTS "$sample_database
