@@ -40,5 +40,6 @@ __Companies & Organizations__
 * [Gome](https://www.gome.com.cn/)  
     * Apache Kylin provides a perfect solution for Gome's online Operation Advisor. It improved not only the analysis performance, but also the productivity. We adopted Kylin in both T+1 batch procesing and real time analysis. It is the best OLAP solution in our scenario.    
 * [LeEco](http://www.leeco.com/)  
-    * Apache kylin has been used as a part of OLAP engine and data query engine for big data platform at LeEco, which is powering various big data business, such as stream media data and cloud data.
-    
+    * Apache Kylin has been used as a part of OLAP engine and data query engine for big data platform at LeEco, which is powering various big data business, such as stream media data and cloud data.
+* [Toutiao](https://www.toutiao.com/)  
+    * As the most popular mobile news app in China, Toutiao has over 600 million active users, we need OLAP capability on **Trillion** level data, and only Kylin can fulfill. Take an example, the Cube for the videos analysis has more than 2.4 trillion source records, taking 4+ TB storage (source file more than 100 TB); Most of the queries can be finished in less than 1 second (same query need couple hours in Hive). Another point is, Kylin reduces the pressure of our Hadoop cluster. This is what called "build once, use many".     
