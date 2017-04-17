@@ -84,6 +84,7 @@ public class HBaseResourceStore extends ResourceStore {
         if (!hbaseUrl.equals("hbase"))
             throw new IOException("Can not create HBaseResourceStore. Url not match. Url:" + hbaseUrl);
         createHTableIfNeeded(getAllInOneTableName());
+
     }
 
     private void createHTableIfNeeded(String tableName) throws IOException {
