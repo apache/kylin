@@ -101,6 +101,8 @@
                                     <include>org.apache.commons:commons-lang3</include>
                                     <include>com.google.guava:guava</include>
                                     <include>org.apache.kylin:*</include>
+                                    <include>org.springframework.security:spring-security-core</include>
+                                    <include>org.springframework.security:spring-security-acl</include>
                                 </includes>
                             </artifactSet>
                             <relocations>

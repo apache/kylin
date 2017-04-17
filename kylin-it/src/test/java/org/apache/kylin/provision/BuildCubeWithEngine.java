@@ -61,7 +61,7 @@ import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
-import org.apache.kylin.tool.StorageCleanupJob;
+import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
