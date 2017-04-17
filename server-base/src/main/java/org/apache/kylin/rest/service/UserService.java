@@ -74,9 +74,7 @@ public class UserService implements UserDetailsManager {
 
     private Logger logger = LoggerFactory.getLogger(UserService.class);
 
-    private static final String DIR_PREFIX = "/user/";
-
-    private static final String PWD_PREFIX = "PWD:";
+    public static final String DIR_PREFIX = "/user/";
 
     protected ResourceStore aclStore;
 
@@ -174,7 +172,7 @@ public class UserService implements UserDetailsManager {
         return all;
     }
 
-    private String getId(String userName) {
+    public static String getId(String userName) {
         return DIR_PREFIX + userName;
     }
 
@@ -185,6 +183,32 @@ public class UserService implements UserDetailsManager {
             authorities.add(new UserGrantedAuthority(str));
         }
         return new User(userInfo.getUsername(), userInfo.getPassword(), authorities);
+    }
+
+    public static class UserInfoSerializer implements Serializer<UserInfo> {
+
+        private static final UserInfoSerializer serializer = new UserInfoSerializer();
+
+        private UserInfoSerializer() {
+
+        }
+
+        public static UserInfoSerializer getInstance() {
+            return serializer;
+        }
+
+
+        @Override
+        public void serialize(UserInfo userInfo, DataOutputStream out) throws IOException {
+            String json = JsonUtil.writeValueAsString(userInfo);
+            out.writeUTF(json);
+        }
+
+        @Override
+        public UserInfo deserialize(DataInputStream in) throws IOException {
+            String json = in.readUTF();
+            return JsonUtil.readValue(json, UserInfo.class);
+        }
     }
 
 
@@ -241,31 +265,6 @@ class UserInfo extends RootPersistentEntity {
 
 }
 
-class UserInfoSerializer implements Serializer<UserInfo> {
-
-    private static final UserInfoSerializer serializer = new UserInfoSerializer();
-
-    private UserInfoSerializer() {
-
-    }
-
-    public static UserInfoSerializer getInstance() {
-        return serializer;
-    }
-
-
-    @Override
-    public void serialize(UserInfo userInfo, DataOutputStream out) throws IOException {
-        String json = JsonUtil.writeValueAsString(userInfo);
-        out.writeUTF(json);
-    }
-
-    @Override
-    public UserInfo deserialize(DataInputStream in) throws IOException {
-        String json = in.readUTF();
-        return JsonUtil.readValue(json, UserInfo.class);
-    }
-}
 
 class UserGrantedAuthority implements GrantedAuthority {
     private static final long serialVersionUID = -5128905636841891058L;

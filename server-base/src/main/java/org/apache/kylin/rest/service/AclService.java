@@ -80,7 +80,7 @@ public class AclService implements MutableAclService {
 
     private final Field fieldAcl = FieldUtils.getField(AccessControlEntryImpl.class, "acl");
 
-    private static final String DIR_PREFIX = "/acl/";
+    public static final String DIR_PREFIX = "/acl/";
 
 
     @Autowired
@@ -276,23 +276,26 @@ public class AclService implements MutableAclService {
 >>>>>>> 62cdc0f... KYLIN-2535 AclService and UserService store records via ResourceStore interface
         List<AceInfo> aceInfos = new ArrayList<AceInfo>();
         Map<String, AceInfo> allAceInfos = record.getAllAceInfo();
-        if (sids != null) {
-            // Just return aces in sids
-            for (Sid sid : sids) {
-                String sidName = null;
-                if (sid instanceof PrincipalSid) {
-                    sidName = ((PrincipalSid) sid).getPrincipal();
-                } else if (sid instanceof GrantedAuthoritySid) {
-                    sidName = ((GrantedAuthoritySid) sid).getGrantedAuthority();
+        if (allAceInfos != null) {
+            if (sids != null) {
+                // Just return aces in sids
+                for (Sid sid : sids) {
+                    String sidName = null;
+                    if (sid instanceof PrincipalSid) {
+                        sidName = ((PrincipalSid) sid).getPrincipal();
+                    } else if (sid instanceof GrantedAuthoritySid) {
+                        sidName = ((GrantedAuthoritySid) sid).getGrantedAuthority();
+                    }
+                    AceInfo aceInfo = allAceInfos.get(sidName);
+                    if (aceInfo != null) {
+                        aceInfos.add(aceInfo);
+                    }
                 }
-                AceInfo aceInfo = allAceInfos.get(sidName);
-                if (aceInfo != null) {
-                    aceInfos.add(aceInfo);
-                }
+            } else {
+                aceInfos.addAll(allAceInfos.values());
             }
         } else {
-            if (allAceInfos != null)
-                aceInfos.addAll(allAceInfos.values());
+            logger.warn("Get null AllAceInfos from AclRecord");
         }
 
         List<AccessControlEntry> newAces = new ArrayList<AccessControlEntry>();
@@ -317,7 +320,7 @@ public class AclService implements MutableAclService {
         }
     }
 
-    private String getQueryKeyById(String id) {
+    public static String getQueryKeyById(String id) {
         return DIR_PREFIX + id;
     }
 
