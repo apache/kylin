@@ -53,6 +53,7 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -465,11 +466,13 @@ public class DeployCoprocessorCLI {
 
         ArrayList<String> result = new ArrayList<String>();
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
-            for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
-                String tableName = seg.getStorageLocationIdentifier();
-                if (StringUtils.isBlank(tableName) == false) {
-                    result.add(tableName);
-                    System.out.println("added new table: " + tableName);
+            if (cube.getStorageType() == IStorageAware.ID_HBASE || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
+                for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
+                    String tableName = seg.getStorageLocationIdentifier();
+                    if (StringUtils.isBlank(tableName) == false) {
+                        result.add(tableName);
+                        System.out.println("added new table: " + tableName);
+                    }
                 }
             }
         }
