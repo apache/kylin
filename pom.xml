@@ -16,7 +16,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -62,11 +63,11 @@
         <!-- Spark versions -->
         <spark.version>1.6.3</spark.version>
         <kryo.version>4.0.0</kryo.version>
-        
+
         <!-- <reflections.version>0.9.10</reflections.version> -->
 
         <!-- Calcite Version -->
-        <calcite.version>1.12.0</calcite.version>
+        <calcite.version>1.12.0-kylin-r2-SNAPSHOT</calcite.version>
         <avatica.version>1.9.0</avatica.version>
 
         <!-- Hadoop Common deps, keep compatible with hadoop2.version -->
@@ -115,7 +116,8 @@
         <!-- REST Service -->
         <spring.framework.version>3.2.17.RELEASE</spring.framework.version>
         <spring.framework.security.version>3.1.2.RELEASE</spring.framework.security.version>
-        <spring.framework.security.extensions.version>1.0.2.RELEASE</spring.framework.security.extensions.version>
+        <spring.framework.security.extensions.version>1.0.2.RELEASE
+        </spring.framework.security.extensions.version>
         <opensaml.version>2.6.4</opensaml.version>
         <aspectj.version>1.8.9</aspectj.version>
 
@@ -183,7 +185,8 @@
 
     <scm>
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</connection>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git</developerConnection>
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/kylin.git
+        </developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf/kylin.git</url>
         <tag>HEAD</tag>
     </scm>
@@ -847,6 +850,20 @@
             <id>cloudera</id>
             <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
         </repository>
+
+        <repository>
+            <id>nexus</id>
+            <name>Kyligence Repository</name>
+            <url>http://repository.kyligence.io:8081/repository/maven-public/
+            </url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
     </repositories>
 
     <build>
@@ -960,7 +977,8 @@
                             <phase>validate</phase>
                             <configuration>
                                 <configLocation>dev-support/checkstyle.xml</configLocation>
-                                <suppressionsLocation>dev-support/checkstyle-suppressions.xml</suppressionsLocation>
+                                <suppressionsLocation>dev-support/checkstyle-suppressions.xml
+                                </suppressionsLocation>
                                 <includeTestSourceDirectory>true</includeTestSourceDirectory>
                                 <consoleOutput>true</consoleOutput>
                                 <failsOnError>true</failsOnError>
@@ -1136,7 +1154,8 @@
                                         <artifactItem>
                                             <groupId>com.github.jbellis</groupId>
                                             <artifactId>jamm</artifactId>
-                                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                                            <outputDirectory>${project.build.testOutputDirectory}
+                                            </outputDirectory>
                                             <destFileName>jamm.jar</destFileName>
                                         </artifactItem>
                                     </artifactItems>
@@ -1179,7 +1198,8 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19.1</version>
                         <configuration>
-                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
+                            <reportsDirectory>${project.basedir}/../target/surefire-reports
+                            </reportsDirectory>
                             <excludes>
                                 <exclude>**/IT*.java</exclude>
                             </excludes>
@@ -1190,10 +1210,14 @@
                                 </property>
                                 <property>
                                     <name>log4j.configuration</name>
-                                    <value>file:${project.basedir}/../build/conf/kylin-tools-log4j.properties</value>
+                                    <value>
+                                        file:${project.basedir}/../build/conf/kylin-tools-log4j.properties
+                                    </value>
                                 </property>
                             </systemProperties>
-                            <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar ${argLine} ${surefireArgLine}</argLine>
+                            <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar
+                                ${argLine} ${surefireArgLine}
+                            </argLine>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -1236,7 +1260,8 @@
                                         <artifactItem>
                                             <groupId>com.github.jbellis</groupId>
                                             <artifactId>jamm</artifactId>
-                                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                                            <outputDirectory>${project.build.testOutputDirectory}
+                                            </outputDirectory>
                                             <destFileName>jamm.jar</destFileName>
                                         </artifactItem>
                                     </artifactItems>
@@ -1279,7 +1304,8 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19.1</version>
                         <configuration>
-                            <reportsDirectory>${project.basedir}/../target/surefire-reports</reportsDirectory>
+                            <reportsDirectory>${project.basedir}/../target/surefire-reports
+                            </reportsDirectory>
                             <excludes>
                                 <exclude>**/IT*.java</exclude>
                             </excludes>
@@ -1290,10 +1316,14 @@
                                 </property>
                                 <property>
                                     <name>log4j.configuration</name>
-                                    <value>file:${project.basedir}/../build/conf/kylin-tools-log4j.properties</value>
+                                    <value>
+                                        file:${project.basedir}/../build/conf/kylin-tools-log4j.properties
+                                    </value>
                                 </property>
                             </systemProperties>
-                            <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar ${argLine} ${surefireArgLine}</argLine>
+                            <argLine>-javaagent:${project.build.testOutputDirectory}/jamm.jar
+                                ${argLine} ${surefireArgLine}
+                            </argLine>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -1327,7 +1357,9 @@
                                     <tarLongFileMode>posix</tarLongFileMode>
                                     <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
                                     <appendAssemblyId>true</appendAssemblyId>
-                                    <descriptor>assembly/src/main/config/assemblies/source-assembly.xml</descriptor>
+                                    <descriptor>
+                                        assembly/src/main/config/assemblies/source-assembly.xml
+                                    </descriptor>
                                     <finalName>apache-kylin-${project.version}</finalName>
                                 </configuration>
                             </execution>
@@ -1406,7 +1438,8 @@
                                 <!-- MIT license -->
                                 <exclude>webapp/app/css/AdminLTE.css</exclude>
                                 <exclude>webapp/app/css/messenger-theme-ice.css</exclude>
-                                <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js</exclude>
+                                <exclude>webapp/app/js/directives/kylin_abn_tree_directive.js
+                                </exclude>
                                 <exclude>webapp/app/js/directives/angular-tree-control.js</exclude>
                                 <exclude>webapp/app/js/directives/datetimepicker.js</exclude>
                                 <exclude>webapp/app/js/directives/select.js</exclude>
