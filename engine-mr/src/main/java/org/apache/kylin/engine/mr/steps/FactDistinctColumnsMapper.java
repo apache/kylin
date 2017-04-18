@@ -103,7 +103,6 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
             }
 
 
-
             TblColRef partitionColRef = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (partitionColRef != null) {
                 partitionColumnIndex = intermediateTableDesc.getColumnIndex(partitionColRef);
@@ -124,10 +123,12 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                     row_hashcodes[i] = new ByteArray();
                 }
                 hf = Hashing.murmur3_32();
+                logger.info("Found KylinVersion : {}. Use old algorithm for cuboid sampling.", cubeDesc.getVersion());
             } else {
                 isUsePutRowKeyToHllNewAlgorithm = true;
                 rowHashCodesLong = new long[nRowKey];
                 hf = Hashing.murmur3_128();
+                logger.info("Found KylinVersion : {}. Use new algorithm for cuboid sampling. About the details of the new algorithm, please refer to KYLIN-2518", cubeDesc.getVersion());
             }
         }
 
