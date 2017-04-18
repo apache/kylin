@@ -6,17 +6,17 @@ title: 下载
 1.6.0 是最新的发布版本。2.0.0 是最新的 beta 版本。
 您可以按照这些[步骤](https://www.apache.org/info/verification.html) 并使用这些[KEYS](http://kylin.apache.org/KEYS)来验证下载文件的有效性.
 
-## 2.0.0 beta2
+## 2.0.0 beta3
 
-注意 2.0.0 beta2 并不是一个正式发行版，它只是一个正式发行前的预览版本。
+注意 2.0.0 beta3 并不是一个正式发行版，它只是一个正式发行前的预览版本。
 
 - 这是最新的 Apache Kylin，功能包括 **Spark 构建引擎**，支持**雪花模型**，并能运行 **TPC-H 基准测试**。[查看更多信息](/cn/blog/2017/02/25/v2.0.0-beta-ready/)。
-- 2.0.0 beta2 支持从老版本[平滑升级](/docs20/howto/howto_upgrade.html)。
-- 源代码: https://github.com/apache/kylin/tree/2.0.x
+- 2.0.0 beta3 支持从老版本[平滑升级](/docs20/howto/howto_upgrade.html)。
+- 源代码: https://github.com/apache/kylin/tree/2.0.x  (commit: d31e7e0934dff7363b897d772c0d28215cc49574)
 - 二进制包下载:
-  - for HBase 0.98 (includes HDP 2.2, CDH 5.2/5.3) - [apache-kylin-2.0.0-beta2-hbase098.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-hbase098.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-hbase098.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-hbase098.tar.gz.md5)\]
-  - for HBase 1.x (includes HDP 2.3/2.4, EMR 5.0) - [apache-kylin-2.0.0-beta2-hbase1x.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-hbase1x.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-hbase1x.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-hbase1x.tar.gz.md5)\]
-  - for CDH 5.7/5.8 - [apache-kylin-2.0.0-beta2-cdh57.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-cdh57.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-cdh57.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta2/apache-kylin-2.0.0-beta2-cdh57.tar.gz.md5)\]
+  - for HBase 0.98 (includes HDP 2.2, CDH 5.2/5.3) - [apache-kylin-2.0.0-beta3-hbase098.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-hbase098.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-hbase098.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-hbase098.tar.gz.md5)\]
+  - for HBase 1.x (includes HDP 2.3/2.4, EMR 5.0) - [apache-kylin-2.0.0-beta3-hbase1x.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-hbase1x.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-hbase1x.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-hbase1x.tar.gz.md5)\]
+  - for CDH 5.7/5.8 - [apache-kylin-2.0.0-beta3-cdh57.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-cdh57.tar.gz) \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-cdh57.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0-beta3/apache-kylin-2.0.0-beta3-cdh57.tar.gz.md5)\]
 
 ## 1.6.0
 
