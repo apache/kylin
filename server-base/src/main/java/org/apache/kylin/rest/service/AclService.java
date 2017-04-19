@@ -75,7 +75,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * @author xduo
- * 
  */
 @Component("aclService")
 public class AclService implements MutableAclService {
@@ -110,6 +109,9 @@ public class AclService implements MutableAclService {
 
     @Autowired
     protected AclHBaseStorage aclHBaseStorage;
+
+    @Autowired
+    protected UserService userService;
 
     public AclService() throws IOException {
         fieldAces.setAccessible(true);
@@ -297,6 +299,13 @@ public class AclService implements MutableAclService {
             }
 
             for (AccessControlEntry ace : acl.getEntries()) {
+                if (ace.getSid() instanceof PrincipalSid) {
+                    PrincipalSid psid = (PrincipalSid) ace.getSid();
+                    String userName = psid.getPrincipal();
+                    logger.debug("ACE SID name: " + userName);
+                    if (!userService.userExists(userName))
+                        throw new NotFoundException("User : " + userName + " not exists. Please check or create user first");
+                }
                 AceInfo aceInfo = new AceInfo(ace);
                 put.addColumn(Bytes.toBytes(AclHBaseStorage.ACL_ACES_FAMILY), Bytes.toBytes(aceInfo.getSidInfo().getSid()), aceSerializer.serialize(aceInfo));
             }
@@ -314,6 +323,7 @@ public class AclService implements MutableAclService {
 
         return (MutableAcl) readAclById(acl.getObjectIdentity());
     }
+
 
     private void genAces(List<Sid> sids, Result result, AclImpl acl) throws JsonParseException, JsonMappingException, IOException {
         List<AceInfo> aceInfos = new ArrayList<AceInfo>();
@@ -458,5 +468,6 @@ public class AclService implements MutableAclService {
             this.permissionMask = permissionMask;
         }
     }
+
 
 }
