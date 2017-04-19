@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,7 +47,7 @@ public class UserControllerTest extends ServiceTestBase {
         staticCreateTestMetadata();
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
         User user = new User("ADMIN", "ADMIN", authorities);
-        Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", "ROLE_ADMIN");
+        Authentication authentication = new TestingAuthenticationToken(user, "ADMIN", Constant.ROLE_ADMIN);
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 

@@ -37,9 +37,11 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.security.AclHBaseStorage;
 import org.apache.kylin.rest.util.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -138,11 +140,13 @@ public class UserService implements UserDetailsManager {
     }
 
     @Override
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void createUser(UserDetails user) {
         updateUser(user);
     }
 
     @Override
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void updateUser(UserDetails user) {
         Table htable = null;
         try {
@@ -162,6 +166,7 @@ public class UserService implements UserDetailsManager {
     }
 
     @Override
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void deleteUser(String username) {
         Table htable = null;
         try {

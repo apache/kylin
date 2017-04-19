@@ -66,6 +66,7 @@ import org.springframework.security.acls.model.PermissionGrantingStrategy;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.util.FieldUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -304,7 +305,7 @@ public class AclService implements MutableAclService {
                     String userName = psid.getPrincipal();
                     logger.debug("ACE SID name: " + userName);
                     if (!userService.userExists(userName))
-                        throw new NotFoundException("User : " + userName + " not exists. Please check or create user first");
+                        throw new UsernameNotFoundException("User " + userName + " does not exist. Please make sure the user has logged in before");
                 }
                 AceInfo aceInfo = new AceInfo(ace);
                 put.addColumn(Bytes.toBytes(AclHBaseStorage.ACL_ACES_FAMILY), Bytes.toBytes(aceInfo.getSidInfo().getSid()), aceSerializer.serialize(aceInfo));

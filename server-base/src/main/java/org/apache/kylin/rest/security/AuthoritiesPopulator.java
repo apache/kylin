@@ -21,6 +21,8 @@ package org.apache.kylin.rest.security;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.rest.constant.Constant;
 import org.springframework.ldap.core.ContextSource;
 import org.springframework.security.core.GrantedAuthority;
@@ -33,7 +35,6 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
  */
 public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 
-    String adminRole;
     SimpleGrantedAuthority adminRoleAsAuthority;
 
     SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(Constant.ROLE_ADMIN);
@@ -48,12 +49,12 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
      */
     public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole, String defaultRole) {
         super(contextSource, groupSearchBase);
-        this.adminRole = adminRole;
         this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
 
-        if (defaultRole.contains(Constant.ROLE_MODELER))
+        String[] defaultRoles = StringUtils.split(defaultRole, ",");
+        if (ArrayUtils.contains(defaultRoles, Constant.ROLE_MODELER))
             this.defaultAuthorities.add(modelerAuthority);
-        if (defaultRole.contains(Constant.ROLE_ANALYST))
+        if (ArrayUtils.contains(defaultRoles, Constant.ROLE_ANALYST))
             this.defaultAuthorities.add(analystAuthority);
     }
 
@@ -61,13 +62,17 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
     public Set<GrantedAuthority> getGroupMembershipRoles(String userDn, String username) {
         Set<GrantedAuthority> authorities = super.getGroupMembershipRoles(userDn, username);
 
+        authorities.addAll(defaultAuthorities);
+
         if (authorities.contains(adminRoleAsAuthority)) {
             authorities.add(adminAuthority);
             authorities.add(modelerAuthority);
             authorities.add(analystAuthority);
         }
 
-        authorities.addAll(defaultAuthorities);
+        if (authorities.contains(modelerAuthority)) {
+            authorities.add(analystAuthority);
+        }
 
         return authorities;
     }

@@ -21,6 +21,7 @@ package org.apache.kylin.rest.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.kylin.rest.constant.Constant;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,7 @@ public class UserServiceTest extends ServiceTestBase {
         Assert.assertTrue(!userService.userExists("ADMIN"));
 
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        authorities.add(new SimpleGrantedAuthority(Constant.ROLE_ADMIN));
         User user = new User("ADMIN", "PWD", authorities);
         userService.createUser(user);
 
@@ -52,9 +53,9 @@ public class UserServiceTest extends ServiceTestBase {
         UserDetails ud = userService.loadUserByUsername("ADMIN");
         Assert.assertEquals("ADMIN", ud.getUsername());
         Assert.assertEquals("PWD", ud.getPassword());
-        Assert.assertEquals("ROLE_ADMIN", ud.getAuthorities().iterator().next().getAuthority());
+        Assert.assertEquals(Constant.ROLE_ADMIN, ud.getAuthorities().iterator().next().getAuthority());
         Assert.assertEquals(1, ud.getAuthorities().size());
 
-        Assert.assertTrue(userService.listUserAuthorities().contains("ROLE_ADMIN"));
+        Assert.assertTrue(userService.listUserAuthorities().contains(Constant.ROLE_ADMIN));
     }
 }
