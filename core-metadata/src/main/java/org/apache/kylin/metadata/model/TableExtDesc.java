@@ -49,9 +49,11 @@ public class TableExtDesc extends RootPersistentEntity {
     private List<String[]> sampleRows = new ArrayList<>();
 
     @JsonProperty("last_modified_time")
-    private String lastModifiedTime;
+    private long lastModifiedTime;
     @JsonProperty("total_rows")
-    private String totalRows;
+    private long totalRows;
+    @JsonProperty("mapper_rows")
+    private List<Long> mapRecords = new ArrayList<>();
     @JsonProperty("data_source_properties")
     private Map<String, String> dataSourceProps = new HashMap<>();
 
@@ -88,6 +90,14 @@ public class TableExtDesc extends RootPersistentEntity {
 
     public List<String[]> getSampleRows() {
         return this.sampleRows;
+    }
+
+    public void setMapRecords(List<Long> mapRecords) {
+        this.mapRecords = mapRecords;
+    }
+
+    public List<Long> getMapRecords() {
+        return this.mapRecords;
     }
 
     public String getCardinality() {
@@ -131,11 +141,11 @@ public class TableExtDesc extends RootPersistentEntity {
         this.columnStats = columnStats;
     }
 
-    public void setTotalRows(String totalRows) {
+    public void setTotalRows(long totalRows) {
         this.totalRows = totalRows;
     }
 
-    public String getTotalRows() {
+    public long getTotalRows() {
         return this.totalRows;
     }
 
@@ -152,11 +162,11 @@ public class TableExtDesc extends RootPersistentEntity {
             this.tableName = this.tableName.toUpperCase();
     }
 
-    public void setLastModifiedTime(String lastModifiedTime) {
+    public void setLastModifiedTime(long lastModifiedTime) {
         this.lastModifiedTime = lastModifiedTime;
     }
 
-    public String getLastModifiedTime() {
+    public long getLastModifiedTime() {
         return this.lastModifiedTime;
     }
 
@@ -187,6 +197,9 @@ public class TableExtDesc extends RootPersistentEntity {
         @JsonBackReference
         private TableExtDesc tableExtDesc;
 
+        @JsonProperty("column_name")
+        private String columnName;
+
         @JsonProperty("max_value")
         private String maxValue;
 
@@ -205,12 +218,23 @@ public class TableExtDesc extends RootPersistentEntity {
         @JsonProperty("cardinality")
         private long cardinality;
 
+        @JsonProperty("data_skew_samples")
+        private Map<String, Long> dataSkewSamples = new HashMap<>();
+
         @Override
         public int compareTo(ColumnStats o) {
             return 0;
         }
 
         public ColumnStats() {
+        }
+
+        public void setColumnName(String columnName) {
+            this.columnName = columnName;
+        }
+
+        public String getColumnName() {
+            return this.columnName;
         }
 
         public void setMaxValue(String maxValue) {
@@ -251,6 +275,14 @@ public class TableExtDesc extends RootPersistentEntity {
 
         public long getCardinality() {
             return this.cardinality;
+        }
+
+        public void setDataSkewSamples(Map<String, Long> dataSkewSamples) {
+            this.dataSkewSamples = dataSkewSamples;
+        }
+
+        public Map<String, Long> getDataSkewSamples() {
+            return this.dataSkewSamples;
         }
 
         public void setColumnSamples(String max, String min, String maxLenValue, String minLenValue) {

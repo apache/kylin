@@ -44,7 +44,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, java.io.Se
 
     private int columnCount = 0;
     private List<TblColRef> columnList = Lists.newArrayList();
-    private Map<TblColRef, Integer> columnIndexMap = Maps.newHashMap();;
+    private Map<TblColRef, Integer> columnIndexMap = Maps.newHashMap();
 
     public CubeJoinedFlatTableDesc(CubeDesc cubeDesc) {
         this(cubeDesc, null);

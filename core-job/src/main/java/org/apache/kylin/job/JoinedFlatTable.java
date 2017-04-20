@@ -107,7 +107,13 @@ public class JoinedFlatTable {
     }
 
     public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc) {
-        final KylinConfig kylinConfig = ((CubeSegment) flatDesc.getSegment()).getConfig();
+        CubeSegment segment = ((CubeSegment) flatDesc.getSegment());
+        KylinConfig kylinConfig;
+        if (null == segment) {
+            kylinConfig = KylinConfig.getInstanceFromEnv();
+        } else {
+            kylinConfig = ((CubeSegment) flatDesc.getSegment()).getConfig();
+        }
         if (kylinConfig.isAdvancedFlatTableUsed()) {
             try {
                 Class advancedFlatTable = Class.forName(kylinConfig.getAdvancedFlatTableClass());
