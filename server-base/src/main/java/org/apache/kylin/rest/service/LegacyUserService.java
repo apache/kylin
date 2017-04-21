@@ -18,9 +18,15 @@
 
 package org.apache.kylin.rest.service;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -40,21 +46,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.UserDetailsManager;
 
-import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  */
 //@Component("userService")
 @Deprecated
-public class UserServiceOld implements UserDetailsManager {
+public class LegacyUserService implements UserDetailsManager {
 
-    private static final String PWD_PREFIX = "PWD:";
+    public static final String PWD_PREFIX = "PWD:";
 
     private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
@@ -65,7 +67,7 @@ public class UserServiceOld implements UserDetailsManager {
 
     @PostConstruct
     public void init() throws IOException {
-        userTableName = aclHBaseStorage.prepareHBaseTable(UserServiceOld.class);
+        userTableName = aclHBaseStorage.prepareHBaseTable(LegacyUserService.class);
     }
 
     @Override

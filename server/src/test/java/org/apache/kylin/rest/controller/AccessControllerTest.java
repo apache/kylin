@@ -114,7 +114,6 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         aes = accessController.revoke(CUBE_INSTANCE, "a24ca905-1fc6-4f67-985c-38fa5aeafd92", accessRequest);
         assertEquals(0, aes.size());
 
-
     }
 
     @Test
@@ -143,7 +142,6 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
         projects = projectController.getProjects(10000, 0);
         assertEquals(0, projects.size());
     }
-
 
     @Test
     public void testAuthInCubeLevel() throws Exception {

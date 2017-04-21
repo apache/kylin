@@ -43,6 +43,4 @@ public class Constant {
     public final static String SERVER_MODE_JOB = "job";
     public final static String SERVER_MODE_ALL = "all";
 
-
-
 }

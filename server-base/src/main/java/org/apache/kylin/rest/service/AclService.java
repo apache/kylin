@@ -63,7 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 @Component("aclService")
 public class AclService implements MutableAclService {
 
@@ -74,7 +73,6 @@ public class AclService implements MutableAclService {
     private final Field fieldAcl = FieldUtils.getField(AccessControlEntryImpl.class, "acl");
 
     public static final String DIR_PREFIX = "/acl/";
-
 
     @Autowired
     protected PermissionGrantingStrategy permissionGrantingStrategy;
@@ -326,7 +324,6 @@ public class AclService implements MutableAclService {
         }
     }
 
-
 }
 
 class AclRecord extends RootPersistentEntity {
@@ -428,7 +425,6 @@ class DomainObjectInfo {
         this.type = type;
     }
 }
-
 
 class SidInfo {
     private String sid;

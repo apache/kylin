@@ -17,9 +17,6 @@
 */
 package org.apache.kylin.rest.security;
 
-/**
- * Created by xiefan on 17-4-14.
- */
 public interface AclPermissionType {
     static final String MANAGEMENT = "MANAGEMENT";
 

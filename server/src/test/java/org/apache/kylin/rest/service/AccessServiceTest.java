@@ -118,7 +118,6 @@ public class AccessServiceTest extends ServiceTestBase {
         Assert.assertNull(attachedEntityAcl);
     }
 
-
     public class MockAclEntity implements AclEntity {
 
         private String id;
