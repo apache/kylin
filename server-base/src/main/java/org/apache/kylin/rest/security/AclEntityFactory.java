@@ -27,8 +27,7 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 /**
  * @author xduo
  */
-public class AclEntityFactory implements AclEntityType{
-
+public class AclEntityFactory implements AclEntityType {
 
     public static RootPersistentEntity createAclEntity(String entityType, String uuid) {
         if (CUBE_INSTANCE.equals(entityType)) {

@@ -75,14 +75,14 @@ import java.util.NavigableMap;
  */
 //@Component("aclService")
 @Deprecated
-public class AclServiceOld implements MutableAclService {
+public class LegacyAclService implements MutableAclService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AclServiceOld.class);
+    private static final Logger logger = LoggerFactory.getLogger(LegacyAclService.class);
 
-    private static String ACL_INFO_FAMILY_TYPE_COLUMN = "t";
-    private static String ACL_INFO_FAMILY_OWNER_COLUMN = "o";
-    private static String ACL_INFO_FAMILY_PARENT_COLUMN = "p";
-    private static String ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN = "i";
+    public static String ACL_INFO_FAMILY_TYPE_COLUMN = "t";
+    public static String ACL_INFO_FAMILY_OWNER_COLUMN = "o";
+    public static String ACL_INFO_FAMILY_PARENT_COLUMN = "p";
+    public static String ACL_INFO_FAMILY_ENTRY_INHERIT_COLUMN = "i";
 
     private Serializer<SidInfo> sidSerializer = new Serializer<SidInfo>(SidInfo.class);
     private Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(DomainObjectInfo.class);
@@ -109,14 +109,14 @@ public class AclServiceOld implements MutableAclService {
     @Autowired
     protected AclHBaseStorage aclHBaseStorage;
 
-    public AclServiceOld() throws IOException {
+    public LegacyAclService() throws IOException {
         fieldAces.setAccessible(true);
         fieldAcl.setAccessible(true);
     }
 
     @PostConstruct
     public void init() throws IOException {
-        aclTableName = aclHBaseStorage.prepareHBaseTable(AclServiceOld.class);
+        aclTableName = aclHBaseStorage.prepareHBaseTable(LegacyAclService.class);
     }
 
     @Override

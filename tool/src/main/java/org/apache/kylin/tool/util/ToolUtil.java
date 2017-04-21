@@ -19,22 +19,16 @@
 
 package org.apache.kylin.tool.util;
 
+import com.google.common.collect.Maps;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.storage.hbase.HBaseConnection;
-
-import com.google.common.collect.Maps;
 
 public class ToolUtil {
     public static String getConfFolder() {
@@ -50,14 +44,10 @@ public class ToolUtil {
         throw new RuntimeException("Cannot find conf folder.");
     }
 
-    public static String getHBaseMetaStoreId() throws IOException {
-        try (final HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration()))) {
-            final String metaStoreName = KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
-            final HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(metaStoreName));
-            return desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
-        } catch (Exception e) {
-            return null;
-        }
+    public static String getMetaStoreId() throws IOException {
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        ResourceStore store = ResourceStore.getStore(kylinConfig);
+        return store.getMetaStoreUUID();
     }
 
     public static String decideKylinMajorVersionFromCommitFile() {

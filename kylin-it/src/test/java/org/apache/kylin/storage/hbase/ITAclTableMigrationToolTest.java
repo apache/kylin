@@ -16,10 +16,17 @@
  * limitations under the License.
 */
 
-
 package org.apache.kylin.storage.hbase;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -36,9 +43,9 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.security.AclHBaseStorage;
 import org.apache.kylin.rest.service.AclService;
-import org.apache.kylin.rest.service.AclTableMigrationJob;
+import org.apache.kylin.rest.service.AclTableMigrationTool;
+import org.apache.kylin.rest.service.LegacyUserService;
 import org.apache.kylin.rest.service.UserService;
-import org.apache.kylin.rest.service.UserServiceOld;
 import org.apache.kylin.rest.util.Serializer;
 import org.junit.After;
 import org.junit.Before;
@@ -47,20 +54,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
-
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
 
     private KylinConfig kylinConfig;
-
-    private static final String PWD_PREFIX = "PWD:";
 
     private String STORE_WITH_OLD_TABLE = "STORE_WITH_OLD_TABLE";
 
@@ -68,26 +66,26 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
 
     private Logger logger = LoggerFactory.getLogger(ITAclTableMigrationToolTest.class);
 
-    private TableName aclTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclTableMigrationJob.ACL_TABLE_NAME);
+    private TableName aclTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclHBaseStorage.ACL_TABLE_NAME);
 
-    private TableName userTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclTableMigrationJob.USER_TABLE_NAME);
+    private TableName userTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclHBaseStorage.USER_TABLE_NAME);
 
-    private Serializer<UserServiceOld.UserGrantedAuthority[]> ugaSerializer = new Serializer<UserServiceOld.UserGrantedAuthority[]>(UserServiceOld.UserGrantedAuthority[].class);
+    private Serializer<LegacyUserService.UserGrantedAuthority[]> ugaSerializer = new Serializer<LegacyUserService.UserGrantedAuthority[]>(LegacyUserService.UserGrantedAuthority[].class);
 
-    private AclTableMigrationJob aclTableMigrationJob;
+    private AclTableMigrationTool aclTableMigrationJob;
 
     @Before
     public void setup() throws Exception {
         this.createTestMetadata();
         kylinConfig = KylinConfig.getInstanceFromEnv();
         if (!(ResourceStore.getStore(kylinConfig) instanceof HBaseResourceStore)) {
-            logger.info("Do not use hbase store. Return");
+            logger.info("HBase Enviroment not found. Ignore this test");
             return;
         }
         cleanUpAll();
         createTestHTables();
         addRecordsToTable();
-        aclTableMigrationJob = new AclTableMigrationJob();
+        aclTableMigrationJob = new AclTableMigrationTool();
     }
 
     @Test
@@ -113,7 +111,6 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
         ResourceStoreTest.replaceMetadataUrl(kylinConfig, oldUrl);
     }
 
-
     @After
     public void after() throws Exception {
         cleanUpAll();
@@ -129,8 +126,8 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
     private void createTestHTables() throws IOException {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         Admin hbaseAdmin = new HBaseAdmin(conf);
-        creatTable(hbaseAdmin, conf, aclTable, new String[]{AclHBaseStorage.ACL_INFO_FAMILY, AclHBaseStorage.ACL_ACES_FAMILY});
-        creatTable(hbaseAdmin, conf, userTable, new String[]{AclHBaseStorage.USER_AUTHORITY_FAMILY});
+        creatTable(hbaseAdmin, conf, aclTable, new String[] { AclHBaseStorage.ACL_INFO_FAMILY, AclHBaseStorage.ACL_ACES_FAMILY });
+        creatTable(hbaseAdmin, conf, userTable, new String[] { AclHBaseStorage.USER_AUTHORITY_FAMILY });
     }
 
     private void addRecordsToTable() throws Exception {
@@ -195,18 +192,17 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
         if (authorities == null)
             authorities = Collections.emptyList();
 
-        UserServiceOld.UserGrantedAuthority[] serializing = new UserServiceOld.UserGrantedAuthority[authorities.size() + 1];
+        LegacyUserService.UserGrantedAuthority[] serializing = new LegacyUserService.UserGrantedAuthority[authorities.size() + 1];
 
         // password is stored as the [0] authority
-        serializing[0] = new UserServiceOld.UserGrantedAuthority(PWD_PREFIX + "password");
+        serializing[0] = new LegacyUserService.UserGrantedAuthority(LegacyUserService.PWD_PREFIX + "password");
         int i = 1;
         for (GrantedAuthority a : authorities) {
-            serializing[i++] = new UserServiceOld.UserGrantedAuthority(a.getAuthority());
+            serializing[i++] = new LegacyUserService.UserGrantedAuthority(a.getAuthority());
         }
 
         byte[] value = ugaSerializer.serialize(serializing);
         return Pair.newPair(key, value);
     }
-
 
 }
