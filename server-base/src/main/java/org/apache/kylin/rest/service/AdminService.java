@@ -89,7 +89,7 @@ public class AdminService extends BasicService {
      *
      * @return
      */
-    // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)  // this is a critical security issue, see KYLIN-1664
     public String getConfigAsString() {
         logger.debug("Get Kylin Runtime Config");
 
