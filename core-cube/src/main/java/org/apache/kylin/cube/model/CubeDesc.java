@@ -97,7 +97,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
-    public enum DeriveType implements java.io.Serializable{
+    public enum DeriveType implements java.io.Serializable {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
 
@@ -485,7 +485,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             logger.info("checkSignature on {} is skipped as the its version {} is different from kylin version {}", getName(), cubeVersion, kylinVersion);
             return true;
         }
-        
+
         if (kylinVersion.isCompatibleWith(cubeVersion) && !kylinVersion.isSignatureCompatibleWith(cubeVersion)) {
             logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), cubeVersion);
             return true;
@@ -876,7 +876,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 }
             }
         }
-        
+
         return initDimensionColRef(col);
     }
 
@@ -1218,6 +1218,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setOverrideKylinProps(cubeDesc.getOverrideKylinProps());
         newCubeDesc.setConfig((KylinConfigExt) cubeDesc.getConfig());
         newCubeDesc.setPartitionOffsetStart(cubeDesc.getPartitionOffsetStart());
+        newCubeDesc.setVersion(cubeDesc.getVersion());
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
