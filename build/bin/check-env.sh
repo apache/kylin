@@ -49,6 +49,11 @@ then
 fi
 
 WORKING_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.env.hdfs-working-dir`
+if [ -z "$WORKING_DIR" ]
+then
+    quit "Please set kylin.env.hdfs-working-dir in kylin.properties"
+fi
+
 hadoop ${hadoop_conf_param} fs -mkdir -p $WORKING_DIR
 if [ $? != 0 ]
 then
