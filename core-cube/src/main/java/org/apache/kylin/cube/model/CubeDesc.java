@@ -1229,6 +1229,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setOverrideKylinProps(cubeDesc.getOverrideKylinProps());
         newCubeDesc.setConfig((KylinConfigExt) cubeDesc.getConfig());
         newCubeDesc.setPartitionOffsetStart(cubeDesc.getPartitionOffsetStart());
+        newCubeDesc.setVersion(cubeDesc.getVersion());
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
