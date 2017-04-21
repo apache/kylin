@@ -18,19 +18,7 @@
 
 package org.apache.kylin.storage.hbase;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -50,7 +38,17 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author yangli9
@@ -199,7 +197,7 @@ public class HBaseConnection {
     public static String makeQualifiedPathInHBaseCluster(String inPath) {
         Path path = new Path(inPath);
         path = Path.getPathWithoutSchemeAndAuthority(path);
-        
+
         try {
             FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
             return fs.makeQualified(path).toString();
@@ -303,7 +301,7 @@ public class HBaseConnection {
                 }
             }
 
-            desc.setValue(HTABLE_UUID_TAG, UUID.randomUUID().toString());
+            //desc.setValue(HTABLE_UUID_TAG, UUID.randomUUID().toString());
             hbase.createTable(desc);
 
             logger.debug("HTable '" + table + "' created");

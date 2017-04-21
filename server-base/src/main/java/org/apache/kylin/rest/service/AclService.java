@@ -64,6 +64,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 /**
@@ -71,6 +72,8 @@ import java.util.Map;
  */
 =======
 >>>>>>> 62cdc0f... KYLIN-2535 AclService and UserService store records via ResourceStore interface
+=======
+>>>>>>> c37eac3... KYLIN-2535 Modify getMetaStoreId method and code review
 @Component("aclService")
 public class AclService implements MutableAclService {
 
@@ -81,7 +84,6 @@ public class AclService implements MutableAclService {
     private final Field fieldAcl = FieldUtils.getField(AccessControlEntryImpl.class, "acl");
 
     public static final String DIR_PREFIX = "/acl/";
-
 
     @Autowired
     protected PermissionGrantingStrategy permissionGrantingStrategy;
@@ -355,7 +357,6 @@ public class AclService implements MutableAclService {
         }
     }
 
-
 }
 
 class AclRecord extends RootPersistentEntity {
@@ -457,7 +458,6 @@ class DomainObjectInfo {
         this.type = type;
     }
 }
-
 
 class SidInfo {
     private String sid;

@@ -19,11 +19,8 @@
 package org.apache.kylin.tool;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.rest.service.AclTableMigrationJob;
+import org.apache.kylin.rest.service.AclTableMigrationTool;
 
-/**
- * Created by xiefan on 17-4-20.
- */
 public class AclTableMigrationCLI {
 
     private static final String MIGRATE = "MIGRATE";
@@ -35,20 +32,20 @@ public class AclTableMigrationCLI {
             throw new IllegalArgumentException("Args num error");
         }
         String cmd = args[0].toUpperCase();
-        AclTableMigrationJob job = new AclTableMigrationJob();
+        AclTableMigrationTool tool = new AclTableMigrationTool();
         switch (cmd) {
-            case MIGRATE:
-                job.migrate(KylinConfig.getInstanceFromEnv());
-                break;
-            case CHECK:
-                boolean needMigrate = job.checkIfNeedMigrate(KylinConfig.getInstanceFromEnv());
-                if (needMigrate) {
-                    System.out.println("Found acl tables that need to migrate. Please execute command : ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE");
-                    System.exit(1);
-                }
-                break;
-            default:
-                throw new IllegalArgumentException("Unrecognized cmd");
+        case MIGRATE:
+            tool.migrate(KylinConfig.getInstanceFromEnv());
+            break;
+        case CHECK:
+            boolean needMigrate = tool.checkIfNeedMigrate(KylinConfig.getInstanceFromEnv());
+            if (needMigrate) {
+                System.out.println("Found acl tables that need to migrate. Please execute command : ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.tool.AclTableMigrationCLI MIGRATE");
+                System.exit(1);
+            }
+            break;
+        default:
+            throw new IllegalArgumentException("Unrecognized cmd");
         }
     }
 }

@@ -227,7 +227,7 @@ abstract public class KylinConfigBase implements Serializable {
 
     public String[] getRealizationProviders() {
         return getOptionalStringArray("kylin.metadata.realization-providers", //
-                new String[]{"org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager"});
+                new String[] { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager" });
     }
 
     public String[] getCubeDimensionCustomEncodingFactories() {
@@ -237,7 +237,7 @@ abstract public class KylinConfigBase implements Serializable {
     public Map<String, String> getCubeCustomMeasureTypes() {
         return getPropertiesByPrefix("kylin.metadata.custom-measure-types.");
     }
-    
+
     public DistributedLock getDistributedLock() {
         String clsName = getOptional("kylin.metadata.distributed-lock-impl", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock");
         return (DistributedLock) ClassUtil.newInstance(clsName);
@@ -951,7 +951,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public int[] getQueryMetricsPercentilesIntervals() {
-        String[] dft = {"60", "300", "3600"};
+        String[] dft = { "60", "300", "3600" };
         return getOptionalIntArray("kylin.server.query-metrics-percentiles-intervals", dft);
     }
 
