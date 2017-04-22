@@ -1375,6 +1375,7 @@
                                 <!-- text files without comments -->
                                 <exclude>**/*.csv</exclude>
                                 <exclude>**/*.json</exclude>
+                                <exclude>**/*.json.bad</exclude>
                                 <exclude>**/*.md</exclude>
 
                                 <!-- binary files -->
