@@ -15,7 +15,36 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
+## v2.0.0 - 2017-04-22  (voting)
+
+_Tag:_ [kylin-2.0.0](https://github.com/apache/kylin/tree/kylin-2.0.0)
+This is a major release with **Spark Cubing**, **Snowflake Data Model** and runs **TPC-H Benchmark**. Check out [the download](/download/) and the [how to upgrade guide](/docs20/howto/howto_upgrade.html).
+
+__New Feature__
+
+- [KYLIN-1875] - Support snowflake data model
+- [KYLIN-2467] - Support TPC-H queries
+- [KYLIN-2331] - Spark cubing engine
+- [KYLIN-2006] - Job engine HA
+- [KYLIN-2396] - Percentile measure
+- [KYLIN-2351] - Cloud tested
+
+**Improvements**
+
+(under construction)
+
+**Bugs**
+
+(under construction)
+
+**Tasks**
+
+(under construction)
+
+
+
 ## v1.6.0 - 2016-11-26
+
 _Tag:_ [kylin-1.6.0](https://github.com/apache/kylin/tree/kylin-1.6.0)
 This is a major release with better support for using Apache Kafka as data source. Check [how to upgrade](/docs16/howto/howto_upgrade.html) to do the upgrading.
 
@@ -522,7 +551,7 @@ __New Feature__
 * [KYLIN-1219] - Kylin support SSO with Spring SAML
 * [KYLIN-1277] - Upgrade tool to put old-version cube and new-version cube into a hybrid model
 * [KYLIN-1458] - Checking the consistency of cube segment host with the environment after cube migration
-	
+
 * [KYLIN-976] - Support Custom Aggregation Types
 * [KYLIN-1054] - Support Hive client Beeline
 * [KYLIN-1128] - Clone Cube Metadata
@@ -672,7 +701,7 @@ __Improvement__
 * [KYLIN-1438] - auto generate aggregation group
 * [KYLIN-1474] - expose list, remove and cat in metastore.sh
 * [KYLIN-1475] - Inject ehcache manager for any test case that will touch ehcache manager
-	
+
 * [KYLIN-242] - Redesign aggregation group
 * [KYLIN-770] - optimize memory usage for GTSimpleMemStore GTAggregationScanner
 * [KYLIN-955] - HiveColumnCardinalityJob should use configurations in conf/kylin_job_conf.xml
@@ -839,7 +868,7 @@ __Bug__
 * [KYLIN-1443] - For setting Auto Merge Time Ranges, before sending them to backend, the related time ranges should be sorted increasingly
 * [KYLIN-1456] - Shouldn't use "1970-01-01" as the default end date
 * [KYLIN-1471] - LIMIT after having clause should not be pushed down to storage context
-* 
+* ​
 * [KYLIN-1104] - Long dimension value cause ArrayIndexOutOfBoundsException
 * [KYLIN-1331] - UI Delete Aggregation Groups: cursor disappeared after delete 1 dimension
 * [KYLIN-1344] - Bitmap measure defined after TopN measure can cause merge to fail
@@ -862,7 +891,7 @@ __Task__
 * [KYLIN-820] - support streaming cube of exact timestamp range
 * [KYLIN-907] - Improve Kylin community development experience
 * [KYLIN-1112] - Reorganize InvertedIndex source codes into plug-in architecture
-	
+
 * [KYLIN-808] - streaming cubing support split by data timestamp
 * [KYLIN-1427] - Enable partition date column to support date and hour as separate columns for increment cube build
 
@@ -951,7 +980,7 @@ _Tag:_ [kylin-1.2](https://github.com/apache/kylin/tree/kylin-1.2)
 __New Feature__
 
 * [KYLIN-596] - Support Excel and Power BI
-    
+
 __Improvement__
 
 * [KYLIN-389] - Can't edit cube name for existing cubes
