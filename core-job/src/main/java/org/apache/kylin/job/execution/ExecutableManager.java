@@ -20,13 +20,16 @@ package org.apache.kylin.job.execution;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.dao.ExecutableDao;
 import org.apache.kylin.job.dao.ExecutableOutputPO;
 import org.apache.kylin.job.dao.ExecutablePO;
@@ -38,6 +41,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 
 /**
  */
@@ -412,6 +419,25 @@ public class ExecutableManager {
         if (info == null) {
             return;
         }
+
+        // post process
+        if (info.containsKey(MR_JOB_ID) && !info.containsKey(ExecutableConstants.YARN_APP_ID)) {
+            String jobId = info.get(MR_JOB_ID);
+            if (jobId.startsWith("job_")) {
+                info.put(YARN_APP_ID, jobId.replace("job_", "application_"));
+            }
+        }
+
+        if (info.containsKey(YARN_APP_ID) && !StringUtils.isEmpty(config.getJobTrackingURLPattern())) {
+            String pattern = config.getJobTrackingURLPattern();
+            try {
+                String newTrackingURL = String.format(pattern, info.get(YARN_APP_ID));
+                info.put(YARN_APP_URL, newTrackingURL);
+            } catch (IllegalFormatException ife) {
+                logger.error("Illegal tracking url pattern: " + config.getJobTrackingURLPattern());
+            }
+        }
+
         try {
             ExecutableOutputPO output = executableDao.getJobOutput(id);
             Preconditions.checkArgument(output != null, "there is no related output for job id:" + id);

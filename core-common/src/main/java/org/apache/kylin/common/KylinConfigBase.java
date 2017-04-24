@@ -978,4 +978,7 @@ abstract public class KylinConfigBase implements Serializable {
         return getResourceStoreImpls().get(key);
     }
 
+    public String getJobTrackingURLPattern() {
+        return getOptional("kylin.job.tracking-url-pattern", "");
+    }
 }

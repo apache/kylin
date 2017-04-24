@@ -45,6 +45,8 @@ public class PatternedLogger extends BufferedLogger {
     private static final Pattern PATTERN_HIVE_APP_ID_URL = Pattern.compile("Starting Job = (.*?), Tracking URL = (.*)");
     private static final Pattern PATTERN_HIVE_BYTES_WRITTEN = Pattern.compile("(?:HD|MAPR)FS Read: (\\d+) HDFS Write: (\\d+) SUCCESS");
 
+    private static final Pattern PATTERN_HIVE_APP_ID_URL_2 = Pattern.compile("Executing on YARN cluster with App id  (.*?)");
+
     // spark
     private static final Pattern PATTERN_SPARK_APP_ID = Pattern.compile("Submitted application (.*?)");
     private static final Pattern PATTERN_SPARK_APP_URL = Pattern.compile("tracking URL: (.*)");
@@ -100,6 +102,12 @@ public class PatternedLogger extends BufferedLogger {
             String trackingUrl = matcher.group(2);
             info.put(ExecutableConstants.MR_JOB_ID, jobId);
             info.put(ExecutableConstants.YARN_APP_URL, trackingUrl);
+        } else {
+            matcher = PATTERN_HIVE_APP_ID_URL_2.matcher(message);
+            if (matcher.find()) {
+                String jobId = matcher.group(1);
+                info.put(ExecutableConstants.YARN_APP_ID, jobId);
+            }
         }
 
         matcher = PATTERN_HIVE_BYTES_WRITTEN.matcher(message);
