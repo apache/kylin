@@ -19,25 +19,22 @@
 package org.apache.kylin.storage.hbase.cube.v2;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.DataFormatException;
 
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
-import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
-import org.apache.hadoop.hbase.ipc.RegionCoprocessorRpcChannel;
+import org.apache.hadoop.hbase.ipc.CoprocessorRpcUtils;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.QueryContext.CubeSegmentStatistics;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
@@ -63,6 +60,7 @@ import org.apache.kylin.storage.gtrecord.DummyPartitionStreamer;
 import org.apache.kylin.storage.gtrecord.StorageResponseGTScatter;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos;
+import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
@@ -117,16 +115,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         return Pair.newPair(cubeSeg.getCuboidShardNum(cuboid.getId()), cubeSeg.getCuboidBaseShard(cuboid.getId()));
     }
 
-    static Field channelRowField = null;
-    static {
-        try {
-            channelRowField = RegionCoprocessorRpcChannel.class.getDeclaredField("row");
-            channelRowField.setAccessible(true);
-        } catch (Throwable t) {
-            logger.warn("error when get row field from RegionCoprocessorRpcChannel class", t);
-        }
-    }
-
     @SuppressWarnings("checkstyle:methodlength")
     @Override
     public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
@@ -159,7 +147,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         scanRequest.clearScanRanges();//since raw scans are sent to coprocessor, we don't need to duplicate sending it
         scanRequestByteString = serializeGTScanReq(scanRequest);
 
-        final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(queryContext, shardNum, coprocessorTimeout);
+        final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum, coprocessorTimeout);
 
         logger.info("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", scanRequestByteString.size(),
                 rawScanByteString.size());
@@ -235,15 +223,97 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         builder.setMaxScanBytes(cubeSeg.getConfig().getPartitionMaxScanBytes());
         builder.setIsExactAggregate(storageContext.isExactAggregation());
 
-        final String logHeader = String.format(Locale.ROOT, "<sub-thread for Query %s GTScanRequest %s>",
-                queryContext.getQueryId(), Integer.toHexString(System.identityHashCode(scanRequest)));
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    runEPRange(queryContext, logHeader, compressionResult, builder.build(), conn, epRange.getFirst(),
-                            epRange.getSecond(), epResultItr, querySegmentCacheEnabled, segmentQueryResultBuilder,
-                            segmentQueryCacheKey);
+
+                    final String logHeader = String.format(Locale.ROOT, "<sub-thread for Query %s GTScanRequest %s>", queryId, Integer.toHexString(System.identityHashCode(scanRequest)));
+                    final AtomicReference<RuntimeException> regionErrorHolder = new AtomicReference<>();
+
+                    try {
+                        Table table = conn.getTable(TableName.valueOf(cubeSeg.getStorageLocationIdentifier()), HBaseConnection.getCoprocessorPool());
+
+                        final CubeVisitRequest request = builder.build();
+                        final byte[] startKey = epRange.getFirst();
+                        final byte[] endKey = epRange.getSecond();
+
+                        table.coprocessorService(CubeVisitService.class, startKey, endKey, //
+                                new Batch.Call<CubeVisitService, CubeVisitResponse>() {
+                                    public CubeVisitResponse call(CubeVisitService rowsService) throws IOException {
+                                        ServerRpcController controller = new ServerRpcController();
+                                        CoprocessorRpcUtils.BlockingRpcCallback<CubeVisitResponse> rpcCallback = new CoprocessorRpcUtils.BlockingRpcCallback<>();
+                                        rowsService.visitCube(controller, request, rpcCallback);
+                                        CubeVisitResponse response = rpcCallback.get();
+                                        if (controller.failedOnException()) {
+                                            throw controller.getFailedOn();
+                                        }
+                                        return response;
+                                    }
+                                }, new Batch.Callback<CubeVisitResponse>() {
+                                    @Override
+                                    public void update(byte[] region, byte[] row, CubeVisitResponse result) {
+                                        if (region == null) {
+                                            return;
+                                        }
+
+                                        logger.info(logHeader + getStatsString(region, result));
+
+                                        Stats stats = result.getStats();
+                                        queryContext.addAndGetScannedRows(stats.getScannedRowCount());
+                                        queryContext.addAndGetScannedBytes(stats.getScannedBytes());
+
+                                        RuntimeException rpcException = null;
+                                        if (result.getStats().getNormalComplete() != 1) {
+                                            rpcException = getCoprocessorException(result);
+                                        }
+                                        queryContext.addRPCStatistics(storageContext.ctxId, stats.getHostname(),
+                                                cubeSeg.getCubeDesc().getName(), cubeSeg.getName(), cuboid.getInputID(),
+                                                cuboid.getId(), storageContext.getFilterMask(), rpcException,
+                                                stats.getServiceEndTime() - stats.getServiceStartTime(), 0,
+                                                stats.getScannedRowCount(),
+                                                stats.getScannedRowCount() - stats.getAggregatedRowCount()
+                                                        - stats.getFilteredRowCount(),
+                                                stats.getAggregatedRowCount(), stats.getScannedBytes());
+
+                                        // if any other region has responded with error, skip further processing
+                                        if (regionErrorHolder.get() != null) {
+                                            return;
+                                        }
+
+                                        // record coprocessor error if happened
+                                        if (rpcException != null) {
+                                            regionErrorHolder.compareAndSet(null, rpcException);
+                                            return;
+                                        }
+
+                                        if (queryContext.getScannedBytes() > cubeSeg.getConfig().getQueryMaxScanBytes()) {
+                                            throw new ResourceLimitExceededException("Query scanned " + queryContext.getScannedBytes() + " bytes exceeds threshold " + cubeSeg.getConfig().getQueryMaxScanBytes());
+                                        }
+
+                                        try {
+                                            if (compressionResult) {
+                                                epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows())));
+                                            } else {
+                                                epResultItr.append(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows()));
+                                            }
+                                        } catch (IOException | DataFormatException e) {
+                                            throw new RuntimeException(logHeader + "Error when decompressing", e);
+                                        }
+                                    }
+                                });
+
+                    } catch (Throwable ex) {
+                        logger.error(logHeader + "Error when visiting cubes by endpoint", ex); // double log coz the query thread may already timeout
+                        epResultItr.notifyCoprocException(ex);
+                        return;
+                    }
+
+                    if (regionErrorHolder.get() != null) {
+                        RuntimeException exception = regionErrorHolder.get();
+                        logger.error(logHeader + "Error when visiting cubes by endpoint", exception); // double log coz the query thread may already timeout
+                        epResultItr.notifyCoprocException(exception);
+                    }
                 }
             });
         }
@@ -251,183 +321,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         return new StorageResponseGTScatter(scanRequest, new DummyPartitionStreamer(epResultItr), storageContext);
     }
 
-    private void runEPRange(final QueryContext queryContext, final String logHeader, final boolean compressionResult,
-            final CubeVisitProtos.CubeVisitRequest request, final Connection conn, byte[] startKey, byte[] endKey,
-            final ExpectedSizeIterator epResultItr, final boolean querySegmentCacheEnabled,
-            final SegmentQueryResult.Builder segmentQueryResultBuilder, final String segmentQueryCacheKey) {
 
-        final String queryId = queryContext.getQueryId();
-
-        try {
-            final Table table = conn.getTable(TableName.valueOf(cubeSeg.getStorageLocationIdentifier()),
-                    HBaseConnection.getCoprocessorPool());
-
-            table.coprocessorService(CubeVisitService.class, startKey, endKey, //
-                    new Batch.Call<CubeVisitService, CubeVisitResponse>() {
-                        public CubeVisitResponse call(CubeVisitService rowsService) throws IOException {
-                            if (queryContext.isStopped()) {
-                                logger.warn(
-                                        "Query-{}: the query has been stopped, not send request to region server any more.",
-                                        queryId);
-                                return null;
-                            }
-
-                            HRegionLocation regionLocation = getStartRegionLocation(rowsService);
-                            String regionServerName = regionLocation == null ? "UNKNOWN" : regionLocation.getHostname();
-                            logger.info("Query-{}: send request to the init region server {} on table {} ", queryId,
-                                    regionServerName, table.getName());
-
-                            queryContext.addQueryStopListener(new QueryContext.QueryStopListener() {
-                                private Thread hConnThread = Thread.currentThread();
-
-                                @Override
-                                public void stop(QueryContext query) {
-                                    try {
-                                        hConnThread.interrupt();
-                                    } catch (Exception e) {
-                                        logger.warn("Exception happens during interrupt thread {} due to {}",
-                                                hConnThread.getName(), e);
-                                    }
-                                }
-                            });
-
-                            ServerRpcController controller = new ServerRpcController();
-                            BlockingRpcCallback<CubeVisitResponse> rpcCallback = new BlockingRpcCallback<>();
-                            try {
-                                rowsService.visitCube(controller, request, rpcCallback);
-                                CubeVisitResponse response = rpcCallback.get();
-                                if (controller.failedOnException()) {
-                                    throw controller.getFailedOn();
-                                }
-                                return response;
-                            } catch (Exception e) {
-                                throw e;
-                            } finally {
-                                // Reset the interrupted state
-                                Thread.interrupted();
-                            }
-                        }
-
-                        private HRegionLocation getStartRegionLocation(CubeVisitProtos.CubeVisitService rowsService) {
-                            try {
-                                CubeVisitProtos.CubeVisitService.Stub rowsServiceStub = (CubeVisitProtos.CubeVisitService.Stub) rowsService;
-                                RegionCoprocessorRpcChannel channel = (RegionCoprocessorRpcChannel) rowsServiceStub
-                                        .getChannel();
-                                byte[] row = (byte[]) channelRowField.get(channel);
-                                return conn.getRegionLocator(table.getName()).getRegionLocation(row, false);
-                            } catch (Throwable throwable) {
-                                logger.warn("error when get region server name", throwable);
-                            }
-                            return null;
-                        }
-                    }, new Batch.Callback<CubeVisitResponse>() {
-                        @Override
-                        public void update(byte[] region, byte[] row, CubeVisitResponse result) {
-                            if (result == null) {
-                                return;
-                            }
-                            if (region == null) {
-                                return;
-                            }
-
-                            // if the query is stopped, skip further processing
-                            // this may be caused by
-                            //      * Any other region has responded with error
-                            //      * ServerRpcController.failedOnException
-                            //      * ResourceLimitExceededException
-                            //      * Exception happened during CompressionUtils.decompress()
-                            //      * Outside exceptions, like KylinTimeoutException in SequentialCubeTupleIterator
-                            if (queryContext.isStopped()) {
-                                return;
-                            }
-
-                            logger.info(logHeader + getStatsString(region, result));
-
-                            Stats stats = result.getStats();
-                            queryContext.addAndGetScannedRows(stats.getScannedRowCount());
-                            queryContext.addAndGetScannedBytes(stats.getScannedBytes());
-                            queryContext.addAndGetReturnedRows(stats.getScannedRowCount()
-                                    - stats.getAggregatedRowCount() - stats.getFilteredRowCount());
-
-                            RuntimeException rpcException = null;
-                            if (result.getStats().getNormalComplete() != 1) {
-                                // record coprocessor error if happened
-                                rpcException = getCoprocessorException(result);
-                            }
-                            queryContext.addRPCStatistics(storageContext.ctxId, stats.getHostname(),
-                                    cubeSeg.getCubeDesc().getName(), cubeSeg.getName(), cuboid.getInputID(),
-                                    cuboid.getId(), storageContext.getFilterMask(), rpcException,
-                                    stats.getServiceEndTime() - stats.getServiceStartTime(), 0,
-                                    stats.getScannedRowCount(),
-                                    stats.getScannedRowCount() - stats.getAggregatedRowCount()
-                                            - stats.getFilteredRowCount(),
-                                    stats.getAggregatedRowCount(), stats.getScannedBytes());
-
-                            if (queryContext.getScannedBytes() > cubeSeg.getConfig().getQueryMaxScanBytes()) {
-                                rpcException = new ResourceLimitExceededException(
-                                        "Query scanned " + queryContext.getScannedBytes() + " bytes exceeds threshold "
-                                                + cubeSeg.getConfig().getQueryMaxScanBytes());
-                            } else if (queryContext.getReturnedRows() > cubeSeg.getConfig().getQueryMaxReturnRows()) {
-                                rpcException = new ResourceLimitExceededException(
-                                        "Query returned " + queryContext.getReturnedRows() + " rows exceeds threshold "
-                                                + cubeSeg.getConfig().getQueryMaxReturnRows());
-                            }
-
-                            if (rpcException != null) {
-                                queryContext.stop(rpcException);
-                                return;
-                            }
-
-                            try {
-                                byte[] rawData = HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows());
-                                if (compressionResult) {
-                                    epResultItr.append(CompressionUtils.decompress(rawData));
-                                } else {
-                                    epResultItr.append(rawData);
-                                }
-                                // put segment query result to cache if cache is enabled
-                                if (querySegmentCacheEnabled) {
-                                    try {
-                                        segmentQueryResultBuilder.putRegionResult(rawData);
-                                        if (segmentQueryResultBuilder.isComplete()) {
-                                            CubeSegmentStatistics cubeSegmentStatistics = queryContext
-                                                    .getCubeSegmentStatistics(storageContext.ctxId,
-                                                            cubeSeg.getCubeInstance().getName(), cubeSeg.getName());
-                                            if (cubeSegmentStatistics != null) {
-                                                segmentQueryResultBuilder
-                                                        .setCubeSegmentStatistics(cubeSegmentStatistics);
-                                                logger.info(
-                                                        "Query-{}: try to put segment query result to cache for segment:{}",
-                                                        queryContext.getQueryId(), cubeSeg);
-                                                SegmentQueryResult segmentQueryResult = segmentQueryResultBuilder
-                                                        .build();
-                                                SegmentQueryCache.getInstance().put(segmentQueryCacheKey,
-                                                        segmentQueryResult);
-                                                logger.info(
-                                                        "Query-{}: successfully put segment query result to cache for segment:{}",
-                                                        queryContext.getQueryId(), cubeSeg);
-                                            }
-                                        }
-                                    } catch (Throwable t) {
-                                        logger.error("Fail to put query segment result to cache", t);
-                                    }
-                                }
-                            } catch (IOException | DataFormatException e) {
-                                throw new RuntimeException(logHeader + "Error when decompressing", e);
-                            }
-                        }
-                    });
-
-        } catch (Throwable ex) {
-            queryContext.stop(ex);
-        }
-
-        if (queryContext.isStopped()) {
-            logger.error(logHeader + "Error when visiting cubes by endpoint", queryContext.getThrowable()); // double log coz the query thread may already timeout
-        }
-    }
-
-    public static ByteString serializeGTScanReq(GTScanRequest scanRequest) {
+    private ByteString serializeGTScanReq(GTScanRequest scanRequest) {
         ByteString scanRequestByteString;
         int scanRequestBufferSize = BytesSerializer.SERIALIZE_BUFFER_SIZE;
         while (true) {

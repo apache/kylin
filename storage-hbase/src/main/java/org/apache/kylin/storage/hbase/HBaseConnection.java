@@ -33,6 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -138,7 +139,7 @@ public class HBaseConnection {
                 for (Connection conn : copy) {
                     try {
                         conn.close();
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         logger.error("error closing hbase connection " + conn, e);
                     }
                 }

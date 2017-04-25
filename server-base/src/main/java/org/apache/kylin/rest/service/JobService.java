@@ -32,10 +32,16 @@ import java.util.TimeZone;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.directory.api.util.Strings;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -83,13 +89,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  * @author ysong1
@@ -840,7 +839,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtil.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -940,7 +939,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtil.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1142,7 +1141,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtil.isEmpty(jobName)) {
                                     return true;
                                 }
 
@@ -1217,7 +1216,7 @@ public class JobService extends BasicService implements InitializingBean {
                                     return false;
                                 }
 
-                                if (Strings.isEmpty(jobName)) {
+                                if (StringUtil.isEmpty(jobName)) {
                                     return true;
                                 }
 

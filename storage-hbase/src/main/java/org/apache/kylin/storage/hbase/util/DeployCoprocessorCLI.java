@@ -42,12 +42,12 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.util.Bytes;
@@ -196,7 +196,7 @@ public class DeployCoprocessorCLI {
         }
         logger.info("Commit Information: " + commitInfo);
         for (String tableName : tableNames) {
-            HTableDescriptor tableDesc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+            TableDescriptor tableDesc = hbaseAdmin.getDescriptor(TableName.valueOf(tableName));
             String gitTag = tableDesc.getValue(IRealizationConstants.HTableGitTag);
             if (commitInfo.equals(gitTag)) {
                 filteredList.add(tableName);
@@ -267,18 +267,18 @@ public class DeployCoprocessorCLI {
         return result;
     }
 
-    public static void deployCoprocessor(HTableDescriptor tableDesc) {
+    public static void deployCoprocessor(TableDescriptorBuilder desBuilder) {
         try {
-            initHTableCoprocessor(tableDesc);
-            logger.info("hbase table " + tableDesc.getTableName() + " deployed with coprocessor.");
+            initHTableCoprocessor(desBuilder);
+            logger.info("hbase table " + desBuilder.build().getTableName() + " deployed with coprocessor.");
 
         } catch (Exception ex) {
-            logger.error("Error deploying coprocessor on " + tableDesc.getTableName(), ex);
+            logger.error("Error deploying coprocessor on " + desBuilder.build().getTableName(), ex);
             logger.error("Will try creating the table without coprocessor.");
         }
     }
 
-    private static void initHTableCoprocessor(HTableDescriptor desc) throws IOException {
+    private static void initHTableCoprocessor(TableDescriptorBuilder descBuilder) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         FileSystem fileSystem = FileSystem.get(hconf);
@@ -286,18 +286,19 @@ public class DeployCoprocessorCLI {
         String localCoprocessorJar = kylinConfig.getCoprocessorLocalJar();
         Path hdfsCoprocessorJar = DeployCoprocessorCLI.uploadCoprocessorJar(localCoprocessorJar, fileSystem, null);
 
-        DeployCoprocessorCLI.addCoprocessorOnHTable(desc, hdfsCoprocessorJar);
+        DeployCoprocessorCLI.addCoprocessorOnHTable(descBuilder, hdfsCoprocessorJar);
     }
 
-    public static void addCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
-        logger.info("Add coprocessor on " + desc.getNameAsString());
-        desc.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
+    public static void addCoprocessorOnHTable(TableDescriptorBuilder descBuilder, Path hdfsCoprocessorJar) throws IOException {
+        logger.info("Add coprocessor on " + descBuilder.build().getTableName().toString());
+        descBuilder.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
     }
 
     public static boolean resetCoprocessor(String tableName, Admin hbaseAdmin, Path hdfsCoprocessorJar)
             throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+        TableDescriptor desc = hbaseAdmin.getDescriptor(TableName.valueOf(tableName));
+        TableDescriptorBuilder descBuilder = TableDescriptorBuilder.newBuilder(desc);
 
         //when the table has migrated from dev env to test(prod) env, the dev server
         //should not reset the coprocessor of the table.
@@ -315,30 +316,30 @@ public class DeployCoprocessorCLI {
         }
 
         while (desc.hasCoprocessor(CubeObserverClassOld2)) {
-            desc.removeCoprocessor(CubeObserverClassOld2);
+            desc = descBuilder.removeCoprocessor(CubeObserverClassOld2).build();
         }
         while (desc.hasCoprocessor(CubeEndpointClass)) {
-            desc.removeCoprocessor(CubeEndpointClass);
+            desc = descBuilder.removeCoprocessor(CubeEndpointClass).build();
         }
         while (desc.hasCoprocessor(IIEndpointClass)) {
-            desc.removeCoprocessor(IIEndpointClass);
+            desc = descBuilder.removeCoprocessor(IIEndpointClass).build();
         }
         // remove legacy coprocessor from v1.x
         while (desc.hasCoprocessor(CubeObserverClassOld)) {
-            desc.removeCoprocessor(CubeObserverClassOld);
+            desc = descBuilder.removeCoprocessor(CubeObserverClassOld).build();
         }
         while (desc.hasCoprocessor(IIEndpointClassOld)) {
-            desc.removeCoprocessor(IIEndpointClassOld);
+            desc = descBuilder.removeCoprocessor(IIEndpointClassOld).build();
         }
-        addCoprocessorOnHTable(desc, hdfsCoprocessorJar);
+        addCoprocessorOnHTable(descBuilder, hdfsCoprocessorJar);
 
         // update commit tags
         String commitInfo = KylinVersion.getGitCommitInfo();
         if (!StringUtils.isEmpty(commitInfo)) {
-            desc.setValue(IRealizationConstants.HTableGitTag, commitInfo);
+            descBuilder.setValue(IRealizationConstants.HTableGitTag, commitInfo);
         }
 
-        hbaseAdmin.modifyTable(TableName.valueOf(tableName), desc);
+        hbaseAdmin.modifyTable(descBuilder.build());
 
         logger.info("Enable " + tableName);
         hbaseAdmin.enableTable(TableName.valueOf(tableName));
@@ -516,9 +517,9 @@ public class DeployCoprocessorCLI {
         HashSet<String> result = new HashSet<String>();
 
         for (String tableName : tableNames) {
-            HTableDescriptor tableDescriptor = null;
+            TableDescriptor tableDescriptor = null;
             try {
-                tableDescriptor = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
+                tableDescriptor = hbaseAdmin.getDescriptor(TableName.valueOf(tableName));
             } catch (TableNotFoundException e) {
                 logger.warn("Table not found " + tableName, e);
                 continue;
@@ -526,7 +527,7 @@ public class DeployCoprocessorCLI {
 
             Matcher keyMatcher;
             Matcher valueMatcher;
-            for (Map.Entry<ImmutableBytesWritable, ImmutableBytesWritable> e : tableDescriptor.getValues().entrySet()) {
+            for (Map.Entry<org.apache.hadoop.hbase.util.Bytes, org.apache.hadoop.hbase.util.Bytes> e : tableDescriptor.getValues().entrySet()) {
                 keyMatcher = HConstants.CP_HTD_ATTR_KEY_PATTERN.matcher(Bytes.toString(e.getKey().get()));
                 if (!keyMatcher.matches()) {
                     continue;

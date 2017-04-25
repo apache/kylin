@@ -26,6 +26,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -33,6 +35,8 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValueUtil;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.io.NullWritable;
@@ -56,9 +60,6 @@ import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  */
@@ -132,8 +133,10 @@ public class CreateHTableJob extends AbstractHadoopJob {
         Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
         HadoopUtil.healSickConfig(hbaseConf);
         Job job = Job.getInstance(hbaseConf, hbaseTableName);
-        HTable table = new HTable(hbaseConf, hbaseTableName);
-        HFileOutputFormat2.configureIncrementalLoadMap(job, table);
+        Connection conn = HBaseConnection.get(kylinConfig.getStorageUrl());
+        HTable htable = (HTable) conn.getTable(TableName.valueOf(hbaseTableName));
+
+        HFileOutputFormat2.configureIncrementalLoadMap(job, htable.getDescriptor());
 
         logger.info("Saving HBase configuration to {}", hbaseConfPath);
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
