@@ -27,13 +27,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -88,7 +90,7 @@ public class CubeMigrationCLI extends AbstractApplication {
     protected ResourceStore srcStore;
     protected ResourceStore dstStore;
     protected FileSystem hdfsFS;
-    private HBaseAdmin hbaseAdmin;
+    private Admin hbaseAdmin;
     protected boolean doAclCopy = false;
     protected boolean doOverwrite = false;
     protected boolean doMigrateSegment = true;
@@ -175,7 +177,9 @@ public class CubeMigrationCLI extends AbstractApplication {
         checkAndGetHbaseUrl();
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        hbaseAdmin = new HBaseAdmin(conf);
+        Connection conn = HBaseConnection.get(srcCfg.getStorageUrl());
+        hbaseAdmin = conn.getAdmin();
+
         hdfsFS = HadoopUtil.getWorkingFileSystem();
         operations = new ArrayList<Opt>();
         copyFilesInMetaStore(cube);
@@ -352,7 +356,7 @@ public class CubeMigrationCLI extends AbstractApplication {
     }
 
     @Override
-    protected void execute(OptionsHelper optionsHelper) throws Exception {
+    protected void execute(OptionsHelper optionsHelper) {
     }
 
     protected enum OptType {
@@ -425,10 +429,10 @@ public class CubeMigrationCLI extends AbstractApplication {
             String tableName = (String) opt.params[0];
             System.out.println("CHANGE_HTABLE_HOST, table name: " + tableName);
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-            hbaseAdmin.disableTable(tableName);
+            hbaseAdmin.disableTable(TableName.valueOf(tableName));
             desc.setValue(IRealizationConstants.HTableTag, dstConfig.getMetadataUrlPrefix());
-            hbaseAdmin.modifyTable(tableName, desc);
-            hbaseAdmin.enableTable(tableName);
+            hbaseAdmin.modifyTable(TableName.valueOf(tableName), desc);
+            hbaseAdmin.enableTable(TableName.valueOf(tableName));
             logger.info("CHANGE_HTABLE_HOST is completed");
             break;
         }
@@ -586,10 +590,10 @@ public class CubeMigrationCLI extends AbstractApplication {
         case CHANGE_HTABLE_HOST: {
             String tableName = (String) opt.params[0];
             HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
-            hbaseAdmin.disableTable(tableName);
+            hbaseAdmin.disableTable(TableName.valueOf(tableName));
             desc.setValue(IRealizationConstants.HTableTag, srcConfig.getMetadataUrlPrefix());
-            hbaseAdmin.modifyTable(tableName, desc);
-            hbaseAdmin.enableTable(tableName);
+            hbaseAdmin.modifyTable(TableName.valueOf(tableName), desc);
+            hbaseAdmin.enableTable(TableName.valueOf(tableName));
             break;
         }
         case COPY_FILE_IN_META: {

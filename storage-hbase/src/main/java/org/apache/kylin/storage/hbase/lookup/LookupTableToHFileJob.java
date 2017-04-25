@@ -27,12 +27,12 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
@@ -207,24 +207,24 @@ public class LookupTableToHFileJob extends AbstractHadoopJob {
         String hTableName = genHTableName(kylinConfig, admin, sourceTableName);
 
         TableName tableName = TableName.valueOf(hTableName);
-        HTableDescriptor hTableDesc = new HTableDescriptor(tableName);
-        hTableDesc.setCompactionEnabled(false);
-        hTableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
-        hTableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
-        hTableDesc.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
+        TableDescriptorBuilder descBuilder = TableDescriptorBuilder.newBuilder(tableName);
+        descBuilder.setCompactionEnabled(false);
+        descBuilder.setValue(TableDescriptorBuilder.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
+        descBuilder.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
+        descBuilder.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
         String commitInfo = KylinVersion.getGitCommitInfo();
         if (!StringUtils.isEmpty(commitInfo)) {
-            hTableDesc.setValue(IRealizationConstants.HTableGitTag, commitInfo);
+            descBuilder.setValue(IRealizationConstants.HTableGitTag, commitInfo);
         }
 
-        HColumnDescriptor cf = CubeHTableUtil.createColumnFamily(kylinConfig, HBaseLookupRowEncoder.CF_STRING, false);
-        hTableDesc.addFamily(cf);
+        ColumnFamilyDescriptor cf = CubeHTableUtil.createColumnFamily(kylinConfig, HBaseLookupRowEncoder.CF_STRING, false);
+        descBuilder.modifyColumnFamily(cf);
 
         try {
             if (shardNum > 1) {
-                admin.createTable(hTableDesc, getSplitsByShardNum(shardNum));
+                admin.createTable(descBuilder.build(), getSplitsByShardNum(shardNum));
             } else {
-                admin.createTable(hTableDesc);
+                admin.createTable(descBuilder.build());
             }
         } finally {
             IOUtils.closeQuietly(admin);
