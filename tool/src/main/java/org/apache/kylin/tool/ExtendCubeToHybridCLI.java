@@ -245,7 +245,7 @@ public class ExtendCubeToHybridCLI {
                         value = Bytes.toBytes(valueString);
                     }
                     Put put = new Put(Bytes.toBytes(newCubeId));
-                    put.add(family, column, value);
+                    put.addColumn(family, column, value);
                     aclHtable.put(put);
                 }
             }

@@ -24,11 +24,12 @@ import java.util.Locale;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.regionserver.BloomType;
@@ -36,6 +37,7 @@ import org.apache.hadoop.hbase.regionserver.DisabledRegionSplitPolicy;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -60,25 +62,25 @@ public class CubeHTableUtil {
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
         KylinConfig kylinConfig = cubeDesc.getConfig();
 
-        HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(cubeSegment.getStorageLocationIdentifier()));
-        tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
-        tableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
-        tableDesc.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
+        TableDescriptorBuilder descBuilder = TableDescriptorBuilder.newBuilder(TableName.valueOf(cubeSegment.getStorageLocationIdentifier()));
+        descBuilder.setValue(TableDescriptorBuilder.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
+        descBuilder.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
+        descBuilder.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
 
         if (!StringUtils.isEmpty(kylinConfig.getKylinOwner())) {
             //HTableOwner is the team that provides kylin service
-            tableDesc.setValue(IRealizationConstants.HTableOwner, kylinConfig.getKylinOwner());
+            descBuilder.setValue(IRealizationConstants.HTableOwner, kylinConfig.getKylinOwner());
         }
 
         String commitInfo = KylinVersion.getGitCommitInfo();
         if (!StringUtils.isEmpty(commitInfo)) {
-            tableDesc.setValue(IRealizationConstants.HTableGitTag, commitInfo);
+            descBuilder.setValue(IRealizationConstants.HTableGitTag, commitInfo);
         }
 
         //HTableUser is the cube owner, which will be the "user"
-        tableDesc.setValue(IRealizationConstants.HTableUser, cubeInstance.getOwner());
+        descBuilder.setValue(IRealizationConstants.HTableUser, cubeInstance.getOwner());
 
-        tableDesc.setValue(IRealizationConstants.HTableSegmentTag, cubeSegment.toString());
+        descBuilder.setValue(IRealizationConstants.HTableSegmentTag, cubeSegment.toString());
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         Connection conn = HBaseConnection.get(kylinConfig.getStorageUrl());
@@ -87,12 +89,12 @@ public class CubeHTableUtil {
         try {
             if (User.isHBaseSecurityEnabled(conf)) {
                 // add coprocessor for bulk load
-                tableDesc.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
+                descBuilder.addCoprocessor("org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint");
             }
 
             for (HBaseColumnFamilyDesc cfDesc : cubeDesc.getHbaseMapping().getColumnFamily()) {
-                HColumnDescriptor cf = createColumnFamily(kylinConfig, cfDesc.getName(), cfDesc.isMemoryHungry());
-                tableDesc.addFamily(cf);
+                ColumnFamilyDescriptor cf = createColumnFamily(kylinConfig, cfDesc.getName(), cfDesc.isMemoryHungry());
+                descBuilder.setColumnFamily(cf);
             }
 
             if (admin.tableExists(TableName.valueOf(tableName))) {
@@ -101,9 +103,9 @@ public class CubeHTableUtil {
                 throw new RuntimeException("HBase table " + tableName + " exists!");
             }
 
-            DeployCoprocessorCLI.deployCoprocessor(tableDesc);
+            DeployCoprocessorCLI.deployCoprocessor(descBuilder);
 
-            admin.createTable(tableDesc, splitKeys);
+            admin.createTable(descBuilder.build(), splitKeys);
             Preconditions.checkArgument(admin.isTableAvailable(TableName.valueOf(tableName)), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
         } finally {
@@ -137,14 +139,14 @@ public class CubeHTableUtil {
                 admin.deleteTable(tableName);
             }
 
-            HTableDescriptor tableDesc = new HTableDescriptor(tableName);
-            tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
+            TableDescriptorBuilder descBuilder = TableDescriptorBuilder.newBuilder(tableName);
+            descBuilder.setValue(TableDescriptorBuilder.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
 
             KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-            tableDesc.addFamily(createColumnFamily(kylinConfig, cfName, false));
+            descBuilder.modifyColumnFamily(createColumnFamily(kylinConfig, cfName, false));
 
             logger.info("creating hbase table " + tableName);
-            admin.createTable(tableDesc, null);
+            admin.createTable(descBuilder.build(), null);
             Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
         } finally {
@@ -152,8 +154,8 @@ public class CubeHTableUtil {
         }
     }
 
-    public static HColumnDescriptor createColumnFamily(KylinConfig kylinConfig, String cfName, boolean isMemoryHungry) {
-        HColumnDescriptor cf = new HColumnDescriptor(cfName);
+    public static ColumnFamilyDescriptor createColumnFamily(KylinConfig kylinConfig, String cfName, boolean isMemoryHungry) {
+        ColumnFamilyDescriptorBuilder cf = ColumnFamilyDescriptorBuilder.newBuilder(Bytes.toBytes(cfName));
         cf.setMaxVersions(1);
 
         if (isMemoryHungry) {
@@ -204,7 +206,7 @@ public class CubeHTableUtil {
         cf.setInMemory(false);
         cf.setBloomFilterType(BloomType.NONE);
         cf.setScope(kylinConfig.getHBaseReplicationScope());
-        return cf;
+        return cf.build();
     }
 
 }

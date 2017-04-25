@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.token.TokenUtil;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 
@@ -50,7 +51,8 @@ public class PingHBaseCLI {
         if (User.isHBaseSecurityEnabled(hconf)) {
             try {
                 System.out.println("--------------Getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());
-                TokenUtil.obtainAndCacheToken(hconf, UserGroupInformation.getCurrentUser());
+                Connection connection = HBaseConnection.get(StorageURL.valueOf(hbaseTable + "@hbase"));
+                TokenUtil.obtainAndCacheToken(connection, User.create(UserGroupInformation.getCurrentUser()));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.out.println("--------------Error while getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());
