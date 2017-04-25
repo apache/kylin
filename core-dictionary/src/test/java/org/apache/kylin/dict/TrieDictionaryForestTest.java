@@ -133,6 +133,17 @@ public class TrieDictionaryForestTest {
     }
 
     @Test
+    public void testAllNullValue() {
+        ArrayList<String> strs = new ArrayList<String>();
+        strs.add("");
+        int maxTreeSize = 10;
+        TrieDictionaryForestBuilder<String> builder = newDictBuilder(strs, 0, maxTreeSize);
+        TrieDictionaryForest<String> dict = builder.build();
+        assertEquals(1, dict.getSize());
+        assertEquals(0, dict.getIdFromValue(""));
+    }
+
+    @Test
     public void testBigDataSet() {
         //h=generate data
         ArrayList<String> strs = new ArrayList<>();

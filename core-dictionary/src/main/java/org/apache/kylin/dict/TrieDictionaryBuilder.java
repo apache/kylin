@@ -34,11 +34,11 @@ import org.apache.kylin.common.util.BytesUtil;
  * Builds a dictionary using Trie structure. All values are taken in byte[] form
  * and organized in a Trie with ordering. Then numeric IDs are assigned in
  * sequence.
- * 
+ *
  * @author yangli9
  */
 public class TrieDictionaryBuilder<T> {
-    
+
     private static final int _2GB = 2000000000;
 
     public static class Node {
@@ -76,6 +76,8 @@ public class TrieDictionaryBuilder<T> {
     private Node root;
     protected BytesConverter<T> bytesConverter;
 
+    private boolean hasValue = false;
+
     public TrieDictionaryBuilder(BytesConverter<T> bytesConverter) {
         this.root = new Node(new byte[0], false);
         this.bytesConverter = bytesConverter;
@@ -91,6 +93,7 @@ public class TrieDictionaryBuilder<T> {
     }
 
     private void addValueR(Node node, byte[] value, int start) {
+        hasValue = true;
         // match the value part of current node
         int i = 0, j = start;
         int n = node.part.length, nn = value.length;
@@ -179,10 +182,8 @@ public class TrieDictionaryBuilder<T> {
 
     public static class Stats {
         public int nValues; // number of values in total
-        public int nValueBytesPlain; // number of bytes for all values
-                                     // uncompressed
-        public int nValueBytesCompressed; // number of values bytes in Trie
-                                          // (compressed)
+        public int nValueBytesPlain; // number of bytes for all values uncompressed
+        public int nValueBytesCompressed; // number of values bytes in Trie (compressed)
         public int maxValueLength; // size of longest value in bytes
 
         // the trie is multi-byte-per-node
@@ -234,7 +235,13 @@ public class TrieDictionaryBuilder<T> {
         }
     }
 
-    /** out print some statistics of the trie and the dictionary built from it */
+    public boolean isHasValue() {
+        return hasValue;
+    }
+
+    /**
+     * out print some statistics of the trie and the dictionary built from it
+     */
     public Stats stats() {
         // calculate nEndValueBeneath
         traversePostOrder(new Visitor() {
@@ -313,7 +320,9 @@ public class TrieDictionaryBuilder<T> {
         return s;
     }
 
-    /** out print trie for debug */
+    /**
+     * out print trie for debug
+     */
     public void print() {
         print(System.out);
     }
@@ -396,11 +405,11 @@ public class TrieDictionaryBuilder<T> {
     /**
      * Flatten the trie into a byte array for a minimized memory footprint.
      * Lookup remains fast. Cost is inflexibility to modify (becomes immutable).
-     * 
+     * <p>
      * Flattened node structure is HEAD + NODEs, for each node:
      * - o byte, offset to child node, o = stats.mbpn_sizeChildOffset
-     *    - 1 bit, isLastChild flag, the 1st MSB of o
-     *    - 1 bit, isEndOfValue flag, the 2nd MSB of o
+     *   - 1 bit, isLastChild flag, the 1st MSB of o
+     *   - 1 bit, isEndOfValue flag, the 2nd MSB of o
      * - c byte, number of values beneath, c = stats.mbpn_sizeNoValueBeneath
      * - 1 byte, number of value bytes
      * - n byte, value bytes
@@ -417,7 +426,7 @@ public class TrieDictionaryBuilder<T> {
         Stats stats = stats();
         int sizeNoValuesBeneath = stats.mbpn_sizeNoValueBeneath;
         int sizeChildOffset = stats.mbpn_sizeChildOffset;
-        
+
         if (stats.mbpn_footprint <= 0) // must never happen, but let us be cautious
             throw new IllegalStateException("Too big dictionary, dictionary cannot be bigger than 2GB");
         if (stats.mbpn_footprint > _2GB)
