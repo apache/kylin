@@ -69,19 +69,14 @@ then
     fi
 
 
-    #backup tomccat file
+    #backup tomcat file
     if [ ! -f ${TOMCAT_BACKUP_FILE} ]; then
         cp -f ${TOMCAT_CONFIG_FILE} ${TOMCAT_BACKUP_FILE}
     fi
 
-    #force reset
-    cp -f ${TOMCAT_INIT_FILE} ${TOMCAT_CONFIG_FILE} #reset if exist
-
-    #back or reset
+    #backup kylin.properties
     if [ ! -f ${KYLIN_BACKUP_FILE} ]; then  #backup if not exist
         cp -f ${KYLIN_CONFIG_FILE} ${KYLIN_BACKUP_FILE}
-    else
-        cp -r ${KYLIN_BACKUP_FILE} ${KYLIN_CONFIG_FILE} #reset if exist
     fi
 
 
