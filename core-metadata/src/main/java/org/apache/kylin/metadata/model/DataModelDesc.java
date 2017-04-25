@@ -548,6 +548,7 @@ public class DataModelDesc extends RootPersistentEntity {
             dimDesc = new ModelDimensionDesc();
             dimDesc.setTable(t);
             dimDesc.setColumns(new String[0]);
+            dimensions.add(dimDesc);
         }
 
         if (ArrayUtils.contains(dimDesc.getColumns(), c.getName()) == false) {
