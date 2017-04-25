@@ -32,7 +32,7 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
@@ -125,8 +125,9 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
     }
 
     private void createTestHTables() throws IOException {
+        Connection connction = HBaseConnection.get(kylinConfig.getStorageUrl());
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        Admin hbaseAdmin = new HBaseAdmin(conf);
+        Admin hbaseAdmin = connction.getAdmin();
         creatTable(hbaseAdmin, conf, aclTable, new String[] { AclConstant.ACL_INFO_FAMILY, AclConstant.ACL_ACES_FAMILY });
         creatTable(hbaseAdmin, conf, userTable, new String[] { AclConstant.USER_AUTHORITY_FAMILY });
         hbaseAdmin.close();
@@ -160,8 +161,8 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
     }
 
     private void dropTestHTables() throws IOException {
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        Admin hbaseAdmin = new HBaseAdmin(conf);
+        Connection connction = HBaseConnection.get(kylinConfig.getStorageUrl());
+        Admin hbaseAdmin = connction.getAdmin();
         if (hbaseAdmin.tableExists(aclTable)) {
             if (hbaseAdmin.isTableEnabled(aclTable))
                 hbaseAdmin.disableTable(aclTable);

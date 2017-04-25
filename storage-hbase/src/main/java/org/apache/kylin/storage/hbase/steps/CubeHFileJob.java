@@ -28,9 +28,15 @@ import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.RegionLocator;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
@@ -50,6 +56,10 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Locale;
+
+import static org.apache.hadoop.hbase.HBaseConfiguration.merge;
+
 /**
  * @author George Song (ysong1)
  */
@@ -60,6 +70,7 @@ public class CubeHFileJob extends AbstractHadoopJob {
     public int run(String[] args) throws Exception {
         Options options = new Options();
 
+        Connection connection = null;
         try {
             options.addOption(OPTION_JOB_NAME);
             options.addOption(OPTION_CUBE_NAME);
@@ -96,15 +107,15 @@ public class CubeHFileJob extends AbstractHadoopJob {
             // add metadata to distributed cache
             attachCubeMetadata(cube, job.getConfiguration());
 
-            // construct configuration for the HBase cluster
-            Configuration hbaseConf = HBaseConnection.getCurrentHBaseConfiguration();
-            HTable htable = new HTable(hbaseConf, getOptionValue(OPTION_HTABLE_NAME).toUpperCase(Locale.ROOT));
+            Configuration hbaseConf = HBaseConfiguration.create(getConf());
 
+            String hTableName = getOptionValue(OPTION_HTABLE_NAME).toUpperCase(Locale.ROOT);
+            connection = ConnectionFactory.createConnection(hbaseConf);
+            Table table = connection.getTable(TableName.valueOf(hTableName));
+            RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(hTableName));
             // Automatic config !
-            HFileOutputFormat3.configureIncrementalLoad(job, htable);
-            HFileOutputFormat3.configureHConnection(job, hbaseConf, getJobTempDir());
-
-            reconfigurePartitions(configuration, partitionFilePath);
+            HFileOutputFormat2.configureIncrementalLoad(job, table, regionLocator);
+            reconfigurePartitions(hbaseConf, partitionFilePath);
 
             job.setInputFormatClass(SequenceFileInputFormat.class);
             job.setMapperClass(CubeHFileMapper.class);
@@ -122,6 +133,8 @@ public class CubeHFileJob extends AbstractHadoopJob {
         } finally {
             if (job != null)
                 cleanupTempConfFile(job.getConfiguration());
+            if (null != connection)
+                connection.close();
         }
     }
 
