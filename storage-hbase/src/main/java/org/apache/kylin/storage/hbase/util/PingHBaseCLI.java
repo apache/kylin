@@ -50,7 +50,8 @@ public class PingHBaseCLI {
         if (User.isHBaseSecurityEnabled(hconf)) {
             try {
                 System.out.println("--------------Getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());
-                TokenUtil.obtainAndCacheToken(hconf, UserGroupInformation.getCurrentUser());
+                Connection connection = HBaseConnection.get();
+                TokenUtil.obtainAndCacheToken(connection, User.create(UserGroupInformation.getCurrentUser()));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.out.println("--------------Error while getting kerberos credential for user " + UserGroupInformation.getCurrentUser().getUserName());

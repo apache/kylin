@@ -459,7 +459,7 @@ public class CubeMigrationCLI {
                             value = Bytes.toBytes(valueString);
                         }
                         Put put = new Put(Bytes.toBytes(cubeId));
-                        put.add(family, column, value);
+                        put.addColumn(family, column, value);
                         destAclHtable.put(put);
                     }
                 }

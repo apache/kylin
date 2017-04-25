@@ -38,9 +38,9 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
-import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.hadoop.hbase.shaded.protobuf.ResponseConverter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
@@ -178,7 +178,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             List<Cell> result = delegate.next();
             rowCount++;
             for (Cell cell : result) {
-                rowBytes += CellUtil.estimatedSizeOf(cell);
+                rowBytes += CellUtil.estimatedSerializedSizeOf(cell);
             }
             return result;
         }
