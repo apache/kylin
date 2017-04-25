@@ -18,11 +18,8 @@
 
 package org.apache.kylin.storage.hbase.cube.v2;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.TableName;
@@ -47,8 +44,10 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * for test use only
@@ -181,7 +180,7 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             public List<Cell> next() {
                 List<Cell> result = allResultsIterator.next().listCells();
                 for (Cell cell : result) {
-                    scannedBytes += CellUtil.estimatedSizeOf(cell);
+                    scannedBytes += CellUtil.estimatedSerializedSizeOf(cell);
                 }
                 scannedRows++;
                 return result;

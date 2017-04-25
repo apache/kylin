@@ -78,4 +78,14 @@ public class CubeHFileMapperTest {
         assertEquals("item_count", new String(p2.getSecond().getQualifier(), StandardCharsets.UTF_8));
         assertEquals("2", new String(p2.getSecond().getValue(), StandardCharsets.UTF_8));
     }
+
+    private byte[] copy(KeyValue kv) {
+        return copy(kv.getFamilyArray(), kv.getFamilyOffset(), kv.getFamilyLength());
+    }
+
+    private byte[] copy(byte[] array, int offset, int length) {
+        byte[] result = new byte[length];
+        System.arraycopy(array, offset, result, 0, length);
+        return result;
+    }
 }

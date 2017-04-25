@@ -24,21 +24,19 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.gridtable.GTScanRequest;
 
 import com.google.common.base.Throwables;
 
 class ExpectedSizeIterator implements Iterator<byte[]> {
-    private final QueryContext queryContext;
-    private final int expectedSize;
-    private final BlockingQueue<byte[]> queue;
-    private final long coprocessorTimeout;
-    private final long deadline;
+    private BlockingQueue<byte[]> queue;
+    private int expectedSize;
     private int current = 0;
+    private long coprocessorTimeout;
+    private long deadline;
+    private volatile Throwable coprocException;
 
-    public ExpectedSizeIterator(QueryContext queryContext, int expectedSize, long coprocessorTimeout) {
-        this.queryContext = queryContext;
+    public ExpectedSizeIterator(int expectedSize, long coprocessorTimeout) {
         this.expectedSize = expectedSize;
         this.queue = new ArrayBlockingQueue<byte[]>(expectedSize);
 
@@ -61,9 +59,12 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
             current++;
             byte[] ret = null;
 
-            while (ret == null && deadline > System.currentTimeMillis()) {
-                checkState();
+            while (ret == null && coprocException == null && deadline > System.currentTimeMillis()) {
                 ret = queue.poll(1000, TimeUnit.MILLISECONDS);
+            }
+
+            if (coprocException != null) {
+                throw Throwables.propagate(coprocException);
             }
 
             if (ret == null) {
@@ -84,8 +85,6 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
     }
 
     public void append(byte[] data) {
-        checkState();
-
         try {
             queue.put(data);
         } catch (InterruptedException e) {
@@ -94,14 +93,7 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
         }
     }
 
-    private void checkState() {
-        if (queryContext.isStopped()) {
-            Throwable throwable = queryContext.getThrowable();
-            if (throwable != null) {
-                throw Throwables.propagate(throwable);
-            } else {
-                throw new IllegalStateException("the query is stopped: " + queryContext.getStopReason());
-            }
-        }
+    public void notifyCoprocException(Throwable ex) {
+        coprocException = ex;
     }
 }
