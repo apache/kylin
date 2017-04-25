@@ -22,6 +22,7 @@ package org.apache.kylin.tool;
  * Created by xiefan on 17-4-20.
  */
 public class StorageCleanupJob {
+
     public static void main(String[] args) throws Exception {
         org.apache.kylin.rest.job.StorageCleanupJob cli = new org.apache.kylin.rest.job.StorageCleanupJob();
         cli.execute(args);
