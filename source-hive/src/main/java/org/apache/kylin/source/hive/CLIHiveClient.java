@@ -18,20 +18,20 @@
 
 package org.apache.kylin.source.hive;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists;
 
 /**
  * Hive meta API client for Kylin
@@ -101,7 +101,7 @@ public class CLIHiveClient implements IHiveClient {
         builder.setSdLocation(table.getSd().getLocation());
         builder.setFileSize(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.TOTAL_SIZE));
         builder.setFileNum(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES));
-        builder.setIsNative(!MetaStoreUtils.isNonNativeTable(table));
+        //        builder.setIsNative(!MetaStoreUtils.isNonNativeTable(table));
         builder.setTableName(tableName);
         builder.setSdInputFormat(table.getSd().getInputFormat());
         builder.setSdOutputFormat(table.getSd().getOutputFormat());

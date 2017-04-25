@@ -27,13 +27,13 @@ if [[ `uname -a` =~ "Darwin" ]]; then
     alias md5cmd="md5 -q"
 fi
 
-tomcat_pkg_version="7.0.100"
-tomcat_pkg_md5="79be4ba5a6e770730a4be3d5cb3c7862"
+tomcat_pkg_version="8.5.33"
+tomcat_pkg_md5="79a5ce0bb2c1503a8e46bf00c6ed9181"
 
 if [ ! -f "build/apache-tomcat-${tomcat_pkg_version}.tar.gz" ]
 then
     echo "no binary file found"
-    wget --directory-prefix=build/ http://archive.apache.org/dist/tomcat/tomcat-7/v${tomcat_pkg_version}/bin/apache-tomcat-${tomcat_pkg_version}.tar.gz || echo "Download tomcat failed"
+    wget --directory-prefix=build/ http://archive.apache.org/dist/tomcat/tomcat-8/v${tomcat_pkg_version}/bin/apache-tomcat-${tomcat_pkg_version}.tar.gz || echo "Download tomcat failed"
 else
     if [ `md5cmd build/apache-tomcat-${tomcat_pkg_version}.tar.gz | awk '{print $1}'` != "${tomcat_pkg_md5}" ]
     then
@@ -76,29 +76,11 @@ cp tomcat-ext/target/kylin-tomcat-ext-${version}.jar build/tomcat/lib/kylin-tomc
 chmod 644 build/tomcat/lib/kylin-tomcat-ext-${version}.jar
 
 # add ROOT application
-mkdir -p build/tomcat/webapps/ROOT/WEB-INF/
+mkdir -p build/tomcat/webapps/ROOT
 cat > build/tomcat/webapps/ROOT/index.html <<EOL
 <html>
   <head>
     <meta http-equiv="refresh" content="1;url=kylin">
   </head>
 </html>
-EOL
-
-cat > build/tomcat/webapps/ROOT/WEB-INF/web.xml <<EOL
-<?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns="http://java.sun.com/xml/ns/javaee"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
-		  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
-           version="2.5">
-
-    <display-name>ROOT</display-name>
-    <absolute-ordering />
-    <welcome-file-list>
-        <welcome-file>/index.html</welcome-file>
-    </welcome-file-list>
-
-    <distributable />
-</web-app>
 EOL
