@@ -239,6 +239,11 @@ public class HBaseConnection {
 
     // ============================================================================
 
+    public static Connection get() {
+        String url = KylinConfig.getInstanceFromEnv().getStorageUrl();
+        return get(url);
+    }
+
     // returned Connection can be shared by multiple threads and does not require close()
     @SuppressWarnings("resource")
     public static Connection get(StorageURL url) {

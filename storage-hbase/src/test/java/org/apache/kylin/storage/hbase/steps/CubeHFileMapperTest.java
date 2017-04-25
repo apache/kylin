@@ -68,13 +68,23 @@ public class CubeHFileMapperTest {
         Pair<RowKeyWritable, KeyValue> p2 = result.get(1);
 
         assertEquals(key, p1.getFirst());
-        assertEquals("cf1", new String(p1.getSecond().getFamily()));
-        assertEquals("usd_amt", new String(p1.getSecond().getQualifier()));
-        assertEquals("35.43", new String(p1.getSecond().getValue()));
+        assertEquals("cf1", new String(copy(p1.getSecond())));
+        assertEquals("usd_amt", new String(copy(p1.getSecond())));
+        assertEquals("35.43", new String(copy(p1.getSecond())));
 
         assertEquals(key, p2.getFirst());
-        assertEquals("cf1", new String(p2.getSecond().getFamily()));
-        assertEquals("item_count", new String(p2.getSecond().getQualifier()));
-        assertEquals("2", new String(p2.getSecond().getValue()));
+        assertEquals("cf1", new String(copy(p2.getSecond())));
+        assertEquals("item_count", new String(copy(p2.getSecond())));
+        assertEquals("2", new String(copy(p2.getSecond())));
+    }
+
+    private byte[] copy(KeyValue kv) {
+        return copy(kv.getFamilyArray(), kv.getFamilyOffset(), kv.getFamilyLength());
+    }
+
+    private byte[] copy(byte[] array, int offset, int length) {
+        byte[] result = new byte[length];
+        System.arraycopy(array, offset, result, 0, length);
+        return result;
     }
 }
