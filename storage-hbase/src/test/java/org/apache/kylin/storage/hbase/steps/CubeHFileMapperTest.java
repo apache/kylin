@@ -69,13 +69,23 @@ public class CubeHFileMapperTest {
         Pair<RowKeyWritable, KeyValue> p2 = result.get(1);
 
         assertEquals(key, p1.getFirst());
-        assertEquals("cf1", new String(p1.getSecond().getFamily(), StandardCharsets.UTF_8));
-        assertEquals("usd_amt", new String(p1.getSecond().getQualifier(), StandardCharsets.UTF_8));
-        assertEquals("35.43", new String(p1.getSecond().getValue(), StandardCharsets.UTF_8));
+        assertEquals("cf1", new String(copy(p1.getSecond()), StandardCharsets.UTF_8));
+        assertEquals("usd_amt", new String(copy(p1.getSecond()), StandardCharsets.UTF_8));
+        assertEquals("35.43", new String(copy(p1.getSecond()), StandardCharsets.UTF_8));
 
         assertEquals(key, p2.getFirst());
-        assertEquals("cf1", new String(p2.getSecond().getFamily(), StandardCharsets.UTF_8));
-        assertEquals("item_count", new String(p2.getSecond().getQualifier(), StandardCharsets.UTF_8));
-        assertEquals("2", new String(p2.getSecond().getValue(), StandardCharsets.UTF_8));
+        assertEquals("cf1", new String(copy(p2.getSecond()), StandardCharsets.UTF_8));
+        assertEquals("item_count", new String(copy(p2.getSecond()), StandardCharsets.UTF_8));
+        assertEquals("2", new String(copy(p2.getSecond()), StandardCharsets.UTF_8));
+    }
+
+    private byte[] copy(KeyValue kv) {
+        return copy(kv.getFamilyArray(), kv.getFamilyOffset(), kv.getFamilyLength());
+    }
+
+    private byte[] copy(byte[] array, int offset, int length) {
+        byte[] result = new byte[length];
+        System.arraycopy(array, offset, result, 0, length);
+        return result;
     }
 }

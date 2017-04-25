@@ -31,6 +31,9 @@ export version
 sh build/script/prepare-libs.sh || { exit 1; }
 
 cp server/target/kylin-server-${version}.war build/tomcat/webapps/kylin.war
+
+sh build/script/elimate-jar-conflict.sh
+
 chmod 644 build/tomcat/webapps/kylin.war
 
 echo "add js css to war"
