@@ -24,6 +24,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,16 +32,15 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
-import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.CoprocessorEnvironment;
 import org.apache.hadoop.hbase.DoNotRetryIOException;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.coprocessor.CoprocessorException;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorService;
+import org.apache.hadoop.hbase.coprocessor.RegionCoprocessor;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
-import org.apache.hadoop.hbase.protobuf.ResponseConverter;
 import org.apache.hadoop.hbase.regionserver.HRegion;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
+import org.apache.hadoop.hbase.shaded.protobuf.ResponseConverter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinConfig.SetAndUnsetThreadLocalConfig;
 import org.apache.kylin.common.exceptions.KylinTimeoutException;
@@ -78,7 +78,7 @@ import com.sun.management.OperatingSystemMXBean;
 
 @SuppressWarnings("unused")
 //used in hbase endpoint
-public class CubeVisitService extends CubeVisitProtos.CubeVisitService implements Coprocessor, CoprocessorService {
+public class CubeVisitService extends CubeVisitProtos.CubeVisitService implements RegionCoprocessor {
 
     private static final Logger logger = LoggerFactory.getLogger(CubeVisitService.class);
     //TODO limit memory footprint
@@ -178,7 +178,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             List<Cell> result = delegate.next();
             rowCount++;
             for (Cell cell : result) {
-                rowBytes += CellUtil.estimatedSizeOf(cell);
+                rowBytes += CellUtil.estimatedSerializedSizeOf(cell);
             }
             return result;
         }
@@ -253,7 +253,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
             region = (HRegion) env.getRegion();
             region.startRegionOperation();
 
-            debugGitTag = region.getTableDesc().getValue(IRealizationConstants.HTableGitTag);
+            debugGitTag = region.getTableDescriptor().getValue(IRealizationConstants.HTableGitTag);
 
             final GTScanRequest scanReq = GTScanRequest.serializer
                     .deserialize(ByteBuffer.wrap(HBaseZeroCopyByteString.zeroCopyGetBytes(request.getGtScanRequest())));
@@ -448,7 +448,7 @@ public class CubeVisitService extends CubeVisitProtos.CubeVisitService implement
     }
 
     @Override
-    public Service getService() {
-        return this;
+    public Iterable<Service> getServices() {
+        return Collections.singleton(this);
     }
 }

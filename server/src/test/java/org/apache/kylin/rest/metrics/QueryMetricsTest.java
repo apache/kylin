@@ -32,8 +32,10 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class QueryMetricsTest extends ServiceTestBase {
 
     private static MBeanServer mBeanServer;
