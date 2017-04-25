@@ -105,7 +105,7 @@ public class TrieDictionaryForestBuilder<T> {
     }
 
     public TrieDictionaryForest<T> build() {
-        if (curTreeSize != 0) { //last tree
+        if (trieBuilder.isHasValue()) { //last tree
             TrieDictionary<T> tree = trieBuilder.build(0);
             addTree(tree);
             reset();

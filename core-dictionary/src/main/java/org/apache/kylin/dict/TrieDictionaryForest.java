@@ -63,7 +63,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
     }
 
     public TrieDictionaryForest(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, //
-            ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+                                ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
         init(trees, valueDivide, accuOffset, bytesConverter, baseId);
     }
 
@@ -342,7 +342,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         initSizeOfValue();
     }
 
-    private void initMaxValueForEachTrie(){
+    private void initMaxValueForEachTrie() {
         //init max value
         this.maxValue = new ArrayList<>();
         if (this.trees == null || trees.isEmpty()) {
@@ -356,7 +356,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         }
     }
 
-    private void initMaxId(){
+    private void initMaxId() {
         if (trees.isEmpty()) {
             this.maxId = baseId - 1;
             return;
@@ -365,7 +365,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         this.maxId = accuOffset.get(index) + trees.get(index).getMaxId() + baseId;
     }
 
-    private void initMinId(){
+    private void initMinId() {
         if (trees.isEmpty()) {
             this.minId = baseId;
             return;
@@ -373,8 +373,8 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         this.minId = trees.get(0).getMinId() + baseId;
     }
 
-    private void initSizeOfId(){
-        if (trees.isEmpty()){
+    private void initSizeOfId() {
+        if (trees.isEmpty()) {
             this.sizeOfId = 1;
             return;
         }
@@ -383,7 +383,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
         this.sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1L);
     }
 
-    private void initSizeOfValue(){
+    private void initSizeOfValue() {
         int maxValue = 0;
         for (TrieDictionary<T> tree : trees)
             maxValue = Math.max(maxValue, tree.getSizeOfValue());

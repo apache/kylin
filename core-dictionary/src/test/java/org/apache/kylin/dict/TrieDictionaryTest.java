@@ -221,6 +221,16 @@ public class TrieDictionaryTest {
         testStringDictionary(str, null);
     }
 
+    @Test
+    public void testAllNullValue() {
+        ArrayList<String> strs = new ArrayList<String>();
+        strs.add("");
+        TrieDictionaryBuilder<String> builder = newDictBuilder(strs);
+        TrieDictionary<String> dict = builder.build(0);
+        assertEquals(1, dict.getSize());
+        assertEquals(0, dict.getIdFromValue(""));
+    }
+
     private static void benchmarkStringDictionary(Iterable<String> str) throws IOException {
         TrieDictionaryBuilder<String> b = newDictBuilder(str);
         b.stats().print();
