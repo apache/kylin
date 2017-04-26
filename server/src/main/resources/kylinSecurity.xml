@@ -172,47 +172,42 @@
             <value>ROLE_ANALYST</value>
         </util:list>
 
+        <bean class="org.springframework.security.core.userdetails.User" id="adminUser">
+            <constructor-arg value="ADMIN"/>
+            <constructor-arg
+                    value="$2a$10$o3ktIWsGYxXNuUWQiYlZXOW5hWcqyNAFQsSSCSEWoC/BRVMAUjL32"/>
+            <constructor-arg ref="adminAuthorities"/>
+        </bean>
+        <bean class="org.springframework.security.core.userdetails.User" id="modelerUser">
+            <constructor-arg value="MODELER"/>
+            <constructor-arg
+                    value="$2a$10$Le5ernTeGNIARwMJsY0WaOLioNQdb0QD11DwjeyNqqNRp5NaDo2FG"/>
+            <constructor-arg ref="modelerAuthorities"/>
+        </bean>
+        <bean class="org.springframework.security.core.userdetails.User" id="analystUser">
+            <constructor-arg value="ANALYST"/>
+            <constructor-arg
+                    value="$2a$10$s4INO3XHjPP5Vm2xH027Ce9QeXWdrfq5pvzuGr9z/lQmHqi0rsbNi"/>
+            <constructor-arg ref="analystAuthorities"/>
+        </bean>
+
         <bean id="kylinUserAuthProvider"
               class="org.apache.kylin.rest.security.KylinAuthenticationProvider">
             <constructor-arg>
                 <bean class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
                     <property name="userDetailsService">
-                        <bean class="org.springframework.security.core.userdetails.memory.InMemoryDaoImpl">
-                            <property name="userMap">
-                                <bean class="org.springframework.security.core.userdetails.memory.UserMap">
-                                    <property name="users">
-                                        <util:map key-type="java.lang.String"
-                                                  value-type="org.springframework.security.core.userdetails.User">
-                                            <entry key="admin">
-                                                <bean class="org.springframework.security.core.userdetails.User">
-                                                    <constructor-arg value="ADMIN"/>
-                                                    <constructor-arg
-                                                            value="$2a$10$o3ktIWsGYxXNuUWQiYlZXOW5hWcqyNAFQsSSCSEWoC/BRVMAUjL32"/>
-                                                    <constructor-arg ref="adminAuthorities"/>
-                                                </bean>
-                                            </entry>
-                                            <entry key="modeler">
-                                                <bean class="org.springframework.security.core.userdetails.User">
-                                                    <constructor-arg value="MODELER"/>
-                                                    <constructor-arg
-                                                            value="$2a$10$Le5ernTeGNIARwMJsY0WaOLioNQdb0QD11DwjeyNqqNRp5NaDo2FG"/>
-                                                    <constructor-arg ref="modelerAuthorities"/>
-                                                </bean>
-                                            </entry>
-                                            <entry key="analyst">
-                                                <bean class="org.springframework.security.core.userdetails.User">
-                                                    <constructor-arg value="ANALYST"/>
-                                                    <constructor-arg
-                                                            value="$2a$10$s4INO3XHjPP5Vm2xH027Ce9QeXWdrfq5pvzuGr9z/lQmHqi0rsbNi"/>
-                                                    <constructor-arg ref="analystAuthorities"/>
-                                                </bean>
-                                            </entry>
-                                        </util:map>
-                                    </property>
-                                </bean>
-                            </property>
+                        <bean class="org.springframework.security.provisioning.InMemoryUserDetailsManager">
+                            <constructor-arg>
+                                <util:list
+                                        value-type="org.springframework.security.core.userdetails.User">
+                                    <ref bean="adminUser"></ref>
+                                    <ref bean="modelerUser"></ref>
+                                    <ref bean="analystUser"></ref>
+                                </util:list>
+                            </constructor-arg>
                         </bean>
                     </property>
+
                     <property name="passwordEncoder" ref="passwordEncoder"></property>
                 </bean>
             </constructor-arg>
