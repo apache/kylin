@@ -28,6 +28,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+import org.apache.calcite.avatica.DriverVersion;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -35,6 +37,13 @@ import org.junit.Test;
  * Unit test for Driver.
  */
 public class DriverTest {
+
+    @Test
+    public void testVersion() {
+        Driver driver = new DummyDriver();
+        DriverVersion version = driver.getDriverVersion();
+        Assert.assertNotEquals("unknown version", version.productVersion);
+    }
 
     @Test
     public void testStatementWithMockData() throws SQLException {

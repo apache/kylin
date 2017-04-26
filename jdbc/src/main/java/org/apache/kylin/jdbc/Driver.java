@@ -85,7 +85,7 @@ public class Driver extends UnregisteredDriver {
 
     @Override
     protected DriverVersion createDriverVersion() {
-        return DriverVersion.load(Driver.class, "kylin-jdbc.properties", "Kylin JDBC Driver", "unknown version", "Kylin", "unknown version");
+        return DriverVersion.load(Driver.class, "org-apache-kylin-jdbc.properties", "Kylin JDBC Driver", "unknown version", "Kylin", "unknown version");
     }
 
     @Override
