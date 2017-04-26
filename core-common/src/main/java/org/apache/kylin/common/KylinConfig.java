@@ -18,14 +18,17 @@
 
 package org.apache.kylin.common;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.Map;
@@ -248,22 +251,24 @@ public class KylinConfig extends KylinConfigBase {
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
 
         return conf;
     }
 
-    private static OrderedProperties getKylinOrderedProperties() throws FileNotFoundException {
+    private static OrderedProperties getKylinOrderedProperties() throws FileNotFoundException, UnsupportedEncodingException {
         File propFile = getKylinPropertiesFile();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
             throw new RuntimeException("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);
         }
 
-        final InputStream is = new FileInputStream(propFile);
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(propFile), "UTF-8"));
         try {
             OrderedProperties orderedProperties = new OrderedProperties();
-            orderedProperties.load(is);
+            orderedProperties.load(reader);
             orderedProperties = BCC.check(orderedProperties);
 
             File propOverrideFile = new File(propFile.getParentFile(), propFile.getName() + ".override");
@@ -281,7 +286,7 @@ public class KylinConfig extends KylinConfigBase {
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            IOUtils.closeQuietly(is);
+            IOUtils.closeQuietly(reader);
         }
     }
 
