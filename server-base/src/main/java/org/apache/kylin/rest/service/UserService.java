@@ -18,41 +18,16 @@
 
 package org.apache.kylin.rest.service;
 
-<<<<<<< HEAD
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.hbase.client.Delete;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.security.AclHBaseStorage;
-import org.apache.kylin.rest.util.Serializer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
-=======
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.rest.constant.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
->>>>>>> 62cdc0f... KYLIN-2535 AclService and UserService store records via ResourceStore interface
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -84,7 +59,6 @@ public class UserService implements UserDetailsManager {
         logger.debug("UserService init");
     }
 
-
     @Override
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void createUser(UserDetails user) {
@@ -105,13 +79,7 @@ public class UserService implements UserDetailsManager {
     }
 
     @Override
-<<<<<<< HEAD
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void deleteUser(String username) {
-        Table htable = null;
-=======
     public void deleteUser(String userName) {
->>>>>>> 62cdc0f... KYLIN-2535 AclService and UserService store records via ResourceStore interface
         try {
             String id = getId(userName);
             aclStore.deleteResource(id);
@@ -197,7 +165,6 @@ public class UserService implements UserDetailsManager {
             return serializer;
         }
 
-
         @Override
         public void serialize(UserInfo userInfo, DataOutputStream out) throws IOException {
             String json = JsonUtil.writeValueAsString(userInfo);
@@ -210,7 +177,6 @@ public class UserService implements UserDetailsManager {
             return JsonUtil.readValue(json, UserInfo.class);
         }
     }
-
 
 }
 
@@ -264,7 +230,6 @@ class UserInfo extends RootPersistentEntity {
     }
 
 }
-
 
 class UserGrantedAuthority implements GrantedAuthority {
     private static final long serialVersionUID = -5128905636841891058L;
