@@ -65,8 +65,8 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.query.relnode.OLAPContext;
+import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
@@ -77,6 +77,7 @@ import org.apache.kylin.rest.model.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.util.AclUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -85,7 +86,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -123,6 +123,9 @@ public class QueryService extends BasicService {
 
     @Autowired
     private CacheService cacheService;
+
+    @Autowired
+    private AclUtil aclUtil;
 
     @PostConstruct
     public void init() throws IOException {
@@ -298,8 +301,10 @@ public class QueryService extends BasicService {
         checkCubeAuthorization(cubeInstance);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
     private void checkCubeAuthorization(CubeInstance cube) throws AccessDeniedException {
+        if (!aclUtil.isHasCubePermission(cube)) {
+            throw new AccessDeniedException("Access denied");
+        }
     }
 
     private void checkHybridAuthorization(HybridInstance hybridInstance) throws AccessDeniedException {

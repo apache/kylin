@@ -18,19 +18,7 @@
 
 package org.apache.kylin.job.lock;
 
-import java.util.concurrent.ExecutorService;
+import org.apache.kylin.common.lock.DistributedLock;
 
-public interface DistributedJobLock extends JobLock {
-    
-    boolean lockWithName(String name, String serverName);
-
-    boolean isHasLocked(String segmentId);
-
-    void unlockWithName(String name);
-
-    void watchLock(ExecutorService pool, DoWatchLock doWatch);
-    
-    public interface DoWatchLock {
-        void doWatch(String path, String data);
-    }
+public interface DistributedJobLock extends JobLock, DistributedLock {
 }

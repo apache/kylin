@@ -34,6 +34,7 @@ import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.service.AccessService;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.ProjectService;
+import org.apache.kylin.rest.util.AclUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +42,6 @@ import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,6 +67,8 @@ public class ProjectController extends BasicController {
     private AccessService accessService;
     @Autowired
     private CubeService cubeService;
+    @Autowired
+    private AclUtil aclUtil;
 
     /**
      * Get available project list
@@ -90,29 +90,16 @@ public class ProjectController extends BasicController {
         List<ProjectInstance> projectInstances = projectService.listAllProjects(limit, offset);
 
         //get user infomation
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetails userDetails = null;
-        if (authentication == null) {
-            logger.debug("authentication is null.");
-            throw new InternalErrorException("Can not find authentication infomation.");
-        }
-        if (authentication.getPrincipal() instanceof UserDetails) {
-            logger.debug("authentication.getPrincipal() is " + authentication.getPrincipal());
-            userDetails = (UserDetails) authentication.getPrincipal();
-        }
-        if (authentication.getDetails() instanceof UserDetails) {
-            logger.debug("authentication.getDetails() is " + authentication.getDetails());
-            userDetails = (UserDetails) authentication.getDetails();
-        }
+        UserDetails userDetails = aclUtil.getCurrentUser();
+        String userName = userDetails.getUsername();
 
         //check if ROLE_ADMIN return all,also get user role list
-        List<String> userAuthority = new ArrayList<>();
-        for (GrantedAuthority auth : authentication.getAuthorities()) {
-            userAuthority.add(auth.getAuthority());
-            if (auth.getAuthority().equals(Constant.ROLE_ADMIN))
+        List<String> userAuthority = aclUtil.getAuthorityList();
+        for (String auth : userAuthority) {
+            if (auth.equals(Constant.ROLE_ADMIN))
                 return projectInstances;
         }
-        String userName = userDetails.getUsername();
+
         for (ProjectInstance projectInstance : projectInstances) {
             if (projectInstance == null) {
                 continue;
@@ -157,32 +144,8 @@ public class ProjectController extends BasicController {
                     if (cubeInstance == null) {
                         continue;
                     }
-                    boolean hasCubePermission = false;
-                    AclEntity cubeAe = accessService.getAclEntity("CubeInstance", cubeInstance.getId());
-                    Acl cubeAcl = accessService.getAcl(cubeAe);
-                    //cube no Acl info will not be used to filter project
-                    if (cubeAcl != null) {
-                        //cube owner will have permission to read project
-                        if (((PrincipalSid) cubeAcl.getOwner()).getPrincipal().equals(userName)) {
-                            hasProjectPermission = true;
-                            break;
-                        }
-                        for (AccessControlEntry cubeAce : cubeAcl.getEntries()) {
 
-                            if (cubeAce.getSid() instanceof PrincipalSid && ((PrincipalSid) cubeAce.getSid()).getPrincipal().equals(userName)) {
-                                hasCubePermission = true;
-                                break;
-                            } else if (cubeAce.getSid() instanceof GrantedAuthoritySid) {
-                                String cubeAuthority = ((GrantedAuthoritySid) cubeAce.getSid()).getGrantedAuthority();
-                                if (userAuthority.contains(cubeAuthority)) {
-                                    hasCubePermission = true;
-                                    break;
-                                }
-
-                            }
-                        }
-                    }
-                    if (hasCubePermission) {
+                    if (aclUtil.isHasCubePermission(cubeInstance)) {
                         hasProjectPermission = true;
                         break;
                     }

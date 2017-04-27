@@ -114,6 +114,7 @@ public class JoinedFlatTable {
         } else {
             kylinConfig = ((CubeSegment) flatDesc.getSegment()).getConfig();
         }
+
         if (kylinConfig.isAdvancedFlatTableUsed()) {
             try {
                 Class advancedFlatTable = Class.forName(kylinConfig.getAdvancedFlatTableClass());

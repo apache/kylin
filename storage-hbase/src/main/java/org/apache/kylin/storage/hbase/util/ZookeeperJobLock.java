@@ -56,7 +56,7 @@ public class ZookeeperJobLock implements JobLock {
     private CuratorFramework zkClient;
 
     @Override
-    public boolean lock() {
+    public boolean lockJobEngine() {
         this.scheduleID = schedulerId();
         String zkConnectString = getZKConnectString();
         logger.info("zk connection string:" + zkConnectString);
@@ -100,7 +100,7 @@ public class ZookeeperJobLock implements JobLock {
     }
 
     @Override
-    public void unlock() {
+    public void unlockJobEngine() {
         releaseLock();
     }
 

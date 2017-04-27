@@ -29,6 +29,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.lock.DistributedLock;
+import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -234,6 +236,11 @@ abstract public class KylinConfigBase implements Serializable {
 
     public Map<String, String> getCubeCustomMeasureTypes() {
         return getPropertiesByPrefix("kylin.metadata.custom-measure-types.");
+    }
+    
+    public DistributedLock getDistributedLock() {
+        String clsName = getOptional("kylin.metadata.distributed-lock-impl", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock");
+        return (DistributedLock) ClassUtil.newInstance(clsName);
     }
 
     // ============================================================================
@@ -982,4 +989,7 @@ abstract public class KylinConfigBase implements Serializable {
         return getResourceStoreImpls().get(key);
     }
 
+    public String getJobTrackingURLPattern() {
+        return getOptional("kylin.job.tracking-url-pattern", "");
+    }
 }

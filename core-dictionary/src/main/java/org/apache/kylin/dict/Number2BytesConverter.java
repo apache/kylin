@@ -17,9 +17,10 @@
 */
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Bytes;
-
 import java.io.Serializable;
+import java.math.BigDecimal;
+
+import org.apache.kylin.common.util.Bytes;
 
 /**
  * Created by xiefan on 17-1-20.
@@ -59,10 +60,26 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
 
     @Override
     public byte[] convertToBytes(String v) {
+        v = normalizeNumber(v);
         NumberBytesCodec codec = getCodec(this.maxDigitsBeforeDecimalPoint);
         byte[] num = Bytes.toBytes(v);
         codec.encodeNumber(num, 0, num.length);
         return Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
+    }
+
+    public static String normalizeNumber(String v) {
+        boolean badBegin = (v.startsWith("0") && v.length() > 1 && v.charAt(1) != '.') //
+                || (v.startsWith("-0") && v.length() > 2 && v.charAt(2) != '.') //
+                || v.startsWith("+");
+        if (badBegin) {
+            v = new BigDecimal(v).toPlainString();
+        }
+        
+        while (v.contains(".") && (v.endsWith("0") || v.endsWith("."))) {
+            v = v.substring(0, v.length() - 1);
+        }
+        
+        return v;
     }
 
     @Override
@@ -224,5 +241,4 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
             return out - offset;
         }
     }
-
 }

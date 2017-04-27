@@ -30,7 +30,7 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DictionaryDimEnc extends DimensionEncoding implements Serializable{
+public class DictionaryDimEnc extends DimensionEncoding implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryDimEnc.class);

@@ -187,8 +187,8 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     }
 
     @Override
-    public synchronized void init(JobEngineConfig jobEngineConfig, final JobLock jobLock) throws SchedulerException {
-        this.jobLock = jobLock;
+    public synchronized void init(JobEngineConfig jobEngineConfig, JobLock lock) throws SchedulerException {
+        jobLock = lock;
         
         String serverMode = jobEngineConfig.getConfig().getServerMode();
         if (!("job".equals(serverMode.toLowerCase()) || "all".equals(serverMode.toLowerCase()))) {
@@ -205,7 +205,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
 
         this.jobEngineConfig = jobEngineConfig;
 
-        if (jobLock.lock() == false) {
+        if (jobLock.lockJobEngine() == false) {
             throw new IllegalStateException("Cannot start job scheduler due to lack of job lock");
         }
 
@@ -226,7 +226,7 @@ public class DefaultScheduler implements Scheduler<AbstractExecutable>, Connecti
     @Override
     public void shutdown() throws SchedulerException {
         logger.info("Shutingdown Job Engine ....");
-        jobLock.unlock();
+        jobLock.unlockJobEngine();
         fetcherPool.shutdown();
         jobPool.shutdown();
     }

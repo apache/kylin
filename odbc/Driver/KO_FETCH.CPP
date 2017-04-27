@@ -146,6 +146,8 @@ RETCODE _SQLColAttribute_basic ( SQLHSTMT pStmt,
         return SQL_ERROR;
     }
 
+    __ODBCLOG ( _ODBCLogMsg ( LogLevel_DEBUG, "SQLColAttribute_basic called, ColNum: %d, FldID: %d", pColNum, pFldID ) );
+
     // get value from descriptor as per field type
     switch ( pFldID )
     {

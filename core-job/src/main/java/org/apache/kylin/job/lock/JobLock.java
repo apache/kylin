@@ -19,9 +19,12 @@
 package org.apache.kylin.job.lock;
 
 /**
+ * Among a Kylin cluster, usually only one node runs as the job engine and does the scheduling of build jobs.
+ * This interface is for such negotiation. 
  */
 public interface JobLock {
-    boolean lock();
+    
+    boolean lockJobEngine();
 
-    void unlock();
+    void unlockJobEngine();
 }

@@ -81,9 +81,9 @@ public class ITInMemCubeBuilderTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testKylinCube() throws Exception {
-        testBuild("test_kylin_cube_without_slr_left_join_empty", //
-                LOCALMETA_TEST_DATA + "/data/flatten_data_for_without_slr_left_join.csv", 7000, 4);
+    public void testSSBCubeMore() throws Exception {
+        testBuild("ssb", //
+                LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv", 7000, 4);
     }
 
     @Test

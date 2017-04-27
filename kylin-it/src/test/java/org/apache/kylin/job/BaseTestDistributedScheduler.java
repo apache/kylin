@@ -54,6 +54,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static KylinConfig kylinConfig2;
     static CuratorFramework zkClient;
     static File localMetaDir;
+    static String backup;
 
     static final String SEGMENT_ID = "segmentId";
     static final String segmentId1 = "seg1" + UUID.randomUUID();
@@ -75,11 +76,10 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
 
         localMetaDir = Files.createTempDir();
-        String backup = srcConfig.getMetadataUrl();
+        backup = srcConfig.getMetadataUrl();
         srcConfig.setProperty("kylin.metadata.url", localMetaDir.getAbsolutePath());
         srcConfig.writeProperties(new File(confDstPath1));
         srcConfig.writeProperties(new File(confDstPath2));
-        srcConfig.setProperty("kylin.metadata.url", backup);
 
         kylinConfig1 = KylinConfig.createInstanceFromUri(new File(confDstPath1).getAbsolutePath());
         kylinConfig2 = KylinConfig.createInstanceFromUri(new File(confDstPath2).getAbsolutePath());
@@ -132,6 +132,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
 
         FileUtils.deleteDirectory(localMetaDir);
         System.clearProperty("kylin.job.lock");
+        System.clearProperty("kylin.metadata.url");
         staticCleanupTestMetadata();
     }
 
@@ -167,7 +168,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     }
 
     boolean lock(ZookeeperDistributedJobLock jobLock, String cubeName, String serverName) {
-        return jobLock.lockWithName(cubeName, serverName);
+        return jobLock.lockPath(getLockPath(cubeName), serverName);
     }
 
     private static void initZk() {
@@ -197,6 +198,6 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     }
 
     private String getLockPath(String pathName) {
-        return ZookeeperDistributedJobLock.ZOOKEEPER_LOCK_PATH + "/" + kylinConfig1.getMetadataUrlPrefix() + "/" + pathName;
+        return DistributedScheduler.ZOOKEEPER_LOCK_PATH + "/" + kylinConfig1.getMetadataUrlPrefix() + "/" + pathName;
     }
 }

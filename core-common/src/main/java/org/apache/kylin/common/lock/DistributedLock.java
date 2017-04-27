@@ -16,8 +16,22 @@
  * limitations under the License.
  */
 
-KylinApp.factory('EncodingService', ['$resource', function ($resource, config) {
-  return $resource(Config.service.url + 'encodings/valid_encodings', {}, {
-    getEncodingMap: {method: 'GET', params: {}, isArray: false}
-  });
-}]);
+package org.apache.kylin.common.lock;
+
+import java.io.Closeable;
+import java.util.concurrent.Executor;
+
+public interface DistributedLock extends Closeable {
+
+    boolean lockPath(String lockPath, String lockClient);
+
+    boolean isPathLocked(String lockPath);
+
+    void unlockPath(String lockPath, String lockClient);
+
+    Closeable watchPath(String watchPath, Executor watchExecutor, Watcher process);
+
+    public interface Watcher {
+        void process(String path, String data);
+    }
+}

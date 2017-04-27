@@ -120,6 +120,8 @@ public class FactDistinctColumnsReducer extends KylinReducer<SelfDefineSortableK
             col = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (col == null) {
                 logger.info("No partition col. This reducer will do nothing");
+            } else {
+                logger.info("Reducer " + taskId + " handling partition col " + col.getIdentity());
             }
         } else {
             // normal col
