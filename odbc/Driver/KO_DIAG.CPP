@@ -1126,8 +1126,17 @@ void _ODBCLogMsg ( LogLevel level, const char* pMsgArgs, ... )
         {
             // convert to full msg including parsed params
             va_start ( args, pMsgArgs );
-            vsprintf ( s, pMsgArgs, args );
+            vsnprintf ( s, 4095, pMsgArgs, args );
             va_end ( args );
+            // Omit out of buffer message
+            if ( strlen ( s ) >= 4095 )
+            {
+                s[4092] = '.';
+                s[4093] = '.';
+                s[4094] = '.';
+                s[4095] = 0;
+            }
+
         }
 
         else
