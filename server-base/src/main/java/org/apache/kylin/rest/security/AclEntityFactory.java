@@ -26,33 +26,32 @@ import org.apache.kylin.metadata.project.ProjectInstance;
 
 /**
  * @author xduo
- * 
  */
-public class AclEntityFactory {
+public class AclEntityFactory implements AclEntityType {
 
     public static RootPersistentEntity createAclEntity(String entityType, String uuid) {
-        if ("CubeInstance".equals(entityType)) {
+        if (CUBE_INSTANCE.equals(entityType)) {
             CubeInstance cubeInstance = new CubeInstance();
             cubeInstance.setUuid(uuid);
 
             return cubeInstance;
         }
 
-        if ("DataModelDesc".equals(entityType)) {
+        if (DATA_MODEL_DESC.equals(entityType)) {
             DataModelDesc modelInstance = new DataModelDesc();
             modelInstance.setUuid(uuid);
 
             return modelInstance;
         }
 
-        if ("JobInstance".equals(entityType)) {
+        if (JOB_INSTANCE.equals(entityType)) {
             JobInstance jobInstance = new JobInstance();
             jobInstance.setUuid(uuid);
 
             return jobInstance;
         }
 
-        if ("ProjectInstance".equals(entityType)) {
+        if (PROJECT_INSTANCE.equals(entityType)) {
             ProjectInstance projectInstance = new ProjectInstance();
             projectInstance.setUuid(uuid);
 

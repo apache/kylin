@@ -19,6 +19,9 @@
 
 # set verbose=true to print more logs during start up
 
+
+
+
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh $@
 if [ "$verbose" = true ]; then
     shift
@@ -92,6 +95,7 @@ then
         quit "Port ${kylin_rest_address} is not available, could not start Kylin."
     fi
 
+    ${KYLIN_HOME}/bin/check_acl_migration.sh || { exit 1; }
     #debug if encounter NoClassDefError
     verbose "kylin classpath is: $(hbase classpath)"
 

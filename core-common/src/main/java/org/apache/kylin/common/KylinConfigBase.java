@@ -237,7 +237,7 @@ abstract public class KylinConfigBase implements Serializable {
     public Map<String, String> getCubeCustomMeasureTypes() {
         return getPropertiesByPrefix("kylin.metadata.custom-measure-types.");
     }
-    
+
     public DistributedLock getDistributedLock() {
         String clsName = getOptional("kylin.metadata.distributed-lock-impl", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock");
         return (DistributedLock) ClassUtil.newInstance(clsName);

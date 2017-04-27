@@ -68,7 +68,7 @@ import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
 import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
-import org.apache.kylin.tool.StorageCleanupJob;
+import org.apache.kylin.rest.job.StorageCleanupJob;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

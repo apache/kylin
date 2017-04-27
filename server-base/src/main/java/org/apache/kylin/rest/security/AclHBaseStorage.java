@@ -24,6 +24,7 @@ import org.apache.hadoop.hbase.client.Table;
 
 /**
  */
+@Deprecated  //use ResourceStore interface instead.
 public interface AclHBaseStorage {
 
     String ACL_INFO_FAMILY = "i";

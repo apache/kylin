@@ -25,15 +25,19 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -47,6 +51,7 @@ import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.StringEntity;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -84,6 +89,7 @@ public class HBaseResourceStore extends ResourceStore {
         if (!hbaseUrl.equals("hbase"))
             throw new IOException("Can not create HBaseResourceStore. Url not match. Url:" + hbaseUrl);
         createHTableIfNeeded(getAllInOneTableName());
+
     }
 
     private void createHTableIfNeeded(String tableName) throws IOException {
@@ -112,6 +118,33 @@ public class HBaseResourceStore extends ResourceStore {
         });
         // return null to indicate not a folder
         return result.isEmpty() ? null : result;
+    }
+
+    /*
+    override get meta store uuid method for backward compatibility
+     */
+
+    @Override
+    public String createMetaStoreUUID() throws IOException {
+        try (final HBaseAdmin hbaseAdmin = new HBaseAdmin(HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration()))) {
+            final String metaStoreName = KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
+            final HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(metaStoreName));
+            String uuid = desc.getValue(HBaseConnection.HTABLE_UUID_TAG);
+            if (uuid != null)
+                return uuid;
+            return UUID.randomUUID().toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    public String getMetaStoreUUID() throws IOException {
+        if (!exists(ResourceStore.METASTORE_UUID_TAG)) {
+            putResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(createMetaStoreUUID()), 0, StringEntity.serializer);
+        }
+        StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.class, StringEntity.serializer);
+        return entity.toString();
     }
 
     private void visitFolder(String folderPath, Filter filter, FolderVisitor visitor) throws IOException {
@@ -371,7 +404,7 @@ public class HBaseResourceStore extends ResourceStore {
 
         return put;
     }
-    
+
     @Override
     public String toString() {
         return getAllInOneTableName() + "@hbase";
