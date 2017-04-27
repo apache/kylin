@@ -71,8 +71,8 @@ fi
 if [ -z "$HCAT_HOME" ]
 then
     verbose "HCAT_HOME not found, try to find hcatalog path from hadoop home"
-    hadoop_home=`echo $hive_exec_path | awk -F '/hive.*/lib/' '{print $1}'`
-    hive_home=`echo $hive_exec_path | awk -F '/lib/' '{print $1}'`
+    hadoop_home=`echo $hive_exec_path | awk -F '/hive.*/lib/hive-exec[a-z0-9A-Z.-]*.jar' '{print $1}'`
+    hive_home=`echo $hive_exec_path | awk -F '/lib/hive-exec[a-z0-9A-Z.-]*.jar' '{print $1}'`
     is_aws=`uname -r | grep amzn`
     if [ -d "${hadoop_home}/hive-hcatalog" ]; then
       hcatalog_home=${hadoop_home}/hive-hcatalog
