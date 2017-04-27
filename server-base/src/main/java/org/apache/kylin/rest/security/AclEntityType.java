@@ -15,15 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-
-package org.apache.kylin.tool;
+package org.apache.kylin.rest.security;
 
 /**
- * Created by xiefan on 17-4-20.
+ * Created by xiefan on 17-4-14.
  */
-public class StorageCleanupJob {
-    public static void main(String[] args) throws Exception {
-        org.apache.kylin.rest.job.StorageCleanupJob cli = new org.apache.kylin.rest.job.StorageCleanupJob();
-        cli.execute(args);
-    }
+public interface AclEntityType {
+    static final String CUBE_INSTANCE = "CubeInstance";
+
+    static final String DATA_MODEL_DESC = "DataModelDesc";
+
+    static final String JOB_INSTANCE = "JobInstance";
+
+    static final String PROJECT_INSTANCE = "ProjectInstance";
 }

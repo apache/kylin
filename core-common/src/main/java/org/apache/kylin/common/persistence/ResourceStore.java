@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -66,6 +67,8 @@ abstract public class ResourceStore {
 
     protected static final String DEFAULT_STORE_NAME = "kylin_metadata";
 
+    public static final String METASTORE_UUID_TAG = "/UUID";
+
     private static final ConcurrentMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
     private static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
@@ -88,8 +91,13 @@ abstract public class ResourceStore {
         logger.info("Using metadata url " + kylinConfig.getMetadataUrl() + " for resource store");
         for (Class<? extends ResourceStore> cls : getKnownImpl(kylinConfig)) {
             try {
-                return cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
+                ResourceStore store = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
+                if (!store.exists(METASTORE_UUID_TAG)) {
+                    store.putResource(METASTORE_UUID_TAG, new StringEntity(store.createMetaStoreUUID()), 0, StringEntity.serializer);
+                }
+                return store;
             } catch (Throwable e) {
+
                 es.add(e);
             }
         }
@@ -131,6 +139,18 @@ abstract public class ResourceStore {
 
     abstract protected NavigableSet<String> listResourcesImpl(String folderPath) throws IOException;
 
+    public String createMetaStoreUUID() throws IOException {
+        return UUID.randomUUID().toString();
+    }
+
+    public String getMetaStoreUUID() throws IOException {
+        if (!exists(ResourceStore.METASTORE_UUID_TAG)) {
+            putResource(ResourceStore.METASTORE_UUID_TAG, new StringEntity(createMetaStoreUUID()), 0, StringEntity.serializer);
+        }
+        StringEntity entity = getResource(ResourceStore.METASTORE_UUID_TAG, StringEntity.class, StringEntity.serializer);
+        return entity.toString();
+    }
+
     /**
      * Return true if a resource exists, return false in case of folder or non-exist
      */
@@ -169,14 +189,14 @@ abstract public class ResourceStore {
     }
 
     /**
-     * Read all resources under a folder. Return empty list if folder not exist. 
+     * Read all resources under a folder. Return empty list if folder not exist.
      */
     final public <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, Class<T> clazz, Serializer<T> serializer) throws IOException {
         return getAllResources(folderPath, Long.MIN_VALUE, Long.MAX_VALUE, clazz, serializer);
     }
 
     /**
-     * Read all resources under a folder having last modified time between given range. Return empty list if folder not exist. 
+     * Read all resources under a folder having last modified time between given range. Return empty list if folder not exist.
      */
     final public <T extends RootPersistentEntity> List<T> getAllResources(String folderPath, long timeStart, long timeEndExclusive, Class<T> clazz, Serializer<T> serializer) throws IOException {
         final List<RawResource> allResources = getAllResourcesImpl(folderPath, timeStart, timeEndExclusive);
@@ -201,10 +221,14 @@ abstract public class ResourceStore {
 
     abstract protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException;
 
-    /** returns null if not exists */
+    /**
+     * returns null if not exists
+     */
     abstract protected RawResource getResourceImpl(String resPath) throws IOException;
 
-    /** returns 0 if not exists */
+    /**
+     * returns 0 if not exists
+     */
     abstract protected long getResourceTimestampImpl(String resPath) throws IOException;
 
     /**
@@ -350,4 +374,5 @@ abstract public class ResourceStore {
 
         return metaDirURI;
     }
+
 }

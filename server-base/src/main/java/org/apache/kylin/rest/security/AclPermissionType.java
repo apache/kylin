@@ -15,15 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
+package org.apache.kylin.rest.security;
 
-package org.apache.kylin.tool;
+public interface AclPermissionType {
+    static final String MANAGEMENT = "MANAGEMENT";
 
-/**
- * Created by xiefan on 17-4-20.
- */
-public class StorageCleanupJob {
-    public static void main(String[] args) throws Exception {
-        org.apache.kylin.rest.job.StorageCleanupJob cli = new org.apache.kylin.rest.job.StorageCleanupJob();
-        cli.execute(args);
-    }
+    static final String OPERATION = "OPERATION";
+
+    static final String READ = "READ";
+
+    static final String WRITE = "WRITE";
+
+    static final String CREATE = "CREATE";
+
+    static final String DELETE = "DELETE";
+
+    static final String ADMINISTRATION = "ADMINISTRATION";
 }

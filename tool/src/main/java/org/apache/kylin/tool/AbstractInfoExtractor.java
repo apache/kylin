@@ -139,9 +139,9 @@ public abstract class AbstractInfoExtractor extends AbstractApplication {
         FileUtils.writeStringToFile(new File(exportDir, "kylin_env"), output, Charset.defaultCharset());
 
         StringBuilder basicSb = new StringBuilder();
-        basicSb.append("MetaStoreID: ").append(ToolUtil.getHBaseMetaStoreId()).append("\n");
+        basicSb.append("MetaStoreID: ").append(ToolUtil.getMetaStoreId()).append("\n");
         basicSb.append("PackageType: ").append(packageType.toUpperCase()).append("\n");
-        SimpleDateFormat format  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
         basicSb.append("PackageTimestamp: ").append(format.format(new Date())).append("\n");
         basicSb.append("Host: ").append(ToolUtil.getHostName()).append("\n");
         FileUtils.writeStringToFile(new File(exportDir, "info"), basicSb.toString(), Charset.defaultCharset());
