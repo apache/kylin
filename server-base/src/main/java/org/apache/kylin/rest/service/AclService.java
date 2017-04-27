@@ -64,16 +64,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-/**
- * @author xduo
- */
-=======
->>>>>>> 62cdc0f... KYLIN-2535 AclService and UserService store records via ResourceStore interface
-=======
->>>>>>> c37eac3... KYLIN-2535 Modify getMetaStoreId method and code review
 @Component("aclService")
 public class AclService implements MutableAclService {
 
@@ -239,9 +229,13 @@ public class AclService implements MutableAclService {
             if (mutableAcl.getParentAcl() != null) {
                 record.setParentDomainObjectInfo(new DomainObjectInfo(mutableAcl.getParentAcl().getObjectIdentity()));
             }
-<<<<<<< HEAD
 
-            for (AccessControlEntry ace : acl.getEntries()) {
+            if (record.getAllAceInfo() == null) {
+                record.setAllAceInfo(new HashMap<String, AceInfo>());
+            }
+            Map<String, AceInfo> allAceInfo = record.getAllAceInfo();
+            allAceInfo.clear();
+            for (AccessControlEntry ace : mutableAcl.getEntries()) {
                 if (ace.getSid() instanceof PrincipalSid) {
                     PrincipalSid psid = (PrincipalSid) ace.getSid();
                     String userName = psid.getPrincipal();
@@ -249,16 +243,6 @@ public class AclService implements MutableAclService {
                     if (!userService.userExists(userName))
                         throw new UsernameNotFoundException("User " + userName + " does not exist. Please make sure the user has logged in before");
                 }
-                AceInfo aceInfo = new AceInfo(ace);
-                put.addColumn(Bytes.toBytes(AclHBaseStorage.ACL_ACES_FAMILY), Bytes.toBytes(aceInfo.getSidInfo().getSid()), aceSerializer.serialize(aceInfo));
-=======
-            if (record.getAllAceInfo() == null) {
-                record.setAllAceInfo(new HashMap<String, AceInfo>());
->>>>>>> 62cdc0f... KYLIN-2535 AclService and UserService store records via ResourceStore interface
-            }
-            Map<String, AceInfo> allAceInfo = record.getAllAceInfo();
-            allAceInfo.clear();
-            for (AccessControlEntry ace : mutableAcl.getEntries()) {
                 AceInfo aceInfo = new AceInfo(ace);
                 allAceInfo.put(String.valueOf(aceInfo.getSidInfo().getSid()), aceInfo);
             }
@@ -270,12 +254,7 @@ public class AclService implements MutableAclService {
         return (MutableAcl) readAclById(mutableAcl.getObjectIdentity());
     }
 
-<<<<<<< HEAD
-
-    private void genAces(List<Sid> sids, Result result, AclImpl acl) throws JsonParseException, JsonMappingException, IOException {
-=======
     private void genAces(List<Sid> sids, AclRecord record, AclImpl acl) throws JsonParseException, JsonMappingException, IOException {
->>>>>>> 62cdc0f... KYLIN-2535 AclService and UserService store records via ResourceStore interface
         List<AceInfo> aceInfos = new ArrayList<AceInfo>();
         Map<String, AceInfo> allAceInfos = record.getAllAceInfo();
         if (allAceInfos != null) {
@@ -476,8 +455,6 @@ class SidInfo {
         }
     }
 
-<<<<<<< HEAD
-=======
     public String getSid() {
         return sid;
     }
@@ -493,7 +470,6 @@ class SidInfo {
     public void setPrincipal(boolean isPrincipal) {
         this.isPrincipal = isPrincipal;
     }
->>>>>>> 62cdc0f... KYLIN-2535 AclService and UserService store records via ResourceStore interface
 
 }
 
