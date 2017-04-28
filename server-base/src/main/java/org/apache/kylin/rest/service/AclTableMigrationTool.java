@@ -146,7 +146,7 @@ public class AclTableMigrationTool {
                     Result result = rs.next();
                     while (result != null) {
                         User user = hbaseRowToUser(result);
-                        UserInfo userInfo = convert(user);
+                        UserService.UserInfo userInfo = convert(user);
                         store.deleteResource(UserService.getId(userInfo.getUsername()));
                         store.putResource(UserService.getId(userInfo.getUsername()), userInfo, 0, UserService.UserInfoSerializer.getInstance());
                         result = rs.next();
@@ -252,10 +252,10 @@ public class AclTableMigrationTool {
         return newInfo;
     }
 
-    private UserInfo convert(User user) {
+    private UserService.UserInfo convert(User user) {
         if (user == null)
             return null;
-        UserInfo newInfo = new UserInfo();
+        UserService.UserInfo newInfo = new UserService.UserInfo();
         newInfo.setUsername(user.getUserName());
         newInfo.setPassword(user.getPassword());
         List<String> authorities = new ArrayList<>();
