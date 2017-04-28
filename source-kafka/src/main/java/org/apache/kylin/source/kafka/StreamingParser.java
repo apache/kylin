@@ -57,6 +57,7 @@ public abstract class StreamingParser {
         defaultProperties.put(PROPERTY_TS_COLUMN_NAME, "timestamp");
         defaultProperties.put(PROPERTY_TS_PARSER, "org.apache.kylin.source.kafka.DefaultTimeParser");
         defaultProperties.put(PROPERTY_TS_PATTERN, DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
+        //why do you use this to separator json key? this made my json key with "_" can not parse correctly
         defaultProperties.put(EMBEDDED_PROPERTY_SEPARATOR, "_");
     }
 
