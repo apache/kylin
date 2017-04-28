@@ -18,21 +18,37 @@
 
 package org.apache.kylin.rest.response;
 
-/**
- * @author xduo
- * 
- */
-public class ErrorResponse {
+import org.apache.kylin.rest.exception.BadRequestException;
 
-    public String url;
+import com.google.common.base.Throwables;
+
+/**
+ * response to client when the return HTTP code is not 200
+ */
+public class ErrorResponse extends EnvelopeResponse {
+
+    //stacktrace of the exception
+    public String stacktrace;
+
+    //same as EnvelopeResponse.msg, kept for legacy reasons
     public String exception;
 
-    /**
-     * @param exception
-     */
+    //request URL, kept from legacy codes
+    public String url;
+
     public ErrorResponse(String url, Exception exception) {
+        super();
+        
         this.url = url;
         this.exception = exception.getLocalizedMessage();
-    }
+        this.msg = exception.getLocalizedMessage();
+        this.stacktrace = Throwables.getStackTraceAsString(exception);
+        this.data = null;
 
+        if (exception instanceof BadRequestException) {
+            this.code = ((BadRequestException) exception).getCode();
+        } else {
+            this.code = ResponseCode.CODE_UNDEFINED;
+        }
+    }
 }

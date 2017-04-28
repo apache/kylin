@@ -100,7 +100,7 @@ public class AggregateMultipleExpandRule extends RelOptRule {
                     rexNodes.add(rexBuilder.makeInputRef(type, index++));
                     groupKey = groupKeyIter.next();
                 } else {
-                    rexNodes.add(rexBuilder.makeNullLiteral(type.getSqlTypeName()));
+                    rexNodes.add(rexBuilder.makeNullLiteral(type));
                 }
             }
 

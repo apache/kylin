@@ -19,12 +19,12 @@
 package org.apache.kylin.storage.gtrecord;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
+import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -35,7 +35,7 @@ import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -46,7 +46,6 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     protected List<CubeSegmentScanner> scanners;
     protected List<SegmentCubeTupleIterator> segmentCubeTupleIterators;
     protected Iterator<ITuple> tupleIterator;
-    protected final int storagePushDownLimit;
     protected StorageContext context;
 
     private int scanCount;
@@ -62,21 +61,67 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
             segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context));
         }
 
-        this.storagePushDownLimit = context.getFinalPushDownLimit();
-        if (storagePushDownLimit == Integer.MAX_VALUE) {
-            //normal case
-            tupleIterator = Iterators.concat(segmentCubeTupleIterators.iterator());
-        } else {
+        if (context.mergeSortPartitionResults()) {
             //query with limit
-            Iterator<Iterator<ITuple>> transformed = Iterators.transform(segmentCubeTupleIterators.iterator(), new Function<SegmentCubeTupleIterator, Iterator<ITuple>>() {
-                @Nullable
-                @Override
-                public Iterator<ITuple> apply(@Nullable SegmentCubeTupleIterator input) {
-                    return input;
-                }
-            });
-            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, storagePushDownLimit, segmentCubeTupleIterators.get(0).getCubeTupleConverter().getTupleDimensionComparator()).getIterator();
+            logger.info("Using SortedIteratorMergerWithLimit to merge segment results");
+            Iterator<Iterator<ITuple>> transformed = (Iterator<Iterator<ITuple>>) (Iterator<?>) segmentCubeTupleIterators.iterator();
+            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), getTupleDimensionComparator(cuboid, returnTupleInfo)).getIterator();
+        } else {
+            //normal case
+            logger.info("Using Iterators.concat to merge segment results");
+            tupleIterator = Iterators.concat(segmentCubeTupleIterators.iterator());
         }
+    }
+
+    public Comparator<ITuple> getTupleDimensionComparator(Cuboid cuboid, TupleInfo returnTupleInfo) {
+        // dimensionIndexOnTuple is for SQL with limit
+        List<Integer> temp = Lists.newArrayList();
+        for (TblColRef dim : cuboid.getColumns()) {
+            if (returnTupleInfo.hasColumn(dim)) {
+                temp.add(returnTupleInfo.getColumnIndex(dim));
+            }
+        }
+
+        final int[] dimensionIndexOnTuple = new int[temp.size()];
+        for (int i = 0; i < temp.size(); i++) {
+            dimensionIndexOnTuple[i] = temp.get(i);
+        }
+
+        return new Comparator<ITuple>() {
+            @Override
+            public int compare(ITuple o1, ITuple o2) {
+                Preconditions.checkNotNull(o1);
+                Preconditions.checkNotNull(o2);
+                for (int i = 0; i < dimensionIndexOnTuple.length; i++) {
+                    int index = dimensionIndexOnTuple[i];
+
+                    if (index == -1) {
+                        //TODO: 
+                        continue;
+                    }
+
+                    Comparable a = (Comparable) o1.getAllValues()[index];
+                    Comparable b = (Comparable) o2.getAllValues()[index];
+
+                    if (a == null && b == null) {
+                        continue;
+                    } else if (a == null) {
+                        return 1;
+                    } else if (b == null) {
+                        return -1;
+                    } else {
+                        int temp = a.compareTo(b);
+                        if (temp != 0) {
+                            return temp;
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+
+                return 0;
+            }
+        };
     }
 
     @Override
@@ -86,7 +131,10 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
 
     @Override
     public ITuple next() {
-        scanCount++;
+        if (scanCount++ % 100 == 1 && System.currentTimeMillis() > context.getDeadline()) {
+            throw new KylinTimeoutException("Query timeout after \"kylin.query.timeout-seconds\" seconds");
+        }
+
         if (++scanCountDelta >= 1000)
             flushScanCountDelta();
 
@@ -117,12 +165,8 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
         }
     }
 
-    public int getScanCount() {
-        return scanCount;
-    }
-
     private void flushScanCountDelta() {
-        context.increaseTotalScanCount(scanCountDelta);
+        context.increaseProcessedRowCount(scanCountDelta);
         scanCountDelta = 0;
     }
 

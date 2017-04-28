@@ -19,6 +19,8 @@
 package org.apache.kylin.query.schema;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,13 +45,13 @@ import org.apache.calcite.schema.impl.AbstractTableQueryable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationType;
@@ -186,31 +188,30 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
         //to avoid overflow we upgrade x's type to long
         //this includes checking two parts:
         //1. sum measures in cubes:
-        HashSet<ColumnDesc> updateColumns = Sets.newHashSet();
+        HashSet<ColumnDesc> upgradeCols = Sets.newHashSet();
         for (MeasureDesc m : mgr.listEffectiveMeasures(olapSchema.getProjectName(), sourceTable.getIdentity())) {
             if (m.getFunction().isSum()) {
                 FunctionDesc func = m.getFunction();
                 if (func.getReturnDataType() != func.getRewriteFieldType() && //
                         func.getReturnDataType().isBigInt() && //
                         func.getRewriteFieldType().isIntegerFamily()) {
-                    updateColumns.add(func.getParameter().getColRefs().get(0).getColumnDesc());
+                    upgradeCols.add(func.getParameter().getColRefs().get(0).getColumnDesc());
                 }
             }
         }
         //2. All integer measures in non-cube realizations
-        MetadataManager metadataManager = MetadataManager.getInstance(olapSchema.getConfig());
         for (IRealization realization : mgr.listAllRealizations(olapSchema.getProjectName())) {
             if (realization.getType() == RealizationType.INVERTED_INDEX && realization.getModel().isFactTable(sourceTable.getIdentity())) {
-                DataModelDesc dataModelDesc = realization.getModel();
-                for (String metricColumn : dataModelDesc.getMetrics()) {
-                    ColumnDesc columnDesc = metadataManager.getColumnDesc(dataModelDesc.getRootFactTable().getTableIdentity() + "." + metricColumn);
-                    if (columnDesc.getType().isIntegerFamily() && !columnDesc.getType().isBigInt())
-                        updateColumns.add(columnDesc);
+                DataModelDesc model = realization.getModel();
+                for (String metricColumn : model.getMetrics()) {
+                    TblColRef col = model.findColumn(metricColumn);
+                    if (col.getTable().equals(sourceTable.getIdentity()) && col.getType().isIntegerFamily() && !col.getType().isBigInt())
+                        upgradeCols.add(col.getColumnDesc());
                 }
             }
         }
 
-        for (ColumnDesc upgrade : updateColumns) {
+        for (ColumnDesc upgrade : upgradeCols) {
             int index = tableColumns.indexOf(upgrade);
             if (index < 0) {
                 throw new IllegalStateException("Metric column " + upgrade + " is not found in the the project's columns");
@@ -219,6 +220,12 @@ public class OLAPTable extends AbstractQueryableTable implements TranslatableTab
             logger.info("To avoid overflow, upgraded {}'s type from {} to {}", tableColumns.get(index), tableColumns.get(index).getType(), tableColumns.get(index).getUpgradedType());
         }
 
+        Collections.sort(tableColumns, new Comparator<ColumnDesc>() {
+            @Override
+            public int compare(ColumnDesc o1, ColumnDesc o2) {
+                return o1.getZeroBasedIndex() - o2.getZeroBasedIndex();
+            }
+        });
         return Lists.newArrayList(Iterables.concat(tableColumns, metricColumns));
     }
 

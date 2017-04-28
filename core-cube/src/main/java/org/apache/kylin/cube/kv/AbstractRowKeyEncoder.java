@@ -18,8 +18,6 @@
 
 package org.apache.kylin.cube.kv;
 
-import java.util.Map;
-
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.cube.CubeSegment;
@@ -30,12 +28,14 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 /**
  * 
  * @author xjiang
  * 
  */
-public abstract class AbstractRowKeyEncoder {
+public abstract class AbstractRowKeyEncoder implements java.io.Serializable {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractRowKeyEncoder.class);
     public static final byte DEFAULT_BLANK_BYTE = DimensionEncoding.NULL;

@@ -321,9 +321,9 @@ public class KylinClient implements IRemoteClient {
     }
 
     @Override
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues) throws IOException {
+    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues, Map<String, String> queryToggles) throws IOException {
 
-        SQLResponseStub queryResp = executeKylinQuery(sql, convertParameters(params, paramValues));
+        SQLResponseStub queryResp = executeKylinQuery(sql, convertParameters(params, paramValues), queryToggles);
         if (queryResp.getIsException())
             throw new IOException(queryResp.getExceptionMessage());
 
@@ -346,7 +346,7 @@ public class KylinClient implements IRemoteClient {
         return result;
     }
 
-    private SQLResponseStub executeKylinQuery(String sql, List<StatementParameter> params) throws IOException {
+    private SQLResponseStub executeKylinQuery(String sql, List<StatementParameter> params, Map<String, String> queryToggles) throws IOException {
         String url = baseUrl() + "/kylin/api/query";
         String project = conn.getProject();
 
@@ -360,6 +360,7 @@ public class KylinClient implements IRemoteClient {
         }
         request.setSql(sql);
         request.setProject(project);
+        request.setBackdoorToggles(queryToggles);
 
         HttpPost post = new HttpPost(url);
         addHttpHeaders(post);

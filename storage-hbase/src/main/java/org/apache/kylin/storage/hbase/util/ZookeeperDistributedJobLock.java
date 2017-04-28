@@ -19,10 +19,7 @@
 package org.apache.kylin.storage.hbase.util;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
-
-import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
@@ -33,17 +30,11 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.job.lock.DistributedJobLock;
-import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 
 /**
  * the jobLock is specially used to support distributed scheduler.
@@ -65,7 +56,7 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
     public ZookeeperDistributedJobLock(KylinConfig config) {
         this.config = config;
 
-        String zkConnectString = getZKConnectString();
+        String zkConnectString = ZookeeperUtil.getZKConnectString();
         logger.info("zk connection string:" + zkConnectString);
         if (StringUtils.isEmpty(zkConnectString)) {
             throw new IllegalArgumentException("ZOOKEEPER_QUORUM is empty!");
@@ -96,6 +87,8 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
      * @param serverName the hostname of job server
      *
      * @return <tt>true</tt> if the segment locked successfully
+     *
+     * @since 2.0
      */
 
     @Override
@@ -110,13 +103,13 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
                 return false;
             }
             if (zkClient.checkExists().forPath(lockPath) != null) {
-                if (hasLock(serverName, lockPath)) {
+                if (isKeepLock(serverName, lockPath)) {
                     hasLock = true;
                     logger.info(serverName + " has kept the lock for segment: " + segmentId);
                 }
             } else {
                 zkClient.create().withMode(CreateMode.EPHEMERAL).forPath(lockPath, serverName.getBytes(Charset.forName("UTF-8")));
-                if (hasLock(serverName, lockPath)) {
+                if (isKeepLock(serverName, lockPath)) {
                     hasLock = true;
                     logger.info(serverName + " lock the segment: " + segmentId + " successfully");
                 }
@@ -131,17 +124,54 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
         return true;
     }
 
-    private boolean hasLock(String serverName, String lockPath) {
-        String lockServerName = null;
+    /**
+     *
+     * Returns <tt>true</tt> if, the job server is keeping the lock for the lockPath
+     *
+     * @param serverName the hostname of job server
+     *
+     * @param lockPath the zookeeper node path of segment
+     *
+     * @return <tt>true</tt> if the job server is keeping the lock for the lockPath, otherwise
+     * <tt>false</tt>
+     *
+     * @since 2.0
+     */
+
+    private boolean isKeepLock(String serverName, String lockPath) {
         try {
             if (zkClient.checkExists().forPath(lockPath) != null) {
                 byte[] data = zkClient.getData().forPath(lockPath);
-                lockServerName = new String(data, Charset.forName("UTF-8"));
+                String lockServerName = new String(data, Charset.forName("UTF-8"));
+                return lockServerName.equalsIgnoreCase(serverName);
             }
         } catch (Exception e) {
             logger.error("fail to get the serverName for the path: " + lockPath, e);
         }
-        return lockServerName.equalsIgnoreCase(serverName);
+        return false;
+    }
+
+    /**
+     *
+     * Returns <tt>true</tt> if, and only if, the segment has been locked.
+     *
+     * @param segmentId the id of segment need to release the lock.
+     *
+     * @return <tt>true</tt> if the segment has been locked, otherwise
+     * <tt>false</tt>
+     *
+     * @since 2.0
+     */
+
+    @Override
+    public boolean isHasLocked(String segmentId) {
+        String lockPath = getLockPath(segmentId);
+        try {
+            return zkClient.checkExists().forPath(lockPath) != null;
+        } catch (Exception e) {
+            logger.error("fail to get the path: " + lockPath, e);
+        }
+        return false;
     }
 
     /**
@@ -149,7 +179,9 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
      *
      * <p> the segment related zookeeper node will be deleted.
      *
-     * @param segmentId the name of segment need to release the lock
+     * @param segmentId the id of segment need to release the lock
+     *
+     * @since 2.0
      */
 
     @Override
@@ -175,7 +207,10 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
      * in order to when one job server is down, other job server can take over the running jobs.
      *
      * @param pool the threadPool watching the zookeeper node change
+     *
      * @param doWatch do the concrete action with the zookeeper node path and zookeeper node data
+     *
+     * @since 2.0
      */
 
     @Override
@@ -199,19 +234,6 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
         }
     }
 
-    private static String getZKConnectString() {
-        Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
-        final String serverList = conf.get(HConstants.ZOOKEEPER_QUORUM);
-        final String port = conf.get(HConstants.ZOOKEEPER_CLIENT_PORT);
-        return StringUtils.join(Iterables.transform(Arrays.asList(serverList.split(",")), new Function<String, String>() {
-            @Nullable
-            @Override
-            public String apply(String input) {
-                return input + ":" + port;
-            }
-        }), ",");
-    }
-
     private String getLockPath(String pathName) {
         return ZOOKEEPER_LOCK_PATH + "/" + config.getMetadataUrlPrefix() + "/" + pathName;
     }
@@ -227,9 +249,8 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
 
     @Override
     public void unlock() {
-
     }
-    
+
     public void close() {
         try {
             childrenCache.close();

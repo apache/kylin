@@ -38,6 +38,7 @@ import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.cube.gridtable.CubeGridTable;
+import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.gridtable.GTAggregateScanner;
 import org.apache.kylin.gridtable.GTBuilder;
@@ -108,7 +109,10 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
     }
 
     private GridTable newGridTableByCuboidID(long cuboidID) throws IOException {
-        GTInfo info = CubeGridTable.newGTInfo(cubeDesc, cuboidID, dictionaryMap);
+        GTInfo info = CubeGridTable.newGTInfo(
+                Cuboid.findById(cubeDesc, cuboidID),
+                new CubeDimEncMap(cubeDesc, dictionaryMap)
+        );
 
         // Below several store implementation are very similar in performance. The ConcurrentDiskStore is the simplest.
         // MemDiskStore store = new MemDiskStore(info, memBudget == null ? MemoryBudgetController.ZERO_BUDGET : memBudget);
@@ -205,6 +209,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
             for (Thread t : threads)
                 t.join();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IOException("interrupted while waiting task and output complete", e);
         }
     }
@@ -334,7 +339,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
 
         Pair<ImmutableBitSet, ImmutableBitSet> dimensionMetricsBitSet = InMemCubeBuilderUtils.getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         GTScanRequest req = new GTScanRequestBuilder().setInfo(baseCuboid.getInfo()).setRanges(null).setDimensions(null).setAggrGroupBy(dimensionMetricsBitSet.getFirst()).setAggrMetrics(dimensionMetricsBitSet.getSecond()).setAggrMetricsFuncs(metricsAggrFuncs).setFilterPushDown(null).createGTScanRequest();
-        GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req, Long.MAX_VALUE);
+        GTAggregateScanner aggregationScanner = new GTAggregateScanner(baseInput, req);
         aggregationScanner.trackMemoryLevel(baseCuboidMemTracker);
 
         int count = 0;
@@ -462,6 +467,8 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         for (int i = 0; i < totalSum.length; i++) {
             if (totalSum[i] instanceof DoubleMutable) {
                 totalSum[i] = Math.round(((DoubleMutable) totalSum[i]).get());
+            } else if (totalSum[i] instanceof Double) {
+                totalSum[i] = Math.round(((Double) totalSum[i]).doubleValue());
             } else if (totalSum[i] instanceof TopNCounter) {
                 TopNCounter counter = (TopNCounter) totalSum[i];
                 Iterator<Counter> iterator = counter.iterator();
@@ -531,6 +538,7 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
                     try {
                         currentObject = input.take();
                     } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         throw new RuntimeException(e);
                     }
                     return currentObject != null && currentObject.size() > 0;
@@ -559,11 +567,6 @@ public class InMemCubeBuilder extends AbstractInMemCubeBuilder {
         @Override
         public GTInfo getInfo() {
             return info;
-        }
-
-        @Override
-        public long getScannedRowCount() {
-            return 0L;
         }
     }
 }

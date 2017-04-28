@@ -37,6 +37,7 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
 /**
  * very time consuming
  */
+@Ignore("to save CI time")
 public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
 
     @SuppressWarnings("unused")
@@ -64,8 +66,8 @@ public class ITDoggedCubeBuilderStressTest extends LocalFileMetadataTestCase {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
 
-        cube = cubeManager.getCube("test_kylin_cube_without_slr_left_join_empty");
-        flatTable = LOCALMETA_TEST_DATA + "/data/flatten_data_for_without_slr_left_join.csv";
+        cube = cubeManager.getCube("ssb");
+        flatTable = LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv";
         dictionaryMap = ITInMemCubeBuilderTest.getDictionaryMap(cube, flatTable);
     }
 

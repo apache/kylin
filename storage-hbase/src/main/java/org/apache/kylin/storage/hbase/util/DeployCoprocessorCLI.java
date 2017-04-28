@@ -44,7 +44,8 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.TableNotFoundException;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
@@ -52,8 +53,13 @@ import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealizationConstants;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,9 +70,9 @@ import com.google.common.collect.Lists;
  */
 public class DeployCoprocessorCLI {
 
-    public static final String CubeObserverClass = "org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.AggregateRegionObserver";
     public static final String CubeEndpointClass = "org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.CubeVisitService";
     public static final String CubeObserverClassOld = "org.apache.kylin.storage.hbase.coprocessor.observer.AggregateRegionObserver";
+    public static final String CubeObserverClassOld2 = "org.apache.kylin.storage.hbase.cube.v1.coprocessor.observer.AggregateRegionObserver";
     public static final String IIEndpointClassOld = "org.apache.kylin.storage.hbase.coprocessor.endpoint.IIEndpoint";
     public static final String IIEndpointClass = "org.apache.kylin.storage.hbase.ii.coprocessor.endpoint.IIEndpoint";
 
@@ -81,7 +87,8 @@ public class DeployCoprocessorCLI {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
         FileSystem fileSystem = FileSystem.get(hconf);
-        HBaseAdmin hbaseAdmin = new HBaseAdmin(hconf);
+        Connection conn = HBaseConnection.get(kylinConfig.getStorageUrl());
+        Admin hbaseAdmin = conn.getAdmin();
 
         String localCoprocessorJar;
         if ("default".equals(args[0])) {
@@ -100,11 +107,14 @@ public class DeployCoprocessorCLI {
             tableNames = filterByTables(tableNames, Arrays.asList(args).subList(2, args.length));
         } else if (filterType.equals("-cube")) {
             tableNames = filterByCubes(tableNames, Arrays.asList(args).subList(2, args.length));
+        } else if (filterType.equals("-project")) {
+            tableNames = filterByProjects(tableNames, Arrays.asList(args).subList(2, args.length));
         } else if (!filterType.equals("all")) {
             printUsageAndExit();
         }
 
         logger.info("Will execute tables " + tableNames);
+        long start = System.currentTimeMillis();
 
         Set<String> oldJarPaths = getCoprocessorJarPaths(hbaseAdmin, tableNames);
         logger.info("Old coprocessor jar: " + oldJarPaths);
@@ -119,14 +129,45 @@ public class DeployCoprocessorCLI {
 
         hbaseAdmin.close();
 
+        logger.info("Processed time: " + (System.currentTimeMillis() - start));
         logger.info("Processed tables count: " + processedTables.size());
         logger.info("Processed tables: " + processedTables);
         logger.info("Active coprocessor jar: " + hdfsCoprocessorJar);
     }
 
     private static void printUsageAndExit() {
-        logger.info("Probe run, exiting. Append argument 'all' or specific tables/cubes to execute.");
+        logger.info("Usage: ");
+        logger.info("$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar all");
+        logger.info("$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -table tableName1 tableName2 ...");
+        logger.info("$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -cube cubeName1 cubeName2 ... ");
+        logger.info("$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -project projectName1 projectName2 ...");
         System.exit(0);
+    }
+
+    private static List<String> filterByProjects(List<String> allTableNames, List<String> projectNames) {
+        ProjectManager projectManager = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv());
+        CubeManager cubeManager = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
+
+        List<String> result = Lists.newArrayList();
+        for (String p : projectNames) {
+            p = p.trim();
+            if (p.endsWith(",")) {
+                p = p.substring(0, p.length() - 1);
+            }
+
+            ProjectInstance projectInstance = projectManager.getProject(p);
+            List<RealizationEntry> cubeList = projectInstance.getRealizationEntries(RealizationType.CUBE);
+            for (RealizationEntry cube: cubeList) {
+                CubeInstance cubeInstance = cubeManager.getCube(cube.getRealization());
+                for (CubeSegment segment : cubeInstance.getSegments()) {
+                    String tableName = segment.getStorageLocationIdentifier();
+                    if (allTableNames.contains(tableName)) {
+                        result.add(tableName);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     private static List<String> filterByCubes(List<String> allTableNames, List<String> cubeNames) {
@@ -165,10 +206,10 @@ public class DeployCoprocessorCLI {
     public static void deployCoprocessor(HTableDescriptor tableDesc) {
         try {
             initHTableCoprocessor(tableDesc);
-            logger.info("hbase table " + tableDesc.getName() + " deployed with coprocessor.");
+            logger.info("hbase table " + tableDesc.getTableName() + " deployed with coprocessor.");
 
         } catch (Exception ex) {
-            logger.error("Error deploying coprocessor on " + tableDesc.getName(), ex);
+            logger.error("Error deploying coprocessor on " + tableDesc.getTableName(), ex);
             logger.error("Will try creating the table without coprocessor.");
         }
     }
@@ -187,10 +228,9 @@ public class DeployCoprocessorCLI {
     public static void addCoprocessorOnHTable(HTableDescriptor desc, Path hdfsCoprocessorJar) throws IOException {
         logger.info("Add coprocessor on " + desc.getNameAsString());
         desc.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
-        desc.addCoprocessor(CubeObserverClass, hdfsCoprocessorJar, 1002, null);
     }
 
-    public static boolean resetCoprocessor(String tableName, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
+    public static boolean resetCoprocessor(String tableName, Admin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
 
@@ -205,10 +245,10 @@ public class DeployCoprocessorCLI {
         logger.info("reset coprocessor on " + tableName);
 
         logger.info("Disable " + tableName);
-        hbaseAdmin.disableTable(tableName);
+        hbaseAdmin.disableTable(TableName.valueOf(tableName));
 
-        while (desc.hasCoprocessor(CubeObserverClass)) {
-            desc.removeCoprocessor(CubeObserverClass);
+        while (desc.hasCoprocessor(CubeObserverClassOld2)) {
+            desc.removeCoprocessor(CubeObserverClassOld2);
         }
         while (desc.hasCoprocessor(CubeEndpointClass)) {
             desc.removeCoprocessor(CubeEndpointClass);
@@ -231,16 +271,15 @@ public class DeployCoprocessorCLI {
             desc.setValue(IRealizationConstants.HTableGitTag, commitInfo);
         }
 
-        hbaseAdmin.modifyTable(tableName, desc);
+        hbaseAdmin.modifyTable(TableName.valueOf(tableName), desc);
 
         logger.info("Enable " + tableName);
-        hbaseAdmin.enableTable(tableName);
+        hbaseAdmin.enableTable(TableName.valueOf(tableName));
 
         return true;
     }
 
-
-    private static List<String> resetCoprocessorOnHTables(final HBaseAdmin hbaseAdmin, final Path hdfsCoprocessorJar, List<String> tableNames) throws IOException {
+    private static List<String> resetCoprocessorOnHTables(final Admin hbaseAdmin, final Path hdfsCoprocessorJar, List<String> tableNames) throws IOException {
         List<String> processedTables = Collections.synchronizedList(new ArrayList<String>());
         ExecutorService coprocessorPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
         CountDownLatch countDownLatch = new CountDownLatch(tableNames.size());
@@ -261,12 +300,12 @@ public class DeployCoprocessorCLI {
 
     private static class ResetCoprocessorWorker implements Runnable {
         private final CountDownLatch countDownLatch;
-        private final HBaseAdmin hbaseAdmin;
+        private final Admin hbaseAdmin;
         private final Path hdfsCoprocessorJar;
         private final String tableName;
         private final List<String> processedTables;
 
-        public ResetCoprocessorWorker(CountDownLatch countDownLatch, HBaseAdmin hbaseAdmin, Path hdfsCoprocessorJar, String tableName, List<String> processedTables) {
+        public ResetCoprocessorWorker(CountDownLatch countDownLatch, Admin hbaseAdmin, Path hdfsCoprocessorJar, String tableName, List<String> processedTables) {
             this.countDownLatch = countDownLatch;
             this.hbaseAdmin = hbaseAdmin;
             this.hdfsCoprocessorJar = hdfsCoprocessorJar;
@@ -382,12 +421,13 @@ public class DeployCoprocessorCLI {
 
     private static Path getCoprocessorHDFSDir(FileSystem fileSystem, KylinConfig config) throws IOException {
         String hdfsWorkingDirectory = config.getHdfsWorkingDirectory();
+        hdfsWorkingDirectory = HBaseConnection.makeQualifiedPathInHBaseCluster(hdfsWorkingDirectory);
         Path coprocessorDir = new Path(hdfsWorkingDirectory, "coprocessor");
         fileSystem.mkdirs(coprocessorDir);
         return coprocessorDir;
     }
 
-    private static Set<String> getCoprocessorJarPaths(HBaseAdmin hbaseAdmin, List<String> tableNames) throws IOException {
+    private static Set<String> getCoprocessorJarPaths(Admin hbaseAdmin, List<String> tableNames) throws IOException {
         HashSet<String> result = new HashSet<String>();
 
         for (String tableName : tableNames) {
@@ -426,11 +466,13 @@ public class DeployCoprocessorCLI {
 
         ArrayList<String> result = new ArrayList<String>();
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
-            for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
-                String tableName = seg.getStorageLocationIdentifier();
-                if (StringUtils.isBlank(tableName) == false) {
-                    result.add(tableName);
-                    System.out.println("added new table: " + tableName);
+            if (cube.getStorageType() == IStorageAware.ID_HBASE || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
+                for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
+                    String tableName = seg.getStorageLocationIdentifier();
+                    if (StringUtils.isBlank(tableName) == false) {
+                        result.add(tableName);
+                        System.out.println("added new table: " + tableName);
+                    }
                 }
             }
         }

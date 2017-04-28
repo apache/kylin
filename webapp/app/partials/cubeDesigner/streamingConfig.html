@@ -238,36 +238,8 @@
             </div>
           </div>
 
-          <div class="form-group middle-popover" ng-class="{'required':state.mode=='edit'}">
-            <div class="row">
-              <label class="col-xs-12 col-sm-3 control-label no-padding-right">
-                <b>Buffer Size</b>
-                <i class="fa fa-info-circle" kylinpopover placement="right" title="Buffer Size" template="BufferSizecTip.html"></i>
-              </label>
-
-              <div class="col-xs-12 col-sm-6"
-                   ng-class="{'has-error':form.cube_streaming_form.bufferSize.$invalid && (form.cube_streaming_form.bufferSize.$dirty||form.cube_streaming_form.$submitted)}">
-                <input ng-if="state.mode=='edit'" name="bufferSize" required ng-model="kafkaMeta.bufferSize" type="text"
-                       placeholder="Input kafkaConfig bufferSize"
-                       ng-pattern="/^\+?[1-9][0-9]*$/"
-                       class="form-control"/>
-                <small class="help-block"
-                       ng-show="!form.cube_streaming_form.bufferSize.$error.required && form.cube_streaming_form.bufferSize.$invalid && (form.cube_streaming_form.bufferSize.$dirty||form.cube_streaming_form.$submitted)">
-                  Kafka bufferSize is invalid.
-                </small>
-                <small class="help-block"
-                       ng-show="form.cube_streaming_form.bufferSize.$error.required && (form.cube_streaming_form.bufferSize.$dirty||form.cube_streaming_form.$submitted)">
-                  Kafka bufferSize is required.
-                </small>
-                <span ng-if="state.mode=='view'">{{kafkaMeta.bufferSize}}</span>
-              </div>
-            </div>
-          </div>
-
         </accordion-group>
       </accordion>
-
-
 
     </div>
   </form>
@@ -279,11 +251,8 @@
 <script type="text/ng-template" id="TimeoutTip.html">
     <p>Set timeout for kafka client.</p>
   </script>
-<script type="text/ng-template" id="BufferSizecTip.html">
-    <p>Set byte size for kafka client’s buffer.</p>
-  </script>
 <script type="text/ng-template" id="MarginTip.html">
-    <p>When the messages in kafka is not strictly sorted on timestamp, read more data (expressed in ts) before and after the specified interval to avoid data loss.</p>
+    <p>Deprecated. When the messages in kafka is not strictly sorted on timestamp, read more data (expressed in ts) before and after the specified interval to avoid data loss.</p>
   </script>
 <script type="text/ng-template" id="ParserName.html">
     <p>Set the parser to parse source data messages. The default parser works for json messages with a timestamp field.</p>

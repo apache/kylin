@@ -20,26 +20,13 @@
   <div class="modal-header">
     <h4 tooltip="submit">CUBE CLONE</h4>
   </div>
-  <div class="modal-body" style="background-color: white">
+  <ng-form name="forms.cube_clone_form" novalidate="novalidate" class="modal-body" style="background-color: white">
 
     <div class="row">
       <div class="col-md-2"></div>
       <div class="col-md-8">
         <div class="row">
           <p class="text-info"> Cross project clone is not allowed now,  cube will be cloned into current project.</p>
-          <!--<div class="form-group">-->
-            <!--<b>Target Project is:</b>-->
-            <!--<br/>-->
-            <!--<select ng-required="projectModel.projects.length" chosen ng-model="targetObj.targetProject"-->
-                    <!--ng-init="newAccess.permission=permissions.READ.value;"-->
-                    <!--ng-options="project.name as project.name for project in projectModel.projects "-->
-                    <!--ng-disabled="true"-->
-                    <!--style="width: 100% !important;"-->
-                    <!--data-placeholder="select a project"-->
-                    <!--class="chosen-select">-->
-              <!--<option value=""></option>-->
-            <!--</select>-->
-          <!--</div>-->
         </div>
       </div>
       <div class="col-md-2"></div>
@@ -51,15 +38,17 @@
           <div class="form-group">
             <b>New Cube Name:</b>
             <br/>
-            <input type="text" class="form-control" ng-model="targetObj.cubeName"/>
+            <input type="text" class="form-control"  name="cube_name" ng-model="targetObj.cubeName" ng-pattern="/^\w+$/"  required  />
+            <small class="help-block red" ng-show="forms.cube_clone_form.cube_name.$error.required && (forms.cube_clone_form.cube_name.$dirty)">Cube name is required.</small>
+            <small class="help-block red" ng-show="!forms.cube_clone_form.cube_name.$error.required&&forms.cube_clone_form.cube_name.$invalid && (forms.cube_clone_form.cube_name.$dirty)">Cube name is invalid.</small>
           </div>
         </div>
       </div>
       <div class="col-md-2"></div>
     </div>
-  </div>
+  </ng-form>
   <div class="modal-footer">
-    <button class="btn btn-success" ng-click="cloneCube()">Submit</button>
     <button class="btn btn-primary" ng-click="cancel()">Close</button>
+    <button class="btn btn-success" ng-click="cloneCube()" ng-disabled="forms.cube_clone_form.$invalid">Submit</button>
   </div>
 </script>

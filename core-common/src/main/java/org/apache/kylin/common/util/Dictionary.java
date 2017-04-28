@@ -94,8 +94,12 @@ abstract public class Dictionary<T> implements Serializable {
     final public int getIdFromValue(T value, int roundingFlag) throws IllegalArgumentException {
         if (isNullObjectForm(value))
             return nullId();
-        else
-            return getIdFromValueImpl(value, roundingFlag);
+
+        int id = getIdFromValueImpl(value, roundingFlag);
+        if (id == -1) {
+            throw new IllegalArgumentException("Value : " + value + " not exists");
+        }
+        return id;
     }
 
     final public boolean containsValue(T value) throws IllegalArgumentException {
@@ -131,72 +135,6 @@ abstract public class Dictionary<T> implements Serializable {
     }
 
     abstract protected T getValueFromIdImpl(int id);
-
-    /**
-     * Convenient form of
-     * <code>getIdFromValueBytes(value, offset, len, 0)</code>
-     */
-    final public int getIdFromValueBytes(byte[] value, int offset, int len) throws IllegalArgumentException {
-        return getIdFromValueBytes(value, offset, len, 0);
-    }
-
-    /**
-     * A lower level API, return ID integer from raw value bytes. In case of not found 
-     * <p>
-     * - if roundingFlag=0, throw IllegalArgumentException; <br>
-     * - if roundingFlag<0, the closest smaller ID integer if exist; <br>
-     * - if roundingFlag>0, the closest bigger ID integer if exist. <br>
-     * <p>
-     * Bypassing the cache layer, this could be significantly slower than getIdFromValue(T value).
-     * 
-     * @throws IllegalArgumentException
-     *             if value is not found in dictionary and rounding is off;
-     *             or if rounding cannot find a smaller or bigger ID
-     */
-    final public int getIdFromValueBytes(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
-        if (isNullByteForm(value, offset, len))
-            return nullId();
-        else {
-            int id = getIdFromValueBytesImpl(value, offset, len, roundingFlag);
-            if (id < 0)
-                throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
-            return id;
-        }
-    }
-
-    protected boolean isNullByteForm(byte[] value, int offset, int len) {
-        return value == null;
-    }
-
-    abstract protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag);
-
-    final public byte[] getValueBytesFromId(int id) {
-        if (isNullId(id))
-            return BytesUtil.EMPTY_BYTE_ARRAY;
-        else
-            return getValueBytesFromIdImpl(id);
-    }
-
-    abstract protected byte[] getValueBytesFromIdImpl(int id);
-
-    /**
-     * A lower level API, get byte values from ID, return the number of bytes
-     * written. Bypassing the cache layer, this could be significantly slower
-     * than getIdFromValue(T value).
-     *
-     * @return size of value bytes, 0 if empty string, -1 if null
-     *
-     * @throws IllegalArgumentException
-     *             if ID is not found in dictionary
-     */
-    final public int getValueBytesFromId(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
-        if (isNullId(id))
-            return -1;
-        else
-            return getValueBytesFromIdImpl(id, returnValue, offset);
-    }
-
-    abstract protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset);
 
     abstract public void dump(PrintStream out);
 

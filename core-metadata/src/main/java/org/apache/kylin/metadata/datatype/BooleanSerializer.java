@@ -18,40 +18,26 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import java.nio.ByteBuffer;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.BooleanUtils;
 
-public class BooleanSerializer extends DataTypeSerializer<LongMutable> {
+import java.nio.ByteBuffer;
+
+public class BooleanSerializer extends DataTypeSerializer<Long> {
 
     public final static String[] TRUE_VALUE_SET = { "true", "t", "on", "yes" };
-
-    // be thread-safe and avoid repeated obj creation
-    private ThreadLocal<LongMutable> current = new ThreadLocal<LongMutable>();
 
     public BooleanSerializer(DataType type) {
     }
 
     @Override
-    public void serialize(LongMutable value, ByteBuffer out) {
-        out.putLong(value.get());
-    }
-
-    private LongMutable current() {
-        LongMutable l = current.get();
-        if (l == null) {
-            l = new LongMutable();
-            current.set(l);
-        }
-        return l;
+    public void serialize(Long value, ByteBuffer out) {
+        out.putLong(value);
     }
 
     @Override
-    public LongMutable deserialize(ByteBuffer in) {
-        LongMutable l = current();
-        l.set(in.getLong());
-        return l;
+    public Long deserialize(ByteBuffer in) {
+        return in.getLong();
     }
 
     @Override
@@ -70,12 +56,10 @@ public class BooleanSerializer extends DataTypeSerializer<LongMutable> {
     }
 
     @Override
-    public LongMutable valueOf(String str) {
-        LongMutable l = current();
+    public Long valueOf(String str) {
         if (str == null)
-            l.set(0L);
+           return Long.valueOf(0L);
         else
-            l.set(BooleanUtils.toInteger(ArrayUtils.contains(TRUE_VALUE_SET, str.toLowerCase())));
-        return l;
+            return Long.valueOf(BooleanUtils.toInteger(ArrayUtils.contains(TRUE_VALUE_SET, str.toLowerCase())));
     }
 }

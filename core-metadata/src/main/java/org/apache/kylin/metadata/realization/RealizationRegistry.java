@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -37,7 +38,7 @@ import com.google.common.collect.Maps;
 public class RealizationRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(RealizationRegistry.class);
-    private static final ConcurrentHashMap<KylinConfig, RealizationRegistry> CACHE = new ConcurrentHashMap<KylinConfig, RealizationRegistry>();
+    private static final ConcurrentMap<KylinConfig, RealizationRegistry> CACHE = new ConcurrentHashMap<KylinConfig, RealizationRegistry>();
 
     public static RealizationRegistry getInstance(KylinConfig config) {
         RealizationRegistry r = CACHE.get(config);

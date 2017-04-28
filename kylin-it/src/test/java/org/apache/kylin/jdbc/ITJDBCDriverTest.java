@@ -21,12 +21,14 @@ package org.apache.kylin.jdbc;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -36,6 +38,8 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -45,9 +49,12 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     private static Server server = null;
     private static SystemPropertiesOverride sysPropsOverride = new SystemPropertiesOverride();
+    private static final int PORT = new Random().nextInt(100) + 37070;
+    private static final Logger logger = LoggerFactory.getLogger(ITJDBCDriverTest.class);
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+        logger.info("random jetty port: " + PORT);
         sysPropsOverride.override("spring.profiles.active", "testing");
         sysPropsOverride.override("catalina.home", "."); // resources/log4j.properties ref ${catalina.home}
         staticCreateTestMetadata();
@@ -73,7 +80,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
     protected static void startJetty() throws Exception {
 
-        server = new Server(7070);
+        server = new Server(PORT);
 
         WebAppContext context = new WebAppContext();
         context.setDescriptor("../server/src/main/webapp/WEB-INF/web.xml");
@@ -93,7 +100,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
         Properties info = new Properties();
         info.put("user", "ADMIN");
         info.put("password", "KYLIN");
-        Connection conn = driver.connect("jdbc:kylin://localhost:7070/default", info);
+        Connection conn = driver.connect("jdbc:kylin://localhost:" + PORT + "/default", info);
 
         return conn;
     }
@@ -217,7 +224,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
         PreparedStatement statement = conn.prepareStatement("select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact " + "where LSTG_FORMAT_NAME = ? group by LSTG_FORMAT_NAME");
 
-        statement.setString(1, "FP-GTC_A");
+        statement.setString(1, "FP-GTC");
 
         ResultSet rs = statement.executeQuery();
 
@@ -225,7 +232,7 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
 
         String format_name = rs.getString(1);
 
-        Assert.assertTrue("FP-GTC_A".equals(format_name));
+        Assert.assertTrue("FP-GTC".equals(format_name));
 
         rs.close();
         statement.close();
@@ -255,6 +262,35 @@ public class ITJDBCDriverTest extends HBaseMetadataTestCase {
         }
 
         Assert.assertTrue(count > 0);
+        statement.close();
+        rs.close();
+        conn.close();
+
+    }
+
+    @Test
+    public void testResultSetWithMaxRows() throws Exception {
+        String sql = "select LSTG_FORMAT_NAME, sum(price) as GMV, count(1) as TRANS_CNT from test_kylin_fact \n" + " group by LSTG_FORMAT_NAME ";
+
+        Connection conn = getConnection();
+        Statement statement = conn.createStatement();
+        statement.setMaxRows(2);
+
+        statement.execute(sql);
+
+        ResultSet rs = statement.getResultSet();
+
+        int count = 0;
+        while (rs.next()) {
+            count++;
+            String lstg = rs.getString(1);
+            double gmv = rs.getDouble(2);
+            int trans_count = rs.getInt(3);
+
+            System.out.println("Get a line: LSTG_FORMAT_NAME=" + lstg + ", GMV=" + gmv + ", TRANS_CNT=" + trans_count);
+        }
+
+        Assert.assertTrue(count == 2);
         statement.close();
         rs.close();
         conn.close();

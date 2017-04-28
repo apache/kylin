@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
  * 
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class RowKeyColDesc {
+public class RowKeyColDesc implements java.io.Serializable {
 
     @JsonProperty("column")
     private String column;
@@ -62,9 +62,9 @@ public class RowKeyColDesc {
     private TblColRef colRef;
 
     public void init(int index, CubeDesc cubeDesc) {
-        column = column.toUpperCase();
         bitIndex = index;
         colRef = cubeDesc.getModel().findColumn(column);
+        column = colRef.getIdentity();
         Preconditions.checkArgument(colRef != null, "Cannot find rowkey column %s in cube %s", column, cubeDesc);
 
         Preconditions.checkState(StringUtils.isNotEmpty(this.encoding));
@@ -86,10 +86,9 @@ public class RowKeyColDesc {
                 encoding = encodingName = TimeDimEnc.ENCODING_NAME;
             }
         }
-        if (DateDimEnc.ENCODING_NAME.equals(encodingName) && type.isDate() == false)
-            throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply date encoding");
-        if (TimeDimEnc.ENCODING_NAME.equals(encodingName) && type.isTimeFamily() == false)
-            throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply time encoding");
+
+        encodingArgs = DateDimEnc.replaceEncodingArgs(encoding, encodingArgs, encodingName, type);
+        
         if (encodingName.startsWith(FixedLenDimEnc.ENCODING_NAME) && (type.isIntegerFamily() || type.isNumberFamily()))
             throw new IllegalArgumentException(colRef + " type is " + type + " and cannot apply fixed_length encoding");
     }
@@ -155,8 +154,34 @@ public class RowKeyColDesc {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((column == null) ? 0 : column.hashCode());
+        return result;
+    }
+
+    @Override
     public String toString() {
         return Objects.toStringHelper(this).add("column", column).add("encoding", encoding).toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RowKeyColDesc that = (RowKeyColDesc) o;
+
+        if (column != null ? !column.equals(that.column) : that.column != null) {
+            return false;
+        }
+
+        return true;
+    }
 }

@@ -17,9 +17,7 @@
  */
 package org.apache.kylin.common.util;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Preconditions;
+import org.apache.commons.lang.StringUtils;
 
 /**
  */
@@ -27,11 +25,17 @@ public final class SparkEntry {
 
     public static void main(String[] args) throws Exception {
         System.out.println("SparkEntry args:" + StringUtils.join(args, " "));
-        Preconditions.checkArgument(args.length >= 2, "-className is required");
-        Preconditions.checkArgument(args[0].equals("-className"), "-className is required");
+        if (!(args.length >= 2)) {
+            throw new IllegalArgumentException(String.valueOf("-className is required"));
+        }
+        if (!(args[0].equals("-className"))) {
+            throw new IllegalArgumentException(String.valueOf("-className is required"));
+        }
         final String className = args[1];
         final Object o = Class.<AbstractApplication> forName(className).newInstance();
-        Preconditions.checkArgument(o instanceof AbstractApplication, className + " is not a subClass of AbstractSparkApplication");
+        if (!(o instanceof AbstractApplication)) {
+            throw new IllegalArgumentException(String.valueOf(className + " is not a subClass of AbstractApplication"));
+        }
         String[] appArgs = new String[args.length - 2];
         for (int i = 2; i < args.length; i++) {
             appArgs[i - 2] = args[i];

@@ -40,6 +40,16 @@ public class BigDecimalSumAggregator extends MeasureAggregator<BigDecimal> {
     }
 
     @Override
+    public BigDecimal aggregate(BigDecimal value1, BigDecimal value2) {
+        if (value1 == null) {
+            return value2;
+        } else if (value2 == null) {
+            return value1;
+        }
+        return value1.add(value2);
+    }
+
+    @Override
     public BigDecimal getState() {
         return sum;
     }

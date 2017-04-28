@@ -71,7 +71,7 @@ public abstract class DimensionEncodingFactory {
         if (factoryMap == null)
             initFactoryMap();
 
-        Map<String, Integer> result = Maps.newHashMap();
+        Map<String, Integer> result = Maps.newTreeMap();
         for (Pair<String, Integer> p : factoryMap.keySet()) {
             if (result.containsKey(p.getFirst())) {
                 if (result.get(p.getFirst()) > p.getSecond()) {

@@ -24,16 +24,13 @@
     <artifactId>kylin-source-hive</artifactId>
     <packaging>jar</packaging>
     <name>Apache Kylin - Hive Source</name>
+    <description>Apache Kylin - Hive Source</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>1.6.1-SNAPSHOT</version>
-
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
-
-    <properties>
-    </properties>
 
     <dependencies>
 

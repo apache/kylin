@@ -18,59 +18,33 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.dict.NumberDictionary.NumberBytesCodec;
-
 /**
  * Created by xiefan on 16-11-2.
  */
 public class NumberDictionaryForestBuilder extends TrieDictionaryForestBuilder<String> {
 
-    public static class Number2BytesConverter implements BytesConverter<String> {
+    // keep this class for backward compatibility
+    public static class Number2BytesConverter extends org.apache.kylin.dict.Number2BytesConverter {
+        private static final long serialVersionUID = 1L;
 
-        static final int MAX_DIGITS_BEFORE_DECIMAL_POINT = NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT;
-        static final ThreadLocal<NumberBytesCodec> LOCAL = new ThreadLocal<NumberBytesCodec>();
-
-        static NumberBytesCodec getCodec() {
-            NumberBytesCodec codec = LOCAL.get();
-            if (codec == null) {
-                codec = new NumberBytesCodec(MAX_DIGITS_BEFORE_DECIMAL_POINT);
-                LOCAL.set(codec);
-            }
-            return codec;
-        }
-        
-        @Override
-        public byte[] convertToBytes(String v) {
-            NumberBytesCodec codec = getCodec();
-            byte[] num = Bytes.toBytes(v);
-            codec.encodeNumber(num, 0, num.length);
-            return Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
+        public Number2BytesConverter() {
+            super();
         }
 
-        @Override
-        public String convertFromBytes(byte[] b, int offset, int length) {
-            NumberBytesCodec codec = getCodec();
-            byte[] backup = codec.buf;
-            codec.buf = b;
-            codec.bufOffset = offset;
-            codec.bufLen = length;
-            int len = codec.decodeNumber(backup, 0);
-            codec.buf = backup;
-            return Bytes.toString(backup, 0, len);
+        public Number2BytesConverter(int maxDigitsBeforeDecimalPoint) {
+            super(maxDigitsBeforeDecimalPoint);
         }
-
     }
 
     public NumberDictionaryForestBuilder() {
-        super(new Number2BytesConverter());
+        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT));
     }
 
     public NumberDictionaryForestBuilder(int baseId) {
-        super(new Number2BytesConverter(), 0);
+        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0);
     }
 
     public NumberDictionaryForestBuilder(int baseId, int maxTrieSizeMB) {
-        super(new Number2BytesConverter(), 0, maxTrieSizeMB);
+        super(new org.apache.kylin.dict.Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT), 0, maxTrieSizeMB);
     }
 }

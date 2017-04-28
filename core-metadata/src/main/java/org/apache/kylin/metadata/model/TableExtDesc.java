@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -47,18 +48,8 @@ public class TableExtDesc extends RootPersistentEntity {
     @JsonProperty("sample_rows")
     private List<String[]> sampleRows = new ArrayList<>();
 
-    @JsonProperty("storage_location")
-    private String storageLocation;
-    @JsonProperty("owner")
-    private String owner;
-    @JsonProperty("last_access_time")
-    private String lastAccessTime;
     @JsonProperty("last_modified_time")
     private String lastModifiedTime;
-    @JsonProperty("partition_column")
-    private String partitionColumn;
-    @JsonProperty("total_file_size")
-    private String totalFileSize;
     @JsonProperty("total_rows")
     private String totalRows;
     @JsonProperty("data_source_properties")
@@ -161,22 +152,6 @@ public class TableExtDesc extends RootPersistentEntity {
             this.tableName = this.tableName.toUpperCase();
     }
 
-    public void setStorageLocation(String storageLocation) {
-        this.storageLocation = storageLocation;
-    }
-
-    public String getStorageLocation() {
-        return this.storageLocation;
-    }
-
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }
-
-    public String getOwner() {
-        return this.owner;
-    }
-
     public void setLastModifiedTime(String lastModifiedTime) {
         this.lastModifiedTime = lastModifiedTime;
     }
@@ -185,32 +160,8 @@ public class TableExtDesc extends RootPersistentEntity {
         return this.lastModifiedTime;
     }
 
-    public void setLastAccessTime(String lastAccessTime) {
-        this.lastAccessTime = lastAccessTime;
-    }
-
-    public String getLastAccessTime() {
-        return this.lastAccessTime;
-    }
-
-    public void setPartitionColumn(String partitionColumn) {
-        this.partitionColumn = partitionColumn;
-    }
-
-    public String getPartitionColumn() {
-        return this.partitionColumn;
-    }
-
     public boolean isPartitioned() {
-        return this.partitionColumn == null ? false : !this.partitionColumn.isEmpty();
-    }
-
-    public void setTotalFileSize(String totalFileSize) {
-        this.totalFileSize = totalFileSize;
-    }
-
-    public String getTotalFileSize() {
-        return this.totalFileSize;
+        return this.dataSourceProps.get("partition_column") == null ? false : !this.dataSourceProps.get("partition_column").isEmpty();
     }
 
     @Override
@@ -231,7 +182,7 @@ public class TableExtDesc extends RootPersistentEntity {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ColumnStats implements Comparable<ColumnStats> {
+    public static class ColumnStats implements Comparable<ColumnStats>, Serializable {
 
         @JsonBackReference
         private TableExtDesc tableExtDesc;
@@ -249,8 +200,8 @@ public class TableExtDesc extends RootPersistentEntity {
         private String minLengthValue;
 
         @JsonProperty("null_count")
-        private int nullCount;
-        
+        private long nullCount;
+
         @JsonProperty("cardinality")
         private long cardinality;
 
@@ -309,11 +260,11 @@ public class TableExtDesc extends RootPersistentEntity {
             this.minLengthValue = minLenValue;
         }
 
-        public int getNullCount() {
+        public long getNullCount() {
             return nullCount;
         }
 
-        public void setNullCount(int nullCount) {
+        public void setNullCount(long nullCount) {
             this.nullCount = nullCount;
         }
     }

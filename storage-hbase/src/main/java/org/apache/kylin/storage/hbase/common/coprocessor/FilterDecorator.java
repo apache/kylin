@@ -90,6 +90,20 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
                 result = newCompareFilter;
             }
             break;
+        case NOTIN:
+            Set<String> notInValues = Sets.newHashSet();
+            for (String value : constValues) {
+                v = translate(col, value, 0);
+                if (!isDictNull(v))
+                    notInValues.add(v);
+            }
+            if (notInValues.isEmpty()) {
+                result = ConstantTupleFilter.TRUE;
+            } else {
+                newCompareFilter.addChild(new ConstantTupleFilter(notInValues));
+                result = newCompareFilter;
+            }
+            break;
         case NEQ:
             v = translate(col, firstValue, 0);
             if (isDictNull(v)) {

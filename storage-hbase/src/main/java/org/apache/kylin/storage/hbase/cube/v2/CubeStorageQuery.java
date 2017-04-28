@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public class CubeStorageQuery extends GTCubeStorageQueryBase {
 
+    @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(CubeStorageQuery.class);
 
     public CubeStorageQuery(CubeInstance cube) {

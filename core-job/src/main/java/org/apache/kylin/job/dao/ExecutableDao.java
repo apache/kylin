@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -43,7 +44,7 @@ public class ExecutableDao {
     private static final Serializer<ExecutablePO> JOB_SERIALIZER = new JsonSerializer<ExecutablePO>(ExecutablePO.class);
     private static final Serializer<ExecutableOutputPO> JOB_OUTPUT_SERIALIZER = new JsonSerializer<ExecutableOutputPO>(ExecutableOutputPO.class);
     private static final Logger logger = LoggerFactory.getLogger(ExecutableDao.class);
-    private static final ConcurrentHashMap<KylinConfig, ExecutableDao> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableDao>();
+    private static final ConcurrentMap<KylinConfig, ExecutableDao> CACHE = new ConcurrentHashMap<KylinConfig, ExecutableDao>();
 
     private ResourceStore store;
 
@@ -62,6 +63,12 @@ public class ExecutableDao {
             }
         }
         return r;
+    }
+
+    public static void clearCache() {
+        synchronized (CACHE) {
+            CACHE.clear();
+        }
     }
 
     private ExecutableDao(KylinConfig config) {

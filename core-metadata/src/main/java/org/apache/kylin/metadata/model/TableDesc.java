@@ -26,8 +26,9 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringSplitter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Table Metadata from Source. All name should be uppercase.
@@ -36,7 +37,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
-    public static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
+    private static final String TABLE_TYPE_VIRTUAL_VIEW = "VIRTUAL_VIEW";
+    private static final String materializedTableNamePrefix = "kylin_intermediate_";
+
     @JsonProperty("name")
     private String name;
     @JsonProperty("columns")
@@ -46,7 +49,9 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     @JsonProperty("table_type")
     private String tableType;
 
-    private static final String materializedTableNamePrefix = "kylin_intermediate_";
+    @JsonProperty("data_gen")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String dataGen;
 
     private DatabaseDesc database = new DatabaseDesc();
 
@@ -97,6 +102,10 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
         return identity;
     }
 
+    public boolean isView() {
+        return TABLE_TYPE_VIRTUAL_VIEW.equals(tableType);
+    }
+
     public static String concatResourcePath(String tableIdentity) {
         return ResourceStore.TABLE_RESOURCE_ROOT + "/" + tableIdentity + ".json";
     }
@@ -121,7 +130,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
                 this.name = splits[0];
             }
         } else {
-            this.name = name;
+            this.name = null;
         }
     }
 
@@ -154,6 +163,10 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
 
     public int getColumnCount() {
         return getMaxColumnIndex() + 1;
+    }
+
+    public String getDataGen() {
+        return dataGen;
     }
 
     public void init() {
@@ -211,7 +224,7 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
             return false;
         if (!Arrays.equals(columns, tableDesc.columns))
             return false;
-        
+
         return getIdentity().equals(tableDesc.getIdentity());
 
     }

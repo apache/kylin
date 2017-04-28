@@ -251,6 +251,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         return getType() + "[name=" + name + "]";
     }
 
+    @Override
     public KylinConfig getConfig() {
         return config;
     }

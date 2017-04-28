@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -43,7 +44,7 @@ public class KafkaConfigManager {
     private static final Logger logger = LoggerFactory.getLogger(KafkaConfigManager.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, KafkaConfigManager> CACHE = new ConcurrentHashMap<KylinConfig, KafkaConfigManager>();
+    private static final ConcurrentMap<KylinConfig, KafkaConfigManager> CACHE = new ConcurrentHashMap<KylinConfig, KafkaConfigManager>();
 
     private KylinConfig config;
 
@@ -59,7 +60,7 @@ public class KafkaConfigManager {
     private KafkaConfigManager(KylinConfig config) throws IOException {
         this.config = config;
         this.kafkaMap = new CaseInsensitiveStringCache<KafkaConfig>(config, "kafka");
-        
+
         // touch lower level metadata before registering my listener
         reloadAllKafkaConfig();
         Broadcaster.getInstance(config).registerListener(new KafkaSyncListener(), "kafka");
@@ -191,6 +192,14 @@ public class KafkaConfigManager {
             throw new IllegalArgumentException();
         }
 
+        if (StringUtils.isEmpty(kafkaConfig.getTopic())) {
+            throw new IllegalArgumentException("No topic info");
+        }
+
+        if (kafkaConfig.getKafkaClusterConfigs() == null || kafkaConfig.getKafkaClusterConfigs().size() == 0) {
+            throw new IllegalArgumentException("No cluster info");
+        }
+
         String path = KafkaConfig.concatResourcePath(kafkaConfig.getName());
         getStore().putResource(path, kafkaConfig, KafkaConfig.SERIALIZER);
     }
@@ -205,7 +214,7 @@ public class KafkaConfigManager {
     private void removeKafkaConfigLocal(String name) {
         kafkaMap.remove(name);
     }
-    
+
     private void reloadAllKafkaConfig() throws IOException {
         ResourceStore store = getStore();
         logger.info("Reloading Kafka Metadata from folder " + store.getReadableResourcePath(ResourceStore.KAFKA_RESOURCE_ROOT));

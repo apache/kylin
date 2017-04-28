@@ -43,6 +43,20 @@ public class BigDecimalMaxAggregator extends MeasureAggregator<BigDecimal> {
     }
 
     @Override
+    public BigDecimal aggregate(BigDecimal value1, BigDecimal value2) {
+        if (value1 == null) {
+            return value2;
+        } else if (value2 == null) {
+            return value1;
+        }
+
+        if (value1.compareTo(value2) > 0)
+            return value1;
+        else
+            return value2;
+    }
+
+    @Override
     public BigDecimal getState() {
         return max;
     }

@@ -57,12 +57,8 @@ public class RawQueryLastHacker {
                 sqlDigest.groupbyColumns.add(col);
             } else {
                 // For measure columns, take them as metric columns with aggregation function SUM().
-                ParameterDesc colParameter = new ParameterDesc();
-                colParameter.setType("column");
-                colParameter.setValue(col.getName());
-                FunctionDesc sumFunc = new FunctionDesc();
-                sumFunc.setExpression("SUM");
-                sumFunc.setParameter(colParameter);
+                ParameterDesc parameter = ParameterDesc.newInstance(col);
+                FunctionDesc sumFunc = FunctionDesc.newInstance("SUM", parameter, null);
 
                 boolean measureHasSum = false;
                 for (MeasureDesc colMeasureDesc : cubeDesc.getMeasures()) {

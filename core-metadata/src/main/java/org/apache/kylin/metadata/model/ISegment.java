@@ -26,11 +26,18 @@ public interface ISegment {
 
     public long getDateRangeEnd();
 
+    public boolean isSourceOffsetsOn();
+
     public long getSourceOffsetStart();
 
     public long getSourceOffsetEnd();
-    
+
     public DataModelDesc getModel();
 
     public SegmentStatusEnum getStatus();
+
+    public long getLastBuildTime();
+    
+    public void validate() throws IllegalStateException;
+    
 }

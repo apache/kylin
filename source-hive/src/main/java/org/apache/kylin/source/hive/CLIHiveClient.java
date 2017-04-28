@@ -42,7 +42,6 @@ import com.google.common.collect.Lists;
  *
  */
 public class CLIHiveClient implements IHiveClient {
-
     protected HiveConf hiveConf = null;
     protected Driver driver = null;
     protected HiveMetaStoreClient metaStoreClient = null;
@@ -109,6 +108,7 @@ public class CLIHiveClient implements IHiveClient {
         builder.setOwner(table.getOwner());
         builder.setLastAccessTime(table.getLastAccessTime());
         builder.setTableType(table.getTableType());
+        builder.setSkipHeaderLineCount(table.getParameters().get("skip.header.line.count"));
 
         return builder.createHiveTableMeta();
     }

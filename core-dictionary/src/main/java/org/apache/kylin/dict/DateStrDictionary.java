@@ -26,7 +26,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 import org.apache.commons.lang.StringUtils;
@@ -84,10 +83,6 @@ public class DateStrDictionary extends Dictionary<String> {
         return pattern.length();
     }
 
-    @Override
-    protected boolean isNullByteForm(byte[] value, int offset, int len) {
-        return value == null || len == 0;
-    }
 
     @Override
     final protected int getIdFromValueImpl(String value, int roundFlag) {
@@ -105,34 +100,6 @@ public class DateStrDictionary extends Dictionary<String> {
             throw new IllegalArgumentException("ID '" + id + "' is out of range [" + baseId + "," + maxId + "]");
         long millis = DateDimEnc.getMillisFromNumOfDaysSince0000(calcSeqNoFromId(id));
         return dateToString(new Date(millis), pattern);
-    }
-
-    @Override
-    final protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
-        try {
-            return getIdFromValue(new String(value, offset, len, "ISO-8859-1"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e); // never happen
-        }
-    }
-
-    @Override
-    final protected byte[] getValueBytesFromIdImpl(int id) {
-        String date = getValueFromId(id);
-        byte[] bytes;
-        try {
-            bytes = date.getBytes("ISO-8859-1");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e); // never happen
-        }
-        return bytes;
-    }
-
-    @Override
-    final protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
-        byte[] bytes = getValueBytesFromIdImpl(id);
-        System.arraycopy(bytes, 0, returnValue, offset, bytes.length);
-        return bytes.length;
     }
 
     private int calcIdFromSeqNo(int seq) {
@@ -155,6 +122,7 @@ public class DateStrDictionary extends Dictionary<String> {
         int baseId = in.readInt();
         init(pattern, baseId);
     }
+
 
     @Override
     public int hashCode() {

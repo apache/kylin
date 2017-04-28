@@ -18,6 +18,7 @@
 
 package org.apache.kylin.cube.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -35,8 +36,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class AggregationGroup {
-    public static class HierarchyMask {
+public class AggregationGroup implements Serializable{
+    public static class HierarchyMask implements java.io.Serializable {
         public long fullMask; // 00000111
         public long[] allMasks; // 00000100,00000110,00000111
         public long[] dims; // 00000100,00000010,00000001
@@ -107,7 +108,7 @@ public class AggregationGroup {
         
         for (int i = 0; i < names.length; i++) {
             TblColRef col = cubeDesc.getModel().findColumn(names[i]);
-            names[i] = col.getTableAlias() + "." + col.getName();
+            names[i] = col.getIdentity();
         }
         
         // check no dup

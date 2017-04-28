@@ -71,6 +71,8 @@ abstract public class MeasureAggregator<V> implements Serializable {
 
     abstract public void aggregate(V value);
 
+    abstract public V aggregate(V value1, V value2);
+
     abstract public V getState();
 
     // get an estimate of memory consumption UPPER BOUND

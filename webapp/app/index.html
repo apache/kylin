@@ -22,6 +22,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <!-- HTTP 1.1 -->
+  <meta http-equiv="pragma" content="no-cache">
+  <!-- HTTP 1.0 -->
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta name="format-detection" content="telephone=no">
   <base href="/kylin/">
   <link rel="icon" href="image/favicon.ico" type="image/x-icon">
   <link rel="shortcut icon" href="image/favicon.ico" type="image/x-icon">
@@ -128,7 +133,7 @@
 <script src="js/services/auth.js"></script>
 <script src="js/services/cubeDesc.js"></script>
 <script src="js/services/model.js"></script>
-
+<script src="js/services/encodings.js"></script>
 <script src="js/services/cubes.js"></script>
 <script src="js/services/streaming.js"></script>
 <script src="js/services/graph.js"></script>
@@ -187,6 +192,9 @@
 <!--New GUI-->
 <script src="js/controllers/modelSchema.js"></script>
 <script src="js/controllers/modelDimensions.js"></script>
+<script src="js/controllers/modelDataModel.js"></script>
+<script src="js/controllers/modelMeasures.js"></script>
+<script src="js/controllers/modelConditionsSettings.js"></script>
 <script src="js/controllers/modelRefresh.js"></script>
 <script src="js/controllers/modelEdit.js"></script>
 

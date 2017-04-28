@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import org.apache.kylin.engine.spark.SparkCuboidWriter;
 import org.apache.kylin.gridtable.GTRecord;
 
-import com.google.common.collect.Lists;
-
 import scala.Tuple2;
 
 /**
@@ -35,7 +33,7 @@ public class ListBackedCuboidWriter implements SparkCuboidWriter {
     private final TupleConverter tupleConverter;
 
     public ListBackedCuboidWriter(TupleConverter tupleConverter) {
-        this.result = Lists.newArrayList();
+        this.result = new ArrayList();
         this.tupleConverter = tupleConverter;
     }
 

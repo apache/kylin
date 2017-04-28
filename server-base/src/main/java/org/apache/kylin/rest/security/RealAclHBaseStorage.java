@@ -21,7 +21,8 @@ package org.apache.kylin.rest.security;
 import java.io.IOException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.QueryService;
@@ -38,10 +39,11 @@ public class RealAclHBaseStorage implements AclHBaseStorage {
 
     @Override
     public String prepareHBaseTable(Class<?> clazz) throws IOException {
-        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String metadataUrl = kylinConfig.getMetadataUrl();
         int cut = metadataUrl.indexOf('@');
-        String tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        String tableNameBase = kylinConfig.getMetadataUrlPrefix();
 
         if (clazz == AclService.class) {
             aclTableName = tableNameBase + ACL_TABLE_NAME;
@@ -57,11 +59,11 @@ public class RealAclHBaseStorage implements AclHBaseStorage {
     }
 
     @Override
-    public HTableInterface getTable(String tableName) throws IOException {
+    public Table getTable(String tableName) throws IOException {
         if (StringUtils.equals(tableName, aclTableName)) {
-            return HBaseConnection.get(hbaseUrl).getTable(aclTableName);
+            return HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(aclTableName));
         } else if (StringUtils.equals(tableName, userTableName)) {
-            return HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            return HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(userTableName));
         } else {
             throw new IllegalStateException("getTable failed" + tableName);
         }

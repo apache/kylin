@@ -180,6 +180,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 try {
                     split.join();
                 } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                     errors.add(e);
                 }
                 if (split.exception != null)
@@ -221,6 +222,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 return false;
 
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
         }
@@ -239,6 +241,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 last.join();
 
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             }
         }

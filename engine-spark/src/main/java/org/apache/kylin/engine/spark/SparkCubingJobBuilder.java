@@ -50,7 +50,6 @@ public class SparkCubingJobBuilder extends JobBuilderSupport {
 
     public DefaultChainedExecutable build() {
         final CubingJob result = CubingJob.createBuildJob(seg, submitter, config);
-        final String jobId = result.getId();
 
         inputSide.addStepPhase1_CreateFlatTable(result);
         final IJoinedFlatTableDesc joinedFlatTableDesc = EngineFactory.getJoinedFlatTableDesc(seg);

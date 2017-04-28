@@ -25,7 +25,7 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 
 import com.google.common.collect.Maps;
 
-public class RowKeyEncoderProvider {
+public class RowKeyEncoderProvider implements java.io.Serializable {
 
     private CubeSegment cubeSegment;
     private HashMap<Long, RowKeyEncoder> rowKeyEncoders;

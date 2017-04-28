@@ -92,11 +92,10 @@ public class JobEngineConfig {
                 }
             }
         }
-        logger.info("Chosen job conf is : " + path);
         return path;
     }
 
-    public String getHiveConfFilePath() throws IOException {
+    public String getHiveConfFilePath() {
         String hiveConfFile = (HIVE_CONF_FILENAME + ".xml");
 
         File jobConfig = getJobConfig(hiveConfFile);

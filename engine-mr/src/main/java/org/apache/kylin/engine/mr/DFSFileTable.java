@@ -26,6 +26,7 @@ import java.util.Arrays;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.source.ReadableTable;
 
@@ -61,11 +62,22 @@ public class DFSFileTable implements ReadableTable {
 
     @Override
     public TableSignature getSignature() throws IOException {
+        Pair<Long, Long> sizeAndLastModified;
         try {
-            Pair<Long, Long> sizeAndLastModified = getSizeAndLastModified(path);
-            return new TableSignature(path, sizeAndLastModified.getFirst(), sizeAndLastModified.getSecond());
+            sizeAndLastModified = getSizeAndLastModified(path);
         } catch (FileNotFoundException ex) {
-            return null;
+            sizeAndLastModified = Pair.newPair(-1L, 0L);
+        }
+        return new TableSignature(path, sizeAndLastModified.getFirst(), sizeAndLastModified.getSecond());
+    }
+    
+    @Override
+    public boolean exists() throws IOException {
+        try {
+            getSizeAndLastModified(path);
+            return true;
+        } catch (FileNotFoundException ex) {
+            return false;
         }
     }
 

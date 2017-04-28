@@ -24,8 +24,104 @@ KylinApp.constant('tableConfig', {
     {attr: 'cardinality', name: 'Cardinality'},
     {attr: 'comment', name: 'Comment'}
   ],
-  dataTypes:["tinyint","smallint","int","bigint","float","double","decimal","timestamp","date","string","varchar(256)","char","boolean","binary"]
-
+  dataTypes:["tinyint","smallint","int","bigint","float","double","decimal","timestamp","date","string","varchar(256)","char","boolean","binary"],
+  columnTypeEncodingMap:{
+    "numeric": [
+      "dict"
+    ],
+    "bigint": [
+      "boolean",
+      "date",
+      "time",
+      "dict",
+      "integer"
+    ],
+    "char": [
+      "boolean",
+      "date",
+      "time",
+      "dict",
+      "fixed_length",
+      "fixed_length_hex",
+      "integer"
+    ],
+    "integer": [
+      "boolean",
+      "date",
+      "time",
+      "dict",
+      "integer"
+    ],
+    "int4": [
+      "boolean",
+      "date",
+      "time",
+      "dict",
+      "integer"
+    ],
+    "tinyint": [
+      "boolean",
+      "date",
+      "time",
+      "dict",
+      "integer"
+    ],
+    "double": [
+      "dict"
+    ],
+    "date": [
+      "date",
+      "time",
+      "dict"
+    ],
+    "float": [
+      "dict"
+    ],
+    "decimal": [
+      "dict"
+    ],
+    "timestamp": [
+      "date",
+      "time",
+      "dict"
+    ],
+    "real": [
+      "dict"
+    ],
+    "time": [
+      "date",
+      "time",
+      "dict"
+    ],
+    "long8": [
+      "boolean",
+      "date",
+      "time",
+      "dict",
+      "integer"
+    ],
+    "datetime": [
+      "date",
+      "time",
+      "dict"
+    ],
+    "smallint": [
+      "boolean",
+      "date",
+      "time",
+      "dict",
+      "integer"
+    ],
+    "varchar": [
+      "boolean",
+      "date",
+      "time",
+      "dict",
+      "fixed_length",
+      "fixed_length_hex",
+      "integer"
+    ]
+  }
 
 
 });

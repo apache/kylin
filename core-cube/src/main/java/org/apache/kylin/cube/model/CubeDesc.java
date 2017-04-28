@@ -62,8 +62,13 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.IEngineAware;
 import org.apache.kylin.metadata.model.IStorageAware;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.project.ProjectManager;
+import org.apache.kylin.metadata.realization.RealizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,26 +97,26 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         }
     }
 
-    public enum DeriveType {
+    public enum DeriveType implements java.io.Serializable {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
 
-    public static class DeriveInfo {
+    public static class DeriveInfo implements java.io.Serializable {
         public DeriveType type;
-        public DimensionDesc dimension;
+        public JoinDesc join;
         public TblColRef[] columns;
         public boolean isOneToOne; // only used when ref from derived to host
 
-        DeriveInfo(DeriveType type, DimensionDesc dimension, TblColRef[] columns, boolean isOneToOne) {
+        DeriveInfo(DeriveType type, JoinDesc join, TblColRef[] columns, boolean isOneToOne) {
             this.type = type;
-            this.dimension = dimension;
+            this.join = join;
             this.columns = columns;
             this.isOneToOne = isOneToOne;
         }
 
         @Override
         public String toString() {
-            return "DeriveInfo [type=" + type + ", dimension=" + dimension + ", columns=" + Arrays.toString(columns) + ", isOneToOne=" + isOneToOne + "]";
+            return "DeriveInfo [type=" + type + ", join=" + join + ", columns=" + Arrays.toString(columns) + ", isOneToOne=" + isOneToOne + "]";
         }
 
     }
@@ -435,6 +440,9 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public int getBuildLevel() {
+        if (aggregationGroups == null || aggregationGroups.size() == 0)
+            throw new IllegalStateException("Cube has no aggregation group.");
+
         return Collections.max(Collections2.transform(aggregationGroups, new Function<AggregationGroup, Integer>() {
             @Nullable
             @Override
@@ -466,8 +474,20 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
      * @return
      */
     public boolean checkSignature() {
-        if (KylinVersion.getCurrentVersion().isCompatibleWith(new KylinVersion(getVersion())) && !KylinVersion.getCurrentVersion().isSignatureCompatibleWith(new KylinVersion(getVersion()))) {
-            logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), getVersion());
+        if (this.getConfig().isIgnoreCubeSignatureInconsistency()) {
+            logger.info("Skip checking cube signature");
+            return true;
+        }
+
+        KylinVersion cubeVersion = new KylinVersion(getVersion());
+        KylinVersion kylinVersion = KylinVersion.getCurrentVersion();
+        if (!kylinVersion.isCompatibleWith(cubeVersion)) {
+            logger.info("checkSignature on {} is skipped as the its version {} is different from kylin version {}", getName(), cubeVersion, kylinVersion);
+            return true;
+        }
+
+        if (kylinVersion.isCompatibleWith(cubeVersion) && !kylinVersion.isSignatureCompatibleWith(cubeVersion)) {
+            logger.info("checkSignature on {} is skipped as the its version is {} (not signature compatible but compatible) ", getName(), cubeVersion);
             return true;
         }
 
@@ -514,10 +534,24 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     public void init(KylinConfig config) {
         this.errors.clear();
-        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
 
         checkArgument(StringUtils.isNotBlank(name), "CubeDesc name is blank");
-        checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc(%s) has blank modelName", name);
+        checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc (%s) has blank model name", name);
+
+        // note CubeDesc.name == CubeInstance.name
+        List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
+
+        // cube inherit the project override props
+        if (ownerPrj.size() == 1) {
+            Map<String, String> prjOverrideProps = ownerPrj.get(0).getOverrideKylinProps();
+            for (Entry<String, String> entry : prjOverrideProps.entrySet()) {
+                if (!overrideKylinProps.containsKey(entry.getKey())) {
+                    overrideKylinProps.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
 
         this.model = MetadataManager.getInstance(config).getDataModelDesc(modelName);
         checkNotNull(this.model, "DateModelDesc(%s) not found", modelName);
@@ -530,6 +564,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         initMeasureColumns();
 
         rowkey.init(this);
+
         validateAggregationGroups(); // check if aggregation group is valid
         for (AggregationGroup agg : this.aggregationGroups) {
             agg.init(this, rowkey);
@@ -543,13 +578,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived(true);
-        checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%d) doesn't match dimensions columns count (%d)", rowkey.getRowKeyColumns().length, dimCols.size());
+        checkState(rowkey.getRowKeyColumns().length == dimCols.size(), "RowKey columns count (%s) doesn't match dimensions columns count (%s)", rowkey.getRowKeyColumns().length, dimCols.size());
 
         initDictionaryDesc();
-
-        for (TblColRef col : allColumns) {
-            allColumnDescs.add(col.getColumnDesc());
-        }
+        amendAllColumns();
     }
 
     public void validateAggregationGroups() {
@@ -728,22 +760,29 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 for (int i = 0; i < derivedNames.length; i++) {
                     derivedCols[i] = initDimensionColRef(dim, derivedNames[i]);
                 }
-                initDerivedMap(dimColArray, DeriveType.LOOKUP, dim, derivedCols, derivedExtra);
+                initDerivedMap(dimColArray, DeriveType.LOOKUP, join, derivedCols, derivedExtra);
             }
 
-            // PK-FK derive the other side
             if (join != null) {
-                TblColRef[] fk = join.getForeignKeyColumns();
-                TblColRef[] pk = join.getPrimaryKeyColumns();
+                allColumns.addAll(Arrays.asList(join.getForeignKeyColumns()));
+                allColumns.addAll(Arrays.asList(join.getPrimaryKeyColumns()));
+            }
+        }
 
-                allColumns.addAll(Arrays.asList(fk));
-                allColumns.addAll(Arrays.asList(pk));
-                for (int i = 0; i < fk.length; i++) {
-                    int find = ArrayUtils.indexOf(dimColArray, fk[i]);
-                    if (find >= 0) {
-                        TblColRef derivedCol = initDimensionColRef(pk[i]);
-                        initDerivedMap(new TblColRef[] { dimColArray[find] }, DeriveType.PK_FK, dim, new TblColRef[] { derivedCol }, null);
-                    }
+        // PK-FK derive the other side
+        Set<TblColRef> realDimensions = new HashSet<>(listDimensionColumnsExcludingDerived(true));
+        for (JoinTableDesc joinTable : model.getJoinTables()) {
+            JoinDesc join = joinTable.getJoin();
+            int n = join.getForeignKeyColumns().length;
+            for (int i = 0; i < n; i++) {
+                TblColRef pk = join.getPrimaryKeyColumns()[i];
+                TblColRef fk = join.getForeignKeyColumns()[i];
+                if (realDimensions.contains(pk) && !realDimensions.contains(fk)) {
+                    initDimensionColRef(fk);
+                    initDerivedMap(new TblColRef[] { pk }, DeriveType.PK_FK, join, new TblColRef[] { fk }, null);
+                } else if (realDimensions.contains(fk) && !realDimensions.contains(pk)) {
+                    initDimensionColRef(pk);
+                    initDerivedMap(new TblColRef[] { fk }, DeriveType.PK_FK, join, new TblColRef[] { pk }, null);
                 }
             }
         }
@@ -766,7 +805,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return new String[][] { cols, extra };
     }
 
-    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
+    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, JoinDesc join, TblColRef[] derivedCols, String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
 
@@ -776,39 +815,68 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         for (int i = 0; i < derivedCols.length; i++) {
             if (ArrayUtils.contains(hostCols, derivedCols[i])) {
                 derivedCols = (TblColRef[]) ArrayUtils.remove(derivedCols, i);
-                extra = (String[]) ArrayUtils.remove(extra, i);
+                if (extra != null)
+                    extra = (String[]) ArrayUtils.remove(extra, i);
                 i--;
             }
         }
 
-        Map<TblColRef, DeriveInfo> toHostMap = derivedToHostMap;
-        Map<Array<TblColRef>, List<DeriveInfo>> hostToMap = hostToDerivedMap;
-
-        Array<TblColRef> hostColArray = new Array<TblColRef>(hostCols);
-        List<DeriveInfo> infoList = hostToMap.get(hostColArray);
-        if (infoList == null) {
-            hostToMap.put(hostColArray, infoList = new ArrayList<DeriveInfo>());
-        }
-        infoList.add(new DeriveInfo(type, dimension, derivedCols, false));
+        if (derivedCols.length == 0)
+            return;
 
         for (int i = 0; i < derivedCols.length; i++) {
             TblColRef derivedCol = derivedCols[i];
             boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol) || (extra != null && extra[i].contains("1-1"));
-            toHostMap.put(derivedCol, new DeriveInfo(type, dimension, hostCols, isOneToOne));
+            derivedToHostMap.put(derivedCol, new DeriveInfo(type, join, hostCols, isOneToOne));
+        }
+
+        Array<TblColRef> hostColArray = new Array<TblColRef>(hostCols);
+        List<DeriveInfo> infoList = hostToDerivedMap.get(hostColArray);
+        if (infoList == null) {
+            infoList = new ArrayList<DeriveInfo>();
+            hostToDerivedMap.put(hostColArray, infoList);
+        }
+
+        // Merged duplicated derived column
+        List<TblColRef> whatsLeft = new ArrayList<>();
+        for (TblColRef derCol : derivedCols) {
+            boolean merged = false;
+            for (DeriveInfo existing : infoList) {
+                if (existing.type == type && existing.join.getPKSide().equals(join.getPKSide())) {
+                    if (ArrayUtils.contains(existing.columns, derCol)) {
+                        merged = true;
+                        break;
+                    }
+                    if (type == DeriveType.LOOKUP) {
+                        existing.columns = (TblColRef[]) ArrayUtils.add(existing.columns, derCol);
+                        merged = true;
+                        break;
+                    }
+                }
+            }
+            if (!merged)
+                whatsLeft.add(derCol);
+        }
+        if (whatsLeft.size() > 0) {
+            infoList.add(new DeriveInfo(type, join, (TblColRef[]) whatsLeft.toArray(new TblColRef[whatsLeft.size()]), false));
         }
     }
 
     private TblColRef initDimensionColRef(DimensionDesc dim, String colName) {
         TblColRef col = model.findColumn(dim.getTable(), colName);
 
-        // always use FK instead PK, FK could be shared by more than one lookup tables
-        JoinDesc join = dim.getJoin();
-        if (join != null) {
-            int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), col);
-            if (idx >= 0) {
-                col = join.getForeignKeyColumns()[idx];
+        // for backward compatibility
+        if (KylinVersion.isBefore200(getVersion())) {
+            // always use FK instead PK, FK could be shared by more than one lookup tables
+            JoinDesc join = dim.getJoin();
+            if (join != null) {
+                int idx = ArrayUtils.indexOf(join.getPrimaryKeyColumns(), col);
+                if (idx >= 0) {
+                    col = join.getForeignKeyColumns()[idx];
+                }
             }
         }
+
         return initDimensionColRef(col);
     }
 
@@ -818,6 +886,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return col;
     }
 
+    @SuppressWarnings("deprecation")
     private void initMeasureColumns() {
         if (measures == null || measures.isEmpty()) {
             return;
@@ -834,7 +903,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             func.init(model);
             allColumns.addAll(func.getParameter().getColRefs());
 
-            if (ExtendedColumnMeasureType.FUNC_RAW.equalsIgnoreCase(m.getFunction().getExpression())) {
+            if (ExtendedColumnMeasureType.FUNC_EXTENDED_COLUMN.equalsIgnoreCase(m.getFunction().getExpression())) {
                 FunctionDesc functionDesc = m.getFunction();
 
                 List<TblColRef> hosts = ExtendedColumnMeasureType.getExtendedColumnHosts(functionDesc);
@@ -899,6 +968,35 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
             }
         }
         return false;
+    }
+
+    private void amendAllColumns() {
+        // make sure all PF/FK are included, thus become exposed to calcite later
+        Set<TableRef> tables = collectTablesOnJoinChain(allColumns);
+        for (TableRef t : tables) {
+            JoinDesc join = model.getJoinByPKSide(t);
+            if (join != null) {
+                allColumns.addAll(Arrays.asList(join.getForeignKeyColumns()));
+                allColumns.addAll(Arrays.asList(join.getPrimaryKeyColumns()));
+            }
+        }
+
+        for (TblColRef col : allColumns) {
+            allColumnDescs.add(col.getColumnDesc());
+        }
+    }
+
+    private Set<TableRef> collectTablesOnJoinChain(Set<TblColRef> columns) {
+        Set<TableRef> result = new HashSet<>();
+        for (TblColRef col : columns) {
+            TableRef t = col.getTableRef();
+            while (t != null) {
+                result.add(t);
+                JoinDesc join = model.getJoinByPKSide(t);
+                t = join == null ? null : join.getFKSide();
+            }
+        }
+        return result;
     }
 
     public long getRetentionRange() {
@@ -1059,6 +1157,28 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return null;
     }
 
+    /** Get a column which can be used to cluster the source table.
+     * To reduce memory footprint in base cuboid for global dict */
+    // TODO handle more than one ultra high cardinality columns use global dict in one cube
+    TblColRef getClusteredByColumn() {
+        if (getDistributedByColumn() != null) {
+            return null;
+        }
+
+        if (dictionaries == null) {
+            return null;
+        }
+
+        String clusterByColumn = config.getFlatHiveTableClusterByDictColumn();
+        for (DictionaryDesc dictDesc : dictionaries) {
+            if (dictDesc.getColumnRef().getName().equalsIgnoreCase(clusterByColumn)) {
+                return dictDesc.getColumnRef();
+            }
+        }
+
+        return null;
+    }
+
     public String getDictionaryBuilderClass(TblColRef col) {
         if (dictionaries == null)
             return null;
@@ -1097,11 +1217,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setAggregationGroups(cubeDesc.getAggregationGroups());
         newCubeDesc.setOverrideKylinProps(cubeDesc.getOverrideKylinProps());
         newCubeDesc.setConfig((KylinConfigExt) cubeDesc.getConfig());
-        newCubeDesc.updateRandomUuid();
         newCubeDesc.setPartitionOffsetStart(cubeDesc.getPartitionOffsetStart());
+        newCubeDesc.setVersion(cubeDesc.getVersion());
+        newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }
-
 
     private Collection ensureOrder(Collection c) {
         TreeSet set = new TreeSet();

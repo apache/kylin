@@ -154,7 +154,7 @@ public class SQLResponseStub implements Serializable {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ColumnMetaStub {
+    public static class ColumnMetaStub implements Serializable{
 
         private boolean isAutoIncrement;
         private boolean isCaseSensitive;

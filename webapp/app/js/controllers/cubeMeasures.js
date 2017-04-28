@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel) {
+KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubesManager,CubeDescModel,SweetAlert,VdmUtil,TableModel,cubeConfig,modelsManager) {
   $scope.num=0;
   $scope.convertedColumns=[];
   $scope.groupby=[];
@@ -29,48 +29,24 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     }
   };
   $scope.initUpdateMeasureStatus();
-  var needLengthKeyList=['fixed_length','fixed_length_hex','int','integer'];
-  $scope.removeVersion=function(typename){
-    if(typename){
-      return typename.replace(/\[v\d+\]/g,"");
-    }
-    return "";
-  }
-  $scope.getTypeVersion=function(typename){
-    var searchResult=/\[v(\d+)\]/.exec(typename);
-    if(searchResult&&searchResult.length){
-      return searchResult.length&&searchResult[1]||1;
-    }else{
-      return 1;
-    }
-  }
-  $scope.createFilter=function(type){
-    if(type.indexOf("varchar")<=0){
-      return ['fixed_length_hex'];
-    }else if(type!="date"){
-      return ['date'];
-    }else if(type!="time"&&type!="datetime"&&type!="timestamp"){
-      return ['time'];
-    }else{
-      return [];
-    }
-  }
+  var needLengthKeyList=cubeConfig.needSetLengthEncodingList;
   $scope.getEncodings =function (name){
-    var type = TableModel.columnNameTypeMap[name]||'';
+    var columnType = modelsManager.getColumnTypeByColumnName(name);
     var encodings =$scope.store.supportedEncoding,filterEncoding=[];
-    var filerList=$scope.createFilter(type);
+    var matchList=VdmUtil.getObjValFromLikeKey($scope.store.encodingMaps,columnType);
     if($scope.isEdit) {
-      if (name && $scope.newMeasure.function.configuration) {
+      if (name && $scope.newMeasure.function.configuration&&$scope.newMeasure.function.configuration['topn.encoding.' + name]) {
         var version = $scope.newMeasure.function.configuration['topn.encoding_version.' + name] || 1;
         filterEncoding = VdmUtil.getFilterObjectListByOrFilterVal(encodings, 'value', $scope.newMeasure.function.configuration['topn.encoding.' + name].replace(/:\d+/, "") + (version ? "[v" + version + "]" : "[v1]"), 'suggest', true);
+        matchList.push($scope.newMeasure.function.configuration['topn.encoding.' + name].replace(/:\d+/, ""));
+        filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList);
       }else{
         filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest', true);
+        filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList);
       }
     }else{
       filterEncoding=VdmUtil.getFilterObjectListByOrFilterVal(encodings,'suggest', true);
-    }
-    for(var f=0;f<filerList.length;f++){
-      filterEncoding=VdmUtil.removeFilterObjectList(filterEncoding,'baseValue',filerList[f]);
+      filterEncoding=VdmUtil.getObjectList(filterEncoding,'baseValue',matchList);
     }
     return filterEncoding;
   }
@@ -80,16 +56,28 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       $scope.updateMeasureStatus.editIndex = index;
     }
     $scope.nextParameters = [];
+    $scope.measureParamValueColumn=$scope.getCommonMetricColumns();
     $scope.newMeasure = (!!measure)? jQuery.extend(true, {},measure):CubeDescModel.createMeasure();
+    $scope.newMeasure.function.returntype=$scope.newMeasure.function.returntype.replace(/\,\d+/,'');
     if(!!measure && measure.function.parameter.next_parameter){
       $scope.nextPara.value = measure.function.parameter.next_parameter.value;
     }
+    if($scope.newMeasure.function.parameter.value){
+      if($scope.metaModel.model.metrics&&$scope.metaModel.model.metrics.indexOf($scope.newMeasure.function.parameter.value)!=-1){
+          $scope.newMeasure.showDim=false;
+      }else{
+          $scope.newMeasure.showDim=true;
+      }
+    }else{
+      $scope.newMeasure.showDim=false;
+    }
+    $scope.measureParamValueUpdate();
     if($scope.newMeasure.function.expression=="TOP_N"){
       $scope.convertedColumns=[];
       if($scope.newMeasure.function.configuration==null){
         var GroupBy = {
             name:$scope.newMeasure.function.parameter.next_parameter.value,
-            encoding:"dict",
+            encoding:"dict  (v1)",
             valueLength:0,
             }
         $scope.convertedColumns.push(GroupBy);
@@ -98,35 +86,19 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           if(/topn\.encoding\./.test(configuration)){
             var _name=configuration.slice(14);
             var item=$scope.newMeasure.function.configuration[configuration];
-            //var _isFixedLength = item.substring(0,12) === "fixed_length"?"true":"false";//fixed_length:12
-            //var _isIntegerLength = item.substring(0,7) === "integer"?"true":"false";
-            //var _isIntLength = item.substring(0,3) === "int"?"true":"false";
             var _encoding = item;
             var _valueLength = 0 ;
-            //if(_isFixedLength !=="false"){
-            //  _valueLength = item.substring(13,item.length);
-            //  _encoding = "fixed_length";
-            //}
-            //if(_isIntLength!="false" && _isIntegerLength=="false" ){
-            //  _valueLength = item.substring(4,item.length);
-            //  _encoding = "int";
-            //}
-            //
-            //if(_isIntegerLength!="false" ){
-            //  _valueLength = item.substring(8,item.length);
-            //  _encoding = "integer";
-            //}
             var version=$scope.newMeasure.function.configuration['topn.encoding_version.'+_name]||1;
             item=$scope.removeVersion(item);
             var baseKey=item.replace(/:\d+/,'');
-            if(needLengthKeyList.indexOf(baseKey)>=-1){
+            if(needLengthKeyList.indexOf(baseKey)!=-1){
               var result=/:(\d+)/.exec(item);
               _valueLength=result?result[1]:0;
             }
             _encoding=baseKey;
             $scope.GroupBy = {
               name:_name,
-              encoding:_encoding+(version?"[v"+version+"]":"[v1]"),
+              encoding: _encoding + (version ? "[v" + version + "]" : "[v1]"),
               valueLength:_valueLength,
               encoding_version:version||1
             }
@@ -231,7 +203,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           var versionKey='topn.encoding_version.'+item.name;
           var version=$scope.getTypeVersion(item.encoding);
           var encoding="";
-          if(needLengthKeyList.indexOf($scope.removeVersion(item.encoding))>=-1){
+          if(needLengthKeyList.indexOf($scope.removeVersion(item.encoding))!=-1){
             encoding = $scope.removeVersion(item.encoding)+":"+item.valueLength;
           }else{
             encoding = $scope.removeVersion(item.encoding);
@@ -287,7 +259,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
   $scope.addNewGroupByColumn = function () {
     $scope.nextGroupBy = {
       name:null,
-      encoding:"dict",
+      encoding:"dict  (v1)",
       valueLength:0,
     }
     $scope.convertedColumns.push($scope.nextGroupBy);
@@ -333,6 +305,19 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       return false;
     }
   }
+
+  $scope.measureParamValueUpdate = function(){
+    if($scope.newMeasure.function.expression !== 'EXTENDED_COLUMN' && $scope.newMeasure.showDim==true){
+       $scope.measureParamValueColumn=$scope.getAllModelDimMeasureColumns();
+    }
+    if($scope.newMeasure.function.expression !== 'EXTENDED_COLUMN' && $scope.newMeasure.showDim==false){
+       $scope.measureParamValueColumn=$scope.getCommonMetricColumns();
+    }
+    if($scope.newMeasure.function.expression == 'EXTENDED_COLUMN'){
+      $scope.measureParamValueColumn=$scope.getExtendedHostColumn();
+    }
+  }
+
   //map right return type for param
   $scope.measureReturnTypeUpdate = function(){
 
@@ -347,6 +332,8 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
       $scope.newMeasure.function.parameter.type= 'column';
       $scope.newMeasure.function.returntype = "extendedcolumn(100)";
       return;
+    }else if($scope.newMeasure.function.expression=='PERCENTILE'){
+      $scope.newMeasure.function.parameter.type= 'column';
     }else{
       $scope.nextParameterInit();
     }
@@ -369,8 +356,9 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
     if($scope.newMeasure.function.parameter.type=="column"&&$scope.newMeasure.function.expression!=="COUNT_DISTINCT"){
 
       var column = $scope.newMeasure.function.parameter.value;
-      var colType = $scope.getColumnType(column, $scope.metaModel.model.fact_table); // $scope.getColumnType defined in cubeEdit.js
-
+      if(column&&(typeof column=="string")){
+        var colType = $scope.getColumnType(VdmUtil.removeNameSpace(column), VdmUtil.getNameSpaceAliasName(column)); // $scope.getColumnType defined in cubeEdit.js
+      }
       if(colType==""||!colType){
         $scope.newMeasure.function.returntype = "";
         return;
@@ -398,6 +386,9 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
           break;
         case "COUNT":
           $scope.newMeasure.function.returntype = "bigint";
+          break;
+        case "PERCENTILE":
+          $scope.newMeasure.function.returntype = "percentile(100)";
           break;
         default:
           $scope.newMeasure.function.returntype = "";

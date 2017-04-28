@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 
@@ -35,8 +36,14 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
 
     private int precision;
 
+    private int scale;
+
     public TopNCounterSerializer(DataType dataType) {
         this.precision = dataType.getPrecision();
+        this.scale = dataType.getScale();
+        if (scale < 0) {
+            scale = DictionaryDimEnc.MAX_ENCODING_LENGTH;
+        }
     }
 
     @Override
@@ -54,12 +61,12 @@ public class TopNCounterSerializer extends DataTypeSerializer<TopNCounter<ByteAr
 
     @Override
     public int maxLength() {
-        return precision * TopNCounter.EXTRA_SPACE_RATE * (4 + 8);
+        return Math.max(precision * TopNCounter.EXTRA_SPACE_RATE * (scale + 8), 1024 * 1024); // use at least 1M
     }
 
     @Override
     public int getStorageBytesEstimate() {
-        return precision * TopNCounter.EXTRA_SPACE_RATE * 8;
+        return precision * TopNCounter.EXTRA_SPACE_RATE * (scale + 8);
     }
 
     @Override

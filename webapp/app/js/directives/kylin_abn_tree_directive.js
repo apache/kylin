@@ -186,7 +186,6 @@
                 return b.uid = "" + Math.random();
               }
             });
-            console.log('UIDs are set.');
             for_each_branch(function(b) {
               var child, _i, _len, _ref, _results;
               if (angular.isArray(b.children)) {

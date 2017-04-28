@@ -59,10 +59,11 @@ public class SQLDigest {
     public List<TblColRef> sortColumns;
     public List<OrderEnum> sortOrders;
     public boolean isRawQuery;
+    public boolean limitPrecedesAggr;
 
     public SQLDigest(String factTable, TupleFilter filter, List<JoinDesc> joinDescs, Set<TblColRef> allColumns, //
             List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, Set<TblColRef> filterColumns, Set<TblColRef> metricColumns, //
-            List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, List<TblColRef> sortColumns, List<OrderEnum> sortOrders) {
+            List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr) {
         this.factTable = factTable;
         this.filter = filter;
         this.joinDescs = joinDescs;
@@ -76,6 +77,7 @@ public class SQLDigest {
         this.sortColumns = sortColumns;
         this.sortOrders = sortOrders;
         this.isRawQuery = isRawQuery();
+        this.limitPrecedesAggr = limitPrecedesAggr;
     }
 
     private boolean isRawQuery() {

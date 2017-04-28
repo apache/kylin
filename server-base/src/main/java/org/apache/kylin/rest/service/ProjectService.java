@@ -20,14 +20,13 @@ package org.apache.kylin.rest.service;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.rest.request.CreateProjectRequest;
-import org.apache.kylin.rest.request.UpdateProjectRequest;
 import org.apache.kylin.rest.security.AclPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,16 +49,18 @@ public class ProjectService extends BasicService {
     private AccessService accessService;
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public ProjectInstance createProject(CreateProjectRequest projectRequest) throws IOException {
-        String projectName = projectRequest.getName();
-        String description = projectRequest.getDescription();
+    public ProjectInstance createProject(ProjectInstance newProject) throws IOException {
+        String projectName = newProject.getName();
+        String description = newProject.getDescription();
+        LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
+
         ProjectInstance currentProject = getProjectManager().getProject(projectName);
 
         if (currentProject != null) {
             throw new InternalErrorException("The project named " + projectName + " already exists");
         }
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description);
+        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description, overrideProps);
         accessService.init(createdProject, AclPermission.ADMINISTRATION);
         logger.debug("New project created.");
 
@@ -67,22 +68,17 @@ public class ProjectService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION') or hasPermission(#currentProject, 'MANAGEMENT')")
-    public ProjectInstance updateProject(UpdateProjectRequest projectRequest, ProjectInstance currentProject) throws IOException {
-        String formerProjectName = projectRequest.getFormerProjectName();
-        String newProjectName = projectRequest.getNewProjectName();
-        String newDescription = projectRequest.getNewDescription();
+    public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
+        String newProjectName = newProject.getName();
+        String newDescription = newProject.getDescription();
+        LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
 
-        if (currentProject == null) {
-            throw new InternalErrorException("The project named " + formerProjectName + " does not exists");
-        }
-
-        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription);
+        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription, overrideProps);
 
         logger.debug("Project updated.");
 
         return updatedProject;
     }
-
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<ProjectInstance> listProjects(final Integer limit, final Integer offset) {

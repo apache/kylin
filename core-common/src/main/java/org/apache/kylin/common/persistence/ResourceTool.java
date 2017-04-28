@@ -28,11 +28,14 @@ import java.util.NavigableSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ResourceTool {
 
     private static String[] includes = null;
     private static String[] excludes = null;
+    private static final Logger logger = LoggerFactory.getLogger(ResourceTool.class);
 
     public static void main(String[] args) throws IOException {
         args = StringUtil.filterSystemArgs(args);
@@ -130,22 +133,24 @@ public class ResourceTool {
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
 
+        logger.info("Copy from {} to {}", src, dst);
+        
         copyR(src, dst, path);
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig, List<String> paths) throws IOException {
         ResourceStore src = ResourceStore.getStore(srcConfig);
         ResourceStore dst = ResourceStore.getStore(dstConfig);
+        
+        logger.info("Copy from {} to {}", src, dst);
+        
         for (String path : paths) {
             copyR(src, dst, path);
         }
     }
 
     public static void copy(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
-
-        ResourceStore src = ResourceStore.getStore(srcConfig);
-        ResourceStore dst = ResourceStore.getStore(dstConfig);
-        copyR(src, dst, "/");
+        copy(srcConfig, dstConfig, "/");
     }
 
     public static void copyR(ResourceStore src, ResourceStore dst, String path) throws IOException {
@@ -164,7 +169,7 @@ public class ResourceTool {
                     }
                 } catch (Exception ex) {
                     System.err.println("Failed to open " + path);
-                    ex.printStackTrace();
+                    logger.error(ex.getLocalizedMessage(), ex);
                 }
             }
         } else {

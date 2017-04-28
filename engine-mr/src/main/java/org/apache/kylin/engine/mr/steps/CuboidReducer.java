@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeManager;
@@ -50,11 +51,11 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
     private BufferedMeasureCodec codec;
     private MeasureAggregators aggs;
 
-    private int counter;
     private int cuboidLevel;
-    private boolean[] needAggr;
+    private int[] needAggrMeasures;
     private Object[] input;
     private Object[] result;
+    private int vcounter;
 
     private Text outputValue = new Text();
 
@@ -76,12 +77,21 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
         input = new Object[measuresDescs.size()];
         result = new Object[measuresDescs.size()];
-        needAggr = new boolean[measuresDescs.size()];
 
-        if (cuboidLevel > 0) {
-            for (int i = 0; i < measuresDescs.size(); i++) {
-                needAggr[i] = !measuresDescs.get(i).getFunction().getMeasureType().onlyAggrInBaseCuboid();
+        List<Integer> needAggMeasuresList = Lists.newArrayList();
+        for (int i = 0; i < measuresDescs.size(); i++) {
+            if (cuboidLevel == 0) {
+                needAggMeasuresList.add(i);
+            } else {
+                if (!measuresDescs.get(i).getFunction().getMeasureType().onlyAggrInBaseCuboid()) {
+                    needAggMeasuresList.add(i);
+                }
             }
+        }
+
+        needAggrMeasures = new int[needAggMeasuresList.size()];
+        for (int i = 0; i < needAggMeasuresList.size(); i++) {
+            needAggrMeasures[i] = needAggMeasuresList.get(i);
         }
     }
 
@@ -90,12 +100,11 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
         aggs.reset();
 
         for (Text value : values) {
-            codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), input);
-            if (cuboidLevel > 0) {
-                aggs.aggregate(input, needAggr);
-            } else {
-                aggs.aggregate(input);
+            if (vcounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+                logger.info("Handling value with ordinal (This is not KV number!): " + vcounter);
             }
+            codec.decode(ByteBuffer.wrap(value.getBytes(), 0, value.getLength()), input);
+            aggs.aggregate(input, needAggrMeasures);
         }
         aggs.collectStates(result);
 
@@ -103,11 +112,5 @@ public class CuboidReducer extends KylinReducer<Text, Text, Text, Text> {
 
         outputValue.set(valueBuf.array(), 0, valueBuf.position());
         context.write(key, outputValue);
-
-        counter++;
-        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + counter + " records!");
-        }
     }
-
 }

@@ -20,9 +20,13 @@ KylinApp.constant('cubeConfig', {
 
   //~ Define metadata & class
   measureParamType: ['column', 'constant'],
-  measureExpressions: ['SUM', 'MIN', 'MAX', 'COUNT', 'COUNT_DISTINCT',"TOP_N", 'RAW','EXTENDED_COLUMN'],
+  measureExpressions: ['SUM', 'MIN', 'MAX', 'COUNT', 'COUNT_DISTINCT',"TOP_N", 'RAW','EXTENDED_COLUMN','PERCENTILE'],
   dimensionDataTypes: ["string", "tinyint", "int", "bigint", "date"],
   cubePartitionTypes: ['APPEND'],
+  engineType:[
+    {name:'MapReduce',value: 2},
+    {name:'Spark (Beta)',value: 4}
+  ],
   joinTypes: [
     {name: 'Left', value: 'left'},
     {name: 'Inner', value: 'inner'}
@@ -107,5 +111,6 @@ KylinApp.constant('cubeConfig', {
   statusNeedNofity:['ERROR', 'DISCARDED', 'SUCCEED'],
   buildDictionaries:[
     {name:"Global Dictionary", value:"org.apache.kylin.dict.GlobalDictionaryBuilder"}
-  ]
+  ],
+  needSetLengthEncodingList:['fixed_length','fixed_length_hex','int','integer']
 });

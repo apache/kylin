@@ -38,7 +38,7 @@ public class DateDimEncTest {
 
     @Before
     public void setup() {
-        enc = new DateDimEnc();
+        enc = new DateDimEnc(null);
         buf = new byte[enc.getLengthOfEncoding()];
     }
 

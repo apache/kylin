@@ -19,6 +19,7 @@
 package org.apache.kylin.tool;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -49,6 +50,7 @@ import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
+import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.metadata.streaming.StreamingManager;
@@ -58,6 +60,12 @@ import org.apache.kylin.storage.hybrid.HybridManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -74,6 +82,14 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private static final Option OPTION_HYBRID = OptionBuilder.withArgName("hybrid").hasArg().isRequired(false).withDescription("Specify which hybrid to extract").create("hybrid");
     @SuppressWarnings("static-access")
     private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(false).withDescription("Specify realizations in which project to extract").create("project");
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_All_PROJECT = OptionBuilder.withArgName("allProjects").hasArg(false).isRequired(false).withDescription("Specify realizations in all projects to extract").create("allProjects");
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_STORAGE_TYPE = OptionBuilder.withArgName("storageType").hasArg().isRequired(false).withDescription("Specify the storage type to overwrite. Default is empty, keep origin.").create("storageType");
+
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_ENGINE_TYPE = OptionBuilder.withArgName("engineType").hasArg().isRequired(false).withDescription("Specify the engine type to overwrite. Default is empty, keep origin.").create("engineType");
 
     @SuppressWarnings("static-access")
     private static final Option OPTION_INCLUDE_SEGMENTS = OptionBuilder.withArgName("includeSegments").hasArg().isRequired(false).withDescription("set this to true if want extract the segments info. Default true").create("includeSegments");
@@ -102,6 +118,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
     private boolean includeJobs;
     private boolean includeSegmentDetails;
     private boolean onlyJobOutput;
+    private String storageType = null;
+    private String engineType = null;
 
     private Set<String> requiredResources = Sets.newLinkedHashSet();
     private Set<String> optionalResources = Sets.newLinkedHashSet();
@@ -116,6 +134,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         realizationOrProject.addOption(OPTION_CUBE);
         realizationOrProject.addOption(OPTION_PROJECT);
         realizationOrProject.addOption(OPTION_HYBRID);
+        realizationOrProject.addOption(OPTION_All_PROJECT);
         realizationOrProject.setRequired(true);
 
         options.addOptionGroup(realizationOrProject);
@@ -123,6 +142,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         options.addOption(OPTION_INCLUDE_JOB);
         options.addOption(OPTION_INCLUDE_SEGMENT_DETAILS);
         options.addOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT);
+        options.addOption(OPTION_STORAGE_TYPE);
+        options.addOption(OPTION_ENGINE_TYPE);
     }
 
     @Override
@@ -131,6 +152,8 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         includeJobs = optionsHelper.hasOption(OPTION_INCLUDE_JOB) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_JOB)) : false;
         includeSegmentDetails = optionsHelper.hasOption(OPTION_INCLUDE_SEGMENT_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_SEGMENT_DETAILS)) : false;
         onlyJobOutput = optionsHelper.hasOption(OPTION_INCLUDE_ONLY_JOB_OUTPUT) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_ONLY_JOB_OUTPUT)) : true;
+        storageType = optionsHelper.hasOption(OPTION_STORAGE_TYPE) ? optionsHelper.getOptionValue(OPTION_STORAGE_TYPE) : null;
+        engineType = optionsHelper.hasOption(OPTION_ENGINE_TYPE) ? optionsHelper.getOptionValue(OPTION_ENGINE_TYPE) : null;
 
         kylinConfig = KylinConfig.getInstanceFromEnv();
         metadataManager = MetadataManager.getInstance(kylinConfig);
@@ -142,23 +165,16 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         realizationRegistry = RealizationRegistry.getInstance(kylinConfig);
         badQueryHistoryManager = BadQueryHistoryManager.getInstance(kylinConfig);
 
-        if (optionsHelper.hasOption(OPTION_PROJECT)) {
+        if (optionsHelper.hasOption(OPTION_All_PROJECT)) {
+            for (ProjectInstance projectInstance : projectManager.listAllProjects()) {
+                requireProject(projectInstance);
+            }
+        } else if (optionsHelper.hasOption(OPTION_PROJECT)) {
             String projectNames = optionsHelper.getOptionValue(OPTION_PROJECT);
             for (String projectName : projectNames.split(",")) {
                 ProjectInstance projectInstance = projectManager.getProject(projectName);
-                if (projectInstance == null) {
-                    throw new IllegalArgumentException("Project " + projectName + " does not exist");
-                }
-                addRequired(projectInstance.getResourcePath());
-                List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
-                for (RealizationEntry realizationEntry : realizationEntries) {
-                    retrieveResourcePath(getRealization(realizationEntry));
-                }
-                List<DataModelDesc> modelDescs = metadataManager.getModels(projectName);
-                for (DataModelDesc modelDesc : modelDescs) {
-                    addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
-                }
-                addOptional(badQueryHistoryManager.getBadQueriesForProject(projectName).getResourcePath());
+                Preconditions.checkNotNull(projectInstance, "Project " + projectName + " does not exist.");
+                requireProject(projectInstance);
             }
         } else if (optionsHelper.hasOption(OPTION_CUBE)) {
             String cubeNames = optionsHelper.getOptionValue(OPTION_CUBE);
@@ -184,6 +200,20 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
         }
 
         executeExtraction(exportDir.getAbsolutePath());
+        engineOverwrite(new File(exportDir.getAbsolutePath()));
+    }
+
+    private void requireProject(ProjectInstance projectInstance) throws IOException {
+        addRequired(projectInstance.getResourcePath());
+        List<RealizationEntry> realizationEntries = projectInstance.getRealizationEntries();
+        for (RealizationEntry realizationEntry : realizationEntries) {
+            retrieveResourcePath(getRealization(realizationEntry));
+        }
+        List<DataModelDesc> modelDescs = metadataManager.getModels(projectInstance.getName());
+        for (DataModelDesc modelDesc : modelDescs) {
+            addRequired(DataModelDesc.concatResourcePath(modelDesc.getName()));
+        }
+        addOptional(badQueryHistoryManager.getBadQueriesForProject(projectInstance.getName()).getResourcePath());
     }
 
     private void executeExtraction(String dest) {
@@ -222,6 +252,40 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
 
         } catch (Exception e) {
             throw new RuntimeException("Exception", e);
+        }
+    }
+
+    private void engineOverwrite(File dest) throws IOException {
+        if (engineType != null || storageType != null) {
+            for (File f : dest.listFiles()) {
+                if (f.isDirectory()) {
+                    engineOverwrite(f);
+                } else {
+                    engineOverwriteInternal(f);
+                }
+            }
+        }
+    }
+
+    private void engineOverwriteInternal(File f) throws IOException {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(f);
+            boolean replaced = false;
+            if (engineType != null && rootNode.get("engine_type") != null) {
+                ((ObjectNode) rootNode).put("engine_type", Integer.parseInt(engineType));
+                replaced = true;
+            }
+            if (storageType != null && rootNode.get("storage_type") != null) {
+                ((ObjectNode) rootNode).put("storage_type", Integer.parseInt(storageType));
+                replaced = true;
+            }
+            if (replaced) {
+                objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+                objectMapper.writeValue(f, rootNode);
+            }
+        } catch (JsonProcessingException ex) {
+            logger.info("cannot parse file {}", f);
         }
     }
 
@@ -306,6 +370,7 @@ public class CubeMetaExtractor extends AbstractInfoExtractor {
                     logger.warn("It's useless to set includeJobs to true when includeSegments is set to false");
                 }
 
+                cube.setStatus(RealizationStatusEnum.DISABLED);
                 cubesToTrimAndSave.add(cube);
             }
         } else if (realization instanceof HybridInstance) {

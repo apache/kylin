@@ -31,6 +31,8 @@ import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.SerializeToByteBuffer;
+import org.apache.kylin.measure.BufferedMeasureCodec;
+import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
@@ -42,7 +44,7 @@ import com.google.common.collect.Sets;
 public class GTScanRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(GTScanRequest.class);
-    
+
     //it's not necessary to increase the checkInterval to very large because the check cost is not high
     //changing it might break org.apache.kylin.query.ITKylinQueryTest.testTimeoutQuery()
     public static final int terminateCheckInterval = 100;
@@ -156,7 +158,7 @@ public class GTScanRequest {
     }
 
     public IGTScanner decorateScanner(IGTScanner scanner) throws IOException {
-        return decorateScanner(scanner, true, true, Long.MAX_VALUE);
+        return decorateScanner(scanner, true, true);
     }
 
     /**
@@ -165,21 +167,27 @@ public class GTScanRequest {
      * 
      * Refer to CoprocessorBehavior for explanation
      */
-    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, long deadline) throws IOException {
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn) throws IOException {
+        return decorateScanner(scanner, filterToggledOn, aggrToggledOn, false, true);
+    }
+
+    /**
+     * hasPreFiltered indicate the data has been filtered before scanning
+     */
+    public IGTScanner decorateScanner(IGTScanner scanner, boolean filterToggledOn, boolean aggrToggledOn, boolean hasPreFiltered, boolean spillEnabled) throws IOException {
         IGTScanner result = scanner;
         if (!filterToggledOn) { //Skip reading this section if you're not profiling! 
-            int scanned = lookAndForget(result);
-            return new EmptyGTScanner(scanned);
+            lookAndForget(result);
+            return new EmptyGTScanner();
         } else {
 
-            if (this.hasFilterPushDown()) {
+            if (this.hasFilterPushDown() && !hasPreFiltered) {
                 result = new GTFilterScanner(result, this);
             }
 
             if (!aggrToggledOn) {//Skip reading this section if you're not profiling! 
-                long scanned = result.getScannedRowCount();
                 lookAndForget(result);
-                return new EmptyGTScanner(scanned);
+                return new EmptyGTScanner();
             }
 
             if (!this.isAllowStorageAggregation()) {
@@ -187,13 +195,24 @@ public class GTScanRequest {
             } else if (this.hasAggregation()) {
                 logger.info("pre aggregating results before returning");
                 this.doingStorageAggregation = true;
-                result = new GTAggregateScanner(result, this, deadline);
+                result = new GTAggregateScanner(result, this, spillEnabled);
             } else {
                 logger.info("has no aggregation, skip it");
             }
             return result;
         }
 
+    }
+
+    public BufferedMeasureCodec createMeasureCodec() {
+        DataType[] metricTypes = new DataType[aggrMetrics.trueBitCount()];
+        for (int i = 0; i < metricTypes.length; i++) {
+            metricTypes[i] = info.getColumnType(aggrMetrics.trueBitAt(i));
+        }
+
+        BufferedMeasureCodec codec = new BufferedMeasureCodec(metricTypes);
+        codec.setBufferSize(info.getMaxColumnLength(aggrMetrics));
+        return codec;
     }
 
     public boolean isDoingStorageAggregation() {
@@ -251,6 +270,10 @@ public class GTScanRequest {
 
     public TupleFilter getFilterPushDown() {
         return filterPushDown;
+    }
+
+    public void setFilterPushDown(TupleFilter filter) {
+        filterPushDown = filter;
     }
 
     public ImmutableBitSet getDimensions() {

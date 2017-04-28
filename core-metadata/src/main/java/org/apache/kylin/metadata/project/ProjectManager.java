@@ -20,10 +20,12 @@ package org.apache.kylin.metadata.project;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -47,7 +49,7 @@ import com.google.common.collect.Lists;
 
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
-    private static final ConcurrentHashMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
+    private static final ConcurrentMap<KylinConfig, ProjectManager> CACHE = new ConcurrentHashMap<KylinConfig, ProjectManager>();
     public static final Serializer<ProjectInstance> PROJECT_SERIALIZER = new JsonSerializer<ProjectInstance>(ProjectInstance.class);
 
     public static ProjectManager getInstance(KylinConfig config) {
@@ -97,7 +99,7 @@ public class ProjectManager {
     }
 
     private class ProjectSyncListener extends Broadcaster.Listener {
-        
+
         @Override
         public void onClearAll(Broadcaster broadcaster) throws IOException {
             clearCache();
@@ -106,12 +108,12 @@ public class ProjectManager {
         @Override
         public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             String project = cacheKey;
-            
+
             if (event == Event.DROP)
                 removeProjectLocal(project);
             else
                 reloadProjectLocal(project);
-            
+
             broadcaster.notifyProjectSchemaUpdate(project);
             broadcaster.notifyProjectDataUpdate(project);
         }
@@ -138,7 +140,6 @@ public class ProjectManager {
     }
 
     private ProjectInstance reloadProjectLocalAt(String path) throws IOException {
-
         ProjectInstance projectInstance = getStore().getResource(path, ProjectInstance.class, PROJECT_SERIALIZER);
         if (projectInstance == null) {
             logger.warn("reload project at path:" + path + " not found, this:" + this.toString());
@@ -162,12 +163,12 @@ public class ProjectManager {
         return projectMap.get(projectName);
     }
 
-    public ProjectInstance createProject(String projectName, String owner, String description) throws IOException {
+    public ProjectInstance createProject(String projectName, String owner, String description, LinkedHashMap<String, String> overrideProps) throws IOException {
         logger.info("Creating project " + projectName);
 
         ProjectInstance currentProject = getProject(projectName);
         if (currentProject == null) {
-            currentProject = ProjectInstance.create(projectName, owner, description, null, null);
+            currentProject = ProjectInstance.create(projectName, owner, description, overrideProps, null, null);
         } else {
             throw new IllegalStateException("The project named " + projectName + "already exists");
         }
@@ -207,9 +208,9 @@ public class ProjectManager {
     }
 
     //update project itself
-    public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc) throws IOException {
+    public ProjectInstance updateProject(ProjectInstance project, String newName, String newDesc, LinkedHashMap<String, String> overrideProps) throws IOException {
         if (!project.getName().equals(newName)) {
-            ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc);
+            ProjectInstance newProject = this.createProject(newName, project.getOwner(), newDesc, overrideProps);
 
             newProject.setCreateTimeUTC(project.getCreateTimeUTC());
             newProject.recordUpdateTime(System.currentTimeMillis());
@@ -225,6 +226,7 @@ public class ProjectManager {
         } else {
             project.setName(newName);
             project.setDescription(newDesc);
+            project.setOverrideKylinProps(overrideProps);
 
             if (project.getUuid() == null)
                 project.updateRandomUuid();
@@ -248,7 +250,7 @@ public class ProjectManager {
         projectMap.remove(norm(proj.getName()));
         clearL2Cache();
     }
-    
+
     private void removeProjectLocal(String proj) {
         projectMap.remove(norm(proj));
         clearL2Cache();
@@ -291,7 +293,7 @@ public class ProjectManager {
         String newProjectName = norm(project);
         ProjectInstance newProject = getProject(newProjectName);
         if (newProject == null) {
-            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding realization " + realizationName + "(" + type + ")");
+            newProject = this.createProject(newProjectName, user, "This is a project automatically added when adding realization " + realizationName + "(" + type + ")", null);
         }
         newProject.addRealizationEntry(type, realizationName);
         updateProject(newProject);
@@ -392,7 +394,7 @@ public class ProjectManager {
         }
         return projects;
     }
-    
+
     public ExternalFilterDesc getExternalFilterDesc(String project, String extFilter) {
         return l2Cache.getExternalFilterDesc(project, extFilter);
     }

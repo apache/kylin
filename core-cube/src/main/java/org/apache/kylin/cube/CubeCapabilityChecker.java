@@ -120,6 +120,11 @@ public class CubeCapabilityChecker {
             return result;
         }
 
+        if (digest.limitPrecedesAggr) {
+            logger.info("Exclude cube " + cube.getName() + " because there's limit preceding aggregation");
+            return result;
+        }
+
         if (digest.isRawQuery && rootFactTable.equals(digest.factTable)) {
             result.influences.add(new CapabilityInfluence() {
                 @Override

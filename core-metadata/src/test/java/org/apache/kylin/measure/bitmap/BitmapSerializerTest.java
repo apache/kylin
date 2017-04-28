@@ -18,19 +18,19 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import static org.junit.Assert.assertEquals;
-
-import java.nio.ByteBuffer;
-
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * Created by sunyerui on 15/12/31.
- */
+import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 public class BitmapSerializerTest extends LocalFileMetadataTestCase {
     @BeforeClass
     public static void setUp() throws Exception {
@@ -43,27 +43,35 @@ public class BitmapSerializerTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testSerDeCounter() {
-        BitmapCounter counter = new BitmapCounter();
-        counter.add(1);
-        counter.add(3333);
-        counter.add("123".getBytes());
-        counter.add(123);
-        assertEquals(3, counter.getCount());
-
-        ByteBuffer buffer = ByteBuffer.allocate(10 * 1024 * 1024);
+    public void testBitmapSerDe() {
         BitmapSerializer serializer = new BitmapSerializer(DataType.ANY);
+
+        BitmapCounter counter = RoaringBitmapCounterFactory.INSTANCE.newBitmap(1, 1234, 5678, 100000);
+
+        ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
         serializer.serialize(counter, buffer);
-        int len = buffer.position();
+        int size = buffer.position();
+        buffer.flip();
 
-        buffer.position(0);
-        BitmapSerializer deSerializer = new BitmapSerializer(DataType.ANY);
-        BitmapCounter counter2 = deSerializer.deserialize(buffer);
-        assertEquals(3, counter2.getCount());
+        assertEquals(size, serializer.peekLength(buffer));
+        assertEquals(0, buffer.position()); // peek doesn't change buffer
 
-        buffer.position(0);
-        assertEquals(len, deSerializer.peekLength(buffer));
-        assertEquals(8 * 1024 * 1024, deSerializer.maxLength());
-        System.out.println("counter size " + deSerializer.getStorageBytesEstimate());
+        BitmapCounter counter2 = serializer.deserialize(buffer);
+        assertEquals(size, buffer.position()); // deserialize advance positions to next record
+        assertEquals(4, counter2.getCount());
+
+        buffer.flip();
+        for (int i = 0; i < size; i++) {
+            buffer.put((byte) 0); // clear buffer content
+        }
+        assertEquals(4, counter2.getCount());
+
+        buffer = ByteBuffer.allocate(size - 1);
+        try {
+            serializer.serialize(counter, buffer);
+            Assert.fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof BufferOverflowException);
+        }
     }
 }

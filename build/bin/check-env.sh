@@ -18,6 +18,13 @@
 #
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/find-hadoop-conf-dir.sh
+
+if [ -z "${kylin_hadoop_conf_dir}" ]; then
+    hadoop_conf_param=
+else
+    hadoop_conf_param="--config ${kylin_hadoop_conf_dir}"
+fi
 
 if [ -z "$KYLIN_HOME" ]
 then
@@ -41,9 +48,20 @@ then
     quit "Please make sure the user has the privilege to run hadoop shell"
 fi
 
-WORKING_DIR=`sh $KYLIN_HOME/bin/get-properties.sh kylin.env.hdfs-working-dir`
-hadoop fs -mkdir -p $WORKING_DIR
+WORKING_DIR=`bash $KYLIN_HOME/bin/get-properties.sh kylin.env.hdfs-working-dir`
+if [ -z "$WORKING_DIR" ]
+then
+    quit "Please set kylin.env.hdfs-working-dir in kylin.properties"
+fi
+
+hadoop ${hadoop_conf_param} fs -mkdir -p $WORKING_DIR
 if [ $? != 0 ]
 then
     quit "Failed to create $WORKING_DIR. Please make sure the user has right to access $WORKING_DIR"
+fi
+
+hadoop ${hadoop_conf_param} fs -mkdir -p $WORKING_DIR/spark-history
+if [ $? != 0 ]
+then
+    quit "Failed to create $WORKING_DIR/spark-history. Please make sure the user has right to access $WORKING_DIR"
 fi

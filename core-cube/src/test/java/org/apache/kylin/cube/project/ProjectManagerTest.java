@@ -147,7 +147,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
 
-        CubeInstance cube = cubeMgr.getCube("test_kylin_cube_with_slr_empty");
+        CubeInstance cube = cubeMgr.getCube("ci_left_join_cube");
         assertTrue(prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
         assertTrue(prjMgr.listAllRealizations("default").contains(cube));
 
@@ -162,7 +162,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         ProjectManager prjMgr = ProjectManager.getInstance(getTestConfig());
         CubeManager cubeMgr = CubeManager.getInstance(getTestConfig());
 
-        CubeInstance cube = cubeMgr.getCube("test_kylin_cube_with_slr_empty");
+        CubeInstance cube = cubeMgr.getCube("ci_left_join_cube");
         assertTrue(prjMgr.getRealizationsByTable("default", "default.test_kylin_fact").contains(cube));
 
         prjMgr.removeRealizationsFromProjects(RealizationType.CUBE, cube.getName());

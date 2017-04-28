@@ -26,16 +26,34 @@ import org.dbunit.dataset.Columns;
 import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.ITableMetaData;
+import org.dbunit.dataset.datatype.BigIntegerDataType;
 import org.dbunit.dataset.datatype.DataType;
+import org.dbunit.dataset.datatype.IntegerDataType;
+import org.dbunit.dataset.datatype.UnknownDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * dirty hack to support checking result of SQL with limit
+ * A copy of DbUnitAssert, in which a few hacks applied
+ * 
+ * - tolerate some column type difference, like INT vs. BIGINT
+ * - check expected table contains actual table (instead of equals), for sql with limit
  */
 public class HackedDbUnitAssert extends DbUnitAssert {
     private static final Logger logger = LoggerFactory.getLogger(HackedDbUnitAssert.class);
 
+    private boolean hackCheckContains;
+    private boolean hackIgnoreIntBigIntMismatch;
+
+    public void hackCheckContains() {
+        hackCheckContains = true;
+    }
+
+    public void hackIgnoreIntBigIntMismatch() {
+        hackIgnoreIntBigIntMismatch = true;
+    }
+
+    // THIS METHOD IS MOSTLY COPIED FROM DbUnitAssert. CHANGES ARE LEAD BY hackXXX CONDITION CHECKS.
     public void assertEquals(ITable expectedTable, ITable actualTable, FailureHandler failureHandler) throws DatabaseUnitException {
         logger.trace("assertEquals(expectedTable, actualTable, failureHandler) - start");
         logger.debug("assertEquals: expectedTable={}", expectedTable);
@@ -57,25 +75,21 @@ public class HackedDbUnitAssert extends DbUnitAssert {
         ITableMetaData actualMetaData = actualTable.getTableMetaData();
         String expectedTableName = expectedMetaData.getTableName();
 
-        //        // Verify row count
-        //        int expectedRowsCount = expectedTable.getRowCount();
-        //        int actualRowsCount = actualTable.getRowCount();
-        //        if (expectedRowsCount != actualRowsCount) {
-        //            String msg = "row count (table=" + expectedTableName + ")";
-        //            Error error =
-        //                    failureHandler.createFailure(msg, String
-        //                            .valueOf(expectedRowsCount), String
-        //                            .valueOf(actualRowsCount));
-        //            logger.error(error.toString());
-        //            throw error;
-        //        }
+        // Verify row count
+        int expectedRowsCount = expectedTable.getRowCount();
+        int actualRowsCount = actualTable.getRowCount();
+        if (!hackCheckContains) {
+            if (expectedRowsCount != actualRowsCount) {
+                String msg = "row count (table=" + expectedTableName + ")";
+                Error error = failureHandler.createFailure(msg, String.valueOf(expectedRowsCount), String.valueOf(actualRowsCount));
+                logger.error(error.toString());
+                throw error;
+            }
+        }
 
-        // if both tables are empty, it is not necessary to compare columns, as
-        // such
-        // comparison
-        // can fail if column metadata is different (which could occurs when
-        // comparing empty tables)
-        if (expectedTable.getRowCount() == 0 &&  actualTable.getRowCount() == 0) {
+        // if both tables are empty, it is not necessary to compare columns, as such comparison
+        // can fail if column metadata is different (which could occurs when comparing empty tables)
+        if (expectedRowsCount == 0 && actualRowsCount == 0) {
             logger.debug("Tables are empty, hence equals.");
             return;
         }
@@ -97,10 +111,86 @@ public class HackedDbUnitAssert extends DbUnitAssert {
         ComparisonColumn[] comparisonCols = getComparisonColumns(expectedTableName, expectedColumns, actualColumns, failureHandler);
 
         // Finally compare the data
-        compareData(expectedTable, actualTable, comparisonCols, failureHandler);
+        if (hackCheckContains)
+            compareDataContains(expectedTable, actualTable, comparisonCols, failureHandler);
+        else
+            compareData(expectedTable, actualTable, comparisonCols, failureHandler);
     }
 
-    protected void compareData(ITable expectedTable, ITable actualTable, ComparisonColumn[] comparisonCols, FailureHandler failureHandler) throws DataSetException {
+    // THIS METHOD IS COPIED FROM SUPER CLASS TO CHANGE ComparisonColumn TO OUR OWN.
+    @Override
+    protected ComparisonColumn[] getComparisonColumns(String expectedTableName, Column[] expectedColumns, Column[] actualColumns, FailureHandler failureHandler) {
+        ComparisonColumn[] result = new ComparisonColumn[expectedColumns.length];
+
+        for (int j = 0; j < expectedColumns.length; j++) {
+            Column expectedColumn = expectedColumns[j];
+            Column actualColumn = actualColumns[j];
+            result[j] = new HackedComparisonColumn(expectedTableName, expectedColumn, actualColumn, failureHandler);
+        }
+        return result;
+    }
+
+    // MOSTLY COPIED FROM SUPER CLASS
+    private class HackedComparisonColumn extends ComparisonColumn {
+        private String columnName;
+        private DataType dataType;
+
+        public HackedComparisonColumn(String tableName, Column expectedColumn, Column actualColumn, FailureHandler failureHandler) {
+            
+            // super class is actually useless, all public methods are overridden below
+            super(tableName, expectedColumn, expectedColumn, failureHandler);
+            
+            this.columnName = expectedColumn.getColumnName();
+            this.dataType = getComparisonDataType(tableName, expectedColumn, actualColumn, failureHandler);
+        }
+
+        @Override
+        public String getColumnName() {
+            return this.columnName;
+        }
+
+        @Override
+        public DataType getDataType() {
+            return this.dataType;
+        }
+
+        // COPIED FROM SUPER CLASS, CHANGES ARE LEAD BY hackXXX CONDITION CHECKS.
+        private DataType getComparisonDataType(String tableName, Column expectedColumn, Column actualColumn, FailureHandler failureHandler) {
+            if (logger.isDebugEnabled())
+                logger.debug("getComparisonDataType(tableName={}, expectedColumn={}, actualColumn={}, failureHandler={}) - start", new Object[] { tableName, expectedColumn, actualColumn, failureHandler });
+
+            DataType expectedDataType = expectedColumn.getDataType();
+            DataType actualDataType = actualColumn.getDataType();
+
+            // The two columns have different data type
+            if (!expectedDataType.getClass().isInstance(actualDataType)) {
+                // Expected column data type is unknown, use actual column data type
+                if (expectedDataType instanceof UnknownDataType) {
+                    return actualDataType;
+                }
+
+                // Actual column data type is unknown, use expected column data type
+                if (actualDataType instanceof UnknownDataType) {
+                    return expectedDataType;
+                }
+                
+                if (hackIgnoreIntBigIntMismatch) {
+                    if (expectedDataType instanceof IntegerDataType && actualDataType instanceof BigIntegerDataType)
+                        return actualDataType;
+                }
+
+                // Impossible to determine which data type to use
+                String msg = "Incompatible data types: (table=" + tableName + ", col=" + expectedColumn.getColumnName() + ")";
+                throw failureHandler.createFailure(msg, String.valueOf(expectedDataType), String.valueOf(actualDataType));
+            }
+
+            // Both columns have same data type, return any one of them
+            return expectedDataType;
+        }
+
+    }
+
+    private void compareDataContains(ITable expectedTable, ITable actualTable, ComparisonColumn[] comparisonCols, FailureHandler failureHandler) throws DataSetException {
         logger.debug("compareData(expectedTable={}, actualTable={}, " + "comparisonCols={}, failureHandler={}) - start", new Object[] { expectedTable, actualTable, comparisonCols, failureHandler });
 
         if (expectedTable == null) {

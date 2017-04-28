@@ -35,18 +35,18 @@ import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 
 /**
  * @author Jack
- * 
+ *
  */
 public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritable, BytesWritable> {
 
-    private Map<Integer, HyperLogLogPlusCounter> hllcMap = new HashMap<Integer, HyperLogLogPlusCounter>();
+    private Map<Integer, HLLCounter> hllcMap = new HashMap<Integer, HLLCounter>();
     public static final String DEFAULT_DELIM = ",";
 
     private int counter = 0;
@@ -62,7 +62,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
 
         String tableName = conf.get(BatchConstants.CFG_TABLE_NAME);
         tableDesc = MetadataManager.getInstance(config).getTableDesc(tableName);
-        tableInputFormat = MRUtil.getTableInputFormat(tableDesc);
+        tableInputFormat = MRUtil.getTableInputFormat(tableDesc, true);
     }
 
     @Override
@@ -80,16 +80,15 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
                 System.out.println("Get row " + counter + " column '" + field + "'  value: " + fieldValue);
             }
 
-            if (fieldValue != null)
-                getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
+            getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
         }
 
         counter++;
     }
 
-    private HyperLogLogPlusCounter getHllc(Integer key) {
+    private HLLCounter getHllc(Integer key) {
         if (!hllcMap.containsKey(key)) {
-            hllcMap.put(key, new HyperLogLogPlusCounter());
+            hllcMap.put(key, new HLLCounter());
         }
         return hllcMap.get(key);
     }
@@ -100,7 +99,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
         ByteBuffer buf = ByteBuffer.allocate(BufferedMeasureCodec.DEFAULT_BUFFER_SIZE);
         while (it.hasNext()) {
             int key = it.next();
-            HyperLogLogPlusCounter hllc = hllcMap.get(key);
+            HLLCounter hllc = hllcMap.get(key);
             buf.clear();
             hllc.writeRegisters(buf);
             buf.flip();

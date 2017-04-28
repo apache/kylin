@@ -35,10 +35,22 @@ var Config = {
   },
   contact_mail: ''
 };
-
+//resolve startsWith and endsWidth not work in low version chrome
+if (typeof String.prototype.startsWith != 'function') {
+  String.prototype.startsWith = function (prefix){
+    return this.slice(0, prefix.length) === prefix;
+  };
+}
+if (typeof String.prototype.endsWith != 'function') {
+  String.prototype.endsWith = function(suffix) {
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+  };
+}
 // Angular module to load routes.
 KylinApp.config(function ($routeProvider, $httpProvider, $locationProvider, $logProvider) {
-
+    //resolve http always use cache data in IE11,IE10
+    $httpProvider.defaults.headers.common['Cache-Control'] = 'no-cache';
+    $httpProvider.defaults.headers.common['Pragma'] = 'no-cache';
     // Set debug to true by default.
     if (angular.isUndefined(Config.debug) || Config.debug !== false) {
       Config.debug = true;

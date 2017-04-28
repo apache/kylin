@@ -20,6 +20,7 @@ package org.apache.kylin.rest.controller;
 
 import java.io.IOException;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.rest.service.CacheService;
 import org.slf4j.Logger;
@@ -39,7 +40,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 @RequestMapping(value = "/cache")
 public class CacheController extends BasicController {
-    
+
     @SuppressWarnings("unused")
     private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 
@@ -62,6 +63,12 @@ public class CacheController extends BasicController {
     @ResponseBody
     public void wipeCache(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
         cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
+    }
+
+    @RequestMapping(value = "/announce/config", method = { RequestMethod.POST })
+    public void hotLoadKylinConfig() throws IOException {
+        KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
+        cacheService.notifyMetadataChange(Broadcaster.SYNC_ALL, Broadcaster.Event.UPDATE, Broadcaster.SYNC_ALL);
     }
 
     public void setCacheService(CacheService cacheService) {

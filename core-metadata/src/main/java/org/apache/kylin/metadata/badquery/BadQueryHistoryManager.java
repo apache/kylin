@@ -21,6 +21,7 @@ package org.apache.kylin.metadata.badquery;
 import java.io.IOException;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
@@ -35,7 +36,7 @@ public class BadQueryHistoryManager {
     public static final Serializer<BadQueryHistory> BAD_QUERY_INSTANCE_SERIALIZER = new JsonSerializer<>(BadQueryHistory.class);
     private static final Logger logger = LoggerFactory.getLogger(BadQueryHistoryManager.class);
 
-    private static final ConcurrentHashMap<KylinConfig, BadQueryHistoryManager> CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<KylinConfig, BadQueryHistoryManager> CACHE = new ConcurrentHashMap<>();
     private KylinConfig kylinConfig;
 
     private BadQueryHistoryManager(KylinConfig config) throws IOException {

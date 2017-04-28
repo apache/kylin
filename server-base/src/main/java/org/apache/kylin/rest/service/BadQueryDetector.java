@@ -52,7 +52,7 @@ public class BadQueryDetector extends Thread {
         super("BadQueryDetector");
         this.setDaemon(true);
         this.kylinConfig = KylinConfig.getInstanceFromEnv();
-        this.detectionInterval = kylinConfig.getBadQueryDefaultDetectIntervalSeconds() * 1000;
+        this.detectionInterval = kylinConfig.getBadQueryDefaultDetectIntervalSeconds() * 1000L;
         this.alertMB = 100;
         this.alertRunningSec = kylinConfig.getBadQueryDefaultAlertingSeconds();
 
@@ -118,6 +118,7 @@ public class BadQueryDetector extends Thread {
             try {
                 Thread.sleep(detectionInterval);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 // stop detection and exit
                 return;
             }
@@ -208,7 +209,7 @@ public class BadQueryDetector extends Thread {
         @Override
         public void badQueryFound(String adj, float runningSec, long startTime, String project, String sql, String user, Thread t) {
             try {
-                long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 30;
+                long cachingSeconds = (kylinConfig.getBadQueryDefaultAlertingSeconds() + 1) * 30L;
                 Pair<Long, String> sqlPair = new Pair<>(startTime, sql);
                 if (!cacheQueue.contains(sqlPair)) {
                     badQueryManager.addEntryToProject(sql, startTime, adj, runningSec, serverHostname, t.getName(), user, project);

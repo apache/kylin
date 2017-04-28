@@ -61,7 +61,7 @@ public class KylinConfigExt extends KylinConfig {
             return super.getOptional(prop, dft);
     }
 
-    public Properties getAllProperties() {
+    protected Properties getAllProperties() {
         Properties result = new Properties();
         result.putAll(super.getAllProperties());
         result.putAll(overrides);

@@ -45,6 +45,14 @@ public class ColumnDesc implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String comment;
 
+    @JsonProperty("data_gen")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String dataGen;
+
+    @JsonProperty("index")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String index;
+
     // parsed from data type
     private DataType type;
     private DataType upgradedType;
@@ -148,6 +156,14 @@ public class ColumnDesc implements Serializable {
     public void setNullable(boolean nullable) {
         this.isNullable = nullable;
     }
+    
+    public String getDataGen() {
+        return dataGen;
+    }
+
+    public String getIndex() {
+        return index;
+    }
 
     public void init(TableDesc table) {
         this.table = table;
@@ -194,15 +210,9 @@ public class ColumnDesc implements Serializable {
         if (table == null) {
             if (other.table != null)
                 return false;
-        } else if (!table.equals(other.table))
+        } else if (!table.getIdentity().equals(other.table.getIdentity()))
             return false;
         
-        if (datatype == null) {
-            if (other.datatype != null)
-                return false;
-        } else if (!datatype.equals(other.datatype))
-            return false;
-
         return true;
     }
 

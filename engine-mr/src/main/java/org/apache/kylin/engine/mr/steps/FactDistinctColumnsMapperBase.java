@@ -54,7 +54,7 @@ abstract public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends Kyli
     protected IMRTableInputFormat flatTableInputFormat;
 
     protected Text outputKey = new Text();
-    protected SelfDefineSortableKey sortableKey = new SelfDefineSortableKey();
+    //protected SelfDefineSortableKey sortableKey = new SelfDefineSortableKey();
     protected Text outputValue = new Text();
     protected int errorRecordCounter = 0;
 
@@ -105,7 +105,7 @@ abstract public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends Kyli
         ex.printStackTrace(System.err);
 
         errorRecordCounter++;
-        if (errorRecordCounter > BatchConstants.ERROR_RECORD_LOG_THRESHOLD) {
+        if (errorRecordCounter > cubeSeg.getConfig().getErrorRecordThreshold()) {
             if (ex instanceof IOException)
                 throw (IOException) ex;
             else if (ex instanceof RuntimeException)

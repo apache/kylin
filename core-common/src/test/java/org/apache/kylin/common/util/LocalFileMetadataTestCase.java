@@ -57,7 +57,9 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
         if (System.getProperty(KylinConfig.KYLIN_CONF) == null && System.getenv(KylinConfig.KYLIN_CONF) == null)
             System.setProperty(KylinConfig.KYLIN_CONF, tempTestMetadataUrl);
 
-        KylinConfig.getInstanceFromEnv().setMetadataUrl(tempTestMetadataUrl);
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        config.setMetadataUrl(tempTestMetadataUrl);
+        config.setProperty("kylin.env.hdfs-working-dir", "file:///tmp/kylin");
     }
 
     public static void cleanAfterClass() {

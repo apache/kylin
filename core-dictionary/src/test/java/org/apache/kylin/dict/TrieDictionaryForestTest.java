@@ -52,6 +52,14 @@ import org.junit.Test;
 public class TrieDictionaryForestTest {
 
     @Test
+    public void testEmptyDict() {
+        ArrayList<String> strs = new ArrayList<String>();
+        TrieDictionaryForestBuilder<String> builder = newDictBuilder(strs, 0);
+        TrieDictionaryForest<String> dict = builder.build();
+        assertSameBehaviorAsTrie(dict, strs, 0);
+    }
+
+    @Test
     public void testBasicFound() {
         ArrayList<String> strs = new ArrayList<String>();
         strs.add("part");
@@ -67,11 +75,11 @@ public class TrieDictionaryForestTest {
         dict.dump(System.out);
         int expectId = baseId;
         for (String s : strs) {
-            System.out.println("value:" + s + "  expect id:" + expectId);
             assertEquals(expectId, dict.getIdFromValue(s));
             expectId++;
         }
-        System.out.println("test ok");
+
+        assertSameBehaviorAsTrie(dict, strs, baseId);
     }
 
     @Test //one string one tree
@@ -95,11 +103,11 @@ public class TrieDictionaryForestTest {
         assertEquals(strs.size(), dict.getTrees().size());
         int expectId = baseId;
         for (String s : strs) {
-            System.out.println("value:" + s + "  expect id:" + expectId);
             assertEquals(expectId, dict.getIdFromValue(s));
             expectId++;
         }
-        System.out.println("test ok");
+
+        assertSameBehaviorAsTrie(dict, strs, baseId);
     }
 
     @Test
@@ -115,11 +123,24 @@ public class TrieDictionaryForestTest {
         dict.dump(System.out);
         //null value query
         int id = dict.getIdFromValue(null, 0);
-        System.out.println(id);
+        assertEquals(255, id);
         id = dict.getIdFromValue(null, 1);
-        System.out.println(id);
+        assertEquals(255, id);
         id = dict.getIdFromValue(null, -1);
-        System.out.println(id);
+        assertEquals(255, id);
+
+        assertSameBehaviorAsTrie(dict, strs, 0);
+    }
+
+    @Test
+    public void testAllNullValue() {
+        ArrayList<String> strs = new ArrayList<String>();
+        strs.add("");
+        int maxTreeSize = 10;
+        TrieDictionaryForestBuilder<String> builder = newDictBuilder(strs, 0, maxTreeSize);
+        TrieDictionaryForest<String> dict = builder.build();
+        assertEquals(1, dict.getSize());
+        assertEquals(0, dict.getIdFromValue(""));
     }
 
     @Test
@@ -253,7 +274,6 @@ public class TrieDictionaryForestTest {
     }
 
     @Test
-    @Ignore
     public void categoryNamesTest() throws Exception {
         InputStream is = new FileInputStream("src/test/resources/dict/dw_category_grouping_names.dat");
         ArrayList<String> str = loadStrings(is);
@@ -274,19 +294,19 @@ public class TrieDictionaryForestTest {
     }
 
     @Test
-    public void emptyDictTest() throws Exception{
+    public void emptyDictTest() throws Exception {
         TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter());
         TrieDictionaryForest<String> dict = b.build();
-        try{
-            int id = dict.getIdFromValue("123",0);
+        try {
+            int id = dict.getIdFromValue("123", 0);
             fail("id should not exist");
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             //right
         }
-        try{
+        try {
             String value = dict.getValueFromIdImpl(123);
             fail("value should not exist");
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             //right
         }
     }
@@ -632,7 +652,7 @@ public class TrieDictionaryForestTest {
         System.out.println("max memory:" + Runtime.getRuntime().maxMemory());
         System.gc();
         Thread.currentThread().sleep(1000);
-        NumberDictionaryBuilder<String> b = new NumberDictionaryBuilder<>(new StringBytesConverter());
+        NumberDictionaryBuilder b = new NumberDictionaryBuilder();
         int k = 0;
         while (true) {
             b.addValue(k + "");
@@ -720,12 +740,6 @@ public class TrieDictionaryForestTest {
         }
 
         System.out.println("compare build time.  Old trie : " + oldDictTotalBuildTime / 1000.0 + "s.New trie : " + newDictTotalBuildTime / 1000.0 + "s");
-    }
-
-    @Test
-    public void queryTimeBenchmarkTest() throws Exception {
-        int count = (int) (Integer.MAX_VALUE * 0.8 / 640);
-        benchmarkStringDictionary(new RandomStrings(count));
     }
 
     private void evaluateDataSize(ArrayList<String> list) {
@@ -817,7 +831,7 @@ public class TrieDictionaryForestTest {
         for (int i = 0; i < times; i++) {
             for (int j = 0; j < n; j++) {
                 //System.out.println("looking for value:"+new String(array[j]));
-                keep |= dict.getIdFromValueBytes(array[j], 0, array[j].length);
+                keep |= dict.getIdFromValueBytesWithoutCache(array[j], 0, array[j].length, 0);
             }
         }
         long timeValueToIdByDict = System.currentTimeMillis() - start;
@@ -842,7 +856,7 @@ public class TrieDictionaryForestTest {
         start = System.currentTimeMillis();
         for (int i = 0; i < times; i++) {
             for (int j = 0; j < n; j++) {
-                keep |= dict.getValueBytesFromId(j, valueBytes, 0);
+                keep |= dict.getValueBytesFromIdWithoutCache(j).length;
             }
         }
         long timeIdToValueByDict = System.currentTimeMillis() - start;
@@ -857,7 +871,6 @@ public class TrieDictionaryForestTest {
         int baseId = new Random().nextInt(100);
         TrieDictionaryForestBuilder<String> b = newDictBuilder(str, baseId, 2);
         TrieDictionaryForest<String> dict = b.build();
-        //dict.dump(System.out);
         TreeSet<String> set = new TreeSet<String>();
         for (String s : str) {
             set.add(s);
@@ -871,7 +884,7 @@ public class TrieDictionaryForestTest {
         int id = baseId;
         for (; it.hasNext(); id++) {
             String value = it.next();
-            // System.out.println("checking " + id + " <==> " + value);
+            //System.out.println("checking " + id + " <==> " + value);
 
             assertEquals(id, dict.getIdFromValue(value));
             assertEquals(value, dict.getValueFromId(id));
@@ -903,9 +916,6 @@ public class TrieDictionaryForestTest {
         // test null value
         int nullId = dict.getIdFromValue(null);
         assertNull(dict.getValueFromId(nullId));
-        int nullId2 = dict.getIdFromValueBytes(null, 0, 0);
-        assertEquals(dict.getValueBytesFromId(nullId2, null, 0), -1);
-        assertEquals(nullId, nullId2);
     }
 
     private Map<String, Integer> rightIdMap(int baseId, ArrayList<String> strs) {
@@ -928,8 +938,9 @@ public class TrieDictionaryForestTest {
     public static TrieDictionaryForestBuilder<String> newDictBuilder(Iterable<String> strs, int baseId, int treeSize) {
         TrieDictionaryForestBuilder<String> b = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), baseId);
         b.setMaxTrieTreeSize(treeSize);
-        for (String s : strs)
+        for (String s : strs) {
             b.addValue(s);
+        }
         return b;
     }
 
@@ -1020,6 +1031,21 @@ public class TrieDictionaryForestTest {
         Collections.sort(testData, new ByteComparator<String>(new StringBytesConverter()));
         evaluateDataSize(testData);
         return testData;
+    }
+
+    private void assertSameBehaviorAsTrie(TrieDictionaryForest<String> dict, ArrayList<String> strs, int baseId) {
+        TrieDictionaryBuilder<String> trieBuilder = new TrieDictionaryBuilder<>(new StringBytesConverter());
+        for (String s : strs) {
+            if (s != null)
+                trieBuilder.addValue(s);
+        }
+        TrieDictionary<String> trie = trieBuilder.build(baseId);
+
+        assertEquals(trie.getMaxId(), dict.getMaxId());
+        assertEquals(trie.getMinId(), dict.getMinId());
+        assertEquals(trie.getSize(), dict.getSize());
+        assertEquals(trie.getSizeOfId(), dict.getSizeOfId());
+        assertEquals(trie.getSizeOfValue(), dict.getSizeOfValue());
     }
 
 }

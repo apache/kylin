@@ -142,6 +142,7 @@ public class CliCommandExecutor {
             int exitCode = proc.waitFor();
             return Pair.newPair(exitCode, result.toString());
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IOException(e);
         }
     }

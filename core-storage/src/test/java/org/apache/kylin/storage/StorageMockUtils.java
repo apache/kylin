@@ -1,23 +1,20 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  * Licensed to the Apache Software Foundation (ASF) under one
- *  * or more contributor license agreements.  See the NOTICE file
- *  * distributed with this work for additional information
- *  * regarding copyright ownership.  The ASF licenses this file
- *  * to you under the Apache License, Version 2.0 (the
- *  * "License"); you may not use this file except in compliance
- *  * with the License.  You may obtain a copy of the License at
- *  * 
- *  *     http://www.apache.org/licenses/LICENSE-2.0
- *  * 
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
- * /
- */
-
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.apache.kylin.storage;
 
 import java.util.ArrayList;
@@ -35,8 +32,6 @@ import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.TupleInfo;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  */
@@ -83,14 +78,8 @@ public class StorageMockUtils {
 
         TblColRef priceCol = model.findColumn("DEFAULT.TEST_KYLIN_FACTPRICE");
 
-        FunctionDesc f1 = new FunctionDesc();
-        f1.setExpression("SUM");
-        ParameterDesc p1 = new ParameterDesc();
-        p1.setType("column");
-        p1.setValue("PRICE");
-        p1.setColRefs(ImmutableList.of(priceCol));
-        f1.setParameter(p1);
-        f1.setReturnType("decimal(19,4)");
+        FunctionDesc f1 = FunctionDesc.newInstance("SUM", //
+                ParameterDesc.newInstance(priceCol), "decimal(19,4)");
         functions.add(f1);
 
         return functions;
@@ -102,24 +91,12 @@ public class StorageMockUtils {
         TblColRef priceCol = model.findColumn("DEFAULT.TEST_KYLIN_FACT.PRICE");
         TblColRef sellerCol = model.findColumn("DEFAULT.TEST_KYLIN_FACT.SELLER_ID");
 
-        FunctionDesc f1 = new FunctionDesc();
-        f1.setExpression("SUM");
-        ParameterDesc p1 = new ParameterDesc();
-        p1.setType("column");
-        p1.setValue("PRICE");
-        p1.setColRefs(ImmutableList.of(priceCol));
-        f1.setParameter(p1);
-        f1.setReturnType("decimal(19,4)");
+        FunctionDesc f1 = FunctionDesc.newInstance("SUM", //
+                ParameterDesc.newInstance(priceCol), "decimal(19,4)");
         functions.add(f1);
 
-        FunctionDesc f2 = new FunctionDesc();
-        f2.setExpression("COUNT_DISTINCT");
-        ParameterDesc p2 = new ParameterDesc();
-        p2.setType("column");
-        p2.setValue("SELLER_ID");
-        p2.setColRefs(ImmutableList.of(sellerCol));
-        f2.setParameter(p2);
-        f2.setReturnType("hllc(10)");
+        FunctionDesc f2 = FunctionDesc.newInstance("COUNT_DISTINCT", //
+                ParameterDesc.newInstance(sellerCol), "hllc(10)");
         functions.add(f2);
 
         return functions;

@@ -18,8 +18,8 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +56,7 @@ import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Util;
 import org.apache.kylin.measure.MeasureTypeFactory;
+import org.apache.kylin.measure.ParamAsMeasureCount;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
@@ -72,6 +73,7 @@ import com.google.common.collect.Sets;
 public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     private final static Map<String, String> AGGR_FUNC_MAP = new HashMap<String, String>();
+    private final static Map<String, Integer> AGGR_FUNC_PARAM_AS_MEASTURE_MAP = new HashMap<String, Integer>();
 
     static {
         AGGR_FUNC_MAP.put("SUM", "SUM");
@@ -84,6 +86,15 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         Map<String, MeasureTypeFactory> udafFactories = MeasureTypeFactory.getUDAFFactories();
         for (String udaf : udafFactories.keySet()) {
             AGGR_FUNC_MAP.put(udaf, udafFactories.get(udaf).getAggrFunctionName());
+        }
+
+        Map<String, Class<?>> udafs = MeasureTypeFactory.getUDAFs();
+        for (String func : udafs.keySet()) {
+            try {
+                AGGR_FUNC_PARAM_AS_MEASTURE_MAP.put(func, ((ParamAsMeasureCount) (udafs.get(func).newInstance())).getParamAsMeasureCount());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -154,9 +165,13 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
         // only translate the innermost aggregation
         if (!this.afterAggregate) {
-            this.context.groupByColumns.addAll(this.groups);
+            addToContextGroupBy(this.groups);
             this.context.aggregations.addAll(this.aggregations);
             this.context.afterAggregate = true;
+
+            if (this.context.afterLimit) {
+                this.context.limitPrecedesAggr = true;
+            }
         } else {
             for (AggregateCall aggCall : aggCalls) {
                 // check if supported by kylin
@@ -193,17 +208,16 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
-            TblColRef aggCol = null;
-            if (aggFunc.needRewriteField()) {
-                aggCol = buildRewriteColumn(aggFunc);
+            String aggOutName;
+            if (aggFunc != null && aggFunc.needRewriteField()) {
+                aggOutName = aggFunc.getRewriteFieldName();
             } else {
                 AggregateCall aggCall = this.rewriteAggCalls.get(i);
-                if (!aggCall.getArgList().isEmpty()) {
-                    int index = aggCall.getArgList().get(0);
-                    aggCol = inputColumnRowType.getColumnByIndex(index);
-                }
+                int index = aggCall.getArgList().get(0);
+                aggOutName = getSqlFuncName(aggCall) + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity() + "_";
             }
-            columns.add(aggCol);
+            TblColRef aggOutCol = TblColRef.newInnerColumn(aggOutName, TblColRef.InnerDataTypeEnum.LITERAL);
+            columns.add(aggOutCol);
         }
         return new ColumnRowType(columns);
     }
@@ -233,21 +247,29 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         this.aggregations = new ArrayList<FunctionDesc>();
         for (AggregateCall aggCall : this.rewriteAggCalls) {
             ParameterDesc parameter = null;
+            // By default all args are included, UDFs can define their own in getParamAsMeasureCount method.
             if (!aggCall.getArgList().isEmpty()) {
-                // TODO: Currently only get the column of first param
-                int index = aggCall.getArgList().get(0);
-                TblColRef column = inputColumnRowType.getColumnByIndex(index);
-                if (!column.isInnerColumn()) {
-                    parameter = new ParameterDesc();
-                    parameter.setValue(column.getName());
-                    parameter.setType(FunctionDesc.PARAMETER_TYPE_COLUMN);
-                    parameter.setColRefs(Arrays.asList(column));
+                List<TblColRef> columns = Lists.newArrayList();
+                String funcName = getSqlFuncName(aggCall);
+                int columnsCount = aggCall.getArgList().size();
+                if (AGGR_FUNC_PARAM_AS_MEASTURE_MAP.containsKey(funcName)) {
+                    int asMeasureCnt = AGGR_FUNC_PARAM_AS_MEASTURE_MAP.get(funcName);
+                    if (asMeasureCnt > 0) {
+                        columnsCount = asMeasureCnt;
+                    } else {
+                        columnsCount += asMeasureCnt;
+                    }
+                }
+                for (Integer index : aggCall.getArgList().subList(0, columnsCount)) {
+                    TblColRef column = inputColumnRowType.getColumnByIndex(index);
+                    columns.add(column);
+                }
+                if (!columns.isEmpty()) {
+                    parameter = ParameterDesc.newInstance(columns.toArray(new TblColRef[columns.size()]));
                 }
             }
-            FunctionDesc aggFunc = new FunctionDesc();
-            String funcName = getAggrFuncName(aggCall);
-            aggFunc.setExpression(funcName);
-            aggFunc.setParameter(parameter);
+            String expression = getAggrFuncName(aggCall);
+            FunctionDesc aggFunc = FunctionDesc.newInstance(expression, parameter, null);
             this.aggregations.add(aggFunc);
         }
     }
@@ -255,7 +277,8 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
     @Override
     public void implementRewrite(RewriteImplementor implementor) {
         // only rewrite the innermost aggregation
-        if (!this.afterAggregate) {
+        boolean hasRealization = (null != this.context.realization);
+        if (hasRealization && !this.afterAggregate) {
             translateAggregation();
             buildRewriteFieldsAndMetricsColumns();
         }
@@ -263,7 +286,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         implementor.visitChild(this, getInput());
 
         // only rewrite the innermost aggregation
-        if (!this.afterAggregate) {
+        if (hasRealization && !this.afterAggregate) {
             // rewrite the aggCalls
             this.rewriteAggCalls = new ArrayList<AggregateCall>(aggCalls.size());
             for (int i = 0; i < this.aggCalls.size(); i++) {
@@ -329,7 +352,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             FunctionDesc aggFunc = this.aggregations.get(i);
 
             if (aggFunc.isDimensionAsMetric()) {
-                this.context.groupByColumns.addAll(aggFunc.getParameter().getColRefs());
+                addToContextGroupBy(aggFunc.getParameter().getColRefs());
                 continue; // skip rewrite, let calcite handle
             }
 
@@ -344,12 +367,20 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
             AggregateCall aggCall = this.rewriteAggCalls.get(i);
             if (!aggCall.getArgList().isEmpty()) {
-                int index = aggCall.getArgList().get(0);
-                TblColRef column = inputColumnRowType.getColumnByIndex(index);
-                if (!column.isInnerColumn()) {
-                    this.context.metricsColumns.add(column);
+                for (Integer index : aggCall.getArgList()) {
+                    TblColRef column = inputColumnRowType.getColumnByIndex(index);
+                    if (!column.isInnerColumn()) {
+                        this.context.metricsColumns.add(column);
+                    }
                 }
             }
+        }
+    }
+
+    private void addToContextGroupBy(List<TblColRef> colRefs) {
+        for (TblColRef col : colRefs) {
+            if (col.isInnerColumn() == false)
+                this.context.groupByColumns.add(col);
         }
     }
 
@@ -381,18 +412,6 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             return aggCall;
         }
 
-        // rebuild parameters
-        List<Integer> newArgList = Lists.newArrayList(aggCall.getArgList());
-        if (func.needRewriteField()) {
-            RelDataTypeField field = getInput().getRowType().getField(func.getRewriteFieldName(), true, false);
-            if (newArgList.isEmpty()) {
-                newArgList.add(field.getIndex());
-            } else {
-                // only the first column got overwritten
-                newArgList.set(0, field.getIndex());
-            }
-        }
-
         // rebuild function
         String callName = getSqlFuncName(aggCall);
         RelDataType fieldType = aggCall.getType();
@@ -404,10 +423,38 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             newAgg = createCustomAggFunction(callName, fieldType, udafMap.get(callName));
         }
 
+        // rebuild parameters
+        List<Integer> newArgList = Lists.newArrayList(aggCall.getArgList());
+        if (udafMap != null && udafMap.containsKey(callName)) {
+            newArgList = truncArgList(newArgList, udafMap.get(callName));
+        }
+        if (func.needRewriteField()) {
+            RelDataTypeField field = getInput().getRowType().getField(func.getRewriteFieldName(), true, false);
+            if (newArgList.isEmpty()) {
+                newArgList.add(field.getIndex());
+            } else {
+                // TODO: only the first column got overwritten
+                newArgList.set(0, field.getIndex());
+            }
+        }
+
         // rebuild aggregate call
         @SuppressWarnings("deprecation")
         AggregateCall newAggCall = new AggregateCall(newAgg, false, newArgList, fieldType, callName);
         return newAggCall;
+    }
+
+    /**
+     * truncate Arg List according to UDAF's "add" method parameter count
+     */
+    private List<Integer> truncArgList(List<Integer> argList, Class<?> udafClazz) {
+        int argListLength = argList.size();
+        for (Method method : udafClazz.getMethods()) {
+            if (method.getName().equals("add")) {
+                argListLength = Math.min(method.getParameterTypes().length - 1, argListLength);
+            }
+        }
+        return argList.subList(0, argListLength);
     }
 
     private SqlAggFunction createCustomAggFunction(String funcName, RelDataType returnType, Class<?> customAggFuncClz) {

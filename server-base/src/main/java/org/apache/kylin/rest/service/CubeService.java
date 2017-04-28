@@ -25,12 +25,9 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
@@ -41,17 +38,10 @@ import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
-import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
-import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.project.RealizationEntry;
@@ -63,9 +53,6 @@ import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.security.AclPermission;
-import org.apache.kylin.source.hive.HiveSourceTableLoader;
-import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
-import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.slf4j.Logger;
@@ -261,9 +248,9 @@ public class CubeService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void deleteCube(CubeInstance cube) throws IOException, JobException {
-        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING, ExecutableState.ERROR));
         if (!cubingJobs.isEmpty()) {
-            throw new JobException("The cube " + cube.getName() + " has running job, please discard it and try again.");
+            throw new JobException("The cube " + cube.getName() + " has running or failed job, please discard it and try again.");
         }
 
         try {
@@ -276,14 +263,6 @@ public class CubeService extends BasicService {
         int cubeNum = getCubeManager().getCubesByDesc(cube.getDescriptor().getName()).size();
         getCubeManager().dropCube(cube.getName(), cubeNum == 1);//only delete cube desc when no other cube is using it
         accessService.clean(cube, true);
-    }
-
-    public static String getCubeNameFromDesc(String descName) {
-        if (descName.toLowerCase().endsWith(DESC_SUFFIX)) {
-            return descName.substring(0, descName.toLowerCase().indexOf(DESC_SUFFIX));
-        } else {
-            return descName;
-        }
     }
 
     /**
@@ -358,7 +337,7 @@ public class CubeService extends BasicService {
         }
 
         if (cube.getSegments(SegmentStatusEnum.READY).size() == 0) {
-            throw new InternalErrorException("Cube " + cubeName + " dosen't contain any READY segment");
+            throw new InternalErrorException("Cube " + cubeName + " doesn't contain any READY segment");
         }
 
         final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
@@ -366,7 +345,7 @@ public class CubeService extends BasicService {
             throw new JobException("Enable is not allowed with a running job.");
         }
         if (!cube.getDescriptor().checkSignature()) {
-            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor());
+            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor() + ", if it's right after a upgrade, please try 'Edit CubeDesc' to delete the 'signature' field. Or use 'bin/metastore.sh refresh-cube-signature' to batch refresh all cubes' signatures, then reload metadata to take effect");
         }
 
         try {
@@ -414,83 +393,27 @@ public class CubeService extends BasicService {
         if (htableInfoCache.containsKey(tableName)) {
             return htableInfoCache.get(tableName);
         }
-
-        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
-        HTable table = null;
+        Connection conn = HBaseConnection.get(this.getConfig().getStorageUrl());
         HBaseResponse hr = null;
         long tableSize = 0;
         int regionCount = 0;
 
-        try {
-            table = new HTable(hconf, tableName);
+        HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(tableName, conn);
+        Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
 
-            HBaseRegionSizeCalculator cal = new HBaseRegionSizeCalculator(table);
-            Map<byte[], Long> sizeMap = cal.getRegionSizeMap();
-
-            for (long s : sizeMap.values()) {
-                tableSize += s;
-            }
-
-            regionCount = sizeMap.size();
-
-            // Set response.
-            hr = new HBaseResponse();
-            hr.setTableSize(tableSize);
-            hr.setRegionCount(regionCount);
-        } finally {
-            IOUtils.closeQuietly(table);
+        for (long s : sizeMap.values()) {
+            tableSize += s;
         }
 
+        regionCount = sizeMap.size();
+
+        // Set response.
+        hr = new HBaseResponse();
+        hr.setTableSize(tableSize);
+        hr.setRegionCount(regionCount);
         htableInfoCache.put(tableName, hr);
 
         return hr;
-    }
-
-    /**
-     * Generate cardinality for table This will trigger a hadoop job
-     * The result will be merged into table exd info
-     *
-     * @param tableName
-     */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinality(String tableName, String submitter) throws IOException {
-        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
-        tableName = dbTableName[0] + "." + dbTableName[1];
-        TableDesc table = getMetadataManager().getTableDesc(tableName);
-        final TableExtDesc tableExt = getMetadataManager().getTableExt(tableName);
-        if (table == null) {
-            IllegalArgumentException e = new IllegalArgumentException("Cannot find table descirptor " + tableName);
-            logger.error("Cannot find table descirptor " + tableName, e);
-            throw e;
-        }
-
-        DefaultChainedExecutable job = new DefaultChainedExecutable();
-        //make sure the job could be scheduled when the DistributedScheduler is enable.
-        job.setParam("segmentId", tableName);
-        job.setName("Hive Column Cardinality calculation for table '" + tableName + "'");
-        job.setSubmitter(submitter);
-
-        String outPath = getConfig().getHdfsWorkingDirectory() + "cardinality/" + job.getId() + "/" + tableName;
-        String param = "-table " + tableName + " -output " + outPath;
-
-        MapReduceExecutable step1 = new MapReduceExecutable();
-
-        step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
-        step1.setMapReduceParams(param);
-        step1.setParam("segmentId", tableName);
-
-        job.addTask(step1);
-
-        HadoopShellExecutable step2 = new HadoopShellExecutable();
-
-        step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
-        step2.setJobParams(param);
-        step2.setParam("segmentId", tableName);
-        job.addTask(step2);
-        tableExt.setJodID(job.getId());
-        getMetadataManager().saveTableExt(tableExt);
-
-        getExecutableManager().addJob(job);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
@@ -519,6 +442,10 @@ public class CubeService extends BasicService {
             if (seg.getName().equals(segmentName)) {
                 toDelete = seg;
             }
+        }
+
+        if (toDelete == null) {
+            throw new IllegalArgumentException("Cannot find segment '" + segmentName + "'");
         }
 
         if (toDelete.getStatus() != SegmentStatusEnum.READY) {
@@ -552,44 +479,6 @@ public class CubeService extends BasicService {
         CubeUpdate update = new CubeUpdate(cube);
         update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
         CubeManager.getInstance(getConfig()).updateCube(update);
-    }
-
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
-    public String[] reloadHiveTable(String tables) throws IOException {
-        Set<String> loaded = HiveSourceTableLoader.reloadHiveTables(tables.split(","), getConfig());
-        return (String[]) loaded.toArray(new String[loaded.size()]);
-    }
-
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void unLoadHiveTable(String tableName) throws IOException {
-        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
-        tableName = dbTableName[0] + "." + dbTableName[1];
-        HiveSourceTableLoader.unLoadHiveTable(tableName.toUpperCase());
-    }
-
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void syncTableToProject(String[] tables, String project) throws IOException {
-        getProjectManager().addTableDescToProject(tables, project);
-    }
-
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void removeTableFromProject(String tableName, String projectName) throws IOException {
-        String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
-        tableName = dbTableName[0] + "." + dbTableName[1];
-        getProjectManager().removeTableDescFromProject(tableName, projectName);
-    }
-
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws IOException {
-        MetadataManager metaMgr = getMetadataManager();
-        ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
-        for (String table : tables) {
-            TableExtDesc tableExtDesc = metaMgr.getTableExt(table);
-            String jobID = tableExtDesc.getJodID();
-            if (null == jobID || ExecutableState.RUNNING != exeMgt.getOutput(jobID).getState()) {
-                calculateCardinality(table, submitter);
-            }
-        }
     }
 
     public void updateOnNewSegmentReady(String cubeName) {

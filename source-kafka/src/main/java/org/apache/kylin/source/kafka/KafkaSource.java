@@ -83,15 +83,15 @@ public class KafkaSource implements ISource {
                 logger.debug("Last segment doesn't exist, use the start offset that be initiated previously: " + cube.getDescriptor().getPartitionOffsetStart());
                 result.setSourcePartitionOffsetStart(cube.getDescriptor().getPartitionOffsetStart());
             } else {
-                // from the topic's very begining;
-                logger.debug("Last segment doesn't exist, and didn't initiate the start offset, will seek from topic's very beginning.");
+                // from the topic's earliest offset;
+                logger.debug("Last segment doesn't exist, and didn't initiate the start offset, will seek from topic's earliest offset.");
                 result.setSourcePartitionOffsetStart(KafkaClient.getEarliestOffsets(cube));
             }
         }
 
-        final KafkaConfig kafakaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig(cube.getRootFactTable());
-        final String brokers = KafkaClient.getKafkaBrokers(kafakaConfig);
-        final String topic = kafakaConfig.getTopic();
+        final KafkaConfig kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig(cube.getRootFactTable());
+        final String brokers = KafkaClient.getKafkaBrokers(kafkaConfig);
+        final String topic = kafkaConfig.getTopic();
         try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cube.getName(), null)) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(topic);
             for (PartitionInfo partitionInfo : partitionInfos) {
@@ -107,7 +107,7 @@ public class KafkaSource implements ISource {
 
         if (result.getEndOffset() == Long.MAX_VALUE) {
             logger.debug("Seek end offsets from topic");
-            Map<Integer, Long> latestOffsets = KafkaClient.getCurrentOffsets(cube);
+            Map<Integer, Long> latestOffsets = KafkaClient.getLatestOffsets(cube);
             logger.debug("The end offsets are " + latestOffsets);
 
             for (Integer partitionId : latestOffsets.keySet()) {

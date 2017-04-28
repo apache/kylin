@@ -61,6 +61,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 public class ModelController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ModelController.class);
 
+    private static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
+
     @Autowired
     private ModelService modelService;
 
@@ -92,6 +94,10 @@ public class ModelController extends BasicController {
         if (StringUtils.isEmpty(modelDesc.getName())) {
             logger.info("Model name should not be empty.");
             throw new BadRequestException("Model name should not be empty.");
+        }
+        if (!StringUtils.containsOnly(modelDesc.getName(), VALID_MODELNAME)) {
+            logger.info("Invalid Model name {}, only letters, numbers and underline supported.", modelDesc.getName());
+            throw new BadRequestException("Invalid Model name, only letters, numbers and underline supported.");
         }
 
         try {
@@ -173,6 +179,10 @@ public class ModelController extends BasicController {
         if (StringUtils.isEmpty(newModelName)) {
             logger.info("New model name is empty.");
             throw new BadRequestException("New model name is empty.");
+        }
+        if (!StringUtils.containsOnly(newModelName, VALID_MODELNAME)) {
+            logger.info("Invalid Model name {}, only letters, numbers and underline supported.", newModelName);
+            throw new BadRequestException("Invalid Model name, only letters, numbers and underline supported.");
         }
 
         DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);

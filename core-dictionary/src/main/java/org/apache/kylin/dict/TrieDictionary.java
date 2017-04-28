@@ -27,10 +27,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
-import java.lang.ref.SoftReference;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
 
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesUtil;
@@ -44,21 +42,21 @@ import com.google.common.base.Preconditions;
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
  * int IDs.
- * 
+ * <p>
  * With Trie the memory footprint of the mapping is kinda minimized at the cost
  * CPU, if compared to HashMap of ID Arrays. Performance test shows Trie is
  * roughly 10 times slower, so there's a cache layer overlays on top of Trie and
  * gracefully fall back to Trie using a weak reference.
- * 
+ * <p>
  * The implementation is thread-safe.
- * 
+ *
  * @author yangli9
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
-public class TrieDictionary<T> extends Dictionary<T> {
+@SuppressWarnings({"rawtypes", "unchecked"})
+public class TrieDictionary<T> extends CacheDictionary<T> {
     private static final long serialVersionUID = 1L;
 
-    public static final byte[] MAGIC = new byte[] { 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "TrieDict"
+    public static final byte[] MAGIC = new byte[]{0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74}; // "TrieDict"
     public static final int MAGIC_SIZE_I = MAGIC.length;
 
     public static final int BIT_IS_LAST_CHILD = 0x80;
@@ -74,21 +72,13 @@ public class TrieDictionary<T> extends Dictionary<T> {
     transient private int bodyLen;
     transient private int sizeChildOffset;
     transient private int sizeNoValuesBeneath;
-    transient private int baseId;
     transient private int maxValueLength;
-    transient private BytesConverter<T> bytesConvert;
 
     transient private int nValues;
     transient private int sizeOfId;
     transient private long childOffsetMask;
     transient private int firstByteOffset;
 
-    transient private boolean enableValueCache = true;
-    transient private SoftReference<Map> valueToIdCache;
-    transient private SoftReference<Object[]> idToValueCache;
-
-    transient private boolean enableIdToValueBytesCache = false;
-    transient private byte[][] idToValueBytesCache;
 
     public TrieDictionary() { // default constructor for Writable interface
     }
@@ -114,22 +104,23 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
             String converterName = headIn.readUTF();
             if (converterName.isEmpty() == false)
-                this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                setConverterByName(converterName);
 
             this.nValues = BytesUtil.readUnsigned(trieBytes, headSize + sizeChildOffset, sizeNoValuesBeneath);
-            this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
+            this.sizeOfId = BytesUtil.sizeForValue(baseId + nValues + 1L); // note baseId could raise 1 byte in ID space, +1 to reserve all 0xFF for NULL case
             this.childOffsetMask = ~((long) (BIT_IS_LAST_CHILD | BIT_IS_END_OF_VALUE) << ((sizeChildOffset - 1) * 8));
             this.firstByteOffset = sizeChildOffset + sizeNoValuesBeneath + 1; // the offset from begin of node to its first value byte
+            enableCache();
         } catch (Exception e) {
             if (e instanceof RuntimeException)
                 throw (RuntimeException) e;
             else
                 throw new RuntimeException(e);
         }
-        if (enableValueCache) {
-            valueToIdCache = new SoftReference<Map>(new ConcurrentHashMap());
-            idToValueCache = new SoftReference<Object[]>(new Object[nValues]);
-        }
+    }
+
+    protected void setConverterByName(String converterName) throws Exception {
+        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
     }
 
     @Override
@@ -152,29 +143,9 @@ public class TrieDictionary<T> extends Dictionary<T> {
         return maxValueLength;
     }
 
-    @Override
-    final protected int getIdFromValueImpl(T value, int roundingFlag) {
-        if (enableValueCache && roundingFlag == 0) {
-            Map cache = valueToIdCache.get(); // SoftReference to skip cache gracefully when short of memory
-            if (cache != null) {
-                Integer id = null;
-                id = (Integer) cache.get(value);
-                if (id != null)
-                    return id.intValue();
-
-                byte[] valueBytes = bytesConvert.convertToBytes(value);
-                id = getIdFromValueBytes(valueBytes, 0, valueBytes.length, roundingFlag);
-
-                cache.put(value, id);
-                return id;
-            }
-        }
-        byte[] valueBytes = bytesConvert.convertToBytes(value);
-        return getIdFromValueBytes(valueBytes, 0, valueBytes.length, roundingFlag);
-    }
 
     @Override
-    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) {
+    protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag) {
         int seq = lookupSeqNoFromValue(headSize, value, offset, offset + len, roundingFlag);
         int id = calcIdFromSeqNo(seq);
         if (id < 0)
@@ -184,19 +155,14 @@ public class TrieDictionary<T> extends Dictionary<T> {
 
     /**
      * returns a code point from [0, nValues), preserving order of value
-     * 
-     * @param n
-     *            -- the offset of current node
-     * @param inp
-     *            -- input value bytes to lookup
-     * @param o
-     *            -- offset in the input value bytes matched so far
-     * @param inpEnd
-     *            -- end of input
-     * @param roundingFlag
-     *            -- =0: return -1 if not found
-     *            -- <0: return closest smaller if not found, return -1
-     *            -- >0: return closest bigger if not found, return nValues
+     *
+     * @param n            -- the offset of current node
+     * @param inp          -- input value bytes to lookup
+     * @param o            -- offset in the input value bytes matched so far
+     * @param inpEnd       -- end of input
+     * @param roundingFlag -- =0: return -1 if not found
+     *                     -- <0: return closest smaller if not found, return -1
+     *                     -- >0: return closest bigger if not found, return nValues
      */
     private int lookupSeqNoFromValue(int n, byte[] inp, int o, int inpEnd, int roundingFlag) {
         if (o == inpEnd) // special 'empty' value
@@ -267,35 +233,9 @@ public class TrieDictionary<T> extends Dictionary<T> {
             return k;
     }
 
-    @Override
-    final protected T getValueFromIdImpl(int id) {
-        if (enableValueCache) {
-            Object[] cache = idToValueCache.get(); // SoftReference to skip cache gracefully when short of memory
-            if (cache != null) {
-                int seq = calcSeqNoFromId(id);
-                if (cache[seq] != null)
-                    return (T) cache[seq];
-
-                byte[] value = new byte[getSizeOfValue()];
-                int length = getValueBytesFromId(id, value, 0);
-                T result = bytesConvert.convertFromBytes(value, 0, length);
-
-                cache[seq] = result;
-                return result;
-            }
-        }
-        byte[] value = new byte[getSizeOfValue()];
-        int length = getValueBytesFromId(id, value, 0);
-        return bytesConvert.convertFromBytes(value, 0, length);
-    }
 
     @Override
-    protected byte[] getValueBytesFromIdImpl(int id) {
-        if (enableIdToValueBytesCache) {
-            int seq = calcSeqNoFromId(id);
-            return idToValueBytesCache[seq];
-        }
-
+    protected byte[] getValueBytesFromIdWithoutCache(int id) {
         byte[] buf = new byte[maxValueLength];
         int len = getValueBytesFromIdImpl(id, buf, 0);
 
@@ -308,7 +248,6 @@ public class TrieDictionary<T> extends Dictionary<T> {
         }
     }
 
-    @Override
     protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) {
         int seq = calcSeqNoFromId(id);
         return lookupValueFromSeqNo(headSize, seq, returnValue, offset);
@@ -317,13 +256,10 @@ public class TrieDictionary<T> extends Dictionary<T> {
     /**
      * returns a code point from [0, nValues), preserving order of value, or -1
      * if not found
-     * 
-     * @param n
-     *            -- the offset of current node
-     * @param seq
-     *            -- the code point under track
-     * @param returnValue
-     *            -- where return value is written to
+     *
+     * @param n           -- the offset of current node
+     * @param seq         -- the code point under track
+     * @param returnValue -- where return value is written to
      */
     private int lookupValueFromSeqNo(int n, int seq, byte[] returnValue, int offset) {
         int o = offset;
@@ -363,68 +299,6 @@ public class TrieDictionary<T> extends Dictionary<T> {
         }
     }
 
-    public void enableIdToValueBytesCache() {
-        enableIdToValueBytesCache(new EnableIdToValueBytesCacheVisitor() {
-            @Override
-            public byte[] getBuffer() {
-                return new byte[getSizeOfValue()];
-            }
-
-            @Override
-            public byte[] makeValueBytes(byte[] buf, int length) {
-                byte[] valueBytes = new byte[length];
-                System.arraycopy(buf, 0, valueBytes, 0, length);
-                return valueBytes;
-            }
-        });
-    }
-
-    interface EnableIdToValueBytesCacheVisitor {
-        byte[] getBuffer();
-
-        byte[] makeValueBytes(byte[] buf, int length);
-    }
-
-    protected void enableIdToValueBytesCache(EnableIdToValueBytesCacheVisitor visitor) {
-        enableIdToValueBytesCache = true;
-        idToValueBytesCache = new byte[nValues][];
-        enableIdToValueBytesCache_recursion(headSize, 0, visitor.getBuffer(), 0, visitor);
-    }
-
-    private void enableIdToValueBytesCache_recursion(int n, int seq, byte[] buf, int tail, EnableIdToValueBytesCacheVisitor visitor) {
-        // write current node value
-        int p = n + firstByteOffset;
-        int len = BytesUtil.readUnsigned(trieBytes, p - 1, 1);
-        System.arraycopy(trieBytes, p, buf, tail, len);
-        tail += len;
-
-        // if the value is ended
-        boolean isEndOfValue = checkFlag(n, BIT_IS_END_OF_VALUE);
-        if (isEndOfValue) {
-            idToValueBytesCache[seq] = visitor.makeValueBytes(buf, tail);
-            seq++;
-        }
-
-        // find a child to continue
-        int c = getChildOffset(n);
-        if (c == headSize) // has no children 
-            return;
-
-        // process each child
-        while (true) {
-            enableIdToValueBytesCache_recursion(c, seq, buf, tail, visitor);
-
-            int nValuesBeneath = BytesUtil.readUnsigned(trieBytes, c + sizeChildOffset, sizeNoValuesBeneath);
-            seq += nValuesBeneath;
-
-            // go next child
-            if (checkFlag(c, BIT_IS_LAST_CHILD))
-                break; // no more child? we are done
-            p = c + firstByteOffset;
-            c = p + BytesUtil.readUnsigned(trieBytes, p - 1, 1);
-        }
-    }
-
     private boolean checkFlag(int offset, int bit) {
         return (trieBytes[offset] & bit) > 0;
     }
@@ -434,14 +308,6 @@ public class TrieDictionary<T> extends Dictionary<T> {
             return -1;
         else
             return baseId + seq;
-    }
-
-    private int calcSeqNoFromId(int id) {
-        int seq = id - baseId;
-        if (seq < 0 || seq >= nValues) {
-            throw new IllegalArgumentException("Not a valid ID: " + id);
-        }
-        return seq;
     }
 
     @Override
@@ -552,9 +418,9 @@ public class TrieDictionary<T> extends Dictionary<T> {
         Preconditions.checkArgument(dict2.contains(dict));
         Preconditions.checkArgument(dict.equals(dict2));
 
-        dict2.enableIdToValueBytesCache();
+        //dict2.enableIdToValueBytesCache();
         for (int i = 0; i <= dict.getMaxId(); i++) {
-            System.out.println(Bytes.toString(dict.getValueBytesFromId(i)));
+            System.out.println(Bytes.toString(dict.getValueBytesFromIdWithoutCache(i)));
         }
     }
 }

@@ -21,6 +21,7 @@ package org.apache.kylin.dimension;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Map;
@@ -33,7 +34,7 @@ import com.google.common.collect.Maps;
 /**
  * Encoding Boolean values to bytes
  */
-public class BooleanDimEnc extends DimensionEncoding {
+public class BooleanDimEnc extends DimensionEncoding implements Serializable{
     private static final long serialVersionUID = 1L;
 
     public static final String ENCODING_NAME = "boolean";
@@ -63,7 +64,7 @@ public class BooleanDimEnc extends DimensionEncoding {
 
     // ============================================================================
 
-    private static int fixedLen = 1;
+    private int fixedLen = 1;
 
     //no-arg constructor is required for Externalizable
     public BooleanDimEnc() {
@@ -108,12 +109,10 @@ public class BooleanDimEnc extends DimensionEncoding {
         return new BooleanSerializer();
     }
 
-    private class BooleanSerializer extends DataTypeSerializer<Object> {
-        // be thread-safe and avoid repeated obj creation
-        private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
+    public class BooleanSerializer extends DataTypeSerializer<Object> {
 
         private byte[] currentBuf() {
-            byte[] buf = current.get();
+            byte[] buf = (byte[]) current.get();
             if (buf == null) {
                 buf = new byte[fixedLen];
                 current.set(buf);

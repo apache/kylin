@@ -31,7 +31,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.JobStatus;
 import org.apache.kylin.common.util.ClassUtil;
-import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.constant.JobStepStatusEnum;
@@ -84,6 +84,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                 logger.warn("error get hadoop status");
                 super.onExecuteStart(executableContext);
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 logger.warn("error get hadoop status");
                 super.onExecuteStart(executableContext);
             }
@@ -147,7 +148,7 @@ public class MapReduceExecutable extends AbstractExecutable {
             //            boolean useKerberosAuth = context.getConfig().isGetJobStatusWithKerberos();
             //            HadoopStatusChecker statusChecker = new HadoopStatusChecker(restStatusCheckUrl, mrJobId, output, useKerberosAuth);
             JobStepStatusEnum status = JobStepStatusEnum.NEW;
-            while (!isDiscarded()) {
+            while (!isDiscarded() && !isPaused()) {
 
                 JobStepStatusEnum newStatus = HadoopJobStatusChecker.checkStatus(job, output);
                 if (status == JobStepStatusEnum.KILLED) {
@@ -171,7 +172,7 @@ public class MapReduceExecutable extends AbstractExecutable {
                         return new ExecuteResult(ExecuteResult.State.FAILED, output.toString());
                     }
                 }
-                Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000);
+                Thread.sleep(context.getConfig().getYarnStatusCheckIntervalSeconds() * 1000L);
             }
 
             // try to kill running map-reduce job to release resources.
@@ -183,7 +184,11 @@ public class MapReduceExecutable extends AbstractExecutable {
                 }
             }
 
-            return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
+            if (isDiscarded()) {
+                return new ExecuteResult(ExecuteResult.State.DISCARDED, output.toString());
+            } else {
+                return new ExecuteResult(ExecuteResult.State.STOPPED, output.toString());
+            }
 
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
@@ -197,14 +202,14 @@ public class MapReduceExecutable extends AbstractExecutable {
     private void readCounters(final HadoopCmdOutput hadoopCmdOutput, final Map<String, String> info) {
         hadoopCmdOutput.updateJobCounter();
         info.put(ExecutableConstants.SOURCE_RECORDS_COUNT, hadoopCmdOutput.getMapInputRecords());
-        info.put(ExecutableConstants.SOURCE_RECORDS_SIZE, hadoopCmdOutput.getHdfsBytesRead());
+        info.put(ExecutableConstants.SOURCE_RECORDS_SIZE, hadoopCmdOutput.getRawInputBytesRead());
         info.put(ExecutableConstants.HDFS_BYTES_WRITTEN, hadoopCmdOutput.getHdfsBytesWritten());
 
         String saveAs = getParam(KEY_COUNTER_SAVEAS);
         if (saveAs != null) {
             String[] saveAsNames = saveAs.split(",");
             saveCounterAs(hadoopCmdOutput.getMapInputRecords(), saveAsNames, 0, info);
-            saveCounterAs(hadoopCmdOutput.getHdfsBytesRead(), saveAsNames, 1, info);
+            saveCounterAs(hadoopCmdOutput.getRawInputBytesRead(), saveAsNames, 1, info);
             saveCounterAs(hadoopCmdOutput.getHdfsBytesWritten(), saveAsNames, 2, info);
         }
     }
@@ -237,10 +242,6 @@ public class MapReduceExecutable extends AbstractExecutable {
 
     public void setMapReduceParams(String param) {
         setParam(KEY_PARAMS, param);
-    }
-
-    public String getCounterSaveAs() {
-        return getParam(KEY_COUNTER_SAVEAS);
     }
 
     public void setCounterSaveAs(String value) {

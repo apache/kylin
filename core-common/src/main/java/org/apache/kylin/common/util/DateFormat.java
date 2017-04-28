@@ -48,6 +48,10 @@ public class DateFormat {
         }
         return r;
     }
+    
+    public static String formatToCompactDateStr(long millis) {
+        return formatToDateStr(millis, COMPACT_DATE_PATTERN);
+    }
 
     public static String formatToDateStr(long millis) {
         return formatToDateStr(millis, DEFAULT_DATE_PATTERN);
@@ -88,18 +92,6 @@ public class DateFormat {
     }
 
     public static long stringToMillis(String str) {
-        return stringToMillis(str, null);
-    }
-
-    public static long stringToMillis(String str, String dateFormat) {
-        try {
-            if (dateFormat != null) {
-                return getDateFormat(dateFormat).parse(str).getTime();
-            }
-        } catch (ParseException e) {
-            // given format does not work, proceed to below
-        }
-
         // try to be smart and guess the date format
         if (isAllDigits(str)) {
             if (str.length() == 8)

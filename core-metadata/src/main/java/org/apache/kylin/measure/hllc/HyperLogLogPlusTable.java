@@ -25,7 +25,7 @@ import java.util.TreeMap;
  * @author xjiang
  * 
  */
-public class HyperLogLogPlusTable {
+public class HyperLogLogPlusTable implements java.io.Serializable {
 
     // threshold and bias data taken from google's bias correction data set:
     // https://docs.google.com/document/d/1gyjfMHy43U9OWBXxfaeG-3MjGzejW1dlpyMwEYAAWEI/view?fullscreen#

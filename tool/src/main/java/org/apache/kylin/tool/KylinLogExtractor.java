@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.io.FileUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.cube.CubeDescManager;
@@ -110,7 +109,8 @@ public class KylinLogExtractor extends AbstractInfoExtractor {
         for (File logFile : requiredLogFiles) {
             logger.info("Log file:" + logFile.getAbsolutePath());
             if (logFile.exists()) {
-                FileUtils.copyFileToDirectory(logFile, exportDir);
+                String cmd = String.format("cp %s %s", logFile.getAbsolutePath(), exportDir.getAbsolutePath());
+                config.getCliCommandExecutor().execute(cmd);
             }
         }
     }

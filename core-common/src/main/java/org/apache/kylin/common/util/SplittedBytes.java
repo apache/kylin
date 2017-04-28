@@ -22,7 +22,7 @@ package org.apache.kylin.common.util;
  * @author George Song (ysong1)
  * 
  */
-public class SplittedBytes {
+public class SplittedBytes implements java.io.Serializable {
     public SplittedBytes(int length) {
         this.value = new byte[length];
         this.length = 0;

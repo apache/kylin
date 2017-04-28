@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
  * It is desinged to run in hadoop CLI, both in sandbox or in real hadoop environment
  */
 public class SandboxMetastoreCLI {
-
     private static final Logger logger = LoggerFactory.getLogger(SandboxMetastoreCLI.class);
 
     public static void main(String[] args) throws Exception {
@@ -44,7 +43,7 @@ public class SandboxMetastoreCLI {
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
         if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
-            throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
+            throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
         }
 
         if (args.length < 1) {

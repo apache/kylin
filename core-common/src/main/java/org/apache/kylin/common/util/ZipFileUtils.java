@@ -77,7 +77,10 @@ public class ZipFileUtils {
     }
 
     private static void compressDirectoryToZipfile(String rootDir, String sourceDir, ZipOutputStream out) throws IOException {
-        for (File sourceFile : new File(sourceDir).listFiles()) {
+        File[] files = new File(sourceDir).listFiles();
+        if (files == null)
+            return;
+        for (File sourceFile : files) {
             if (sourceFile.isDirectory()) {
                 compressDirectoryToZipfile(rootDir, sourceDir + normDir(sourceFile.getName()), out);
             } else {

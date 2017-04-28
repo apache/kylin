@@ -18,19 +18,21 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import java.nio.ByteBuffer;
-import java.util.Map;
-
+import com.google.common.collect.Maps;
 import org.apache.kylin.common.util.BytesSerializer;
 
-import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.nio.ByteBuffer;
+import java.util.Map;
 
 /**
  * Note: the implementations MUST be thread-safe.
  */
-abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
+abstract public class DataTypeSerializer<T> implements BytesSerializer<T>, java.io.Serializable {
 
     final static Map<String, Class<?>> implementations = Maps.newHashMap();
+    protected transient ThreadLocal current = new ThreadLocal();
     static {
         implementations.put("char", StringSerializer.class);
         implementations.put("varchar", StringSerializer.class);
@@ -93,5 +95,10 @@ abstract public class DataTypeSerializer<T> implements BytesSerializer<T> {
             return "NULL";
         else
             return value.toString();
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        current = new ThreadLocal();
     }
 }

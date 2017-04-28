@@ -41,7 +41,6 @@ import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureIngester;
 import org.apache.kylin.measure.MeasureType;
-import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.junit.After;
@@ -161,7 +160,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
     }
 
     private Text newValueText(BufferedMeasureCodec codec, String sum, String min, String max, int count, int item_count) {
-        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new LongMutable(count), new LongMutable(item_count) };
+        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new Long(count), new Long(item_count) };
 
         ByteBuffer buf = codec.encode(values);
 

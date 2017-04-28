@@ -19,8 +19,6 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Random;
 
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -29,10 +27,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.CubingJob.AlgorithmEnum;
-import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.engine.mr.common.CubeStatsReader;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -61,10 +59,12 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
         ResourceStore rs = ResourceStore.getStore(kylinConf);
         try {
-            Path statisticsFilePath = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
-            FileSystem fs = FileSystem.get(HadoopUtil.getCurrentConfiguration());
-            if (!fs.exists(statisticsFilePath))
-                throw new IOException("File " + statisticsFilePath + " does not exists");
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
+            Path statisticsDir = new Path(CubingExecutableUtil.getStatisticsPath(this.getParams()));
+            Path statisticsFilePath = HadoopUtil.getFilterOnlyPath(fs, statisticsDir, BatchConstants.CFG_OUTPUT_STATISTICS);
+            if (statisticsFilePath == null) {
+                throw new IOException("fail to find the statistics file in base dir: " + statisticsDir);
+            }
 
             FSDataInputStream is = fs.open(statisticsFilePath);
             try {
@@ -73,7 +73,6 @@ public class SaveStatisticsStep extends AbstractExecutable {
                 rs.putResource(statisticsFileName, is, System.currentTimeMillis());
             } finally {
                 IOUtils.closeStream(is);
-                fs.delete(statisticsFilePath, true);
             }
 
             decideCubingAlgorithm(newSegment, kylinConf);
@@ -87,16 +86,6 @@ public class SaveStatisticsStep extends AbstractExecutable {
 
     private void decideCubingAlgorithm(CubeSegment seg, KylinConfig kylinConf) throws IOException {
         String algPref = kylinConf.getCubeAlgorithm();
-
-        CubeStatsReader cubeStats = new CubeStatsReader(seg, kylinConf);
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        cubeStats.print(pw);
-        pw.flush();
-        pw.close();
-        logger.info("Cube Stats Estimation for segment {} :", seg.toString());
-        logger.info(sw.toString());
-
         AlgorithmEnum alg;
         if (AlgorithmEnum.INMEM.name().equalsIgnoreCase(algPref)) {
             alg = AlgorithmEnum.INMEM;
@@ -116,6 +105,7 @@ public class SaveStatisticsStep extends AbstractExecutable {
             } else if ("random".equalsIgnoreCase(algPref)) { // for testing
                 alg = new Random().nextBoolean() ? AlgorithmEnum.INMEM : AlgorithmEnum.LAYER;
             } else { // the default
+                CubeStatsReader cubeStats = new CubeStatsReader(seg, kylinConf);
                 int mapperNumber = cubeStats.getMapperNumberOfFirstBuild();
                 int mapperNumLimit = kylinConf.getCubeAlgorithmAutoMapperLimit();
                 double mapperOverlapRatio = cubeStats.getMapperOverlapRatioOfFirstBuild();

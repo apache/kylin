@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, $animate) {
+KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location, $window, $modal, MessageService, CubeDescService, CubeService, JobService, UserService, ProjectService, SweetAlert, loadingRequest, $log, modelConfig, ProjectModel, ModelService, MetaModel, modelsManager, cubesManager, TableModel, AccessService) {
 
   //tree data
 
@@ -131,21 +131,28 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     var cubename = [];
     var modelstate=false;
     var i=0;
-    if (model.cubes.length != 0) {
-      angular.forEach(model.cubes,function(cube){
-        if (cube.status=="READY"){
-          modelstate=true;
-          cubename[i] =cube.name;
-          i++;
-        }
-      })
-    }
-    if(modelstate==false){
-      $location.path("/models/edit/"+model.name);
-    }
-    else{
-      SweetAlert.swal('Sorry','This model is still used by '+ cubename.join(','));
-    }
+
+    CubeService.list({modelName:model.name}, function (_cubes) {
+      model.cubes = _cubes;
+
+      if (model.cubes.length != 0) {
+        angular.forEach(model.cubes,function(cube){
+          if (cube.status=="READY"){
+            modelstate=true;
+            cubename[i] =cube.name;
+            i++;
+          }
+        })
+      }
+
+      if(modelstate==false){
+        $location.path("/models/edit/"+model.name);
+      }
+      else{
+        SweetAlert.swal('Sorry','This model is still used by '+ cubename.join(','));
+      }
+    })
+
   };
 
   $scope.cloneModel = function(model){
@@ -176,7 +183,59 @@ KylinApp.controller('ModelsCtrl', function ($scope, $q, $routeParams, $location,
     });
   };
 
+  function changePositionOfScrollBar(){
+    //get which button be clicked
+    var btn = window.event.srcElement || window.event.target;
+    //get current position of scroll bar
+    var scrollTop =$("#cube_model_trees").scrollTop();
+    //get total length of scroll bar
+    var scrollHeight  = document.getElementById('cube_model_trees').scrollHeight;
+    //get the position of clicked button relative to the top of window
+    var offsetTop  =$(btn).offset().top;
+    //get the position of the container relative to the top of window
+    var treeOffsetTop = $("#cube_model_trees").offset().top;
+
+    //distance from button to the top of tree model container
+    var minor = offsetTop - treeOffsetTop;
+    //height of tree model container
+    var  viewH =$("#cube_model_trees").height();
+
+    //change scroll bar to show the dropdown menu
+    if(minor + 100 > viewH){//100 is the height of dropdowm menu
+      if((scrollHeight - scrollTop - viewH)>=minor+100-viewH){
+        document.getElementById('cube_model_trees').scrollTop+=(minor+120-viewH);
+      }else{
+        var node=document.createElement("LI");
+        node.style.height = (minor+120-viewH)+"px";
+        document.getElementById("models-tree").appendChild(node);
+        var  viewH =$("#cube_model_trees").height();//可见高度
+        document.getElementById('cube_model_trees').scrollTop+=(minor+120-viewH);
+
+      }
+    }
+  }
+
+  $scope.listModelAccess = function (model) {
+    changePositionOfScrollBar();
+
+    if(model.uuid){
+      AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
+        model.accessEntities = accessEntities;
+        try {
+          if (!model.owner) {
+            model.owner = accessEntities[0].sid.principal;
+          }
+        } catch (error) {
+          $log.error("No acl info.");
+        }
+      })
+    }
+
+
+  };
+
   var ModelDetailModalCtrl = function ($scope, $location, $modalInstance, scope) {
+    modelsManager.selectedModel.visiblePage='metadata';
     $scope.cancel = function () {
       $modalInstance.dismiss('cancel');
     };

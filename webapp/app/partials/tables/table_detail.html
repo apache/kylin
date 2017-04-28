@@ -19,7 +19,8 @@
 <div ng-controller="SourceMetaCtrl" class="nav-tabs-custom">
   <div class="col-xs-12" ng-show="tableModel.selectedSrcDb&&tableModel.selectedSrcTable.name">
     <h3 class="text-info">Table Schema:{{ tableModel.selectedSrcTable.name}}</h3>
-
+    <a class="btn btn-primary pull-right" ng-if="userService.hasRole('ROLE_ADMIN')" ng-click="unloadTable(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;" ><span class="fa fa-remove"></span>&nbsp;Unload Table</a>
+    <a class="btn btn-success pull-right" ng-if="tableModel.selectedSrcTable.source_type==0&&userService.hasRole('ROLE_ADMIN')"  ng-click="reloadTable(tableModel.selectedSrcTable.database+'.'+tableModel.selectedSrcTable.name)" style="margin-left:10px;" ><span class="fa fa-download"></span>&nbsp;Reload Table</a>
     <div class="tabbable nav-tabs-custom">
       <ul class="nav nav-tabs">
         <li class="active">
@@ -39,12 +40,16 @@
             <table class="table">
               <tbody>
               <tr>
-                <th style="width:20%">NAME</th>
+                <th style="width:20%">TABLE NAME</th>
                 <td>{{ tableModel.selectedSrcTable.name}}</td>
               </tr>
               <tr>
                 <th>Hive DATABASE</th>
                 <td>{{tableModel.selectedSrcTable.database}}</td>
+              </tr>
+              <tr>
+                <th>TABLE TYPE</th>
+                <td>{{tableModel.selectedSrcTable.table_type}}</td>
               </tr>
               <tr>
                 <th>SNAPSHOT TIME</th>
@@ -56,11 +61,11 @@
               </tr>
               <tr>
                 <th>INPUT FORMAT</th>
-                <td>{{tableModel.selectedSrcTable.exd.inputformat}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.hive_inputFormat}}</td>
               </tr>
               <tr>
                 <th>OUTPUT FORMAT</th>
-                <td>{{tableModel.selectedSrcTable.exd.outputformat}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.hive_outputFormat}}</td>
               </tr>
               <tr>
                 <th>OWNER</th>
@@ -70,11 +75,11 @@
               </tr>
               <tr>
                 <th>TOTAL FILE NUMBER</th>
-                <td>{{tableModel.selectedSrcTable.exd.totalNumberFiles}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.total_file_number}}</td>
               </tr>
               <tr>
                 <th>TOTAL FILE SIZE</th>
-                <td>{{tableModel.selectedSrcTable.exd.totalFileSize}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.total_file_size}}</td>
               </tr>
               <tr>
                 <th>PARTITIONED</th>
@@ -82,7 +87,7 @@
               </tr>
               <tr>
                 <th>PARTITION COLUMNS</th>
-                <td>{{tableModel.selectedSrcTable.exd.partitionColumns}}</td>
+                <td>{{tableModel.selectedSrcTable.exd.partition_column}}</td>
               </tr>
               </tbody>
             </table>

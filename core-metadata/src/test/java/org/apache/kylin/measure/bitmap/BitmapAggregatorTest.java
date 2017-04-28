@@ -18,41 +18,73 @@
 
 package org.apache.kylin.measure.bitmap;
 
+import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.junit.Test;
-
-/**
- * Created by sunyerui on 15/12/31.
- */
 public class BitmapAggregatorTest {
+    private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
 
     @Test
     public void testAggregator() {
-        BitmapCounter counter = new BitmapCounter();
-        counter.add(1);
-        counter.add(3333);
-        counter.add("123".getBytes());
-        counter.add(123);
-        assertEquals(3, counter.getCount());
-
-        BitmapCounter counter2 = new BitmapCounter();
-        counter2.add("23456");
-        counter2.add(12273456);
-        counter2.add("4258");
-        counter2.add(123);
-        assertEquals(4, counter2.getCount());
-
         BitmapAggregator aggregator = new BitmapAggregator();
-        assertNull(aggregator.getState());
-        assertEquals(Integer.MIN_VALUE, aggregator.getMemBytesEstimate());
+        assertNull(null, aggregator.getState());
 
-        aggregator.aggregate(counter);
-        aggregator.aggregate(counter2);
-        assertEquals(6, aggregator.getState().getCount());
+        aggregator.aggregate(factory.newBitmap(10, 20, 30, 40));
+        assertEquals(4, aggregator.getState().getCount());
+
+        aggregator.aggregate(factory.newBitmap(25, 30, 35, 40, 45));
+        assertEquals(7, aggregator.getState().getCount());
+
         aggregator.reset();
         assertNull(aggregator.getState());
     }
 
+    @Test
+    public void testAggregatorDeserializedCounter() throws IOException {
+        BitmapCounter counter1 = factory.newBitmap(1, 3, 5);
+        BitmapCounter counter2 = factory.newBitmap(1, 2, 4, 6);
+        BitmapCounter counter3 = factory.newBitmap(1, 5, 7);
+
+        ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
+        counter1.write(buffer);
+        counter2.write(buffer);
+        counter3.write(buffer);
+        buffer.flip();
+
+        BitmapAggregator aggregator = new BitmapAggregator();
+
+        // first
+        BitmapCounter next = factory.newBitmap(buffer);
+        assertEquals(counter1, next);
+
+        aggregator.aggregate(next);
+        assertEquals(counter1, aggregator.getState());
+
+        // second
+        next = factory.newBitmap(buffer);
+        assertEquals(counter2, next);
+
+        aggregator.aggregate(next);
+        assertEquals(6, aggregator.getState().getCount());
+
+        // third
+        next = factory.newBitmap(buffer);
+        assertEquals(counter3, next);
+
+        aggregator.aggregate(next);
+        assertEquals(7, aggregator.getState().getCount());
+
+        BitmapCounter result = factory.newBitmap();
+        result.orWith(counter1);
+        result.orWith(counter2);
+        result.orWith(counter3);
+        assertEquals(result, aggregator.getState());
+
+
+    }
 }

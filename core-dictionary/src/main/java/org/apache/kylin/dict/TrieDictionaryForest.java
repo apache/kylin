@@ -40,85 +40,65 @@ import org.apache.kylin.common.util.Dictionary;
  * <p>
  * Created by xiefan on 16-10-26.
  */
-public class TrieDictionaryForest<T> extends Dictionary<T> {
+public class TrieDictionaryForest<T> extends CacheDictionary<T> {
     private static final long serialVersionUID = 1L;
 
     private ArrayList<TrieDictionary<T>> trees;
 
     private ArrayList<ByteArray> valueDivide;
 
-    private ArrayList<Integer> accuOffset; //find tree
-
-    private BytesConverter<T> bytesConvert;
-
-    private int baseId;
+    private ArrayList<Integer> accuOffset;
 
     private ArrayList<ByteArray> maxValue;
+
+    private int minId;
+
+    private int maxId;
+
+    private int sizeOfId;
+
+    private int sizeOfValue;
 
     public TrieDictionaryForest() { // default constructor for Writable interface
     }
 
     public TrieDictionaryForest(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, //
-            ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+                                ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+        init(trees, valueDivide, accuOffset, bytesConverter, baseId);
+    }
+
+    private void init(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
         this.trees = trees;
         this.valueDivide = valueDivide;
         this.accuOffset = accuOffset;
         this.bytesConvert = bytesConverter;
         this.baseId = baseId;
-        initMaxValue();
+        initConstantValue();
+        initForestCache();
     }
 
     @Override
     public int getMinId() {
-        if (trees.isEmpty())
-            return baseId;
-        return trees.get(0).getMinId() + baseId;
+        return this.minId;
     }
 
     @Override
     public int getMaxId() {
-        if (trees.isEmpty())
-            return baseId - 1;
-        int index = trees.size() - 1;
-        int id = accuOffset.get(index) + trees.get(index).getMaxId() + baseId;
-        return id;
+        return this.maxId;
     }
 
     @Override
     public int getSizeOfId() {
-        if (trees.isEmpty())
-            return -1;
-        int maxOffset = accuOffset.get(accuOffset.size() - 1);
-        TrieDictionary<T> lastTree = trees.get(trees.size() - 1);
-        int sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1);
-        return sizeOfId;
+        return this.sizeOfId;
     }
 
     @Override
     public int getSizeOfValue() {
-        int maxValue = -1;
-        for (TrieDictionary<T> tree : trees)
-            maxValue = Math.max(maxValue, tree.getSizeOfValue());
-        return maxValue;
-    }
-
-    // value --> id
-    @Override
-    protected int getIdFromValueImpl(T value, int roundingFlag) throws IllegalArgumentException {
-        byte[] valueBytes = bytesConvert.convertToBytes(value);
-        return getIdFromValueBytesImpl(valueBytes, 0, valueBytes.length, roundingFlag);
+        return this.sizeOfValue;
     }
 
     @Override
-    protected int getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
-
-        int result = _getIdFromValueBytesImpl(value, offset, len, roundingFlag);
-        //logger.info("{} => {}, rounding {}", bytesConvert.convertFromBytes(value, offset, len), result, roundingFlag);
-        return result;
-    }
-
-    // id = tree_inner_offset + accumulate_offset + baseId
-    protected int _getIdFromValueBytesImpl(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
+    protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
         int index;
         if (trees.size() == 1) {
             index = 0;
@@ -142,37 +122,20 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
             }
         }
         TrieDictionary<T> tree = trees.get(index);
-        int id = tree.getIdFromValueBytes(value, offset, len, roundingFlag);
+        int id = tree.getIdFromValueBytesWithoutCache(value, offset, len, roundingFlag);
+        if (id == -1)
+            throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
         id = id + accuOffset.get(index);
         id += baseId;
         return id;
     }
 
     @Override
-    protected T getValueFromIdImpl(int id) throws IllegalArgumentException {
-        byte[] data = getValueBytesFromIdImpl(id);
-        if (data != null) {
-            return bytesConvert.convertFromBytes(data, 0, data.length);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    protected int getValueBytesFromIdImpl(int id, byte[] returnValue, int offset) throws IllegalArgumentException {
+    protected byte[] getValueBytesFromIdWithoutCache(int id) throws IllegalArgumentException {
         int index = (trees.size() == 1) ? 0 : findIndexById(id);
         int treeInnerOffset = getTreeInnerOffset(id, index);
         TrieDictionary<T> tree = trees.get(index);
-        int size = tree.getValueBytesFromIdImpl(treeInnerOffset, returnValue, offset);
-        return size;
-    }
-
-    @Override
-    protected byte[] getValueBytesFromIdImpl(int id) throws IllegalArgumentException {
-        int index = (trees.size() == 1) ? 0 : findIndexById(id);
-        int treeInnerOffset = getTreeInnerOffset(id, index);
-        TrieDictionary<T> tree = trees.get(index);
-        byte[] result = tree.getValueBytesFromId(treeInnerOffset);
+        byte[] result = tree.getValueBytesFromIdWithoutCache(treeInnerOffset);
         return result;
     }
 
@@ -244,19 +207,20 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         try {
             @SuppressWarnings("unused")
             int headSize = in.readInt();
-            this.baseId = in.readInt();
+            int baseId = in.readInt();
             String converterName = in.readUTF();
+            BytesConverter<T> bytesConverter = null;
             if (converterName.isEmpty() == false)
-                this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
+                bytesConverter = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
             //init accuOffset
             int accuSize = in.readInt();
-            this.accuOffset = new ArrayList<>();
+            ArrayList<Integer> accuOffset = new ArrayList<>();
             for (int i = 0; i < accuSize; i++) {
                 accuOffset.add(in.readInt());
             }
             //init valueDivide
             int valueDivideSize = in.readInt();
-            this.valueDivide = new ArrayList<>();
+            ArrayList<ByteArray> valueDivide = new ArrayList<>();
             for (int i = 0; i < valueDivideSize; i++) {
                 int length = in.readInt();
                 byte[] buffer = new byte[length];
@@ -264,13 +228,13 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
                 valueDivide.add(new ByteArray(buffer, 0, buffer.length));
             }
             int treeSize = in.readInt();
-            this.trees = new ArrayList<>();
+            ArrayList<TrieDictionary<T>> trees = new ArrayList<>();
             for (int i = 0; i < treeSize; i++) {
                 TrieDictionary<T> dict = new TrieDictionary<>();
                 dict.readFields(in);
                 trees.add(dict);
             }
-            initMaxValue();
+            init(trees, valueDivide, accuOffset, bytesConverter, baseId);
         } catch (Exception e) {
             if (e instanceof RuntimeException)
                 throw (RuntimeException) e;
@@ -370,7 +334,16 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         }
     }
 
-    private void initMaxValue() throws IllegalStateException {
+    private void initConstantValue() throws IllegalStateException {
+        initMaxValueForEachTrie();
+        initMaxId();
+        initMinId();
+        initSizeOfId();
+        initSizeOfValue();
+    }
+
+    private void initMaxValueForEachTrie() {
+        //init max value
         this.maxValue = new ArrayList<>();
         if (this.trees == null || trees.isEmpty()) {
             return;
@@ -383,21 +356,44 @@ public class TrieDictionaryForest<T> extends Dictionary<T> {
         }
     }
 
-    public static void main(String[] args) {
-        ArrayList<String> list = new ArrayList<>();
-        list.add("一");
-        list.add("二");
-        list.add("三");
-        list.add("");
-        list.add("part");
-        list.add("par");
-        list.add("partition");
-        list.add("party");
-        list.add("parties");
-        list.add("paint");
-        Collections.sort(list);
-        for (String str : list) {
-            System.out.println("found value:" + str + " index:" + lowerBound(str, list));
+    private void initMaxId() {
+        if (trees.isEmpty()) {
+            this.maxId = baseId - 1;
+            return;
+        }
+        int index = trees.size() - 1;
+        this.maxId = accuOffset.get(index) + trees.get(index).getMaxId() + baseId;
+    }
+
+    private void initMinId() {
+        if (trees.isEmpty()) {
+            this.minId = baseId;
+            return;
+        }
+        this.minId = trees.get(0).getMinId() + baseId;
+    }
+
+    private void initSizeOfId() {
+        if (trees.isEmpty()) {
+            this.sizeOfId = 1;
+            return;
+        }
+        int maxOffset = accuOffset.get(accuOffset.size() - 1);
+        TrieDictionary<T> lastTree = trees.get(trees.size() - 1);
+        this.sizeOfId = BytesUtil.sizeForValue(baseId + maxOffset + lastTree.getMaxId() + 1L);
+    }
+
+    private void initSizeOfValue() {
+        int maxValue = 0;
+        for (TrieDictionary<T> tree : trees)
+            maxValue = Math.max(maxValue, tree.getSizeOfValue());
+        this.sizeOfValue = maxValue;
+    }
+
+    private void initForestCache() {
+        enableCache();
+        for (TrieDictionary<T> tree : trees) { //disable duplicate cache
+            tree.disableCache();
         }
     }
 

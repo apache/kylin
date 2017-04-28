@@ -50,6 +50,11 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
 
     private void inner(CubeDesc cube, ValidateContext context) {
 
+        if (cube.getAggregationGroups() == null || cube.getAggregationGroups().size() == 0) {
+            context.addResult(ResultLevel.ERROR, "Cube should have at least one Aggregation group.");
+            return;
+        }
+
         int index = 0;
         for (AggregationGroup agg : cube.getAggregationGroups()) {
             if (agg.getIncludes() == null) {

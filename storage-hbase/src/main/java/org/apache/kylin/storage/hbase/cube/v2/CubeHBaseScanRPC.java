@@ -24,11 +24,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.ShardingHash;
@@ -40,6 +42,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.IGTStore;
 import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,37 +88,13 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         }
     }
 
-    public CubeHBaseScanRPC(ISegment segment, Cuboid cuboid, final GTInfo fullGTInfo) {
-        super(segment, cuboid, fullGTInfo);
+    public CubeHBaseScanRPC(ISegment segment, Cuboid cuboid, final GTInfo fullGTInfo, StorageContext context) {
+        super(segment, cuboid, fullGTInfo, context);
     }
 
     @Override
     public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
-        final IGTScanner scanner = getGTScannerInternal(scanRequest);
-
-        return new IGTScanner() {
-            @Override
-            public GTInfo getInfo() {
-                return scanner.getInfo();
-            }
-
-            @Override
-            public long getScannedRowCount() {
-                long sum = 0;
-                sum += scanner.getScannedRowCount();
-                return sum;
-            }
-
-            @Override
-            public void close() throws IOException {
-                scanner.close();
-            }
-
-            @Override
-            public Iterator<GTRecord> iterator() {
-                return scanner.iterator();
-            }
-        };
+        return getGTScannerInternal(scanRequest);
     }
 
     //for non-sharding cases it will only return one byte[] with not shard at beginning
@@ -154,8 +133,8 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         // primary key (also the 0th column block) is always selected
         final ImmutableBitSet selectedColBlocks = scanRequest.getSelectedColBlocks().set(0);
         // globally shared connection, does not require close
-        HConnection hbaseConn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
-        final HTableInterface hbaseTable = hbaseConn.getTable(cubeSeg.getStorageLocationIdentifier());
+        Connection hbaseConn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
+        final Table hbaseTable = hbaseConn.getTable(TableName.valueOf(cubeSeg.getStorageLocationIdentifier()));
 
         List<RawScan> rawScans = preparedHBaseScans(scanRequest.getGTScanRanges(), selectedColBlocks);
         List<List<Integer>> hbaseColumnsToGT = getHBaseColumnsGTMapping(selectedColBlocks);
@@ -179,8 +158,14 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
         final Iterator<Result> allResultsIterator = Iterators.concat(resultIterators.iterator());
 
         CellListIterator cellListIterator = new CellListIterator() {
+            long scannedRows = 0;
+            long scannedBytes = 0;
+
             @Override
             public void close() throws IOException {
+                queryContext.addAndGetScannedRows(scannedRows);
+                queryContext.addAndGetScannedBytes(scannedBytes);
+
                 for (ResultScanner scanner : scanners) {
                     scanner.close();
                 }
@@ -194,7 +179,12 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
 
             @Override
             public List<Cell> next() {
-                return allResultsIterator.next().listCells();
+                List<Cell> result = allResultsIterator.next().listCells();
+                for (Cell cell : result) {
+                    scannedBytes += CellUtil.estimatedSizeOf(cell);
+                }
+                scannedRows++;
+                return result;
             }
 
             @Override
@@ -213,11 +203,6 @@ public class CubeHBaseScanRPC extends CubeHBaseRPC {
             @Override
             public GTInfo getInfo() {
                 return fullGTInfo;
-            }
-
-            @Override
-            public long getScannedRowCount() {
-                return decorateScanner.getScannedRowCount();
             }
 
             @Override

@@ -30,6 +30,10 @@
         <location>/index.html</location>
     </error-page>
 
+    <session-config>
+        <session-timeout>480</session-timeout>
+    </session-config>
+
     <context-param>
         <param-name>log4jConfigLocation</param-name>
         <param-value>classpath:kylin-server-log4j.properties</param-value>

@@ -1,5 +1,24 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 package org.apache.kylin.engine.mr.steps;
 
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
@@ -11,8 +30,8 @@ import java.util.Random;
 import java.util.UUID;
 
 import org.apache.hadoop.io.Text;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.engine.mr.steps.SelfDefineSortableKey.TypeFlag;
 import org.junit.Test;
 
 /**
@@ -37,7 +56,7 @@ public class SelfDefineSortableKeyTest {
         System.out.println("test numbers:" + longList);
         ArrayList<String> strNumList = listToStringList(longList);
         //System.out.println("test num strs list:"+strNumList);
-        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) TypeFlag.INTEGER_FAMILY_TYPE.ordinal());
+        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) SelfDefineSortableKey.TypeFlag.INTEGER_FAMILY_TYPE.ordinal());
         System.out.println(keyList.get(0).isIntegerFamily());
         Collections.sort(keyList);
         ArrayList<String> strListAftereSort = new ArrayList<>();
@@ -73,8 +92,7 @@ public class SelfDefineSortableKeyTest {
         System.out.println("test numbers:" + doubleList);
         ArrayList<String> strNumList = listToStringList(doubleList);
         //System.out.println("test num strs list:"+strNumList);
-        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
-        System.out.println(keyList.get(0).isOtherNumericFamily());
+        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
         Collections.sort(keyList);
         ArrayList<String> strListAftereSort = new ArrayList<>();
         for (SelfDefineSortableKey key : keyList) {
@@ -103,8 +121,7 @@ public class SelfDefineSortableKeyTest {
         strList.add("hello"); //duplicate
         strList.add("123");
         strList.add("");
-        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strList, (byte) TypeFlag.NONE_NUMERIC_TYPE.ordinal());
-        System.out.println(keyList.get(0).isOtherNumericFamily());
+        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strList, (byte) SelfDefineSortableKey.TypeFlag.NONE_NUMERIC_TYPE.ordinal());
         Collections.sort(keyList);
         ArrayList<String> strListAftereSort = new ArrayList<>();
         for (SelfDefineSortableKey key : keyList) {
@@ -118,6 +135,60 @@ public class SelfDefineSortableKeyTest {
             }
         }));
     }
+
+    @Test
+    public void testPerformance() {
+        Random rand = new Random(System.currentTimeMillis());
+        ArrayList<Double> doubleList = new ArrayList<>();
+        int count = 10 * 10000;
+        for (int i = 0; i < count; i++) {
+            doubleList.add(rand.nextDouble());
+        }
+        doubleList.add(0.0);
+        doubleList.add(0.0); //test duplicate
+        doubleList.add(-1.0); //test negative number
+        doubleList.add(Double.MAX_VALUE);
+        doubleList.add(-Double.MAX_VALUE);
+        //System.out.println(Double.MIN_VALUE);
+
+
+        ArrayList<String> strNumList = listToStringList(doubleList);
+        //System.out.println("test num strs list:"+strNumList);
+        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
+
+        System.out.println("start to test str sort");
+        long start = System.currentTimeMillis();
+        Collections.sort(strNumList);
+        System.out.println("sort time : " + (System.currentTimeMillis() - start));
+
+
+        System.out.println("start to test double sort");
+        start = System.currentTimeMillis();
+        Collections.sort(keyList);
+        System.out.println("sort time : " + (System.currentTimeMillis() - start));
+
+        List<ByteArray> byteList = new ArrayList<>();
+        for (String str : strNumList) {
+            byteList.add(new ByteArray(Bytes.toBytes(str)));
+        }
+        System.out.println("start to test byte array sort");
+        start = System.currentTimeMillis();
+        Collections.sort(byteList);
+        System.out.println("sort time : " + (System.currentTimeMillis() - start));
+
+        //test new key
+        List<SelfDefineSortableKey> newKeyList = new ArrayList<>();
+        for (String str : strNumList) {
+            SelfDefineSortableKey key = new SelfDefineSortableKey();
+            key.init(new Text(str), (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
+            newKeyList.add(key);
+        }
+        System.out.println("start to test new sortable key");
+        start = System.currentTimeMillis();
+        Collections.sort(newKeyList);
+        System.out.println("sort time : " + (System.currentTimeMillis() - start));
+    }
+
 
     @Test
     public void testIllegalNumber() {
@@ -138,18 +209,19 @@ public class SelfDefineSortableKeyTest {
         ArrayList<String> strNumList = listToStringList(doubleList);
         strNumList.add("fjaeif"); //illegal type
         //System.out.println("test num strs list:"+strNumList);
-        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
-        System.out.println(keyList.get(0).isOtherNumericFamily());
-        Collections.sort(keyList);
-        for (SelfDefineSortableKey key : keyList) {
-            printKey(key);
+        try {
+            ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
+            Collections.sort(keyList);
+            fail("Need catch exception");
+        }catch(Exception e){
+            //correct
         }
 
     }
 
     @Test
     public void testEnum() {
-        TypeFlag flag = TypeFlag.DOUBLE_FAMILY_TYPE;
+        SelfDefineSortableKey.TypeFlag flag = SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE;
         System.out.println((byte) flag.ordinal());
         int t = (byte) flag.ordinal();
         System.out.println(t);
@@ -158,7 +230,6 @@ public class SelfDefineSortableKeyTest {
     private <T> ArrayList<String> listToStringList(ArrayList<T> list) {
         ArrayList<String> strList = new ArrayList<>();
         for (T t : list) {
-            System.out.println(t.toString());
             strList.add(t.toString());
         }
         return strList;
@@ -175,17 +246,18 @@ public class SelfDefineSortableKeyTest {
             Bytes.copy(keyBuffer.array(), 1, keyBuffer.position() - offset - 1);
             Text outputKey = new Text();
             outputKey.set(keyBuffer.array(), offset, keyBuffer.position() - offset);
-            SelfDefineSortableKey sortableKey = new SelfDefineSortableKey(typeFlag, outputKey);
+            SelfDefineSortableKey sortableKey = new SelfDefineSortableKey();
+            sortableKey.init(outputKey, typeFlag);
             keyList.add(sortableKey);
         }
         return keyList;
     }
 
     private String printKey(SelfDefineSortableKey key) {
-        byte[] data = key.getText().getBytes();
-        byte[] fieldValue = Bytes.copy(data, 1, data.length - 1);
-        System.out.println("type flag:" + key.getTypeId() + " fieldValue:" + new String(fieldValue));
-        return new String(fieldValue);
+        Text data = key.getText();
+        String fieldValue = Bytes.toString(data.getBytes(), 1, data.getLength() - 1);
+        System.out.println("type flag:" + key.getTypeId() + " fieldValue:" + fieldValue);
+        return fieldValue;
     }
 
     private <T> boolean isIncreasedOrder(List<T> list, Comparator<T> comp) {

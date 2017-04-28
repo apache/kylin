@@ -18,13 +18,14 @@
 
 package org.apache.kylin.dict;
 
+import org.apache.kylin.common.util.ClassUtil;
+
 /**
  * This class uses MAX_DIGITS_BEFORE_DECIMAL_POINT (=19) instead of legacy (=16).
  */
 @SuppressWarnings("serial")
+@Deprecated
 public class NumberDictionary2<T> extends NumberDictionary<T> {
-
-    static ThreadLocal<NumberBytesCodec> localCodec = new ThreadLocal<NumberBytesCodec>();
 
     // ============================================================================
 
@@ -36,13 +37,10 @@ public class NumberDictionary2<T> extends NumberDictionary<T> {
         super(trieBytes);
     }
 
-    protected NumberBytesCodec getCodec() {
-        NumberBytesCodec codec = localCodec.get();
-        if (codec == null) {
-            codec = new NumberBytesCodec(MAX_DIGITS_BEFORE_DECIMAL_POINT);
-            localCodec.set(codec);
-        }
-        return codec;
+    @Override
+    protected void setConverterByName(String converterName) throws Exception {
+        converterName = "org.apache.kylin.dict.Number2BytesConverter";
+        this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
     }
 
 }

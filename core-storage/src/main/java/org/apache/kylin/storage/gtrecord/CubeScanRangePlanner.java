@@ -38,6 +38,7 @@ import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.cube.gridtable.RecordComparators;
 import org.apache.kylin.cube.gridtable.ScanRangePlannerBase;
 import org.apache.kylin.cube.gridtable.SegmentGTStartAndEnd;
+import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
@@ -85,7 +86,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         Set<TblColRef> filterDims = Sets.newHashSet();
         TupleFilter.collectColumns(filter, filterDims);
 
-        this.gtInfo = CubeGridTable.newGTInfo(cubeSegment, cuboid.getId());
+        this.gtInfo = CubeGridTable.newGTInfo(cuboid, new CubeDimEncMap(cubeSegment));
         CuboidToGridTableMapping mapping = cuboid.getCuboidToGridTableMapping();
 
         IGTComparator comp = gtInfo.getCodeSystem().getComparator();
@@ -148,15 +149,10 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         GTScanRequest scanRequest;
         List<GTScanRange> scanRanges = this.planScanRanges();
         if (scanRanges != null && scanRanges.size() != 0) {
-            GTScanRequestBuilder builder = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(scanRanges).setDimensions(gtDimensions).//
+            scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(scanRanges).setDimensions(gtDimensions).//
                     setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs).setFilterPushDown(gtFilter).//
-                    setAllowStorageAggregation(context.isNeedStorageAggregation()).setAggCacheMemThreshold(cubeSegment.getCubeInstance().getConfig().getQueryCoprocessorMemGB()).//
-                    setStorageScanRowNumThreshold(context.getThreshold());
-
-            if (context.getFinalPushDownLimit() != Integer.MAX_VALUE)
-                builder.setStoragePushDownLimit(context.getFinalPushDownLimit());
-
-            scanRequest = builder.createGTScanRequest();
+                    setAllowStorageAggregation(context.isNeedStorageAggregation()).setAggCacheMemThreshold(cubeSegment.getConfig().getQueryCoprocessorMemGB()).//
+                    setStoragePushDownLimit(context.getFinalPushDownLimit()).createGTScanRequest();
         } else {
             scanRequest = null;
         }

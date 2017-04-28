@@ -54,7 +54,6 @@
             </th>
             <th>Actions</th>
             <th ng-if="userService.hasRole('ROLE_ADMIN')">Admins</th>
-            <th>Streaming</th>
         </tr>
         </thead>
         <!--Body-->
@@ -83,17 +82,16 @@
             <td>{{ cube.owner}}</td>
             <td>{{ cube.create_time_utc | utcToConfigTimeZone}}</td>
             <td>
-                <div ng-click="$event.stopPropagation();" class="btn-group" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
+                <div ng-click="$event.stopPropagation();" class="btn-group">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle"
                             data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
-                    <ul class="dropdown-menu" role="menu">
+                    <ul ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)" class="dropdown-menu" role="menu">
                         <li ng-if="cube.status!='READY' && userService.hasRole('ROLE_ADMIN') ">
                             <a ng-click="dropCube(cube)" tooltip="Drop the cube, related jobs and data permanently.">Drop</a></li>
                         <li ng-if="(userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))">
                             <a ng-click="cubeEdit(cube);">Edit</a></li>
-                        <li ng-if="cube.streaming && cube.status=='DISABLED' && (userService.hasRole('ROLE_ADMIN') || hasPermission(cube, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask))"></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startJobSubmit(cube);">Build</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startRefresh(cube)">Refresh</a></li>
                         <li ng-if="cube.status!='DESCBROKEN'"><a ng-click="startMerge(cube)">Merge</a></li>
@@ -108,19 +106,16 @@
                     N/A
                 </span>
             </td>
-            <td ng-if="userService.hasRole('ROLE_ADMIN')">
+            <td>
                 <div ng-click="$event.stopPropagation();" class="btn-group">
                     <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" ng-click="listAccess(cube, 'CubeInstance')">
                         Action <span class="ace-icon fa fa-caret-down icon-on-right"></span>
                     </button>
-                    <ul class="dropdown-menu" role="menu">
+                    <ul class="dropdown-menu" role="menu" ng-if="userService.hasRole('ROLE_ADMIN')">
                         <li ng-if="cube.status!='READY'"><a href="cubes/edit/{{cube.name}}/descriptionjson">Edit CubeDesc</a></li>
                         <li><a href="cubes/view/{{cube.name}}/instancejson">View Cube</a></li>
                     </ul>
                 </div>
-            </td>
-            <td>
-              <label class="badge" ng-class="{'label-info':cube.streaming==true}" style="cursor:pointer;">{{cube.streaming}}</label>
             </td>
         </tr>
         <tr ng-show="cube.showDetail">

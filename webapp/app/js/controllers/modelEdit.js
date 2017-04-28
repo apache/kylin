@@ -19,9 +19,14 @@
 'use strict';
 
 
-KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager) {
+KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $location, $templateCache, $interpolate, MessageService, TableService, CubeDescService, ModelService, loadingRequest, SweetAlert,$log,cubeConfig,CubeDescModel,ModelDescService,MetaModel,TableModel,ProjectService,ProjectModel,modelsManager, CubeService, VdmUtil) {
     //add or edit ?
     var absUrl = $location.absUrl();
+    $scope.tableAliasMap={};
+    $scope.aliasTableMap={};
+    $scope.aliasName=[];
+    $scope.selectedAliasCubeMap={};
+    $scope.route={params:$routeParams.modelName};
     $scope.modelMode = absUrl.indexOf("/models/add")!=-1?'addNewModel':absUrl.indexOf("/models/edit")!=-1?'editExistModel':'default';
 
     if($scope.modelMode=="addNewModel"&&ProjectModel.selectedProject==null){
@@ -30,22 +35,8 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
     }
 
     $scope.modelsManager = modelsManager;
-
     $scope.cubeConfig = cubeConfig;
 
-    $scope.getPartitonColumns = function(tableName){
-        var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
-            return column.datatype==="date"||column.datatype==="timestamp"||column.datatype==="string"||column.datatype.startsWith("varchar")||column.datatype==="bigint"||column.datatype==="int"||column.datatype==="integer";
-        });
-        return columns;
-    };
-
-    $scope.getPartitonTimeColumns = function(tableName){
-        var columns = _.filter($scope.getColumnsByTable(tableName),function(column){
-            return column.datatype==="time"||column.datatype==="timestamp"||column.datatype==="string"||column.datatype.startsWith("varchar");
-        });
-        return columns;
-    };
 
     $scope.getColumnsByTable = function (tableName) {
         var temp = [];
@@ -56,9 +47,17 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         });
         return temp;
     };
-
-    $scope.getColumnType = function (_column,table){
-        var columns = $scope.getColumnsByTable(table);
+    $scope.getColumnsByAlias = function (aliasName) {
+        var temp = [];
+        angular.forEach(TableModel.selectProjectTables, function (table) {
+            if (table.name == $scope.aliasTableMap[aliasName]) {
+                temp = table.columns;
+            }
+        });
+        return temp;
+    };
+    $scope.getColumnType = function (_column,alias){
+        var columns = $scope.getColumnsByAlias(alias);
         var type;
         angular.forEach(columns,function(column){
             if(_column === column.name){
@@ -69,38 +68,6 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         return type;
     };
 
-  $scope.isFormatEditable = false;
-  var judgeFormatEditable = function(dateColumn){
-
-    if(dateColumn == null){
-      $scope.isFormatEditable = false;
-      return;
-    }
-    var column = _.filter($scope.getColumnsByTable($scope.modelsManager.selectedModel.fact_table),function(_column){
-      var columnName=$scope.modelsManager.selectedModel.fact_table+"."+_column.name;
-      if(dateColumn == columnName)
-        return _column;
-    });
-
-    var data_type = column[0].datatype;
-    if(data_type ==="bigint" ||data_type ==="int" ||data_type ==="integer"){
-      $scope.isFormatEditable = false;
-      $scope.modelsManager.selectedModel.partition_desc.partition_date_format='yyyyMMdd';
-      $scope.partitionColumn.hasSeparateTimeColumn=false;
-      $scope.modelsManager.selectedModel.partition_desc.partition_time_column=null;
-      $scope.modelsManager.selectedModel.partition_desc.partition_time_format=null;
-
-      return;
-    }
-
-    $scope.isFormatEditable = true;
-    return;
-
-  };
-  $scope.partitionChange = function (dateColumn) {
-    judgeFormatEditable(dateColumn);
-  };
-
     // ~ Define data
     $scope.state = {
         "modelSchema": "",
@@ -109,44 +76,44 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
         project:$scope.projectModel.selectedProject
     };
 
-    $scope.partitionColumn ={
-      "hasSeparateTimeColumn" : false
-    }
-    // ~ init
     if ($scope.isEdit = !!$routeParams.modelName) {
-
-        var modelName = $routeParams.modelName;
-        ModelDescService.query({model_name: modelName}, function (model) {
-                    if (model) {
-                        modelsManager.selectedModel = model;
-
-                        if($scope.modelsManager.selectedModel.partition_desc.partition_time_column){
-                          $scope.partitionColumn.hasSeparateTimeColumn = true;
-                        }
-                        modelsManager.selectedModel.project = ProjectModel.getProjectByCubeModel(modelName);
-
-                        if(!ProjectModel.getSelectedProject()){
-                            ProjectModel.setSelectedProject(modelsManager.selectedModel.project);
-                        }
-
-                        TableModel.aceSrcTbLoaded().then(function(){
-                          judgeFormatEditable($scope.modelsManager.selectedModel.partition_desc.partition_date_column);
-                        });
-                    }
+      var modelName = $routeParams.modelName;
+      ModelDescService.query({model_name: modelName}, function (model) {
+        if (model) {
+          modelsManager.selectedModel = model;
+          $scope.FactTable={root:$scope.modelsManager.selectedModel.fact_table};
+          $scope.aliasTableMap[VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table)]=$scope.modelsManager.selectedModel.fact_table;
+          $scope.tableAliasMap[$scope.modelsManager.selectedModel.fact_table]=VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table);
+          $scope.aliasName.push(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table));
+          angular.forEach($scope.modelsManager.selectedModel.lookups,function(joinTable){
+            $scope.aliasTableMap[joinTable.alias]=joinTable.table;
+            $scope.tableAliasMap[joinTable.table]=joinTable.alias;
+            $scope.aliasName.push(joinTable.alias);
+          });
+          CubeService.list({modelName:model.name}, function (_cubes) {
+            $scope.cubesLength = _cubes.length;
+            angular.forEach(_cubes,function(cube){
+              CubeDescService.query({cube_name:cube.name},{},function(each){
+                angular.forEach(each[0].dimensions,function(dimension){
+                  $scope.selectedAliasCubeMap[dimension.table]=true;
                 });
+                angular.forEach(each[0].measures,function(measure){
+                  $scope.selectedAliasCubeMap[VdmUtil.getNameSpaceAliasName(measure.function.parameter.value)]=true;
+                });
+              })
+            });
+          });
+          modelsManager.selectedModel.project = ProjectModel.getProjectByCubeModel(modelName);
+          if(!ProjectModel.getSelectedProject()){
+            ProjectModel.setSelectedProject(modelsManager.selectedModel.project);
+          }
+        }
+      });
         //init project
-
     } else {
         MetaModel.initModel();
         modelsManager.selectedModel = MetaModel.getMetaModel();
         modelsManager.selectedModel.project = ProjectModel.getSelectedProject();
-    }
-
-
-    $scope.toggleHasSeparateColumn = function(){
-      if($scope.partitionColumn.hasSeparateTimeColumn == false){
-        $scope.modelsManager.selectedModel.partition_desc.partition_time_column = null;
-      }
     }
 
     $scope.prepareModel = function () {
@@ -188,7 +155,11 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                 loadingRequest.show();
 
                 if ($scope.isEdit) {
-                    ModelService.update({}, {modelDescData:$scope.state.modelSchema, modelName: $routeParams.modelName, project: $scope.state.project}, function (request) {
+                    ModelService.update({}, {
+                      modelDescData:VdmUtil.filterNullValInObj($scope.state.modelSchema),
+                      modelName: $routeParams.modelName,
+                      project: $scope.state.project
+                    }, function (request) {
                         if (request.successful) {
                             $scope.state.modelSchema = request.modelSchema;
                             SweetAlert.swal('', 'Updated the model successfully.', 'success');
@@ -216,13 +187,16 @@ KylinApp.controller('ModelEditCtrl', function ($scope, $q, $routeParams, $locati
                         loadingRequest.hide();
                     });
                 } else {
-                    ModelService.save({}, {modelDescData:$scope.state.modelSchema, project: $scope.state.project}, function (request) {
+                    ModelService.save({}, {
+                      modelDescData:VdmUtil.filterNullValInObj($scope.state.modelSchema),
+                      project: $scope.state.project
+                    }, function (request) {
                         if(request.successful) {
 
                           $scope.state.modelSchema = request.modelSchema;
                           SweetAlert.swal('', 'Created the model successfully.', 'success');
                           $location.path("/models");
-                          location.reload();
+                         // location.reload();
                         } else {
                             $scope.saveModelRollBack();
                             var message =request.message;

@@ -47,25 +47,11 @@ public class LogicalTupleFilter extends TupleFilter {
         return cloneTuple;
     }
 
-    //    private TupleFilter reverseNestedNots(TupleFilter filter, int depth) {
-    //        if ((filter instanceof LogicalTupleFilter) && (filter.operator == FilterOperatorEnum.NOT)) {
-    //            assert (filter.children.size() == 1);
-    //            return reverseNestedNots(filter.children.get(0), depth + 1);
-    //        }
-    //
-    //        if (depth % 2 == 1) {
-    //            return filter;
-    //        } else {
-    //            return filter.reverse();
-    //        }
-    //    }
-
     @Override
     public TupleFilter reverse() {
         switch (operator) {
         case NOT:
-            throw new IllegalStateException("not( not in ()) is invalid syntax");
-            //return reverseNestedNots(this, 0);
+            throw new IllegalStateException("NOT will be replaced in org.apache.kylin.query.relnode.OLAPFilterRel.TupleFilterVisitor");
         case AND:
         case OR:
             LogicalTupleFilter reverse = new LogicalTupleFilter(REVERSE_OP_MAP.get(operator));

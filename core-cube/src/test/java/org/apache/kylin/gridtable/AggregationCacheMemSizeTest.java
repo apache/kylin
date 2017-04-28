@@ -1,23 +1,32 @@
 /*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements. See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License. You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 
 package org.apache.kylin.gridtable;
 
-import com.google.common.base.Stopwatch;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.basic.BigDecimalSumAggregator;
@@ -25,25 +34,25 @@ import org.apache.kylin.measure.basic.DoubleSumAggregator;
 import org.apache.kylin.measure.basic.LongSumAggregator;
 import org.apache.kylin.measure.bitmap.BitmapAggregator;
 import org.apache.kylin.measure.bitmap.BitmapCounter;
+import org.apache.kylin.measure.bitmap.BitmapCounterFactory;
+import org.apache.kylin.measure.bitmap.RoaringBitmapCounterFactory;
 import org.apache.kylin.measure.hllc.HLLCAggregator;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
-import org.apache.kylin.metadata.datatype.DoubleMutable;
-import org.apache.kylin.metadata.datatype.LongMutable;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.github.jamm.MemoryMeter;
 import org.junit.Test;
 
-import java.math.BigDecimal;
-import java.util.*;
+import com.google.common.base.Stopwatch;
 
 public class AggregationCacheMemSizeTest {
     private static final MemoryMeter meter = new MemoryMeter();
+    private static final BitmapCounterFactory bitmapFactory = RoaringBitmapCounterFactory.INSTANCE;
     private static final BitmapCounter[] bitmaps = new BitmapCounter[5];
     private static final Random random = new Random();
 
     // consider bitmaps with variant cardinality
     static {
         for (int i = 0; i < bitmaps.length; i++) {
-            bitmaps[i] = new BitmapCounter();
+            bitmaps[i] = bitmapFactory.newBitmap();
         }
 
         final int totalBits = 1_000_000;
@@ -92,10 +101,10 @@ public class AggregationCacheMemSizeTest {
 
     private MeasureAggregator<?>[] createNoMemHungryAggrs() {
         LongSumAggregator longSum = new LongSumAggregator();
-        longSum.aggregate(new LongMutable(10));
+        longSum.aggregate(new Long(10));
 
         DoubleSumAggregator doubleSum = new DoubleSumAggregator();
-        doubleSum.aggregate(new DoubleMutable(10));
+        doubleSum.aggregate(new Double(10));
 
         BigDecimalSumAggregator decimalSum = new BigDecimalSumAggregator();
         decimalSum.aggregate(new BigDecimal("12345678901234567890.123456789"));
@@ -105,13 +114,13 @@ public class AggregationCacheMemSizeTest {
 
     private HLLCAggregator createHLLCAggr() {
         HLLCAggregator hllcAggregator = new HLLCAggregator(14);
-        hllcAggregator.aggregate(new HyperLogLogPlusCounter(14));
+        hllcAggregator.aggregate(new HLLCounter(14));
         return hllcAggregator;
     }
 
     private BitmapAggregator createBitmapAggr(boolean lowCardinality) {
-        BitmapCounter counter = new BitmapCounter();
-        counter.merge(lowCardinality ? bitmaps[0] : bitmaps[3]);
+        BitmapCounter counter = bitmapFactory.newBitmap();
+        counter.orWith(lowCardinality ? bitmaps[0] : bitmaps[3]);
 
         BitmapAggregator result = new BitmapAggregator();
         result.aggregate(counter);
@@ -133,6 +142,8 @@ public class AggregationCacheMemSizeTest {
                 break;
             case WITH_HIGH_CARD_BITMAP:
                 aggregators.add(createBitmapAggr(false));
+                break;
+            default:
                 break;
         }
 

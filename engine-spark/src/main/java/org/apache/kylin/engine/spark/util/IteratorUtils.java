@@ -24,8 +24,6 @@ import java.util.NoSuchElementException;
 
 import org.apache.spark.api.java.function.Function;
 
-import com.google.common.collect.Lists;
-
 import scala.Tuple2;
 
 /**
@@ -47,7 +45,7 @@ public class IteratorUtils {
                 if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
-                final LinkedList<V> values = Lists.newLinkedList();
+                final LinkedList<V> values = new LinkedList();
                 K currentKey = current._1();
                 values.add(current._2());
                 while (input.hasNext()) {

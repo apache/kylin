@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,6 +36,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.job.Scheduler;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.apache.kylin.job.engine.JobEngineConfig;
@@ -71,7 +73,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     private DistributedJobLock jobLock;
 
     private static final Logger logger = LoggerFactory.getLogger(DistributedScheduler.class);
-    private static final ConcurrentHashMap<KylinConfig, DistributedScheduler> CACHE = new ConcurrentHashMap<KylinConfig, DistributedScheduler>();
+    private static final ConcurrentMap<KylinConfig, DistributedScheduler> CACHE = new ConcurrentHashMap<KylinConfig, DistributedScheduler>();
     //keep all segments having running job
     private final Set<String> segmentWithLocks = new CopyOnWriteArraySet<>();
     private volatile boolean initialized = false;
@@ -173,7 +175,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
 
         @Override
         public void run() {
-            try {
+            try (SetThreadName ignored = new SetThreadName("Job %s", executable.getId())) {
                 String segmentId = executable.getParam(SEGMENT_ID);
                 if (jobLock.lockWithName(segmentId, serverName)) {
                     logger.info(executable.toString() + " scheduled in server: " + serverName);
@@ -194,13 +196,13 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
             }
         }
 
-        //release job lock only when the all tasks of the job finish and the job server keep the cube lock.
+        //release job lock when job state is ready or running and the job server keep the cube lock.
         private void releaseJobLock(AbstractExecutable executable) {
             if (executable instanceof DefaultChainedExecutable) {
                 String segmentId = executable.getParam(SEGMENT_ID);
                 ExecutableState state = executable.getStatus();
 
-                if (state == ExecutableState.SUCCEED || state == ExecutableState.ERROR || state == ExecutableState.DISCARDED) {
+                if (state != ExecutableState.READY && state != ExecutableState.RUNNING) {
                     if (segmentWithLocks.contains(segmentId)) {
                         logger.info(executable.toString() + " will release the lock for the segment: " + segmentId);
                         jobLock.unlockWithName(segmentId);
@@ -231,7 +233,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
                     if (executable instanceof DefaultChainedExecutable && executable.getParams().get(SEGMENT_ID).equalsIgnoreCase(segmentId) && !nodeData.equalsIgnoreCase(serverName)) {
                         try {
                             logger.warn(nodeData + " has released the lock for: " + segmentId + " but the job still running. so " + serverName + " resume the job");
-                            if (jobLock.lockWithName(segmentId, serverName)) {
+                            if (!jobLock.isHasLocked(segmentId)) {
                                 executableManager.resumeRunningJobForce(executable.getId());
                                 fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
                                 break;
@@ -301,7 +303,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
             AbstractExecutable executable = executableManager.getJob(id);
             if (output.getState() == ExecutableState.RUNNING && executable instanceof DefaultChainedExecutable) {
                 try {
-                    if (jobLock.lockWithName(executable.getParam(SEGMENT_ID), serverName)) {
+                    if (!jobLock.isHasLocked(executable.getParam(SEGMENT_ID))) {
                         executableManager.resumeRunningJobForce(executable.getId());
                         fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
                     }

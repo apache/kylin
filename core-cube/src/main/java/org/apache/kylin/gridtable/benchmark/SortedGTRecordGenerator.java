@@ -184,12 +184,6 @@ public class SortedGTRecordGenerator {
         public GTInfo getInfo() {
             return info;
         }
-
-        @Override
-        public long getScannedRowCount() {
-            return counter;
-        }
-
     }
 
     private class Distribution {

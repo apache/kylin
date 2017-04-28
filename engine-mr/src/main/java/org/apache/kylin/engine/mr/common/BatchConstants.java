@@ -53,8 +53,15 @@ public interface BatchConstants {
     String CFG_STATISTICS_ENABLED = "statistics.enabled";
     String CFG_STATISTICS_OUTPUT = "statistics.ouput";//spell error, for compatibility issue better not change it
     String CFG_STATISTICS_SAMPLING_PERCENT = "statistics.sampling.percent";
-    String CFG_STATISTICS_CUBE_ESTIMATION_FILENAME = "cube_statistics.txt";
     String CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME = "cuboid_statistics.seq";
+
+    String CFG_MAPRED_OUTPUT_COMPRESS = "mapred.output.compress";
+
+    String CFG_OUTPUT_COLUMN = "column";
+    String CFG_OUTPUT_DICT = "dict";
+    String CFG_OUTPUT_STATISTICS = "statistics";
+    String CFG_OUTPUT_PARTITION = "partition";
+
 
     /**
      * command line ARGuments
@@ -80,7 +87,6 @@ public interface BatchConstants {
      */
     String MAPREDUCE_COUNTER_GROUP_NAME = "Cube Builder";
     int NORMAL_RECORD_LOG_THRESHOLD = 100000;
-    int ERROR_RECORD_LOG_THRESHOLD = 100;
 
     /**
      * dictionaries builder class

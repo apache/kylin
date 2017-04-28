@@ -135,12 +135,4 @@ public class CubingExecutableUtil {
         return params.get(MERGED_STATISTICS_PATH);
     }
 
-    public static void setIndexPath(String indexPath, Map<String, String> params) {
-        params.put(INDEX_PATH, indexPath);
-    }
-
-    public static String getIndexPath(Map<String, String> params) {
-        return params.get(INDEX_PATH);
-    }
-
 }

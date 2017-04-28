@@ -20,6 +20,7 @@ package org.apache.kylin.source;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -35,9 +36,11 @@ public interface ReadableTable {
     public TableReader getReader() throws IOException;
 
     /**
-     * Used to detect table modifications mainly. Return null in case table does not exist.
+     * Used to detect table modifications.
      */
     public TableSignature getSignature() throws IOException;
+    
+    public boolean exists() throws IOException;
 
 
     public interface TableReader extends Closeable {
@@ -57,7 +60,7 @@ public interface ReadableTable {
     // ============================================================================
 
     @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-    public class TableSignature {
+    public class TableSignature implements Serializable{
 
         @JsonProperty("path")
         private String path;

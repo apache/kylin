@@ -168,7 +168,7 @@ public class ColumnValueRange {
 
     // remove invalid EQ/IN values and round start/end according to dictionary
     public void preEvaluateWithDict(Dictionary<String> dict) {
-        if (dict == null)
+        if (dict == null || dict.getSize() == 0)
             return;
 
         if (equalValues != null) {

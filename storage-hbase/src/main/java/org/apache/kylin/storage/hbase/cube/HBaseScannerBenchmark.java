@@ -132,9 +132,6 @@ public class HBaseScannerBenchmark {
         }
         scan.close();
 
-        if (scan.getScannedRowCount() != count)
-            throw new IllegalStateException();
-
         t = System.currentTimeMillis() - t;
         logger.info(msg + ", " + count + " records, " + speed(t) + "K rec/sec");
     }

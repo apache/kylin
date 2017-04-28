@@ -190,4 +190,40 @@ KylinApp
         return _day +" (Days)";
       }
     }
+  }).filter('inDimNotInMea', function ($filter) {
+    return function (inputArr, table, arr) {
+      var out=[];
+      angular.forEach(arr,function(item) {
+        if (item.table == table) {
+          angular.forEach(inputArr, function (inputItem) {
+            if (item.columns.indexOf(inputItem.name) == -1) {
+              out.push(inputItem);
+            }
+          });
+        }
+      });
+      return out;
+    }
+  }).filter('inMeaNotInDim', function ($filter) {
+        return function (inputArr, table, arr) {
+          var out=[];
+          angular.forEach(inputArr, function (inputItem) {
+            if (arr.indexOf(table+"."+inputItem.name) == -1) {
+              out.push(inputItem);
+            }
+          });
+          return out;
+        }
+  }).filter('assignedMeasureNames', function ($filter) {
+    //return the measures that haven't assign to column family
+    return function (inputArr, assignedArr) {
+      var out = [];
+      angular.forEach(inputArr, function (inputItem) {
+        if (assignedArr.indexOf(inputItem) == -1) {
+          out.push(inputItem);
+        }
+      });
+      return out;
+    }
   });
+

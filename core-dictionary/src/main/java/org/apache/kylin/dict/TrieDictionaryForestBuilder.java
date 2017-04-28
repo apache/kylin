@@ -105,13 +105,12 @@ public class TrieDictionaryForestBuilder<T> {
     }
 
     public TrieDictionaryForest<T> build() {
-        if (curTreeSize != 0) { //last tree
+        if (trieBuilder.isHasValue()) { //last tree
             TrieDictionary<T> tree = trieBuilder.build(0);
             addTree(tree);
             reset();
         }
         TrieDictionaryForest<T> forest = new TrieDictionaryForest<T>(this.trees, this.valueDivide, this.accuOffset, this.bytesConverter, baseId);
-
         // if input values are not in ascending order and tree num>1,TrieDictionaryForest can not work correctly.
         if (forest.getTrees().size() > 1 && !isOrdered) {
             throw new IllegalStateException("Invalid input data. Unordered data can not be split into multi trees");
@@ -132,7 +131,7 @@ public class TrieDictionaryForestBuilder<T> {
         trees.add(tree);
         int minId = tree.getMinId();
         accuOffset.add(curOffset);
-        byte[] valueBytes = tree.getValueBytesFromId(minId);
+        byte[] valueBytes = tree.getValueBytesFromIdWithoutCache(minId);
         valueDivide.add(new ByteArray(valueBytes, 0, valueBytes.length));
         curOffset += (tree.getMaxId() + 1);
     }

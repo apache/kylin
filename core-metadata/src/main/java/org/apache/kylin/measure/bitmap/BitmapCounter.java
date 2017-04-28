@@ -18,269 +18,67 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import org.apache.commons.io.IOUtils;
-import org.roaringbitmap.buffer.MutableRoaringBitmap;
-
 /**
- * Created by sunyerui on 15/12/1.
+ * An implementation-agnostic bitmap type.
  */
-public class BitmapCounter implements Comparable<BitmapCounter> {
+public interface BitmapCounter extends Iterable<Integer> {
 
-    private MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
+    /**
+     * Add the value to the bitmap (set the value to "true"), whether it already appears or not.
+     * @param value integer value
+     */
+    void add(int value);
 
-    public BitmapCounter() {
-    }
+    /**
+     * In-place bitwise OR (union) operation. The current bitmap is modified.
+     * @param another other bitmap
+     */
+    void orWith(BitmapCounter another);
 
-    public BitmapCounter(BitmapCounter another) {
-        merge(another);
-    }
+    /**
+     * In-place bitwise AND (intersection) operation. The current bitmap is modified.
+     * @param another other bitmap
+     */
+    void andWith(BitmapCounter another);
 
-    public void clear() {
-        bitmap.clear();
-    }
+    /**
+     * reset to an empty bitmap
+     */
+    void clear();
 
-    public BitmapCounter clone() {
-        BitmapCounter newCounter = new BitmapCounter();
-        newCounter.bitmap = bitmap.clone();
-        return newCounter;
-    }
+    /**
+     * @return cardinality of the bitmap
+     */
+    long getCount();
 
-    public void add(int value) {
-        bitmap.add(value);
-    }
+    /**
+     * @return estimated memory footprint of this counter
+     */
+    int getMemBytes();
 
-    public void add(byte[] value) {
-        add(value, 0, value.length);
-    }
+    /**
+     * @return a iterator of the ints stored in this counter.
+     */
+    Iterator<Integer> iterator();
 
-    public void add(byte[] value, int offset, int length) {
-        if (value == null || length == 0) {
-            return;
-        }
+    /**
+     * Serialize this counter. The current counter is not modified.
+     */
+    void write(ByteBuffer out) throws IOException;
 
-        add(new String(value, offset, length));
-    }
+    /**
+     * Deserialize a counter from its serialized form.
+     * <p> After deserialize, any changes to `in` should not affect the returned counter.
+     */
+    void readFields(ByteBuffer in) throws IOException;
 
-    public void add(String value) {
-        if (value == null || value.isEmpty()) {
-            return;
-        }
-        add(Integer.parseInt(value));
-    }
-
-    public void merge(BitmapCounter another) {
-        this.bitmap.or(another.bitmap);
-    }
-
-    public void intersect(BitmapCounter another) {
-        this.bitmap.and(another.bitmap);
-    }
-
-    public long getCount() {
-        return this.bitmap.getCardinality();
-    }
-
-    public int getMemBytes() {
-        return this.bitmap.getSizeInBytes();
-    }
-
-    public Iterator<Integer> iterator() {
-        return bitmap.iterator();
-    }
-
-    public void writeRegisters(ByteBuffer out) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(bos);
-        bitmap.runOptimize();
-        bitmap.serialize(dos);
-        dos.close();
-        ByteBuffer bb = ByteBuffer.wrap(bos.toByteArray());
-        out.put(bb);
-    }
-
-    public void readRegisters(ByteBuffer in) throws IOException {
-        DataInputByteBuffer input = new DataInputByteBuffer();
-        try {
-            input.reset(new ByteBuffer[] { in });
-            bitmap.deserialize(input);
-        } finally {
-            IOUtils.closeQuietly(input);
-        }
-    }
-
-    @Override
-    public String toString() {
-        long count = getCount();
-        if (count <= 10) {
-            return "(" + count + ")" + bitmap.toString();
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("(").append(count).append("){");
-            int values = 0;
-            for (Integer v : bitmap) {
-                if (values++ < 10) {
-                    sb.append(v).append(",");
-                } else {
-                    sb.append("...");
-                    break;
-                }
-            }
-            sb.append("}");
-            return sb.toString();
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + bitmap.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BitmapCounter other = (BitmapCounter) obj;
-        return bitmap.equals(other.bitmap);
-    }
-
-    @Override
-    public int compareTo(BitmapCounter o) {
-        if (o == null)
-            return 1;
-
-        long e1 = this.getCount();
-        long e2 = o.getCount();
-
-        if (e1 == e2)
-            return 0;
-        else if (e1 > e2)
-            return 1;
-        else
-            return -1;
-    }
-
-    public int peekLength(ByteBuffer in) {
-        int mark = in.position();
-        int len;
-
-        DataInputByteBuffer input = new DataInputByteBuffer();
-        input.reset(new ByteBuffer[] { in });
-        MutableRoaringBitmap bitmap = new MutableRoaringBitmap();
-        try {
-            bitmap.deserialize(input);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        } finally {
-            IOUtils.closeQuietly(input);
-        }
-
-        len = in.position() - mark;
-        in.position(mark);
-        return len;
-    }
-
-    static class DataInputByteBuffer extends DataInputStream {
-        private DataInputByteBuffer.Buffer buffers;
-
-        public DataInputByteBuffer() {
-            this(new DataInputByteBuffer.Buffer());
-        }
-
-        private DataInputByteBuffer(DataInputByteBuffer.Buffer buffers) {
-            super(buffers);
-            this.buffers = buffers;
-        }
-
-        public void reset(ByteBuffer... input) {
-            this.buffers.reset(input);
-        }
-
-        public ByteBuffer[] getData() {
-            return this.buffers.getData();
-        }
-
-        public int getPosition() {
-            return this.buffers.getPosition();
-        }
-
-        public int getLength() {
-            return this.buffers.getLength();
-        }
-
-        private static class Buffer extends InputStream {
-            private final byte[] scratch;
-            ByteBuffer[] buffers;
-            int bidx;
-            int pos;
-            int length;
-
-            private Buffer() {
-                this.scratch = new byte[1];
-                this.buffers = new ByteBuffer[0];
-            }
-
-            public int read() {
-                return -1 == this.read(this.scratch, 0, 1) ? -1 : this.scratch[0] & 255;
-            }
-
-            public int read(byte[] b, int off, int len) {
-                if (this.bidx >= this.buffers.length) {
-                    return -1;
-                } else {
-                    int cur = 0;
-
-                    do {
-                        int rem = Math.min(len, this.buffers[this.bidx].remaining());
-                        this.buffers[this.bidx].get(b, off, rem);
-                        cur += rem;
-                        off += rem;
-                        len -= rem;
-                    } while (len > 0 && ++this.bidx < this.buffers.length);
-
-                    this.pos += cur;
-                    return cur;
-                }
-            }
-
-            public void reset(ByteBuffer[] buffers) {
-                this.bidx = this.pos = this.length = 0;
-                this.buffers = buffers;
-                ByteBuffer[] arr$ = buffers;
-                int len$ = buffers.length;
-
-                for (int i$ = 0; i$ < len$; ++i$) {
-                    ByteBuffer b = arr$[i$];
-                    this.length += b.remaining();
-                }
-
-            }
-
-            public int getPosition() {
-                return this.pos;
-            }
-
-            public int getLength() {
-                return this.length;
-            }
-
-            public ByteBuffer[] getData() {
-                return this.buffers;
-            }
-        }
-    }
+    /**
+     * @return size of the counter stored in the current position of `in`.
+     * The position field must not be modified.
+     */
+    int peekLength(ByteBuffer in);
 }

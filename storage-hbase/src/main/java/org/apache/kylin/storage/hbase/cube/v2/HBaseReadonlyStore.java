@@ -152,11 +152,6 @@ public class HBaseReadonlyStore implements IGTStore {
             public GTInfo getInfo() {
                 return info;
             }
-
-            @Override
-            public long getScannedRowCount() {
-                return count;
-            }
         };
     }
 }

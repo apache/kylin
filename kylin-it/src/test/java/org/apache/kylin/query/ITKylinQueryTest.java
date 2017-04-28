@@ -29,12 +29,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.KylinVersion;
 import org.apache.kylin.common.debug.BackdoorToggles;
-import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
+import org.apache.kylin.common.exceptions.KylinTimeoutException;
 import org.apache.kylin.gridtable.StorageSideBehavior;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.routing.Candidate;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
-import org.apache.kylin.storage.hbase.HBaseStorage;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.ITable;
@@ -45,18 +44,22 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
 @Ignore("KylinQueryTest is contained by ITCombinationTest")
 public class ITKylinQueryTest extends KylinTestBase {
 
+    private static final Logger logger = LoggerFactory.getLogger(ITKylinQueryTest.class);
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @BeforeClass
     public static void setUp() throws Exception {
-        printInfo("setUp in ITKylinQueryTest");
+        logger.info("setUp in ITKylinQueryTest");
         Map<RealizationType, Integer> priorities = Maps.newHashMap();
         priorities.put(RealizationType.HYBRID, 0);
         priorities.put(RealizationType.CUBE, 0);
@@ -66,39 +69,17 @@ public class ITKylinQueryTest extends KylinTestBase {
         joinType = "left";
 
         setupAll();
-
-        RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_left_join_empty]");
-        RemoveBlackoutRealizationsRule.blackList.add("CUBE[name=test_kylin_cube_with_view_inner_join_empty]");
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
-        printInfo("tearDown in ITKylinQueryTest");
+        logger.info("tearDown in ITKylinQueryTest");
         Candidate.restorePriorities();
         clean();
     }
 
-    protected String getQueryFolderPrefix() {
-        return "";
-    }
-
-    protected Throwable findRoot(Throwable throwable) {
-        while (true) {
-            if (throwable.getCause() != null) {
-                throwable = throwable.getCause();
-            } else {
-                break;
-            }
-        }
-        return throwable;
-    }
-
     @Test
     public void testTimeoutQuery() throws Exception {
-        if (HBaseStorage.overwriteStorageQuery != null) {
-            //v1 engine does not suit
-            return;
-        }
         try {
 
             Map<String, String> toggles = Maps.newHashMap();
@@ -129,15 +110,12 @@ public class ITKylinQueryTest extends KylinTestBase {
             try {
                 runSQL(sqlFile, false, false);
             } catch (SQLException e) {
-
-                System.out.println(e.getMessage());
-
-                if (findRoot(e) instanceof GTScanSelfTerminatedException) {
+                if (findRoot(e) instanceof KylinTimeoutException) {
                     //expected
                     continue;
                 }
             }
-            throw new RuntimeException("Expecting GTScanTimeoutException");
+            throw new RuntimeException("Expecting KylinTimeoutException");
         }
     }
 
@@ -153,15 +131,14 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     }
 
-    @Ignore
     @Test
     public void testSingleRunQuery() throws Exception {
 
-        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_subquery/query11.sql";
+        String queryFileName = getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount/query03.sql";
 
         File sqlFile = new File(queryFileName);
         if (sqlFile.exists()) {
-            runSQL(sqlFile, true, true);
+            //runSQL(sqlFile, true, true);
             runSQL(sqlFile, true, false);
         }
     }
@@ -197,13 +174,28 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testSnowflakeQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_snowflake", null, true);
+    }
+
+    @Test
+    public void testDateTimeQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_datetime", null, true);
+    }
+
+    @Test
+    public void testExtendedColumnQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_extended_column", null, true);
+    }
+
+    @Test
     public void testLikeQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_like", null, true);
     }
 
     @Test
     public void testVerifyCountQuery() throws Exception {
-        verifyResultRowCount(getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount");
+        verifyResultRowColCount(getQueryFolderPrefix() + "src/test/resources/query/sql_verifyCount");
     }
 
     @Test
@@ -265,6 +257,15 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testMultiModelQuery() throws Exception {
+        if ("left".equalsIgnoreCase(joinType)) {
+            joinType = "default";
+            execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_multi_model", null, true);
+            joinType = "left";
+        }
+    }
+
+    @Test
     public void testDimDistinctCountQuery() throws Exception {
         execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_distinct_dim", null, true);
     }
@@ -303,12 +304,12 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testInvalidQuery() throws Exception {
 
-        printInfo("-------------------- Test Invalid Query --------------------");
+        logger.info("-------------------- Test Invalid Query --------------------");
         String queryFolder = getQueryFolderPrefix() + "src/test/resources/query/sql_invalid";
         List<File> sqlFiles = getFilesFromFolder(new File(queryFolder), ".sql");
         for (File sqlFile : sqlFiles) {
             String queryName = StringUtils.split(sqlFile.getName(), '.')[0];
-            printInfo("Testing Query " + queryName);
+            logger.info("Testing Query " + queryName);
             String sql = getTextFromFile(sqlFile);
             IDatabaseConnection cubeConn = new DatabaseConnection(cubeConnection);
             try {
@@ -329,30 +330,16 @@ public class ITKylinQueryTest extends KylinTestBase {
 
     @Test
     public void testLimitEnabled() throws Exception {
-        if (HBaseStorage.overwriteStorageQuery == null) {//v1 query engine will not work
-
-            try {
-                //other cubes have strange aggregation groups
-                RemoveBlackoutRealizationsRule.whiteList.add("CUBE[name=test_kylin_cube_with_slr_empty]");
-
-                List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_limit"), ".sql");
-                for (File sqlFile : sqlFiles) {
-                    runSQL(sqlFile, false, false);
-                    assertTrue(checkLimitEnabled());
-                    assertTrue(checkFinalPushDownLimit());
-                }
-
-            } finally {
-                RemoveBlackoutRealizationsRule.whiteList.remove("CUBE[name=test_kylin_cube_with_slr_empty]");
-            }
+        List<File> sqlFiles = getFilesFromFolder(new File(getQueryFolderPrefix() + "src/test/resources/query/sql_limit"), ".sql");
+        for (File sqlFile : sqlFiles) {
+            runSQL(sqlFile, false, false);
+            assertTrue(checkFinalPushDownLimit());
         }
     }
 
     @Test
     public void testLimitCorrectness() throws Exception {
-        if (HBaseStorage.overwriteStorageQuery == null) {//v1 query engine will not work
-            execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
-        }
+        this.execLimitAndValidate(getQueryFolderPrefix() + "src/test/resources/query/sql");
     }
 
     @Test
@@ -375,19 +362,23 @@ public class ITKylinQueryTest extends KylinTestBase {
     @Test
     public void testVersionQuery() throws Exception {
         String expectVersion = KylinVersion.getCurrentVersion().toString();
-        printInfo("---------- verify expect version: " + expectVersion);
+        logger.info("---------- verify expect version: " + expectVersion);
 
         String queryName = "QueryKylinVersion";
         String sql = "SELECT VERSION() AS version";
 
         // execute Kylin
-        printInfo("Query Result from Kylin - " + queryName);
+        logger.info("Query Result from Kylin - " + queryName);
         IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
         ITable kylinTable = executeQuery(kylinConn, queryName, sql, false);
         String queriedVersion = String.valueOf(kylinTable.getValue(0, "version"));
-        
 
         // compare the result
         Assert.assertEquals(expectVersion, queriedVersion);
+    }
+
+    @Test
+    public void testPercentileQuery() throws Exception {
+        batchExecuteQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_percentile");
     }
 }

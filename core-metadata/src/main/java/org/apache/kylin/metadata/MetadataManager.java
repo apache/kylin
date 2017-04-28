@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
@@ -39,6 +40,7 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
@@ -64,7 +66,7 @@ public class MetadataManager {
     public static final Serializer<ExternalFilterDesc> EXTERNAL_FILTER_DESC_SERIALIZER = new JsonSerializer<ExternalFilterDesc>(ExternalFilterDesc.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
+    private static final ConcurrentMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
 
     public static MetadataManager getInstance(KylinConfig config) {
         MetadataManager r = CACHE.get(config);
@@ -395,6 +397,7 @@ public class MetadataManager {
         // remove old json
         if (name == null) {
             getStore().deleteResource(path);
+            return null;
         }
 
         srcTableExdMap.putLocal(name, t);
@@ -495,19 +498,16 @@ public class MetadataManager {
     }
 
     public boolean isTableInModel(String tableName, String projectName) throws IOException {
-        for (DataModelDesc modelDesc : getModels(projectName)) {
-            if (modelDesc.getAllTables().contains(tableName.toUpperCase())) {
-                return true;
-            }
-        }
-        return false;
+        return getModelsUsingTable(tableName, projectName).size() > 0;
     }
 
     public List<String> getModelsUsingTable(String tableName, String projectName) throws IOException {
         List<String> models = new ArrayList<>();
         for (DataModelDesc modelDesc : getModels(projectName)) {
-            if (modelDesc.getAllTables().contains(tableName.toUpperCase())) {
-                models.add(modelDesc.getName());
+            for (TableRef tableRef : modelDesc.getAllTables()) {
+                if (tableRef.getTableIdentity().equalsIgnoreCase(tableName)) {
+                    models.add(modelDesc.getName());
+                }
             }
         }
         return models;
@@ -515,8 +515,10 @@ public class MetadataManager {
 
     public boolean isTableInAnyModel(String tableName) {
         for (DataModelDesc modelDesc : getModels()) {
-            if (modelDesc.getAllTables().contains(tableName.toUpperCase())) {
-                return true;
+            for (TableRef tableRef : modelDesc.getAllTables()) {
+                if (tableRef.getTableIdentity().equalsIgnoreCase(tableName)) {
+                    return true;
+                }
             }
         }
         return false;

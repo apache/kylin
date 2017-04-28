@@ -18,9 +18,11 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.Serializable;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.measure.MeasureType;
@@ -32,13 +34,24 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class FunctionDesc {
+public class FunctionDesc implements Serializable {
+
+    public static FunctionDesc newInstance(String expression, ParameterDesc param, String returnType) {
+        FunctionDesc r = new FunctionDesc();
+        r.expression = (expression == null) ? null : expression.toUpperCase();
+        r.parameter = param;
+        r.returnType = returnType;
+        r.returnDataType = DataType.getType(returnType);
+        return r;
+    }
 
     public static final String FUNC_SUM = "SUM";
     public static final String FUNC_MIN = "MIN";
@@ -67,7 +80,7 @@ public class FunctionDesc {
 
     @JsonProperty("configuration")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private HashMap<String, String> configuration = new LinkedHashMap<String, String>();
+    private Map<String, String> configuration = new LinkedHashMap<String, String>();
 
     private DataType returnDataType;
     private MeasureType<?> measureType;
@@ -78,18 +91,12 @@ public class FunctionDesc {
         returnDataType = DataType.getType(returnType);
 
         for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
-            p.setValue(p.getValue().toUpperCase());
-        }
-
-        ArrayList<TblColRef> colRefs = Lists.newArrayList();
-        for (ParameterDesc p = parameter; p != null; p = p.getNextParameter()) {
             if (p.isColumnType()) {
                 TblColRef colRef = model.findColumn(p.getValue());
-                colRefs.add(colRef);
+                p.setValue(colRef.getIdentity());
+                p.setColRef(colRef);
             }
         }
-
-        parameter.setColRefs(colRefs);
     }
 
     private void reInitMeasureType() {
@@ -132,9 +139,11 @@ public class FunctionDesc {
         if (isSum()) {
             return getParameter().getValue();
         } else if (isCount()) {
-            return "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
+            return "_KY_" + "COUNT__"; // ignores parameter, count(*), count(1), count(col) are all the same
+        } else if (isCountDistinct()) {
+            return "_KY_" + getFullExpressionInAlphabetOrder().replaceAll("[(),. ]", "_");
         } else {
-            return getFullExpression().replaceAll("[(), ]", "_");
+            return "_KY_" + getFullExpression().replaceAll("[(),. ]", "_");
         }
     }
 
@@ -190,6 +199,25 @@ public class FunctionDesc {
         return sb.toString();
     }
 
+    /**
+     * Parameters' name appears in alphabet order.
+     * This method is used for funcs whose parameters appear in arbitrary order
+     */
+    public String getFullExpressionInAlphabetOrder() {
+        StringBuilder sb = new StringBuilder(expression);
+        sb.append("(");
+        ParameterDesc localParam = parameter;
+        List<String> flatParams = Lists.newArrayList();
+        while (localParam != null) {
+            flatParams.add(localParam.getValue());
+            localParam = localParam.getNextParameter();
+        }
+        Collections.sort(flatParams);
+        sb.append(Joiner.on(",").join(flatParams));
+        sb.append(")");
+        return sb.toString();
+    }
+
     public boolean isDimensionAsMetric() {
         return isDimensionAsMetric;
     }
@@ -205,16 +233,8 @@ public class FunctionDesc {
         return expression;
     }
 
-    public void setExpression(String expression) {
-        this.expression = expression;
-    }
-
     public ParameterDesc getParameter() {
         return parameter;
-    }
-
-    public void setParameter(ParameterDesc parameter) {
-        this.parameter = parameter;
     }
 
     public int getParameterCount() {
@@ -229,21 +249,16 @@ public class FunctionDesc {
         return returnType;
     }
 
+    public void setReturnType(String returnType) {
+        this.returnType = returnType;
+    }
+
     public DataType getReturnDataType() {
         return returnDataType;
     }
 
-    public void setReturnType(String returnType) {
-        this.returnType = returnType;
-        this.returnDataType = DataType.getType(returnType);
-    }
-
-    public HashMap<String, String> getConfiguration() {
+    public Map<String, String> getConfiguration() {
         return configuration;
-    }
-
-    public void setConfiguration(HashMap<String, String> configurations) {
-        this.configuration = configurations;
     }
 
     @Override
@@ -252,6 +267,7 @@ public class FunctionDesc {
         int result = 1;
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
         result = prime * result + ((isCount() || parameter == null) ? 0 : parameter.hashCode());
+        // NOTE: don't compare returnType, FunctionDesc created at query engine does not have a returnType
         return result;
     }
 
@@ -269,19 +285,24 @@ public class FunctionDesc {
                 return false;
         } else if (!expression.equals(other.expression))
             return false;
-        // NOTE: don't check the parameter of count()
-        if (isCount() == false) {
+        if (isCountDistinct()) {
+            // for count distinct func, param's order doesn't matter
             if (parameter == null) {
                 if (other.parameter != null)
                     return false;
             } else {
-                if (parameter == null) {
-                    if (other.parameter != null)
-                        return false;
-                } else if (!parameter.equals(other.parameter))
+                return parameter.equalInArbitraryOrder(other.parameter);
+            }
+        } else if (!isCount()) { // NOTE: don't check the parameter of count()
+            if (parameter == null) {
+                if (other.parameter != null)
+                    return false;
+            } else {
+                if (!parameter.equals(other.parameter))
                     return false;
             }
         }
+        // NOTE: don't compare returnType, FunctionDesc created at query engine does not have a returnType
         return true;
     }
 

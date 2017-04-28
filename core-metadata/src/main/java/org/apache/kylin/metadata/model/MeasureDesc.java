@@ -18,23 +18,27 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  */
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class MeasureDesc {
+public class MeasureDesc implements Serializable {
 
     @JsonProperty("name")
     private String name;
     @JsonProperty("function")
     private FunctionDesc function;
     @JsonProperty("dependent_measure_ref")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Deprecated
     private String dependentMeasureRef;
 
     public String getName() {
@@ -53,10 +57,12 @@ public class MeasureDesc {
         this.function = function;
     }
 
+    @Deprecated
     public String getDependentMeasureRef() {
         return dependentMeasureRef;
     }
 
+    @Deprecated
     public void setDependentMeasureRef(String dependentMeasureRef) {
         this.dependentMeasureRef = dependentMeasureRef;
     }

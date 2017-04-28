@@ -23,7 +23,7 @@ import java.util.Arrays;
 /*
  * An array with correct equals(), hashCode(), compareTo() and toString()
  */
-public class Array<T> implements Comparable<Array<T>> {
+public class Array<T> implements Comparable<Array<T>>, java.io.Serializable {
     public T[] data;
 
     public Array(T[] data) {

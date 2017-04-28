@@ -170,6 +170,7 @@ public class TupleFilterSerializer {
         case GT:
         case GTE:
         case IN:
+        case NOTIN:
         case ISNULL:
         case ISNOTNULL:
             filter = new CompareTupleFilter(op);

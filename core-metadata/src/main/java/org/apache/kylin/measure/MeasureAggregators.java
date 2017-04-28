@@ -77,13 +77,28 @@ public class MeasureAggregators implements Serializable {
         }
     }
 
-    public void aggregate(Object[] values, boolean[] aggrMask) {
+    public void aggregate(Object[] values, int[] measures) {
         assert values.length == descLength;
-        assert aggrMask.length == descLength;
+        for (int i = 0; i < measures.length; i++) {
+            aggs[measures[i]].aggregate(values[measures[i]]);
+        }
+    }
+
+    public void aggregate(Object[] values1, Object[] values2, Object[] result) {
+        assert values1.length == values2.length && values2.length == descLength && values1.length == result.length;
 
         for (int i = 0; i < descLength; i++) {
-            if (aggrMask[i])
-                aggs[i].aggregate(values[i]);
+            result[i] = aggs[i].aggregate(values1[i], values2[i]);
+        }
+
+    }
+
+    public void aggregate(Object[] values1, Object[] values2, Object[] result, boolean[] aggrMask) {
+        assert values1.length == values2.length && values2.length == descLength && values1.length == result.length && result.length == aggrMask.length;
+        for (int i = 0; i < descLength; i++) {
+            if (aggrMask[i]) {
+                result[i] = aggs[i].aggregate(values1[i], values2[i]);
+            }
         }
     }
 

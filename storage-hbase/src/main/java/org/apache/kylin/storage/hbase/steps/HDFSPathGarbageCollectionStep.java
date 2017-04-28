@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.job.exception.ExecuteException;
@@ -59,7 +59,7 @@ public class HDFSPathGarbageCollectionStep extends AbstractExecutable {
         try {
             config = new JobEngineConfig(context.getConfig());
             List<String> toDeletePaths = getDeletePaths();
-            dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HadoopUtil.getCurrentConfiguration()));
+            dropHdfsPathOnCluster(toDeletePaths, HadoopUtil.getWorkingFileSystem());
 
             if (StringUtils.isNotEmpty(context.getConfig().getHBaseClusterFs())) {
                 dropHdfsPathOnCluster(toDeletePaths, FileSystem.get(HBaseConnection.getCurrentHBaseConfiguration()));

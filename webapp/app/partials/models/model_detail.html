@@ -32,23 +32,7 @@
       <li class="{{modelsManager.selectedModel.visiblePage=='json_model'? 'active':''}}">
         <a href="" ng-click="modelsManager.selectedModel.visiblePage='json_model';">JSON</a>
       </li>
-        <li class="dropdown" ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
-            <a class="dropdown-toggle highlight-bule" data-toggle="dropdown" href="#" aria-expanded="true">
-                <i class="fa fa-star"> Action </i> <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu">
-                <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
-                    <a href="models/edit/{{modelsManager.selectedModel.name}}" data-widget="collapse">Edit</a>
-                </li>
-                <li ng-if="userService.hasRole('ROLE_ADMIN')">
-                    <a ng-click="dropModel(modelsManager.selectedModel)">Drop</a>
-                </li>
-                <li role="presentation" class="divider"></li>
-                <li ng-if="userService.hasRole('ROLE_ADMIN') || hasPermission(modelsManager.selectedModel, permissions.ADMINISTRATION.mask, permissions.MANAGEMENT.mask, permissions.OPERATION.mask)">
-                    <a href="cubes/add/{{modelsManager.selectedModel.name}}" data-widget="collapse">Create Cube</a>
-                </li>
-            </ul>
-        </li>
+
     </ul>
 
     <div class="model-detail" ng-if="!modelsManager.selectedModel.visiblePage || modelsManager.selectedModel.visiblePage=='metadata'">

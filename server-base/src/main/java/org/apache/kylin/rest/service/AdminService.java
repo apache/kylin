@@ -22,10 +22,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.OrderedProperties;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.tool.StorageCleanupJob;
@@ -49,7 +51,7 @@ public class AdminService extends BasicService {
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public String getEnv() {
         PropertiesConfiguration tempConfig = new PropertiesConfiguration();
-
+        OrderedProperties orderedProperties = new OrderedProperties(new TreeMap<String, String>());
         // Add Java Env
 
         try {
@@ -59,14 +61,18 @@ public class AdminService extends BasicService {
             Map<String, String> env = System.getenv();
 
             for (Map.Entry<String, String> entry : env.entrySet()) {
-                tempConfig.addProperty(entry.getKey(), entry.getValue());
+                orderedProperties.setProperty(entry.getKey(), entry.getValue());
             }
 
             // properties
-            Properties proterties = System.getProperties();
+            Properties properties = System.getProperties();
 
-            for (Map.Entry<Object, Object> entry : proterties.entrySet()) {
-                tempConfig.setProperty((String) entry.getKey(), entry.getValue());
+            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                orderedProperties.setProperty((String) entry.getKey(), (String) entry.getValue());
+            }
+
+            for (Map.Entry<String, String> entry : orderedProperties.entrySet()) {
+                tempConfig.addProperty(entry.getKey(), entry.getValue());
             }
 
             // do save
@@ -83,7 +89,7 @@ public class AdminService extends BasicService {
      *
      * @return
      */
-    // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
+    // @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)  // this is a critical security issue, see KYLIN-1664
     public String getConfigAsString() {
         logger.debug("Get Kylin Runtime Config");
 
@@ -104,4 +110,5 @@ public class AdminService extends BasicService {
             throw new InternalErrorException(e.getMessage(), e);
         }
     }
+
 }

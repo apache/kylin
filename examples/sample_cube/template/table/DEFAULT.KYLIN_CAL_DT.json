@@ -403,6 +403,6 @@
     "name" : "KYLIN_CAL_DT_UPD_USER",
     "datatype" : "string"
   } ],
-  "database" : "default",
+  "database" : "DEFAULT",
   "last_modified" : 0
 }

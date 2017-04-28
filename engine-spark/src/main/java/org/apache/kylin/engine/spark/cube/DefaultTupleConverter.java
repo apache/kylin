@@ -38,7 +38,7 @@ import scala.Tuple2;
  */
 public final class DefaultTupleConverter implements TupleConverter {
 
-    private final static ThreadLocal<ByteBuffer> valueBuf = new ThreadLocal<>();
+    private final static transient ThreadLocal<ByteBuffer> valueBuf = new ThreadLocal<>();
     private final CubeSegment segment;
     private final int measureCount;
     private final Map<TblColRef, Integer> columnLengthMap;

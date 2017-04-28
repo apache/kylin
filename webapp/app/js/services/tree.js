@@ -16,8 +16,9 @@
  * limitations under the License.
 */
 
-KylinApp.service('ModelGraphService', function () {
-
+KylinApp.service('ModelGraphService', function (VdmUtil) {
+    var tablesNodeList={};
+  //  var aliasList=[];
     var margin = {top: 20, right: 100, bottom: 20, left: 100},
         width = 1100 - margin.right - margin.left,
         height = 600;
@@ -37,65 +38,41 @@ KylinApp.service('ModelGraphService', function () {
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         var graphData = {
-            "type": "fact",
-            "name": model.fact_table,
+            "type": "FACT",
+            "name": VdmUtil.removeNameSpace(model.fact_table),
             "children": []
         };
-
+        tablesNodeList[graphData.name]=graphData;
+      //   aliasList.push(graphData.name);
         model.graph = (!!model.graph) ? model.graph : {};
 
-      angular.forEach(model.lookups, function (lookup, index) {
-        if (lookup.join && lookup.join.primary_key.length > 0) {
-
-          var dimensionNode;
-
-          /* Loop through the graphData.children array to find out: If the LKP table is already existed */
-          for(var j = 0; j < graphData.children.length; j++ ) {
-            if(graphData.children[j].name == lookup.table){
-              dimensionNode = graphData.children[j];
-              break;
+        angular.forEach(model.lookups,function (lookup, index) {
+          if(!lookup.alias){
+            lookup.alias=VdmUtil.removeNameSpace(lookup.table);
+          }
+          if (lookup.join && lookup.join.primary_key.length > 0) {
+            var  dimensionNode={
+                "type": lookup.kind,
+                "name": lookup.alias,
+                "join": lookup.join,
+                "children": [],
+                "_children": []
+              }
+        //      aliasList.push(dimensionNode.name);
+              tablesNodeList[dimensionNode.name]=dimensionNode;
             }
+
+        });
+
+        angular.forEach(model.lookups,function(joinTable){
+          if (joinTable.join && joinTable.join.primary_key.length > 0) {
+            var fkAliasName=VdmUtil.getNameSpaceAliasName(joinTable.join.foreign_key[0]);
+            var pkAliasName=VdmUtil.getNameSpaceAliasName(joinTable.join.primary_key[0]);
+            tablesNodeList[fkAliasName].children.push(tablesNodeList[pkAliasName]);
           }
+        });
 
-          /* If not existed, create dimensionNode and push it */
-          if(j == graphData.children.length) {
-            dimensionNode = {
-              "type": "dimension",
-              "name": lookup.table,
-              "join": lookup.join,
-              "children": [],
-              "_children": []
-            };
-          }
 
-          if(j == graphData.children.length) {
-            graphData.children.push(dimensionNode);
-          }
-
-        }
-      });
-
-      angular.forEach(model.dimensions, function (dimension, index) {
-        // for dimension on lookup table
-        if(model.fact_table!==dimension.table){
-            var lookup = _.find(graphData.children,function(item){
-              return item.name === dimension.table;
-            });
-
-          angular.forEach(lookup.join.primary_key, function(pk, index){
-                  for (var i = 0; i < lookup._children.length; i++) {
-                      if(lookup._children[i].name == pk)
-                          break;
-                  }
-                  if(i == lookup._children.length) {
-                    lookup._children.push({
-                          "type": "column",
-                          "name": pk
-                      });
-                  }
-          });
-        };
-      });
         model.graph.columnsCount = 0;
         model.graph.tree = tree;
         model.graph.root = graphData;

@@ -18,17 +18,18 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.util.Arrays;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
+import java.io.Serializable;
+import java.util.Arrays;
+
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class JoinDesc {
+public class JoinDesc implements Serializable {
 
     // inner, left, right, outer...
     @JsonProperty("type")
@@ -110,6 +111,14 @@ public class JoinDesc {
             Preconditions.checkState(tableRef == cols[i].getTableRef());
     }
 
+    public TableRef getPKSide() {
+        return primaryKeyColumns[0].getTableRef();
+    }
+    
+    public TableRef getFKSide() {
+        return foreignKeyColumns[0].getTableRef();
+    }
+
     public void sortByFK() {
         Preconditions.checkState(primaryKey.length == foreignKey.length && primaryKey.length == primaryKeyColumns.length && foreignKey.length == foreignKeyColumns.length);
         boolean cont = true;
@@ -174,6 +183,9 @@ public class JoinDesc {
 
     // equals() without alias
     public boolean matches(JoinDesc other) {
+        if (other == null)
+            return false;
+        
         if (!this.type.equalsIgnoreCase(other.getType()))
             return false;
         

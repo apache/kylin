@@ -27,7 +27,7 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Table Name</th>
+                        <th>Table Alias</th>
                         <th>Columns</th>
                     </tr>
                 </thead>
@@ -56,7 +56,7 @@
                    class="table table-hover list">
                 <tr class="row">
                     <th class="col-xs-1">ID</th>
-                    <th class="col-xs-2">Table Name</th>
+                    <th class="col-xs-2">Table Alias</th>
                     <th class="col-xs-9">Columns</th>
                 </tr>
 
@@ -70,13 +70,13 @@
                     </td>
                     <td class="col-xs-9">
                       <ui-select
-                        ng-if="state.mode=='edit'" style="width: 100%"
+                        style="width: 100%"
                         autofocus="true"
                         close-on-select="false"
                         ng-model="modelsManager.selectedModel.dimensions[$index].columns" multiple>
                         <ui-select-match placeholder="Select Column...">{{$item.name}}</ui-select-match>
                         <ui-select-choices
-                          repeat="column.name as column in getColumnsByTable(dimension.table) | filter:$select.search">
+                          repeat="column.name as column in getColumnsByAlias(dimension.table) | filter:$select.search|inMeaNotInDim:dimension.table:modelsManager.selectedModel.metrics">
                           {{column.name}}
                         </ui-select-choices>
                       </ui-select>

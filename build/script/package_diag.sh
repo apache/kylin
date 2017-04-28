@@ -39,7 +39,7 @@ fi
 
 dir=$(dirname ${0})
 cd ${dir}/../..
-version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\['`
+version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version |  grep -E '^[0-9]+\.[0-9]+\.[0-9]+' `
 
 if [ "$version" == "" ];then
 	echo "Failed to identify kylin version (current: `pwd`)"

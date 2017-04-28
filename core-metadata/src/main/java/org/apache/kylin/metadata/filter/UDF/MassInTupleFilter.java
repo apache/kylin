@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.filter.UDF;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.kylin.common.KylinConfig;
@@ -40,7 +41,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 public class MassInTupleFilter extends FunctionTupleFilter {
-
     public static final Logger logger = LoggerFactory.getLogger(MassInTupleFilter.class);
     public static MassInValueProviderFactory VALUE_PROVIDER_FACTORY = null;
 
@@ -50,9 +50,20 @@ public class MassInTupleFilter extends FunctionTupleFilter {
     private String filterTableName;//key in MetadataManager.extFilterMap
     private String filterTableResourceIdentifier;//HDFS path, or hbase table name depending on FilterTableType
     private Functions.FilterTableType filterTableType;
+    private boolean reverse = false;
 
     public MassInTupleFilter() {
         super(Lists.<TupleFilter> newArrayList(), TupleFilter.FilterOperatorEnum.MASSIN);
+    }
+
+    public MassInTupleFilter(MassInTupleFilter filter) {
+        super(new ArrayList<TupleFilter>(filter.children), filter.operator);
+        this.valueProvider = filter.getValueProvider();
+        this.column = filter.getColumn();
+        this.filterTableName = filter.getFilterTableName();
+        this.filterTableResourceIdentifier = filter.getFilterTableResourceIdentifier();
+        this.filterTableType = filter.getFilterTableType();
+        this.reverse = filter.isReverse();
     }
 
     @Override
@@ -66,7 +77,18 @@ public class MassInTupleFilter extends FunctionTupleFilter {
             valueProvider = VALUE_PROVIDER_FACTORY.getProvider(filterTableType, filterTableResourceIdentifier, column);
         }
         boolean ret = valueProvider.getMassInValues().contains(colValue);
-        return ret;
+        return reverse ? !ret : ret;
+    }
+
+    @Override
+    public TupleFilter reverse() {
+        try {
+            MassInTupleFilter result = (MassInTupleFilter) this.clone();
+            result.setReverse(!this.isReverse());
+            return result;
+        } catch (CloneNotSupportedException e) {
+            throw new UnsupportedOperationException(e);
+        }
     }
 
     @Override
@@ -120,6 +142,7 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         BytesUtil.writeUTFString(filterTableName, buffer);
         BytesUtil.writeUTFString(filterTableResourceIdentifier, buffer);
         BytesUtil.writeUTFString(filterTableType.toString(), buffer);
+        BytesUtil.writeUTFString(String.valueOf(reverse), buffer);
     }
 
     @Override
@@ -127,6 +150,7 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         filterTableName = BytesUtil.readUTFString(buffer);
         filterTableResourceIdentifier = BytesUtil.readUTFString(buffer);
         filterTableType = Functions.FilterTableType.valueOf(BytesUtil.readUTFString(buffer));
+        reverse = Boolean.valueOf(BytesUtil.readUTFString(buffer));
     }
 
     public static boolean containsMassInTupleFilter(TupleFilter filter) {
@@ -144,4 +168,32 @@ public class MassInTupleFilter extends FunctionTupleFilter {
         return false;
     }
 
+    public boolean isReverse() {
+        return reverse;
+    }
+
+    public void setReverse(boolean reverse) {
+        this.reverse = reverse;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return new MassInTupleFilter(this);
+    }
+
+    public MassInValueProvider getValueProvider() {
+        return valueProvider;
+    }
+
+    public String getFilterTableName() {
+        return filterTableName;
+    }
+
+    public String getFilterTableResourceIdentifier() {
+        return filterTableResourceIdentifier;
+    }
+
+    public Functions.FilterTableType getFilterTableType() {
+        return filterTableType;
+    }
 }

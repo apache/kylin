@@ -203,11 +203,11 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         final Broadcaster broadcaster = Broadcaster.getInstance(configA);
         broadcaster.getCounterAndClear();
 
-        getStore().deleteResource("/cube/a_whole_new_cube.json");
+        getStore().deleteResource("/cube/test_kylin_cube_a_new_one.json");
 
         //create cube
 
-        final String cubeName = "a_whole_new_cube";
+        final String cubeName = "test_kylin_cube_a_new_one";
         final CubeManager cubeManager = getCubeManager(configA);
         final CubeManager cubeManagerB = getCubeManager(configB);
         final ProjectManager projectManager = getProjectManager(configA);
@@ -277,7 +277,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         assertTrue(cubeDescManager.getCubeDesc(cubeDescName) == null);
         assertTrue(cubeDescManagerB.getCubeDesc(cubeDescName) == null);
 
-        getStore().deleteResource("/cube/a_whole_new_cube.json");
+        getStore().deleteResource("/cube/test_kylin_cube_a_new_one.json");
     }
 
     private TableDesc createTestTableDesc() {

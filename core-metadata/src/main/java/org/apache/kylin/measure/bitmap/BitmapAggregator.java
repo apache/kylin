@@ -20,12 +20,10 @@ package org.apache.kylin.measure.bitmap;
 
 import org.apache.kylin.measure.MeasureAggregator;
 
-/**
- * Created by sunyerui on 15/12/2.
- */
 public class BitmapAggregator extends MeasureAggregator<BitmapCounter> {
+    private static final BitmapCounterFactory bitmapFactory = RoaringBitmapCounterFactory.INSTANCE;
 
-    private BitmapCounter sum = null;
+    private BitmapCounter sum;
 
     @Override
     public void reset() {
@@ -34,11 +32,27 @@ public class BitmapAggregator extends MeasureAggregator<BitmapCounter> {
 
     @Override
     public void aggregate(BitmapCounter value) {
+        // Here we optimize for case when group only has 1 value. In such situation, no
+        // aggregation is needed, so we just keep a reference to the first value, saving
+        // the cost of deserialization and merging.
         if (sum == null) {
-            sum = new BitmapCounter(value);
-        } else {
-            sum.merge(value);
+            sum = value;
+            return;
         }
+
+        sum.orWith(value);
+    }
+
+    @Override
+    public BitmapCounter aggregate(BitmapCounter value1, BitmapCounter value2) {
+        BitmapCounter merged = bitmapFactory.newBitmap();
+        if (value1 != null) {
+            merged.orWith(value1);
+        }
+        if (value2 != null) {
+            merged.orWith(value2);
+        }
+        return merged;
     }
 
     @Override
@@ -48,10 +62,6 @@ public class BitmapAggregator extends MeasureAggregator<BitmapCounter> {
 
     @Override
     public int getMemBytesEstimate() {
-        if (sum == null) {
-            return Integer.MIN_VALUE;
-        } else {
-            return sum.getMemBytes();
-        }
+        return sum == null ? 0 : sum.getMemBytes();
     }
 }

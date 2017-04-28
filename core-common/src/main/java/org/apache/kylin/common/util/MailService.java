@@ -34,18 +34,22 @@ public class MailService {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MailService.class);
 
     private Boolean enabled = Boolean.TRUE;
+    private Boolean starttlsEnabled = Boolean.FALSE;
     private String host;
+    private String port;
     private String username;
     private String password;
     private String sender;
 
     public MailService(KylinConfig config) {
-        this(config.isMailEnabled(), config.getMailHost(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());
+        this(config.isMailEnabled(), config.isStarttlsEnabled(), config.getMailHost(), config.getSmtpPort(), config.getMailUsername(), config.getMailPassword(), config.getMailSender());
     }
 
-    private MailService(boolean enabled, String host, String username, String password, String sender) {
+    private MailService(boolean enabled, boolean starttlsEnabled, String host, String port, String username, String password, String sender) {
         this.enabled = enabled;
+        this.starttlsEnabled = starttlsEnabled;
         this.host = host;
+        this.port = port;
         this.username = username;
         this.password = password;
         this.sender = sender;
@@ -85,6 +89,13 @@ public class MailService {
 
         Email email = new HtmlEmail();
         email.setHostName(host);
+        email.setStartTLSEnabled(starttlsEnabled);
+        if (starttlsEnabled) {
+            email.setSslSmtpPort(port);
+        } else {
+            email.setSmtpPort(Integer.valueOf(port));
+        }
+        
         if (username != null && username.trim().length() > 0) {
             email.setAuthentication(username, password);
         }

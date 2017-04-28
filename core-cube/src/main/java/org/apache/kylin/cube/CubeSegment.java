@@ -38,6 +38,7 @@ import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 
@@ -50,7 +51,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegment {
+public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegment, java.io.Serializable {
 
     @JsonBackReference
     private CubeInstance cubeInstance;
@@ -96,9 +97,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     private ConcurrentHashMap<String, String> dictionaries; // table/column ==> dictionary resource path
     @JsonProperty("snapshots")
     private ConcurrentHashMap<String, String> snapshots; // table name ==> snapshot resource path
-
-    @JsonProperty("index_path")
-    private String indexPath;
 
     @JsonProperty("rowkey_stats")
     private List<Object[]> rowkeyStats = Lists.newArrayList();
@@ -217,6 +215,7 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         this.inputRecordsSize = inputRecordsSize;
     }
 
+    @Override
     public long getLastBuildTime() {
         return lastBuildTime;
     }
@@ -294,15 +293,22 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
     }
 
     public String getDictResPath(TblColRef col) {
-        return getDictionaries().get(dictKey(col));
+        String r;
+        String dictKey = col.getIdentity();
+        r = getDictionaries().get(dictKey);
+        
+        // try Kylin v1.x dict key as well
+        if (r == null) {
+            String v1DictKey = col.getTable() + "/" + col.getName();
+            r = getDictionaries().get(v1DictKey);
+        }
+        
+        return r;
     }
 
     public void putDictResPath(TblColRef col, String dictResPath) {
-        getDictionaries().put(dictKey(col), dictResPath);
-    }
-
-    private String dictKey(TblColRef col) {
-        return col.getTable() + "/" + col.getName();
+        String dictKey = col.getIdentity();
+        getDictionaries().put(dictKey, dictResPath);
     }
 
     public void setStorageLocationIdentifier(String storageLocationIdentifier) {
@@ -349,31 +355,18 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         this.sourceOffsetEnd = sourceOffsetEnd;
     }
 
-    public boolean dateRangeOverlaps(CubeSegment seg) {
-        return dateRangeStart < seg.dateRangeEnd && seg.dateRangeStart < dateRangeEnd;
-    }
-
-    public boolean dateRangeContains(CubeSegment seg) {
-        return dateRangeStart <= seg.dateRangeStart && seg.dateRangeEnd <= dateRangeEnd;
-    }
-
     // date range is used in place of source offsets when offsets are missing
     public boolean sourceOffsetOverlaps(CubeSegment seg) {
-        if (isSourceOffsetsOn())
-            return sourceOffsetStart < seg.sourceOffsetEnd && seg.sourceOffsetStart < sourceOffsetEnd;
-        else
-            return dateRangeOverlaps(seg);
+        return Segments.sourceOffsetOverlaps(this, seg);
     }
 
     // date range is used in place of source offsets when offsets are missing
-    public boolean sourceOffsetContains(CubeSegment seg) {
-        if (isSourceOffsetsOn())
-            return sourceOffsetStart <= seg.sourceOffsetStart && seg.sourceOffsetEnd <= sourceOffsetEnd;
-        else
-            return dateRangeContains(seg);
+    public boolean sourceOffsetContains(ISegment seg) {
+        return Segments.sourceOffsetContains(this, seg);
     }
 
-    public void validate() {
+    @Override
+    public void validate() throws IllegalStateException {
         if (cubeInstance.getDescriptor().getModel().getPartitionDesc().isPartitioned()) {
             if (!isSourceOffsetsOn() && dateRangeStart >= dateRangeEnd)
                 throw new IllegalStateException("Invalid segment, dateRangeStart(" + dateRangeStart + ") must be smaller than dateRangeEnd(" + dateRangeEnd + ") in segment " + this);
@@ -532,14 +525,6 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
 
     public IRealization getRealization() {
         return cubeInstance;
-    }
-
-    public String getIndexPath() {
-        return indexPath;
-    }
-
-    public void setIndexPath(String indexPath) {
-        this.indexPath = indexPath;
     }
 
     public Map<String, String> getAdditionalInfo() {

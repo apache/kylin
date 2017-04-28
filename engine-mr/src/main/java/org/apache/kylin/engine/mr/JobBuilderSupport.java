@@ -45,6 +45,8 @@ public class JobBuilderSupport {
     final protected CubeSegment seg;
     final protected String submitter;
 
+    final public static String LayeredCuboidFolderPrefix = "level_";
+
     public JobBuilderSupport(CubeSegment seg, String submitter) {
         Preconditions.checkNotNull(seg, "segment cannot be null");
         this.config = new JobEngineConfig(seg.getConfig());
@@ -75,6 +77,7 @@ public class JobBuilderSupport {
         appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Fact_Distinct_Columns_" + seg.getRealization().getName() + "_Step");
         appendExecCmdParameters(cmd, BatchConstants.ARG_CUBING_JOB_ID, jobId);
         result.setMapReduceParams(cmd.toString());
+        result.setCounterSaveAs(CubingJob.SOURCE_RECORD_COUNT + "," + CubingJob.SOURCE_SIZE_BYTES);
         return result;
     }
 
@@ -100,7 +103,6 @@ public class JobBuilderSupport {
         CubingExecutableUtil.setCubeName(seg.getRealization().getName(), result.getParams());
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
-        CubingExecutableUtil.setIndexPath(this.getSecondaryIndexPath(jobId), result.getParams());
 
 
         return result;
@@ -125,7 +127,6 @@ public class JobBuilderSupport {
         CubingExecutableUtil.setSegmentId(seg.getUuid(), result.getParams());
         CubingExecutableUtil.setCubingJobId(jobId, result.getParams());
         CubingExecutableUtil.setMergingSegmentIds(mergingSegmentIds, result.getParams());
-        CubingExecutableUtil.setIndexPath(this.getSecondaryIndexPath(jobId), result.getParams());
 
         return result;
     }
@@ -172,7 +173,7 @@ public class JobBuilderSupport {
     }
 
     public String getStatisticsPath(String jobId) {
-        return getRealizationRootPath(jobId) + "/statistics";
+        return getRealizationRootPath(jobId) + "/fact_distinct_columns/" + BatchConstants.CFG_OUTPUT_STATISTICS;
     }
 
     // ============================================================================
@@ -194,17 +195,13 @@ public class JobBuilderSupport {
         return buf.append(" -").append(paraName).append(" ").append(paraValue);
     }
 
-    public String[] getCuboidOutputPaths(String cuboidRootPath, int totalRowkeyColumnCount, int groupRowkeyColumnsCount) {
-        String[] paths = new String[groupRowkeyColumnsCount + 1];
-        for (int i = 0; i <= groupRowkeyColumnsCount; i++) {
-            int dimNum = totalRowkeyColumnCount - i;
-            if (dimNum == totalRowkeyColumnCount) {
-                paths[i] = cuboidRootPath + "base_cuboid";
-            } else {
-                paths[i] = cuboidRootPath + dimNum + "d_cuboid";
-            }
+    public static String getCuboidOutputPathsByLevel(String cuboidRootPath, int level) {
+        if (level == 0) {
+            return cuboidRootPath + LayeredCuboidFolderPrefix + "base_cuboid";
+        } else {
+            return cuboidRootPath + LayeredCuboidFolderPrefix + level + "_cuboid";
         }
-        return paths;
     }
+
 
 }

@@ -39,13 +39,11 @@ import org.apache.kylin.storage.IStorageQuery;
 import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.StorageFactory;
 import org.apache.kylin.storage.StorageMockUtils;
-import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -82,16 +80,6 @@ public class ITStorageTest extends HBaseMetadataTestCase {
     @After
     public void tearDown() throws Exception {
         this.cleanupTestMetadata();
-    }
-
-    @Test(expected = ScanOutOfLimitException.class)
-    @Ignore
-    public void testScanOutOfLimit() {
-        context.setThreshold(1);
-        List<TblColRef> groups = mockup.buildGroups();
-        List<FunctionDesc> aggregations = mockup.buildAggregations();
-
-        search(groups, aggregations, null, context);
     }
 
     @Test
@@ -148,7 +136,7 @@ public class ITStorageTest extends HBaseMetadataTestCase {
         int count = 0;
         ITupleIterator iterator = null;
         try {
-            SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", filter, null, Collections.<TblColRef> emptySet(), groups, Sets.<TblColRef> newHashSet(), Collections.<TblColRef> emptySet(), Collections.<TblColRef> emptySet(), aggregations, Collections.<SQLCall> emptyList(), new ArrayList<TblColRef>(), new ArrayList<SQLDigest.OrderEnum>());
+            SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", filter, null, Collections.<TblColRef> emptySet(), groups, Sets.<TblColRef> newHashSet(), Collections.<TblColRef> emptySet(), Collections.<TblColRef> emptySet(), aggregations, Collections.<SQLCall> emptyList(), new ArrayList<TblColRef>(), new ArrayList<SQLDigest.OrderEnum>(), false);
             iterator = storageEngine.search(context, sqlDigest, mockup.newTupleInfo(groups, aggregations));
             while (iterator.hasNext()) {
                 ITuple tuple = iterator.next();

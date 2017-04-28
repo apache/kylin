@@ -18,7 +18,6 @@
 
 package org.apache.kylin.dict;
 
-import org.apache.kylin.common.util.Bytes;
 
 /**
  * Use <code>NumberDictionaryForestBuilder</code> instead.
@@ -26,24 +25,17 @@ import org.apache.kylin.common.util.Bytes;
  * @author yangli9
  */
 @Deprecated
-public class NumberDictionaryBuilder<T> extends TrieDictionaryBuilder<T> {
+public class NumberDictionaryBuilder extends TrieDictionaryBuilder<String> {
 
-    NumberDictionary.NumberBytesCodec codec = new NumberDictionary.NumberBytesCodec(NumberDictionary.MAX_DIGITS_BEFORE_DECIMAL_POINT);
 
-    public NumberDictionaryBuilder(BytesConverter<T> bytesConverter) {
-        super(bytesConverter);
+    public NumberDictionaryBuilder() {
+        super(new Number2BytesConverter(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT));
     }
 
-    @Override
-    void addValue(byte[] value) {
-        codec.encodeNumber(value, 0, value.length);
-        byte[] copy = Bytes.copy(codec.buf, codec.bufOffset, codec.bufLen);
-        super.addValue(copy);
-    }
 
-    public NumberDictionary<T> build(int baseId) {
+    public NumberDictionary build(int baseId) {
         byte[] trieBytes = buildTrieBytes(baseId);
-        NumberDictionary2<T> r = new NumberDictionary2<T>(trieBytes);
+        NumberDictionary2 r = new NumberDictionary2(trieBytes);
         return r;
     }
 

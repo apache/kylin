@@ -24,6 +24,6 @@ public class ProvisionWithoutBuild extends BuildCubeWithEngine {
     public static void main(String[] args) throws Exception {
         beforeClass();
         DeployUtil.deployMetadata();
-        DeployUtil.prepareTestDataForNormalCubes("test_kylin_cube_with_slr_empty");
+        DeployUtil.prepareTestDataForNormalCubes("ci_left_join_model");
     }
 }

@@ -47,8 +47,8 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtendedColumnMeasureType.class);
 
-    public static final String FUNC_RAW = "EXTENDED_COLUMN";
-    public static final String DATATYPE_RAW = "extendedcolumn";
+    public static final String FUNC_EXTENDED_COLUMN = "EXTENDED_COLUMN";
+    public static final String DATATYPE_EXTENDED_COLUMN = "extendedcolumn";
     private final DataType dataType;
 
     public static class Factory extends MeasureTypeFactory<ByteArray> {
@@ -60,12 +60,12 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
 
         @Override
         public String getAggrFunctionName() {
-            return FUNC_RAW;
+            return FUNC_EXTENDED_COLUMN;
         }
 
         @Override
         public String getAggrDataTypeName() {
-            return DATATYPE_RAW;
+            return DATATYPE_EXTENDED_COLUMN;
         }
 
         @Override
@@ -251,6 +251,21 @@ public class ExtendedColumnMeasureType extends MeasureType<ByteArray> {
                         }
                     }
                 }
+            }
+
+            @Override
+            public ByteArray aggregate(ByteArray value1, ByteArray value2) {
+                if (value1 == null) {
+                    return value2;
+                } else if (value2 == null) {
+                    return value1;
+                } else if (!value1.equals(value2)) {
+                    if (!warned) {
+                        logger.warn("Extended column must be unique given same host column");
+                        warned = true;
+                    }
+                }
+                return value1;
             }
 
             @Override

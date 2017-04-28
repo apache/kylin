@@ -37,17 +37,16 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HConnectionManager;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Threads;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.StorageException;
-import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +63,7 @@ public class HBaseConnection {
     private static final Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
 
     private static final Map<String, Configuration> configCache = new ConcurrentHashMap<String, Configuration>();
-    private static final Map<String, HConnection> connPool = new ConcurrentHashMap<String, HConnection>();
+    private static final Map<String, Connection> connPool = new ConcurrentHashMap<String, Connection>();
     private static final ThreadLocal<Configuration> configThreadLocal = new ThreadLocal<>();
 
     private static ExecutorService coprocessorPool = null;
@@ -75,7 +74,7 @@ public class HBaseConnection {
             public void run() {
                 closeCoprocessorPool();
 
-                for (HConnection conn : connPool.values()) {
+                for (Connection conn : connPool.values()) {
                     try {
                         conn.close();
                     } catch (IOException e) {
@@ -144,12 +143,13 @@ public class HBaseConnection {
         // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
         if (!(StringUtils.isEmpty(url) || "hbase".equals(url)))
             throw new IllegalArgumentException("to use hbase storage, pls set 'kylin.storage.url=hbase' in kylin.properties");
-        
+
         Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
         addHBaseClusterNNHAConfiguration(conf);
 
         // support hbase using a different FS
-        String hbaseClusterFs = KylinConfig.getInstanceFromEnv().getHBaseClusterFs();
+        KylinConfig kylinConf = KylinConfig.getInstanceFromEnv();
+        String hbaseClusterFs = kylinConf.getHBaseClusterFs();
         if (StringUtils.isNotEmpty(hbaseClusterFs)) {
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hbaseClusterFs);
         }
@@ -161,12 +161,6 @@ public class HBaseConnection {
         if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
             conf.set("hbase.fs.tmp.dir", "/tmp");
         }
-
-        // reduce rpc retry
-        conf.set(HConstants.HBASE_CLIENT_PAUSE, "3000");
-        conf.set(HConstants.HBASE_CLIENT_RETRIES_NUMBER, "5");
-        conf.set(HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, "60000");
-        // conf.set(ScannerCallable.LOG_SCANNER_ACTIVITY, "true");
 
         return conf;
     }
@@ -202,10 +196,13 @@ public class HBaseConnection {
         conf.setStrings(JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE, nameServices.toArray(new String[0]));
     }
 
-    public static String makeQualifiedPathInHBaseCluster(String path) {
+    public static String makeQualifiedPathInHBaseCluster(String inPath) {
+        Path path = new Path(inPath);
+        path = Path.getPathWithoutSchemeAndAuthority(path);
+        
         try {
             FileSystem fs = FileSystem.get(getCurrentHBaseConfiguration());
-            return fs.makeQualified(new Path(path)).toString();
+            return fs.makeQualified(path).toString();
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot create FileSystem from current hbase cluster conf", e);
         }
@@ -213,9 +210,9 @@ public class HBaseConnection {
 
     // ============================================================================
 
-    // returned HConnection can be shared by multiple threads and does not require close()
+    // returned Connection can be shared by multiple threads and does not require close()
     @SuppressWarnings("resource")
-    public static HConnection get(String url) {
+    public static Connection get(String url) {
         // find configuration
         Configuration conf = configCache.get(url);
         if (conf == null) {
@@ -223,13 +220,13 @@ public class HBaseConnection {
             configCache.put(url, conf);
         }
 
-        HConnection connection = connPool.get(url);
+        Connection connection = connPool.get(url);
         try {
             while (true) {
                 // I don't use DCL since recreate a connection is not a big issue.
                 if (connection == null || connection.isClosed()) {
                     logger.info("connection is null or closed, creating a new one");
-                    connection = HConnectionManager.createConnection(conf);
+                    connection = ConnectionFactory.createConnection(conf);
                     connPool.put(url, connection);
                 }
 
@@ -248,8 +245,8 @@ public class HBaseConnection {
         return connection;
     }
 
-    public static boolean tableExists(HConnection conn, String tableName) throws IOException {
-        HBaseAdmin hbase = new HBaseAdmin(conn);
+    public static boolean tableExists(Connection conn, String tableName) throws IOException {
+        Admin hbase = conn.getAdmin();
         try {
             return hbase.tableExists(TableName.valueOf(tableName));
         } finally {
@@ -269,18 +266,18 @@ public class HBaseConnection {
         deleteTable(HBaseConnection.get(hbaseUrl), tableName);
     }
 
-    public static void createHTableIfNeeded(HConnection conn, String table, String... families) throws IOException {
-        HBaseAdmin hbase = new HBaseAdmin(conn);
-
+    public static void createHTableIfNeeded(Connection conn, String table, String... families) throws IOException {
+        Admin hbase = conn.getAdmin();
+        TableName tableName = TableName.valueOf(table);
         try {
             if (tableExists(conn, table)) {
                 logger.debug("HTable '" + table + "' already exists");
-                Set<String> existingFamilies = getFamilyNames(hbase.getTableDescriptor(TableName.valueOf(table)));
+                Set<String> existingFamilies = getFamilyNames(hbase.getTableDescriptor(tableName));
                 boolean wait = false;
                 for (String family : families) {
                     if (existingFamilies.contains(family) == false) {
                         logger.debug("Adding family '" + family + "' to HTable '" + table + "'");
-                        hbase.addColumn(table, newFamilyDescriptor(family));
+                        hbase.addColumn(tableName, newFamilyDescriptor(family));
                         // addColumn() is async, is there a way to wait it finish?
                         wait = true;
                     }
@@ -333,8 +330,8 @@ public class HBaseConnection {
         return fd;
     }
 
-    public static void deleteTable(HConnection conn, String tableName) throws IOException {
-        HBaseAdmin hbase = new HBaseAdmin(conn);
+    public static void deleteTable(Connection conn, String tableName) throws IOException {
+        Admin hbase = conn.getAdmin();
 
         try {
             if (!tableExists(conn, tableName)) {
@@ -344,10 +341,10 @@ public class HBaseConnection {
 
             logger.debug("delete HTable '" + tableName + "'");
 
-            if (hbase.isTableEnabled(tableName)) {
-                hbase.disableTable(tableName);
+            if (hbase.isTableEnabled(TableName.valueOf(tableName))) {
+                hbase.disableTable(TableName.valueOf(tableName));
             }
-            hbase.deleteTable(tableName);
+            hbase.deleteTable(TableName.valueOf(tableName));
 
             logger.debug("HTable '" + tableName + "' deleted");
         } finally {

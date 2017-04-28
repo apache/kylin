@@ -23,20 +23,18 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.engine.mr.HadoopUtil;
-import org.apache.kylin.metadata.streaming.StreamingConfig;
-import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.StreamingRequest;
-import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.KafkaConfigService;
 import org.apache.kylin.rest.service.StreamingService;
+import org.apache.kylin.rest.service.TableService;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +67,7 @@ public class StreamingController extends BasicController {
     @Autowired
     private KafkaConfigService kafkaConfigService;
     @Autowired
-    private CubeService cubeMgmtService;
+    private TableService tableService;
 
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET })
     @ResponseBody
@@ -104,15 +102,16 @@ public class StreamingController extends BasicController {
 
         String project = streamingRequest.getProject();
         TableDesc tableDesc = deserializeTableDesc(streamingRequest);
+        if (null == tableDesc) {
+            throw new BadRequestException("Failed to add streaming table.");
+        }
+
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
         boolean saveStreamingSuccess = false, saveKafkaSuccess = false;
 
         try {
-            tableDesc.setUuid(UUID.randomUUID().toString());
-            MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
-            metaMgr.saveSourceTable(tableDesc);
-            cubeMgmtService.syncTableToProject(new String[] { tableDesc.getIdentity() }, project);
+            tableService.addStreamingTable(tableDesc, project);
         } catch (IOException e) {
             throw new BadRequestException("Failed to add streaming table.");
         }
@@ -235,10 +234,12 @@ public class StreamingController extends BasicController {
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
 
-        String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
-        desc.setName(dbTable[1]);
-        desc.setDatabase(dbTable[0]);
-        desc.getIdentity();
+        if (null != desc) {
+            String[] dbTable = HadoopUtil.parseHiveTableName(desc.getName());
+            desc.setName(dbTable[1]);
+            desc.setDatabase(dbTable[0]);
+            desc.getIdentity();
+        }
         return desc;
     }
 
@@ -283,15 +284,4 @@ public class StreamingController extends BasicController {
         request.setMessage(message);
     }
 
-    public void setStreamingService(StreamingService streamingService) {
-        this.streamingService = streamingService;
-    }
-
-    public void setKafkaConfigService(KafkaConfigService kafkaConfigService) {
-        this.kafkaConfigService = kafkaConfigService;
-    }
-
-    public void setCubeService(CubeService cubeService) {
-        this.cubeMgmtService = cubeService;
-    }
 }

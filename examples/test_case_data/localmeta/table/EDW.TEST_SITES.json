@@ -5,11 +5,13 @@
   "columns" : [ {
     "id" : "1",
     "name" : "SITE_ID",
-    "datatype" : "int"
+    "datatype" : "int",
+    "index": "T"
   }, {
     "id" : "2",
     "name" : "SITE_NAME",
-    "datatype" : "string"
+    "datatype" : "string",
+    "index": "T"
   }, {
     "id" : "3",
     "name" : "SITE_DOMAIN_CODE",
@@ -25,7 +27,8 @@
   }, {
     "id" : "6",
     "name" : "SITE_CNTRY_ID",
-    "datatype" : "int"
+    "datatype" : "int",
+    "index": "T"
   }, {
     "id" : "7",
     "name" : "CRE_DATE",

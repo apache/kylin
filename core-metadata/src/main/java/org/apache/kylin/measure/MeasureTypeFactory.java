@@ -28,6 +28,7 @@ import org.apache.kylin.measure.bitmap.BitmapMeasureType;
 import org.apache.kylin.measure.dim.DimCountDistinctMeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.measure.hllc.HLLCMeasureType;
+import org.apache.kylin.measure.percentile.PercentileMeasureType;
 import org.apache.kylin.measure.raw.RawMeasureType;
 import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.datatype.DataType;
@@ -62,7 +63,7 @@ import com.google.common.collect.Maps;
   }
 </pre>
  * 
- * @param <T> the Java type of aggregation data object, e.g. HyperLogLogPlusCounter
+ * @param <T> the Java type of aggregation data object, e.g. HLLCounter
  */
 abstract public class MeasureTypeFactory<T> {
 
@@ -109,6 +110,7 @@ abstract public class MeasureTypeFactory<T> {
         factoryInsts.add(new TopNMeasureType.Factory());
         factoryInsts.add(new RawMeasureType.Factory());
         factoryInsts.add(new ExtendedColumnMeasureType.Factory());
+        factoryInsts.add(new PercentileMeasureType.Factory());
 
         logger.info("Checking custom measure types from kylin config");
 
@@ -142,7 +144,8 @@ abstract public class MeasureTypeFactory<T> {
             registerUDAF(factory);
             List<MeasureTypeFactory<?>> list = factories.get(funcName);
             if (list == null)
-                factories.put(funcName, list = Lists.newArrayListWithCapacity(2));
+                list = Lists.newArrayListWithCapacity(2);
+            factories.put(funcName, list);
             list.add(factory);
         }
 
@@ -215,7 +218,7 @@ abstract public class MeasureTypeFactory<T> {
     }
 
     @SuppressWarnings("rawtypes")
-    private static class NeedRewriteOnlyMeasureType extends MeasureType {
+    public static class NeedRewriteOnlyMeasureType extends MeasureType {
 
         private Boolean needRewrite;
 

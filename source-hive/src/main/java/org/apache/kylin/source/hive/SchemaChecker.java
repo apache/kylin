@@ -32,6 +32,7 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -80,7 +81,7 @@ public class SchemaChecker {
                 buf.append("- ").append(reason).append("\n");
             }
 
-            return new CheckResult(false, format("Found %d issue(s) with '%s':\n%s Please disable and purge related cube(s) first", reasons.size(), tableName, buf.toString()));
+            return new CheckResult(false, format("Found %d issue(s) with '%s':%n%s Please disable and purge related cube(s) first", reasons.size(), tableName, buf.toString()));
         }
     }
 
@@ -103,7 +104,10 @@ public class SchemaChecker {
                 if (cube == null || cube.allowBrokenDescriptor()) {
                     return false;
                 }
-                return cube.getModel().containsTable(fullTableName);
+                DataModelDesc model = cube.getModel();
+                if (model == null)
+                    return false;
+                return model.containsTable(fullTableName);
             }
         });
 

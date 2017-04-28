@@ -18,18 +18,23 @@
 
 package org.apache.kylin.rest.service;
 
+import java.util.Arrays;
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
+import org.apache.kylin.rest.constant.Constant;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -42,10 +47,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ActiveProfiles("testing")
 public class ServiceTestBase extends LocalFileMetadataTestCase {
 
+    @Autowired
+    UserService userService;
+
     @BeforeClass
     public static void setupResource() throws Exception {
         staticCreateTestMetadata();
-        Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", "ROLE_ADMIN");
+        Authentication authentication = new TestingAuthenticationToken("ADMIN", "ADMIN", Constant.ROLE_ADMIN);
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
@@ -59,6 +67,21 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
 
         KylinConfig config = KylinConfig.getInstanceFromEnv();
         Broadcaster.getInstance(config).notifyClearAll();
+
+        if (!userService.userExists("ADMIN")) {
+            userService.createUser(new User("ADMIN", "KYLIN", Arrays.asList(//
+                    new UserService.UserGrantedAuthority(Constant.ROLE_ADMIN), new UserService.UserGrantedAuthority(Constant.ROLE_ANALYST), new UserService.UserGrantedAuthority(Constant.ROLE_MODELER))));
+        }
+
+        if (!userService.userExists("MODELER")) {
+            userService.createUser(new User("MODELER", "MODELER", Arrays.asList(//
+                    new UserService.UserGrantedAuthority(Constant.ROLE_ANALYST), new UserService.UserGrantedAuthority(Constant.ROLE_MODELER))));
+        }
+
+        if (!userService.userExists("ROLE_ANALYST")) {
+            userService.createUser(new User("ROLE_ANALYST", "ROLE_ANALYST", Arrays.asList(//
+                    new UserService.UserGrantedAuthority(Constant.ROLE_ANALYST))));
+        }
     }
 
     @After

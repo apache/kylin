@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.calcite.avatica.AvaticaParameter;
 import org.apache.calcite.avatica.ColumnMetaData;
@@ -63,7 +64,7 @@ public class DummyClient implements IRemoteClient {
     }
 
     @Override
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues) throws IOException {
+    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues, Map<String, String> queryToggles) throws IOException {
         List<Object> data = new ArrayList<Object>();
         Object[] row = new Object[] { "foo", "bar", "tool" };
         data.add(row);

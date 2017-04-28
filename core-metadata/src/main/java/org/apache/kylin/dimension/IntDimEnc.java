@@ -21,6 +21,7 @@ package org.apache.kylin.dimension;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * deprecated use IntegerDimEnc instead
  * @deprecated
  */
-public class IntDimEnc extends DimensionEncoding {
+public class IntDimEnc extends DimensionEncoding implements Serializable{
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(IntDimEnc.class);
@@ -109,11 +110,9 @@ public class IntDimEnc extends DimensionEncoding {
     }
 
     public class IntegerSerializer extends DataTypeSerializer<Object> {
-        // be thread-safe and avoid repeated obj creation
-        private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
 
         private byte[] currentBuf() {
-            byte[] buf = current.get();
+            byte[] buf = (byte[]) current.get();
             if (buf == null) {
                 buf = new byte[fixedLen];
                 current.set(buf);

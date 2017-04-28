@@ -17,40 +17,75 @@
 -->
 
 <script type="text/ng-template" id="project.html">
-    <ng-form name="proj_create_form">
-        <div class="modal-header">
-            <h4>New Project</h4>
+  <ng-form name="proj_create_form">
+    <div class="modal-header">
+      <h4>New Project</h4>
+    </div>
+    <div class="modal-body" style="background-color: white">
+      <div class="form-group">
+        <label><b>Project Name</b></label>
+
+        <div class="clearfix">
+          <input name="name_input" type="text" class="form-control" ng-model="proj.name" required
+                 placeholder="You can use letters, numbers, and underscore characters '_'"
+                 ng-maxlength=100 ng-pattern="/^\w+$/"/>
+                    <span class="text-warning"
+                          ng-if="proj_create_form.name_input.$error.required  && proj_create_form.name_input.$dirty"
+                    >&nbsp;The project name is required</span>
+                    <span class="text-warning"
+                          ng-if="proj_create_form.name_input.$invalid && proj_create_form.name_input.$dirty && !proj_create_form.name_input.$error.required"
+                    >&nbsp;The project name is invalid</span>
         </div>
-        <div class="modal-body" style="background-color: white">
-            <div class="form-group">
-                <label><b>Project Name</b></label>
+      </div>
+      <div class="form-group">
+        <label><b>Project Description</b></label>
 
-                <div class="clearfix">
-                    <input name="name_input" type="text" class="form-control" ng-model="proj.name" required
-                           placeholder="You can use letters, numbers, and underscore characters '_'"
-                           ng-maxlength = 100 ng-pattern="/^\w+$/" />
-                    <span class="text-warning" ng-if="proj_create_form.name_input.$error.required  && proj_create_form.name_input.$dirty"
-                            >&nbsp;The project name is required</span>
-                    <span class="text-warning" ng-if="proj_create_form.name_input.$invalid && proj_create_form.name_input.$dirty && !proj_create_form.name_input.$error.required"
-                            >&nbsp;The project name is invalid</span>
-                </div>
-            </div>
-            <div class="form-group">
-                <label><b>Project Description</b></label>
-
-                <div class="clearfix">
+        <div class="clearfix">
                     <textarea name="description_input" type="text" class="form-control"
                               placeholder="Project Description.."
                               ng-model="proj.description"
-                            ></textarea>
-                </div>
+                    ></textarea>
+        </div>
+      </div>
+      <div>
+        <label><b>Project Config</b></label>
+        <div ng-repeat=" prop in convertedProperties track by $index " class="form-group">
+          <div class="row">
+            <label class="col-xs-12 col-sm-6 control-label no-padding-right" ng-class="{'has-error':prop.name==''}">
+              <input ng-model="prop.name" placeholder="key" ng-change="refreshProperty(convertedProperties,$index,prop)"
+                     class="form-control"/>
+              <small style="font-weight: normal !important;" class="help-block" ng-show="prop.name==''">Property name is
+                required.
+              </small>
+            </label>
+            <div class="col-xs-12 col-sm-5" ng-class="{'has-error':prop.value==''}">
+              <input ng-model="prop.value" placeholder="value"
+                     ng-change="refreshProperty(convertedProperties,$index,prop)" class="form-control"/>
+              <small class="help-block" ng-show="prop.value==''">Property value is required.</small>
             </div>
+            <div class="col-sm-1">
+              <button class="btn btn-xs btn-info" ng-click="removeProperty(convertedProperties,$index,prop)"><i
+                class="fa fa-minus"></i>
+              </button>
+            </div>
+
+          </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" ng-click="cancel()">Close</button>
-            <button class="btn btn-success" ng-click="createOrUpdate()" ng-disabled="proj_create_form.$invalid">
-                Submit
-            </button>
+        <!--Add Project Property-->
+        <div class="form-group">
+          <button class="btn btn-sm btn-info" ng-click="addNewProperty();">
+            <i class="fa fa-plus"></i> Property
+          </button>
         </div>
-    </ng-form>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="cancel()">Close</button>
+      <button class="btn btn-success" ng-click="createOrUpdate()" ng-disabled="proj_create_form.$invalid">
+        Submit
+      </button>
+    </div>
+  </ng-form>
 </script>
+

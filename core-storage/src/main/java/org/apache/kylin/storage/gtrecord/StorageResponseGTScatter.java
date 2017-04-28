@@ -18,21 +18,21 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
+import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * scatter the blob returned from region server to a iterable of gtrecords
@@ -41,18 +41,20 @@ public class StorageResponseGTScatter implements IGTScanner {
 
     private static final Logger logger = LoggerFactory.getLogger(StorageResponseGTScatter.class);
 
-    private GTInfo info;
-    private Iterator<byte[]> blocks;
-    private ImmutableBitSet columns;
-    private long totalScannedCount;
-    private int storagePushDownLimit = -1;
+    private final GTInfo info;
+    private IPartitionStreamer partitionStreamer;
+    private final Iterator<byte[]> blocks;
+    private final ImmutableBitSet columns;
+    private final ImmutableBitSet groupByDims;
+    private final boolean needSorted; // whether scanner should return sorted records
 
-    public StorageResponseGTScatter(GTInfo info, Iterator<byte[]> blocks, ImmutableBitSet columns, long totalScannedCount, int storagePushDownLimit) {
-        this.info = info;
-        this.blocks = blocks;
-        this.columns = columns;
-        this.totalScannedCount = totalScannedCount;
-        this.storagePushDownLimit = storagePushDownLimit;
+    public StorageResponseGTScatter(GTScanRequest scanRequest, IPartitionStreamer partitionStreamer, StorageContext context) {
+        this.info = scanRequest.getInfo();
+        this.partitionStreamer = partitionStreamer;
+        this.blocks = partitionStreamer.asByteArrayIterator();
+        this.columns = scanRequest.getColumns();
+        this.groupByDims = scanRequest.getAggrGroupBy();
+        this.needSorted = (context.getFinalPushDownLimit() != Integer.MAX_VALUE) || context.isStreamAggregateEnabled();
     }
 
     @Override
@@ -61,57 +63,29 @@ public class StorageResponseGTScatter implements IGTScanner {
     }
 
     @Override
-    public long getScannedRowCount() {
-        return totalScannedCount;
-    }
-
-    @Override
     public void close() throws IOException {
-        //do nothing
+        //If upper consumer failed while consuming the GTRecords, the consumer should call IGTScanner's close method to ensure releasing resource
+        partitionStreamer.close();
     }
 
     @Override
     public Iterator<GTRecord> iterator() {
-        Iterator<Iterator<GTRecord>> shardSubsets = Iterators.transform(blocks, new EndpointResponseGTScatterFunc());
-        if (storagePushDownLimit != Integer.MAX_VALUE) {
-            return new SortedIteratorMergerWithLimit<GTRecord>(shardSubsets, storagePushDownLimit, GTRecord.getPrimaryKeyComparator()).getIterator();
-        } else {
-            return Iterators.concat(shardSubsets);
+        Iterator<PartitionResultIterator> iterators = Iterators.transform(blocks, new Function<byte[], PartitionResultIterator>() {
+            public PartitionResultIterator apply(byte[] input) {
+                return new PartitionResultIterator(input, info, columns);
+            }
+        });
+
+        if (!needSorted) {
+            logger.debug("Using Iterators.concat to pipeline partition results");
+            return Iterators.concat(iterators);
         }
-    }
 
-    class EndpointResponseGTScatterFunc implements Function<byte[], Iterator<GTRecord>> {
-        @Nullable
-        @Override
-        public Iterator<GTRecord> apply(@Nullable final byte[] input) {
-
-            return new Iterator<GTRecord>() {
-                private ByteBuffer inputBuffer = null;
-                //rotate between two buffer GTRecord to support SortedIteratorMergerWithLimit, which will peek one more GTRecord
-                private GTRecord firstRecord = null;
-
-                @Override
-                public boolean hasNext() {
-                    if (inputBuffer == null) {
-                        inputBuffer = ByteBuffer.wrap(input);
-                        firstRecord = new GTRecord(info);
-                    }
-
-                    return inputBuffer.position() < inputBuffer.limit();
-                }
-
-                @Override
-                public GTRecord next() {
-                    firstRecord.loadColumns(columns, inputBuffer);
-                    return firstRecord;
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
+        List<PartitionResultIterator> partitionResults = Lists.newArrayList(iterators);
+        if (partitionResults.size() == 1) {
+            return partitionResults.get(0);
         }
+        logger.debug("Using SortMergedPartitionResultIterator to merge {} partition results", partitionResults.size());
+        return new SortMergedPartitionResultIterator(partitionResults, info, GTRecord.getComparator(groupByDims));
     }
-
 }

@@ -55,11 +55,18 @@ public class BulkLoadJob extends AbstractHadoopJob {
 
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         FsShell shell = new FsShell(conf);
-        try {
-            shell.run(new String[] { "-chmod", "-R", "777", input });
-        } catch (Exception e) {
-            logger.error("Couldn't change the file permissions ", e);
-            throw new IOException(e);
+
+        int exitCode = -1;
+        int retryCount = 10;
+        while (exitCode != 0 && retryCount >= 1) {
+            exitCode = shell.run(new String[] { "-chmod", "-R", "777", input });
+            retryCount--;
+            Thread.sleep(5000);
+        }
+
+        if (exitCode != 0) {
+            logger.error("Failed to change the file permissions: " + input);
+            throw new IOException("Failed to change the file permissions: " + input);
         }
 
         String[] newArgs = new String[2];

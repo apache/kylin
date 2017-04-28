@@ -277,12 +277,6 @@ public class MemDiskStore implements IGTStore, Closeable {
         public GTInfo getInfo() {
             return info;
         }
-
-        @Override
-        public long getScannedRowCount() {
-            return count;
-        }
-
     }
 
     private class Writer implements IGTWriter {
@@ -603,6 +597,7 @@ public class MemDiskStore implements IGTStore, Closeable {
             } catch (NullPointerException npe) {
                 // that's fine, async flusher may not present
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 logger.warn("async join interrupted", e);
             }
             synchronized (lock) {

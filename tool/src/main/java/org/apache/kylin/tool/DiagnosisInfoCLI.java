@@ -231,6 +231,7 @@ public class DiagnosisInfoCLI extends AbstractInfoExtractor {
         try {
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException("Diagnosis info dump interrupted.", e);
         }
     }

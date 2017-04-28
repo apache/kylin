@@ -24,6 +24,8 @@ public interface DistributedJobLock extends JobLock {
     
     boolean lockWithName(String name, String serverName);
 
+    boolean isHasLocked(String segmentId);
+
     void unlockWithName(String name);
 
     void watchLock(ExecutorService pool, DoWatchLock doWatch);

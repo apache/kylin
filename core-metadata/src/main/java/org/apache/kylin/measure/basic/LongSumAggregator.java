@@ -19,27 +19,31 @@
 package org.apache.kylin.measure.basic;
 
 import org.apache.kylin.measure.MeasureAggregator;
-import org.apache.kylin.metadata.datatype.LongMutable;
 
 /**
  */
 @SuppressWarnings("serial")
-public class LongSumAggregator extends MeasureAggregator<LongMutable> {
+public class LongSumAggregator extends MeasureAggregator<Long> {
 
-    LongMutable sum = new LongMutable();
+    Long sum = new Long(0L);
 
     @Override
     public void reset() {
-        sum.set(0);
+        sum = new Long(0L);
     }
 
     @Override
-    public void aggregate(LongMutable value) {
-        sum.set(sum.get() + value.get());
+    public void aggregate(Long value) {
+        sum += value;
     }
 
     @Override
-    public LongMutable getState() {
+    public Long aggregate(Long value1, Long value2) {
+        return Long.valueOf(value1 + value2);
+    }
+
+    @Override
+    public Long getState() {
         return sum;
     }
 

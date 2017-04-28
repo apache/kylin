@@ -26,9 +26,11 @@ import org.apache.kylin.cube.kv.CubeDimEncMap;
 import org.apache.kylin.cube.kv.RowConstants;
 import org.apache.kylin.cube.kv.RowKeyColumnIO;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.RowKeyColDesc;
+import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.model.TblColRef;
 
-public class RowKeySplitter {
+public class RowKeySplitter implements java.io.Serializable {
 
     private CubeDesc cubeDesc;
     private RowKeyColumnIO colIO;
@@ -37,7 +39,6 @@ public class RowKeySplitter {
     private int[] splitOffsets;
     private int bufferSize;
 
-    private long lastSplittedCuboidId;
     private boolean enableSharding;
     private short shardId;
 
@@ -64,7 +65,13 @@ public class RowKeySplitter {
     public RowKeySplitter(CubeSegment cubeSeg, int splitLen, int bytesLen) {
         this.enableSharding = cubeSeg.isEnableSharding();
         this.cubeDesc = cubeSeg.getCubeDesc();
-        this.colIO = new RowKeyColumnIO(new CubeDimEncMap(cubeSeg));
+        IDimensionEncodingMap dimEncoding = new CubeDimEncMap(cubeSeg);
+
+        for (RowKeyColDesc rowKeyColDesc : cubeDesc.getRowkey().getRowKeyColumns()) {
+            dimEncoding.get(rowKeyColDesc.getColRef());
+        }
+
+        this.colIO = new RowKeyColumnIO(dimEncoding);
 
         this.splitBuffers = new SplittedBytes[splitLen];
         this.splitOffsets = new int[splitLen];
@@ -105,7 +112,7 @@ public class RowKeySplitter {
         System.arraycopy(bytes, offset, cuboidIdSplit.value, 0, RowConstants.ROWKEY_CUBOIDID_LEN);
         offset += RowConstants.ROWKEY_CUBOIDID_LEN;
 
-        lastSplittedCuboidId = Bytes.toLong(cuboidIdSplit.value, 0, cuboidIdSplit.length);
+        long lastSplittedCuboidId = Bytes.toLong(cuboidIdSplit.value, 0, cuboidIdSplit.length);
         Cuboid cuboid = Cuboid.findById(cubeDesc, lastSplittedCuboidId);
 
         // rowkey columns

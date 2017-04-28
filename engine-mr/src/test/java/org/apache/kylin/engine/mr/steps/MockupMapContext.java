@@ -47,267 +47,276 @@ import org.apache.kylin.engine.mr.common.BatchConstants;
  * 
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class MockupMapContext {
+public class MockupMapContext implements MapContext {
+
+    private Configuration hconf;
+
+    private Object[] outKV;
 
     public static Context create(final Configuration hconf, String metadataUrl, String cubeName, final Object[] outKV) {
 
         hconf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
 
-        return new WrappedMapper().getMapContext(new MapContext() {
+        return new WrappedMapper().getMapContext(new MockupMapContext(hconf, outKV));
+    }
 
-            @Override
-            public boolean nextKeyValue() throws IOException, InterruptedException {
-                throw new NotImplementedException();
-            }
+    public MockupMapContext(Configuration hconf, Object[] outKV) {
+        this.hconf = hconf;
+        this.outKV = outKV;
+    }
 
-            @Override
-            public Object getCurrentKey() throws IOException, InterruptedException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public boolean nextKeyValue() throws IOException, InterruptedException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Object getCurrentValue() throws IOException, InterruptedException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Object getCurrentKey() throws IOException, InterruptedException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public void write(Object key, Object value) throws IOException, InterruptedException {
-                System.out.println("Write -- k:" + key + ", v:" + value);
-                if (outKV != null) {
-                    outKV[0] = key;
-                    outKV[1] = value;
-                }
-            }
+    @Override
+    public Object getCurrentValue() throws IOException, InterruptedException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public OutputCommitter getOutputCommitter() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public void write(Object key, Object value) throws IOException, InterruptedException {
+        System.out.println("Write -- k:" + key + ", v:" + value);
+        if (outKV != null) {
+            outKV[0] = key;
+            outKV[1] = value;
+        }
+    }
 
-            @Override
-            public TaskAttemptID getTaskAttemptID() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public OutputCommitter getOutputCommitter() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public void setStatus(String msg) {
-                throw new NotImplementedException();
-            }
+    @Override
+    public TaskAttemptID getTaskAttemptID() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public String getStatus() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public String getStatus() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public float getProgress() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public void setStatus(String msg) {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Counter getCounter(Enum<?> counterName) {
-                throw new NotImplementedException();
-            }
+    public float getProgress() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Counter getCounter(String groupName, String counterName) {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Counter getCounter(Enum<?> counterName) {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Configuration getConfiguration() {
-                return hconf;
-            }
+    @Override
+    public Counter getCounter(String groupName, String counterName) {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Credentials getCredentials() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Configuration getConfiguration() {
+        return hconf;
+    }
 
-            @Override
-            public JobID getJobID() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Credentials getCredentials() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public int getNumReduceTasks() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public JobID getJobID() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Path getWorkingDirectory() throws IOException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public int getNumReduceTasks() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<?> getOutputKeyClass() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Path getWorkingDirectory() throws IOException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<?> getOutputValueClass() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<?> getOutputKeyClass() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<?> getMapOutputKeyClass() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<?> getOutputValueClass() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<?> getMapOutputValueClass() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<?> getMapOutputKeyClass() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public String getJobName() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<?> getMapOutputValueClass() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public String getJobName() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<? extends Mapper<?, ?, ?, ?>> getMapperClass() throws ClassNotFoundException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<? extends Reducer<?, ?, ?, ?>> getCombinerClass() throws ClassNotFoundException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<? extends Mapper<?, ?, ?, ?>> getMapperClass() throws ClassNotFoundException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<? extends Reducer<?, ?, ?, ?>> getReducerClass() throws ClassNotFoundException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<? extends Reducer<?, ?, ?, ?>> getCombinerClass() throws ClassNotFoundException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<? extends OutputFormat<?, ?>> getOutputFormatClass() throws ClassNotFoundException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<? extends Reducer<?, ?, ?, ?>> getReducerClass() throws ClassNotFoundException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Class<? extends Partitioner<?, ?>> getPartitionerClass() throws ClassNotFoundException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<? extends OutputFormat<?, ?>> getOutputFormatClass() throws ClassNotFoundException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public RawComparator<?> getSortComparator() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Class<? extends Partitioner<?, ?>> getPartitionerClass() throws ClassNotFoundException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public String getJar() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public RawComparator<?> getSortComparator() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public RawComparator<?> getGroupingComparator() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public String getJar() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public boolean getJobSetupCleanupNeeded() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public RawComparator<?> getGroupingComparator() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public boolean getTaskCleanupNeeded() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public boolean getJobSetupCleanupNeeded() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public boolean getProfileEnabled() {
-                throw new NotImplementedException();
-            }
+    public boolean getTaskCleanupNeeded() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public String getProfileParams() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public boolean getProfileEnabled() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public IntegerRanges getProfileTaskRange(boolean isMap) {
-                throw new NotImplementedException();
-            }
+    @Override
+    public String getProfileParams() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public String getUser() {
-                throw new NotImplementedException();
-            }
+    public IntegerRanges getProfileTaskRange(boolean isMap) {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public boolean getSymlink() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public String getUser() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Path[] getArchiveClassPaths() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public boolean getSymlink() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public URI[] getCacheArchives() throws IOException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Path[] getArchiveClassPaths() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public URI[] getCacheFiles() throws IOException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public URI[] getCacheArchives() throws IOException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Path[] getLocalCacheArchives() throws IOException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public URI[] getCacheFiles() throws IOException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Path[] getLocalCacheFiles() throws IOException {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Path[] getLocalCacheArchives() throws IOException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public Path[] getFileClassPaths() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Path[] getLocalCacheFiles() throws IOException {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public String[] getArchiveTimestamps() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public Path[] getFileClassPaths() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public String[] getFileTimestamps() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public String[] getArchiveTimestamps() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public int getMaxMapAttempts() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public String[] getFileTimestamps() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public int getMaxReduceAttempts() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public int getMaxMapAttempts() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public void progress() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public int getMaxReduceAttempts() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public InputSplit getInputSplit() {
-                throw new NotImplementedException();
-            }
+    @Override
+    public void progress() {
+        throw new NotImplementedException();
+    }
 
-            @Override
-            public RawComparator<?> getCombinerKeyGroupingComparator() {
-                throw new NotImplementedException();
-            }
-        });
+    @Override
+    public InputSplit getInputSplit() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public RawComparator<?> getCombinerKeyGroupingComparator() {
+        throw new NotImplementedException();
+    }
+
+    public boolean userClassesTakesPrecedence() {
+        throw new NotImplementedException();
     }
 }

@@ -33,15 +33,16 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.collect.ImmutableMap;
 
-public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
+public class HLLCMeasureType extends MeasureType<HLLCounter> {
+    private static final long serialVersionUID = 1L;
 
     public static final String FUNC_COUNT_DISTINCT = FunctionDesc.FUNC_COUNT_DISTINCT;
     public static final String DATATYPE_HLLC = "hllc";
 
-    public static class Factory extends MeasureTypeFactory<HyperLogLogPlusCounter> {
+    public static class Factory extends MeasureTypeFactory<HLLCounter> {
 
         @Override
-        public MeasureType<HyperLogLogPlusCounter> createMeasureType(String funcName, DataType dataType) {
+        public MeasureType<HLLCounter> createMeasureType(String funcName, DataType dataType) {
             return new HLLCMeasureType(funcName, dataType);
         }
 
@@ -56,7 +57,7 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
         }
 
         @Override
-        public Class<? extends DataTypeSerializer<HyperLogLogPlusCounter>> getAggrDataTypeSerializer() {
+        public Class<? extends DataTypeSerializer<HLLCounter>> getAggrDataTypeSerializer() {
             return HLLCSerializer.class;
         }
     }
@@ -91,25 +92,41 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
     }
 
     @Override
-    public MeasureIngester<HyperLogLogPlusCounter> newIngester() {
-        return new MeasureIngester<HyperLogLogPlusCounter>() {
-            HyperLogLogPlusCounter current = new HyperLogLogPlusCounter(dataType.getPrecision());
+    public MeasureIngester<HLLCounter> newIngester() {
+        return new MeasureIngester<HLLCounter>() {
+            private static final long serialVersionUID = 1L;
+            
+            HLLCounter current = new HLLCounter(dataType.getPrecision());
 
             @Override
-            public HyperLogLogPlusCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
-                HyperLogLogPlusCounter hllc = current;
+            public HLLCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+                HLLCounter hllc = current;
                 hllc.clear();
-                for (String v : values) {
-                    if (v != null)
-                        hllc.add(v);
+                if (values.length == 1) {
+                    if (values[0] != null)
+                        hllc.add(values[0]);
+                } else {
+                    boolean allNull = true;
+                    StringBuilder buf = new StringBuilder();
+                    for (String v : values) {
+                        allNull = (allNull && v == null);
+                        buf.append(v);
+                    }
+                    if (!allNull)
+                        hllc.add(buf.toString());
                 }
                 return hllc;
+            }
+
+            @Override
+            public void reset() {
+                current = new HLLCounter(dataType.getPrecision());
             }
         };
     }
 
     @Override
-    public MeasureAggregator<HyperLogLogPlusCounter> newAggregator() {
+    public MeasureAggregator<HLLCounter> newAggregator() {
         return new HLLCAggregator(dataType.getPrecision());
     }
 
@@ -128,5 +145,5 @@ public class HLLCMeasureType extends MeasureType<HyperLogLogPlusCounter> {
     public static boolean isCountDistinct(FunctionDesc func) {
         return FUNC_COUNT_DISTINCT.equalsIgnoreCase(func.getExpression());
     }
-
+    
 }

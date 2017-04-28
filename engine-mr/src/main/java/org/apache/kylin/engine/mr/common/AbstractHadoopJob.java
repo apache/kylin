@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -60,12 +59,12 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.CliCommandExecutor;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.apache.kylin.common.util.StringSplitter;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -76,7 +75,7 @@ import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("static-access")
 public abstract class AbstractHadoopJob extends Configured implements Tool {
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractHadoopJob.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractHadoopJob.class);
 
     protected static final Option OPTION_JOB_NAME = OptionBuilder.withArgName(BatchConstants.ARG_JOB_NAME).hasArg().isRequired(true).withDescription("Job name. For example, Kylin_Cuboid_Builder-clsfd_v2_Step_22-D)").create(BatchConstants.ARG_JOB_NAME);
     protected static final Option OPTION_CUBE_NAME = OptionBuilder.withArgName(BatchConstants.ARG_CUBE_NAME).hasArg().isRequired(true).withDescription("Cube name. For exmaple, flat_item_cube").create(BatchConstants.ARG_CUBE_NAME);
@@ -284,7 +283,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         try {
             Configuration jobConf = job.getConfiguration();
             FileSystem localfs = FileSystem.getLocal(jobConf);
-            FileSystem hdfs = FileSystem.get(jobConf);
+            FileSystem hdfs = HadoopUtil.getWorkingFileSystem(jobConf);
 
             StringBuilder jarList = new StringBuilder();
             StringBuilder fileList = new StringBuilder();
@@ -408,7 +407,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             inp = inp.trim();
             if (inp.endsWith("/*")) {
                 inp = inp.substring(0, inp.length() - 2);
-                FileSystem fs = FileSystem.get(job.getConfiguration());
+                FileSystem fs = HadoopUtil.getWorkingFileSystem(job.getConfiguration());
                 Path path = new Path(inp);
 
                 if (!exists(fs, path)) {
@@ -449,33 +448,49 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
     }
 
-    protected void attachKylinPropsAndMetadata(TableDesc table, Configuration conf) throws IOException {
+    protected void attachTableMetadata(TableDesc table, Configuration conf) throws IOException {
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.add(table.getResourcePath());
-        attachKylinPropsAndMetadata(dumpList, KylinConfig.getInstanceFromEnv(), conf);
+        dumpKylinPropsAndMetadata(dumpList, KylinConfig.getInstanceFromEnv(), conf);
     }
 
-    protected void attachKylinPropsAndMetadata(CubeInstance cube, Configuration conf) throws IOException {
-        // write cube / model_desc / cube_desc / dict / table
+    protected void attachCubeMetadata(CubeInstance cube, Configuration conf) throws IOException {
+        dumpKylinPropsAndMetadata(collectCubeMetadata(cube), cube.getConfig(), conf);
+    }
+
+    protected void attachCubeMetadataWithDict(CubeInstance cube, Configuration conf) throws IOException {
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.addAll(collectCubeMetadata(cube));
+        for (CubeSegment segment : cube.getSegments()) {
+            dumpList.addAll(segment.getDictionaryPaths());
+        }
+        dumpKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
+    }
+
+    protected void attachSegmentMetadataWithDict(CubeSegment segment, Configuration conf) throws IOException {
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.addAll(collectCubeMetadata(segment.getCubeInstance()));
+        dumpList.addAll(segment.getDictionaryPaths());
+        dumpKylinPropsAndMetadata(dumpList, segment.getConfig(), conf);
+    }
+
+    private Set<String> collectCubeMetadata(CubeInstance cube) {
+        // cube, model_desc, cube_desc, table
         Set<String> dumpList = new LinkedHashSet<>();
         dumpList.add(cube.getResourcePath());
         dumpList.add(cube.getDescriptor().getModel().getResourcePath());
         dumpList.add(cube.getDescriptor().getResourcePath());
 
-        for (TableRef tableRef: cube.getDescriptor().getModel().getAllTables()) {
+        for (TableRef tableRef : cube.getDescriptor().getModel().getAllTables()) {
             TableDesc table = tableRef.getTableDesc();
             dumpList.add(table.getResourcePath());
-            List<String> dependentResources = SourceFactory.getMRDependentResources(table);
-            dumpList.addAll(dependentResources);
-        }
-        for (CubeSegment segment : cube.getSegments()) {
-            dumpList.addAll(segment.getDictionaryPaths());
+            dumpList.addAll(SourceFactory.getMRDependentResources(table));
         }
 
-        attachKylinPropsAndMetadata(dumpList, cube.getConfig(), conf);
+        return dumpList;
     }
 
-    protected void attachKylinPropsAndMetadata(Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
+    protected void dumpKylinPropsAndMetadata(Set<String> dumpList, KylinConfig kylinConfig, Configuration conf) throws IOException {
         File tmp = File.createTempFile("kylin_job_meta", "");
         FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
 
@@ -524,6 +539,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
     }
 
     private void dumpResources(KylinConfig kylinConfig, File metaDir, Set<String> dumpList) throws IOException {
+        long startTime = System.currentTimeMillis();
+
         ResourceStore from = ResourceStore.getStore(kylinConfig);
         KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());
         ResourceStore to = ResourceStore.getStore(localConfig);
@@ -534,6 +551,8 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
             to.putResource(path, res.inputStream, res.timestamp);
             res.inputStream.close();
         }
+
+        logger.debug("Dump resources to {} took {} ms", metaDir, System.currentTimeMillis() - startTime);
     }
 
     protected void deletePath(Configuration conf, Path path) throws IOException {

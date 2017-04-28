@@ -18,9 +18,13 @@
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -63,5 +67,38 @@ public class DictionaryManagerTest extends LocalFileMetadataTestCase {
             TblColRef factDate = outerModel.findColumn("TEST_KYLIN_FACT.CAL_DT");
             assertEquals(factDate, dictMgr.decideSourceData(outerModel, factDate));
         }
+    }
+    
+    @Test
+    public void testBuildSaveDictionary() throws IOException {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        DictionaryManager dictMgr = DictionaryManager.getInstance(config);
+        MetadataManager metaMgr = MetadataManager.getInstance(config);
+        DataModelDesc model = metaMgr.getDataModelDesc("test_kylin_inner_join_model_desc");
+        TblColRef col = model.findColumn("lstg_format_name");
+
+        // non-exist input returns null;
+        DictionaryInfo nullInfo = dictMgr.buildDictionary(model, col, MockupReadableTable.newNonExistTable("/a/path"));
+        assertEquals(null, nullInfo);
+        
+        DictionaryInfo info1 = dictMgr.buildDictionary(model, col, MockupReadableTable.newSingleColumnTable("/a/path", "1", "2", "3"));
+        assertEquals(3, info1.getDictionaryObject().getSize());
+
+        // same input returns same dict
+        DictionaryInfo info2 = dictMgr.buildDictionary(model, col, MockupReadableTable.newSingleColumnTable("/a/path", "1", "2", "3"));
+        assertTrue(info1 == info2);
+        
+        // same input values (different path) returns same dict
+        DictionaryInfo info3 = dictMgr.buildDictionary(model, col, MockupReadableTable.newSingleColumnTable("/a/different/path", "1", "2", "3"));
+        assertTrue(info1 == info3);
+        
+        // save dictionary works in spite of non-exist table
+        Dictionary<String> dict = DictionaryGenerator.buildDictionary(col.getType(), new IterableDictionaryValueEnumerator("1", "2", "3"));
+        DictionaryInfo info4 = dictMgr.saveDictionary(model, col, MockupReadableTable.newNonExistTable("/a/path"), dict);
+        assertTrue(info1 == info4);
+        
+        Dictionary<String> dict2 = DictionaryGenerator.buildDictionary(col.getType(), new IterableDictionaryValueEnumerator("1", "2", "3", "4"));
+        DictionaryInfo info5 = dictMgr.saveDictionary(model, col, MockupReadableTable.newNonExistTable("/a/path"), dict2);
+        assertTrue(info1 != info5);
     }
 }

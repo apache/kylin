@@ -21,6 +21,7 @@ package org.apache.kylin.source.kafka.hadoop;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
@@ -33,6 +34,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.source.kafka.config.KafkaConsumerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,8 @@ import org.slf4j.LoggerFactory;
 public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWritable> {
 
     static Logger log = LoggerFactory.getLogger(KafkaInputRecordReader.class);
+
+    public static final long DEFAULT_KAFKA_CONSUMER_POLL_TIMEOUT = 60000;
 
     private Configuration conf;
 
@@ -61,8 +65,7 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
     private LongWritable key;
     private BytesWritable value;
 
-    private long timeOut = 60000;
-    private long bufferSize = 65536;
+    private long timeOut = DEFAULT_KAFKA_CONSUMER_POLL_TIMEOUT;
 
     private long numProcessedMessages = 0L;
 
@@ -82,12 +85,11 @@ public class KafkaInputRecordReader extends RecordReader<LongWritable, BytesWrit
         if (conf.get(KafkaFlatTableJob.CONFIG_KAFKA_TIMEOUT) != null) {
             timeOut = Long.parseLong(conf.get(KafkaFlatTableJob.CONFIG_KAFKA_TIMEOUT));
         }
-        if (conf.get(KafkaFlatTableJob.CONFIG_KAFKA_BUFFER_SIZE) != null) {
-            bufferSize = Long.parseLong(conf.get(KafkaFlatTableJob.CONFIG_KAFKA_BUFFER_SIZE));
-        }
-
         String consumerGroup = conf.get(KafkaFlatTableJob.CONFIG_KAFKA_CONSUMER_GROUP);
-        consumer = org.apache.kylin.source.kafka.util.KafkaClient.getKafkaConsumer(brokers, consumerGroup, null);
+
+        Properties kafkaProperties = KafkaConsumerProperties.extractKafkaConfigToProperties(conf);
+
+        consumer = org.apache.kylin.source.kafka.util.KafkaClient.getKafkaConsumer(brokers, consumerGroup, kafkaProperties);
 
         earliestOffset = this.split.getOffsetStart();
         latestOffset = this.split.getOffsetEnd();

@@ -27,6 +27,8 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.dimension.DateDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DimensionEncoding;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
@@ -220,7 +222,7 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         int start = (functionDesc.getParameter().isColumnType() == true) ? 1 : 0;
         for (int i = start; i < allCols.size(); i++) {
             TblColRef tblColRef = allCols.get(i);
-            String encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getName());
+            String encoding = getEncoding(functionDesc, tblColRef).getFirst();
             if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
                 columnsNeedDict.add(tblColRef);
             }
@@ -410,8 +412,10 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
         final DimensionEncoding[] dimensionEncodings = new DimensionEncoding[literalCols.size()];
         for (int i = 0; i < literalCols.size(); i++) {
             TblColRef colRef = literalCols.get(i);
-            String encoding = function.getConfiguration().get(TopNMeasureType.CONFIG_ENCODING_PREFIX + colRef.getName());
-            String encodingVersionStr = function.getConfiguration().get(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + colRef.getName());
+
+            Pair<String, String> topNEncoding = TopNMeasureType.getEncoding(function, colRef);
+            String encoding = topNEncoding.getFirst();
+            String encodingVersionStr = topNEncoding.getSecond();
             if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
                 dimensionEncodings[i] = new DictionaryDimEnc(dictionaryMap.get(colRef));
             } else {
@@ -424,7 +428,12 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
                     }
                 }
                 Object[] encodingConf = DimensionEncoding.parseEncodingConf(encoding);
-                dimensionEncodings[i] = DimensionEncodingFactory.create((String) encodingConf[0], (String[]) encodingConf[1], encodingVersion);
+                String encodingName = (String) encodingConf[0];
+                String[] encodingArgs = (String[]) encodingConf[1];
+
+                encodingArgs = DateDimEnc.replaceEncodingArgs(encoding, encodingArgs, encodingName, literalCols.get(i).getType());
+                
+                dimensionEncodings[i] = DimensionEncodingFactory.create(encodingName, encodingArgs, encodingVersion);
             }
         }
 
@@ -448,6 +457,25 @@ public class TopNMeasureType extends MeasureType<TopNCounter<ByteArray>> {
 
     private boolean isTopN(FunctionDesc functionDesc) {
         return FUNC_TOP_N.equalsIgnoreCase(functionDesc.getExpression());
+    }
+
+
+    /**
+     * Get the encoding name and version for the given col from Measure FunctionDesc
+     * @param functionDesc
+     * @param tblColRef
+     * @return a pair of the encoding name and encoding version
+     */
+    public static final Pair<String, String> getEncoding(FunctionDesc functionDesc, TblColRef tblColRef) {
+        String encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getIdentity());
+        String encodingVersion =functionDesc.getConfiguration().get(CONFIG_ENCODING_VERSION_PREFIX + tblColRef.getIdentity());
+        if (StringUtils.isEmpty(encoding)) {
+            // for backward compatibility
+            encoding = functionDesc.getConfiguration().get(CONFIG_ENCODING_PREFIX + tblColRef.getName());
+            encodingVersion =functionDesc.getConfiguration().get(CONFIG_ENCODING_VERSION_PREFIX + tblColRef.getName());
+        }
+
+        return new Pair<>(encoding, encodingVersion);
     }
 
 }

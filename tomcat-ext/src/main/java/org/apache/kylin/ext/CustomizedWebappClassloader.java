@@ -46,7 +46,6 @@ public class CustomizedWebappClassloader extends ParallelWebappClassLoader {
      * @return true if the class should be filtered
      */
     protected boolean filter(String name) {
-
         if (name == null)
             return false;
 
@@ -63,7 +62,6 @@ public class CustomizedWebappClassloader extends ParallelWebappClassLoader {
                 return true;
         }
 
-        return false;
-
+        return super.filter(name);
     }
 }

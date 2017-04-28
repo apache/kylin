@@ -79,9 +79,10 @@ public class MergeCuboidJob extends CuboidJob {
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
 
             // add metadata to distributed cache
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
+            // TODO actually only dictionaries from merging segments are needed
+            attachCubeMetadataWithDict(cube, job.getConfiguration());
 
-            setReduceTaskNum(job, cube.getDescriptor(), 0);
+            job.setNumReduceTasks(LayerReducerNumSizing.getReduceTaskNum(cube.getSegmentById(segmentID), getTotalMapInputMB(), -1));
 
             this.deletePath(job.getConfiguration(), output);
 

@@ -18,35 +18,30 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * Created by sunyerui on 15/12/22.
+ * Bitmap-based distinct count UDAF, called by calcite runtime.
  */
 public class BitmapDistinctCountAggFunc {
 
-    private static final Logger logger = LoggerFactory.getLogger(BitmapDistinctCountAggFunc.class);
-
-    public static BitmapCounter init() {
-        return null;
+    public static BitmapAggregator init() {
+        return new BitmapAggregator();
     }
 
-    public static BitmapCounter add(BitmapCounter counter, Object v) {
-        BitmapCounter c = (BitmapCounter) v;
-        if (counter == null) {
-            return new BitmapCounter(c);
-        } else {
-            counter.merge(c);
-            return counter;
+    public static BitmapAggregator add(BitmapAggregator agg, Object value) {
+        agg.aggregate((BitmapCounter) value);
+        return agg;
+    }
+
+    public static BitmapAggregator merge(BitmapAggregator agg, Object value) {
+        BitmapAggregator agg2 = (BitmapAggregator) value;
+        if (agg2.getState() == null) {
+            return agg;
         }
+        return add(agg, agg2.getState());
     }
 
-    public static BitmapCounter merge(BitmapCounter counter0, Object counter1) {
-        return add(counter0, counter1);
-    }
-
-    public static long result(BitmapCounter counter) {
-        return counter == null ? 0L : counter.getCount();
+    public static long result(BitmapAggregator agg) {
+        BitmapCounter finalState = agg.getState();
+        return finalState == null ? 0 : finalState.getCount();
     }
 }

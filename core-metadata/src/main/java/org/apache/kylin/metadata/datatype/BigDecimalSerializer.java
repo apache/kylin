@@ -35,7 +35,7 @@ public class BigDecimalSerializer extends DataTypeSerializer<BigDecimal> {
     private static final Logger logger = LoggerFactory.getLogger(BigDecimalSerializer.class);
 
     final DataType type;
-    transient final int maxLength;
+    final int maxLength;
 
     transient int avoidVerbose = 0;
 

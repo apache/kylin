@@ -20,7 +20,7 @@ package org.apache.kylin.cube.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SelectRule {
+public class SelectRule implements java.io.Serializable {
     @JsonProperty("hierarchy_dims")
     public String[][] hierarchy_dims;
     @JsonProperty("mandatory_dims")

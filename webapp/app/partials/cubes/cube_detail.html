@@ -44,7 +44,7 @@
 
     <div class="cube-detail" ng-if="!cube.visiblePage || cube.visiblePage=='metadata'">
         <div ng-include="'partials/cubes/cube_schema.html'" ng-controller="CubeSchemaCtrl"
-             ng-init="state={mode:'view', cubeName:cube.name};cubeState={isStreaming:(!!cube.streaming)?true:false}"></div>
+             ng-init="state={mode:'view', cubeName:cube.name};"></div>
     </div>
 
     <div ng-show="cube.visiblePage=='sql'" class="cube-detail">

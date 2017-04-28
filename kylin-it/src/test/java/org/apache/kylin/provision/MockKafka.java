@@ -29,6 +29,8 @@ import org.I0Itec.zkclient.ZkConnection;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
 import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.apache.kafka.common.requests.MetadataResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import kafka.admin.AdminUtils;
 import kafka.server.KafkaConfig;
@@ -52,6 +54,7 @@ public class MockKafka {
     }
 
     private KafkaServerStartable kafkaServer;
+    private static final Logger logger = LoggerFactory.getLogger(MockKafka.class);
 
     private ZkConnection zkConnection;
 
@@ -67,7 +70,7 @@ public class MockKafka {
 
     public MockKafka(ZkConnection zkServerConnection, int port, int brokerId) {
         this(zkServerConnection, System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID().toString(), String.valueOf(port), String.valueOf(brokerId));
-        start();
+        //start();
     }
 
     private MockKafka(ZkConnection zkServerConnection, String logDir, String port, String brokerId) {
@@ -110,13 +113,9 @@ public class MockKafka {
         zkClient.close();
     }
 
-    public String getConnectionString() {
-        return String.format("%s:%d", kafkaServer.serverConfig().hostName(), kafkaServer.serverConfig().port());
-    }
-
     public void start() {
         kafkaServer.startup();
-        System.out.println("embedded kafka is up");
+        System.out.println("--embedded kafka is up");
     }
 
     public void stop() {

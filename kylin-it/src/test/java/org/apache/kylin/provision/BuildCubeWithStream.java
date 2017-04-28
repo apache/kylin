@@ -36,6 +36,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kafka.common.requests.MetadataResponse;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
@@ -63,6 +67,7 @@ import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.storage.hbase.util.ZookeeperJobLock;
+import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
 import org.apache.kylin.tool.StorageCleanupJob;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -84,8 +89,14 @@ public class BuildCubeWithStream {
 
     private KafkaConfig kafkaConfig;
     private MockKafka kafkaServer;
+    private ZkConnection zkConnection;
+    private final String kafkaZkPath = "/" + UUID.randomUUID().toString();
+
     protected static boolean fastBuildMode = false;
-    private boolean generateData = true;
+    private volatile boolean generateData = true;
+    private volatile boolean generateDataDone = false;
+
+    private static final int BUILD_ROUND = 5;
 
     public void before() throws Exception {
         deployEnv();
@@ -126,8 +137,9 @@ public class BuildCubeWithStream {
 
     private void startEmbeddedKafka(String topicName, BrokerConfig brokerConfig) {
         //Start mock Kakfa
-        String zkConnectionStr = "sandbox:2181";
-        ZkConnection zkConnection = new ZkConnection(zkConnectionStr);
+        String zkConnectionStr = ZookeeperUtil.getZKConnectString() + kafkaZkPath;
+        System.out.println("zkConnectionStr" + zkConnectionStr);
+        zkConnection = new ZkConnection(zkConnectionStr);
         // Assert.assertEquals(ZooKeeper.States.CONNECTED, zkConnection.getZookeeperState());
         kafkaServer = new MockKafka(zkConnection, brokerConfig.getPort(), brokerConfig.getId());
         kafkaServer.start();
@@ -171,18 +183,33 @@ public class BuildCubeWithStream {
                     try {
                         generateStreamData(dateStart, dateEnd, rand.nextInt(100));
                         dateStart = dateEnd;
-                        sleep(rand.nextInt(rand.nextInt(100 * 1000))); // wait random time
+                        sleep(rand.nextInt(rand.nextInt(30)) * 1000); // wait random time
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
+                generateDataDone = true;
             }
         }).start();
         ExecutorService executorService = Executors.newCachedThreadPool();
 
         List<FutureTask<ExecutableState>> futures = Lists.newArrayList();
-        for (int i = 0; i < 5; i++) {
-            Thread.sleep(2 * 60 * 1000); // wait for new messages
+        for (int i = 0; i < BUILD_ROUND; i++) {
+            if (i == (BUILD_ROUND - 1)) {
+                // stop generating message to kafka
+                generateData = false;
+                int waittime = 0;
+                while (generateDataDone == false && waittime < 100) {
+                    Thread.sleep(1000);
+                    waittime++;
+                }
+                if (generateDataDone == false) {
+                    throw new IllegalStateException("Timeout when wait all messages be sent to Kafka"); // ensure all messages have been flushed.
+                }
+            } else {
+                Thread.sleep(30 * 1000); // wait for new messages
+            }
+
             FutureTask futureTask = new FutureTask(new Callable<ExecutableState>() {
                 @Override
                 public ExecutableState call() {
@@ -202,7 +229,7 @@ public class BuildCubeWithStream {
             futures.add(futureTask);
         }
 
-        generateData = false; // stop generating message to kafka
+        generateData = false;
         executorService.shutdown();
         int succeedBuild = 0;
         for (int i = 0; i < futures.size(); i++) {
@@ -265,8 +292,8 @@ public class BuildCubeWithStream {
 
     protected void deployEnv() throws IOException {
         DeployUtil.overrideJobJarLocations();
-        //        DeployUtil.initCliWorkDir();
-        //        DeployUtil.deployMetadata();
+        //                DeployUtil.initCliWorkDir();
+        //                DeployUtil.deployMetadata();
     }
 
     public static void beforeClass() throws Exception {
@@ -274,14 +301,29 @@ public class BuildCubeWithStream {
         ClassUtil.addClasspath(new File(HBaseMetadataTestCase.SANDBOX_TEST_DATA).getAbsolutePath());
         System.setProperty(KylinConfig.KYLIN_CONF, HBaseMetadataTestCase.SANDBOX_TEST_DATA);
         if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
-            throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.2.4.2-2");
+            throw new RuntimeException("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
         }
         HBaseMetadataTestCase.staticCreateTestMetadata(HBaseMetadataTestCase.SANDBOX_TEST_DATA);
     }
 
     public void after() {
         kafkaServer.stop();
+        cleanKafkaZkPath(kafkaZkPath);
         DefaultScheduler.destroyInstance();
+    }
+
+    private void cleanKafkaZkPath(String path) {
+        RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+        CuratorFramework zkClient = CuratorFrameworkFactory.newClient(ZookeeperUtil.getZKConnectString(), retryPolicy);
+        zkClient.start();
+
+        try {
+            zkClient.delete().deletingChildrenIfNeeded().forPath(kafkaZkPath);
+        } catch (Exception e) {
+            logger.warn("Failed to delete zookeeper path: " + path, e);
+        } finally {
+            zkClient.close();
+        }
     }
 
     protected void waitForJob(String jobId) {
@@ -311,6 +353,9 @@ public class BuildCubeWithStream {
     }
 
     public static void main(String[] args) throws Exception {
+        long start = System.currentTimeMillis();
+        int exitCode = 0;
+
         BuildCubeWithStream buildCubeWithStream = null;
         try {
             beforeClass();
@@ -318,13 +363,18 @@ public class BuildCubeWithStream {
             buildCubeWithStream.before();
             buildCubeWithStream.build();
             logger.info("Build is done");
+
+            buildCubeWithStream.after();
             buildCubeWithStream.cleanup();
             logger.info("Going to exit");
-            System.exit(0);
         } catch (Throwable e) {
             logger.error("error", e);
-            System.exit(1);
+            exitCode = 1;
         }
 
+        long millis = System.currentTimeMillis() - start;
+        System.out.println("Time elapsed: " + (millis / 1000) + " sec - in " + BuildCubeWithStream.class.getName());
+
+        System.exit(exitCode);
     }
 }

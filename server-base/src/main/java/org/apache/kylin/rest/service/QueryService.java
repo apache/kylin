@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.service;
 
+import static org.apache.kylin.common.util.CheckUtil.checkCondition;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -39,7 +41,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
@@ -47,13 +48,15 @@ import javax.sql.DataSource;
 import org.apache.calcite.avatica.ColumnMetaData.Rep;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.SetThreadName;
@@ -76,7 +79,6 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.QueryUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.rest.util.TableauInterceptor;
-import org.apache.kylin.storage.exception.ScanOutOfLimitException;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
@@ -104,7 +106,6 @@ public class QueryService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
     public static final String USER_QUERY_FAMILY = "q";
-    private static final String DEFAULT_TABLE_PREFIX = "kylin_metadata";
     private static final String USER_TABLE_NAME = "_user";
     private static final String USER_QUERY_COLUMN = "c";
 
@@ -129,11 +130,12 @@ public class QueryService extends BasicService {
     }
 
     public QueryService() {
-        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
+        String metadataUrl = kylinConfig.getMetadataUrl();
         // split TABLE@HBASE_URL
         int cut = metadataUrl.indexOf('@');
-        String tableNameBase = cut < 0 ? DEFAULT_TABLE_PREFIX : metadataUrl.substring(0, cut);
         hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        String tableNameBase = kylinConfig.getMetadataUrlPrefix();
         userTableName = tableNameBase + USER_TABLE_NAME;
 
         badQueryDetector.start();
@@ -161,14 +163,13 @@ public class QueryService extends BasicService {
         Query[] queryArray = new Query[queries.size()];
 
         byte[] bytes = querySerializer.serialize(queries.toArray(queryArray));
-        HTableInterface htable = null;
+        Table htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(userTableName));
             Put put = new Put(Bytes.toBytes(creator));
-            put.add(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN), bytes);
+            put.addColumn(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN), bytes);
 
             htable.put(put);
-            htable.flushCommits();
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -194,14 +195,13 @@ public class QueryService extends BasicService {
 
         Query[] queryArray = new Query[queries.size()];
         byte[] bytes = querySerializer.serialize(queries.toArray(queryArray));
-        HTableInterface htable = null;
+        Table htable = null;
         try {
-            htable = HBaseConnection.get(hbaseUrl).getTable(userTableName);
+            htable = HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(userTableName));
             Put put = new Put(Bytes.toBytes(creator));
-            put.add(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN), bytes);
+            put.addColumn(Bytes.toBytes(USER_QUERY_FAMILY), Bytes.toBytes(USER_QUERY_COLUMN), bytes);
 
             htable.put(put);
-            htable.flushCommits();
         } finally {
             IOUtils.closeQuietly(htable);
         }
@@ -213,12 +213,12 @@ public class QueryService extends BasicService {
         }
 
         List<Query> queries = new ArrayList<Query>();
-        HTableInterface htable = null;
+        Table htable = null;
         try {
-            HConnection conn = HBaseConnection.get(hbaseUrl);
+            org.apache.hadoop.hbase.client.Connection conn = HBaseConnection.get(hbaseUrl);
             HBaseConnection.createHTableIfNeeded(conn, userTableName, USER_QUERY_FAMILY);
 
-            htable = conn.getTable(userTableName);
+            htable = HBaseConnection.get(hbaseUrl).getTable(TableName.valueOf(userTableName));
             Get get = new Get(Bytes.toBytes(creator));
             get.addFamily(Bytes.toBytes(USER_QUERY_FAMILY));
             Result result = htable.get(get);
@@ -236,7 +236,7 @@ public class QueryService extends BasicService {
 
     public void logQuery(final SQLRequest request, final SQLResponse response) {
         final String user = SecurityContextHolder.getContext().getAuthentication().getName();
-        final Set<String> realizationNames = new HashSet<String>();
+        final List<String> realizationNames = new LinkedList<>();
         final Set<Long> cuboidIds = new HashSet<Long>();
         float duration = response.getDuration() / (float) 1000;
         boolean storageCacheUsed = response.isStorageCacheUsed();
@@ -250,8 +250,7 @@ public class QueryService extends BasicService {
                 }
 
                 if (ctx.realization != null) {
-                    String realizationName = ctx.realization.getName();
-                    realizationNames.add(realizationName);
+                    realizationNames.add(ctx.realization.getCanonicalName());
                 }
 
             }
@@ -266,7 +265,7 @@ public class QueryService extends BasicService {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
-        stringBuilder.append("Query Id: ").append(BackdoorToggles.getQueryId()).append(newLine);
+        stringBuilder.append("Query Id: ").append(QueryContext.current().getQueryId()).append(newLine);
         stringBuilder.append("SQL: ").append(request.getSql()).append(newLine);
         stringBuilder.append("User: ").append(user).append(newLine);
         stringBuilder.append("Success: ").append((null == response.getExceptionMessage())).append(newLine);
@@ -275,6 +274,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Realization Names: ").append(realizationNames).append(newLine);
         stringBuilder.append("Cuboid Ids: ").append(cuboidIds).append(newLine);
         stringBuilder.append("Total scan count: ").append(response.getTotalScanCount()).append(newLine);
+        stringBuilder.append("Total scan bytes: ").append(response.getTotalScanBytes()).append(newLine);
         stringBuilder.append("Result row count: ").append(resultRowCount).append(newLine);
         stringBuilder.append("Accept Partial: ").append(request.isAcceptPartial()).append(newLine);
         stringBuilder.append("Is Partial Result: ").append(response.isPartial()).append(newLine);
@@ -322,17 +322,16 @@ public class QueryService extends BasicService {
         if (!(Constant.SERVER_MODE_QUERY.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase()))) {
             throw new InternalErrorException("Query is not allowed in " + serverMode + " mode.");
         }
-
-        final String queryId = UUID.randomUUID().toString();
-
-        Map<String, String> toggles = new HashMap<>();
-        toggles.put(BackdoorToggles.KEY_QUERY_ID, queryId);
-        if (sqlRequest.getBackdoorToggles() != null) {
-            toggles.putAll(sqlRequest.getBackdoorToggles());
+        if (StringUtils.isBlank(sqlRequest.getProject())) {
+            throw new InternalErrorException("Project cannot be empty. Please select a project.");
         }
-        BackdoorToggles.setToggles(toggles);
 
-        try (SetThreadName ignored = new SetThreadName("Query %s", queryId)) {
+        if (sqlRequest.getBackdoorToggles() != null)
+            BackdoorToggles.addToggles(sqlRequest.getBackdoorToggles());
+
+        final QueryContext queryContext = QueryContext.current();
+
+        try (SetThreadName ignored = new SetThreadName("Query %s", queryContext.getQueryId())) {
             String sql = sqlRequest.getSql();
             String project = sqlRequest.getProject();
             logger.info("Using project: " + project);
@@ -346,7 +345,9 @@ public class QueryService extends BasicService {
             long startTime = System.currentTimeMillis();
 
             SQLResponse sqlResponse = null;
-            boolean queryCacheEnabled = kylinConfig.isQueryCacheEnabled() && !BackdoorToggles.getDisableCache();
+            boolean queryCacheEnabled = checkCondition(kylinConfig.isQueryCacheEnabled(), "query cache disabled in KylinConfig") && //
+                    checkCondition(!BackdoorToggles.getDisableCache(), "query cache disabled in BackdoorToggles");
+
             if (queryCacheEnabled) {
                 sqlResponse = searchQueryInCache(sqlRequest);
             }
@@ -356,16 +357,23 @@ public class QueryService extends BasicService {
                     sqlResponse = query(sqlRequest);
 
                     long durationThreshold = kylinConfig.getQueryDurationCacheThreshold();
-                    long scancountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
+                    long scanCountThreshold = kylinConfig.getQueryScanCountCacheThreshold();
+                    long scanBytesThreshold = kylinConfig.getQueryScanBytesCacheThreshold();
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
                     logger.info("Stats of SQL response: isException: {}, duration: {}, total scan count {}", //
                             String.valueOf(sqlResponse.getIsException()), String.valueOf(sqlResponse.getDuration()), String.valueOf(sqlResponse.getTotalScanCount()));
-                    if (queryCacheEnabled && !sqlResponse.getIsException() //
-                            && (sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scancountThreshold)) {
+                    if (checkCondition(queryCacheEnabled, "query cache is disabled") //
+                            && checkCondition(!sqlResponse.getIsException(), "query has exception") //
+                            && checkCondition(sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scanCountThreshold || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
+                                    "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})", sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(), scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
+                            && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(), "query response is too large: {} ({})", sqlResponse.getResults().size(), kylinConfig.getLargeQueryThreshold())) {
                         cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                     }
+
                 } else {
                     sqlResponse.setDuration(System.currentTimeMillis() - startTime);
+                    sqlResponse.setTotalScanCount(0);
+                    sqlResponse.setTotalScanBytes(0);
                 }
 
                 checkQueryAuth(sqlResponse);
@@ -375,9 +383,10 @@ public class QueryService extends BasicService {
                 String errMsg = QueryUtil.makeErrorMsgUserFriendly(e);
 
                 sqlResponse = new SQLResponse(null, null, 0, true, errMsg);
+                sqlResponse.setTotalScanCount(queryContext.getScannedRows());
+                sqlResponse.setTotalScanBytes(queryContext.getScannedBytes());
 
-                // for exception queries, only cache ScanOutOfLimitException
-                if (queryCacheEnabled && e instanceof ScanOutOfLimitException) {
+                if (queryCacheEnabled && e.getCause() != null && e.getCause() instanceof ResourceLimitExceededException) {
                     Cache exceptionCache = cacheManager.getCache(EXCEPTION_QUERY_CACHE);
                     exceptionCache.put(new Element(sqlRequest, sqlResponse));
                 }
@@ -394,6 +403,7 @@ public class QueryService extends BasicService {
 
         } finally {
             BackdoorToggles.cleanToggles();
+            QueryContext.reset();
         }
     }
 
@@ -417,7 +427,7 @@ public class QueryService extends BasicService {
         return response;
     }
 
-    private void checkQueryAuth(SQLResponse sqlResponse) throws AccessDeniedException {
+    protected void checkQueryAuth(SQLResponse sqlResponse) throws AccessDeniedException {
         if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
             checkAuthorization(sqlResponse.getCube());
         }
@@ -440,7 +450,9 @@ public class QueryService extends BasicService {
         String correctedSql = QueryUtil.massageSql(sqlRequest);
         if (!correctedSql.equals(sqlRequest.getSql())) {
             logger.info("The corrected query: " + correctedSql);
-            sqlRequest.setSql(correctedSql);
+
+            //CAUTION: should not change sqlRequest content!
+            //sqlRequest.setSql(correctedSql);
         }
 
         // add extra parameters into olap context, like acceptPartial
@@ -510,13 +522,21 @@ public class QueryService extends BasicService {
         return tableMetas;
     }
 
+    private void processStatementAttr(Statement s, SQLRequest sqlRequest) throws SQLException {
+        Integer statementMaxRows = BackdoorToggles.getStatementMaxRows();
+        if (statementMaxRows != null) {
+            logger.info("Setting current statement's max rows to {}", statementMaxRows);
+            s.setMaxRows(statementMaxRows);
+        }
+    }
+
     /**
-     * @param sql
+     * @param correctedSql
      * @param sqlRequest
      * @return
      * @throws Exception
      */
-    private SQLResponse execute(String sql, SQLRequest sqlRequest) throws Exception {
+    private SQLResponse execute(String correctedSql, SQLRequest sqlRequest) throws Exception {
         Connection conn = null;
         Statement stat = null;
         ResultSet resultSet = null;
@@ -528,7 +548,8 @@ public class QueryService extends BasicService {
             conn = cacheService.getOLAPDataSource(sqlRequest.getProject()).getConnection();
 
             if (sqlRequest instanceof PrepareSqlRequest) {
-                PreparedStatement preparedState = conn.prepareStatement(sql);
+                PreparedStatement preparedState = conn.prepareStatement(correctedSql);
+                processStatementAttr(preparedState, sqlRequest);
 
                 for (int i = 0; i < ((PrepareSqlRequest) sqlRequest).getParams().length; i++) {
                     setParam(preparedState, i + 1, ((PrepareSqlRequest) sqlRequest).getParams()[i]);
@@ -537,7 +558,8 @@ public class QueryService extends BasicService {
                 resultSet = preparedState.executeQuery();
             } else {
                 stat = conn.createStatement();
-                resultSet = stat.executeQuery(sql);
+                processStatementAttr(stat, sqlRequest);
+                resultSet = stat.executeQuery(correctedSql);
             }
 
             ResultSetMetaData metaData = resultSet.getMetaData();
@@ -563,22 +585,21 @@ public class QueryService extends BasicService {
 
         boolean isPartialResult = false;
         String cube = "";
-        StringBuilder sb = new StringBuilder("Scan count for each storageContext: ");
-        long totalScanCount = 0;
+        StringBuilder sb = new StringBuilder("Processed rows for each storageContext: ");
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 if (ctx.realization != null) {
                     isPartialResult |= ctx.storageContext.isPartialResultReturned();
                     cube = ctx.realization.getName();
-                    totalScanCount += ctx.storageContext.getTotalScanCount();
-                    sb.append(ctx.storageContext.getTotalScanCount() + ",");
+                    sb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
                 }
             }
         }
         logger.info(sb.toString());
 
         SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult);
-        response.setTotalScanCount(totalScanCount);
+        response.setTotalScanCount(QueryContext.current().getScannedRows());
+        response.setTotalScanBytes(QueryContext.current().getScannedBytes());
 
         return response;
     }

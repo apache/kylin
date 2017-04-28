@@ -18,56 +18,42 @@
 
 package org.apache.kylin.measure.bitmap;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import org.junit.Test;
 
-/**
- * Created by sunyerui on 15/12/31.
- */
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 public class BitmapCounterTest {
+    private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
 
     @Test
-    public void testAddAndMergeValues() {
-        BitmapCounter counter = new BitmapCounter();
-        counter.add(1);
-        counter.add(3333);
-        counter.add("123".getBytes());
-        counter.add(123);
-        assertEquals(3, counter.getCount());
+    public void testBitmapCounter() {
+        BitmapCounter counter = factory.newBitmap(10, 20, 30, 1000);
+        assertEquals(4, counter.getCount());
+        assertTrue(counter.getMemBytes() > 0);
 
-        BitmapCounter counter2 = new BitmapCounter();
-        counter2.add("23456");
-        counter2.add(12273456);
-        counter2.add("4258");
-        counter2.add(123);
+        BitmapCounter counter2 = factory.newBitmap();
+        assertEquals(0, counter2.getCount());
+        counter2.add(10);
+        counter2.add(30);
+        counter2.add(40);
+        counter2.add(2000);
         assertEquals(4, counter2.getCount());
 
-        counter.merge(counter2);
-        assertEquals(6, counter.getCount());
-        System.out.print("counter size: " + counter.getMemBytes() + ", counter2 size: " + counter2.getMemBytes());
-    }
+        counter2.orWith(counter);
+        assertEquals(4, counter.getCount());
+        assertEquals(6, counter2.getCount());  // in-place change
 
-    @Test
-    public void testSerDeCounter() throws IOException {
-        BitmapCounter counter = new BitmapCounter();
-        for (int i = 1; i < 1000; i++) {
-            counter.add(i);
+        int i = 0;
+        int[] values = new int[(int) counter2.getCount()];
+        for (int value : counter2) {
+            values[i++] = value;
         }
-        ByteBuffer buffer = ByteBuffer.allocate(10 * 1024 * 1024);
-        counter.writeRegisters(buffer);
-        int len = buffer.position();
+        assertArrayEquals(new int[]{10, 20, 30, 40, 1000, 2000}, values);
 
-        buffer.position(0);
-        assertEquals(len, counter.peekLength(buffer));
-        assertEquals(0, buffer.position());
-
-        BitmapCounter counter2 = new BitmapCounter();
-        counter2.readRegisters(buffer);
-        assertEquals(999, counter2.getCount());
+        counter2.clear();
+        assertEquals(0, counter2.getCount());
     }
 
 }

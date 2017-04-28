@@ -84,7 +84,12 @@ public class CubingJob extends DefaultChainedExecutable {
         if (projList == null || projList.size() == 0) {
             throw new RuntimeException("Cannot find the project containing the cube " + cube.getName() + "!!!");
         } else if (projList.size() >= 2) {
-            throw new RuntimeException("Find more than one project containing the cube " + cube.getName() + ". It does't meet the uniqueness requirement!!! ");
+            String msg = "Find more than one project containing the cube " + cube.getName() + ". It does't meet the uniqueness requirement!!! ";
+            if (!config.getConfig().allowCubeAppearInMultipleProjects()) {
+                throw new RuntimeException(msg);
+            } else {
+                logger.warn(msg);
+            }
         }
 
         CubingJob result = new CubingJob();

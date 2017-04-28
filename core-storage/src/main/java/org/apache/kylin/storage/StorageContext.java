@@ -20,9 +20,10 @@ package org.apache.kylin.storage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.realization.IRealization;
+import org.apache.kylin.storage.gtrecord.GTCubeStorageQueryBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,42 +35,26 @@ import com.google.common.collect.Range;
 public class StorageContext {
     private static final Logger logger = LoggerFactory.getLogger(StorageContext.class);
 
-    public static final int DEFAULT_THRESHOLD = 1000000;
-
     private String connUrl;
-    private int threshold;
-    private int limit;
-    private int offset;
-    private int finalPushDownLimit;
-    private boolean hasSort;
-    private boolean acceptPartialResult;
+    private int limit = Integer.MAX_VALUE;
+    private boolean overlookOuterLimit = false;
+    private int offset = 0;
+    private int finalPushDownLimit = Integer.MAX_VALUE;
+    private boolean hasSort = false;
+    private boolean acceptPartialResult = false;
+    private long deadline;
 
-    private boolean exactAggregation;
-    private boolean needStorageAggregation;
-    private boolean enableLimit;
-    private boolean enableCoprocessor;
+    private boolean exactAggregation = false;
+    private boolean needStorageAggregation = false;
+    private boolean enableCoprocessor = false;
+    private boolean enableStreamAggregate = false;
 
-    private AtomicLong totalScanCount;
+    private IStorageQuery storageQuery;
+    private AtomicLong processedRowCount = new AtomicLong();
     private Cuboid cuboid;
-    private boolean partialResultReturned;
+    private boolean partialResultReturned = false;
 
     private Range<Long> reusedPeriod;
-
-    public StorageContext() {
-        this.threshold = DEFAULT_THRESHOLD;
-        this.limit = DEFAULT_THRESHOLD;
-        this.totalScanCount = new AtomicLong();
-        this.cuboid = null;
-        this.hasSort = false;
-
-        this.exactAggregation = false;
-        this.enableLimit = false;
-        this.enableCoprocessor = false;
-
-        this.acceptPartialResult = false;
-        this.partialResultReturned = false;
-        this.finalPushDownLimit = Integer.MAX_VALUE;
-    }
 
     public String getConnUrl() {
         return connUrl;
@@ -79,22 +64,30 @@ public class StorageContext {
         this.connUrl = connUrl;
     }
 
-    public int getThreshold() {
-        return threshold;
-    }
-
-    public void setThreshold(int t) {
-        threshold = t;
-    }
-
-    public int getLimit() {
-        return limit;
+    //the limit here correspond to the limit concept in SQL
+    //also take into consideration Statement.setMaxRows in JDBC
+    private int getLimit() {
+        if (overlookOuterLimit || BackdoorToggles.getStatementMaxRows() == null || BackdoorToggles.getStatementMaxRows() == 0) {
+            return limit;
+        } else {
+            return Math.min(limit, BackdoorToggles.getStatementMaxRows());
+        }
     }
 
     public void setLimit(int l) {
-        this.limit = l;
+        if (limit != Integer.MAX_VALUE) {
+            logger.warn("Setting limit to {} but in current olap context, the limit is already {}, won't apply", l, limit);
+        } else {
+            limit = l;
+        }
     }
 
+    //outer limit is sth like Statement.setMaxRows in JDBC
+    public void setOverlookOuterLimit() {
+        this.overlookOuterLimit = true;
+    }
+
+    //the offset here correspond to the offset concept in SQL
     public int getOffset() {
         return offset;
     }
@@ -103,16 +96,18 @@ public class StorageContext {
         this.offset = offset;
     }
 
-    public void enableLimit() {
-        this.enableLimit = true;
+    /**
+     * in contrast to the limit in SQL concept, "limit push down" means
+     * whether the limit is effective in storage level. Some queries are not possible 
+     * to leverage limit clause, checkout 
+     * {@link GTCubeStorageQueryBase#enableStorageLimitIfPossible(org.apache.kylin.cube.cuboid.Cuboid, java.util.Collection, java.util.Set, java.util.Collection, org.apache.kylin.metadata.filter.TupleFilter, java.util.Set, java.util.Collection, org.apache.kylin.storage.StorageContext)}
+     */
+    public boolean isLimitPushDownEnabled() {
+        return isValidPushDownLimit(finalPushDownLimit);
     }
 
-    public boolean isLimitEnabled() {
-        return this.enableLimit;
-    }
-
-    private int getStoragePushDownLimit() {
-        return this.isLimitEnabled() ? this.getOffset() + this.getLimit() : Integer.MAX_VALUE;
+    public static boolean isValidPushDownLimit(int finalPushDownLimit) {
+        return finalPushDownLimit < Integer.MAX_VALUE && finalPushDownLimit > 0;
     }
 
     public int getFinalPushDownLimit() {
@@ -121,21 +116,38 @@ public class StorageContext {
 
     public void setFinalPushDownLimit(IRealization realization) {
 
-        //decide the final limit push down
-        int tempPushDownLimit = this.getStoragePushDownLimit();
-        if (tempPushDownLimit == Integer.MAX_VALUE) {
+        if (!isValidPushDownLimit(this.getLimit())) {
             return;
         }
-        
-        int pushDownLimitMax = KylinConfig.getInstanceFromEnv().getStoragePushDownLimitMax();
+
+        int tempPushDownLimit = this.getOffset() + this.getLimit();
+
         if (!realization.supportsLimitPushDown()) {
-            logger.info("Not enabling limit push down because cube storage type not supported");
-        } else if (tempPushDownLimit > pushDownLimitMax) {
-            logger.info("Not enabling limit push down because the limit(including offset) {} is larger than kylin.query.max-limit-pushdown {}", //
-                    tempPushDownLimit, pushDownLimitMax);
+            logger.warn("Not enabling limit push down because cube storage type not supported");
         } else {
             this.finalPushDownLimit = tempPushDownLimit;
-            logger.info("Enable limit: " + tempPushDownLimit);
+            logger.info("Enable limit (storage push down limit) :" + tempPushDownLimit);
+        }
+    }
+
+    public boolean mergeSortPartitionResults() {
+        return mergeSortPartitionResults(finalPushDownLimit);
+    }
+
+    public static boolean mergeSortPartitionResults(int finalPushDownLimit) {
+        return isValidPushDownLimit(finalPushDownLimit);
+    }
+
+    public long getDeadline() {
+        return this.deadline;
+    }
+
+    public void setDeadline(IRealization realization) {
+        int timeout = realization.getConfig().getQueryTimeoutSeconds() * 1000;
+        if (timeout == 0) {
+            this.deadline = Long.MAX_VALUE;
+        } else {
+            this.deadline = timeout + System.currentTimeMillis();
         }
     }
 
@@ -155,12 +167,12 @@ public class StorageContext {
         return cuboid;
     }
 
-    public long getTotalScanCount() {
-        return totalScanCount.get();
+    public long getProcessedRowCount() {
+        return processedRowCount.get();
     }
 
-    public long increaseTotalScanCount(long count) {
-        return this.totalScanCount.addAndGet(count);
+    public long increaseProcessedRowCount(long count) {
+        return processedRowCount.addAndGet(count);
     }
 
     public boolean isAcceptPartialResult() {
@@ -209,5 +221,21 @@ public class StorageContext {
 
     public void setReusedPeriod(Range<Long> reusedPeriod) {
         this.reusedPeriod = reusedPeriod;
+    }
+
+    public IStorageQuery getStorageQuery() {
+        return storageQuery;
+    }
+
+    public void setStorageQuery(IStorageQuery storageQuery) {
+        this.storageQuery = storageQuery;
+    }
+
+    public boolean isStreamAggregateEnabled() {
+        return enableStreamAggregate;
+    }
+
+    public void enableStreamAggregate() {
+        this.enableStreamAggregate = true;
     }
 }

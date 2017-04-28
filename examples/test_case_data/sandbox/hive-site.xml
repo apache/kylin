@@ -22,8 +22,43 @@
     </property>
 
     <property>
+        <name>atlas.cluster.name</name>
+        <value>Sandbox</value>
+    </property>
+
+    <property>
+        <name>atlas.hook.hive.maxThreads</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>atlas.hook.hive.minThreads</name>
+        <value>1</value>
+    </property>
+
+    <property>
+        <name>atlas.hook.hive.synchronous</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>atlas.rest.address</name>
+        <value>http://sandbox.hortonworks.com:21000</value>
+    </property>
+
+    <property>
+        <name>datanucleus.autoCreateSchema</name>
+        <value>false</value>
+    </property>
+
+    <property>
         <name>datanucleus.cache.level2.type</name>
         <value>none</value>
+    </property>
+
+    <property>
+        <name>datanucleus.fixedDatastore</name>
+        <value>true</value>
     </property>
 
     <property>
@@ -38,7 +73,7 @@
 
     <property>
         <name>hive.auto.convert.join.noconditionaltask.size</name>
-        <value>1000000000</value>
+        <value>357913941</value>
     </property>
 
     <property>
@@ -127,6 +162,16 @@
     </property>
 
     <property>
+        <name>hive.default.fileformat</name>
+        <value>TextFile</value>
+    </property>
+
+    <property>
+        <name>hive.default.fileformat.managed</name>
+        <value>TextFile</value>
+    </property>
+
+    <property>
         <name>hive.enforce.bucketing</name>
         <value>true</value>
     </property>
@@ -162,11 +207,6 @@
     </property>
 
     <property>
-        <name>hive.exec.failure.hooks</name>
-        <value>org.apache.hadoop.hive.ql.hooks.ATSHook</value>
-    </property>
-
-    <property>
         <name>hive.exec.max.created.files</name>
         <value>100000</value>
     </property>
@@ -197,6 +237,11 @@
     </property>
 
     <property>
+        <name>hive.exec.orc.encoding.strategy</name>
+        <value>SPEED</value>
+    </property>
+
+    <property>
         <name>hive.exec.parallel</name>
         <value>false</value>
     </property>
@@ -204,16 +249,6 @@
     <property>
         <name>hive.exec.parallel.thread.number</name>
         <value>8</value>
-    </property>
-
-    <property>
-        <name>hive.exec.post.hooks</name>
-        <value>org.apache.hadoop.hive.ql.hooks.ATSHook</value>
-    </property>
-
-    <property>
-        <name>hive.exec.pre.hooks</name>
-        <value>org.apache.hadoop.hive.ql.hooks.ATSHook</value>
     </property>
 
     <property>
@@ -259,11 +294,6 @@
     <property>
         <name>hive.fetch.task.conversion.threshold</name>
         <value>1073741824</value>
-    </property>
-
-    <property>
-        <name>hive.heapsize</name>
-        <value>250</value>
     </property>
 
     <property>
@@ -478,7 +508,7 @@
 
     <property>
         <name>hive.prewarm.numcontainers</name>
-        <value>10</value>
+        <value>3</value>
     </property>
 
     <property>
@@ -488,7 +518,7 @@
 
     <property>
         <name>hive.security.authorization.enabled</name>
-        <value>false</value>
+        <value>true</value>
     </property>
 
     <property>
@@ -508,7 +538,7 @@
 
     <property>
         <name>hive.security.metastore.authorization.manager</name>
-        <value>org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider,org.apache.hadoop.hive.ql.security.authorization.MetaStoreAuthzAPIAuthorizerEmbedOnly</value>
+        <value>org.apache.hadoop.hive.ql.security.authorization.StorageBasedAuthorizationProvider</value>
     </property>
 
     <property>
@@ -533,12 +563,7 @@
 
     <property>
         <name>hive.server2.enable.doAs</name>
-        <value>true</value>
-    </property>
-
-    <property>
-        <name>hive.server2.enable.impersonation</name>
-        <value>true</value>
+        <value>false</value>
     </property>
 
     <property>
@@ -548,7 +573,7 @@
 
     <property>
         <name>hive.server2.logging.operation.log.location</name>
-        <value>${system:java.io.tmpdir}/${system:user.name}/operation_logs</value>
+        <value>/tmp/hive/operation_logs</value>
     </property>
 
     <property>
@@ -653,7 +678,7 @@
 
     <property>
         <name>hive.tez.container.size</name>
-        <value>250</value>
+        <value>1024</value>
     </property>
 
     <property>

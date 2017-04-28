@@ -18,10 +18,14 @@
 
 package org.apache.kylin.dimension;
 
+import java.io.Serializable;
+
+import org.apache.kylin.common.util.DateFormat;
+
 /**
  * This encoding is meant to be IDENTICAL to TimeStrDictionary for 100% backward compatibility.
  */
-public class TimeDimEnc extends AbstractDateDimEnc {
+public class TimeDimEnc extends AbstractDateDimEnc implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public static final String ENCODING_NAME = "time";
@@ -39,17 +43,18 @@ public class TimeDimEnc extends AbstractDateDimEnc {
     };
 
     public TimeDimEnc() {
-        super(4, new IMillisCodec() {
+        super(4, new IValueCodec() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public long millisToCode(long millis) {
+            public long valueToCode(String value) {
+                long millis = DateFormat.stringToMillis(value);
                 return millis / 1000;
             }
 
             @Override
-            public long codeToMillis(long code) {
-                return code * 1000;
+            public String codeToValue(long code) {
+                return String.valueOf(code * 1000);
             }
         });
     }

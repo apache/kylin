@@ -43,12 +43,22 @@ public class MRUtil {
         return SourceFactory.createEngineAdapter(seg, IMRInput.class).getBatchCubingInputSide(flatDesc);
     }
 
+    @Deprecated
     public static IMRTableInputFormat getTableInputFormat(String tableName) {
-        return getTableInputFormat(getTableDesc(tableName));
+        return getTableInputFormat(tableName, true);
     }
 
+    public static IMRTableInputFormat getTableInputFormat(String tableName, boolean isFullTable) {
+        return getTableInputFormat(getTableDesc(tableName), isFullTable);
+    }
+
+    @Deprecated
     public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc) {
-        return SourceFactory.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc);
+        return getTableInputFormat(tableDesc, true);
+    }
+
+    public static IMRTableInputFormat getTableInputFormat(TableDesc tableDesc, boolean isFullTable) {
+        return SourceFactory.createEngineAdapter(tableDesc, IMRInput.class).getTableInputFormat(tableDesc, isFullTable);
     }
 
     private static TableDesc getTableDesc(String tableName) {

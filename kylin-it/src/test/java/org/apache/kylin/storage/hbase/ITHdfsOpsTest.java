@@ -20,13 +20,12 @@ package org.apache.kylin.storage.hbase;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
-import org.apache.kylin.engine.mr.HadoopUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,9 +41,7 @@ public class ITHdfsOpsTest extends HBaseMetadataTestCase {
 
         this.createTestMetadata();
 
-        Configuration hconf = HadoopUtil.getCurrentConfiguration();
-
-        fileSystem = FileSystem.get(hconf);
+        fileSystem = HadoopUtil.getWorkingFileSystem();
     }
 
     @Test

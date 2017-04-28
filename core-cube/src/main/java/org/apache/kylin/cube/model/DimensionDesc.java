@@ -20,8 +20,6 @@ package org.apache.kylin.cube.model;
 
 import java.util.Arrays;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
@@ -36,7 +34,7 @@ import com.google.common.base.Objects;
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class DimensionDesc {
+public class DimensionDesc implements java.io.Serializable {
 
     @JsonProperty("name")
     private String name;
@@ -54,16 +52,13 @@ public class DimensionDesc {
     private TblColRef[] columnRefs;
 
     public void init(CubeDesc cubeDesc) {
+        DataModelDesc model = cubeDesc.getModel();
+        
         if (name != null)
             name = name.toUpperCase();
 
-        if (table != null)
-            table = table.toUpperCase();
-
-        DataModelDesc model = cubeDesc.getModel();
-        tableRef = model.findTable(this.getTable());
-        if (tableRef == null)
-            throw new IllegalStateException("Can't find table " + table + " for dimension " + name);
+        tableRef = model.findTable(table);
+        table = tableRef.getAlias();
 
         join = null;
         for (JoinTableDesc joinTable : model.getJoinTables()) {
@@ -73,11 +68,16 @@ public class DimensionDesc {
             }
         }
 
+        if (column != null && !"{FK}".equals(column)) {
+            column = model.findColumn(table, column).getName();
+        }
         if (derived != null && derived.length == 0) {
             derived = null;
         }
         if (derived != null) {
-            StringUtil.toUpperCaseArray(derived, derived);
+            for (int i = 0; i < derived.length; i++) {
+                derived[i] = model.findColumn(table, derived[i]).getName();
+            }
         }
         if (derived != null && join == null) {
             throw new IllegalStateException("Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
@@ -135,16 +135,6 @@ public class DimensionDesc {
 
     public TableRef getTableRef() {
         return this.tableRef;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public int hashCode() {
-        throw new NotImplementedException();
     }
 
     @Override

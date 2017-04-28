@@ -18,26 +18,25 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.text.ParseException;
+import java.io.InputStreamReader;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
-import org.apache.kylin.common.util.DateFormat;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
-import org.apache.kylin.engine.mr.SortedColumnDFSFile;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
-import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.source.ReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,6 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         long cubeSizeBytes = cubingJob.findCubeSizeBytes();
 
         segment.setLastBuildJobID(CubingExecutableUtil.getCubingJobId(this.getParams()));
-        segment.setIndexPath(CubingExecutableUtil.getIndexPath(this.getParams()));
         segment.setLastBuildTime(System.currentTimeMillis());
         segment.setSizeKB(cubeSizeBytes / 1024);
         segment.setInputRecords(sourceCount);
@@ -83,41 +81,35 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
 
     private void updateTimeRange(CubeSegment segment) throws IOException {
         final TblColRef partitionCol = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateColumnRef();
-        final DataType partitionColType = partitionCol.getType();
-        final FastDateFormat dateFormat;
-        if (partitionColType.isDate()) {
-            dateFormat = DateFormat.getDateFormat(DateFormat.DEFAULT_DATE_PATTERN);
-        } else if (partitionColType.isDatetime() || partitionColType.isTimestamp()) {
-            dateFormat = DateFormat.getDateFormat(DateFormat.DEFAULT_DATETIME_PATTERN_WITHOUT_MILLISECONDS);
-        } else if (partitionColType.isStringFamily()) {
-            String partitionDateFormat = segment.getCubeDesc().getModel().getPartitionDesc().getPartitionDateFormat();
-            if (StringUtils.isEmpty(partitionDateFormat)) {
-                partitionDateFormat = DateFormat.DEFAULT_DATE_PATTERN;
-            }
-            dateFormat = DateFormat.getDateFormat(partitionDateFormat);
-        } else {
-            throw new IllegalStateException("Type " + partitionColType + " is not valid partition column type");
+
+        if (partitionCol == null) {
+            return;
+        }
+        final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
+        Path colDir = new Path(factColumnsInputPath, partitionCol.getIdentity());
+        FileSystem fs = HadoopUtil.getWorkingFileSystem();
+        Path outputFile = HadoopUtil.getFilterOnlyPath(fs, colDir, partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
+        if (outputFile == null) {
+            throw new IOException("fail to find the partition file in base dir: " + colDir);
         }
 
-        final String factDistinctPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
-        //final ReadableTable readableTable = new DFSFileTable(factDistinctPath + "/" + partitionCol.getName(), -1);
-        final ReadableTable readableTable = new SortedColumnDFSFile(factDistinctPath + "/" + partitionCol.getName(), partitionCol.getType());
-        final ReadableTable.TableReader tableReader = readableTable.getReader();
-        long minValue = Long.MAX_VALUE, maxValue = Long.MIN_VALUE;
+        FSDataInputStream is = null;
+        BufferedReader bufferedReader = null;
+        InputStreamReader isr = null;
+        long minValue, maxValue;
         try {
-            while (tableReader.next()) {
-                long time = dateFormat.parse(tableReader.getRow()[0]).getTime();
-                minValue = Math.min(minValue, time);
-                maxValue = Math.max(maxValue, time);
-            }
-        } catch (ParseException e) {
-            throw new IOException(e);
+            is = fs.open(outputFile);
+            isr = new InputStreamReader(is);
+            bufferedReader = new BufferedReader(isr);
+            minValue = Long.parseLong(bufferedReader.readLine());
+            maxValue = Long.parseLong(bufferedReader.readLine());
         } finally {
-            IOUtils.closeQuietly(tableReader);
+            IOUtils.closeQuietly(is);
+            IOUtils.closeQuietly(isr);
+            IOUtils.closeQuietly(bufferedReader);
         }
-
+        logger.info("updateTimeRange step. minValue:" + minValue + " maxValue:" + maxValue);
         segment.setDateRangeStart(minValue);
         segment.setDateRangeEnd(maxValue);
     }
-
 }

@@ -18,21 +18,22 @@
 
 package org.apache.kylin.dimension;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 import org.apache.kylin.common.util.BytesUtil;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 /**
  * not being used yet, prepared for future
  */
-public class OneMoreByteVLongDimEnc extends DimensionEncoding {
+public class OneMoreByteVLongDimEnc extends DimensionEncoding implements Serializable{
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(OneMoreByteVLongDimEnc.class);
@@ -118,11 +119,9 @@ public class OneMoreByteVLongDimEnc extends DimensionEncoding {
     }
 
     public class VLongSerializer extends DataTypeSerializer<Object> {
-        // be thread-safe and avoid repeated obj creation
-        private ThreadLocal<byte[]> current = new ThreadLocal<byte[]>();
 
         private byte[] currentBuf() {
-            byte[] buf = current.get();
+            byte[] buf = (byte[]) current.get();
             if (buf == null) {
                 buf = new byte[byteLen];
                 current.set(buf);

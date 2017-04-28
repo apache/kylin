@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
@@ -38,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class MergeOffsetStep extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(MergeOffsetStep.class);
+
     public MergeOffsetStep() {
         super();
     }
@@ -46,12 +48,15 @@ public class MergeOffsetStep extends AbstractExecutable {
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
         final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
-        final CubeSegment segment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
+        final String segmentId = CubingExecutableUtil.getSegmentId(this.getParams());
+        final CubeSegment segment = cube.getSegmentById(segmentId);
 
+        Preconditions.checkNotNull(segment, "Cube segment '" + segmentId + "' not found.");
         List<CubeSegment> mergingSegs = cube.getMergingSegments(segment);
 
-        Collections.sort(mergingSegs);
+        Preconditions.checkArgument(mergingSegs.size() > 0, "Merging segment not exist.");
 
+        Collections.sort(mergingSegs);
         final CubeSegment first = mergingSegs.get(0);
         final CubeSegment last = mergingSegs.get(mergingSegs.size() - 1);
 

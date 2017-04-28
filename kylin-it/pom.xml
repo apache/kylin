@@ -18,21 +18,27 @@
 -->
 
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>kylin</artifactId>
-        <groupId>org.apache.kylin</groupId>
-        <version>1.6.1-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-it</artifactId>
+    <packaging>jar</packaging>
     <name>Apache Kylin - Integration Test</name>
+    <description>Apache Kylin - Integration Test</description>
+
+    <parent>
+        <artifactId>kylin</artifactId>
+        <groupId>org.apache.kylin</groupId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
 
     <properties>
         <hdp.version/>
         <fastBuildMode/>
+        <buildCubeUsingProvidedData/>
+        <engineType/>
     </properties>
 
     <!-- Dependencies. -->
@@ -40,6 +46,12 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>atopcalcite</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>avatica-core</artifactId>
+                    <groupId>org.apache.calcite.avatica</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -70,14 +82,6 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-query</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-linq4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-cli</groupId>
-            <artifactId>commons-cli</artifactId>
         </dependency>
 
         <!-- Env & Test -->
@@ -237,6 +241,37 @@
             <artifactId>kafka_2.10</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <!-- log dependency -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spark dependency -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.10</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_2.10</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 
@@ -271,15 +306,15 @@
                             </excludes>
                             <systemProperties>
                                 <property>
-                                    <name>useSandbox</name>
-                                    <value>true</value>
-                                </property>
-                                <property>
                                     <name>log4j.configuration</name>
-                                    <value>file:${pom.parent.basedir}/build/conf/kylin-tools-log4j.properties</value>
+                                    <value>
+                                        file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                    </value>
                                 </property>
                             </systemProperties>
-                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M</argLine>
+                            <argLine>-Xms1G -Xmx2G -XX:PermSize=128M -XX:MaxPermSize=512M
+                                -Dkylin.server.cluster-servers=localhost:7070
+                            </argLine>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -297,13 +332,19 @@
                                     <classpathScope>test</classpathScope>
                                     <executable>java</executable>
                                     <arguments>
-                                        <argument>-DuseSandbox=true</argument>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
-                                        <argument>-Dlog4j.configuration=file:${pom.parent.basedir}/build/conf/kylin-tools-log4j.properties</argument>
+                                        <argument>
+                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                        </argument>
+                                        <argument>-DengineType=${engineType}</argument>
+                                        <argument>
+                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        </argument>
                                         <argument>-classpath</argument>
                                         <classpath/>
-                                        <argument>org.apache.kylin.provision.BuildCubeWithEngine</argument>
+                                        <argument>org.apache.kylin.provision.BuildCubeWithEngine
+                                        </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>
                                 </configuration>
@@ -319,13 +360,18 @@
                                     <classpathScope>test</classpathScope>
                                     <executable>java</executable>
                                     <arguments>
-                                        <argument>-DuseSandbox=true</argument>
                                         <argument>-Dhdp.version=${hdp.version}</argument>
                                         <argument>-DfastBuildMode=${fastBuildMode}</argument>
-                                        <argument>-Dlog4j.configuration=file:${pom.parent.basedir}/build/conf/kylin-tools-log4j.properties</argument>
+                                        <argument>
+                                            -DbuildCubeUsingProvidedData=${buildCubeUsingProvidedData}
+                                        </argument>
+                                        <argument>
+                                            -Dlog4j.configuration=file:${project.basedir}/..//build/conf/kylin-tools-log4j.properties
+                                        </argument>
                                         <argument>-classpath</argument>
                                         <classpath/>
-                                        <argument>org.apache.kylin.provision.BuildCubeWithStream</argument>
+                                        <argument>org.apache.kylin.provision.BuildCubeWithStream
+                                        </argument>
                                     </arguments>
                                     <workingDirectory>${project.basedir}</workingDirectory>
                                 </configuration>

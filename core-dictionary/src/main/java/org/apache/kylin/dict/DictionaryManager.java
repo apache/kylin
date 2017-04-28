@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -38,12 +39,10 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
 import org.apache.kylin.source.ReadableTable.TableSignature;
-import org.apache.kylin.source.SourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +60,7 @@ public class DictionaryManager {
     private static final DictionaryInfo NONE_INDICATOR = new DictionaryInfo();
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, DictionaryManager> CACHE = new ConcurrentHashMap<KylinConfig, DictionaryManager>();
+    private static final ConcurrentMap<KylinConfig, DictionaryManager> CACHE = new ConcurrentHashMap<KylinConfig, DictionaryManager>();
 
     public static DictionaryManager getInstance(KylinConfig config) {
         DictionaryManager r = CACHE.get(config);
@@ -89,9 +88,6 @@ public class DictionaryManager {
     private KylinConfig config;
     private LoadingCache<String, DictionaryInfo> dictCache; // resource
 
-    // path ==>
-    // DictionaryInfo
-
     private DictionaryManager(KylinConfig config) {
         this.config = config;
         this.dictCache = CacheBuilder.newBuilder().removalListener(new RemovalListener<String, DictionaryInfo>() {
@@ -113,7 +109,7 @@ public class DictionaryManager {
                 });
     }
 
-    public Dictionary<?> getDictionary(String resourcePath) throws IOException {
+    public Dictionary<String> getDictionary(String resourcePath) throws IOException {
         DictionaryInfo dictInfo = getDictionaryInfo(resourcePath);
         return dictInfo == null ? null : dictInfo.getDictionaryObject();
     }
@@ -135,7 +131,7 @@ public class DictionaryManager {
      * Save the dictionary as it is.
      * More often you should consider using its alternative trySaveNewDict to save dict space
      */
-    public DictionaryInfo forceSave(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
+    public DictionaryInfo forceSave(Dictionary<String> newDict, DictionaryInfo newDictInfo) throws IOException {
         initDictInfo(newDict, newDictInfo);
         logger.info("force to save dict directly");
         return saveNewDict(newDictInfo);
@@ -145,15 +141,16 @@ public class DictionaryManager {
      * @return may return another dict that is a super set of the input
      * @throws IOException
      */
-    public DictionaryInfo trySaveNewDict(Dictionary<?> newDict, DictionaryInfo newDictInfo) throws IOException {
+    public DictionaryInfo trySaveNewDict(Dictionary<String> newDict, DictionaryInfo newDictInfo) throws IOException {
 
         initDictInfo(newDict, newDictInfo);
 
         if (config.isGrowingDictEnabled()) {
+            logger.info("Growing dict is enabled, merge with largest dictionary");
             DictionaryInfo largestDictInfo = findLargestDictInfo(newDictInfo);
             if (largestDictInfo != null) {
                 largestDictInfo = getDictionaryInfo(largestDictInfo.getResourcePath());
-                Dictionary<?> largestDictObject = largestDictInfo.getDictionaryObject();
+                Dictionary<String> largestDictObject = largestDictInfo.getDictionaryObject();
                 if (largestDictObject.contains(newDict)) {
                     logger.info("dictionary content " + newDict + ", is contained by  dictionary at " + largestDictInfo.getResourcePath());
                     return largestDictInfo;
@@ -169,7 +166,6 @@ public class DictionaryManager {
                 return saveNewDict(newDictInfo);
             }
         } else {
-            logger.info("Growing dict is not enabled");
             String dupDict = checkDupByContent(newDictInfo, newDict);
             if (dupDict != null) {
                 logger.info("Identical dictionary content, reuse existing dictionary at " + dupDict);
@@ -180,7 +176,7 @@ public class DictionaryManager {
         }
     }
 
-    private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<?> dict) throws IOException {
+    private String checkDupByContent(DictionaryInfo dictInfo, Dictionary<String> dict) throws IOException {
         ResourceStore store = MetadataManager.getInstance(config).getStore();
         NavigableSet<String> existings = store.listResources(dictInfo.getResourceDir());
         if (existings == null)
@@ -201,7 +197,7 @@ public class DictionaryManager {
         return null;
     }
 
-    private void initDictInfo(Dictionary<?> newDict, DictionaryInfo newDictInfo) {
+    private void initDictInfo(Dictionary<String> newDict, DictionaryInfo newDictInfo) {
         newDictInfo.setCardinality(newDict.getSize());
         newDictInfo.setDictionaryObject(newDict);
         newDictInfo.setDictionaryClass(newDict.getClass().getName());
@@ -268,69 +264,74 @@ public class DictionaryManager {
             logger.info("Use one of the merging dictionaries directly");
             return dicts.get(0);
         } else {
-            Dictionary<?> newDict = DictionaryGenerator.mergeDictionaries(DataType.getType(newDictInfo.getDataType()), dicts);
+            Dictionary<String> newDict = DictionaryGenerator.mergeDictionaries(DataType.getType(newDictInfo.getDataType()), dicts);
             return trySaveNewDict(newDict, newDictInfo);
         }
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) throws IOException {
-        return buildDictionary(model, col, factTableValueProvider, null);
+    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable) throws IOException {
+        return buildDictionary(model, col, inpTable, null);
     }
 
-    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider, String builderClass) throws IOException {
+    public DictionaryInfo buildDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable, String builderClass) throws IOException {
+        if (inpTable.exists() == false)
+            return null;
 
         logger.info("building dictionary for " + col);
 
-        TblColRef srcCol = decideSourceData(model, col);
-        String srcTable = srcCol.getTable();
-        String srcColName = srcCol.getName();
-        int srcColIdx = srcCol.getColumnDesc().getZeroBasedIndex();
-
-        ReadableTable inpTable;
-        if (model.isFactTable(srcTable)) {
-            inpTable = factTableValueProvider.getDistinctValuesFor(srcCol);
-        } else {
-            MetadataManager metadataManager = MetadataManager.getInstance(config);
-            TableDesc tableDesc = new TableDesc(metadataManager.getTableDesc(srcTable));
-            if (TableDesc.TABLE_TYPE_VIRTUAL_VIEW.equalsIgnoreCase(tableDesc.getTableType())) {
-                TableDesc materializedTbl = new TableDesc();
-                materializedTbl.setDatabase(config.getHiveDatabaseForIntermediateTable());
-                materializedTbl.setName(tableDesc.getMaterializedName());
-                inpTable = SourceFactory.createReadableTable(materializedTbl);
-            } else {
-                inpTable = SourceFactory.createReadableTable(tableDesc);
-            }
-        }
-
-        TableSignature inputSig = inpTable.getSignature();
-        if (inputSig == null) // table does not exists
-            return null;
-
-        DictionaryInfo dictInfo = new DictionaryInfo(srcTable, srcColName, srcColIdx, col.getDatatype(), inputSig);
-
-        String dupDict = checkDupByInfo(dictInfo);
-        if (dupDict != null) {
-            logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupDict);
-            return getDictionaryInfo(dupDict);
+        DictionaryInfo dictInfo = createDictionaryInfo(model, col, inpTable);
+        String dupInfo = checkDupByInfo(dictInfo);
+        if (dupInfo != null) {
+            logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupInfo);
+            return getDictionaryInfo(dupInfo);
         }
 
         logger.info("Building dictionary object " + JsonUtil.writeValueAsString(dictInfo));
 
         Dictionary<String> dictionary;
+        dictionary = buildDictFromReadableTable(inpTable, dictInfo, builderClass, col);
+        return trySaveNewDict(dictionary, dictInfo);
+    }
+
+    private Dictionary<String> buildDictFromReadableTable(ReadableTable inpTable, DictionaryInfo dictInfo, String builderClass, TblColRef col) throws IOException {
+        Dictionary<String> dictionary;
         IDictionaryValueEnumerator columnValueEnumerator = null;
         try {
             columnValueEnumerator = new TableColumnValueEnumerator(inpTable.getReader(), dictInfo.getSourceColumnIndex());
-            if (builderClass == null)
+            if (builderClass == null) {
                 dictionary = DictionaryGenerator.buildDictionary(DataType.getType(dictInfo.getDataType()), columnValueEnumerator);
-            else
-                dictionary = DictionaryGenerator.buildDictionary((IDictionaryBuilder) ClassUtil.newInstance(builderClass), dictInfo, columnValueEnumerator);
+            } else {
+                IDictionaryBuilder builder = (IDictionaryBuilder) ClassUtil.newInstance(builderClass);
+                dictionary = DictionaryGenerator.buildDictionary(builder, dictInfo, columnValueEnumerator);
+            }
         } catch (Exception ex) {
             throw new RuntimeException("Failed to create dictionary on " + col, ex);
         } finally {
             if (columnValueEnumerator != null)
                 columnValueEnumerator.close();
         }
+        return dictionary;
+    }
+
+    public DictionaryInfo saveDictionary(DataModelDesc model, TblColRef col, ReadableTable inpTable, Dictionary<String> dictionary) throws IOException {
+        DictionaryInfo dictInfo = createDictionaryInfo(model, col, inpTable);
+        String dupInfo = checkDupByInfo(dictInfo);
+        if (dupInfo != null) {
+            logger.info("Identical dictionary input " + dictInfo.getInput() + ", reuse existing dictionary at " + dupInfo);
+            return getDictionaryInfo(dupInfo);
+        }
+
         return trySaveNewDict(dictionary, dictInfo);
+    }
+
+    private DictionaryInfo createDictionaryInfo(DataModelDesc model, TblColRef col, ReadableTable inpTable) throws IOException {
+        TblColRef srcCol = decideSourceData(model, col);
+        TableSignature inputSig = inpTable.getSignature();
+        if (inputSig == null) // table does not exists
+            throw new IllegalStateException("Input table does not exist: " + inpTable);
+
+        DictionaryInfo dictInfo = new DictionaryInfo(srcCol.getColumnDesc(), col.getDatatype(), inputSig);
+        return dictInfo;
     }
 
     /**
@@ -341,19 +342,19 @@ public class DictionaryManager {
         // FK on fact table and join type is inner, use PK from lookup instead
         if (model.isFactTable(col.getTable()) == false)
             return col;
-        
+
         // find a lookup table that the col joins as FK
         for (TableRef lookup : model.getLookupTables()) {
-            JoinDesc lookupJoin = model.getPKSideJoinMap().get(lookup);
+            JoinDesc lookupJoin = model.getJoinByPKSide(lookup);
             int find = ArrayUtils.indexOf(lookupJoin.getForeignKeyColumns(), col);
             if (find < 0)
                 continue;
-        
+
             // make sure the joins are all inner up to the root
             if (isAllInnerJoinsToRoot(model, lookupJoin))
                 return lookupJoin.getPrimaryKeyColumns()[find];
         }
-        
+
         return col;
     }
 
@@ -361,9 +362,9 @@ public class DictionaryManager {
         while (join != null) {
             if (join.isInnerJoin() == false)
                 return false;
-            
-            TableRef table = join.getForeignKeyColumns()[0].getTableRef();
-            join = model.getPKSideJoinMap().get(table);
+
+            TableRef table = join.getFKSide();
+            join = model.getJoinByPKSide(table);
         }
         return true;
     }

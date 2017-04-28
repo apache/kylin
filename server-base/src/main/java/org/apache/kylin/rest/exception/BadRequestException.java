@@ -18,6 +18,7 @@
 
 package org.apache.kylin.rest.exception;
 
+import org.apache.kylin.rest.response.ResponseCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -27,35 +28,31 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 @ResponseStatus(value = HttpStatus.BAD_REQUEST)
 public class BadRequestException extends RuntimeException {
-    /**
-     * 
-     */
+    
     private static final long serialVersionUID = -6798154278095441848L;
 
-    public BadRequestException(String s) {
-        super(s);
-    }
+    private String code;
 
     /**
-     * 
+     * legacy support, new APIs should not call this. Instead, new APIs should provide return code
      */
-    public BadRequestException() {
-        super();
+    public BadRequestException(String msg) {
+        super(msg);
+        this.code = ResponseCode.CODE_UNDEFINED;
     }
 
-    /**
-     * @param arg0
-     * @param arg1
-     */
-    public BadRequestException(String arg0, Throwable arg1) {
-        super(arg0, arg1);
+    public BadRequestException(String msg, String code) {
+        super(msg);
+        this.code = code;
     }
 
-    /**
-     * @param arg0
-     */
-    public BadRequestException(Throwable arg0) {
-        super(arg0);
+    public BadRequestException(String msg, String code, Throwable cause) {
+        super(msg, cause);
+        this.code = code;
+    }
+
+    public String getCode() {
+        return code;
     }
 
 }

@@ -196,6 +196,20 @@ public class GTUtil {
                     result = newCompareFilter;
                 }
                 break;
+            case NOTIN:
+                Set notInValues = Sets.newHashSet();
+                for (Object value : constValues) {
+                    code = translate(col, value, 0);
+                    if (code != null)
+                        notInValues.add(code);
+                }
+                if (notInValues.isEmpty()) {
+                    result = ConstantTupleFilter.TRUE;
+                } else {
+                    newCompareFilter.addChild(new ConstantTupleFilter(notInValues));
+                    result = newCompareFilter;
+                }
+                break;
             case NEQ:
                 code = translate(col, firstValue, 0);
                 if (code == null) {

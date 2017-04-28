@@ -193,6 +193,9 @@ public class BeelineHiveClient implements IHiveClient {
                     if ("numFiles".equals(resultSet.getString(2).trim())) {
                         builder.setFileNum(Long.parseLong(resultSet.getString(3).trim()));
                     }
+                    if ("skip.header.line.count".equals(resultSet.getString(2).trim())) {
+                        builder.setSkipHeaderLineCount(resultSet.getString(3).trim());
+                    }
                 }
             }
             if ("InputFormat:".equals(resultSet.getString(1).trim())) {

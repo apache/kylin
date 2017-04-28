@@ -40,6 +40,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringSplitter;
 import org.apache.kylin.source.ReadableTable.TableReader;
 import org.slf4j.Logger;
@@ -88,7 +89,7 @@ public class DFSFileTableReader implements TableReader {
 
         try {
             for (FileStatus f : allFiles) {
-                RowReader rowReader = new SeqRowReader(HadoopUtil.getCurrentConfiguration(), fs, f.getPath().toString());
+                RowReader rowReader = new SeqRowReader(HadoopUtil.getCurrentConfiguration(), f.getPath().toString());
                 this.readerList.add(rowReader);
             }
         } catch (IOException e) {
@@ -208,7 +209,7 @@ public class DFSFileTableReader implements TableReader {
         Writable key;
         Text value;
 
-        SeqRowReader(Configuration hconf, FileSystem fs, String path) throws IOException {
+        SeqRowReader(Configuration hconf, String path) throws IOException {
             reader = new Reader(hconf, SequenceFile.Reader.file(new Path(path)));
             key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), hconf);
             value = new Text();

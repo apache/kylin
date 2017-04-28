@@ -115,6 +115,8 @@ public class Tuple implements ITuple {
         // BigDecimal during cube build for best precision
         if ("double".equals(dataType) && fieldValue instanceof BigDecimal) {
             fieldValue = ((BigDecimal) fieldValue).doubleValue();
+        } else if ("decimal".equals(dataType) && fieldValue instanceof BigDecimal) {
+            fieldValue = normalizeDecimal((BigDecimal) fieldValue);
         } else if ("integer".equals(dataType) && fieldValue instanceof Number) {
             fieldValue = ((Number) fieldValue).intValue();
         } else if ("smallint".equals(dataType) && fieldValue instanceof Number) {
@@ -143,6 +145,14 @@ public class Tuple implements ITuple {
         else if (o instanceof DoubleMutable)
             o = ((DoubleMutable) o).get();
         return o;
+    }
+
+    private static BigDecimal normalizeDecimal(BigDecimal input) {
+        if (input.scale() < 0) {
+            return input.setScale(0);
+        } else {
+            return input;
+        }
     }
 
     public boolean hasColumn(TblColRef column) {
@@ -199,11 +209,11 @@ public class Tuple implements ITuple {
         case "double":
             return Double.valueOf(strValue);
         case "decimal":
-            return new BigDecimal(strValue);
+            return normalizeDecimal(new BigDecimal(strValue));
         case "float":
             return Float.valueOf(strValue);
         case "boolean":
-            return Boolean.valueOf(strValue) | "1".equals(strValue); // in some extended encodings boolean might be encoded as a number
+            return Boolean.valueOf(strValue) || "1".equals(strValue); // in some extended encodings boolean might be encoded as a number
         default:
             return strValue;
         }

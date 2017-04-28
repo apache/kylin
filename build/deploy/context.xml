@@ -32,7 +32,7 @@
     <!--
     <Valve className="org.apache.catalina.valves.CometConnectionManagerValve" />
     -->
-    
+
     <Loader loaderClass="org.apache.kylin.ext.CustomizedWebappClassloader"/>
 
 </Context>

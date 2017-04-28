@@ -131,18 +131,18 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
     public void testConcurrentBuildAndMerge() throws Exception {
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
-        getTestConfig().setMaxBuildingSegments(10);
+        System.setProperty("kylin.cube.max-building-segments", "10");
         // no segment at first
         assertEquals(0, cube.getSegments().size());
 
         Map m1 =  Maps.newHashMap();
-        m1.put(1, 1000l);
+        m1.put(1, 1000L);
         Map m2 =  Maps.newHashMap();
-        m2.put(1, 2000l);
+        m2.put(1, 2000L);
         Map m3 =  Maps.newHashMap();
-        m3.put(1, 3000l);
+        m3.put(1, 3000L);
         Map m4 =  Maps.newHashMap();
-        m4.put(1, 4000l);
+        m4.put(1, 4000L);
 
         // append first
         CubeSegment seg1 = mgr.appendSegment(cube, 0, 0, 0, 1000, null, m1);
@@ -186,20 +186,20 @@ public class CubeManagerTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testConcurrentMergeAndMerge() throws Exception {
+        System.setProperty("kylin.cube.max-building-segments", "10");
         CubeManager mgr = CubeManager.getInstance(getTestConfig());
-        getTestConfig().setMaxBuildingSegments(10);
         CubeInstance cube = mgr.getCube("test_kylin_cube_with_slr_empty");
 
         // no segment at first
         assertEquals(0, cube.getSegments().size());
         Map m1 =  Maps.newHashMap();
-        m1.put(1, 1000l);
+        m1.put(1, 1000L);
         Map m2 =  Maps.newHashMap();
-        m2.put(1, 2000l);
+        m2.put(1, 2000L);
         Map m3 =  Maps.newHashMap();
-        m3.put(1, 3000l);
+        m3.put(1, 3000L);
         Map m4 =  Maps.newHashMap();
-        m4.put(1, 4000l);
+        m4.put(1, 4000L);
 
         // append first
         CubeSegment seg1 = mgr.appendSegment(cube, 0, 0, 0, 1000, null, m1);

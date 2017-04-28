@@ -19,6 +19,7 @@
 package org.apache.kylin.query.routing;
 
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
 import org.apache.kylin.metadata.model.JoinTableDesc;
+import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
@@ -38,14 +40,39 @@ import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class ModelChooser {
 
-    // select a model that satisfies all the contexts
-    public static Set<IRealization> selectModel(List<OLAPContext> contexts) {
+    // select models for given contexts, return realization candidates for each context
+    public static IdentityHashMap<OLAPContext, Set<IRealization>> selectModel(List<OLAPContext> contexts) {
+
+        IdentityHashMap<OLAPContext, Set<IRealization>> candidates = new IdentityHashMap<>();
+
+        // attempt one model for all contexts
+        //        Set<IRealization> reals = attemptSelectModel(contexts);
+        //        if (reals != null) {
+        //            for (OLAPContext ctx : contexts) {
+        //                candidates.put(ctx, reals);
+        //            }
+        //            return candidates;
+        //        }
+
+        // try different model for different context
+        for (OLAPContext ctx : contexts) {
+            Set<IRealization> reals = attemptSelectModel(ImmutableList.of(ctx));
+            if (reals == null)
+                throw new NoRealizationFoundException("No model found for" + toErrorMsg(ctx));
+
+            candidates.put(ctx, reals);
+        }
+        return candidates;
+    }
+
+    private static Set<IRealization> attemptSelectModel(List<OLAPContext> contexts) {
         Map<DataModelDesc, Set<IRealization>> modelMap = makeOrderedModelMap(contexts);
 
         for (DataModelDesc model : modelMap.keySet()) {
@@ -56,62 +83,46 @@ public class ModelChooser {
                 return modelMap.get(model);
             }
         }
-
-        throw new NoRealizationFoundException("No model found for" + toErrorMsg(contexts));
+        return null;
     }
 
-    private static String toErrorMsg(List<OLAPContext> contexts) {
+    private static String toErrorMsg(OLAPContext ctx) {
         StringBuilder buf = new StringBuilder();
-        for (OLAPContext ctx : contexts) {
-            buf.append(", ").append(ctx.firstTableScan);
-            for (JoinDesc join : ctx.joins)
-                buf.append(", ").append(join);
-        }
+        buf.append(ctx.firstTableScan);
+        for (JoinDesc join : ctx.joins)
+            buf.append(", ").append(join);
         return buf.toString();
     }
 
     private static Map<String, String> matches(DataModelDesc model, List<OLAPContext> contexts) {
         Map<String, String> result = Maps.newHashMap();
 
-        // the greedy match is not perfect but works for the moment
-        Map<String, List<JoinDesc>> modelJoinsMap = model.getFKSideJoinMap();
         for (OLAPContext ctx : contexts) {
-            for (JoinDesc queryJoin : ctx.joins) {
-                String fkTable = queryJoin.getForeignKeyColumns()[0].getTable();
-                List<JoinDesc> modelJoins = modelJoinsMap.get(fkTable);
-                if (modelJoins == null)
-                    return null;
+            TableRef firstTable = ctx.firstTableScan.getTableRef();
 
-                JoinDesc matchJoin = null;
-                for (JoinDesc modelJoin : modelJoins) {
-                    if (modelJoin.matches(queryJoin)) {
-                        matchJoin = modelJoin;
-                        break;
-                    }
+            Map<String, String> matchUp = null;
+
+            if (ctx.joins.isEmpty() && model.isLookupTable(firstTable.getTableIdentity())) {
+                // one lookup table
+                String modelAlias = model.findFirstTable(firstTable.getTableIdentity()).getAlias();
+                matchUp = ImmutableMap.of(firstTable.getAlias(), modelAlias);
+            } else if (ctx.joins.size() != ctx.allTableScans.size() - 1) {
+                // has hanging tables
+                throw new NoRealizationFoundException("Please adjust the sequence of join tables and put subquery or temporary table after lookup tables. " + toErrorMsg(ctx));
+            } else {
+                // normal big joins
+                if (ctx.joinsTree == null) {
+                    ctx.joinsTree = new JoinsTree(firstTable, ctx.joins);
                 }
-                if (matchJoin == null)
-                    return null;
+                matchUp = ctx.joinsTree.matches(model.getJoinsTree(), result);
+            }
 
-                matchesAdd(queryJoin.getForeignKeyColumns()[0].getTableAlias(), matchJoin.getForeignKeyColumns()[0].getTableAlias(), result);
-                matchesAdd(queryJoin.getPrimaryKeyColumns()[0].getTableAlias(), matchJoin.getPrimaryKeyColumns()[0].getTableAlias(), result);
-            }
-            
-            OLAPTableScan firstTable = ctx.firstTableScan;
-            String firstTableAlias = firstTable.getAlias();
-            if (result.containsKey(firstTableAlias) == false) {
-                TableRef tableRef = model.findFirstTable(firstTable.getOlapTable().getTableName());
-                if (tableRef == null)
-                    return null;
-                matchesAdd(firstTableAlias, tableRef.getAlias(), result);
-            }
+            if (matchUp == null)
+                return null;
+
+            result.putAll(matchUp);
         }
-        
         return result;
-    }
-
-    private static void matchesAdd(String origAlias, String targetAlias, Map<String, String> result) {
-        String existingTarget = result.put(origAlias, targetAlias);
-        Preconditions.checkState(existingTarget == null || existingTarget.equals(targetAlias));
     }
 
     private static Map<DataModelDesc, Set<IRealization>> makeOrderedModelMap(List<OLAPContext> contexts) {
@@ -152,7 +163,12 @@ public class ModelChooser {
         TreeMap<DataModelDesc, Set<IRealization>> result = Maps.newTreeMap(new Comparator<DataModelDesc>() {
             @Override
             public int compare(DataModelDesc o1, DataModelDesc o2) {
-                return costs.get(o1).compareTo(costs.get(o2));
+                RealizationCost c1 = costs.get(o1);
+                RealizationCost c2 = costs.get(o2);
+                int comp = c1.compareTo(c2);
+                if (comp == 0)
+                    comp = o1.getName().compareTo(o2.getName());
+                return comp;
             }
         });
         result.putAll(models);

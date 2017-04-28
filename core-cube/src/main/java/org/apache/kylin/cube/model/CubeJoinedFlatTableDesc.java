@@ -36,7 +36,7 @@ import com.google.common.collect.Maps;
 
 /**
  */
-public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
+public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, java.io.Serializable {
 
     protected final String tableName;
     protected final CubeDesc cubeDesc;
@@ -49,11 +49,11 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     public CubeJoinedFlatTableDesc(CubeDesc cubeDesc) {
         this(cubeDesc, null);
     }
-    
+
     public CubeJoinedFlatTableDesc(CubeSegment cubeSegment) {
         this(cubeSegment.getCubeDesc(), cubeSegment);
     }
-    
+
     private CubeJoinedFlatTableDesc(CubeDesc cubeDesc, CubeSegment cubeSegment /* can be null */) {
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
@@ -63,12 +63,12 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
 
     protected String makeTableName(CubeDesc cubeDesc, CubeSegment cubeSegment) {
         if (cubeSegment == null) {
-            return "kylin_intermediate_" + cubeDesc.getName();
+            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase();
         } else {
-            return "kylin_intermediate_" + cubeDesc.getName() + "_" + cubeSegment.getUuid().replaceAll("-", "_");
+            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase() + "_" + cubeSegment.getUuid().replaceAll("-", "_");
         }
     }
-    
+
     protected final void initAddColumn(TblColRef col) {
         if (columnIndexMap.containsKey(col))
             return;
@@ -77,10 +77,10 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
         columnIndexMap.put(col, columnIndex);
         columnList.add(col);
         columnCount = columnIndexMap.size();
-        
+
         Preconditions.checkState(columnIndexMap.size() == columnList.size());
     }
-    
+
     // check what columns from hive tables are required, and index them
     protected void initParseCubeDesc() {
         for (TblColRef col : cubeDesc.listDimensionColumnsExcludingDerived(false)) {
@@ -163,6 +163,11 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc {
     @Override
     public ISegment getSegment() {
         return cubeSegment;
+    }
+
+    @Override
+    public TblColRef getClusterBy() {
+        return cubeDesc.getClusteredByColumn();
     }
 
 }

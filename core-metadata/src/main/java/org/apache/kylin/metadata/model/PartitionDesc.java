@@ -27,12 +27,14 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.Serializable;
+
 /**
  */
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class PartitionDesc {
+public class PartitionDesc implements Serializable {
 
-    public static enum PartitionType {
+    public static enum PartitionType implements Serializable{
         APPEND, //
         UPDATE_INSERT // not used since 0.7.1
     }
@@ -66,11 +68,11 @@ public class PartitionDesc {
         if (StringUtils.isEmpty(partitionDateColumn))
             return;
 
-        partitionDateColumn = partitionDateColumn.toUpperCase();
         partitionDateColumnRef = model.findColumn(partitionDateColumn);
+        partitionDateColumn = partitionDateColumnRef.getIdentity();
         if (StringUtils.isBlank(partitionTimeColumn) == false) {
-            partitionTimeColumn = partitionTimeColumn.toUpperCase();
             partitionTimeColumnRef = model.findColumn(partitionTimeColumn);
+            partitionTimeColumn = partitionTimeColumnRef.getIdentity();
         }
         partitionConditionBuilder = (IPartitionConditionBuilder) ClassUtil.newInstance(partitionConditionBuilderClz);
     }
@@ -175,7 +177,7 @@ public class PartitionDesc {
         String buildDateRangeCondition(PartitionDesc partDesc, long startInclusive, long endExclusive);
     }
 
-    public static class DefaultPartitionConditionBuilder implements IPartitionConditionBuilder {
+    public static class DefaultPartitionConditionBuilder implements IPartitionConditionBuilder, java.io.Serializable {
 
         @Override
         public String buildDateRangeCondition(PartitionDesc partDesc, long startInclusive, long endExclusive) {

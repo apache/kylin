@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -42,9 +43,7 @@ import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
-import org.apache.kylin.metadata.filter.LogicalTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
-import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.routing.ModelChooser;
@@ -75,25 +74,23 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
 
     @Override
     public Result implement(EnumerableRelImplementor enumImplementor, Prefer pref) {
+        if (System.getProperty("calcite.debug") != null) {
+            String dumpPlan = RelOptUtil.dumpPlan("", this, false, SqlExplainLevel.DIGEST_ATTRIBUTES);
+            System.out.println("EXECUTION PLAN BEFORE REWRITE");
+            System.out.println(dumpPlan);
+        }
+        
         // post-order travel children
         OLAPRel.OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
         olapImplementor.visitChild(getInput(), this);
 
         // identify model
         List<OLAPContext> contexts = listContextsHavingScan();
-        Set<IRealization> candidates = ModelChooser.selectModel(contexts);
-        
-        // identify realization for each context
-        for (OLAPContext context : OLAPContext.getThreadLocalContexts()) {
-            
-            // Context has no table scan is created by OLAPJoinRel which looks like
-            //     (sub-query) as A join (sub-query) as B
-            // No realization needed for such context.
-            if (context.firstTableScan == null) {
-                continue;
-            }
+        IdentityHashMap<OLAPContext, Set<IRealization>> candidates = ModelChooser.selectModel(contexts);
 
-            IRealization realization = QueryRouter.selectRealization(context, candidates);
+        // identify realization for each context
+        for (OLAPContext context : contexts) {
+            IRealization realization = QueryRouter.selectRealization(context, candidates.get(context));
             context.realization = realization;
             doAccessControl(context);
         }
@@ -117,6 +114,9 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
     }
 
     private List<OLAPContext> listContextsHavingScan() {
+        // Context has no table scan is created by OLAPJoinRel which looks like
+        //     (sub-query) as A join (sub-query) as B
+        // No realization needed for such context.
         int size = OLAPContext.getThreadLocalContexts().size();
         List<OLAPContext> result = Lists.newArrayListWithCapacity(size);
         for (int i = 0; i < size; i++) {
@@ -135,31 +135,9 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             if (null != tupleFilter) {
                 context.filterColumns.addAll(collectColumns(tupleFilter));
                 context.allColumns.addAll(collectColumns(tupleFilter));
-                context.filter = and(context.filter, tupleFilter);
+                context.filter = TupleFilter.and(context.filter, tupleFilter);
             }
         }
-    }
-
-    private TupleFilter and(TupleFilter f1, TupleFilter f2) {
-        if (f1 == null)
-            return f2;
-        if (f2 == null)
-            return f1;
-
-        if (f1.getOperator() == FilterOperatorEnum.AND) {
-            f1.addChild(f2);
-            return f1;
-        }
-
-        if (f2.getOperator() == FilterOperatorEnum.AND) {
-            f2.addChild(f1);
-            return f2;
-        }
-
-        LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
-        and.addChild(f1);
-        and.addChild(f2);
-        return and;
     }
 
     private Set<TblColRef> collectColumns(TupleFilter filter) {

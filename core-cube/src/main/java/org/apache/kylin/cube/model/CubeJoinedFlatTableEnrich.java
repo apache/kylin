@@ -18,8 +18,6 @@
 
 package org.apache.kylin.cube.model;
 
-import java.util.List;
-
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
@@ -28,10 +26,12 @@ import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
+import java.util.List;
+
 /**
  * An enrich of IJoinedFlatTableDesc for cubes
  */
-public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc {
+public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc, java.io.Serializable {
 
     private CubeDesc cubeDesc;
     private IJoinedFlatTableDesc flatDesc;
@@ -42,7 +42,7 @@ public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc {
         // != works due to object cache
         if (cubeDesc.getModel() != flatDesc.getDataModel())
             throw new IllegalArgumentException();
-        
+
         this.cubeDesc = cubeDesc;
         this.flatDesc = flatDesc;
         parseCubeDesc();
@@ -130,6 +130,11 @@ public class CubeJoinedFlatTableEnrich implements IJoinedFlatTableDesc {
     @Override
     public ISegment getSegment() {
         return flatDesc.getSegment();
+    }
+
+    @Override
+    public TblColRef getClusterBy() {
+        return flatDesc.getClusterBy();
     }
 
 }

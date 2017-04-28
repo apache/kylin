@@ -33,6 +33,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.engine.mr.KylinMapper;
 
 /**
@@ -67,7 +68,7 @@ public class RowKeyDistributionCheckerMapper extends KylinMapper<Text, Text, Tex
         for (Text t : keyList) {
             if (key.compareTo(t) < 0) {
                 Long v = resultMap.get(t);
-                long length = key.getLength() + value.getLength();
+                long length = (long)key.getLength() + value.getLength();
                 v += length;
                 resultMap.put(t, v);
                 break;
@@ -89,7 +90,7 @@ public class RowKeyDistributionCheckerMapper extends KylinMapper<Text, Text, Tex
         List<byte[]> rowkeyList = new ArrayList<byte[]>();
         SequenceFile.Reader reader = null;
         try {
-            reader = new SequenceFile.Reader(path.getFileSystem(conf), path, conf);
+            reader = new SequenceFile.Reader(HadoopUtil.getFileSystem(path, conf), path, conf);
             Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
             while (reader.next(key, value)) {

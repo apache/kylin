@@ -12,7 +12,7 @@ For more details, see the website [http://kylin.apache.org](http://kylin.apache.
 
 Documentation
 =============
-Please refer to [http://kylin.apache.org/docs15/](http://kylin.apache.org/docs15/).
+Please refer to [http://kylin.apache.org/docs16/](http://kylin.apache.org/docs16/).
 
 Get Help
 ============

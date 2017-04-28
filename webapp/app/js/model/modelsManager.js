@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessService,ProjectModel,$log){
+KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessService,ProjectModel,VdmUtil,TableModel){
     var _this = this;
     this.models=[];
     this.modelNameList = [];
@@ -25,56 +25,22 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
     this.loading = false;
     this.selectedModel={};
 
-    this.cubeModel={};
-    this.cubeSelected = false;
-
-    //list models and complemete cube,access info
+    //list models
     this.list = function(queryParam){
 
         _this.loading = true;
         var defer = $q.defer();
-        var cubeDetail = [];
-        var modelPermission = [];
         ModelService.list(queryParam, function (_models) {
-            //_this.removeAll();
 
             angular.forEach(_models, function (model, index) {
-                $log.info("Add model permission info");
-                if(model.uuid){
-                  modelPermission.push(
-                  AccessService.list({type: "DataModelDesc", uuid: model.uuid}, function (accessEntities) {
-                    model.accessEntities = accessEntities;
-                    try{
-                      if(!model.owner){
-                          model.owner = accessEntities[0].sid.principal;
-                      }
-                    } catch(error){
-                      $log.error("No acl info.");
-                    }
-
-                  }).$promise
-                  )
-                }
-
-                $log.info("Add cube info to model ,not detail info");
-                cubeDetail.push(
-                    CubeService.list({modelName:model.name}, function (_cubes) {
-                    model.cubes = _cubes;
-                    }).$promise
-                );
-
               _this.modelNameList.push(model.name);
-
-                model.project = ProjectModel.getProjectByCubeModel(model.name);
+              model.project = ProjectModel.getProjectByCubeModel(model.name);
             });
-            $q.all(cubeDetail,modelPermission).then(
-                function(result){
-                    _models = _.filter(_models,function(models){return models.name!=undefined});
-                    _this.models = _models;
-                    _this.loading = false;
-                    defer.resolve(_this.models);
-                }
-            );
+
+            _models = _.filter(_models,function(models){return models.name!=undefined});
+            _this.models = _models;
+            _this.loading = false;
+
         },function(){
             defer.reject("Failed to load models");
         });
@@ -126,6 +92,47 @@ KylinApp.service('modelsManager',function(ModelService,CubeService,$q,AccessServ
 
         return defer.promise;
     };
+    //init alias map
+    this.tableAliasMap={};
+    this.aliasTableMap={};
+    this.availableFactTables=[];
+    this.availableLookupTables=[];
+    this.aliasName=[];
 
+    this.initAliasMapByModelSchema=function(metaModel){
+      var rootFactTable = VdmUtil.removeNameSpace(metaModel.model.fact_table);
+      this.tableAliasMap={};
+      this.aliasTableMap={};
+      this.availableFactTables=[];
+      this.availableLookupTables=[];
+      this.aliasName=[];
+      this.availableFactTables.push(rootFactTable);
+      this.aliasName.push(rootFactTable);
+      this.aliasTableMap[rootFactTable]=metaModel.model.fact_table;
+      this.tableAliasMap[metaModel.model.fact_table]=rootFactTable;
+      var _this=this;
+      angular.forEach(metaModel.model.lookups,function(joinTable){
+        if(!joinTable.alias){
+          joinTable.alias=VdmUtil.removeNameSpace(joinTable.table);
+        }
+        if(joinTable.kind=="FACT"){
+          _this.availableFactTables.push(joinTable.alias);
+        }else{
+          _this.availableLookupTables.push(joinTable.alias);
+        }
+        _this.aliasTableMap[joinTable.alias]=joinTable.table;
+        _this.tableAliasMap[joinTable.table]=joinTable.alias;
+        _this.aliasName.push(joinTable.alias);
+      });
+    }
+    this.getDatabaseByColumnName=function(column){
+      return  VdmUtil.getNameSpaceTopName(this.aliasTableMap[VdmUtil.getNameSpaceTopName(column)])
+    }
+    this.getColumnTypeByColumnName=function(column){
+      return TableModel.columnNameTypeMap[this.aliasTableMap[VdmUtil.getNameSpaceTopName(column)]+'.'+VdmUtil.removeNameSpace(column)];
+    }
+    this.getColumnsByAlias=function(alias){
+      return TableModel.getColumnsByTable(this.aliasTableMap[alias]);
+    }
 
 });

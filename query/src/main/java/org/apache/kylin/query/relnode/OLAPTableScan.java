@@ -45,6 +45,7 @@ import org.apache.calcite.rel.rules.AggregateExpandDistinctAggregatesRule;
 import org.apache.calcite.rel.rules.AggregateJoinTransposeRule;
 import org.apache.calcite.rel.rules.AggregateProjectMergeRule;
 import org.apache.calcite.rel.rules.AggregateUnionTransposeRule;
+import org.apache.calcite.rel.rules.DateRangeRules;
 import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.rel.rules.FilterProjectTransposeRule;
 import org.apache.calcite.rel.rules.JoinCommuteRule;
@@ -52,6 +53,7 @@ import org.apache.calcite.rel.rules.JoinPushExpressionsRule;
 import org.apache.calcite.rel.rules.JoinPushThroughJoinRule;
 import org.apache.calcite.rel.rules.JoinUnionTransposeRule;
 import org.apache.calcite.rel.rules.ReduceExpressionsRule;
+import org.apache.calcite.rel.rules.SemiJoinRule;
 import org.apache.calcite.rel.rules.SortJoinTransposeRule;
 import org.apache.calcite.rel.rules.SortUnionTransposeRule;
 import org.apache.calcite.rel.type.RelDataType;
@@ -172,6 +174,9 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         planner.removeRule(JoinUnionTransposeRule.LEFT_UNION);
         planner.removeRule(JoinUnionTransposeRule.RIGHT_UNION);
         planner.removeRule(AggregateUnionTransposeRule.INSTANCE);
+        planner.removeRule(DateRangeRules.FILTER_INSTANCE);
+        planner.removeRule(SemiJoinRule.JOIN);
+        planner.removeRule(SemiJoinRule.PROJECT);
         // distinct count will be split into a separated query that is joined with the left query
         planner.removeRule(AggregateExpandDistinctAggregatesRule.INSTANCE);
 
@@ -236,13 +241,20 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
             TblColRef colRef = TblColRef.columnForUnknownModel(tableRef, sourceColumn);
             columns.add(colRef);
         }
+        
+        if (columns.size() != rowType.getFieldCount()) {
+            throw new IllegalStateException("RowType=" + rowType.getFieldCount() + ", ColumnRowType=" + columns.size());
+        }
         return new ColumnRowType(columns);
+    }
+    
+    public TableRef getTableRef() {
+        return columnRowType.getColumnByIndex(0).getTableRef();
     }
     
     @SuppressWarnings("deprecation")
     public TblColRef makeRewriteColumn(String name) {
-        TableRef tableRef = columnRowType.getColumnByIndex(0).getTableRef();
-        return tableRef.makeFakeColumn(name);
+        return getTableRef().makeFakeColumn(name);
     }
     
     public void fixColumnRowTypeWithModel(DataModelDesc model, Map<String, String> aliasMap) {
@@ -271,7 +283,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
 
     private String genExecFunc() {
         // if the table to scan is not the fact table of cube, then it's a lookup table
-        if (context.hasJoin == false && context.realization.getModel().isLookupTable(tableName)) {
+        if (context.realization.getModel().isLookupTable(tableName)) {
             return "executeLookupTableQuery";
         } else {
             return "executeOLAPQuery";

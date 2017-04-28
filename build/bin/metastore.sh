@@ -87,6 +87,11 @@ then
 
     ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.common.persistence.ResourceTool  reset
     
+elif [ "$1" == "refresh-cube-signature" ]
+then
+
+    ${KYLIN_HOME}/bin/kylin.sh org.apache.kylin.cube.cli.CubeSignatureRefresher
+    
 elif [ "$1" == "clean" ]
 then
 
@@ -96,6 +101,7 @@ else
     echo "usage: metastore.sh backup"
     echo "       metastore.sh fetch DATA"
     echo "       metastore.sh reset"
+    echo "       metastore.sh refresh-cube-signature"
     echo "       metastore.sh restore PATH_TO_LOCAL_META"
     echo "       metastore.sh list RESOURCE_PATH"
     echo "       metastore.sh cat RESOURCE_PATH"

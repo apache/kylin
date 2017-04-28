@@ -46,7 +46,7 @@ abstract public class AbstractInMemCubeBuilder {
     final protected CubeDesc cubeDesc;
     final protected Map<TblColRef, Dictionary<String>> dictionaryMap;
 
-    protected int taskThreadCount = 4;
+    protected int taskThreadCount = 1;
     protected int reserveMemoryMB = 100;
 
     public AbstractInMemCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {

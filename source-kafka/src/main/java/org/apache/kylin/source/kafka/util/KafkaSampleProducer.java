@@ -34,6 +34,7 @@ import org.apache.commons.cli.Options;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ public class KafkaSampleProducer {
         String topic, broker;
         options.addOption(OPTION_TOPIC);
         options.addOption(OPTION_BROKER);
+        options.addOption(OPTION_INTERVAL);
         optionsHelper.parseOptions(options, args);
 
         logger.info("options: '" + optionsHelper.getOptionsAsString() + "'");
@@ -130,7 +132,7 @@ public class KafkaSampleProducer {
             record.put("user", user);
             //send message
             ProducerRecord<String, String> data = new ProducerRecord<>(topic, System.currentTimeMillis() + "", mapper.writeValueAsString(record));
-            System.out.println("Sending 1 message: " + record.toString());
+            System.out.println("Sending 1 message: " + JsonUtil.writeValueAsString(record));
             producer.send(data);
             Thread.sleep(interval);
         }

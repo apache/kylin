@@ -23,7 +23,7 @@ cd ${dir}/../..
 if [ -z "$version" ]
 then
     echo 'version not set'
-    version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\['`
+    version=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version |  grep -E '^[0-9]+\.[0-9]+\.[0-9]+' `
 fi
 echo "version ${version}"
 
@@ -33,7 +33,7 @@ mkdir build/lib build/tool
 cp assembly/target/kylin-assembly-${version}-job.jar build/lib/kylin-job-${version}.jar
 cp storage-hbase/target/kylin-storage-hbase-${version}-coprocessor.jar build/lib/kylin-coprocessor-${version}.jar
 cp jdbc/target/kylin-jdbc-${version}.jar build/lib/kylin-jdbc-${version}.jar
-cp tool/target/kylin-tool-${version}-assembly.jar build/tool/kylin-tool-${version}.jar
+cp tool-assembly/target/kylin-tool-assembly-${version}-assembly.jar build/tool/kylin-tool-${version}.jar
 
 # Copied file becomes 000 for some env (e.g. my Cygwin)
 chmod 644 build/lib/kylin-job-${version}.jar

@@ -33,6 +33,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.JoinDesc;
+import org.apache.kylin.metadata.model.JoinsTree;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.metadata.realization.SQLDigest;
@@ -111,7 +112,9 @@ public class OLAPContext {
     public Set<OLAPTableScan> allTableScans = new HashSet<>();
     public TupleInfo returnTupleInfo = null;
     public boolean afterAggregate = false;
-    public boolean afterSkippedFilter = false;
+    public boolean afterHavingClauseFilter = false;
+    public boolean afterLimit = false;
+    public boolean limitPrecedesAggr = false;
     public boolean afterJoin = false;
     public boolean hasJoin = false;
 
@@ -127,13 +130,12 @@ public class OLAPContext {
     public Set<TblColRef> filterColumns = new HashSet<>();
     public TupleFilter filter;
     public List<JoinDesc> joins = new LinkedList<>();
+    public JoinsTree joinsTree;
     private List<TblColRef> sortColumns;
     private List<SQLDigest.OrderEnum> sortOrders;
 
     // rewrite info
     public Map<String, RelDataType> rewriteFields = new HashMap<>();
-
-    public int limit;
 
     // hive query
     public String sql = "";
@@ -148,7 +150,7 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, subqueryJoinParticipants, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortColumns, sortOrders);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, subqueryJoinParticipants, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortColumns, sortOrders, limitPrecedesAggr);
         return sqlDigest;
     }
 

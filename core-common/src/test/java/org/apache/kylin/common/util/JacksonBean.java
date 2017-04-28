@@ -18,6 +18,9 @@
 
 package org.apache.kylin.common.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -31,6 +34,10 @@ public class JacksonBean {
     @JsonProperty("b")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private int b;
+
+    @JsonProperty("configuration")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, String> configuration = new HashMap<String, String>();
 
     public String getA() {
         return a;
@@ -46,6 +53,14 @@ public class JacksonBean {
 
     public void setB(int b) {
         this.b = b;
+    }
+
+    public Map<String, String> getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Map<String, String> configuration) {
+        this.configuration = configuration;
     }
 
     @Override

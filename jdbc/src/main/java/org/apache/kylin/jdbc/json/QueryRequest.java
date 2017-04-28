@@ -18,10 +18,14 @@
 
 package org.apache.kylin.jdbc.json;
 
+import java.util.Map;
+
 public class QueryRequest {
     private String sql;
     private String project;
     private boolean acceptPartial = false;
+
+    private Map<String, String> backdoorToggles;
 
     public String getSql() {
         return sql;
@@ -45,5 +49,13 @@ public class QueryRequest {
 
     public void setAcceptPartial(boolean acceptPartial) {
         this.acceptPartial = acceptPartial;
+    }
+
+    public Map<String, String> getBackdoorToggles() {
+        return backdoorToggles;
+    }
+
+    public void setBackdoorToggles(Map<String, String> backdoorToggles) {
+        this.backdoorToggles = backdoorToggles;
     }
 }

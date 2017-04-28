@@ -14,7 +14,7 @@ release.properties
 
 #IDEA
 *.iml
-#.settings
+.settings
 
 # External tool builders
 .externalToolBuilders/

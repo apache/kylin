@@ -6,7 +6,17 @@
     "name" : "SSB.PART_DERIVED",
     "table" : "SSB.PART",
     "column" : null,
-    "derived" : [ "P_MFGR", "P_CATEGORY", "P_BRAND" ]
+    "derived" : [ "P_MFGR" ]
+  }, {
+    "name" : "SSB.PART_DERIVED",
+    "table" : "SSB.PART",
+    "column" : null,
+    "derived" : [ "P_CATEGORY" ]
+  }, {
+    "name" : "SSB.PART_DERIVED",
+    "table" : "SSB.PART",
+    "column" : null,
+    "derived" : [ "P_BRAND" ]
   }, {
     "name" : "C_CITY",
     "table" : "SSB.CUSTOMER",
@@ -173,7 +183,7 @@
   "engine_type" : 2,
   "storage_type" : 2,
   "override_kylin_properties" : {
-    "kylin.hbase.default.compression.codec" : "lz4",
-    "kylin.cube.aggrgroup.isMandatoryOnlyValid" : "true"
+    "kylin.storage.hbase.compression-codec" : "lz4",
+    "kylin.cube.aggrgroup.is-mandatory-only-valid" : "true"
   }
 }

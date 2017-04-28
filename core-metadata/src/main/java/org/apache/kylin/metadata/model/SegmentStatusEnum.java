@@ -18,10 +18,12 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
+
 /**
  * @author xduo
  * 
  */
-public enum SegmentStatusEnum {
+public enum SegmentStatusEnum implements Serializable{
     NEW, READY, READY_PENDING
 }

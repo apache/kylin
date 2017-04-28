@@ -18,19 +18,34 @@
 
 package org.apache.kylin.cube;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
+import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
+import org.apache.kylin.cube.model.CubeDesc.DeriveType;
+import org.apache.kylin.cube.model.DimensionDesc;
 import org.apache.kylin.cube.model.SelectRule;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,7 +61,7 @@ import com.google.common.collect.Maps;
 public class CubeDescTest extends LocalFileMetadataTestCase {
 
     private static final String CUBE_WITH_SLR_DESC = "test_kylin_cube_with_slr_desc";
-    
+
     private String SELLER_ID;
     private String SLR_SEGMENT_CD;
     private String LSTG_FORMAT_NAME;
@@ -55,14 +70,14 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     private String CATEG_LVL2_NAME;
     private String CATEG_LVL3_NAME;
     private String LEAF_CATEG_ID;
-    
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() throws Exception {
         this.createTestMetadata();
-        
+
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         AggregationGroup g = cubeDesc.getAggregationGroups().get(0);
         SELLER_ID = getColInAggrGroup(g, "SELLER_ID");
@@ -86,6 +101,64 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     @After
     public void after() throws Exception {
         this.cleanupTestMetadata();
+    }
+
+    @Test
+    public void testCiCube() {
+        CubeDescManager mgr = CubeDescManager.getInstance(getTestConfig());
+        CubeDesc lc = mgr.getCubeDesc("ci_left_join_cube");
+        CubeDesc ic = mgr.getCubeDesc("ci_inner_join_cube");
+        assertNotNull(lc);
+        assertNotNull(ic);
+        
+        // assert the two CI cubes are identical apart from the left/inner difference
+        assertEquals(lc.getDimensions().size(), ic.getDimensions().size());
+        for (int i = 0, n = lc.getDimensions().size(); i < n; i++) {
+            DimensionDesc ld = lc.getDimensions().get(i);
+            DimensionDesc id = ic.getDimensions().get(i);
+            assertEquals(ld.getTable(), id.getTable());
+            assertEquals(ld.getColumn(), id.getColumn());
+            assertArrayEquals(ld.getDerived(), id.getDerived());
+        }
+        
+        // To enable spark in IT, the inner cube removed the percentile measure, so ignore that particular measure
+        List<MeasureDesc> lcMeasures = dropPercentile(lc.getMeasures());
+        List<MeasureDesc> icMeasures = ic.getMeasures();
+        
+        assertEquals(lcMeasures.size(), icMeasures.size());
+        for (int i = 0, n = lcMeasures.size(); i < n; i++) {
+            MeasureDesc lm = lcMeasures.get(i);
+            MeasureDesc im = icMeasures.get(i);
+            assertEquals(lm.getName(), im.getName());
+            assertEquals(lm.getFunction().getFullExpression(), im.getFunction().getFullExpression());
+            assertEquals(lm.getFunction().getReturnType(), im.getFunction().getReturnType());
+        }
+        
+        assertEquals(lc.getAggregationGroups().size(), ic.getAggregationGroups().size());
+        for (int i = 0, n = lc.getAggregationGroups().size(); i < n; i++) {
+            AggregationGroup lag = lc.getAggregationGroups().get(i);
+            AggregationGroup iag = ic.getAggregationGroups().get(i);
+            assertArrayEquals(lag.getIncludes(), iag.getIncludes());
+            assertArrayEquals(lag.getSelectRule().mandatory_dims, iag.getSelectRule().mandatory_dims);
+            assertArrayEquals(lag.getSelectRule().hierarchy_dims, iag.getSelectRule().hierarchy_dims);
+            assertArrayEquals(lag.getSelectRule().joint_dims, iag.getSelectRule().joint_dims);
+        }
+        
+        assertEquals(lc.listAllColumnDescs().size(), ic.listAllColumnDescs().size());
+        assertEquals(lc.listAllColumns().size(), ic.listAllColumns().size());
+        
+        // test KYLIN-2440
+        assertTrue(lc.listAllColumns().contains(lc.getModel().findColumn("SELLER_ACCOUNT.ACCOUNT_ID")));
+        assertTrue(ic.listAllColumns().contains(ic.getModel().findColumn("SELLER_ACCOUNT.ACCOUNT_ID")));
+    }
+    
+    private List<MeasureDesc> dropPercentile(List<MeasureDesc> measures) {
+        ArrayList<MeasureDesc> result = new ArrayList<>();
+        for (MeasureDesc m : measures) {
+            if (!m.getFunction().getExpression().toUpperCase().contains("PERCENTILE"))
+                result.add(m);
+        }
+        return result;
     }
 
     @Test
@@ -230,7 +303,7 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     }
 
     @Test
-    public void testCombinationIntOverflow() throws  Exception {
+    public void testCombinationIntOverflow() throws Exception {
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA, "cube_desc").listFiles()) {
             if (f.getName().endsWith(".bad")) {
                 String path = f.getPath();
@@ -254,6 +327,21 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
     }
 
     @Test
+    public void testGetCopyOf() throws Exception {
+        CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+        CubeDesc copyDesc = CubeDesc.getCopyOf(desc);
+
+        // uuid is different, set to equals for json comparison
+        copyDesc.setUuid(desc.getUuid());
+        copyDesc.setLastModified(desc.getLastModified());
+
+        String descStr = JsonUtil.writeValueAsIndentString(desc);
+        String copyStr = JsonUtil.writeValueAsIndentString(copyDesc);
+
+        assertEquals(descStr, copyStr);
+    }
+
+    @Test
     public void testGetCubeDesc() throws Exception {
         CubeDesc cubeDesc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
         Assert.assertNotNull(cubeDesc);
@@ -273,7 +361,42 @@ public class CubeDescTest extends LocalFileMetadataTestCase {
         Map<?, ?> map2 = JsonUtil.readValue(mapStr, HashMap.class);
 
         Assert.assertEquals(map, map2);
+    }
 
+    @Test
+    public void testDerivedInfo() {
+        {
+            CubeDesc cube = CubeDescManager.getInstance(getTestConfig()).getCubeDesc(CUBE_WITH_SLR_DESC);
+            List<TblColRef> givenCols = new ArrayList<>();
+            givenCols.add(cube.findColumnRef("TEST_KYLIN_FACT", "LSTG_SITE_ID"));
+            givenCols.add(cube.findColumnRef("TEST_KYLIN_FACT", "LEAF_CATEG_ID"));
+            Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cube.getHostToDerivedInfo(givenCols, null);
+            assertEquals(3, hostToDerivedInfo.size());
+            assertEquals(Pair.newPair(3, 2), countDerivedInfo(hostToDerivedInfo));
+        }
+
+        {
+            CubeDesc cube = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("ssb");
+            List<TblColRef> givenCols = new ArrayList<>();
+            givenCols.add(cube.findColumnRef("V_LINEORDER", "LO_PARTKEY"));
+            Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo = cube.getHostToDerivedInfo(givenCols, null);
+            assertEquals(1, hostToDerivedInfo.size());
+            assertEquals(Pair.newPair(1, 1), countDerivedInfo(hostToDerivedInfo));
+        }
+    }
+
+    private Pair<Integer, Integer> countDerivedInfo(Map<Array<TblColRef>, List<DeriveInfo>> hostToDerivedInfo) {
+        int pkfkCount = 0;
+        int lookupCount = 0;
+        for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedInfo.entrySet()) {
+            for (DeriveInfo deriveInfo : entry.getValue()) {
+                if (deriveInfo.type == DeriveType.PK_FK)
+                    pkfkCount++;
+                if (deriveInfo.type == DeriveType.LOOKUP)
+                    lookupCount++;
+            }
+        }
+        return Pair.newPair(pkfkCount, lookupCount);
     }
 
     private Collection<String> sortStrs(String[] strs) {

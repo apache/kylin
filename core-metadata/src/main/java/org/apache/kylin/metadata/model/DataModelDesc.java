@@ -18,17 +18,23 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.StringUtil;
 import org.apache.kylin.metadata.MetadataConstants;
+import org.apache.kylin.metadata.model.JoinsTree.Chain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +51,11 @@ import com.google.common.collect.Sets;
 public class DataModelDesc extends RootPersistentEntity {
     private static final Logger logger = LoggerFactory.getLogger(DataModelDesc.class);
 
-    public static enum TableKind {
+    public static enum TableKind implements Serializable {
         FACT, LOOKUP
     }
 
-    public static enum RealizationCapacity {
+    public static enum RealizationCapacity implements Serializable {
         SMALL, MEDIUM, LARGE
     }
 
@@ -97,8 +103,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private Set<TableRef> allTableRefs = Sets.newLinkedHashSet();
     private Map<String, TableRef> aliasMap = Maps.newHashMap(); // alias => TableRef, a table has exactly one alias
     private Map<String, TableRef> tableNameMap = Maps.newHashMap(); // name => TableRef, a table maybe referenced by multiple names
-    private Map<TableRef, JoinDesc> pkSideJoinMap = Maps.newHashMap(); // table (PK side) => JoinTable
-    private Map<String, List<JoinDesc>> fkSideJoinMap = Maps.newHashMap(); // table (FK side) => JoinDesc
+    private JoinsTree joinsTree;
 
     /**
      * Error messages during resolving json metadata
@@ -113,7 +118,7 @@ public class DataModelDesc extends RootPersistentEntity {
         return name;
     }
 
-    // for test only
+    // for test mainly
     @Deprecated
     public void setName(String name) {
         this.name = name;
@@ -151,12 +156,12 @@ public class DataModelDesc extends RootPersistentEntity {
         return joinTables;
     }
 
-    public Map<TableRef, JoinDesc> getPKSideJoinMap() {
-        return pkSideJoinMap;
+    public JoinDesc getJoinByPKSide(TableRef table) {
+        return joinsTree.getJoinByPKSide(table);
     }
 
-    public Map<String, List<JoinDesc>> getFKSideJoinMap() {
-        return fkSideJoinMap;
+    public JoinsTree getJoinsTree() {
+        return joinsTree;
     }
 
     @Deprecated
@@ -182,7 +187,7 @@ public class DataModelDesc extends RootPersistentEntity {
         }
         return false;
     }
-    
+
     public boolean isFactTable(TableRef t) {
         if (t == null)
             return false;
@@ -197,7 +202,7 @@ public class DataModelDesc extends RootPersistentEntity {
         }
         return false;
     }
-    
+
     public boolean containsTable(String fullTableName) {
         for (TableRef t : allTableRefs) {
             if (t.getTableIdentity().equals(fullTableName))
@@ -205,9 +210,14 @@ public class DataModelDesc extends RootPersistentEntity {
         }
         return false;
     }
-    
+
     public String getFilterCondition() {
         return filterCondition;
+    }
+
+    // for internal only
+    public void setFilterCondition(String filterCondition) {
+        this.filterCondition = filterCondition;
     }
 
     public PartitionDesc getPartitionDesc() {
@@ -269,11 +279,16 @@ public class DataModelDesc extends RootPersistentEntity {
         if (rootFactTableRef.getTableIdentity().equals(tableIdentity))
             return rootFactTableRef;
 
+        for (TableRef fact : factTableRefs) {
+            if (fact.getTableIdentity().equals(tableIdentity))
+                return fact;
+        }
+
         for (TableRef lookup : lookupTableRefs) {
             if (lookup.getTableIdentity().equals(tableIdentity))
                 return lookup;
         }
-        throw new IllegalArgumentException("Table not found by " + tableIdentity);
+        throw new IllegalArgumentException("Table not found by " + tableIdentity + " in model " + name);
     }
 
     public void init(KylinConfig config, Map<String, TableDesc> tables) {
@@ -282,8 +297,15 @@ public class DataModelDesc extends RootPersistentEntity {
         initJoinTablesForUpgrade();
         initTableAlias(tables);
         initJoinColumns();
-        ModelDimensionDesc.capicalizeStrings(dimensions);
+        reorderJoins(tables);
+        initJoinsTree();
+        initDimensionsAndMetrics();
         initPartitionDesc();
+
+        boolean reinit = validate();
+        if (reinit) { // model slightly changed by validate() and must init() again
+            init(config, tables);
+        }
     }
 
     private void initJoinTablesForUpgrade() {
@@ -354,14 +376,21 @@ public class DataModelDesc extends RootPersistentEntity {
         }
     }
 
+    private void initDimensionsAndMetrics() {
+        for (ModelDimensionDesc dim : dimensions) {
+            dim.init(this);
+        }
+        for (int i = 0; i < metrics.length; i++) {
+            metrics[i] = findColumn(metrics[i]).getIdentity();
+        }
+    }
+
     private void initPartitionDesc() {
         if (this.partitionDesc != null)
             this.partitionDesc.init(this);
     }
 
     private void initJoinColumns() {
-        pkSideJoinMap.clear();
-        fkSideJoinMap.clear();
 
         for (JoinTableDesc joinTable : joinTables) {
             TableRef dimTable = joinTable.getTableRef();
@@ -378,8 +407,12 @@ public class DataModelDesc extends RootPersistentEntity {
             for (int i = 0; i < pks.length; i++) {
                 TblColRef col = dimTable.getColumn(pks[i]);
                 if (col == null) {
-                    throw new IllegalStateException("Can't find column " + pks[i] + " in table " + dimTable.getTableIdentity());
+                    col = findColumn(pks[i]);
                 }
+                if (col == null || col.getTableRef().equals(dimTable) == false) {
+                    throw new IllegalStateException("Can't find PK column " + pks[i] + " in table " + dimTable);
+                }
+                pks[i] = col.getIdentity();
                 pkCols[i] = col;
             }
             join.setPrimaryKeyColumns(pkCols);
@@ -390,8 +423,9 @@ public class DataModelDesc extends RootPersistentEntity {
             for (int i = 0; i < fks.length; i++) {
                 TblColRef col = findColumn(fks[i]);
                 if (col == null) {
-                    throw new IllegalStateException("Can't find column " + fks[i] + " in table " + this.getRootFactTable());
+                    throw new IllegalStateException("Can't find FK column " + fks[i]);
                 }
+                fks[i] = col.getIdentity();
                 fkCols[i] = col;
             }
             join.setForeignKeyColumns(fkCols);
@@ -410,15 +444,120 @@ public class DataModelDesc extends RootPersistentEntity {
                     logger.warn("PK " + dimTable + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with FK " + fkTable + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
                 }
             }
-
-            // pk/fk side join maps
-            pkSideJoinMap.put(dimTable, join);
-            List<JoinDesc> list = fkSideJoinMap.get(fkTable.getTableIdentity());
-            if (list == null) {
-                fkSideJoinMap.put(fkTable.getTableIdentity(), list = Lists.newArrayListWithCapacity(4));
-            }
-            list.add(join);
         }
+    }
+
+    private void initJoinsTree() {
+        List<JoinDesc> joins = new ArrayList<>();
+        for (JoinTableDesc joinTable : joinTables) {
+            joins.add(joinTable.getJoin());
+        }
+        joinsTree = new JoinsTree(rootFactTableRef, joins);
+    }
+
+    private void reorderJoins(Map<String, TableDesc> tables) {
+        if (joinTables.length == 0) {
+            return;
+        }
+
+        Map<String, List<JoinTableDesc>> fkMap = Maps.newHashMap();
+        for (JoinTableDesc joinTable : joinTables) {
+            JoinDesc join = joinTable.getJoin();
+            String fkSideName = join.getFKSide().getAlias();
+            if (fkMap.containsKey(fkSideName)) {
+                fkMap.get(fkSideName).add(joinTable);
+            } else {
+                List<JoinTableDesc> joinTableList = Lists.newArrayList();
+                joinTableList.add(joinTable);
+                fkMap.put(fkSideName, joinTableList);
+            }
+        }
+
+        JoinTableDesc[] orderedJoinTables = new JoinTableDesc[joinTables.length];
+        int orderedIndex = 0;
+
+        Queue<JoinTableDesc> joinTableBuff = new ArrayDeque<JoinTableDesc>();
+        TableDesc rootDesc = tables.get(rootFactTable);
+        joinTableBuff.addAll(fkMap.get(rootDesc.getName()));
+        while (!joinTableBuff.isEmpty()) {
+            JoinTableDesc head = joinTableBuff.poll();
+            orderedJoinTables[orderedIndex++] = head;
+            String headAlias = head.getJoin().getPKSide().getAlias();
+            if (fkMap.containsKey(headAlias)) {
+                joinTableBuff.addAll(fkMap.get(headAlias));
+            }
+        }
+
+        joinTables = orderedJoinTables;
+    }
+
+    private boolean validate() {
+
+        // ensure no dup between dimensions/metrics
+        for (ModelDimensionDesc dim : dimensions) {
+            String table = dim.getTable();
+            for (String c : dim.getColumns()) {
+                TblColRef dcol = findColumn(table, c);
+                metrics = ArrayUtils.removeElement(metrics, dcol.getIdentity());
+            }
+        }
+
+        Set<TblColRef> mcols = new HashSet<>();
+        for (String m : metrics) {
+            mcols.add(findColumn(m));
+        }
+
+        // validate PK/FK are in dimensions
+        boolean pkfkDimAmended = false;
+        for (Chain chain : joinsTree.tableChains.values()) {
+            pkfkDimAmended = validatePkFkDim(chain.join, mcols) || pkfkDimAmended;
+        }
+        return pkfkDimAmended;
+    }
+
+    private boolean validatePkFkDim(JoinDesc join, Set<TblColRef> mcols) {
+        if (join == null)
+            return false;
+
+        boolean pkfkDimAmended = false;
+
+        for (TblColRef c : join.getForeignKeyColumns()) {
+            if (!mcols.contains(c)) {
+                pkfkDimAmended = validatePkFkDim(c) || pkfkDimAmended;
+            }
+        }
+        for (TblColRef c : join.getPrimaryKeyColumns()) {
+            if (!mcols.contains(c)) {
+                pkfkDimAmended = validatePkFkDim(c) || pkfkDimAmended;
+            }
+        }
+        return pkfkDimAmended;
+    }
+
+    private boolean validatePkFkDim(TblColRef c) {
+        String t = c.getTableAlias();
+        ModelDimensionDesc dimDesc = null;
+        for (ModelDimensionDesc dim : dimensions) {
+            if (dim.getTable().equals(t)) {
+                dimDesc = dim;
+                break;
+            }
+        }
+
+        if (dimDesc == null) {
+            dimDesc = new ModelDimensionDesc();
+            dimDesc.setTable(t);
+            dimDesc.setColumns(new String[0]);
+            dimensions.add(dimDesc);
+        }
+
+        if (ArrayUtils.contains(dimDesc.getColumns(), c.getName()) == false) {
+            String[] newCols = ArrayUtils.add(dimDesc.getColumns(), c.getName());
+            dimDesc.setColumns(newCols);
+            return true;
+        }
+
+        return false;
     }
 
     /**

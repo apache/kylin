@@ -18,23 +18,36 @@
 
 package org.apache.kylin.engine.mr.steps;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.commons.cli.Options;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ByteArray;
+import org.apache.kylin.common.util.ByteBufferBackedInputStream;
+import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.Dictionary;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.cli.DictionaryGeneratorCLI;
+import org.apache.kylin.dict.DictionaryProvider;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.engine.mr.SortedColumnDFSFile;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.source.ReadableTable;
-
-/**
- * @author ysong1
- */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CreateDictionaryJob extends AbstractHadoopJob {
 
-    private int returnCode = 0;
+    private static final Logger logger = LoggerFactory.getLogger(CreateDictionaryJob.class);
 
     @Override
     public int run(String[] args) throws Exception {
@@ -48,16 +61,44 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
         final String segmentID = getOptionValue(OPTION_SEGMENT_ID);
         final String factColumnsInputPath = getOptionValue(OPTION_INPUT_PATH);
 
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        final KylinConfig config = KylinConfig.getInstanceFromEnv();
 
         DictionaryGeneratorCLI.processSegment(config, cubeName, segmentID, new DistinctColumnValuesProvider() {
             @Override
             public ReadableTable getDistinctValuesFor(TblColRef col) {
-                return new SortedColumnDFSFile(factColumnsInputPath + "/" + col.getName(), col.getType());
+                return new SortedColumnDFSFile(factColumnsInputPath + "/" + col.getIdentity(), col.getType());
+            }
+        }, new DictionaryProvider() {
+
+            @Override
+            public Dictionary<String> getDictionary(TblColRef col) throws IOException {
+                Path colDir = new Path(factColumnsInputPath, col.getIdentity());
+                FileSystem fs = HadoopUtil.getWorkingFileSystem();
+
+                Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
+                if (dictFile == null) {
+                    logger.info("Dict for '" + col.getName() + "' not pre-built.");
+                    return null;
+                }
+
+                try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(), SequenceFile.Reader.file(dictFile))) {
+                    NullWritable key = NullWritable.get();
+                    BytesWritable value = new BytesWritable();
+                    reader.next(key, value);
+
+                    ByteBuffer buffer = new ByteArray(value.getBytes()).asBuffer();
+                    try (DataInputStream is = new DataInputStream(new ByteBufferBackedInputStream(buffer))) {
+                        String dictClassName = is.readUTF();
+                        Dictionary<String> dict = (Dictionary<String>) ClassUtil.newInstance(dictClassName);
+                        dict.readFields(is);
+                        logger.info("DictionaryProvider read dict from file: " + dictFile);
+                        return dict;
+                    }
+                }
             }
         });
 
-        return returnCode;
+        return 0;
     }
 
     public static void main(String[] args) throws Exception {

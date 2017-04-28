@@ -26,11 +26,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 
 /**
  * Modified from the StreamSummary.java in https://github.com/addthis/stream-lib
@@ -42,7 +40,7 @@ import com.google.common.collect.Sets;
  *
  * @param <T> type of data in the stream to be summarized
  */
-public class TopNCounter<T> implements Iterable<Counter<T>> {
+public class TopNCounter<T> implements Iterable<Counter<T>>, java.io.Serializable {
 
     public static final int EXTRA_SPACE_RATE = 50;
 
@@ -157,41 +155,22 @@ public class TopNCounter<T> implements Iterable<Counter<T>> {
      * @return
      */
     public TopNCounter<T> merge(TopNCounter<T> another) {
-        double m1 = 0.0, m2 = 0.0;
-        if (this.size() >= this.capacity) {
-            m1 = this.counterList.getLast().count;
-        }
+        boolean thisFull = this.size() >= this.capacity;
+        boolean anotherFull = another.size() >= another.capacity;
+        double m1 = thisFull ? this.counterList.getLast().count : 0.0;
+        double m2 = anotherFull ? another.counterList.getLast().count : 0.0;
 
-        if (another.size() >= another.capacity) {
-            m2 = another.counterList.getLast().count;
-        }
-
-        Set<T> duplicateItems = Sets.newHashSet();
-        List<T> notDuplicateItems = Lists.newArrayList();
-
-        for (Map.Entry<T, Counter<T>> entry : this.counterMap.entrySet()) {
-            T item = entry.getKey();
-            Counter<T> existing = another.counterMap.get(item);
-            if (existing != null) {
-                duplicateItems.add(item);
-            } else {
-                notDuplicateItems.add(item);
+        if (anotherFull == true) {
+            for (Counter<T> entry : this.counterMap.values()) {
+                entry.count += m2;
             }
         }
 
-        for (T item : duplicateItems) {
-            this.offer(item, another.counterMap.get(item).count);
-        }
-
-        for (T item : notDuplicateItems) {
-            this.offer(item, m2);
-        }
-
         for (Map.Entry<T, Counter<T>> entry : another.counterMap.entrySet()) {
-            T item = entry.getKey();
-            if (duplicateItems.contains(item) == false) {
-                double counter = entry.getValue().count;
-                this.offer(item, counter + m1);
+            if (this.counterMap.containsKey(entry.getKey())) {
+                this.offer(entry.getValue().getItem(), (entry.getValue().count - m2));
+            } else {
+                this.offer(entry.getValue().getItem(), entry.getValue().count + m1);
             }
         }
 

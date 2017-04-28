@@ -57,13 +57,13 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
             //normal case
             translated = translateCompareTupleFilter((CompareTupleFilter) tupleFilter);
             if (translated != null) {
-                logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
+                logger.debug("Translated {{}} to IN clause: {{}}", tupleFilter, translated);
             }
         } else if (tupleFilter instanceof BuiltInFunctionTupleFilter) {
             //like case
             translated = translateFunctionTupleFilter((BuiltInFunctionTupleFilter) tupleFilter);
             if (translated != null) {
-                logger.info("Translated {" + tupleFilter + "} to IN clause: {" + translated + "}");
+                logger.debug("Translated {{}} to IN clause: {{}}", tupleFilter, translated);
             }
         } else if (tupleFilter instanceof LogicalTupleFilter) {
             @SuppressWarnings("unchecked")
@@ -89,7 +89,7 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
         if (dict == null)
             return null;
 
-        CompareTupleFilter translated = new CompareTupleFilter(FilterOperatorEnum.IN);
+        CompareTupleFilter translated = new CompareTupleFilter(builtInFunctionTupleFilter.isReversed() ? FilterOperatorEnum.NOTIN : FilterOperatorEnum.IN);
         translated.addChild(new ColumnTupleFilter(columnRef));
 
         try {
@@ -121,7 +121,7 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
         if (dict == null)
             return null;
 
-        CompareTupleFilter translated = new CompareTupleFilter(FilterOperatorEnum.IN);
+        CompareTupleFilter translated = new CompareTupleFilter(builtInFunctionTupleFilter.isReversed() ? FilterOperatorEnum.NOTIN : FilterOperatorEnum.IN);
         translated.addChild(new ColumnTupleFilter(columnRef));
 
         try {

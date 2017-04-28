@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel,modelsManager) {
+KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel,modelsManager,VdmUtil) {
     $scope.modelsManager = modelsManager;
 
     // Available columns list derived from cube data model.
@@ -34,10 +34,10 @@ KylinApp.controller('ModelDimensionsCtrl', function ($scope, $modal,MetaModel,mo
     // Dump available columns plus column table name, whether is from lookup table.
     $scope.initColumns = function () {
 
-        $scope.availableTables.push(modelsManager.selectedModel.fact_table);
+        $scope.availableTables.push(VdmUtil.removeNameSpace($scope.modelsManager.selectedModel.fact_table));
         var lookups = modelsManager.selectedModel.lookups;
         for (var j = 0; j < lookups.length; j++) {
-            $scope.availableTables.push(lookups[j].table);
+            $scope.availableTables.push(lookups[j].alias);
         }
 
         for(var i = 0;i<$scope.availableTables.length;i++){

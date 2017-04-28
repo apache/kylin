@@ -22,8 +22,33 @@
     </property>
 
     <property>
+        <name>hbase.bucketcache.ioengine</name>
+        <value></value>
+    </property>
+
+    <property>
+        <name>hbase.bucketcache.percentage.in.combinedcache</name>
+        <value></value>
+    </property>
+
+    <property>
+        <name>hbase.bucketcache.size</name>
+        <value></value>
+    </property>
+
+    <property>
+        <name>hbase.bulkload.staging.dir</name>
+        <value>/apps/hbase/staging</value>
+    </property>
+
+    <property>
         <name>hbase.client.keyvalue.maxsize</name>
-        <value>10485760</value>
+        <value>1048576</value>
+    </property>
+
+    <property>
+        <name>hbase.client.retries.number</name>
+        <value>35</value>
     </property>
 
     <property>
@@ -38,12 +63,19 @@
 
     <property>
         <name>hbase.coprocessor.master.classes</name>
-        <value>com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor</value>
+        <value>org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor</value>
     </property>
 
     <property>
         <name>hbase.coprocessor.region.classes</name>
-        <value>com.xasecure.authorization.hbase.XaSecureAuthorizationCoprocessor</value>
+        <value>
+            org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint,org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor
+        </value>
+    </property>
+
+    <property>
+        <name>hbase.coprocessor.regionserver.classes</name>
+        <value></value>
     </property>
 
     <property>
@@ -87,6 +119,11 @@
     </property>
 
     <property>
+        <name>hbase.hstore.compaction.max</name>
+        <value>10</value>
+    </property>
+
+    <property>
         <name>hbase.hstore.compactionThreshold</name>
         <value>3</value>
     </property>
@@ -103,32 +140,42 @@
 
     <property>
         <name>hbase.master.info.port</name>
-        <value>60010</value>
+        <value>16010</value>
     </property>
 
     <property>
         <name>hbase.master.port</name>
-        <value>60000</value>
+        <value>16000</value>
     </property>
 
     <property>
-        <name>hbase.regionserver.global.memstore.lowerLimit</name>
-        <value>0.38</value>
+        <name>hbase.region.server.rpc.scheduler.factory.class</name>
+        <value></value>
     </property>
 
     <property>
-        <name>hbase.regionserver.global.memstore.upperLimit</name>
+        <name>hbase.regionserver.global.memstore.size</name>
         <value>0.4</value>
     </property>
 
     <property>
         <name>hbase.regionserver.handler.count</name>
-        <value>60</value>
+        <value>30</value>
     </property>
 
     <property>
         <name>hbase.regionserver.info.port</name>
-        <value>60030</value>
+        <value>16030</value>
+    </property>
+
+    <property>
+        <name>hbase.regionserver.port</name>
+        <value>16020</value>
+    </property>
+
+    <property>
+        <name>hbase.regionserver.wal.codec</name>
+        <value>org.apache.hadoop.hbase.regionserver.wal.WALCellCodec</value>
     </property>
 
     <property>
@@ -137,8 +184,23 @@
     </property>
 
     <property>
+        <name>hbase.rpc.controllerfactory.class</name>
+        <value></value>
+    </property>
+
+    <property>
+        <name>hbase.rpc.engine</name>
+        <value>org.apache.hadoop.hbase.ipc.SecureRpcEngine</value>
+    </property>
+
+    <property>
         <name>hbase.rpc.protection</name>
         <value>PRIVACY</value>
+    </property>
+
+    <property>
+        <name>hbase.rpc.timeout</name>
+        <value>90000</value>
     </property>
 
     <property>
@@ -158,7 +220,7 @@
 
     <property>
         <name>hbase.tmp.dir</name>
-        <value>/hadoop/hbase</value>
+        <value>/tmp/hbase-${user.name}</value>
     </property>
 
     <property>
@@ -178,34 +240,27 @@
 
     <property>
         <name>hfile.block.cache.size</name>
-        <value>0.40</value>
+        <value>0.4</value>
+    </property>
+
+    <property>
+        <name>phoenix.functions.allowUserDefinedFunctions</name>
+        <value></value>
+    </property>
+
+    <property>
+        <name>phoenix.query.timeoutMs</name>
+        <value>60000</value>
     </property>
 
     <property>
         <name>zookeeper.session.timeout</name>
-        <value>30000</value>
+        <value>60000</value>
     </property>
 
     <property>
         <name>zookeeper.znode.parent</name>
         <value>/hbase-unsecure</value>
     </property>
-    <property>
-        <name>hbase.client.pause</name>
-        <value>100</value>
-        <description>General client pause value.  Used mostly as value to wait
-            before running a retry of a failed get, region lookup, etc.
-            See hbase.client.retries.number for description of how we backoff from
-            this initial pause amount and how this pause works w/ retries.</description>
-    </property>
-    <property>
-        <name>hbase.client.retries.number</name>
-        <value>5</value>
-        <description>Maximum retries.  Used as maximum for all retryable
-            operations such as the getting of a cell's value, starting a row update,
-            etc.  Retry interval is a rough function based on hbase.client.pause.  At
-            first we retry at this interval but then with backoff, we pretty quickly reach
-            retrying every ten seconds.  See HConstants#RETRY_BACKOFF for how the backup
-            ramps up.  Change this setting and hbase.client.pause to suit your workload.</description>
-    </property>
+
 </configuration>

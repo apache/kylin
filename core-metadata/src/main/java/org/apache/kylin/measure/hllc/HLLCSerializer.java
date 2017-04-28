@@ -18,20 +18,17 @@
 
 package org.apache.kylin.measure.hllc;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author yangli9
  * 
  */
-public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
-
-    // be thread-safe and avoid repeated obj creation
-    private ThreadLocal<HyperLogLogPlusCounter> current = new ThreadLocal<HyperLogLogPlusCounter>();
+public class HLLCSerializer extends DataTypeSerializer<HLLCounter> {
 
     private int precision;
 
@@ -40,7 +37,7 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
     }
 
     @Override
-    public void serialize(HyperLogLogPlusCounter value, ByteBuffer out) {
+    public void serialize(HLLCounter value, ByteBuffer out) {
         try {
             value.writeRegisters(out);
         } catch (IOException e) {
@@ -48,18 +45,18 @@ public class HLLCSerializer extends DataTypeSerializer<HyperLogLogPlusCounter> {
         }
     }
 
-    private HyperLogLogPlusCounter current() {
-        HyperLogLogPlusCounter hllc = current.get();
+    private HLLCounter current() {
+        HLLCounter hllc = (HLLCounter) current.get();
         if (hllc == null) {
-            hllc = new HyperLogLogPlusCounter(precision);
+            hllc = new HLLCounter(precision);
             current.set(hllc);
         }
         return hllc;
     }
 
     @Override
-    public HyperLogLogPlusCounter deserialize(ByteBuffer in) {
-        HyperLogLogPlusCounter hllc = current();
+    public HLLCounter deserialize(ByteBuffer in) {
+        HLLCounter hllc = current();
         try {
             hllc.readRegisters(in);
         } catch (IOException e) {

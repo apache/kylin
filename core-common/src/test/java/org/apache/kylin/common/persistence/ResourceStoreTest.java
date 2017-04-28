@@ -30,15 +30,50 @@ import java.util.List;
 import java.util.NavigableSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Be called by LocalFileResourceStoreTest and ITHBaseResourceStoreTest.
+ * Be called by LocalFileResourceStoreTest, ITHBaseResourceStoreTest and ITHDFSResourceStoreTest.
  */
 public class ResourceStoreTest {
 
-    public static void testAStore(ResourceStore store) throws IOException {
+    private static final Logger logger = LoggerFactory.getLogger(ResourceStoreTest.class);
+
+    private static final String PERFORMANCE_TEST_ROOT_PATH = "/performance";
+
+    private static final int TEST_RESOURCE_COUNT = 100;
+
+    public static void testAStore(String url, KylinConfig kylinConfig) throws Exception {
+        String oldUrl = replaceMetadataUrl(kylinConfig, url);
+        testAStore(getStoreByName(kylinConfig.getResourceStoreImpl(), kylinConfig));
+        replaceMetadataUrl(kylinConfig, oldUrl);
+    }
+
+    public static void testPerformance(String url, KylinConfig kylinConfig) throws Exception {
+        String oldUrl = replaceMetadataUrl(kylinConfig, url);
+        testPerformance(getStoreByName(kylinConfig.getResourceStoreImpl(), kylinConfig));
+        replaceMetadataUrl(kylinConfig, oldUrl);
+    }
+
+    public static String mockUrl(String tag, KylinConfig kylinConfig) {
+        return kylinConfig.getMetadataUrlPrefix() + "@" + tag;
+    }
+
+    private static void testAStore(ResourceStore store) throws IOException {
         testBasics(store);
         testGetAllResources(store);
+    }
+
+    private static void testPerformance(ResourceStore store) throws IOException {
+        logger.info("Test basic functions");
+        testAStore(store);
+        logger.info("Basic function ok. Start to test performance for class : " + store.getClass());
+        logger.info("Write metadata time : " + testWritePerformance(store));
+        logger.info("Read metadata time  " + testReadPerformance(store));
+        logger.info("Performance test end. Class : " + store.getClass());
     }
 
     private static void testGetAllResources(ResourceStore store) throws IOException {
@@ -110,9 +145,10 @@ public class ResourceStoreTest {
         }
 
         // list
-        NavigableSet<String> list;
+        NavigableSet<String> list = null;
 
         list = store.listResources(dir1);
+        System.out.println(list);
         assertTrue(list.contains(path1));
         assertTrue(list.contains(path2) == false);
 
@@ -141,6 +177,29 @@ public class ResourceStoreTest {
         assertTrue(store.exists(path2) == false);
         list = store.listResources(dir2);
         assertTrue(list == null || list.contains(path2) == false);
+    }
+
+    private static long testWritePerformance(ResourceStore store) throws IOException {
+        store.deleteResource(PERFORMANCE_TEST_ROOT_PATH);
+        StringEntity content = new StringEntity("something");
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i < TEST_RESOURCE_COUNT; i++) {
+            String resourcePath = PERFORMANCE_TEST_ROOT_PATH + "/res_" + i;
+            store.putResource(resourcePath, content, 0, StringEntity.serializer);
+        }
+        return System.currentTimeMillis() - startTime;
+    }
+
+    private static long testReadPerformance(ResourceStore store) throws IOException {
+        long startTime = System.currentTimeMillis();
+        int step = 0; //avoid compiler optimization
+        for (int i = 0; i < TEST_RESOURCE_COUNT; i++) {
+            String resourcePath = PERFORMANCE_TEST_ROOT_PATH + "/res_" + i;
+            StringEntity t = store.getResource(resourcePath, StringEntity.class, StringEntity.serializer);
+            step |= t.toString().length();
+        }
+        logger.info("step : " + step);
+        return System.currentTimeMillis() - startTime;
     }
 
     @SuppressWarnings("serial")
@@ -186,6 +245,18 @@ public class ResourceStoreTest {
         public String toString() {
             return str;
         }
+    }
+
+    public static String replaceMetadataUrl(KylinConfig kylinConfig, String newUrl) {
+        String oldUrl = kylinConfig.getMetadataUrl();
+        kylinConfig.setProperty("kylin.metadata.url", newUrl);
+        return oldUrl;
+    }
+
+    private static ResourceStore getStoreByName(String storeName, KylinConfig kylinConfig) throws Exception {
+        Class<? extends ResourceStore> cls = ClassUtil.forName(storeName, ResourceStore.class);
+        ResourceStore store = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
+        return store;
     }
 
 }

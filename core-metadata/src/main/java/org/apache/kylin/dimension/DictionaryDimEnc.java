@@ -21,6 +21,7 @@ package org.apache.kylin.dimension;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 import org.apache.kylin.common.util.BytesUtil;
@@ -29,22 +30,27 @@ import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DictionaryDimEnc extends DimensionEncoding {
+public class DictionaryDimEnc extends DimensionEncoding implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryDimEnc.class);
 
     public static final String ENCODING_NAME = "dict";
 
+    public static final int MAX_ENCODING_LENGTH = 4; // won't exceed integer's length
+
     // ============================================================================
 
     // could use a lazy loading trick here, to prevent loading all dictionaries of a segment at once
-    private final Dictionary<String> dict;
-    private final int fixedLen;
+    private Dictionary<String> dict;
+    private int fixedLen;
 
     // used in encode(), when a value does not exist in dictionary
-    private final int roundingFlag;
-    private final byte defaultByte;
+    private int roundingFlag;
+    private byte defaultByte;
+
+    public DictionaryDimEnc() {
+    }
 
     public DictionaryDimEnc(Dictionary<String> dict) {
         this(dict, 0, NULL);
@@ -145,12 +151,18 @@ public class DictionaryDimEnc extends DimensionEncoding {
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        throw new UnsupportedOperationException();
+        out.writeInt(fixedLen);
+        out.writeInt(roundingFlag);
+        out.write(defaultByte);
+        out.writeObject(dict);
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        throw new UnsupportedOperationException();
+        this.fixedLen = in.readInt();
+        this.roundingFlag = in.readInt();
+        this.defaultByte = in.readByte();
+        this.dict = (Dictionary<String>) in.readObject();
     }
 
 }

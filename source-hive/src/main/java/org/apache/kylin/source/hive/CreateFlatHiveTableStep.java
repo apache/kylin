@@ -20,11 +20,12 @@ package org.apache.kylin.source.hive;
 import java.io.IOException;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.BufferedLogger;
+import org.apache.kylin.common.util.HiveCmdBuilder;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.steps.CubingExecutableUtil;
+import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
@@ -37,9 +38,9 @@ import org.slf4j.LoggerFactory;
 public class CreateFlatHiveTableStep extends AbstractExecutable {
 
     private static final Logger logger = LoggerFactory.getLogger(CreateFlatHiveTableStep.class);
-    private final BufferedLogger stepLogger = new BufferedLogger(logger);
+    private final PatternedLogger stepLogger = new PatternedLogger(logger);
 
-    private void createFlatHiveTable(KylinConfig config) throws IOException {
+    protected void createFlatHiveTable(KylinConfig config) throws IOException {
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement(getInitStatement());
         hiveCmdBuilder.addStatement(getCreateTableStatement());
@@ -49,6 +50,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
         stepLogger.log(cmd);
 
         Pair<Integer, String> response = config.getCliCommandExecutor().execute(cmd, stepLogger);
+        getManager().addJobInfo(getId(), stepLogger.getInfo());
         if (response.getFirst() != 0) {
             throw new RuntimeException("Failed to create flat hive table, error code " + response.getFirst());
         }

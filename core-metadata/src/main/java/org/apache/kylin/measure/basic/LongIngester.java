@@ -22,25 +22,24 @@ import java.util.Map;
 
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.measure.MeasureIngester;
-import org.apache.kylin.metadata.datatype.LongMutable;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-public class LongIngester extends MeasureIngester<LongMutable> {
-
-    // avoid repeated object creation
-    private LongMutable current = new LongMutable();
+public class LongIngester extends MeasureIngester<Long> {
 
     @Override
-    public LongMutable valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public Long valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (values.length > 1)
             throw new IllegalArgumentException();
 
-        LongMutable l = current;
-        if (values[0] == null)
-            l.set(0L);
+        if (values[0] == null || values[0].length() == 0)
+            return new Long(0L);
         else
-            l.set(Long.parseLong(values[0]));
-        return l;
+            return Long.valueOf(values[0]);
+    }
+
+    @Override
+    public void reset() {
+
     }
 }

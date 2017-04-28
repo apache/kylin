@@ -22,9 +22,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.kylin.engine.mr.steps.FactDistinctColumnsMapper.RawDataCounter;
 import org.apache.kylin.job.constant.ExecutableConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +69,7 @@ public class HadoopCmdOutput {
 
     private String mapInputRecords;
     private String hdfsBytesWritten;
-    private String hdfsBytesRead;
+    private String rawInputBytesRead;
 
     public String getMapInputRecords() {
         return mapInputRecords;
@@ -77,8 +79,8 @@ public class HadoopCmdOutput {
         return hdfsBytesWritten;
     }
 
-    public String getHdfsBytesRead() {
-        return hdfsBytesRead;
+    public String getRawInputBytesRead() {
+        return rawInputBytesRead;
     }
 
     public void updateJobCounter() {
@@ -92,10 +94,17 @@ public class HadoopCmdOutput {
             }
             this.output.append(counters.toString()).append("\n");
             logger.debug(counters.toString());
+            
+            String bytsWrittenCounterName = "HDFS_BYTES_WRITTEN";
+            String fsScheme = FileSystem.get(job.getConfiguration()).getScheme();
+            if (("wasb").equalsIgnoreCase(fsScheme)) {
+                // for Azure blob store
+                bytsWrittenCounterName = "WASB_BYTES_WRITTEN";
+            }
 
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
-            hdfsBytesWritten = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_WRITTEN").getValue());
-            hdfsBytesRead = String.valueOf(counters.findCounter("FileSystemCounters", "HDFS_BYTES_READ").getValue());
+            hdfsBytesWritten = String.valueOf(counters.findCounter("FileSystemCounters", bytsWrittenCounterName).getValue());
+            rawInputBytesRead = String.valueOf(counters.findCounter(RawDataCounter.BYTES).getValue());
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             output.append(e.getLocalizedMessage());

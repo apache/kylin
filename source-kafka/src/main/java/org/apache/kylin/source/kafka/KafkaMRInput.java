@@ -31,10 +31,10 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StreamingMessage;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
-import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -68,12 +68,17 @@ public class KafkaMRInput implements IMRInput {
 
     @Override
     public IMRBatchCubingInputSide getBatchCubingInputSide(IJoinedFlatTableDesc flatDesc) {
-        this.cubeSegment = (CubeSegment)flatDesc.getSegment();
+        this.cubeSegment = (CubeSegment) flatDesc.getSegment();
         return new BatchCubingInputSide(cubeSegment);
     }
 
     @Override
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
+       return getTableInputFormat(table, true);
+    }
+
+    @Override
+    public IMRTableInputFormat getTableInputFormat(TableDesc table, boolean isFullTable) {
         KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
         KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(table.getIdentity());
         List<TblColRef> columns = Lists.transform(Arrays.asList(table.getColumns()), new Function<ColumnDesc, TblColRef>() {
@@ -223,7 +228,7 @@ public class KafkaMRInput implements IMRInput {
 
         private void rmdirOnHDFS(String path) throws IOException {
             Path externalDataPath = new Path(path);
-            FileSystem fs = FileSystem.get(externalDataPath.toUri(), HadoopUtil.getCurrentConfiguration());
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
             if (fs.exists(externalDataPath)) {
                 fs.delete(externalDataPath, true);
             }

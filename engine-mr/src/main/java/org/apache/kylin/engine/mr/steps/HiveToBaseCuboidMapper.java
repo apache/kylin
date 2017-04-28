@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
-import org.apache.kylin.engine.mr.common.BatchConstants;
 
 /**
  * @author George Song (ysong1)
@@ -39,11 +38,6 @@ public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, O
 
     @Override
     public void doMap(KEYIN key, Object value, Context context) throws IOException, InterruptedException {
-        counter++;
-        if (counter % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
-            logger.info("Handled " + counter + " records!");
-        }
-
         String[] row = flatTableInputFormat.parseMapperInput(value);
         try {
             outputKV(row, context);

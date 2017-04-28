@@ -23,9 +23,6 @@ import org.apache.kylin.metadata.tuple.ITupleIterator;
 import org.apache.kylin.metadata.tuple.TupleInfo;
 
 /**
- * 
- * @author xjiang
- * 
  */
 public interface IStorageQuery {
 

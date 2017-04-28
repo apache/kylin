@@ -25,10 +25,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.engine.mr.ByteArrayWritable;
-import org.apache.kylin.engine.mr.HadoopUtil;
 import org.apache.kylin.engine.mr.JobBuilderSupport;
 import org.apache.kylin.engine.mr.steps.KVGTRecordWriter;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class SequenceFileCuboidWriter extends KVGTRecordWriter {
             JobBuilderSupport jobBuilderSupport = new JobBuilderSupport(cubeSegment, "SYSTEM");
             String cuboidRoot = jobBuilderSupport.getCuboidRootPath(cubeSegment);
             Path cuboidPath = new Path(cuboidRoot);
-            FileSystem fs = HadoopUtil.getFileSystem(cuboidRoot);
+            FileSystem fs = HadoopUtil.getWorkingFileSystem();
             try {
                 if (fs.exists(cuboidPath)) {
                     fs.delete(cuboidPath, true);

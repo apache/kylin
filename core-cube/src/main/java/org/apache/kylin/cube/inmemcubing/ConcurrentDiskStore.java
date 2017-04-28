@@ -265,11 +265,6 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
             return info;
         }
 
-        @Override
-        public long getScannedRowCount() {
-            return count;
-        }
-
     }
 
     private class Writer implements IGTWriter {

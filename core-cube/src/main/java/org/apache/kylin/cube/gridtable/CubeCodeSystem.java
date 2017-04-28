@@ -19,9 +19,11 @@
 package org.apache.kylin.cube.gridtable;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.dimension.DictionaryDimEnc;
 import org.apache.kylin.dimension.DictionaryDimEnc.DictionarySerializer;
@@ -121,7 +123,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
             try {
                 serializer.serialize(value, buf);
             } catch (IllegalArgumentException ex) {
-                IllegalArgumentException rewordEx = new IllegalArgumentException("Column " + col + " value '" + value + "' met dictionary error: " + ex.getMessage());
+                IllegalArgumentException rewordEx = new IllegalArgumentException("Column " + col + " value '" + toStringBinary(value) + "' met dictionary error: " + ex.getMessage());
                 rewordEx.setStackTrace(ex.getStackTrace());
                 throw rewordEx;
             }
@@ -132,6 +134,14 @@ public class CubeCodeSystem implements IGTCodeSystem {
             }
             serializer.serialize(value, buf);
         }
+    }
+
+    private String toStringBinary(Object value) {
+        if (value == null)
+            return "Null";
+        byte[] bytes;
+        bytes = value.toString().getBytes(Charset.forName("UTF-8"));
+        return Bytes.toStringBinary(bytes);
     }
 
     @Override

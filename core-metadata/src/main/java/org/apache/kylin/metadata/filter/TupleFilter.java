@@ -25,8 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
@@ -36,6 +39,8 @@ import com.google.common.collect.Maps;
  * 
  */
 public abstract class TupleFilter {
+
+    static final Logger logger = LoggerFactory.getLogger(TupleFilter.class);
 
     public enum FilterOperatorEnum {
         EQ(1), NEQ(2), GT(3), LT(4), GTE(5), LTE(6), ISNULL(7), ISNOTNULL(8), IN(9), NOTIN(10), AND(20), OR(21), NOT(22), COLUMN(30), CONSTANT(31), DYNAMIC(32), EXTRACT(33), CASE(34), FUNCTION(35), MASSIN(36), EVAL_FUNC(37), UNSUPPORTED(38);
@@ -112,7 +117,8 @@ public abstract class TupleFilter {
     }
 
     public TupleFilter reverse() {
-        throw new UnsupportedOperationException();
+        logger.warn("Cannot reverse " + this + ", loosen the filter to true");
+        return ConstantTupleFilter.TRUE;
     }
 
     /**
@@ -234,6 +240,28 @@ public abstract class TupleFilter {
         for (TupleFilter child : filter.getChildren()) {
             collectColumns(child, collector);
         }
+    }
+
+    public static TupleFilter and(TupleFilter f1, TupleFilter f2) {
+        if (f1 == null)
+            return f2;
+        if (f2 == null)
+            return f1;
+
+        if (f1.getOperator() == FilterOperatorEnum.AND) {
+            f1.addChild(f2);
+            return f1;
+        }
+
+        if (f2.getOperator() == FilterOperatorEnum.AND) {
+            f2.addChild(f1);
+            return f2;
+        }
+
+        LogicalTupleFilter and = new LogicalTupleFilter(FilterOperatorEnum.AND);
+        and.addChild(f1);
+        and.addChild(f2);
+        return and;
     }
 
 }

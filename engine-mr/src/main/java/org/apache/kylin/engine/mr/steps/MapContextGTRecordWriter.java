@@ -41,6 +41,7 @@ public class MapContextGTRecordWriter extends KVGTRecordWriter {
         try {
             mapContext.write(key, value);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new IOException(e);
         }
     }

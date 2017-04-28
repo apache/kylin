@@ -24,35 +24,30 @@
     <artifactId>kylin-source-kafka</artifactId>
     <packaging>jar</packaging>
     <name>Apache Kylin - Kafka Source</name>
+    <description>Apache Kylin - Kafka Source</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>1.6.1-SNAPSHOT</version>
-
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-core-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-mr</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-core-common</artifactId>
-        </dependency>
-
+        <!-- Provided -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.10</artifactId>
-            <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons-lang3.version}</version>
-        </dependency>
+
         <!-- Env & Test -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -77,9 +72,5 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
-
-
     </dependencies>
-
 </project>

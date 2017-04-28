@@ -20,7 +20,6 @@ package org.apache.kylin.rest.security;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class PasswordPlaceHolderConfigurerTest {
 

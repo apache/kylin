@@ -21,17 +21,22 @@ package org.apache.kylin.common.persistence;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,15 +64,18 @@ abstract public class ResourceStore {
     public static final String CUBE_STATISTICS_ROOT = "/cube_statistics";
     public static final String BAD_QUERY_RESOURCE_ROOT = "/bad_query";
 
-    private static final ConcurrentHashMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
+    protected static final String DEFAULT_STORE_NAME = "kylin_metadata";
+
+    private static final ConcurrentMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
     private static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
 
-    private static ArrayList<Class<? extends ResourceStore>> getKnownImpl() {
+    private static ArrayList<Class<? extends ResourceStore>> getKnownImpl(KylinConfig kylinConfig) {
         if (knownImpl.isEmpty()) {
             knownImpl.add(FileResourceStore.class);
             try {
-                knownImpl.add(ClassUtil.forName("org.apache.kylin.storage.hbase.HBaseResourceStore", ResourceStore.class));
+                String implName = kylinConfig.getResourceStoreImpl();
+                knownImpl.add(ClassUtil.forName(implName, ResourceStore.class));
             } catch (Throwable e) {
                 logger.warn("Failed to load HBaseResourceStore impl class: " + e.toString());
             }
@@ -78,7 +86,7 @@ abstract public class ResourceStore {
     private static ResourceStore createResourceStore(KylinConfig kylinConfig) {
         List<Throwable> es = new ArrayList<Throwable>();
         logger.info("Using metadata url " + kylinConfig.getMetadataUrl() + " for resource store");
-        for (Class<? extends ResourceStore> cls : getKnownImpl()) {
+        for (Class<? extends ResourceStore> cls : getKnownImpl(kylinConfig)) {
             try {
                 return cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
             } catch (Throwable e) {
@@ -109,7 +117,7 @@ abstract public class ResourceStore {
 
     final protected KylinConfig kylinConfig;
 
-    public ResourceStore(KylinConfig kylinConfig) {
+    protected ResourceStore(KylinConfig kylinConfig) {
         this.kylinConfig = kylinConfig;
     }
 
@@ -311,4 +319,35 @@ abstract public class ResourceStore {
         return collector;
     }
 
+    public static String dumpResources(KylinConfig kylinConfig, Collection<String> dumpList) throws IOException {
+        File tmp = File.createTempFile("kylin_job_meta", "");
+        FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
+
+        File metaDir = new File(tmp, "meta");
+        metaDir.mkdirs();
+
+        // write kylin.properties
+        File kylinPropsFile = new File(metaDir, "kylin.properties");
+        kylinConfig.writeProperties(kylinPropsFile);
+
+        ResourceStore from = ResourceStore.getStore(kylinConfig);
+        KylinConfig localConfig = KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath());
+        ResourceStore to = ResourceStore.getStore(localConfig);
+        for (String path : dumpList) {
+            RawResource res = from.getResource(path);
+            if (res == null)
+                throw new IllegalStateException("No resource found at -- " + path);
+            to.putResource(path, res.inputStream, res.timestamp);
+            res.inputStream.close();
+        }
+
+        String metaDirURI = OptionsHelper.convertToFileURL(metaDir.getAbsolutePath());
+        if (metaDirURI.startsWith("/")) // note Path on windows is like "d:/../..."
+            metaDirURI = "file://" + metaDirURI;
+        else
+            metaDirURI = "file:///" + metaDirURI;
+        logger.info("meta dir is: " + metaDirURI);
+
+        return metaDirURI;
+    }
 }

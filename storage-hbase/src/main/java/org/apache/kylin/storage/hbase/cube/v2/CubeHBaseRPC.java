@@ -29,12 +29,12 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FuzzyRowFilter;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.QueryContext;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.kv.FuzzyKeyEncoder;
 import org.apache.kylin.cube.kv.FuzzyMaskEncoder;
@@ -48,6 +48,8 @@ import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
 import org.apache.kylin.gridtable.GTScanRange;
 import org.apache.kylin.gridtable.IGTStorage;
+import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.storage.StorageContext;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,15 +64,20 @@ public abstract class CubeHBaseRPC implements IGTStorage {
     final protected CubeSegment cubeSeg;
     final protected Cuboid cuboid;
     final protected GTInfo fullGTInfo;
+    final protected QueryContext queryContext;
+    final protected StorageContext storageContext;
+
     final private RowKeyEncoder fuzzyKeyEncoder;
     final private RowKeyEncoder fuzzyMaskEncoder;
 
-    public CubeHBaseRPC(ISegment segment, Cuboid cuboid, GTInfo fullGTInfo) {
+    public CubeHBaseRPC(ISegment segment, Cuboid cuboid, GTInfo fullGTInfo, StorageContext context) {
         Preconditions.checkArgument(segment instanceof CubeSegment, "segment must be CubeSegment");
         
         this.cubeSeg = (CubeSegment) segment;
         this.cuboid = cuboid;
         this.fullGTInfo = fullGTInfo;
+        this.queryContext = QueryContext.current();
+        this.storageContext = context;
 
         this.fuzzyKeyEncoder = new FuzzyKeyEncoder(cubeSeg, cuboid);
         this.fuzzyMaskEncoder = new FuzzyMaskEncoder(cubeSeg, cuboid);
@@ -279,23 +286,30 @@ public abstract class CubeHBaseRPC implements IGTStorage {
     }
 
     protected int getCoprocessorTimeoutMillis() {
-        int configTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000;
-        if (configTimeout == 0) {
-            configTimeout = Integer.MAX_VALUE;
-        }
-
-        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
-        int rpcTimeout = hconf.getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
-        // final timeout should be smaller than rpc timeout
-        int upper = (int) (rpcTimeout * 0.9);
-
-        int timeout = Math.min(upper, configTimeout);
+        int coopTimeout;
         if (BackdoorToggles.getQueryTimeout() != -1) {
-            timeout = Math.min(upper, BackdoorToggles.getQueryTimeout());
+            coopTimeout = BackdoorToggles.getQueryTimeout();
+        } else {
+            coopTimeout = cubeSeg.getConfig().getQueryCoprocessorTimeoutSeconds() * 1000;
         }
-
-        logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, timeout);
-        return timeout;
+        
+        int rpcTimeout;
+        Configuration hconf = HBaseConnection.getCurrentHBaseConfiguration();
+        rpcTimeout = hconf.getInt(HConstants.HBASE_RPC_TIMEOUT_KEY, HConstants.DEFAULT_HBASE_RPC_TIMEOUT);
+        
+        // HBase rpc timeout must be longer than coprocessor timeout
+        if ((int) (coopTimeout * 1.1) > rpcTimeout) {
+            rpcTimeout = (int) (coopTimeout * 1.1);
+            hconf.setInt(HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout);
+        }
+        
+        // coprocessor timeout is 0 by default
+        if (coopTimeout <= 0) {
+            coopTimeout = (int) (rpcTimeout * 0.9);
+        }
+        
+        logger.debug("{} = {} ms, use {} ms as timeout for coprocessor", HConstants.HBASE_RPC_TIMEOUT_KEY, rpcTimeout, coopTimeout);
+        return coopTimeout;
     }
 
 }

@@ -22,6 +22,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,9 @@ import org.slf4j.LoggerFactory;
  */
 public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
     private static final Logger logger = LoggerFactory.getLogger(KylinReducer.class);
-    
+
+    protected int reduceCounter = 0;
+
     protected void bindCurrentConfiguration(Configuration conf) {
         HadoopUtil.setCurrentConfiguration(conf);
     }
@@ -37,6 +41,10 @@ public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYI
     @Override
     final public void reduce(KEYIN key, Iterable<VALUEIN> values, Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         try {
+            if (reduceCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
+                logger.info("Accepting Reducer Key with ordinal: " + reduceCounter);
+            }
+
             doReduce(key, values, context);
         } catch (IOException ex) { // KYLIN-2170
             logger.error("", ex);
@@ -52,11 +60,11 @@ public class KylinReducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Reducer<KEYI
             throw ex;
         }
     }
-    
+
     protected void doReduce(KEYIN key, Iterable<VALUEIN> values, Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         super.reduce(key, values, context);
     }
-    
+
     @Override
     final protected void cleanup(Reducer<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         try {

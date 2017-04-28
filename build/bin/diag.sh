@@ -47,19 +47,19 @@ then
     fi
 
     mkdir -p ${KYLIN_HOME}/ext
-    export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/lib/*:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
+    export HBASE_CLASSPATH_PREFIX=${KYLIN_HOME}/conf:${KYLIN_HOME}/tool/*:${KYLIN_HOME}/ext/*:${HBASE_CLASSPATH_PREFIX}
     export HBASE_CLASSPATH=${HBASE_CLASSPATH}:${hive_dependency}
 
     if [ ${#patient} -eq 36 ]; then
         hbase ${KYLIN_EXTRA_START_OPTS} \
-        -Dlog4j.configuration=kylin-server-log4j.properties \
+        -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
         -Dcatalina.home=${tomcat_root} \
         org.apache.kylin.tool.JobDiagnosisInfoCLI \
         -jobId $patient \
         -destDir $destDir || exit 1
     else
         hbase ${KYLIN_EXTRA_START_OPTS} \
-        -Dlog4j.configuration=kylin-server-log4j.properties \
+        -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties \
         -Dcatalina.home=${tomcat_root} \
         org.apache.kylin.tool.DiagnosisInfoCLI \
         -project -all \

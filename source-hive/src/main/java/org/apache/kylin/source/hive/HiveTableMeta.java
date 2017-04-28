@@ -44,6 +44,7 @@ class HiveTableMeta {
     String sdOutputFormat;
     String owner;
     String tableType;
+    int skipHeaderLineCount;
     int lastAccessTime;
     long fileSize;
     long fileNum;
@@ -51,7 +52,7 @@ class HiveTableMeta {
     List<HiveTableColumnMeta> allColumns;
     List<HiveTableColumnMeta> partitionColumns;
 
-    public HiveTableMeta(String tableName, String sdLocation, String sdInputFormat, String sdOutputFormat, String owner, String tableType, int lastAccessTime, long fileSize, long fileNum, boolean isNative, List<HiveTableColumnMeta> allColumns, List<HiveTableColumnMeta> partitionColumns) {
+    public HiveTableMeta(String tableName, String sdLocation, String sdInputFormat, String sdOutputFormat, String owner, String tableType, int lastAccessTime, long fileSize, long fileNum, int skipHeaderLineCount, boolean isNative, List<HiveTableColumnMeta> allColumns, List<HiveTableColumnMeta> partitionColumns) {
         this.tableName = tableName;
         this.sdLocation = sdLocation;
         this.sdInputFormat = sdInputFormat;
@@ -64,6 +65,7 @@ class HiveTableMeta {
         this.isNative = isNative;
         this.allColumns = allColumns;
         this.partitionColumns = partitionColumns;
+        this.skipHeaderLineCount = skipHeaderLineCount;
     }
 
     @Override

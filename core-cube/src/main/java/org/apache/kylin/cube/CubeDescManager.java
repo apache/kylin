@@ -21,8 +21,11 @@ package org.apache.kylin.cube;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -31,10 +34,17 @@ import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.validation.CubeMetadataValidator;
 import org.apache.kylin.cube.model.validation.ValidateContext;
+import org.apache.kylin.dimension.DictionaryDimEnc;
+import org.apache.kylin.dimension.DimensionEncoding;
+import org.apache.kylin.dimension.DimensionEncodingFactory;
+import org.apache.kylin.measure.topn.TopNMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.MeasureDesc;
+import org.apache.kylin.metadata.model.ParameterDesc;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -54,7 +64,7 @@ public class CubeDescManager {
     public static final Serializer<CubeDesc> CUBE_DESC_SERIALIZER = new JsonSerializer<CubeDesc>(CubeDesc.class);
 
     // static cached instances
-    private static final ConcurrentHashMap<KylinConfig, CubeDescManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeDescManager>();
+    private static final ConcurrentMap<KylinConfig, CubeDescManager> CACHE = new ConcurrentHashMap<KylinConfig, CubeDescManager>();
 
     public static CubeDescManager getInstance(KylinConfig config) {
         CubeDescManager r = CACHE.get(config);
@@ -94,14 +104,14 @@ public class CubeDescManager {
         logger.info("Initializing CubeDescManager with config " + config);
         this.config = config;
         this.cubeDescMap = new CaseInsensitiveStringCache<CubeDesc>(config, "cube_desc");
-        
+
         // touch lower level metadata before registering my listener
         reloadAllCubeDesc();
         Broadcaster.getInstance(config).registerListener(new CubeDescSyncListener(), "cube_desc");
     }
-    
+
     private class CubeDescSyncListener extends Broadcaster.Listener {
-        
+
         @Override
         public void onClearAll(Broadcaster broadcaster) throws IOException {
             clearCache();
@@ -113,7 +123,7 @@ public class CubeDescManager {
             for (IRealization real : ProjectManager.getInstance(config).listAllRealizations(project)) {
                 if (real instanceof CubeInstance) {
                     String descName = ((CubeInstance) real).getDescName();
-                    reloadCubeDescLocal(descName);        
+                    reloadCubeDescLocal(descName);
                 }
             }
         }
@@ -123,12 +133,12 @@ public class CubeDescManager {
             String cubeDescName = cacheKey;
             CubeDesc cubeDesc = getCubeDesc(cubeDescName);
             String modelName = cubeDesc == null ? null : cubeDesc.getModel().getName();
-            
+
             if (event == Event.DROP)
                 removeLocalCubeDesc(cubeDescName);
             else
                 reloadCubeDescLocal(cubeDescName);
-            
+
             for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByModel(modelName)) {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
             }
@@ -207,6 +217,7 @@ public class CubeDescManager {
             logger.warn("Broken cube desc " + cubeDesc, e);
             cubeDesc.addError(e.getMessage());
         }
+        postProcessCubeDesc(cubeDesc);
         // Check base validation
         if (!cubeDesc.getError().isEmpty()) {
             return cubeDesc;
@@ -225,6 +236,48 @@ public class CubeDescManager {
         cubeDescMap.put(cubeDesc.getName(), cubeDesc);
 
         return cubeDesc;
+    }
+
+    /**
+     * if there is some change need be applied after getting a cubeDesc from front-end, do it here
+     * @param cubeDesc
+     */
+    private void postProcessCubeDesc(CubeDesc cubeDesc) {
+        for (MeasureDesc measureDesc : cubeDesc.getMeasures()) {
+            if (TopNMeasureType.FUNC_TOP_N.equalsIgnoreCase(measureDesc.getFunction().getExpression())) {
+                // update return type scale with the estimated key length
+                Map<String, String> configuration = measureDesc.getFunction().getConfiguration();
+                ParameterDesc parameter = measureDesc.getFunction().getParameter();
+                parameter = parameter.getNextParameter();
+                int keyLength = 0;
+                while (parameter != null) {
+                    String encoding = configuration.get(TopNMeasureType.CONFIG_ENCODING_PREFIX + parameter.getValue());
+                    String encodingVersionStr = configuration.get(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + parameter.getValue());
+                    if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
+                        keyLength += DictionaryDimEnc.MAX_ENCODING_LENGTH; // estimation for dict encoding
+                    } else {
+                        // non-dict encoding
+                        int encodingVersion = 1;
+                        if (!StringUtils.isEmpty(encodingVersionStr)) {
+                            try {
+                                encodingVersion = Integer.parseInt(encodingVersionStr);
+                            } catch (NumberFormatException e) {
+                                throw new RuntimeException("invalid encoding version: " + encodingVersionStr);
+                            }
+                        }
+                        Object[] encodingConf = DimensionEncoding.parseEncodingConf(encoding);
+                        DimensionEncoding dimensionEncoding = DimensionEncodingFactory.create((String) encodingConf[0], (String[]) encodingConf[1], encodingVersion);
+                        keyLength += dimensionEncoding.getLengthOfEncoding();
+                    }
+
+                    parameter = parameter.getNextParameter();
+                }
+
+                DataType returnType = DataType.getType(measureDesc.getFunction().getReturnType());
+                DataType newReturnType = new DataType(returnType.getName(), returnType.getPrecision(), keyLength);
+                measureDesc.getFunction().setReturnType(newReturnType.toString());
+            }
+        }
     }
 
     // remove cubeDesc
@@ -291,6 +344,7 @@ public class CubeDescManager {
             return desc;
         }
 
+        postProcessCubeDesc(desc);
         // Semantic validation
         CubeMetadataValidator validator = new CubeMetadataValidator();
         ValidateContext context = validator.validate(desc);

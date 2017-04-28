@@ -20,12 +20,11 @@ package org.apache.kylin.rest.security;
 
 import java.io.IOException;
 
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.Table;
 
 /**
  */
 public interface AclHBaseStorage {
-    String DEFAULT_TABLE_PREFIX = "kylin_metadata";
 
     String ACL_INFO_FAMILY = "i";
     String ACL_ACES_FAMILY = "a";
@@ -37,6 +36,6 @@ public interface AclHBaseStorage {
 
     String prepareHBaseTable(Class<?> clazz) throws IOException;
 
-    HTableInterface getTable(String tableName) throws IOException;
+    Table getTable(String tableName) throws IOException;
 
 }

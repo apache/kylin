@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RawMeasureType extends MeasureType<List<ByteArray>> {
+    private static final long serialVersionUID = 1L;
 
     private static final Logger logger = LoggerFactory.getLogger(RawMeasureType.class);
 
@@ -103,6 +104,8 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
     @Override
     public MeasureIngester<List<ByteArray>> newIngester() {
         return new MeasureIngester<List<ByteArray>>() {
+            private static final long serialVersionUID = 1L;
+
             //encode measure value to dictionary
             @Override
             public List<ByteArray> valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
@@ -133,17 +136,16 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
 
                 int valueSize = value.size();
                 byte[] newIdBuf = new byte[valueSize * mergedDict.getSizeOfId()];
-                byte[] literal = new byte[sourceDict.getSizeOfValue()];
 
                 int bufOffset = 0;
                 for (ByteArray c : value) {
                     int oldId = BytesUtil.readUnsigned(c.array(), c.offset(), c.length());
                     int newId;
-                    int size = sourceDict.getValueBytesFromId(oldId, literal, 0);
-                    if (size < 0) {
+                    String v = sourceDict.getValueFromId(oldId);
+                    if (v == null) {
                         newId = mergedDict.nullId();
                     } else {
-                        newId = mergedDict.getIdFromValueBytes(literal, 0, size);
+                        newId = mergedDict.getIdFromValue(v);
                     }
                     BytesUtil.writeUnsigned(newId, newIdBuf, bufOffset, mergedDict.getSizeOfId());
                     c.set(newIdBuf, bufOffset, mergedDict.getSizeOfId());
@@ -197,18 +199,12 @@ public class RawMeasureType extends MeasureType<List<ByteArray>> {
         if (sqlDigest.isRawQuery) {
             for (MeasureDesc measureDesc : measureDescs) {
                 TblColRef col = this.getRawColumn(measureDesc.getFunction());
-                ParameterDesc colParameter = new ParameterDesc();
-                colParameter.setType("column");
-                colParameter.setValue(col.getName());
-                FunctionDesc rawFunc = new FunctionDesc();
-                rawFunc.setExpression("RAW");
-                rawFunc.setParameter(colParameter);
+                ParameterDesc colParameter = ParameterDesc.newInstance(col);
+                FunctionDesc rawFunc = FunctionDesc.newInstance("RAW", colParameter, null);
 
                 if (sqlDigest.allColumns.contains(col)) {
                     if (measureDesc.getFunction().equals(rawFunc)) {
-                        FunctionDesc sumFunc = new FunctionDesc();
-                        sumFunc.setExpression("SUM");
-                        sumFunc.setParameter(colParameter);
+                        FunctionDesc sumFunc = FunctionDesc.newInstance("SUM", colParameter, null);
                         sqlDigest.aggregations.remove(sumFunc);
                         sqlDigest.aggregations.add(rawFunc);
                         logger.info("Add RAW measure on column " + col);

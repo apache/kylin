@@ -18,15 +18,18 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
+
 import org.apache.kylin.metadata.model.DataModelDesc.TableKind;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class JoinTableDesc {
+public class JoinTableDesc implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @JsonProperty("table")
     private String table;

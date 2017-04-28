@@ -24,12 +24,12 @@
     <artifactId>kylin-core-cube</artifactId>
     <packaging>jar</packaging>
     <name>Apache Kylin - Core Cube</name>
+    <description>Apache Kylin - Core Cube</description>
 
     <parent>
         <groupId>org.apache.kylin</groupId>
         <artifactId>kylin</artifactId>
-        <version>1.6.1-SNAPSHOT</version>
-
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <dependencies>
@@ -48,9 +48,23 @@
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
         </dependency>
+
+        <!-- Provided -->
         <dependency>
-            <groupId>com.n3twork.druid</groupId>
-            <artifactId>extendedset</artifactId>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
         </dependency>
         <dependency>
             <groupId>com.esotericsoftware</groupId>

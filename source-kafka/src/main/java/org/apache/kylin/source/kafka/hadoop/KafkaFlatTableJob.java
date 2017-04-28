@@ -18,9 +18,12 @@
 
 package org.apache.kylin.source.kafka.hadoop;
 
-import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.source.kafka.util.KafkaClient;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+
 import org.apache.commons.cli.Options;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -33,14 +36,13 @@ import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
+import org.apache.kylin.job.engine.JobEngineConfig;
 import org.apache.kylin.source.kafka.KafkaConfigManager;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
+import org.apache.kylin.source.kafka.config.KafkaConsumerProperties;
+import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * Run a Hadoop Job to process the stream data in kafka;
@@ -57,10 +59,10 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
     public static final String CONFIG_KAFKA_BROKERS = "kafka.brokers";
     public static final String CONFIG_KAFKA_TOPIC = "kafka.topic";
     public static final String CONFIG_KAFKA_TIMEOUT = "kafka.connect.timeout";
-    public static final String CONFIG_KAFKA_BUFFER_SIZE = "kafka.connect.buffer.size";
     public static final String CONFIG_KAFKA_CONSUMER_GROUP = "kafka.consumer.group";
     public static final String CONFIG_KAFKA_INPUT_FORMAT = "input.format";
     public static final String CONFIG_KAFKA_PARSER_NAME = "kafka.parser.name";
+
     @Override
     public int run(String[] args) throws Exception {
         Options options = new Options();
@@ -100,10 +102,12 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
 
             JobEngineConfig jobEngineConfig = new JobEngineConfig(KylinConfig.getInstanceFromEnv());
             job.getConfiguration().addResource(new Path(jobEngineConfig.getHadoopJobConfFilePath(null)));
+            KafkaConsumerProperties kafkaConsumerProperties = KafkaConsumerProperties.getInstanceFromEnv();
+            job.getConfiguration().addResource(new Path(kafkaConsumerProperties.getKafkaConsumerHadoopJobConf()));
+            appendKafkaOverrideProperties(KylinConfig.getInstanceFromEnv(), job.getConfiguration());
             job.getConfiguration().set(CONFIG_KAFKA_BROKERS, brokers);
             job.getConfiguration().set(CONFIG_KAFKA_TOPIC, topic);
             job.getConfiguration().set(CONFIG_KAFKA_TIMEOUT, String.valueOf(kafkaConfig.getTimeout()));
-            job.getConfiguration().set(CONFIG_KAFKA_BUFFER_SIZE, String.valueOf(kafkaConfig.getBufferSize()));
             job.getConfiguration().set(CONFIG_KAFKA_INPUT_FORMAT, "json");
             job.getConfiguration().set(CONFIG_KAFKA_PARSER_NAME, kafkaConfig.getParserName());
             job.getConfiguration().set(CONFIG_KAFKA_CONSUMER_GROUP, cubeName); // use cubeName as consumer group name
@@ -116,9 +120,6 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
             job.getConfiguration().set(BatchConstants.CFG_OUTPUT_PATH, output.toString());
 
             deletePath(job.getConfiguration(), output);
-
-            attachKylinPropsAndMetadata(cube, job.getConfiguration());
-
             return waitForCompletion(job);
 
         } catch (Exception e) {
@@ -153,6 +154,15 @@ public class KafkaFlatTableJob extends AbstractHadoopJob {
         job.setOutputValueClass(Text.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setNumReduceTasks(0);
+    }
+
+    private static void appendKafkaOverrideProperties(final KylinConfig kylinConfig, Configuration conf) {
+        final Map<String, String> kafkaConfOverride = kylinConfig.getKafkaConfigOverride();
+        if (kafkaConfOverride.isEmpty() == false) {
+            for (String key : kafkaConfOverride.keySet()) {
+                conf.set(key, kafkaConfOverride.get(key), "kafka");
+            }
+        }
     }
 
     public static void main(String[] args) throws Exception {

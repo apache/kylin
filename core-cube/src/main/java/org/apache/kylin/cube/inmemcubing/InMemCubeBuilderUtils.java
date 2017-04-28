@@ -41,7 +41,7 @@ public final class InMemCubeBuilderUtils {
         ImmutableBitSet measureColumns = parentDimensionAndMetricColumnBitSet.getSecond();
         ImmutableBitSet childDimensions = parentDimensions;
         long mask = Long.highestOneBit(baseCuboidId);
-        long parentCuboidIdActualLength = Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
+        long parentCuboidIdActualLength = (long)Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
         int index = 0;
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & baseCuboidId) > 0) {

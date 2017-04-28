@@ -20,10 +20,8 @@ package org.apache.kylin.query.enumerator;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.calcite.DataContext;
-import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.linq4j.Enumerator;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -61,20 +59,31 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     @Override
     public boolean moveNext() {
-        if (cursor == null) {
-            cursor = queryStorage();
-        }
+        try {
+            if (cursor == null) {
+                cursor = queryStorage();
+            }
 
-        if (!cursor.hasNext()) {
-            return false;
-        }
+            if (!cursor.hasNext()) {
+                return false;
+            }
 
-        ITuple tuple = cursor.next();
-        if (tuple == null) {
-            return false;
+            ITuple tuple = cursor.next();
+            if (tuple == null) {
+                return false;
+            }
+            convertCurrentRow(tuple);
+            return true;
+        } catch (Exception e) {
+            try {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            } catch (Exception ee) {
+                logger.info("Error when closing cursor, ignore it", ee);
+            }
+            throw e;
         }
-        convertCurrentRow(tuple);
-        return true;
     }
 
     private Object[] convertCurrentRow(ITuple tuple) {
@@ -98,9 +107,6 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
 
     private ITupleIterator queryStorage() {
         logger.debug("query storage...");
-
-        // set connection properties
-        setConnectionProperties();
 
         // bind dynamic variables
         bindVariable(olapContext.filter);
@@ -144,14 +150,4 @@ public class OLAPEnumerator implements Enumerator<Object[]> {
             }
         }
     }
-
-    private void setConnectionProperties() {
-        CalciteConnection conn = (CalciteConnection) optiqContext.getQueryProvider();
-        Properties connProps = conn.getProperties();
-
-        String propThreshold = connProps.getProperty(OLAPQuery.PROP_SCAN_THRESHOLD);
-        int threshold = Integer.valueOf(propThreshold);
-        olapContext.storageContext.setThreshold(threshold);
-    }
-
 }

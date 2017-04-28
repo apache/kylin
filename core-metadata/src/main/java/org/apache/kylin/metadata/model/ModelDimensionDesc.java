@@ -18,6 +18,7 @@
 
 package org.apache.kylin.metadata.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.kylin.common.util.StringUtil;
@@ -28,7 +29,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
-public class ModelDimensionDesc {
+public class ModelDimensionDesc implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     @JsonProperty("table")
     private String table;
     @JsonProperty("columns")
@@ -50,13 +53,26 @@ public class ModelDimensionDesc {
         this.columns = columns;
     }
 
+    void init(DataModelDesc model) {
+        table = table.toUpperCase();
+        if (columns != null) {
+            StringUtil.toUpperCaseArray(columns, columns);
+        }
+        
+        if (model != null) {
+            table = model.findTable(table).getAlias();
+            if (columns != null) {
+                for (int i = 0; i < columns.length; i++) {
+                    columns[i] = model.findColumn(table, columns[i]).getName();
+                }
+            }
+        }
+    }
+
     public static void capicalizeStrings(List<ModelDimensionDesc> dimensions) {
         if (dimensions != null) {
             for (ModelDimensionDesc modelDimensionDesc : dimensions) {
-                modelDimensionDesc.setTable(modelDimensionDesc.getTable().toUpperCase());
-                if (modelDimensionDesc.getColumns() != null) {
-                    StringUtil.toUpperCaseArray(modelDimensionDesc.getColumns(), modelDimensionDesc.getColumns());
-                }
+                modelDimensionDesc.init(null);
             }
         }
     }

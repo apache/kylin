@@ -23,16 +23,18 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.DataFormatException;
 
-import org.apache.hadoop.hbase.client.HConnection;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.ipc.ServerRpcController;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.debug.BackdoorToggles;
+import org.apache.kylin.common.exceptions.KylinTimeoutException;
+import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.BytesSerializer;
 import org.apache.kylin.common.util.BytesUtil;
@@ -40,20 +42,21 @@ import org.apache.kylin.common.util.CompressionUtils;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.LoggableCachedThreadPool;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTScanRequest;
-import org.apache.kylin.gridtable.GTScanSelfTerminatedException;
 import org.apache.kylin.gridtable.IGTScanner;
+import org.apache.kylin.metadata.model.ISegment;
+import org.apache.kylin.storage.StorageContext;
+import org.apache.kylin.storage.gtrecord.DummyPartitionStreamer;
 import org.apache.kylin.storage.gtrecord.StorageResponseGTScatter;
 import org.apache.kylin.storage.hbase.HBaseConnection;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest;
-import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
-import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitService;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitRequest.IntList;
+import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse;
 import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitResponse.Stats;
+import org.apache.kylin.storage.hbase.cube.v2.coprocessor.endpoint.generated.CubeVisitProtos.CubeVisitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,8 +70,8 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
 
     private static ExecutorService executorService = new LoggableCachedThreadPool();
 
-    public CubeHBaseEndpointRPC(ISegment segment, Cuboid cuboid, GTInfo fullGTInfo) {
-        super(segment, cuboid, fullGTInfo);
+    public CubeHBaseEndpointRPC(ISegment segment, Cuboid cuboid, GTInfo fullGTInfo, StorageContext context) {
+        super(segment, cuboid, fullGTInfo, context);
     }
 
     private byte[] getByteArrayForShort(short v) {
@@ -103,7 +106,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     @SuppressWarnings("checkstyle:methodlength")
     @Override
     public IGTScanner getGTScanner(final GTScanRequest scanRequest) throws IOException {
-
         Pair<Short, Short> shardNumAndBaseShard = getShardNumAndBaseShard();
         short shardNum = shardNumAndBaseShard.getFirst();
         short cuboidBaseShard = shardNumAndBaseShard.getSecond();
@@ -116,7 +118,7 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         final ImmutableBitSet selectedColBlocks = scanRequest.getSelectedColBlocks().set(0);
 
         // globally shared connection, does not require close
-        final HConnection conn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
+        final Connection conn = HBaseConnection.get(cubeSeg.getCubeInstance().getConfig().getStorageUrl());
 
         final List<IntList> hbaseColumnsToGTIntList = Lists.newArrayList();
         List<List<Integer>> hbaseColumnsToGT = getHBaseColumnsGTMapping(selectedColBlocks);
@@ -127,14 +129,14 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         //TODO: raw scan can be constructed at region side to reduce traffic
         List<RawScan> rawScans = preparedHBaseScans(scanRequest.getGTScanRanges(), selectedColBlocks);
         rawScanByteString = serializeRawScans(rawScans);
-        
+
         int coprocessorTimeout = getCoprocessorTimeoutMillis();
         scanRequest.setTimeout(coprocessorTimeout);
         scanRequest.clearScanRanges();//since raw scans are sent to coprocessor, we don't need to duplicate sending it
         scanRequestByteString = serializeGTScanReq(scanRequest);
 
         final ExpectedSizeIterator epResultItr = new ExpectedSizeIterator(shardNum, coprocessorTimeout);
-        
+
         logger.info("Serialized scanRequestBytes {} bytes, rawScanBytesString {} bytes", scanRequestByteString.size(), rawScanByteString.size());
 
         logger.info("The scan {} for segment {} is as below with {} separate raw scans, shard part of start/end key is set to 0", Integer.toHexString(System.identityHashCode(scanRequest)), cubeSeg, rawScans.size());
@@ -143,8 +145,6 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
 
         logger.debug("Submitting rpc to {} shards starting from shard {}, scan range count {}", shardNum, cuboidBaseShard, rawScans.size());
-
-        final AtomicLong totalScannedCount = new AtomicLong(0);
 
         // KylinConfig: use env instance instead of CubeSegment, because KylinConfig will share among queries
         // for different cubes until redeployment of coprocessor jar.
@@ -157,10 +157,12 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
         }
         builder.setRowkeyPreambleSize(cubeSeg.getRowKeyPreambleSize());
         builder.setKylinProperties(kylinConfig.getConfigAsString());
-        final String queryId = BackdoorToggles.getQueryId();
+        final String queryId = queryContext.getQueryId();
         if (queryId != null) {
             builder.setQueryId(queryId);
         }
+        builder.setSpillEnabled(cubeSeg.getConfig().getQueryCoprocessorSpillEnabled());
+        builder.setMaxScanBytes(cubeSeg.getConfig().getPartitionMaxScanBytes());
 
         for (final Pair<byte[], byte[]> epRange : getEPKeyRanges(cuboidBaseShard, shardNum, totalShards)) {
             executorService.submit(new Runnable() {
@@ -168,10 +170,10 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                 public void run() {
 
                     final String logHeader = String.format("<sub-thread for Query %s GTScanRequest %s>", queryId, Integer.toHexString(System.identityHashCode(scanRequest)));
-                    final boolean[] abnormalFinish = new boolean[1];
+                    final AtomicReference<RuntimeException> regionErrorHolder = new AtomicReference<>();
 
                     try {
-                        HTableInterface table = conn.getTable(cubeSeg.getStorageLocationIdentifier(), HBaseConnection.getCoprocessorPool());
+                        Table table = conn.getTable(TableName.valueOf(cubeSeg.getStorageLocationIdentifier()), HBaseConnection.getCoprocessorPool());
 
                         final CubeVisitRequest request = builder.build();
                         final byte[] startKey = epRange.getFirst();
@@ -192,16 +194,31 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                                 }, new Batch.Callback<CubeVisitResponse>() {
                                     @Override
                                     public void update(byte[] region, byte[] row, CubeVisitResponse result) {
-                                        if (region == null)
-                                            return;
-
-                                        totalScannedCount.addAndGet(result.getStats().getScannedRowCount());
-                                        logger.info(logHeader + getStatsString(region, result));
-
-                                        if (result.getStats().getNormalComplete() != 1) {
-                                            abnormalFinish[0] = true;
+                                        if (region == null) {
                                             return;
                                         }
+
+                                        logger.info(logHeader + getStatsString(region, result));
+
+                                        Stats stats = result.getStats();
+                                        queryContext.addAndGetScannedRows(stats.getScannedRowCount());
+                                        queryContext.addAndGetScannedBytes(stats.getScannedBytes());
+
+                                        // if any other region has responded with error, skip further processing
+                                        if (regionErrorHolder.get() != null) {
+                                            return;
+                                        }
+
+                                        // record coprocessor error if happened
+                                        if (result.getStats().getNormalComplete() != 1) {
+                                            regionErrorHolder.compareAndSet(null, getCoprocessorException(result));
+                                            return;
+                                        }
+
+                                        if (queryContext.getScannedBytes() > cubeSeg.getConfig().getQueryMaxScanBytes()) {
+                                            throw new ResourceLimitExceededException("Query scanned " + queryContext.getScannedBytes() + " bytes exceeds threshold " + cubeSeg.getConfig().getQueryMaxScanBytes());
+                                        }
+
                                         try {
                                             if (compressionResult) {
                                                 epResultItr.append(CompressionUtils.decompress(HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows())));
@@ -220,17 +237,16 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
                         return;
                     }
 
-                    if (abnormalFinish[0]) {
-                        Throwable ex = new GTScanSelfTerminatedException(logHeader + "The coprocessor thread stopped itself due to scan timeout or scan threshold(check region server log), failing current query...");
-                        logger.error(logHeader + "Error when visiting cubes by endpoint", ex); // double log coz the query thread may already timeout
-                        epResultItr.notifyCoprocException(ex);
-                        return;
+                    if (regionErrorHolder.get() != null) {
+                        RuntimeException exception = regionErrorHolder.get();
+                        logger.error(logHeader + "Error when visiting cubes by endpoint", exception); // double log coz the query thread may already timeout
+                        epResultItr.notifyCoprocException(exception);
                     }
                 }
             });
         }
 
-        return new StorageResponseGTScatter(fullGTInfo, epResultItr, scanRequest.getColumns(), totalScannedCount.get(), scanRequest.getStoragePushDownLimit());
+        return new StorageResponseGTScatter(scanRequest, new DummyPartitionStreamer(epResultItr), storageContext);
     }
 
     private ByteString serializeGTScanReq(GTScanRequest scanRequest) {
@@ -275,15 +291,37 @@ public class CubeHBaseEndpointRPC extends CubeHBaseRPC {
     private String getStatsString(byte[] region, CubeVisitResponse result) {
         StringBuilder sb = new StringBuilder();
         Stats stats = result.getStats();
+        byte[] compressedRows = HBaseZeroCopyByteString.zeroCopyGetBytes(result.getCompressedRows());
+
         sb.append("Endpoint RPC returned from HTable ").append(cubeSeg.getStorageLocationIdentifier()).append(" Shard ").append(BytesUtil.toHex(region)).append(" on host: ").append(stats.getHostname()).append(".");
         sb.append("Total scanned row: ").append(stats.getScannedRowCount()).append(". ");
+        sb.append("Total scanned bytes: ").append(stats.getScannedBytes()).append(". ");
         sb.append("Total filtered/aggred row: ").append(stats.getAggregatedRowCount()).append(". ");
         sb.append("Time elapsed in EP: ").append(stats.getServiceEndTime() - stats.getServiceStartTime()).append("(ms). ");
         sb.append("Server CPU usage: ").append(stats.getSystemCpuLoad()).append(", server physical mem left: ").append(stats.getFreePhysicalMemorySize()).append(", server swap mem left:").append(stats.getFreeSwapSpaceSize()).append(".");
         sb.append("Etc message: ").append(stats.getEtcMsg()).append(".");
         sb.append("Normal Complete: ").append(stats.getNormalComplete() == 1).append(".");
+        sb.append("Compressed row size: ").append(compressedRows.length);
         return sb.toString();
 
     }
 
+    private RuntimeException getCoprocessorException(CubeVisitResponse response) {
+        if (!response.hasErrorInfo()) {
+            return new RuntimeException("Coprocessor aborts due to scan timeout or other reasons, please re-deploy coprocessor to see concrete error message");
+        }
+
+        CubeVisitResponse.ErrorInfo errorInfo = response.getErrorInfo();
+
+        switch (errorInfo.getType()) {
+        case UNKNOWN_TYPE:
+            return new RuntimeException("Coprocessor aborts: " + errorInfo.getMessage());
+        case TIMEOUT:
+            return new KylinTimeoutException(errorInfo.getMessage());
+        case RESOURCE_LIMIT_EXCEEDED:
+            return new ResourceLimitExceededException("Coprocessor resource limit exceeded: " + errorInfo.getMessage());
+        default:
+            throw new AssertionError("Unknown error type: " + errorInfo.getType());
+        }
+    }
 }

@@ -19,15 +19,18 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>kylin</artifactId>
-        <groupId>org.apache.kylin</groupId>
-        <version>1.6.1-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kylin-tool</artifactId>
     <name>Apache Kylin - Tool</name>
+    <packaging>jar</packaging>
+    <description>Apache Kylin - Tool</description>
+
+    <parent>
+        <artifactId>kylin</artifactId>
+        <groupId>org.apache.kylin</groupId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
 
     <dependencies>
         <dependency>
@@ -37,6 +40,10 @@
         <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-engine-mr</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-engine-spark</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kylin</groupId>
@@ -53,6 +60,16 @@
             <artifactId>hbase-client</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-common</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Env & Test -->
         <dependency>
@@ -63,42 +80,5 @@
         </dependency>
 
     </dependencies>
-
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>assembly</shadedClassifierName>
-                            <artifactSet>
-                                <includes>
-                                    <include>org.apache.kylin:kylin-tool</include>
-                                </includes>
-                            </artifactSet>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

@@ -34,7 +34,7 @@ import org.apache.kylin.gridtable.GTScanRequest;
 import org.apache.kylin.gridtable.GTScanRequestBuilder;
 import org.apache.kylin.gridtable.IGTScanner;
 import org.apache.kylin.gridtable.benchmark.SortedGTRecordGenerator.Randomizer;
-import org.apache.kylin.measure.hllc.HyperLogLogPlusCounter;
+import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
@@ -80,7 +80,7 @@ public class GTScannerBenchmark2 {
         gen.addDimension(100, 4, null);
         gen.addMeasure(8);
         gen.addMeasure(8, new Randomizer() {
-            HyperLogLogPlusCounter hllc = new HyperLogLogPlusCounter(12);
+            HLLCounter hllc = new HLLCounter(12);
 
             @Override
             public int fillRandom(Random rand, byte[] array, int offset) {

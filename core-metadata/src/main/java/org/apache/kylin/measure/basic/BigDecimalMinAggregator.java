@@ -27,24 +27,38 @@ import org.apache.kylin.measure.MeasureAggregator;
 @SuppressWarnings("serial")
 public class BigDecimalMinAggregator extends MeasureAggregator<BigDecimal> {
 
-    BigDecimal max = null;
+    BigDecimal min = null;
 
     @Override
     public void reset() {
-        max = null;
+        min = null;
     }
 
     @Override
     public void aggregate(BigDecimal value) {
-        if (max == null)
-            max = value;
-        else if (max.compareTo(value) > 0)
-            max = value;
+        if (min == null)
+            min = value;
+        else if (min.compareTo(value) > 0)
+            min = value;
+    }
+
+    @Override
+    public BigDecimal aggregate(BigDecimal value1, BigDecimal value2) {
+        if (value1 == null) {
+            return value2;
+        } else if (value2 == null) {
+            return value1;
+        }
+
+        if (value1.compareTo(value2) > 0)
+            return value2;
+        else
+            return value1;
     }
 
     @Override
     public BigDecimal getState() {
-        return max;
+        return min;
     }
 
     @Override

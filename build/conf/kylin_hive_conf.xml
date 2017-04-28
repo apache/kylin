@@ -24,7 +24,13 @@
     <property>
         <name>hive.exec.compress.output</name>
         <value>true</value>
-        <description>enable compress</description>
+        <description>Enable compress</description>
+    </property>
+
+    <property>
+        <name>hive.auto.convert.join</name>
+        <value>true</value>
+        <description>Enables the optimization about converting common join into mapjoin</description>
     </property>
 
     <property>
@@ -74,5 +80,23 @@
             The JobTracker won't attempt to read split metainfo files bigger than
             the configured value. No limits if set to -1.
         </description>
+    </property>
+
+    <property>
+        <name>hive.stats.autogather</name>
+        <value>true</value>
+        <description>Collect statistics for newly created intermediate table</description>
+    </property>
+
+    <property>
+        <name>hive.merge.mapfiles</name>
+        <value>false</value>
+        <description>Disable Hive's auto merge</description>
+    </property>
+
+    <property>
+        <name>hive.merge.mapredfiles</name>
+        <value>false</value>
+        <description>Disable Hive's auto merge</description>
     </property>
 </configuration>

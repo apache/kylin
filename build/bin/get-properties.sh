@@ -25,5 +25,6 @@ then
     exit -1
 fi
 
-result=`cat ${KYLIN_HOME}/conf/kylin.properties | grep -w "^$1" | grep -v '^#' | awk -F= '{ n = index($0,"="); print substr($0,n+1)}' | cut -c 1- |tail -1`
+tool_jar=$(ls $KYLIN_HOME/tool/kylin-tool-*.jar)
+result=`java -cp $tool_jar -Dlog4j.configuration=file:${KYLIN_HOME}/conf/kylin-tools-log4j.properties org.apache.kylin.tool.KylinConfigCLI $1 2>/dev/null`
 echo "$result"

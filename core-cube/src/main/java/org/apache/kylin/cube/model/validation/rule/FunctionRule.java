@@ -31,12 +31,10 @@ import org.apache.kylin.cube.model.validation.IValidatorRule;
 import org.apache.kylin.cube.model.validation.ResultLevel;
 import org.apache.kylin.cube.model.validation.ValidateContext;
 import org.apache.kylin.measure.topn.TopNMeasureType;
-import org.apache.kylin.metadata.MetadataManager;
-import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.ParameterDesc;
-import org.apache.kylin.metadata.model.TableDesc;
 
 import com.google.common.collect.Lists;
 
@@ -153,35 +151,12 @@ public class FunctionRule implements IValidatorRule<CubeDesc> {
      * @param value
      */
     private void validateColumnParameter(ValidateContext context, CubeDesc cube, String value) {
-        String factTable = cube.getModel().getRootFactTable().getTableIdentity();
-        if (StringUtils.isEmpty(factTable)) {
-            context.addResult(ResultLevel.ERROR, "Fact table can not be null.");
-            return;
+        DataModelDesc model = cube.getModel();
+        try {
+            model.findColumn(value);
+        } catch (IllegalArgumentException e) {
+            context.addResult(ResultLevel.ERROR, e.getMessage());
         }
-        TableDesc table = MetadataManager.getInstance(cube.getConfig()).getTableDesc(factTable);
-        if (table == null) {
-            context.addResult(ResultLevel.ERROR, "Fact table can not be found: " + cube);
-            return;
-        }
-        // Prepare column set
-        Set<String> set = new HashSet<String>();
-        ColumnDesc[] cdesc = table.getColumns();
-        for (int i = 0; i < cdesc.length; i++) {
-            ColumnDesc columnDesc = cdesc[i];
-            set.add(columnDesc.getName());
-        }
-
-        String[] items = value.split(",");
-        for (int i = 0; i < items.length; i++) {
-            String item = items[i].trim();
-            if (StringUtils.isEmpty(item)) {
-                continue;
-            }
-            if (!set.contains(item)) {
-                context.addResult(ResultLevel.ERROR, "Column [" + item + "] does not exist in factable table" + factTable);
-            }
-        }
-
     }
 
     /**

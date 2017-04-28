@@ -192,10 +192,10 @@ public class JobDiagnosisInfoCLI extends AbstractInfoExtractor {
     private void extractJobInfo(String taskId, File destDir) throws Exception {
         final Map<String, String> jobInfo = executableDao.getJobOutput(taskId).getInfo();
         if (jobInfo.containsKey(ExecutableConstants.MR_JOB_ID)) {
-            String jobId = jobInfo.get(ExecutableConstants.MR_JOB_ID);
+            String mrJobId = jobInfo.get(ExecutableConstants.MR_JOB_ID);
             FileUtils.forceMkdir(destDir);
-            String[] mrJobArgs = { "-destDir", destDir.getAbsolutePath(), "-compress", "false", "-submodule", "true" };
-            new MrJobInfoExtractor(jobId).execute(mrJobArgs);
+            String[] mrJobArgs = { "-mrJobId", mrJobId, "-destDir", destDir.getAbsolutePath(), "-compress", "false", "-submodule", "true" };
+            new MrJobInfoExtractor().execute(mrJobArgs);
         }
     }
 

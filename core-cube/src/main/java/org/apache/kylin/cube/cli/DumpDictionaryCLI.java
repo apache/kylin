@@ -38,7 +38,11 @@ public class DumpDictionaryCLI {
 
     public static void dump(File f) throws IOException {
         if (f.isDirectory()) {
-            for (File c : f.listFiles())
+            File[] files = f.listFiles();
+            if (files == null) {
+                return;
+            }
+            for (File c : files)
                 dump(c);
             return;
         }
