@@ -191,7 +191,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
         }
     }
 
-    protected int getMaxCombinations(CubeDesc cubeDesc) {
+    protected long getMaxCombinations(CubeDesc cubeDesc) {
         return cubeDesc.getConfig().getCubeAggrGroupMaxCombination();
     }
 }

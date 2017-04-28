@@ -320,8 +320,8 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.cube.ignore-signature-inconsistency", "false"));
     }
 
-    public int getCubeAggrGroupMaxCombination() {
-        return Integer.parseInt(getOptional("kylin.cube.aggrgroup.max-combination", "4096"));
+    public long getCubeAggrGroupMaxCombination() {
+        return Long.parseLong(getOptional("kylin.cube.aggrgroup.max-combination", "4096"));
     }
 
     public boolean getCubeAggrGroupIsMandatoryOnlyValid() {

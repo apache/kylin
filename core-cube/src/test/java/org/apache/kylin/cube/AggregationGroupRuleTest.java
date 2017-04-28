@@ -69,7 +69,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
     public void testGoodBecomeBadDesc() throws IOException {
         AggregationGroupRule rule = new AggregationGroupRule() {
             @Override
-            protected int getMaxCombinations(CubeDesc cubeDesc) {
+            protected long getMaxCombinations(CubeDesc cubeDesc) {
                 return 2;
             }
         };
@@ -149,7 +149,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
     public AggregationGroupRule getAggregationGroupRule() {
         AggregationGroupRule rule = new AggregationGroupRule() {
             @Override
-            protected int getMaxCombinations(CubeDesc cubeDesc) {
+            protected long getMaxCombinations(CubeDesc cubeDesc) {
                 return 4096;
             }
         };

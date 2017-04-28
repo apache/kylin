@@ -53,7 +53,7 @@ public class DimensionDesc implements java.io.Serializable {
 
     public void init(CubeDesc cubeDesc) {
         DataModelDesc model = cubeDesc.getModel();
-        
+
         if (name != null)
             name = name.toUpperCase();
 
@@ -140,5 +140,47 @@ public class DimensionDesc implements java.io.Serializable {
     @Override
     public String toString() {
         return Objects.toStringHelper(this).add("name", name).add("table", table).add("column", column).add("derived", Arrays.toString(derived)).add("join", join).toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        DimensionDesc that = (DimensionDesc) o;
+
+        if (column != null ? !column.equals(that.column) : that.column != null) {
+            return false;
+        }
+
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+
+        if (table != null ? !table.equals(that.table) : that.table != null) {
+            return false;
+        }
+
+        if (derived != null ? !derived.equals(that.derived) : that.derived != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((column == null) ? 0 : name.hashCode());
+        result = prime * result + ((table == null) ? 0 : table.hashCode());
+        result = prime * result + ((derived == null) ? 0 : derived.hashCode());
+        return result;
     }
 }
