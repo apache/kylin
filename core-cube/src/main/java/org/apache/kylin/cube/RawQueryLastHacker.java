@@ -46,8 +46,8 @@ public class RawQueryLastHacker {
         boolean isSelectAll = sqlDigest.allColumns.isEmpty() || sqlDigest.allColumns.equals(sqlDigest.filterColumns);
         for (TblColRef col : cubeDesc.listAllColumns()) {
             if (cubeDesc.listDimensionColumnsIncludingDerived().contains(col) || isSelectAll) {
-                if (tupleInfo.hasColumn(col))
-                    sqlDigest.allColumns.add(col);
+                //if (tupleInfo.hasColumn(col))
+                sqlDigest.allColumns.add(col);
             }
         }
 
