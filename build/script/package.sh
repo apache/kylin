@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+export JAVA_HOME="/opt/java/jdk1.8.0_121"
 echo "Checking maven..."
 
 if [ -z "$(command -v mvn)" ]
