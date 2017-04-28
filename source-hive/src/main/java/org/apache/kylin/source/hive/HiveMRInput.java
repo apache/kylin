@@ -107,7 +107,7 @@ public class HiveMRInput implements IMRInput {
         public void configureJob(Job job) {
             try {
                 job.getConfiguration().addResource("hive-site.xml");
-                
+
                 HCatInputFormat.setInput(job, dbName, tableName);
                 job.setInputFormatClass(HCatInputFormat.class);
 
@@ -145,9 +145,7 @@ public class HiveMRInput implements IMRInput {
             final KylinConfig cubeConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName).getConfig();
             JobEngineConfig conf = new JobEngineConfig(cubeConfig);
 
-            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(
-                    flatTableDatabase, conf.getHiveConfFilePath(), cubeConfig.getHiveConfigOverride()
-            ) ;
+            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
             final String jobWorkingDir = getJobWorkingDir(jobFlow);
 
             // create flat table first, then count and redistribute
@@ -259,6 +257,7 @@ public class HiveMRInput implements IMRInput {
 
         private void redistributeTable(KylinConfig config, int numReducers) throws IOException {
             final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+            hiveCmdBuilder.setHiveConfProps(new JobEngineConfig(config).getHivePropsFromFile());
             hiveCmdBuilder.addStatement(getInitStatement());
             hiveCmdBuilder.addStatement("set mapreduce.job.reduces=" + numReducers + ";\n");
             hiveCmdBuilder.addStatement("set hive.merge.mapredfiles=false;\n");
@@ -376,6 +375,7 @@ public class HiveMRInput implements IMRInput {
             final String hiveTable = this.getIntermediateTableIdentity();
             if (config.isHiveKeepFlatTable() == false && StringUtils.isNotEmpty(hiveTable)) {
                 final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+                hiveCmdBuilder.setHiveConfProps(new JobEngineConfig(config).getHivePropsFromFile());
                 hiveCmdBuilder.addStatement("USE " + config.getHiveDatabaseForIntermediateTable() + ";");
                 hiveCmdBuilder.addStatement("DROP TABLE IF EXISTS  " + hiveTable + ";");
 

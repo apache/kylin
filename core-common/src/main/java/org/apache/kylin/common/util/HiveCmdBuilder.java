@@ -24,6 +24,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -42,6 +44,7 @@ public class HiveCmdBuilder {
 
     private HiveClientMode clientMode;
     private KylinConfig kylinConfig;
+    final private Map<String, String> hiveConfProps = new HashMap<>();
     final private ArrayList<String> statements = Lists.newArrayList();
 
     public HiveCmdBuilder() {
@@ -58,7 +61,9 @@ public class HiveCmdBuilder {
             for (String statement : statements) {
                 buf.append(statement).append("\n");
             }
-            buf.append("\"");
+            buf.append("\"").append(" \\").append("\n");
+            buf.append(parseProps());
+            buf.append("\n");
             break;
         case BEELINE:
             BufferedWriter bw = null;
@@ -71,6 +76,7 @@ public class HiveCmdBuilder {
                     bw.newLine();
                 }
                 buf.append("beeline ");
+                buf.append(parseProps());
                 buf.append(kylinConfig.getHiveBeelineParams());
                 buf.append(" -f ");
                 buf.append(tmpHql.getAbsolutePath());
@@ -101,8 +107,29 @@ public class HiveCmdBuilder {
         return buf.toString();
     }
 
+    private String parseProps() {
+        StringBuilder s = new StringBuilder();
+        for (Map.Entry<String, String> prop : hiveConfProps.entrySet()) {
+            s.append("--hiveconf ");
+            s.append(prop.getKey());
+            s.append("=");
+            s.append(prop.getValue());
+            s.append(" \\").append("\n");
+        }
+        return s.toString();
+    }
+
     public void reset() {
         statements.clear();
+        hiveConfProps.clear();
+    }
+
+    public void setHiveConfProps(Map<String, String> hiveConfProps) {
+        this.hiveConfProps.putAll(hiveConfProps);
+    }
+
+    public void overwriteHiveProps(Map<String, String> overwrites) {
+        this.hiveConfProps.putAll(overwrites);
     }
 
     public void addStatement(String statement) {
