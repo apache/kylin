@@ -59,10 +59,7 @@
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-source-kafka</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.kylin</groupId>
-            <artifactId>kylin-tool</artifactId>
-        </dependency>
+
 
         <dependency>
             <groupId>net.sf.ehcache</groupId>
@@ -75,6 +72,11 @@
         <dependency>
             <groupId>net.sf.supercsv</groupId>
             <artifactId>super-csv</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kylin</groupId>
+            <artifactId>kylin-engine-spark</artifactId>
         </dependency>
 
         <!-- Spring Core -->

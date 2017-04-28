@@ -18,22 +18,19 @@
 
 package org.apache.kylin.common.persistence;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.List;
-import java.util.NavigableSet;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.NavigableSet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Be called by LocalFileResourceStoreTest, ITHBaseResourceStoreTest and ITHDFSResourceStoreTest.
@@ -200,51 +197,6 @@ public class ResourceStoreTest {
         }
         logger.info("step : " + step);
         return System.currentTimeMillis() - startTime;
-    }
-
-    @SuppressWarnings("serial")
-    public static class StringEntity extends RootPersistentEntity {
-
-        public static final Serializer<StringEntity> serializer = new Serializer<StringEntity>() {
-            @Override
-            public void serialize(StringEntity obj, DataOutputStream out) throws IOException {
-                out.writeUTF(obj.str);
-            }
-
-            @Override
-            public StringEntity deserialize(DataInputStream in) throws IOException {
-                String str = in.readUTF();
-                return new StringEntity(str);
-            }
-        };
-
-        String str;
-
-        public StringEntity(String str) {
-            this.str = str;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = super.hashCode();
-            result = prime * result + ((str == null) ? 0 : str.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this)
-                return true;
-            if (!(obj instanceof StringEntity))
-                return false;
-            return StringUtils.equals(this.str, ((StringEntity) obj).str);
-        }
-
-        @Override
-        public String toString() {
-            return str;
-        }
     }
 
     public static String replaceMetadataUrl(KylinConfig kylinConfig, String newUrl) {

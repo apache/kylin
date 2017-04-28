@@ -70,17 +70,17 @@ public class ServiceTestBase extends LocalFileMetadataTestCase {
 
         if (!userService.userExists("ADMIN")) {
             userService.createUser(new User("ADMIN", "KYLIN", Arrays.asList(//
-                    new UserService.UserGrantedAuthority(Constant.ROLE_ADMIN), new UserService.UserGrantedAuthority(Constant.ROLE_ANALYST), new UserService.UserGrantedAuthority(Constant.ROLE_MODELER))));
+                new UserGrantedAuthority(Constant.ROLE_ADMIN), new UserGrantedAuthority(Constant.ROLE_ANALYST), new UserGrantedAuthority(Constant.ROLE_MODELER))));
         }
 
         if (!userService.userExists("MODELER")) {
             userService.createUser(new User("MODELER", "MODELER", Arrays.asList(//
-                    new UserService.UserGrantedAuthority(Constant.ROLE_ANALYST), new UserService.UserGrantedAuthority(Constant.ROLE_MODELER))));
+                new UserGrantedAuthority(Constant.ROLE_ANALYST), new UserGrantedAuthority(Constant.ROLE_MODELER))));
         }
 
-        if (!userService.userExists("ROLE_ANALYST")) {
-            userService.createUser(new User("ROLE_ANALYST", "ROLE_ANALYST", Arrays.asList(//
-                    new UserService.UserGrantedAuthority(Constant.ROLE_ANALYST))));
+        if (!userService.userExists("ANALYST")) {
+            userService.createUser(new User("ANALYST", "ANALYST", Arrays.asList(//
+                new UserGrantedAuthority(Constant.ROLE_ANALYST))));
         }
     }
 
