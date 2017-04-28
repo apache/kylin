@@ -28,7 +28,6 @@ import javax.annotation.PostConstruct;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.constant.Constant;
@@ -41,8 +40,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  */
@@ -110,6 +107,9 @@ public class UserService implements UserDetailsManager {
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         try {
             UserInfo userInfo = aclStore.getResource(getId(userName), UserInfo.class, UserInfoSerializer.getInstance());
+            if (userInfo == null) {
+                throw new UsernameNotFoundException("User:" + userName + " Not found");
+            }
             logger.debug("load user : {}", userName);
             return wrap(userInfo);
         } catch (IOException e) {
@@ -147,6 +147,8 @@ public class UserService implements UserDetailsManager {
     }
 
     private User wrap(UserInfo userInfo) {
+        if (userInfo == null)
+            return null;
         List<GrantedAuthority> authorities = new ArrayList<>();
         List<String> auths = userInfo.getAuthorities();
         for (String str : auths) {
@@ -177,109 +179,6 @@ public class UserService implements UserDetailsManager {
         public UserInfo deserialize(DataInputStream in) throws IOException {
             String json = in.readUTF();
             return JsonUtil.readValue(json, UserInfo.class);
-        }
-    }
-
-    public static class UserInfo extends RootPersistentEntity {
-        @JsonProperty()
-        private String username;
-        @JsonProperty()
-        private String password;
-        @JsonProperty()
-        private List<String> authorities = new ArrayList<>();
-
-        public UserInfo(String username, String password, List<String> authorities) {
-            this.username = username;
-            this.password = password;
-            this.authorities = authorities;
-        }
-
-        public UserInfo(UserDetails user) {
-            this.username = user.getUsername();
-            this.password = user.getPassword();
-            for (GrantedAuthority a : user.getAuthorities()) {
-                this.authorities.add(a.getAuthority());
-            }
-        }
-
-        public UserInfo() {
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-
-        public List<String> getAuthorities() {
-            return authorities;
-        }
-
-        public void setAuthorities(List<String> authorities) {
-            this.authorities = authorities;
-        }
-
-    }
-
-    public static class UserGrantedAuthority implements GrantedAuthority {
-        private static final long serialVersionUID = -5128905636841891058L;
-
-        private String authority;
-
-        public UserGrantedAuthority() {
-        }
-
-        public UserGrantedAuthority(String authority) {
-            setAuthority(authority);
-        }
-
-        @Override
-        public String getAuthority() {
-            return authority;
-        }
-
-        public void setAuthority(String authority) {
-            this.authority = authority;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((authority == null) ? 0 : authority.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            UserGrantedAuthority other = (UserGrantedAuthority) obj;
-            if (authority == null) {
-                if (other.authority != null)
-                    return false;
-            } else if (!authority.equals(other.authority))
-                return false;
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return authority;
         }
     }
 
