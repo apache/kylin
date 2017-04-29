@@ -61,9 +61,8 @@ public class HiveCmdBuilder {
             for (String statement : statements) {
                 buf.append(statement).append("\n");
             }
-            buf.append("\"").append(" \\").append("\n");
+            buf.append("\"");
             buf.append(parseProps());
-            buf.append("\n");
             break;
         case BEELINE:
             BufferedWriter bw = null;
@@ -110,11 +109,10 @@ public class HiveCmdBuilder {
     private String parseProps() {
         StringBuilder s = new StringBuilder();
         for (Map.Entry<String, String> prop : hiveConfProps.entrySet()) {
-            s.append("--hiveconf ");
+            s.append(" --hiveconf ");
             s.append(prop.getKey());
             s.append("=");
             s.append(prop.getValue());
-            s.append(" \\").append("\n");
         }
         return s.toString();
     }
