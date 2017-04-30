@@ -15,7 +15,7 @@ or send to Apache Kylin mailing list:
 * User relative: [user@kylin.apache.org](mailto:user@kylin.apache.org)
 * Development relative: [dev@kylin.apache.org](mailto:dev@kylin.apache.org)
 
-## v2.0.0 - 2017-04-22  (voting)
+## v2.0.0 - 2017-04-30
 
 _Tag:_ [kylin-2.0.0](https://github.com/apache/kylin/tree/kylin-2.0.0)
 This is a major release with **Spark Cubing**, **Snowflake Data Model** and runs **TPC-H Benchmark**. Check out [the download](/download/) and the [how to upgrade guide](/docs20/howto/howto_upgrade.html).

@@ -72,7 +72,7 @@ If you're the first time to do release, you need update the server authenticatio
 
 In the "servers" section, make sure the following servers be added, and replace #YOUR_APACHE_ID#, #YOUR_APACHE_PWD#, #YOUR_GPG_PASSPHRASE# with your ID, password, and passphrase:
 {% highlight bash %}
-<servers>
+  <servers>
     <!-- To publish a snapshot of some part of Maven -->
     <server>
       <id>apache.snapshots.https</id>
@@ -113,7 +113,7 @@ In the "servers" section, make sure the following servers be added, and replace 
   </servers>
 {% endhighlight %}
 
-__Fix license issues and make a snapshot__
+__Fix license issues__
 {% highlight bash %}
 # Set passphrase variable without putting it into shell history
 $ read -s GPG_PASSPHRASE
@@ -136,7 +136,7 @@ Optionally, when the dry-run has succeeded, change install to deploy:
 $ mvn -Papache-release -Dgpg.passphrase=${GPG_PASSPHRASE} deploy
 {% endhighlight %}
 
-__Making a release__
+__Prepare and dry run a release__
 
 Create a release branch named after the release, e.g. v0.7.2-release, and push it to Apache.  
 {% highlight bash %}
@@ -145,7 +145,7 @@ $ git push -u origin vX.Y.Z-release
 {% endhighlight %}
 We will use the branch for the entire the release process. Meanwhile, we do not allow commits to the master branch. After the release is final, we can use `git merge --ff-only` to append the changes on the release branch onto the master branch. (Apache does not allow reverts to the master branch, which makes it difficult to clean up the kind of messy commits that inevitably happen while you are trying to finalize a release.)
 
-Now, set up your environment and do a dry run. The dry run will not commit any changes back to git and gives you the opportunity to verify that the release process will complete as expected.
+Now, set up your environment and do an optional dry run. The dry run will not commit any changes back to git and gives you the opportunity to verify that the release process will complete as expected.
 
 If any of the steps fail, clean up (see below), fix the problem, and start again from the top.  
 {% highlight bash %}
@@ -160,7 +160,7 @@ $ mvn clean
 $ mvn -DdryRun=true -DskipTests -DreleaseVersion=X.Y.Z -DdevelopmentVersion=(X.Y.Z+1)-SNAPSHOT -Papache-release -Darguments="-Dgpg.passphrase=${GPG_PASSPHRASE}" release:prepare 2>&1 | tee /tmp/prepare-dry.log
 {% endhighlight %}
 
-__Check the artifacts:__
+__Check the dry run output:__
 
 * In the `target` directory should be these 8 files, among others:
   * apache-kylin-X.Y.Z-SNAPSHOT-src.tar.gz
@@ -371,6 +371,8 @@ with a change comment
 "Resolved in release X.Y.Z (YYYY-MM-DD)"
 (fill in release number and date appropriately).  
 __Uncheck "Send mail for this update".__
+
+Mark the version released in JIRA system, [Manage Versions](https://issues.apache.org/jira/plugins/servlet/project-config/KYLIN/versions).
 
 Promote the staged nexus artifacts.
 
