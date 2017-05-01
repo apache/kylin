@@ -162,6 +162,16 @@ public class OLAPContext {
         this.sqlDigest = null;
     }
 
+    public boolean belongToContextTables(TblColRef tblColRef) {
+        for (OLAPTableScan olapTableScan : this.allTableScans) {
+            if (olapTableScan.getColumnRowType().getAllColumns().contains(tblColRef)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
     public void setReturnTupleInfo(RelDataType rowType, ColumnRowType columnRowType) {
         TupleInfo info = new TupleInfo();
         List<RelDataTypeField> fieldList = rowType.getFieldList();

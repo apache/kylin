@@ -367,7 +367,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
             if (!aggCall.getArgList().isEmpty()) {
                 for (Integer index : aggCall.getArgList()) {
                     TblColRef column = inputColumnRowType.getColumnByIndex(index);
-                    if (!column.isInnerColumn()) {
+                    if (!column.isInnerColumn() && this.context.belongToContextTables(column)) {
                         this.context.metricsColumns.add(column);
                     }
                 }
@@ -377,7 +377,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
 
     private void addToContextGroupBy(List<TblColRef> colRefs) {
         for (TblColRef col : colRefs) {
-            if (col.isInnerColumn() == false)
+            if (col.isInnerColumn() == false && this.context.belongToContextTables(col))
                 this.context.groupByColumns.add(col);
         }
     }

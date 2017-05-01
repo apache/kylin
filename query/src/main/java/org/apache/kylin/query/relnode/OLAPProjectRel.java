@@ -177,7 +177,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         // check it for rewrite count
         if (index < inputColumnRowType.size()) {
             TblColRef column = inputColumnRowType.getColumnByIndex(index);
-            if (!column.isInnerColumn() && !this.rewriting && !this.afterAggregate) {
+            if (!column.isInnerColumn() && context.belongToContextTables(column) && !this.rewriting && !this.afterAggregate) {
                 if (!isMerelyPermutation) {
                     context.allColumns.add(column);
                 }
@@ -296,7 +296,6 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     public OLAPContext getContext() {
         return context;
     }
-    
 
     @Override
     public boolean hasSubQuery() {

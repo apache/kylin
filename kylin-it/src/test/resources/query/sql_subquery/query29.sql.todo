@@ -1,8 +1,8 @@
 
--- group by or aggregate on columns from subquery will fail!
+-- filter or aggregate on columns from subquery will fail!
 
 
-select test_kylin_fact.lstg_format_name, xxx.week_beg_dt,sum(test_kylin_fact.price) as GMV 
+select test_kylin_fact.lstg_format_name, xxx.cal_dt, sum(test_kylin_fact.price) as GMV 
  , count(*) as TRANS_CNT 
  from  
 
@@ -16,7 +16,7 @@ select test_kylin_fact.lstg_format_name, xxx.week_beg_dt,sum(test_kylin_fact.pri
  ON test_kylin_fact.cal_dt = xxx.cal_dt 
 
 
- where test_category_groupings.meta_categ_name  <> 'Baby'
- group by test_kylin_fact.lstg_format_name, xxx.week_beg_dt 
+ where test_category_groupings.meta_categ_name  <> 'Baby' and xxx.week_beg_dt > date'2010-02-02'
+ group by test_kylin_fact.lstg_format_name,  xxx.cal_dt
 
 
