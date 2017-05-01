@@ -322,7 +322,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         Set<TblColRef> filterColumns = Sets.newHashSet();
         TupleFilter.collectColumns(filter, filterColumns);
         for (TblColRef tblColRef : filterColumns) {
-            if (!tblColRef.isInnerColumn()) {
+            if (!tblColRef.isInnerColumn() && context.belongToContextTables(tblColRef)) {
                 context.allColumns.add(tblColRef);
                 context.filterColumns.add(tblColRef);
             }
