@@ -6,77 +6,101 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 package org.apache.kylin.query.util;
 
-import java.util.LinkedList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.kylin.common.util.Pair;
+import com.google.common.collect.Lists;
 
-/**
- * from (a join b on a.x = b.y) join c
- * 
- * similar in https://issues.apache.org/jira/browse/CALCITE-35
- * 
- * we'll find such pattern and remove the parentheses
- */
 public class CognosParenthesesEscape implements QueryUtil.IQueryTransformer {
-
-    private static final String S0 = "\\s*";
-    private static final String S1 = "\\s";
-    private static final String SM = "\\s+";
-    private static final String TABLE_OR_COLUMN_NAME = "[\\w\\\"\\'\\.]+";
-    private static final String TABLE_NAME_WITH_OPTIONAL_ALIAS = TABLE_OR_COLUMN_NAME + "((\\s+as)?\\s+" + TABLE_OR_COLUMN_NAME + ")?";
-    private static final String JOIN = "(\\s+inner|\\s+((left|right|full)(\\s+outer)?))?\\s+join";// as per http://stackoverflow.com/questions/406294/left-join-vs-left-outer-join-in-sql-server
-    private static final String EQUAL_CONDITION = SM + TABLE_OR_COLUMN_NAME + S0 + "=" + S0 + TABLE_OR_COLUMN_NAME;
-    private static final String PARENTHESE_PATTERN_STR = "\\(" + S0 + // (
-            TABLE_NAME_WITH_OPTIONAL_ALIAS + // a
-            JOIN + SM + // join
-            TABLE_NAME_WITH_OPTIONAL_ALIAS + //b
-            SM + "on" + EQUAL_CONDITION + "(\\s+and" + EQUAL_CONDITION + ")*" + // on a.x = b.y [and a.x2 = b.y2]
-            S0 + "\\)";// )
-    private static final Pattern PARENTTHESES_PATTERN = Pattern.compile(PARENTHESE_PATTERN_STR, Pattern.CASE_INSENSITIVE);
-
-    private static int identifierNum = 0;
+    private static final Pattern FROM_PATTERN = Pattern.compile("\\s+from\\s+(\\s*\\(\\s*)+(?!\\s*select\\s)", Pattern.CASE_INSENSITIVE);
 
     @Override
     public String transform(String sql) {
+        if (sql == null || sql.isEmpty()) {
+            return sql;
+        }
+
+        Map<Integer, Integer> parenthesesPairs = findParenthesesPairs(sql);
+        if (parenthesesPairs.isEmpty()) {
+            // parentheses not found
+            return sql;
+        }
+
+        List<Integer> parentheses = Lists.newArrayList();
+        StringBuilder result = new StringBuilder(sql);
+
         Matcher m;
-        List<Pair<String, String>> matches = new LinkedList<>();
         while (true) {
-            m = PARENTTHESES_PATTERN.matcher(sql);
-            if (!m.find())
+            m = FROM_PATTERN.matcher(sql);
+            if (!m.find()) {
                 break;
+            }
 
-            String oneParentheses = m.group(0);
-            String identifier = generateRandomName();
-            matches.add(new Pair<String, String>(identifier, oneParentheses.substring(1, oneParentheses.length() - 1)));
-            sql = sql.substring(0, m.start()) + identifier + sql.substring(m.end());
+            int i = m.end() - 1;
+            while (i > m.start()) {
+                if (sql.charAt(i) == '(') {
+                    parentheses.add(i);
+                }
+                i--;
+            }
+
+            if (m.end() < sql.length()) {
+                sql = sql.substring(m.end());
+            } else {
+                break;
+            }
         }
 
-        for (int i = matches.size() - 1; i >= 0; i--) {
-            sql = sql.replaceAll(matches.get(i).getKey(), matches.get(i).getValue());
+        Collections.sort(parentheses);
+        for (int i = 0; i < parentheses.size(); i++) {
+            result.deleteCharAt(parentheses.get(i) - i);
+            result.deleteCharAt(parenthesesPairs.get(parentheses.get(i)) - i - 1);
         }
-
-        return sql;
+        return result.toString();
     }
 
-    private String generateRandomName() {
-        UUID uuid = UUID.randomUUID();
-        return uuid.toString().replace("-", "_") + "_" + (identifierNum++);
+    private Map<Integer, Integer> findParenthesesPairs(String sql) {
+        Map<Integer, Integer> result = new HashMap<>();
+        if (sql.length() > 1) {
+            Stack<Integer> lStack = new Stack<>();
+            boolean inStrVal = false;
+            for (int i = 0; i < sql.length(); i++) {
+                switch (sql.charAt(i)) {
+                case '(':
+                    if (!inStrVal) {
+                        lStack.push(i);
+                    }
+                    break;
+                case ')':
+                    if (!inStrVal && !lStack.empty()) {
+                        result.put(lStack.pop(), i);
+                    }
+                    break;
+                case '\'':
+                    inStrVal = !inStrVal;
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        return result;
     }
-
 }
