@@ -45,6 +45,7 @@ import org.apache.kylin.rest.security.AclHBaseStorage;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.AclTableMigrationTool;
 import org.apache.kylin.rest.service.LegacyUserService;
+import org.apache.kylin.rest.service.UserGrantedAuthority;
 import org.apache.kylin.rest.service.UserService;
 import org.apache.kylin.rest.util.Serializer;
 import org.junit.After;
@@ -70,7 +71,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
 
     private TableName userTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclHBaseStorage.USER_TABLE_NAME);
 
-    private Serializer<LegacyUserService.UserGrantedAuthority[]> ugaSerializer = new Serializer<LegacyUserService.UserGrantedAuthority[]>(LegacyUserService.UserGrantedAuthority[].class);
+    private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
     private AclTableMigrationTool aclTableMigrationJob;
 
@@ -192,13 +193,13 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
         if (authorities == null)
             authorities = Collections.emptyList();
 
-        LegacyUserService.UserGrantedAuthority[] serializing = new LegacyUserService.UserGrantedAuthority[authorities.size() + 1];
+        UserGrantedAuthority[] serializing = new UserGrantedAuthority[authorities.size() + 1];
 
         // password is stored as the [0] authority
-        serializing[0] = new LegacyUserService.UserGrantedAuthority(LegacyUserService.PWD_PREFIX + "password");
+        serializing[0] = new UserGrantedAuthority(LegacyUserService.PWD_PREFIX + "password");
         int i = 1;
         for (GrantedAuthority a : authorities) {
-            serializing[i++] = new LegacyUserService.UserGrantedAuthority(a.getAuthority());
+            serializing[i++] = new UserGrantedAuthority(a.getAuthority());
         }
 
         byte[] value = ugaSerializer.serialize(serializing);

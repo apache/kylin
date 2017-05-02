@@ -18,8 +18,17 @@
 
 package org.apache.kylin.rest.service;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -59,16 +68,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.util.FieldUtils;
 import org.springframework.util.Assert;
 
-import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * @author xduo
@@ -363,98 +364,5 @@ public class LegacyAclService implements MutableAclService {
         }
     }
 
-    protected static class DomainObjectInfo {
-        private String id;
-        private String type;
-
-        public DomainObjectInfo() {
-        }
-
-        public DomainObjectInfo(ObjectIdentity oid) {
-            super();
-            this.id = (String) oid.getIdentifier();
-            this.type = oid.getType();
-        }
-
-        public Serializable getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-    }
-
-    protected static class SidInfo {
-        private String sid;
-        private boolean isPrincipal;
-
-        public SidInfo() {
-        }
-
-        public SidInfo(Sid sid) {
-            if (sid instanceof PrincipalSid) {
-                this.sid = ((PrincipalSid) sid).getPrincipal();
-                this.isPrincipal = true;
-            } else if (sid instanceof GrantedAuthoritySid) {
-                this.sid = ((GrantedAuthoritySid) sid).getGrantedAuthority();
-                this.isPrincipal = false;
-            }
-        }
-
-        public String getSid() {
-            return sid;
-        }
-
-        public void setSid(String sid) {
-            this.sid = sid;
-        }
-
-        public boolean isPrincipal() {
-            return isPrincipal;
-        }
-
-        public void setPrincipal(boolean isPrincipal) {
-            this.isPrincipal = isPrincipal;
-        }
-    }
-
-    protected static class AceInfo {
-        private SidInfo sidInfo;
-        private int permissionMask;
-
-        public AceInfo() {
-        }
-
-        public AceInfo(AccessControlEntry ace) {
-            super();
-            this.sidInfo = new SidInfo(ace.getSid());
-            this.permissionMask = ace.getPermission().getMask();
-        }
-
-        public SidInfo getSidInfo() {
-            return sidInfo;
-        }
-
-        public void setSidInfo(SidInfo sidInfo) {
-            this.sidInfo = sidInfo;
-        }
-
-        public int getPermissionMask() {
-            return permissionMask;
-        }
-
-        public void setPermissionMask(int permissionMask) {
-            this.permissionMask = permissionMask;
-        }
-    }
 
 }

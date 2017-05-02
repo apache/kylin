@@ -52,13 +52,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 public class AclTableMigrationTool {
 
-    private static final Serializer<LegacyAclService.SidInfo> sidSerializer = new Serializer<LegacyAclService.SidInfo>(LegacyAclService.SidInfo.class);
+    private static final Serializer<SidInfo> sidSerializer = new Serializer<SidInfo>(SidInfo.class);
 
-    private static final Serializer<LegacyAclService.DomainObjectInfo> domainObjSerializer = new Serializer<LegacyAclService.DomainObjectInfo>(LegacyAclService.DomainObjectInfo.class);
+    private static final Serializer<DomainObjectInfo> domainObjSerializer = new Serializer<DomainObjectInfo>(DomainObjectInfo.class);
 
-    private static final Serializer<LegacyAclService.AceInfo> aceSerializer = new Serializer<LegacyAclService.AceInfo>(LegacyAclService.AceInfo.class);
+    private static final Serializer<AceInfo> aceSerializer = new Serializer<AceInfo>(AceInfo.class);
 
-    private static final Serializer<LegacyUserService.UserGrantedAuthority[]> ugaSerializer = new Serializer<LegacyUserService.UserGrantedAuthority[]>(LegacyUserService.UserGrantedAuthority[].class);
+    private static final Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
     public static final String MIGRATE_OK_PREFIX = AclService.DIR_PREFIX + "MIGRATE_OK_";
 
@@ -198,8 +198,8 @@ public class AclTableMigrationTool {
     }
 
     private DomainObjectInfo getParentDomainObjectInfoFromRs(Result result) throws IOException {
-        LegacyAclService.DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(Bytes.toBytes(AclHBaseStorage.ACL_INFO_FAMILY), Bytes.toBytes(LegacyAclService.ACL_INFO_FAMILY_PARENT_COLUMN)));
-        return convert(parentInfo);
+        DomainObjectInfo parentInfo = domainObjSerializer.deserialize(result.getValue(Bytes.toBytes(AclHBaseStorage.ACL_INFO_FAMILY), Bytes.toBytes(LegacyAclService.ACL_INFO_FAMILY_PARENT_COLUMN)));
+        return parentInfo;
     }
 
     private boolean getInheriting(Result result) {
@@ -208,8 +208,8 @@ public class AclTableMigrationTool {
     }
 
     private SidInfo getOwnerSidInfo(Result result) throws IOException {
-        LegacyAclService.SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(AclHBaseStorage.ACL_INFO_FAMILY), Bytes.toBytes(LegacyAclService.ACL_INFO_FAMILY_OWNER_COLUMN)));
-        return convert(owner);
+        SidInfo owner = sidSerializer.deserialize(result.getValue(Bytes.toBytes(AclHBaseStorage.ACL_INFO_FAMILY), Bytes.toBytes(LegacyAclService.ACL_INFO_FAMILY_OWNER_COLUMN)));
+        return owner;
     }
 
     private Map<String, AceInfo> getAllAceInfo(Result result) throws IOException {
@@ -217,39 +217,12 @@ public class AclTableMigrationTool {
         NavigableMap<byte[], byte[]> familyMap = result.getFamilyMap(Bytes.toBytes(AclHBaseStorage.ACL_ACES_FAMILY));
         for (Map.Entry<byte[], byte[]> entry : familyMap.entrySet()) {
             String sid = String.valueOf(entry.getKey());
-            LegacyAclService.AceInfo aceInfo = aceSerializer.deserialize(familyMap.get(entry.getValue()));
+            AceInfo aceInfo = aceSerializer.deserialize(familyMap.get(entry.getValue()));
             if (null != aceInfo) {
-                allAceInfoMap.put(sid, convert(aceInfo));
+                allAceInfoMap.put(sid, aceInfo);
             }
         }
         return allAceInfoMap;
-    }
-
-    private DomainObjectInfo convert(LegacyAclService.DomainObjectInfo oldInfo) {
-        if (oldInfo == null)
-            return null;
-        DomainObjectInfo newInfo = new DomainObjectInfo();
-        newInfo.setId(String.valueOf(oldInfo.getId()));
-        newInfo.setType(oldInfo.getType());
-        return newInfo;
-    }
-
-    private SidInfo convert(LegacyAclService.SidInfo oldInfo) {
-        if (oldInfo == null)
-            return null;
-        SidInfo newInfo = new SidInfo();
-        newInfo.setPrincipal(oldInfo.isPrincipal());
-        newInfo.setSid(oldInfo.getSid());
-        return newInfo;
-    }
-
-    private AceInfo convert(LegacyAclService.AceInfo oldInfo) {
-        if (oldInfo == null)
-            return null;
-        AceInfo newInfo = new AceInfo();
-        newInfo.setPermissionMask(oldInfo.getPermissionMask());
-        newInfo.setSidInfo(convert(oldInfo.getSidInfo()));
-        return newInfo;
     }
 
     private UserInfo convert(User user) {
@@ -273,10 +246,10 @@ public class AclTableMigrationTool {
         String username = Bytes.toString(result.getRow());
 
         byte[] valueBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
-        LegacyUserService.UserGrantedAuthority[] deserialized = ugaSerializer.deserialize(valueBytes);
+        UserGrantedAuthority[] deserialized = ugaSerializer.deserialize(valueBytes);
 
         String password = "";
-        List<LegacyUserService.UserGrantedAuthority> authorities = Collections.emptyList();
+        List<UserGrantedAuthority> authorities = Collections.emptyList();
 
         // password is stored at [0] of authorities for backward compatibility
         if (deserialized != null) {
@@ -288,7 +261,7 @@ public class AclTableMigrationTool {
             }
         }
         List<String> authoritiesStr = new ArrayList<>();
-        for (LegacyUserService.UserGrantedAuthority auth : authorities) {
+        for (UserGrantedAuthority auth : authorities) {
             if (auth != null) {
                 authoritiesStr.add(auth.getAuthority());
             }
