@@ -168,7 +168,7 @@ class ProjectL2Cache {
     }
 
     private ProjectCache loadCache(String project) {
-        logger.info("Loading L2 project cache for " + project);
+        logger.debug("Loading L2 project cache for " + project);
         ProjectCache projectCache = new ProjectCache(project);
 
         ProjectInstance pi = mgr.getProject(project);

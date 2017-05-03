@@ -130,7 +130,7 @@ public class BuiltInFunctionTupleFilter extends FunctionTupleFilter {
                 else
                     methodParams.add((Serializable) clazz.cast(clazz.getDeclaredMethod("valueOf", String.class).invoke(null, constVal)));
             } catch (Exception e) {
-                logger.warn(e.getMessage());
+                logger.warn("Reflection failed for methodParams. ", e);
                 isValidFunc = false;
             }
         }

@@ -255,7 +255,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         try {
             List<String> users = getAllNofifyUsers(config);
             if (users.isEmpty()) {
-                logger.warn("no need to send email, user list is empty");
+                logger.debug("no need to send email, user list is empty");
                 return;
             }
             final Pair<String, String> email = formatNotifications(context, state);
@@ -293,7 +293,7 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
         try {
             List<String> users = getAllNofifyUsers(config);
             if (users.isEmpty()) {
-                logger.warn("no need to send email, user list is empty");
+                logger.debug("no need to send email, user list is empty");
                 return;
             }
             doSendMail(config, users, email);

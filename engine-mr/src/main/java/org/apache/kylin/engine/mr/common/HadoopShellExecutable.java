@@ -55,8 +55,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
             final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
             final AbstractHadoopJob job = constructor.newInstance();
             String[] args = params.trim().split("\\s+");
-            logger.info("parameters of the HadoopShellExecutable:");
-            logger.info(params);
+            logger.info("parameters of the HadoopShellExecutable: {}", params);
             int result;
             StringBuilder log = new StringBuilder();
             try {

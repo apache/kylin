@@ -232,7 +232,7 @@ public class KylinConfig extends KylinConfigBase {
             return getKylinPropertiesFile(kylinConfHome);
         }
 
-        logger.warn("KYLIN_CONF property was not set, will seek KYLIN_HOME env variable");
+        logger.debug("KYLIN_CONF property was not set, will seek KYLIN_HOME env variable");
 
         String kylinHome = getKylinHome();
         if (StringUtils.isEmpty(kylinHome))

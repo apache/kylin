@@ -18,7 +18,6 @@
 
 package org.apache.kylin.dimension;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -54,7 +53,6 @@ public abstract class DimensionEncodingFactory {
      * Create a DimensionEncoding instance, with inputs corresponding to RowKeyColDesc.encodingName and RowKeyColDesc.encodingArgs.
      */
     public static DimensionEncoding create(String encodingName, String[] args, int version) {
-        logger.debug("Encoding Name : {}, args : {}, version {}", encodingName, Arrays.toString(args), version);
         if (factoryMap == null)
             initFactoryMap();
 
