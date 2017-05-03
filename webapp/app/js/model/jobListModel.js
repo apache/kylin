@@ -38,6 +38,7 @@ KylinApp.service('JobList',function(JobService,$q){
                 } else {
                     _this.jobs[id] = job;
                 }
+                _this.jobs[id].dropped = false;
             });
 
             defer.resolve(jobs.length);

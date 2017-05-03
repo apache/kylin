@@ -28,7 +28,9 @@ import java.util.Map;
 import org.apache.kylin.job.JobInstance;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
+import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.JobListRequest;
 import org.apache.kylin.rest.service.JobService;
 import org.slf4j.Logger;
@@ -192,6 +194,27 @@ public class JobController extends BasicController {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
         }
+    }
+
+    /**
+     * Drop a cube job
+     *
+     * @return
+     * @throws IOException
+     */
+    @RequestMapping(value = "/{jobId}/drop", method = { RequestMethod.DELETE })
+    @ResponseBody
+    public JobInstance dropJob(@PathVariable String jobId) {
+        JobInstance jobInstance = null;
+        try {
+            jobInstance = jobService.getJobInstance(jobId);
+            jobService.dropJob(jobInstance);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            throw new InternalErrorException(e);
+        }
+
+        return jobInstance;
     }
 
     public void setJobService(JobService jobService) {

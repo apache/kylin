@@ -215,6 +215,36 @@ KylinApp
         });
       }
 
+     $scope.drop = function (job) {
+        SweetAlert.swal({
+          title: '',
+          text: 'Are you sure to drop the job?',
+          type: '',
+          showCancelButton: true,
+          confirmButtonColor: '#DD6B55',
+          confirmButtonText: "Yes",
+          closeOnConfirm: true
+        }, function(isConfirm) {
+          if(isConfirm) {
+            loadingRequest.show();
+            JobService.drop({jobId: job.uuid}, {}, function (job) {
+              loadingRequest.hide();
+              SweetAlert.swal('Success!', 'Job has been dropped successfully!', 'success');
+              $scope.jobList.jobs[job.uuid].dropped = true;
+            },function(e){
+              loadingRequest.hide();
+              if(e.data&& e.data.exception){
+                var message =e.data.exception;
+                var msg = !!(message) ? message : 'Failed to take action.';
+                SweetAlert.swal('Oops...', msg, 'error');
+              }else{
+                SweetAlert.swal('Oops...', "Failed to take action.", 'error');
+              }
+            });
+          }
+        });
+      }
+
       $scope.diagnosisJob =function(job) {
         if (!job){
           SweetAlert.swal('', "No job selected.", 'info');

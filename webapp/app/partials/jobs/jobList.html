@@ -84,6 +84,7 @@
         <tbody  class="odd table table-striped table-bordered table-hover dataTable no-footer">
         <tr
           ng-repeat="(uuid,job) in jobList.jobs | orderObjectBy:state.filterAttr:state.filterReverse"
+          ng-if="!job.dropped"
           ng-class="{accordion:true}" ng-click="state.selectedJob = job"
           ng-dblclick="state.showSteps= !state.showSteps; state.selectedJob = job"
           style="cursor: pointer"
@@ -141,6 +142,9 @@
                 </li>
                 <li ng-if="job.job_status=='RUNNING' || job.job_status=='NEW' || job.job_status=='PENDING' || job.job_status=='ERROR' || job.job_status=='STOPPED'">
                   <a ng-click="cancel(job)">Discard</a>
+                </li>
+                <li ng-if="job.job_status=='FINISHED' || job.job_status=='DISCARDED' || job.job_status=='ERROR' || job.job_status=='STOPPED'">
+                  <a ng-click="drop(job)">Drop</a>
                 </li>
                 <li>
                   <a ng-click="diagnosisJob(job)" tooltip="Download Diagnosis Info For This Job">Diagnosis</a>

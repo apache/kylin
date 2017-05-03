@@ -321,6 +321,12 @@ public class JobService extends BasicService implements InitializingBean {
         return job;
     }
 
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
+    public void dropJob(JobInstance job) throws IOException, JobException {
+        cancelJob(job);
+        getExecutableManager().deleteJob(job.getId());
+    }
+
     /**
      * currently only support substring match
      * @return
