@@ -45,7 +45,7 @@ git checkout -b tmp
 git reset apache/$base --hard
 
 git am -3 --ignore-whitespace 0001-KYLIN-2307-Create-a-branch-for-master-with-HBase-0.9.patch
-mvn clean compile -DskipTests
+mvn clean package -DskipTests
 git push apache tmp:$base-hbase0.98 -f
 rm 0001-KYLIN-2307-Create-a-branch-for-master-with-HBase-0.9.patch
 
