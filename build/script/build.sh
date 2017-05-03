@@ -22,7 +22,7 @@ echo "package back-end"
 dir=$(dirname ${0})
 cd ${dir}/../..
 
-mvn clean package -DskipTests $@ || { exit 1; }
+mvn clean intall -DskipTests $@ || { exit 1; }
 
 #package webapp
 echo 'package front-end'
