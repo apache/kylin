@@ -8,7 +8,7 @@ title: 下载
 ## 2.0.0
 
 - 这是最新的 Apache Kylin，功能包括 **Spark 构建引擎**，支持**雪花模型**，并能运行 **TPC-H 基准测试**。[查看更多信息](/cn/blog/2017/02/25/v2.0.0-beta-ready/)。
-- [Release notes](/docs20/release_notes.html)
+- [Release notes](/docs20/release_notes.html) 和 [升级指南](/docs20/howto/howto_upgrade.html) (注意Kylin 2.0中的配置属性都已改名)
 - 源代码下载: [apache-kylin-2.0.0-src.tar.gz](http://www.apache.org/dyn/closer.cgi/kylin/apache-kylin-2.0.0/apache-kylin-2.0.0-src.tar.gz) \[[asc](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-2.0.0/apache-kylin-2.0.0-src.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/release/kylin/apache-kylin-2.0.0/apache-kylin-2.0.0-src.tar.gz.md5)\]
 - 二进制包下载:
   - for HBase 0.98 (includes HDP 2.2, CDH 5.2/5.3) - [apache-kylin-2.0.0-bin-hbase098.tar.gz](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0/apache-kylin-2.0.0-bin-hbase098.tar.gz)  \[[asc](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0/apache-kylin-2.0.0-bin-hbase098.tar.gz.asc)\] \[[md5](https://dist.apache.org/repos/dist/dev/kylin/apache-kylin-2.0.0/apache-kylin-2.0.0-bin-hbase098.tar.gz.md5)\]
