@@ -8,25 +8,29 @@ permalink: /docs20/install/advance_settings.html
 ## Overwrite default kylin.properties at Cube level
 In `conf/kylin.properties` there are many parameters, which control/impact on Kylin's behaviors; Most parameters are global configs like security or job related; while some are Cube related; These Cube related parameters can be customized at each Cube level, so you can control the behaviors more flexibly. The GUI to do this is in the "Configuration Overwrites" step of the Cube wizard, as the screenshot below.
 
-![]( /images/install/overwrite_config.png)
+![]( /images/install/overwrite_config_v2.png)
 
 Here take two example: 
 
- * `kylin.cube.algorithm`: it defines the Cubing algorithm that the job engine will select; Its default value is "auto", means the engine will dynamically pick an algorithm ("layer" or "inmem") by sampling the data. If you knows Kylin and your data/cluster well, you can set your preferred algorithm directly (usually "inmem" has better performance but will request more memory).   
+ * `kylin.cube.algorithm`: it defines the Cubing algorithm that the job engine will select; Its default value is "auto", means the engine will dynamically pick an algorithm ("layer" or "inmem") by sampling the data. If you knows Kylin and your data/cluster well, you can set your preferred algorithm directly.   
 
- * `kylin.hbase.region.cut`: it defines how big a region is when creating the HBase table. The default value is "5" (GB) per region. It might be too big for a small or medium cube, so you can give it a smaller value to get more regions created, then can gain better query performance.
+ * `kylin.storage.hbase.region-cut-gb`: it defines how big a region is when creating the HBase table. The default value is "5" (GB) per region. It might be too big for a small or medium cube, so you can give it a smaller value to get more regions created, then can gain better query performance.
 
 ## Overwrite default Hadoop job conf at Cube level
-The `conf/kylin_job_conf.xml` and `conf/kylin_job_conf_inmem.xml` manage the default configurations for Hadoop jobs. If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need adding a prefix `kylin.job.mr.config.override.`; These configs will be parsed out and then applied when submitting jobs. See two examples below:
+The `conf/kylin_job_conf.xml` and `conf/kylin_job_conf_inmem.xml` manage the default configurations for Hadoop jobs. If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need adding a prefix `kylin.engine.mr.config-override.`; These configs will be parsed out and then applied when submitting jobs. See two examples below:
 
- * If want a cube's job getting more memory from Yarn, you can define: `kylin.job.mr.config.override.mapreduce.map.java.opts=-Xmx7g` and `kylin.job.mr.config.override.mapreduce.map.memory.mb=8192`
- * If want a cube's job going to a different Yarn resource queue, you can define: `kylin.job.mr.config.override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample)
+ * If want a cube's job getting more memory from Yarn, you can define: `kylin.engine.mr.config-override.mapreduce.map.java.opts=-Xmx7g` and `kylin.engine.mr.config-override.mapreduce.map.memory.mb=8192`
+ * If want a cube's job going to a different Yarn resource queue, you can define: `kylin.engine.mr.config-override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample)
 
  ## Overwrite default Hive job conf at Cube level
-The `conf/kylin_hive_conf.xml` manage the default configurations when running Hive job (like creating intermediate flat hive table). If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need using another prefix `kylin.hive.config.override.`; These configs will be parsed out and then applied when running "hive -e" or "beeline" commands. See example below:
+The `conf/kylin_hive_conf.xml` manage the default configurations when running Hive job (like creating intermediate flat hive table). If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need using another prefix `kylin.source.hive.config-override.`; These configs will be parsed out and then applied when running "hive -e" or "beeline" commands. See example below:
 
- * If want hive goes a different Yarn resource queue, you can define: `kylin.hive.config.override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample)
+ * If want hive goes a different Yarn resource queue, you can define: `kylin.source.hive.config-override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample)
 
+
+ ## Overwrite default Spark conf at Cube level
+
+ The configurations for Spark are managed in `conf/kylin.properties` with prefix `kylin.engine.spark-conf.`. For example, if you want to use job queue "myQueue" to run the Spark jobs, setting "kylin.engine.spark-conf.spark.yarn.queue=myQueue" will let Spark get "spark.yarn.queue=myQueue" when submitting applications. The same parameters can be configured at Cube level, which will override the default ones. 
 
 ## Enable compression
 

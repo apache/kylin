@@ -43,5 +43,5 @@ __Companies & Organizations__
     * Apache Kylin has been used as a part of OLAP engine and data query engine for big data platform at LeEco, which is powering various big data business, such as stream media data and cloud data.
 * [Toutiao](https://www.toutiao.com/)  
     * As the most popular mobile news app in China, Toutiao has over 78 million daily active users (collected on Feb 2017), we need OLAP capability on **Trillion** level data, and only Kylin can fulfill. Take an example, the Cube for the videos analysis has more than 2.4 trillion source records, taking 4+ TB storage (source file more than 100 TB); Most of the queries can be finished in less than 1 second (same query need couple hours in Hive). From another perspective, Kylin reduces the pressure of our Hadoop cluster. This is what called "build once, use many".     
-* [Qunar](https://www.qunar.com)  
-    * Apache Kylin is used at Qunar for Data Analysis Engine on Hadoop，which offers powerful OLAP capability for flight business with good performance.
+* [Qunar](https://www.qunar.com)  (_NASDAQ:QUNR_)
+    * Apache Kylin is used at Qunar for Data Analysis Engine on Hadoop, which offers powerful OLAP capability for flight business with good performance.
