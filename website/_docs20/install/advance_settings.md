@@ -20,16 +20,17 @@ Here take two example:
 The `conf/kylin_job_conf.xml` and `conf/kylin_job_conf_inmem.xml` manage the default configurations for Hadoop jobs. If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need adding a prefix `kylin.engine.mr.config-override.`; These configs will be parsed out and then applied when submitting jobs. See two examples below:
 
  * If want a cube's job getting more memory from Yarn, you can define: `kylin.engine.mr.config-override.mapreduce.map.java.opts=-Xmx7g` and `kylin.engine.mr.config-override.mapreduce.map.memory.mb=8192`
- * If want a cube's job going to a different Yarn resource queue, you can define: `kylin.engine.mr.config-override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample)
+ * If want a cube's job going to a different Yarn resource queue, you can define: `kylin.engine.mr.config-override.mapreduce.job.queuename=myQueue` ("myQueue" is just a sample, change to your queue name)
 
- ## Overwrite default Hive job conf at Cube level
-The `conf/kylin_hive_conf.xml` manage the default configurations when running Hive job (like creating intermediate flat hive table). If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need using another prefix `kylin.source.hive.config-override.`; These configs will be parsed out and then applied when running "hive -e" or "beeline" commands. See example below:
+## Overwrite default Hive job conf at Cube level
 
- * If want hive goes a different Yarn resource queue, you can define: `kylin.source.hive.config-override.mapreduce.job.queuename=myQueue` (note: "myQueue" is just a sample, change to your queue name)
+The `conf/kylin_hive_conf.xml` manages the default configurations when running Hive job (like creating intermediate flat hive table). If you have the need to customize the configs by cube, you can achieve that with the similar way as above, but need using another prefix `kylin.source.hive.config-override.`; These configs will be parsed out and then applied when running "hive -e" or "beeline" commands. See example below:
+
+ * If want hive goes to a different Yarn resource queue, you can define: `kylin.source.hive.config-override.mapreduce.job.queuename=myQueue` ("myQueue" is just a sample, change to your queue name)
 
 ## Overwrite default Spark conf at Cube level
 
- The configurations for Spark are managed in `conf/kylin.properties` with prefix `kylin.engine.spark-conf.`. For example, if you want to use job queue "myQueue" to run the Spark jobs, setting "kylin.engine.spark-conf.spark.yarn.queue=myQueue" will let Spark get "spark.yarn.queue=myQueue" when submitting applications. The same parameters can be configured at Cube level, which will override the default ones. 
+ The configurations for Spark are managed in `conf/kylin.properties` with prefix `kylin.engine.spark-conf.`. For example, if you want to use job queue "myQueue" to run Spark, setting "kylin.engine.spark-conf.spark.yarn.queue=myQueue" will let Spark get "spark.yarn.queue=myQueue" feeded when submitting applications. The parameters can be configured at Cube level, which will override the default values in `conf/kylin.properties`. 
 
 ## Enable compression
 
