@@ -35,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.DaemonThreadFactory;
+import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +117,7 @@ public class Broadcaster {
                 for (String node : config.getRestServers()) {
                     restClients.add(new RestClient(node));
                 }
-                final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size(), new DaemonThreadFactory());
+                final ExecutorService wipingCachePool = Executors.newCachedThreadPool(new DaemonThreadFactory());
                 while (true) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
@@ -125,8 +126,10 @@ public class Broadcaster {
                             wipingCachePool.execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    try {
+                                    try (SetThreadName ignored = new SetThreadName("CacheWiper %s %s", restClient, broadcastEvent)) {
+                                        logger.info("{} wipe cache {}", restClient, broadcastEvent);
                                         restClient.wipeCache(broadcastEvent.getEntity(), broadcastEvent.getEvent(), broadcastEvent.getCacheKey());
+                                        logger.info("{} wipe cache {} success", restClient, broadcastEvent);
                                     } catch (IOException e) {
                                         logger.warn("Thread failed during wipe cache at " + broadcastEvent, e);
                                     }
