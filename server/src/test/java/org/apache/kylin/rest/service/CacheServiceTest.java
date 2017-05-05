@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -72,13 +73,17 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     @BeforeClass
     public static void beforeClass() throws Exception {
         staticCreateTestMetadata();
+
+        Random random = new Random();
+        int port = random.nextInt(10000) + 40000;
+        logger.info("Chosen port for CacheServiceTest is " + port);
         configA = KylinConfig.getInstanceFromEnv();
-        configA.setProperty("kylin.server.cluster-servers", "localhost:7777");
+        configA.setProperty("kylin.server.cluster-servers", "localhost:" + port);
         configB = KylinConfig.createKylinConfig(configA);
-        configB.setProperty("kylin.server.cluster-servers", "localhost:7777");
+        configB.setProperty("kylin.server.cluster-servers", "localhost:" + port);
         configB.setMetadataUrl("../examples/test_metadata");
 
-        server = new Server(7777);
+        server = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
         server.setHandler(context);
