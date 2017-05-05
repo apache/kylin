@@ -96,7 +96,7 @@ public class ParameterDesc implements Serializable {
     void setValue(String value) {
         this.value = value;
     }
-    
+
     public TblColRef getColRef() {
         return colRef;
     }
@@ -112,7 +112,7 @@ public class ParameterDesc implements Serializable {
             while (p != null) {
                 if (p.isColumnType())
                     all.add(p.getColRef());
-                
+
                 p = p.nextParameter;
             }
             allColRefsIncludingNexts = all;
@@ -145,7 +145,7 @@ public class ParameterDesc implements Serializable {
             if (p.isColumnType()) {
                 if (q.isColumnType() == false)
                     return false;
-                if (this.getColRef().equals(that.getColRef()) == false)
+                if (q.getColRef().equals(p.getColRef()) == false)
                     return false;
             } else {
                 if (q.isColumnType() == true)
