@@ -61,6 +61,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -117,6 +118,10 @@
                                 <relocation>
                                     <pattern>org.apache.commons.lang</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.lang</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.lang3</pattern>
+                                    <shadedPattern>${shadeBase}.org.apache.commons.lang3</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.http</pattern>

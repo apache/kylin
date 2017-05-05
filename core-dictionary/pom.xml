@@ -41,11 +41,6 @@
 
         <!-- Env & Test -->
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.kylin</groupId>
             <artifactId>kylin-core-common</artifactId>
             <type>test-jar</type>

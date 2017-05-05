@@ -69,12 +69,6 @@
 
         <!-- Hadoop dependency -->
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-common</artifactId>
             <scope>provided</scope>

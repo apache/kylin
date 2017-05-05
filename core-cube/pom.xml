@@ -44,12 +44,12 @@
             <artifactId>kylin-core-dictionary</artifactId>
         </dependency>
 
+
+        <!-- Provided -->
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
         </dependency>
-
-        <!-- Provided -->
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>

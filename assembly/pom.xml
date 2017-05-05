@@ -207,10 +207,6 @@
                                     <shadedPattern>${shadeBase}.org.apache.commons.codec</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.apache.commons.collections</pattern>
-                                    <shadedPattern>${shadeBase}.org.apache.commons.collections</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.apache.commons.lang3</pattern>
                                     <shadedPattern>${shadeBase}.org.apache.commons.lang3</shadedPattern>
                                 </relocation>

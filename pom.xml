@@ -78,8 +78,9 @@
         <jsch.version>0.1.53</jsch.version>
         <commons-cli.version>1.2</commons-cli.version>
         <commons-lang.version>2.6</commons-lang.version>
-        <commons-io.version>2.5</commons-io.version>
-        <commons-math3.version>3.6.1</commons-math3.version>
+        <commons-io.version>2.4</commons-io.version>
+        <commons-math3.version>3.1.1</commons-math3.version>
+        <commons-collections.version>3.2.2</commons-collections.version>
 
         <!-- Calcite deps, keep compatible with calcite.version -->
         <jackson.version>2.6.3</jackson.version>
@@ -95,8 +96,6 @@
 
         <!-- Commons -->
         <commons-lang3.version>3.4</commons-lang3.version>
-        <commons-collections.version>3.2.2</commons-collections.version>
-        <commons-daemon.version>1.0.15</commons-daemon.version>
         <commons-email.version>1.4</commons-email.version>
 
         <!-- Utility -->
@@ -342,7 +341,7 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-common</artifactId>
                 <version>${hadoop2.version}</version>
-                <scope>compile</scope>
+                <scope>provided</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.servlet</groupId>
@@ -351,6 +350,10 @@
                     <exclusion>
                         <groupId>net.java.dev.jets3t</groupId>
                         <artifactId>jets3t</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet.jsp</groupId>
+                        <artifactId>jsp-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -464,6 +467,12 @@
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>${commons-collections.version}</version>
                 <scope>provided</scope>
             </dependency>
 
@@ -601,16 +610,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons-lang3.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-collections</groupId>
-                <artifactId>commons-collections</artifactId>
-                <version>${commons-collections.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-daemon</groupId>
-                <artifactId>commons-daemon</artifactId>
-                <version>${commons-daemon.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -828,6 +827,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
+        <!--for transitive dependencies like commons-collectinos, commons-lang -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -861,7 +865,6 @@
             </releases>
             <snapshots>
                 <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
             </snapshots>
         </repository>
     </repositories>
@@ -923,11 +926,6 @@
                             WEB-INF/lib/zookeeper-*.jar
                         </packagingExcludes>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <version>2.10</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -1046,6 +1044,11 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>1.3.6.RELEASE</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.10</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -1056,6 +1059,21 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>analyze</id>
+                        <goals>
+                            <goal>analyze-only</goal>
+                        </goals>
+                        <!--<configuration>-->
+                        <!--<failOnWarning>true</failOnWarning>-->
+                        <!--</configuration>-->
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
