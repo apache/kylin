@@ -420,6 +420,7 @@ Release same version in JIRA, check [Change Log](https://issues.apache.org/jira/
 ## Build and upload binary package
 After publish the release, you need generate the binary packages and then put them to the svn release repository;
 
+* Do `git fetch --all --prune --tags` to sync your local repo with remote.
 * Git checkout the tag for current release; 
 * Make a binary package by refering to [this doc](howto_package.html);
 * Sign the generated binary package with gpg, e.g,:
@@ -430,7 +431,7 @@ gpg --armor --output apache-kylin-1.5.0-bin.tar.gz.asc --detach-sig apache-kylin
 {% highlight bash %}
 md5sum < apache-kylin-1.5.0-bin.tar.gz > apache-kylin-1.5.0-bin.tar.gz.md5
 {% endhighlight %}
-* Move the binary package, the signature file and the md5 fileto the svn release folder for this version;
+* Push the binary package, the signature file and the md5 file to the svn __dev__ repo, then run `svn mv <files-in-dev> <files-in-release>` to move them to svn __release__ repo.
 * For different Hadoop/HBase version, you may need repeat the above steps;
 * Add the files and then commit the svn changes. 
 
