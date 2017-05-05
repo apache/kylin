@@ -20,3 +20,11 @@ Track issues on the "Kylin" Project on the Apache JIRA ([browse](http://issues.a
 
 ### Setup Development Env  
 Refer to this link for how to setup dev env: [Setup Development Env](/development/dev_env.html)
+
+### Roadmap
+- Hadoop 3.0 support (Erasure Coding)
+- Spark cubing enhancement
+- Connect more sources (JDBC, SparkSQL)
+- Ad-hoc queries without cubing
+- Better storage (Kudu?)
+- Real-time analytics with Lambda Architecture
