@@ -145,7 +145,7 @@ public class ParameterDesc implements Serializable {
             if (p.isColumnType()) {
                 if (q.isColumnType() == false)
                     return false;
-                if (this.getColRef().equals(that.getColRef()) == false)
+                if (q.getColRef().equals(p.getColRef()) == false)
                     return false;
             } else {
                 if (q.isColumnType() == true)
