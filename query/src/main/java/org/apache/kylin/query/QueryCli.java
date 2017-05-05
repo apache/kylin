@@ -18,14 +18,11 @@
 
 package org.apache.kylin.query;
 
-import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 
-import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -34,7 +31,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.DBUtils;
-import org.apache.kylin.query.schema.OLAPSchemaFactory;
 
 public class QueryCli {
 
@@ -55,14 +51,11 @@ public class QueryCli {
         KylinConfig config = KylinConfig.createInstanceFromUri(commandLine.getOptionValue(OPTION_METADATA.getOpt()));
         String sql = commandLine.getOptionValue(OPTION_SQL.getOpt());
 
-        Class.forName(Driver.class.getName());
-        File olapTmp = OLAPSchemaFactory.createTempOLAPJson(null, config);
-
         Connection conn = null;
         Statement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DriverManager.getConnection("jdbc:calcite:model=" + olapTmp.getAbsolutePath());
+            conn = QueryDataSource.create(null, config).getConnection();
 
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);

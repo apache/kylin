@@ -18,25 +18,18 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import javax.sql.DataSource;
 
-import org.apache.calcite.jdbc.Driver;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.query.schema.OLAPSchemaFactory;
+import org.apache.kylin.query.QueryDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Component;
 
 import net.sf.ehcache.CacheManager;
@@ -47,8 +40,8 @@ import net.sf.ehcache.CacheManager;
 public class CacheService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
-
-    private ConcurrentMap<String, DataSource> olapDataSources = new ConcurrentHashMap<String, DataSource>();
+    
+    private static QueryDataSource queryDataSource = new QueryDataSource();
 
     @Autowired
     private CubeService cubeService;
@@ -137,40 +130,20 @@ public class CacheService extends BasicService {
             throw new IllegalArgumentException("removeOLAPDataSource: project name not given");
 
         project = ProjectInstance.getNormalizedProjectName(project);
-        olapDataSources.remove(project);
+        queryDataSource.removeCache(project);
     }
 
     public void removeAllOLAPDataSources() {
         // brutal, yet simplest way
         logger.info("removeAllOLAPDataSources is called.");
-        olapDataSources.clear();
+        queryDataSource.clearCache();
     }
 
     public DataSource getOLAPDataSource(String project) {
 
         project = ProjectInstance.getNormalizedProjectName(project);
 
-        DataSource ret = olapDataSources.get(project);
-        if (ret == null) {
-            logger.debug("Creating a new data source, OLAP data source pointing to " + getConfig());
-            File modelJson = OLAPSchemaFactory.createTempOLAPJson(project, getConfig());
-
-            try {
-                String text = FileUtils.readFileToString(modelJson, Charset.defaultCharset());
-                logger.debug("The new temp olap json is :" + text);
-            } catch (IOException e) {
-                e.printStackTrace(); // logging failure is not critical
-            }
-
-            DriverManagerDataSource ds = new DriverManagerDataSource();
-            ds.setDriverClassName(Driver.class.getName());
-            ds.setUrl("jdbc:calcite:model=" + modelJson.getAbsolutePath());
-
-            ret = olapDataSources.putIfAbsent(project, ds);
-            if (ret == null) {
-                ret = ds;
-            }
-        }
+        DataSource ret = queryDataSource.get(project, getConfig());
         return ret;
     }
 
