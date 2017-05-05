@@ -131,20 +131,47 @@ then
     if [ -f "${KYLIN_HOME}/pid" ]
     then
         PID=`cat $KYLIN_HOME/pid`
+        WAIT_TIME=2
+        LOOP_COUNTER=10
         if ps -p $PID > /dev/null
         then
-           echo "Stopping Kylin: $PID"
-           kill $PID
-           rm ${KYLIN_HOME}/pid
-           exit 0
+            echo "Stopping Kylin: $PID"
+            kill $PID
+
+            for ((i=0; i<$LOOP_COUNTER; i++))
+            do
+                # wait to process stopped 
+                sleep $WAIT_TIME
+                if ps -p $PID > /dev/null ; then
+                    echo "Stopping in progress. Will check after $WAIT_TIME secs again..."
+                    continue;
+                else
+                    break;
+                fi
+            done
+
+            # if process is still around, use kill -9
+            if ps -p $PID > /dev/null
+            then
+                echo "Initial kill failed, getting serious now..."
+                kill -9 $PID
+                sleep 1 #give kill -9  sometime to "kill"
+                if ps -p $PID > /dev/null
+                then
+                   quit "Warning, even kill -9 failed, giving up! Sorry..."
+                fi
+            fi
+
+            # process is killed , remove pid file		
+            rm -rf ${KYLIN_HOME}/pid
+            echo "Kylin with pid ${PID} has been stopped."
+            exit 0
         else
-           quit "Kylin is not running"
+           quit "Kylin with pid ${PID} is not running"
         fi
-        
     else
         quit "Kylin is not running"
     fi
-
 elif [ "$1" = "version" ]
 then
     retrieveDependency
