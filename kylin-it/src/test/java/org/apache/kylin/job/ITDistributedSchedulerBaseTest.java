@@ -28,7 +28,7 @@ import org.junit.Test;
 public class ITDistributedSchedulerBaseTest extends BaseTestDistributedScheduler {
     @Test
     public void testSchedulerLock() throws Exception {
-        if (!lock(jobLock, segmentId1, serverName1)) {
+        if (!lock(jobLock1, segmentId1)) {
             throw new JobException("fail to get the lock");
         }
         DefaultChainedExecutable job = new DefaultChainedExecutable();
@@ -58,7 +58,7 @@ public class ITDistributedSchedulerBaseTest extends BaseTestDistributedScheduler
 
     @Test
     public void testSchedulerConsistent() throws Exception {
-        if (!lock(jobLock, segmentId2, serverName1)) {
+        if (!lock(jobLock1, segmentId2)) {
             throw new JobException("fail to get the lock");
         }
         DefaultChainedExecutable job = new DefaultChainedExecutable();
@@ -72,7 +72,7 @@ public class ITDistributedSchedulerBaseTest extends BaseTestDistributedScheduler
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(task1.getId()).getState());
         Assert.assertEquals(ExecutableState.SUCCEED, execMgr.getOutput(job.getId()).getState());
 
-        if (!lock(jobLock, segmentId2, serverName2)) {
+        if (!lock(jobLock2, segmentId2)) {
             throw new JobException("fail to get the lock");
         }
 

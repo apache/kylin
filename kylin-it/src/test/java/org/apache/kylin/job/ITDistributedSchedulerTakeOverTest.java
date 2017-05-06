@@ -28,7 +28,7 @@ import org.junit.Test;
 public class ITDistributedSchedulerTakeOverTest extends BaseTestDistributedScheduler {
     @Test
     public void testSchedulerTakeOver() throws Exception {
-        if (!lock(jobLock, segmentId2, serverName1)) {
+        if (!lock(jobLock1, segmentId2)) {
             throw new JobException("fail to get the lock");
         }
 
