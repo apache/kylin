@@ -17,10 +17,16 @@
 */
 package org.apache.kylin.common.util;
 
+import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.ServerSocket;
+import java.util.Random;
+
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CheckUtil {
-    public static final org.slf4j.Logger logger = LoggerFactory.getLogger(CheckUtil.class);
+    public static final Logger logger = LoggerFactory.getLogger(CheckUtil.class);
 
     public static boolean checkCondition(boolean condition, String message, Object... args) {
         if (condition) {
@@ -29,5 +35,47 @@ public class CheckUtil {
             logger.debug(message, args);
             return false;
         }
+    }
+
+    public static int randomAvailablePort(int minPort, int maxPort) {
+        Random rand = new Random();
+        for (int i = 0; i < 100; i++) {
+            int p = minPort + rand.nextInt(maxPort - minPort);
+            if (checkPortAvailable(p))
+                return p;
+        }
+        throw new RuntimeException("Failed to get random available port between [" + minPort + "," + maxPort + ")");
+    }
+
+    /**
+     * Checks to see if a specific port is available.
+     *
+     * @param port the port to check for availability
+     */
+    public static boolean checkPortAvailable(int port) {
+        ServerSocket ss = null;
+        DatagramSocket ds = null;
+        try {
+            ss = new ServerSocket(port);
+            ss.setReuseAddress(true);
+            ds = new DatagramSocket(port);
+            ds.setReuseAddress(true);
+            return true;
+        } catch (IOException e) {
+        } finally {
+            if (ds != null) {
+                ds.close();
+            }
+
+            if (ss != null) {
+                try {
+                    ss.close();
+                } catch (IOException e) {
+                    /* should not be thrown */
+                }
+            }
+        }
+
+        return false;
     }
 }
