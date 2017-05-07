@@ -84,7 +84,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
 
 
     private final static String SEGMENT_ID = "segmentId";
-    public static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
+    public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /kylin/metadata
 
     //only for it test
     public static DistributedScheduler getInstance(KylinConfig config) {
@@ -305,11 +305,11 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     }
 
     public String getLockPath(String pathName) {
-        return ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/" + pathName;
+        return ZOOKEEPER_LOCK_PATH + "/" + pathName;
     }
 
     private String getWatchPath() {
-        return ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
+        return ZOOKEEPER_LOCK_PATH;
     }
 
     @Override

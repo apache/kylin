@@ -35,7 +35,6 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.lock.DistributedLockFactory;
-import org.apache.kylin.job.impl.threadpool.DistributedScheduler;
 import org.apache.kylin.job.lock.JobLock;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -44,6 +43,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A distributed lock based on zookeeper. Every instance is owned by a client, on whose behalf locks are acquired and/or released.
+ * 
+ * All <code>lockPath</code> will be prefix-ed with "/kylin/metadata-prefix" automatically.
  */
 public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     private static Logger logger = LoggerFactory.getLogger(ZookeeperDistributedLock.class);
@@ -92,6 +93,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             return ZookeeperUtil.getZKConnectString();
         }
 
+        final String zkPathBase;
         final CuratorFramework curator;
 
         public Factory() {
@@ -100,25 +102,30 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
 
         public Factory(KylinConfig config) {
             this.curator = getZKClient(config);
+            this.zkPathBase = "/kylin/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
         }
 
         @Override
         public DistributedLock lockForClient(String client) {
-            return new ZookeeperDistributedLock(curator, client);
+            return new ZookeeperDistributedLock(curator, zkPathBase, client);
         }
     }
 
     // ============================================================================
 
     final CuratorFramework curator;
+    final String zkPathBase;
     final String client;
     final byte[] clientBytes;
 
-    private ZookeeperDistributedLock(CuratorFramework curator, String client) {
+    private ZookeeperDistributedLock(CuratorFramework curator, String zkPathBase, String client) {
         if (client == null)
             throw new NullPointerException("client must not be null");
+        if (zkPathBase == null)
+            throw new NullPointerException("zkPathBase must not be null");
         
         this.curator = curator;
+        this.zkPathBase = zkPathBase;
         this.client = client;
         this.clientBytes = client.getBytes(Charset.forName("UTF-8"));
     }
@@ -130,6 +137,8 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
 
     @Override
     public boolean lock(String lockPath) {
+        lockPath = norm(lockPath);
+        
         logger.debug(client + " trying to lock " + lockPath);
 
         try {
@@ -152,6 +161,8 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
 
     @Override
     public boolean lock(String lockPath, long timeout) {
+        lockPath = norm(lockPath);
+
         if (lock(lockPath))
             return true;
 
@@ -182,6 +193,8 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
 
     @Override
     public String peekLock(String lockPath) {
+        lockPath = norm(lockPath);
+
         try {
             byte[] bytes = curator.getData().forPath(lockPath);
             return new String(bytes, Charset.forName("UTF-8"));
@@ -204,6 +217,8 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     
     @Override
     public void unlock(String lockPath) {
+        lockPath = norm(lockPath);
+
         logger.debug(client + " trying to unlock " + lockPath);
 
         String owner = peekLock(lockPath);
@@ -224,6 +239,8 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     
     @Override
     public void purgeLocks(String lockPathRoot) {
+        lockPathRoot = norm(lockPathRoot);
+
         try {
             curator.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPathRoot);
 
@@ -236,6 +253,8 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
 
     @Override
     public Closeable watchLocks(String lockPathRoot, Executor executor, final Watcher watcher) {
+        lockPathRoot = norm(lockPathRoot);
+
         PathChildrenCache cache = new PathChildrenCache(curator, lockPathRoot, true);
         try {
             cache.start();
@@ -259,6 +278,14 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         }
         return cache;
     }
+    
+    // normalize lock path
+    private String norm(String lockPath) {
+        if (lockPath.startsWith(zkPathBase))
+            return lockPath;
+        else
+            return zkPathBase + (lockPath.startsWith("/") ? "" : "/") + lockPath;
+    }
 
     // ============================================================================
 
@@ -274,7 +301,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     }
 
     private String jobEngineLockPath() {
-        return DistributedScheduler.ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/global_engine_lock";
+        return "/job_engine/global_job_engine_lock";
     }
 
 }

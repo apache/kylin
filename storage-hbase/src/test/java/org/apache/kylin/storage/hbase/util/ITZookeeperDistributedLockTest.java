@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     private static final Logger logger = LoggerFactory.getLogger(ITZookeeperDistributedLockTest.class);
-    private static final String ZK_PFX = "/kylin/test/ZookeeperDistributedLockTest/" + new Random().nextInt(10000000);
+    private static final String ZK_PFX = "/test/ZookeeperDistributedLockTest/" + new Random().nextInt(10000000);
 
     static ZookeeperDistributedLock.Factory factory;
 

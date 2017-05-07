@@ -23,6 +23,8 @@ import java.util.concurrent.Executor;
 
 /**
  * A distributed lock. Every instance is owned by a client, on whose behalf locks are acquired and/or released.
+ * 
+ * Implementation must ensure all <code>lockPath</code> will be prefix-ed with "/kylin/metadata-prefix" automatically.
  */
 public interface DistributedLock {
 

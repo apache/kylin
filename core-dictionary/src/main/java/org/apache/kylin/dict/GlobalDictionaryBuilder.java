@@ -93,10 +93,8 @@ public class GlobalDictionaryBuilder implements IDictionaryBuilder {
         return new AppendTrieDictionary<>();
     }
 
-    private static final String GLOBAL_DICT_LOCK_PATH = "/kylin/dict/lock";
-
     private String getLockPath(String pathName) {
-        return GLOBAL_DICT_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/" + pathName + "/lock";
+        return "/dict/" + pathName + "/lock";
     }
 
 }
