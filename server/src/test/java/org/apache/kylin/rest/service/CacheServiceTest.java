@@ -24,12 +24,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.CheckUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -74,8 +74,7 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     public static void beforeClass() throws Exception {
         staticCreateTestMetadata();
 
-        Random random = new Random();
-        int port = random.nextInt(10000) + 40000;
+        int port = CheckUtil.randomAvailablePort(40000, 50000);
         logger.info("Chosen port for CacheServiceTest is " + port);
         configA = KylinConfig.getInstanceFromEnv();
         configA.setProperty("kylin.server.cluster-servers", "localhost:" + port);
