@@ -163,8 +163,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         }
     }
 
-    boolean lock(ZookeeperDistributedLock jobLock, String cubeName) {
-        return jobLock.lock(getLockPath(cubeName));
+    boolean lock(ZookeeperDistributedLock jobLock, String segName) {
+        return jobLock.lock(DistributedScheduler.getLockPath(segName));
     }
 
     private static void initZk() {
@@ -177,8 +177,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         zkClient.start();
     }
 
-    String getServerName(String cubeName) {
-        String lockPath = getLockPath(cubeName);
+    String getServerName(String segName) {
+        String lockPath = getFullLockPath(segName);
         String serverName = null;
         if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
             try {
@@ -193,7 +193,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         return serverName;
     }
 
-    private String getLockPath(String pathName) {
-        return DistributedScheduler.ZOOKEEPER_LOCK_PATH + "/" + kylinConfig1.getMetadataUrlPrefix() + "/" + pathName;
+    private String getFullLockPath(String segName) {
+        return "/kylin/" + kylinConfig1.getMetadataUrlPrefix() + DistributedScheduler.getLockPath(segName);
     }
 }

@@ -304,11 +304,11 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         }
     }
 
-    public String getLockPath(String pathName) {
+    public static String getLockPath(String pathName) {
         return ZOOKEEPER_LOCK_PATH + "/" + pathName;
     }
 
-    private String getWatchPath() {
+    private static String getWatchPath() {
         return ZOOKEEPER_LOCK_PATH;
     }
 
