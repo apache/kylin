@@ -32,6 +32,7 @@ import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.BasicDataSourceFactory;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.query.schema.OLAPSchemaFactory;
 import org.apache.log4j.Logger;
@@ -129,11 +130,15 @@ public class QueryDataSource {
         }
 
         BasicDataSource ds = null;
+        if (StringUtils.isEmpty(props.getProperty("maxActive"))) {
+            props.setProperty("maxActive", "-1");
+        }
         try {
             ds = (BasicDataSource) BasicDataSourceFactory.createDataSource(props);
         } catch (Exception e) {
             // Basic mode
             ds = new BasicDataSource();
+            ds.setMaxActive(-1);
         }
         ds.setUrl("jdbc:calcite:model=" + olapTmp.getAbsolutePath());
         ds.setDriverClassName(Driver.class.getName());

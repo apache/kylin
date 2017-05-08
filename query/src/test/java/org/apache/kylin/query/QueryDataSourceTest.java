@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -25,6 +27,7 @@ import javax.sql.DataSource;
 import org.apache.calcite.jdbc.Driver;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.DBUtils;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.junit.After;
 import org.junit.Assert;
@@ -80,7 +83,52 @@ public class QueryDataSourceTest extends LocalFileMetadataTestCase {
         Assert.assertNotNull(ds3);
         Assert.assertEquals(ds1, ds2);
         Assert.assertNotEquals(ds1, ds3);
-        
+
         dsCache.clearCache();
+    }
+
+    @Test(timeout=10000)
+    public void testMaxConnLimit() throws SQLException {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        
+        // Test with connection limit 
+        Properties props = new Properties();
+        props.setProperty("maxActive", "3");
+        props.setProperty("maxWait", "1000");
+        DataSource ds1 = QueryDataSource.create("default", config, props);
+        Connection ds1Conn1 = ds1.getConnection();
+        Connection ds1Conn2 = ds1.getConnection();
+        Connection ds1Conn3 = ds1.getConnection();
+        try {
+            Connection ds1Conn4 = ds1.getConnection();
+            DBUtils.closeQuietly(ds1Conn4);
+            Assert.fail("This should fail with SQLException");
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof SQLException);
+        }
+        DBUtils.closeQuietly(ds1Conn1);
+        DBUtils.closeQuietly(ds1Conn2);
+        DBUtils.closeQuietly(ds1Conn3);
+        
+        // Test with not connection limit
+        DataSource ds2 = QueryDataSource.create("default", config);
+        Connection ds2Conn1 = ds2.getConnection();
+        Connection ds2Conn2 = ds2.getConnection();
+        Connection ds2Conn3 = ds2.getConnection();
+        Connection ds2Conn4 = ds2.getConnection();
+        Connection ds2Conn5 = ds2.getConnection();
+        Connection ds2Conn6 = ds2.getConnection();
+        Connection ds2Conn7 = ds2.getConnection();
+        Connection ds2Conn8 = ds2.getConnection(); // DBCP default is 8, should be bypassed with no limit
+        Connection ds2Conn9 = ds2.getConnection();
+        DBUtils.closeQuietly(ds2Conn1);
+        DBUtils.closeQuietly(ds2Conn2);
+        DBUtils.closeQuietly(ds2Conn3);
+        DBUtils.closeQuietly(ds2Conn4);
+        DBUtils.closeQuietly(ds2Conn5);
+        DBUtils.closeQuietly(ds2Conn6);
+        DBUtils.closeQuietly(ds2Conn7);
+        DBUtils.closeQuietly(ds2Conn8);
+        DBUtils.closeQuietly(ds2Conn9);
     }
 }
