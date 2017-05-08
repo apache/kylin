@@ -26,6 +26,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -887,7 +888,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 }
             }
         }
-        
+
         return initDimensionColRef(col);
     }
 
@@ -939,6 +940,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         for (int i = 0; i < measures.size(); i++)
             measureIndexLookup.put(measures.get(i).getName(), i);
 
+        BitSet checkEachMeasureExist = new BitSet();
         for (HBaseColumnFamilyDesc cf : getHbaseMapping().getColumnFamily()) {
             for (HBaseColumnDesc c : cf.getColumns()) {
                 String[] colMeasureRefs = c.getMeasureRefs();
@@ -946,12 +948,20 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 int[] measureIndex = new int[colMeasureRefs.length];
                 for (int i = 0; i < colMeasureRefs.length; i++) {
                     measureDescs[i] = measureLookup.get(colMeasureRefs[i]);
+                    checkState(measureDescs[i] != null, "measure desc at (%s) is null", i);
                     measureIndex[i] = measureIndexLookup.get(colMeasureRefs[i]);
+                    checkState(measureIndex[i] >= 0, "measure index at (%s) not positive", i);
+
+                    checkEachMeasureExist.set(measureIndex[i]);
                 }
                 c.setMeasures(measureDescs);
                 c.setMeasureIndex(measureIndex);
                 c.setColumnFamilyName(cf.getName());
             }
+        }
+
+        for (int i = 0; i < measures.size(); i++) {
+            checkState(checkEachMeasureExist.get(i), "measure (%s) does not exist in column family，or measure duplicates", measures.get(i));
         }
     }
 

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -40,6 +41,7 @@ import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
 import org.apache.kylin.metadata.cachesync.CaseInsensitiveStringCache;
 import org.apache.kylin.metadata.model.ColumnDesc;
+import org.apache.kylin.metadata.model.ComputedColumnDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -113,6 +115,18 @@ public class MetadataManager {
     private CaseInsensitiveStringCache<DataModelDesc> dataModelDescMap;
     // name => External Filter Desc
     private CaseInsensitiveStringCache<ExternalFilterDesc> extFilterMap;
+
+    public static class CCInfo {
+        public ComputedColumnDesc computedColumnDesc;
+        public Set<DataModelDesc> dataModelDescs;
+
+        public CCInfo(ComputedColumnDesc computedColumnDesc, Set<DataModelDesc> dataModelDescs) {
+            this.computedColumnDesc = computedColumnDesc;
+            this.dataModelDescs = dataModelDescs;
+        }
+    }
+
+    private Map<String, CCInfo> ccInfoMap = Maps.newHashMap();// this is to check any two models won't conflict computed columns
 
     private MetadataManager(KylinConfig config) throws IOException {
         init(config);
@@ -343,8 +357,9 @@ public class MetadataManager {
 
         @Override
         public void onProjectSchemaChange(Broadcaster broadcaster, String project) throws IOException {
+            ccInfoMap.clear();
             for (String model : ProjectManager.getInstance(config).getProject(project).getModels()) {
-                reloadDataModelDesc(model);
+                reloadDataModelDescAt(DataModelDesc.concatResourcePath(model));
             }
         }
 
@@ -353,7 +368,7 @@ public class MetadataManager {
             if (event == Event.DROP)
                 dataModelDescMap.removeLocal(cacheKey);
             else
-                reloadDataModelDesc(cacheKey);
+                reloadDataModelDescAt(DataModelDesc.concatResourcePath(cacheKey));
 
             for (ProjectInstance prj : ProjectManager.getInstance(config).findProjectsByModel(cacheKey)) {
                 broadcaster.notifyProjectSchemaUpdate(prj.getName());
@@ -568,7 +583,9 @@ public class MetadataManager {
 
         List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
+
             try {
+                logger.info("Reloading data model at " + path);
                 reloadDataModelDescAt(path);
             } catch (IllegalStateException e) {
                 logger.error("Error to load DataModel at " + path, e);
@@ -579,15 +596,11 @@ public class MetadataManager {
         logger.debug("Loaded " + dataModelDescMap.size() + " DataModel(s)");
     }
 
-    public DataModelDesc reloadDataModelDesc(String name) {
-        return reloadDataModelDescAt(DataModelDesc.concatResourcePath(name));
-    }
-
-    private DataModelDesc reloadDataModelDescAt(String path) {
+    public DataModelDesc reloadDataModelDescAt(String path) {
         ResourceStore store = getStore();
         try {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
-            dataModelDesc.init(config, this.getAllTablesMap());
+            dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
             dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
             return dataModelDesc;
         } catch (Exception e) {
@@ -635,7 +648,7 @@ public class MetadataManager {
     }
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-        dataModelDesc.init(config, this.getAllTablesMap());
+        dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
 
         String path = dataModelDesc.getResourcePath();
         getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);

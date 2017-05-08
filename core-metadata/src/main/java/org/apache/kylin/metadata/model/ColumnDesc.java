@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.util.regex.Pattern;
 
 import org.apache.kylin.metadata.datatype.DataType;
 
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 
 /**
  * Column Metadata from Source. All name should be uppercase.
@@ -37,10 +39,13 @@ public class ColumnDesc implements Serializable {
 
     @JsonProperty("id")
     private String id;
+
     @JsonProperty("name")
     private String name;
+
     @JsonProperty("datatype")
     private String datatype;
+
     @JsonProperty("comment")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String comment;
@@ -62,8 +67,29 @@ public class ColumnDesc implements Serializable {
     private boolean isNullable = true;
 
     private TblColRef ref;
+    private String computedColumnExpr = null;//if null, it's not a computed column
 
     public ColumnDesc() { // default constructor for Jackson
+    }
+
+    public ColumnDesc(ColumnDesc other) {
+        this.id = other.id;
+        this.name = other.name;
+        this.datatype = other.datatype;
+        this.dataGen = other.datatype;
+        this.comment = other.comment;
+        this.dataGen = other.dataGen;
+        this.index = other.index;
+    }
+
+    public ColumnDesc(String id, String name, String datatype, String comment, String dataGen, String index, String computedColumnExpr) {
+        this.id = id;
+        this.name = name;
+        this.datatype = datatype;
+        this.comment = comment;
+        this.dataGen = dataGen;
+        this.index = index;
+        this.computedColumnExpr = computedColumnExpr;
     }
 
     /** Use TableRef.getColumn() instead */
@@ -156,13 +182,24 @@ public class ColumnDesc implements Serializable {
     public void setNullable(boolean nullable) {
         this.isNullable = nullable;
     }
-    
+
     public String getDataGen() {
         return dataGen;
     }
 
     public String getIndex() {
         return index;
+    }
+
+    public String getComputedColumnExpr(String tableAlias, String tableIdentity) {
+        Preconditions.checkState(computedColumnExpr != null);
+
+        //http://stackoverflow.com/questions/5054995/how-to-replace-case-insensitive-literal-substrings-in-java
+        return computedColumnExpr.replaceAll("(?i)" + Pattern.quote(tableIdentity), tableAlias);
+    }
+
+    public boolean isComputedColumnn() {
+        return computedColumnExpr != null;
     }
 
     public void init(TableDesc table) {
@@ -212,7 +249,7 @@ public class ColumnDesc implements Serializable {
                 return false;
         } else if (!table.getIdentity().equals(other.table.getIdentity()))
             return false;
-        
+
         return true;
     }
 

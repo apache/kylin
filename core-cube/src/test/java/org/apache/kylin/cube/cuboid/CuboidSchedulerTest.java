@@ -94,6 +94,10 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     private CubeDesc getSSBCubeDesc() {
         return getCubeDescManager().getCubeDesc("ssb");
     }
+    
+    private CubeDesc getCIInnerJoinCube() {
+        return getCubeDescManager().getCubeDesc("ci_inner_join_cube");
+    }
 
     private void testSpanningAndGetParent(CuboidScheduler scheduler, CubeDesc cube, long[] cuboidIds) {
         for (long cuboidId : cuboidIds) {
@@ -219,6 +223,12 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
         CubeDesc cube = getSSBCubeDesc();
         CuboidCLI.simulateCuboidGeneration(cube, true);
     }
+    
+    @Test
+    public void testCuboidGeneration7() {
+        CubeDesc cube = getCIInnerJoinCube();
+        CuboidCLI.simulateCuboidGeneration(cube, true);
+    }
 
     @Test
     public void testCuboidCounts1() {
@@ -275,6 +285,19 @@ public class CuboidSchedulerTest extends LocalFileMetadataTestCase {
     @Test
     public void testCuboidCounts5() {
         CubeDesc cube = getStreamingCubeDesc();
+        CuboidScheduler cuboidScheduler = new CuboidScheduler(cube);
+        int[] counts = CuboidCLI.calculateAllLevelCount(cube);
+        printCount(counts);
+        int sum = 0;
+        for (Integer x : counts) {
+            sum += x;
+        }
+        assertEquals(cuboidScheduler.getCuboidCount(), sum);
+    }
+
+    @Test
+    public void testCuboidCounts6() {
+        CubeDesc cube = getCIInnerJoinCube();
         CuboidScheduler cuboidScheduler = new CuboidScheduler(cube);
         int[] counts = CuboidCLI.calculateAllLevelCount(cube);
         printCount(counts);

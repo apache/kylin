@@ -18,6 +18,8 @@
 
 package org.apache.kylin.metadata.model;
 
+import static org.apache.kylin.metadata.MetadataManager.CCInfo;
+
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -28,6 +30,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -42,6 +47,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -95,6 +103,10 @@ public class DataModelDesc extends RootPersistentEntity {
 
     @JsonProperty("capacity")
     private RealizationCapacity capacity = RealizationCapacity.MEDIUM;
+
+    @JsonProperty("computed_columns")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    private List<ComputedColumnDesc> computedColumnDescs = Lists.newArrayList();
 
     // computed attributes
     private TableRef rootFactTableRef;
@@ -291,7 +303,16 @@ public class DataModelDesc extends RootPersistentEntity {
         throw new IllegalArgumentException("Table not found by " + tableIdentity + " in model " + name);
     }
 
-    public void init(KylinConfig config, Map<String, TableDesc> tables) {
+    public void init(KylinConfig config, Map<String, TableDesc> originalTables, Map<String, CCInfo> ccInfoMap) {
+        //tweak the tables according to Computed Columns defined in model
+        Map<String, TableDesc> tables = Maps.newHashMap();
+        for (Map.Entry<String, TableDesc> entry : originalTables.entrySet()) {
+            String s = entry.getKey();
+            TableDesc tableDesc = entry.getValue();
+            TableDesc extendedTableDesc = tableDesc.appendColumns(createComputedColumns(tableDesc));
+            tables.put(s, extendedTableDesc);
+        }
+
         this.config = config;
 
         initJoinTablesForUpgrade();
@@ -301,11 +322,30 @@ public class DataModelDesc extends RootPersistentEntity {
         initJoinsTree();
         initDimensionsAndMetrics();
         initPartitionDesc();
+        initComputedColumns(ccInfoMap);
 
         boolean reinit = validate();
         if (reinit) { // model slightly changed by validate() and must init() again
-            init(config, tables);
+            init(config, tables, ccInfoMap);
         }
+    }
+
+    private ColumnDesc[] createComputedColumns(final TableDesc tableDesc) {
+        final MutableInt id = new MutableInt(tableDesc.getColumnCount());
+        return FluentIterable.from(this.computedColumnDescs).filter(new Predicate<ComputedColumnDesc>() {
+            @Override
+            public boolean apply(@Nullable ComputedColumnDesc input) {
+                return tableDesc.getIdentity().equalsIgnoreCase(input.getTableIdentity());
+            }
+        }).transform(new Function<ComputedColumnDesc, ColumnDesc>() {
+            @Nullable
+            @Override
+            public ColumnDesc apply(@Nullable ComputedColumnDesc input) {
+                id.increment();
+                ColumnDesc columnDesc = new ColumnDesc(id.toString(), input.getColumnName(), input.getDatatype(), input.getComment(), null, null, input.getExpression());
+                return columnDesc;
+            }
+        }).toArray(ColumnDesc.class);
     }
 
     private void initJoinTablesForUpgrade() {
@@ -333,6 +373,7 @@ public class DataModelDesc extends RootPersistentEntity {
 
         TableDesc rootDesc = tables.get(rootFactTable);
         rootFactTableRef = new TableRef(this, rootDesc.getName(), rootDesc);
+
         addAlias(rootFactTableRef);
         factTableRefs.add(rootFactTableRef);
 
@@ -346,7 +387,9 @@ public class DataModelDesc extends RootPersistentEntity {
             String alias = join.getAlias();
             if (alias == null)
                 alias = tableDesc.getName();
+
             TableRef ref = new TableRef(this, alias, tableDesc);
+
             join.setTableRef(ref);
             addAlias(ref);
             (join.getKind() == TableKind.LOOKUP ? lookupTableRefs : factTableRefs).add(ref);
@@ -388,6 +431,30 @@ public class DataModelDesc extends RootPersistentEntity {
     private void initPartitionDesc() {
         if (this.partitionDesc != null)
             this.partitionDesc.init(this);
+    }
+
+    private void initComputedColumns(Map<String, CCInfo> ccInfoMap) {
+        Set<String> ccSet = Sets.newHashSet();//make sure cc name does not duplicate within this model
+
+        for (ComputedColumnDesc computedColumnDesc : this.computedColumnDescs) {
+            computedColumnDesc.init();
+
+            if (ccSet.contains(computedColumnDesc.getFullName())) {
+                throw new IllegalArgumentException(String.format("More than one computed column named %s exist in model %s", computedColumnDesc.getFullName(), this.getName()));
+            } else {
+                ccSet.add(computedColumnDesc.getFullName());
+            }
+
+            CCInfo other = ccInfoMap.get(computedColumnDesc.getFullName());
+            if (other == null || (other.dataModelDescs.size() == 1 && other.dataModelDescs.contains(this))) {
+                ccInfoMap.put(computedColumnDesc.getFullName(), new CCInfo(computedColumnDesc, Sets.<DataModelDesc> newHashSet(this)));
+            } else if (other.computedColumnDesc.equals(computedColumnDesc)) {
+                other.dataModelDescs.add(this);
+            } else {
+                throw new IllegalStateException(String.format("Computed column named %s is already defined in other models: %s. Please change another name, or try to keep consistent definition", //
+                        computedColumnDesc.getFullName(), other.dataModelDescs));
+            }
+        }
     }
 
     private void initJoinColumns() {
@@ -568,10 +635,8 @@ public class DataModelDesc extends RootPersistentEntity {
     }
 
     /**
-     * @param message
-     *            error message
-     * @param silent
-     *            if throw exception
+     * @param message error message
+     * @param silent  if throw exception
      */
     public void addError(String message, boolean silent) {
         if (!silent) {
@@ -625,6 +690,10 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public List<ModelDimensionDesc> getDimensions() {
         return dimensions;
+    }
+
+    public List<ComputedColumnDesc> getComputedColumnDescs() {
+        return computedColumnDescs;
     }
 
     public String[] getMetrics() {

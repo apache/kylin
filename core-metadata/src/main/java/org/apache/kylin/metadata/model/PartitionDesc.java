@@ -201,7 +201,7 @@ public class PartitionDesc implements Serializable {
         }
 
         private static void buildSingleColumnRangeCondAsTimeMillis(StringBuilder builder, TblColRef partitionColumn, long startInclusive, long endExclusive) {
-            String partitionColumnName = partitionColumn.getTableAlias() + "." + partitionColumn.getName();
+            String partitionColumnName = partitionColumn.getIdentity();
             if (startInclusive > 0) {
                 builder.append(partitionColumnName + " >= " + startInclusive);
                 builder.append(" AND ");
@@ -210,7 +210,7 @@ public class PartitionDesc implements Serializable {
         }
 
         private static void buildSingleColumnRangeCondAsYmdInt(StringBuilder builder, TblColRef partitionColumn, long startInclusive, long endExclusive) {
-            String partitionColumnName = partitionColumn.getTableAlias() + "." + partitionColumn.getName();
+            String partitionColumnName = partitionColumn.getIdentity();
             if (startInclusive > 0) {
                 builder.append(partitionColumnName + " >= " + DateFormat.formatToDateStr(startInclusive, DateFormat.COMPACT_DATE_PATTERN));
                 builder.append(" AND ");
@@ -219,7 +219,7 @@ public class PartitionDesc implements Serializable {
         }
 
         private static void buildSingleColumnRangeCondition(StringBuilder builder, TblColRef partitionColumn, long startInclusive, long endExclusive, String partitionColumnDateFormat) {
-            String partitionColumnName = partitionColumn.getTableAlias() + "." + partitionColumn.getName();
+            String partitionColumnName = partitionColumn.getIdentity();
             if (startInclusive > 0) {
                 builder.append(partitionColumnName + " >= '" + DateFormat.formatToDateStr(startInclusive, partitionColumnDateFormat) + "'");
                 builder.append(" AND ");
@@ -228,8 +228,8 @@ public class PartitionDesc implements Serializable {
         }
 
         private static void buildMultipleColumnRangeCondition(StringBuilder builder, TblColRef partitionDateColumn, TblColRef partitionTimeColumn, long startInclusive, long endExclusive, String partitionColumnDateFormat, String partitionColumnTimeFormat) {
-            String partitionDateColumnName = partitionDateColumn.getTableAlias() + "." + partitionDateColumn.getName();
-            String partitionTimeColumnName = partitionTimeColumn.getTableAlias() + "." + partitionTimeColumn.getName();
+            String partitionDateColumnName = partitionDateColumn.getIdentity();
+            String partitionTimeColumnName = partitionTimeColumn.getIdentity();
             if (startInclusive > 0) {
                 builder.append("(");
                 builder.append("(");

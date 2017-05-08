@@ -18,14 +18,14 @@
 
 package org.apache.kylin.metadata.model;
 
-import com.google.common.collect.Maps;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-public class TableRef implements Serializable{
+import com.google.common.collect.Maps;
+
+public class TableRef implements Serializable {
 
     final transient private DataModelDesc model;
     final private String alias;
@@ -68,11 +68,11 @@ public class TableRef implements Serializable{
     public TblColRef getColumn(String name) {
         return columns.get(name);
     }
-    
+
     public Collection<TblColRef> getColumns() {
         return Collections.unmodifiableCollection(columns.values());
     }
-    
+
     // for test only
     @Deprecated
     public TblColRef makeFakeColumn(String name) {
@@ -81,13 +81,13 @@ public class TableRef implements Serializable{
         colDesc.setTable(table);
         return new TblColRef(this, colDesc);
     }
-    
+
     // for test only
     @Deprecated
     public TblColRef makeFakeColumn(ColumnDesc colDesc) {
         return new TblColRef(this, colDesc);
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

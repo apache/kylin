@@ -19,6 +19,7 @@
 package org.apache.kylin.metadata.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -41,7 +42,19 @@ public class DataModelDescTest extends LocalFileMetadataTestCase {
     public void after() throws Exception {
         this.cleanupTestMetadata();
     }
-    
+
+    @Test
+    public void loadInnerModel() {
+        DataModelDesc model = MetadataManager.getInstance(getTestConfig()).getDataModelDesc("ci_inner_join_model");
+        assertNotNull(model);
+    }
+
+    @Test
+    public void loadLeftModel() {
+        DataModelDesc model = MetadataManager.getInstance(getTestConfig()).getDataModelDesc("ci_left_join_model");
+        assertNotNull(model);
+    }
+
     @Test
     public void testNoDupColInDimAndMeasure() {
         DataModelDesc model = MetadataManager.getInstance(getTestConfig()).getDataModelDesc("test_kylin_inner_join_model_desc");

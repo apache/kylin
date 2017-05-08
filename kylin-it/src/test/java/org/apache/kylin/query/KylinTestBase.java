@@ -160,7 +160,7 @@ public class KylinTestBase {
         return new ArrayList<>(set);
     }
 
-    protected static String getTextFromFile(File file) throws IOException {
+    public static String getTextFromFile(File file) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line = null;
         StringBuilder stringBuilder = new StringBuilder();
@@ -497,7 +497,21 @@ public class KylinTestBase {
         logger.info("Queries appended with limit: " + appendLimitQueries);
     }
 
+
     protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
+        execAndCompQuery(queryFolder, exclusiveQuerys, needSort, new ICompareQueryTranslator() {
+            @Override
+            public String transform(File f) {
+                try {
+                    return KylinTestBase.getTextFromFile(f);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
+    protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort, ICompareQueryTranslator translator) throws Exception {
         logger.info("---------- test folder: " + new File(queryFolder).getAbsolutePath());
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
@@ -507,17 +521,18 @@ public class KylinTestBase {
             if (exclusiveSet.contains(queryName)) {
                 continue;
             }
-            String sql = getTextFromFile(sqlFile);
+            String sql1 = getTextFromFile(sqlFile);
+            String sql2 = translator.transform(sqlFile);
 
             // execute Kylin
             logger.info("Query Result from Kylin - " + queryName + "  (" + queryFolder + ")");
             IDatabaseConnection kylinConn = new DatabaseConnection(cubeConnection);
-            ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
+            ITable kylinTable = executeQuery(kylinConn, queryName, sql1, needSort);
 
             // execute H2
             logger.info("Query Result from H2 - " + queryName);
             long currentTime = System.currentTimeMillis();
-            ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);
+            ITable h2Table = executeQuery(newH2Connection(), queryName, sql2, needSort);
             logger.info("H2 spent " + (System.currentTimeMillis() - currentTime) + " mili-seconds.");
 
             try {
@@ -530,7 +545,7 @@ public class KylinTestBase {
 
             compQueryCount++;
             if (kylinTable.getRowCount() == 0) {
-                zeroResultQueries.add(sql);
+                zeroResultQueries.add(sql1);
             }
         }
     }

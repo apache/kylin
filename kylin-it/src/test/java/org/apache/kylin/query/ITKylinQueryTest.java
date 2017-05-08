@@ -235,6 +235,11 @@ public class ITKylinQueryTest extends KylinTestBase {
     }
 
     @Test
+    public void testComputedColumnsQuery() throws Exception {
+        execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_computedcolumn", null, true, CompareQueryBySuffix.INSTANCE);
+    }
+
+    @Test
     public void testTopNQuery() throws Exception {
         if ("left".equalsIgnoreCase(joinType)) {
             this.execAndCompQuery(getQueryFolderPrefix() + "src/test/resources/query/sql_topn", null, true);

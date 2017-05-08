@@ -132,10 +132,17 @@ public class CuboidCLI {
             while (!currentQueue.isEmpty()) {
                 long cuboid = currentQueue.pop();
                 Collection<Long> spnanningCuboids = scheduler.getSpanningCuboid(cuboid);
+
                 nextQueue.addAll(spnanningCuboids);
             }
             currentQueue = nextQueue;
             nextQueue = new LinkedList<Long>();
+
+            if (i == levels) {
+                if (!currentQueue.isEmpty()) {
+                    throw new IllegalStateException();
+                }
+            }
         }
 
         return allLevelCounts;

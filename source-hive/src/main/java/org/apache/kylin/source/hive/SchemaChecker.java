@@ -153,7 +153,7 @@ public class SchemaChecker {
 
         List<String> violateColumns = Lists.newArrayList();
         for (ColumnDesc column : table.getColumns()) {
-            if (usedColumns.contains(column)) {
+            if (!column.isComputedColumnn() && usedColumns.contains(column)) {
                 HiveTableMeta.HiveTableColumnMeta field = fieldsMap.get(column.getName());
                 if (field == null || !isColumnCompatible(column, field)) {
                     violateColumns.add(column.getName());

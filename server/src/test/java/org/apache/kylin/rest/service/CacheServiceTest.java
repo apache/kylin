@@ -289,7 +289,6 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
         return tableDesc;
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testMetaCRUD() throws Exception {
         final MetadataManager metadataManager = MetadataManager.getInstance(configA);

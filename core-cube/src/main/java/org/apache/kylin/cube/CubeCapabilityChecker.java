@@ -52,12 +52,7 @@ public class CubeCapabilityChecker {
         CapabilityResult result = new CapabilityResult();
         result.capable = false;
 
-        // match joins
-        boolean isJoinMatch = JoinChecker.isJoinMatch(digest.joinDescs, cube);
-        if (!isJoinMatch) {
-            logger.info("Exclude cube " + cube.getName() + " because unmatched joins");
-            return result;
-        }
+        // match joins is ensured at model select
 
         // dimensions & measures
         Collection<TblColRef> dimensionColumns = getDimensionColumns(digest);
@@ -106,12 +101,12 @@ public class CubeCapabilityChecker {
         }
 
         if (!unmatchedDimensions.isEmpty()) {
-            logger.info("Exclude cube " + cube.getName() + " because unmatched dimensions");
+            logger.info("Exclude cube " + cube.getName() + " because unmatched dimensions: " + unmatchedDimensions);
             return result;
         }
 
         if (!unmatchedAggregations.isEmpty()) {
-            logger.info("Exclude cube " + cube.getName() + " because unmatched aggregations");
+            logger.info("Exclude cube " + cube.getName() + " because unmatched aggregations: " + unmatchedAggregations);
             return result;
         }
 

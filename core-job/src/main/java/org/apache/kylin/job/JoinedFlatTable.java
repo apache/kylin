@@ -109,7 +109,7 @@ public class JoinedFlatTable {
             if (i > 0) {
                 sql.append(",");
             }
-            sql.append(col.getTableAlias() + "." + col.getName() + "\n");
+            sql.append(col.getExpressionInSourceDB() + "\n");
         }
         appendJoinStatement(flatDesc, sql);
         appendWhereStatement(flatDesc, sql);
@@ -149,7 +149,7 @@ public class JoinedFlatTable {
                         if (i > 0) {
                             sql.append(" AND ");
                         }
-                        sql.append(fk[i].getTableAlias() + "." + fk[i].getName() + " = " + pk[i].getTableAlias() + "." + pk[i].getName());
+                        sql.append(fk[i].getIdentity() + " = " + pk[i].getIdentity());
                     }
                     sql.append("\n");
 

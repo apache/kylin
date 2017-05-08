@@ -61,10 +61,34 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     }
 
     public TableDesc(TableDesc other) {
-        this.name = other.getName();
-        this.columns = other.getColumns();
+        this.name = other.name;
+        this.sourceType = other.sourceType;
         this.database.setName(other.getDatabase());
-        this.tableType = other.getTableType();
+        this.tableType = other.tableType;
+        this.dataGen = other.dataGen;
+        this.columns = new ColumnDesc[other.columns.length];
+        for (int i = 0; i < other.columns.length; i++) {
+            this.columns[i] = new ColumnDesc(other.columns[i]);
+            this.columns[i].init(this);
+        }
+    }
+
+    public TableDesc appendColumns(ColumnDesc[] computedColumns) {
+        if (computedColumns == null || computedColumns.length == 0) {
+            return this;
+        }
+
+        TableDesc ret = new TableDesc(this);//deep copy of the table desc
+        ColumnDesc[] origin = ret.columns;
+        ret.columns = new ColumnDesc[computedColumns.length + origin.length];
+        for (int i = 0; i < origin.length; i++) {
+            ret.columns[i] = origin[i];
+        }
+        for (int i = 0; i < computedColumns.length; i++) {
+            computedColumns[i].init(ret);
+            ret.columns[i + this.columns.length] = computedColumns[i];
+        }
+        return ret;
     }
 
     public ColumnDesc findColumnByName(String name) {
@@ -153,7 +177,12 @@ public class TableDesc extends RootPersistentEntity implements ISourceAware {
     }
 
     public int getMaxColumnIndex() {
+        if (columns == null) {
+            return -1;
+        }
+        
         int max = -1;
+        
         for (ColumnDesc col : columns) {
             int idx = col.getZeroBasedIndex();
             max = Math.max(max, idx);

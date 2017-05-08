@@ -242,10 +242,15 @@ class ProjectL2Cache {
                 logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but its table is not found by MetadataManager");
                 return false;
             }
-            ColumnDesc foundCol = table.findColumnByName(col.getName());
-            if (col.getColumnDesc().equals(foundCol) == false) {
-                logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but it is not equal to '" + foundCol + "' according to MetadataManager");
-                return false;
+
+            if (!col.getColumnDesc().isComputedColumnn()) {
+                ColumnDesc foundCol = table.findColumnByName(col.getName());
+                if (col.getColumnDesc().equals(foundCol) == false) {
+                    logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but it is not equal to '" + foundCol + "' according to MetadataManager");
+                    return false;
+                }
+            } else {
+                //computed column may not exit here
             }
 
             // auto-define table required by realization for some legacy test case

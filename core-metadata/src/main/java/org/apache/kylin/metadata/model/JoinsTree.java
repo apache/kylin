@@ -93,7 +93,7 @@ public class JoinsTree implements Serializable {
 
         boolean matches = false;
         if (chain.join == null) {
-            matches = anotherChain.join == null && chain.table.getTableDesc().equals(anotherChain.table.getTableDesc());
+            matches = anotherChain.join == null && chain.table.getTableDesc().getIdentity().equals(anotherChain.table.getTableDesc().getIdentity());
         } else {
             matches = chain.join.matches(anotherChain.join) && matchChain(chain.fkSide, anotherChain.fkSide, matchUp);
         }
