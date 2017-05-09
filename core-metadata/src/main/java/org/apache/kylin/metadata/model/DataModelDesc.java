@@ -344,8 +344,10 @@ public class DataModelDesc extends RootPersistentEntity {
 
             TableDesc tableDesc = tables.get(join.getTable());
             String alias = join.getAlias();
-            if (alias == null)
+            if (alias == null) {
                 alias = tableDesc.getName();
+                join.setAlias(alias);
+            }
             TableRef ref = new TableRef(this, alias, tableDesc);
             join.setTableRef(ref);
             addAlias(ref);

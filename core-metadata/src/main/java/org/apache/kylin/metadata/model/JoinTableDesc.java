@@ -59,6 +59,10 @@ public class JoinTableDesc implements Serializable {
         return kind;
     }
     
+    void setAlias(String alias) {
+        this.alias = alias;
+    }
+    
     public String getAlias() {
         return alias;
     }
