@@ -18,6 +18,7 @@
 
 package org.apache.kylin.query.relnode;
 
+import java.math.BigDecimal;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -68,6 +69,7 @@ import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -140,6 +142,16 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
             case OTHER_FUNCTION:
                 filter = Functions.getFunctionTupleFilter(op.getName());
                 break;
+            case PLUS:
+            case MINUS:
+            case TIMES:
+            case DIVIDE:
+                TupleFilter f = dealWithTrivialExpr(call);
+                if (f != null) {
+                    // is a trivial expr
+                    return f;
+                }
+                //else go to default
             default:
                 filter = new UnsupportedTupleFilter(FilterOperatorEnum.UNSUPPORTED);
                 break;
@@ -164,6 +176,49 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
                 filter = filter.getChildren().get(0).reverse();
             }
             return filter;
+        }
+
+        //KYLIN-2597 - Deal with trivial expression in filters like x = 1 + 2 
+        private TupleFilter dealWithTrivialExpr(RexCall call) {
+            ImmutableList<RexNode> operators = call.operands;
+            if (operators.size() != 2) {
+                return null;
+            }
+
+            BigDecimal left = null;
+            BigDecimal right = null;
+            for (RexNode rexNode : operators) {
+                if (!(rexNode instanceof RexLiteral)) {
+                    return null;// only trivial expr with constants
+                }
+
+                RexLiteral temp = (RexLiteral) rexNode;
+                if (temp.getType().getFamily() != SqlTypeFamily.NUMERIC || !(temp.getValue() instanceof BigDecimal)) {
+                    return null;// only numeric constants now
+                }
+
+                if (left == null) {
+                    left = (BigDecimal) temp.getValue();
+                } else {
+                    right = (BigDecimal) temp.getValue();
+                }
+            }
+
+            Preconditions.checkNotNull(left);
+            Preconditions.checkNotNull(right);
+            
+            switch (call.op.getKind()) {
+            case PLUS:
+                return new ConstantTupleFilter(left.add(right).toString());
+            case MINUS:
+                return new ConstantTupleFilter(left.subtract(right).toString());
+            case TIMES:
+                return new ConstantTupleFilter(left.multiply(right).toString());
+            case DIVIDE:
+                return new ConstantTupleFilter(left.divide(right).toString());
+            default:
+                return null;
+            }
         }
 
         private TupleFilter cast(TupleFilter filter, RelDataType type) {
