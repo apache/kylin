@@ -33,6 +33,7 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Threads;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
@@ -65,6 +66,8 @@ public class HBaseConnection {
     private static final ThreadLocal<Configuration> configThreadLocal = new ThreadLocal<>();
 
     private static ExecutorService coprocessorPool = null;
+
+    private static DistributedLock lock = null;
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -267,6 +270,7 @@ public class HBaseConnection {
     public static void createHTableIfNeeded(Connection conn, String table, String... families) throws IOException {
         Admin hbase = conn.getAdmin();
         TableName tableName = TableName.valueOf(table);
+        boolean hasLock = false;
         try {
             if (tableExists(conn, table)) {
                 logger.debug("HTable '" + table + "' already exists");
@@ -290,6 +294,14 @@ public class HBaseConnection {
                 return;
             }
 
+            lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentProcess();
+            hasLock = lock.lock(getLockPath(table), Long.MAX_VALUE);
+
+            if (tableExists(conn, table)) {
+                logger.debug("HTable '" + table + "' already exists");
+                return;
+            }
+
             logger.debug("Creating HTable '" + table + "'");
 
             HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(table));
@@ -307,6 +319,9 @@ public class HBaseConnection {
             logger.debug("HTable '" + table + "' created");
         } finally {
             hbase.close();
+            if (hasLock && lock != null) {
+                lock.unlock(getLockPath(table));
+            }
         }
     }
 
@@ -348,6 +363,10 @@ public class HBaseConnection {
         } finally {
             hbase.close();
         }
+    }
+
+    private static String getLockPath(String pathName) {
+        return "/create_htable/" + pathName + "/lock";
     }
 
 }
