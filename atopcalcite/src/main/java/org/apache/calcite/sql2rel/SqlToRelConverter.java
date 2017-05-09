@@ -47,6 +47,7 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.Sample;
 import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalCorrelate;
@@ -611,6 +612,16 @@ public class SqlToRelConverter {
         } else {
             return root;
         }
+
+        RelNode tableScanOrJoin = null;
+        RelNode rootProjInput = rootPrj.getInput(0) instanceof LogicalFilter ? rootPrj.getInput(0).getInput(0): rootPrj.getInput(0);
+        if(rootProjInput instanceof TableScan || rootProjInput instanceof LogicalJoin) { 
+            tableScanOrJoin = rootProjInput;
+        }
+        if(tableScanOrJoin == null) {
+            return root;
+        }
+        
         //
         RelNode input = rootPrj.getInput();
         //        if (!(//
