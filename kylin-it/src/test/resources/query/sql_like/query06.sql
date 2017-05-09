@@ -16,6 +16,8 @@
 -- limitations under the License.
 --
 
+-- test case for KYLIN-1954
+
 select META_CATEG_NAME as META_CATEG_NAME, count(*) as cnt 
  
  from test_kylin_fact 
@@ -27,5 +29,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  
  
-where META_CATEG_NAME like '%ab%'
+where META_CATEG_NAME like '%ab%' and META_CATEG_NAME > 'A'
 group by META_CATEG_NAME

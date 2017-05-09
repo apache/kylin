@@ -844,6 +844,10 @@ abstract public class KylinConfigBase implements Serializable {
         return value > 0 ? value : Long.MAX_VALUE;
     }
 
+    public int getTranslatedInClauseMaxSize() {
+        return Integer.parseInt(getOptional("kylin.query.translated-in-clause-max-size", "1024"));
+    }
+
     public int getLargeQueryThreshold() {
         return Integer.parseInt(getOptional("kylin.query.large-query-threshold", String.valueOf(1000000)));
     }

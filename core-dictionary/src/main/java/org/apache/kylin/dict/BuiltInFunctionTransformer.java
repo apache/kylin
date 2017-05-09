@@ -21,6 +21,7 @@ package org.apache.kylin.dict;
 import java.util.Collection;
 import java.util.ListIterator;
 
+import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.dimension.IDimensionEncodingMap;
 import org.apache.kylin.metadata.filter.BuiltInFunctionTupleFilter;
@@ -93,12 +94,19 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
         translated.addChild(new ColumnTupleFilter(columnRef));
 
         try {
+            int translatedInClauseMaxSize = KylinConfig.getInstanceFromEnv().getTranslatedInClauseMaxSize();
+
             for (int i = dict.getMinId(); i <= dict.getMaxId(); i++) {
                 Object dictVal = dict.getValueFromId(i);
                 if ((Boolean) builtInFunctionTupleFilter.invokeFunction(dictVal)) {
                     translated.addChild(new ConstantTupleFilter(dictVal));
+
+                    if (translated.getChildren().size() > translatedInClauseMaxSize) {
+                        return null;
+                    }
                 }
             }
+
         } catch (Exception e) {
             logger.debug(e.getMessage());
             return null;
