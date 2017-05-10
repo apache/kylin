@@ -16,9 +16,10 @@
 -- limitations under the License.
 --
 
-select META_CATEG_NAME as META_CATEG_NAME, count(*) as cnt 
- 
- from test_kylin_fact 
+select upper(meta_categ_name) as META_CATEG_NAME, count(*) as cnt 
+
+
+from test_kylin_fact 
 inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
  inner JOIN test_category_groupings
@@ -27,5 +28,6 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  
  
-where META_CATEG_NAME like '%ab%'
-group by META_CATEG_NAME
+where lower(meta_categ_name)='baby' and substring(meta_categ_name,1,3) in ('Bab') and upper(meta_categ_name) > 'AAAA' and
+lower(meta_categ_name) like '%b%' and char_length(meta_categ_name) < 10 and char_length(meta_categ_name) > 3 and meta_categ_name||'a'='Babya'
+group by meta_categ_name

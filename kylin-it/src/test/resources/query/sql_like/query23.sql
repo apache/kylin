@@ -27,5 +27,5 @@ inner JOIN edw.test_cal_dt as test_cal_dt
  ON test_kylin_fact.lstg_site_id = test_sites.site_id
  
  
-where META_CATEG_NAME like '%ab%'
+where not(META_CATEG_NAME not like '%ab%')
 group by META_CATEG_NAME
