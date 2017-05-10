@@ -29,6 +29,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.prepare.RelOptTableImpl;
 import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -47,6 +48,7 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.Sample;
 import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalCorrelate;
@@ -611,6 +613,7 @@ public class SqlToRelConverter {
         } else {
             return root;
         }
+
         //
         RelNode input = rootPrj.getInput();
         //        if (!(//
@@ -626,25 +629,52 @@ public class SqlToRelConverter {
         List<String> inFields = inType.getFieldNames();
         List<RexNode> projExp = new ArrayList<>();
         List<Pair<Integer, String>> projFields = new ArrayList<>();
+        Map<Integer,Integer> projFieldMapping = new HashMap<>();
         RelDataTypeFactory.FieldInfoBuilder projTypeBuilder = getCluster().getTypeFactory().builder();
         RelDataTypeFactory.FieldInfoBuilder validTypeBuilder = getCluster().getTypeFactory().builder();
+        
+        boolean hiddenColumnExists = false;
+        for (int i = 0; i < root.validatedRowType.getFieldList().size(); i++) {
+            if (root.validatedRowType.getFieldNames().get(i).startsWith("_KY_")) 
+                hiddenColumnExists = true;
+        }
+        if(!hiddenColumnExists) {
+            return root;
+        }
+        
         for (int i = 0; i < inFields.size(); i++) {
             if (!inFields.get(i).startsWith("_KY_")) {
                 projExp.add(rootPrj.getProjects().get(i));
+                projFieldMapping.put(i, projFields.size());
                 projFields.add(Pair.of(projFields.size(), inFields.get(i)));
                 projTypeBuilder.add(inType.getFieldList().get(i));
-                validTypeBuilder.add(root.validatedRowType.getFieldList().get(i));
+                
+                if (i < root.validatedRowType.getFieldList().size()) //for cases like kylin-it/src/test/resources/query/sql_verifyCount/query10.sql
+                    validTypeBuilder.add(root.validatedRowType.getFieldList().get(i));
             }
         }
 
         RelDataType projRowType = getCluster().getTypeFactory().createStructType(projTypeBuilder);
         rootPrj = LogicalProject.create(input, projExp, projRowType);
         if (rootSort != null) {
-            rootSort = (LogicalSort) rootSort.copy(rootSort.getTraitSet(), rootPrj, rootSort.collation, rootSort.offset, rootSort.fetch);
+            //for cases like kylin-it/src/test/resources/query/sql_verifyCount/query10.sql, original RelCollation is stale, need to fix its fieldIndex
+            RelCollation originalCollation = rootSort.collation;
+            RelCollation newCollation = null;
+            List<RelFieldCollation> fieldCollations = originalCollation.getFieldCollations();
+            ImmutableList.Builder<RelFieldCollation> newFieldCollations = ImmutableList.builder();
+            for (RelFieldCollation fieldCollation : fieldCollations) {
+                if(projFieldMapping.containsKey(fieldCollation.getFieldIndex())) { 
+                    newFieldCollations.add(fieldCollation.copy(projFieldMapping.get(fieldCollation.getFieldIndex())));
+                } else {
+                    newFieldCollations.add(fieldCollation);
+                }
+            }
+            newCollation = RelCollationImpl.of(newFieldCollations.build());
+            rootSort = LogicalSort.create(rootPrj, newCollation, rootSort.offset, rootSort.fetch);
         }
 
         RelDataType validRowType = getCluster().getTypeFactory().createStructType(validTypeBuilder);
-        root = new RelRoot(rootSort == null ? rootPrj : rootSort, validRowType, root.kind, projFields, root.collation);
+        root = new RelRoot(rootSort == null ? rootPrj : rootSort, validRowType, root.kind, projFields, rootSort == null ? root.collation : rootSort.getCollation());
 
         validator.setValidatedNodeType(query, validRowType);
 
