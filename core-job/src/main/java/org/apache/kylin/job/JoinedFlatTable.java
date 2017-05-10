@@ -18,13 +18,8 @@
 
 package org.apache.kylin.job;
 
-import java.io.File;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
@@ -33,8 +28,6 @@ import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 
 /**
  *
@@ -46,35 +39,11 @@ public class JoinedFlatTable {
         return storageDfsDir + "/" + flatDesc.getTableName();
     }
 
-    public static String generateHiveInitStatements(
-            String flatTableDatabase, String kylinHiveFile, Map<String, String> cubeOverrides) {
+    public static String generateHiveInitStatements(String flatTableDatabase) {
 
         StringBuilder buffer = new StringBuilder();
 
         buffer.append("USE ").append(flatTableDatabase).append(";\n");
-        try {
-            File file = new File(kylinHiveFile);
-            if (file.exists()) {
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document doc = builder.parse(file);
-                NodeList nl = doc.getElementsByTagName("property");
-                for (int i = 0; i < nl.getLength(); i++) {
-                    String name = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
-                    String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
-                    if (!name.equals("tmpjars")) {
-                        buffer.append("SET ").append(name).append("=").append(value).append(";\n");
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse hive conf file ", e);
-        }
-
-        for (Map.Entry<String, String> entry : cubeOverrides.entrySet()) {
-            buffer.append("SET ").append(entry.getKey()).append("=").append(entry.getValue()).append(";\n");
-        }
-
         return buffer.toString();
     }
 
@@ -105,6 +74,10 @@ public class JoinedFlatTable {
 
     public static String generateInsertDataStatement(IJoinedFlatTableDesc flatDesc) {
         return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + ";\n";
+    }
+
+    public static String generateInsertPartialDataStatement(IJoinedFlatTableDesc flatDesc, String statement) {
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + statement + ";\n";
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {

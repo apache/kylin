@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -48,12 +50,17 @@ public class HiveCmdBuilderTest {
     public void testHiveCLI() {
         System.setProperty("kylin.source.hive.client", "cli");
 
+        Map<String, String> hiveProps = new HashMap<>();
+        hiveProps.put("hive.execution.engine", "mr");
+        Map<String, String> hivePropsOverwrite = new HashMap<>();
+        hivePropsOverwrite.put("hive.execution.engine", "tez");
         HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
         hiveCmdBuilder.addStatement("USE default;");
         hiveCmdBuilder.addStatement("DROP TABLE test;");
         hiveCmdBuilder.addStatement("SHOW\n TABLES;");
-
-        assertEquals("hive -e \"USE default;\nDROP TABLE test;\nSHOW\n TABLES;\n\"", hiveCmdBuilder.build());
+        hiveCmdBuilder.setHiveConfProps(hiveProps);
+        hiveCmdBuilder.overwriteHiveProps(hivePropsOverwrite);
+        assertEquals("hive -e \"USE default;\nDROP TABLE test;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez", hiveCmdBuilder.build());
     }
 
     @Test

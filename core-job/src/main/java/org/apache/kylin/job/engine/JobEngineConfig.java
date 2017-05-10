@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
     public static final String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
-    public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
     public static final String DEFAUL_JOB_CONF_SUFFIX = "";
     public static final String IN_MEM_JOB_CONF_SUFFIX = "inmem";
 
@@ -72,7 +71,7 @@ public class JobEngineConfig {
 
     /**
      *
-     * @param suffix job config file suffix name; if be null, will use the default job conf
+     * @param jobType job config file suffix name; if be null, will use the default job conf
      * @return the job config file path
      * @throws IOException
      */
@@ -93,18 +92,6 @@ public class JobEngineConfig {
             }
         }
         return path;
-    }
-
-    public String getHiveConfFilePath() {
-        String hiveConfFile = (HIVE_CONF_FILENAME + ".xml");
-
-        File jobConfig = getJobConfig(hiveConfFile);
-        if (jobConfig == null || !jobConfig.exists()) {
-
-            logger.error("fail to locate " + HIVE_CONF_FILENAME + ".xml");
-            throw new RuntimeException("fail to locate " + HIVE_CONF_FILENAME + ".xml");
-        }
-        return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
     }
 
     // there should be no setters

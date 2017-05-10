@@ -19,6 +19,7 @@
 
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/header.sh
 source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/find-hadoop-conf-dir.sh
+source $(cd -P -- "$(dirname -- "$0")" && pwd -P)/load-hive-conf.sh
 
 source ${dir}/check-env.sh "if-not-yet"
 job_jar=`find -L ${KYLIN_HOME}/lib/ -name kylin-job*.jar`
@@ -43,7 +44,7 @@ echo "Going to create sample tables in hive to database "$sample_database" by "$
 if [ "${hive_client_mode}" == "beeline" ]
 then
     beeline_params=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.beeline-params`
-    beeline ${beeline_params} -e "CREATE DATABASE IF NOT EXISTS "$sample_database
+    beeline ${hive_conf_properties} ${beeline_params} -e "CREATE DATABASE IF NOT EXISTS "$sample_database
     hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\/\)'`
     if [ -z ${hive2_url} ]; then
         hive2_url=`expr match "${beeline_params}" '.*\(hive2:.*:[0-9]\{4,6\}\)'`
@@ -51,10 +52,10 @@ then
     else
         beeline_params=${beeline_params/${hive2_url}/${hive2_url}${sample_database}}
     fi
-    beeline ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+    beeline ${hive_conf_properties} ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 else
-    hive -e "CREATE DATABASE IF NOT EXISTS "$sample_database
-    hive --database $sample_database -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+    hive ${hive_conf_properties} -e "CREATE DATABASE IF NOT EXISTS "$sample_database
+    hive ${hive_conf_properties} --database $sample_database -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 fi
 
 echo "Sample hive tables are created successfully; Going to create sample cube..."

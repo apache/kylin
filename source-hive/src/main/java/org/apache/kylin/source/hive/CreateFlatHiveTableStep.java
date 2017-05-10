@@ -42,6 +42,7 @@ public class CreateFlatHiveTableStep extends AbstractExecutable {
 
     protected void createFlatHiveTable(KylinConfig config) throws IOException {
         final HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
+        hiveCmdBuilder.overwriteHiveProps(config.getHiveConfigOverride());
         hiveCmdBuilder.addStatement(getInitStatement());
         hiveCmdBuilder.addStatement(getCreateTableStatement());
         final String cmd = hiveCmdBuilder.toString();

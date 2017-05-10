@@ -107,7 +107,7 @@ public class HiveMRInput implements IMRInput {
         public void configureJob(Job job) {
             try {
                 job.getConfiguration().addResource("hive-site.xml");
-                
+
                 HCatInputFormat.setInput(job, dbName, tableName);
                 job.setInputFormatClass(HCatInputFormat.class);
 
@@ -145,9 +145,7 @@ public class HiveMRInput implements IMRInput {
             final KylinConfig cubeConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName).getConfig();
             JobEngineConfig conf = new JobEngineConfig(cubeConfig);
 
-            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(
-                    flatTableDatabase, conf.getHiveConfFilePath(), cubeConfig.getHiveConfigOverride()
-            ) ;
+            final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
             final String jobWorkingDir = getJobWorkingDir(jobFlow);
 
             // create flat table first, then count and redistribute
