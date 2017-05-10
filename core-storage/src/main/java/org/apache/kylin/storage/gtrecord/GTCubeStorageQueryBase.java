@@ -44,6 +44,7 @@ import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.MeasureDesc;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
+import org.apache.kylin.metadata.model.Segments;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.realization.SQLDigest;
 import org.apache.kylin.metadata.tuple.ITupleIterator;
@@ -83,8 +84,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
                 continue;
             }
 
-            scanner = new CubeSegmentScanner(cubeSeg, request.getCuboid(), request.getDimensions(), request.getGroups(), request.getMetrics(), request.getFilter(), request.getContext());
-            scanners.add(scanner);
+            scanner = new CubeSegmentScanner(cubeSeg, request.getCuboid(), request.getDimensions(), request.getGroups(), request.getMetrics(), request.getFilter(), request.getHavingFilter(), request.getContext());
+            
+            if (!scanner.isSegmentSkipped())
+                scanners.add(scanner);
         }
 
         if (scanners.isEmpty())
@@ -147,10 +150,13 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         enableStreamAggregateIfBeneficial(cuboid, groupsD, context);
         // set query deadline
         context.setDeadline(cubeInstance);
-
+        
+        // push down having clause filter if possible
+        TupleFilter havingFilter = checkHavingCanPushDown(sqlDigest.havingFilter, groupsD, sqlDigest.aggregations, metrics);
+        
         logger.info("Cuboid identified: cube={}, cuboidId={}, groupsD={}, filterD={}, limitPushdown={}, storageAggr={}", cubeInstance.getName(), cuboid.getId(), groupsD, filterColumnD, context.getFinalPushDownLimit(), context.isNeedStorageAggregation());
 
-        return new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, filterColumnD, metrics, filterD, context);
+        return new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, filterColumnD, metrics, filterD, havingFilter, context);
     }
 
     protected abstract String getGTStorage();
@@ -414,6 +420,43 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         for (List<MeasureDesc> sublist : map.values()) {
             sublist.get(0).getFunction().getMeasureType().adjustSqlDigest(sublist, sqlDigest);
         }
+    }
+
+    private TupleFilter checkHavingCanPushDown(TupleFilter havingFilter, Set<TblColRef> groupsD, List<FunctionDesc> aggregations, Set<FunctionDesc> metrics) {
+        // must have only one segment
+        Segments<CubeSegment> readySegs = cubeInstance.getSegments(SegmentStatusEnum.READY);
+        if (readySegs.size() != 1)
+            return null;
+        
+        // sharded-by column must on group by
+        CubeDesc desc = cubeInstance.getDescriptor();
+        Set<TblColRef> shardBy = desc.getShardByColumns();
+        if (groupsD == null || shardBy.isEmpty() || !groupsD.containsAll(shardBy))
+            return null;
+        
+        // OK, push down
+        logger.info("Push down having filter " + havingFilter);
+        
+        // convert columns in the filter
+        Set<TblColRef> aggrOutCols = new HashSet<>();
+        TupleFilter.collectColumns(havingFilter, aggrOutCols);
+        
+        for (TblColRef aggrOutCol : aggrOutCols) {
+            int aggrIdxOnSql = aggrOutCol.getColumnDesc().getZeroBasedIndex(); // aggr index marked in OLAPAggregateRel
+            FunctionDesc aggrFunc = aggregations.get(aggrIdxOnSql);
+            
+            // calculate the index of this aggr among all the metrics that is sending to storage
+            int aggrIdxAmongMetrics = 0;
+            for (MeasureDesc m : cubeDesc.getMeasures()) {
+                if (aggrFunc.equals(m.getFunction()))
+                    break;
+                if (metrics.contains(m.getFunction()))
+                    aggrIdxAmongMetrics++;
+            }
+            aggrOutCol.getColumnDesc().setId("" + (aggrIdxAmongMetrics + 1));
+        }
+        
+        return havingFilter;
     }
 
 }

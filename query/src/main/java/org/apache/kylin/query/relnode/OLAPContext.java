@@ -126,9 +126,11 @@ public class OLAPContext {
     public Set<TblColRef> subqueryJoinParticipants = new HashSet<TblColRef>();//subqueryJoinParticipants will be added to groupByColumns(only when other group by co-exists) and allColumns
     public Set<TblColRef> metricsColumns = new HashSet<>();
     public List<FunctionDesc> aggregations = new ArrayList<>(); // storage level measure type, on top of which various sql aggr function may apply
+    public List<TblColRef> aggrOutCols = new ArrayList<>(); // aggregation output (inner) columns
     public List<SQLCall> aggrSqlCalls = new ArrayList<>(); // sql level aggregation function call
     public Set<TblColRef> filterColumns = new HashSet<>();
     public TupleFilter filter;
+    public TupleFilter havingFilter;
     public List<JoinDesc> joins = new LinkedList<>();
     public JoinsTree joinsTree;
     private List<TblColRef> sortColumns;
@@ -150,7 +152,12 @@ public class OLAPContext {
 
     public SQLDigest getSQLDigest() {
         if (sqlDigest == null)
-            sqlDigest = new SQLDigest(firstTableScan.getTableName(), filter, joins, allColumns, groupByColumns, subqueryJoinParticipants, filterColumns, metricsColumns, aggregations, aggrSqlCalls, sortColumns, sortOrders, limitPrecedesAggr);
+            sqlDigest = new SQLDigest(firstTableScan.getTableName(), allColumns, joins, // model
+                    groupByColumns, subqueryJoinParticipants, // group by
+                    metricsColumns, aggregations, aggrSqlCalls, // aggregation
+                    filterColumns, filter, havingFilter, // filter
+                    sortColumns, sortOrders, limitPrecedesAggr // sort & limit
+            );
         return sqlDigest;
     }
 

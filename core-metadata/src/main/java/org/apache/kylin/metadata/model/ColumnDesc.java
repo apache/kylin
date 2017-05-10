@@ -133,6 +133,8 @@ public class ColumnDesc implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+        if (id != null)
+            zeroBasedIndex = Integer.parseInt(id) - 1;
     }
 
     public String getName() {

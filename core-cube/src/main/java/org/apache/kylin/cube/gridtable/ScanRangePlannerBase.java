@@ -44,14 +44,15 @@ import com.google.common.collect.Sets;
 public abstract class ScanRangePlannerBase {
 
     //GT 
-    protected TupleFilter gtFilter;
     protected GTInfo gtInfo;
+    protected TupleFilter gtFilter;
     protected Pair<ByteArray, ByteArray> gtStartAndEnd;
     protected TblColRef gtPartitionCol;
     protected ImmutableBitSet gtDimensions;
     protected ImmutableBitSet gtAggrGroups;
     protected ImmutableBitSet gtAggrMetrics;
     protected String[] gtAggrFuncs;
+    protected TupleFilter havingFilter;
     protected boolean isPartitionColUsingDatetimeEncoding = true;
 
     protected RecordComparator rangeStartComparator;

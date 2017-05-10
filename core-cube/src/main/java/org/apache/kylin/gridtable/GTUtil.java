@@ -20,7 +20,9 @@ package org.apache.kylin.gridtable;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kylin.common.util.ByteArray;
@@ -61,18 +63,28 @@ public class GTUtil {
 
     public static TupleFilter convertFilterColumnsAndConstants(TupleFilter rootFilter, GTInfo info, //
             List<TblColRef> colMapping, Set<TblColRef> unevaluatableColumnCollector) {
-        return convertFilter(rootFilter, info, colMapping, true, unevaluatableColumnCollector);
+        Map<TblColRef, Integer> map = colListToMap(colMapping);
+        return convertFilter(rootFilter, info, map, true, unevaluatableColumnCollector);
+    }
+
+    protected static Map<TblColRef, Integer> colListToMap(List<TblColRef> colMapping) {
+        Map<TblColRef, Integer> map = new HashMap<>();
+        for (int i = 0; i < colMapping.size(); i++) {
+            map.put(colMapping.get(i), i);
+        }
+        return map;
     }
 
     // converts TblColRef to GridTable column, encode constants, drop unEvaluatable parts
     private static TupleFilter convertFilter(TupleFilter rootFilter, final GTInfo info, //
-            final List<TblColRef> colMapping, final boolean encodeConstants, //
+            final Map<TblColRef, Integer> colMapping, final boolean encodeConstants, //
             final Set<TblColRef> unevaluatableColumnCollector) {
 
         IFilterCodeSystem<ByteArray> filterCodeSystem = wrap(info.codeSystem.getComparator());
+        
+        GTConvertDecorator decorator = new GTConvertDecorator(unevaluatableColumnCollector, colMapping, info, encodeConstants);
 
-        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, new GTConvertDecorator(unevaluatableColumnCollector, colMapping, info, encodeConstants), filterCodeSystem);
-
+        byte[] bytes = TupleFilterSerializer.serialize(rootFilter, decorator, filterCodeSystem);
         return TupleFilterSerializer.deserialize(bytes, filterCodeSystem);
     }
 
@@ -106,16 +118,21 @@ public class GTUtil {
 
     protected static class GTConvertDecorator implements TupleFilterSerializer.Decorator {
         protected final Set<TblColRef> unevaluatableColumnCollector;
-        protected final List<TblColRef> colMapping;
+        protected final Map<TblColRef, Integer> colMapping;
         protected final GTInfo info;
         protected final boolean encodeConstants;
 
-        public GTConvertDecorator(Set<TblColRef> unevaluatableColumnCollector, List<TblColRef> colMapping, GTInfo info, boolean encodeConstants) {
+        public GTConvertDecorator(Set<TblColRef> unevaluatableColumnCollector, Map<TblColRef, Integer> colMapping, GTInfo info, boolean encodeConstants) {
             this.unevaluatableColumnCollector = unevaluatableColumnCollector;
             this.colMapping = colMapping;
             this.info = info;
             this.encodeConstants = encodeConstants;
             buf = ByteBuffer.allocate(info.getMaxColumnLength());
+        }
+        
+        protected int mapCol(TblColRef col) {
+            Integer i = colMapping.get(col);
+            return i == null ? -1 : i;
         }
 
         @Override
@@ -140,7 +157,7 @@ public class GTUtil {
             // map to column onto grid table
             if (colMapping != null && filter instanceof ColumnTupleFilter) {
                 ColumnTupleFilter colFilter = (ColumnTupleFilter) filter;
-                int gtColIdx = colMapping.indexOf(colFilter.getColumn());
+                int gtColIdx = mapCol(colFilter.getColumn());
                 return new ColumnTupleFilter(info.colRef(gtColIdx));
             }
 
@@ -174,7 +191,7 @@ public class GTUtil {
             //with normal ConstantTupleFilter
 
             Object firstValue = constValues.iterator().next();
-            int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : colMapping.indexOf(externalCol);
+            int col = colMapping == null ? externalCol.getColumnDesc().getZeroBasedIndex() : mapCol(externalCol);
 
             TupleFilter result;
             ByteArray code;

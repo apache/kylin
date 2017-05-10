@@ -61,6 +61,7 @@ import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter.FilterOperatorEnum;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -320,6 +321,19 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         doScanAndVerify(table, useDeserializedGTScanRequest(req), "[1421280000000, 20, null, 30, null]", "[1421366400000, 20, null, 40, null]");
     }
 
+    @Test
+    public void verifyAggregateAndHavingFilter() throws IOException {
+        GTInfo info = table.getInfo();
+        
+        TblColRef havingCol = TblColRef.newInnerColumn("SUM_OF_BIGDECIMAL", InnerDataTypeEnum.LITERAL);
+        havingCol.getColumnDesc().setId("1"); // point to the first aggregated measure
+        CompareTupleFilter havingFilter = compare(havingCol, FilterOperatorEnum.GT, "20");
+        
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(1)).setAggrMetrics(setOf(4)).setAggrMetricsFuncs(new String[] { "sum" }).setHavingFilterPushDown(havingFilter).createGTScanRequest();
+        
+        doScanAndVerify(table, useDeserializedGTScanRequest(req), "[null, 20, null, null, 42.0]", "[null, 30, null, null, 52.5]");
+    }
+    
     @Test
     public void testFilterScannerPerf() throws IOException {
         GridTable table = newTestPerfTable();

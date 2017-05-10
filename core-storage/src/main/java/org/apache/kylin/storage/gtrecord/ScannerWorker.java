@@ -55,6 +55,10 @@ public class ScannerWorker {
             throw new RuntimeException(e);
         }
     }
+    
+    public boolean isSegmentSkipped() {
+        return internal instanceof EmptyGTScanner;
+    }
 
     public Iterator<GTRecord> iterator() {
         return internal.iterator();

@@ -202,6 +202,8 @@ public class TblColRef implements Serializable {
             return false;
         if ((table == null ? other.table == null : table.equals(other.table)) == false)
             return false;
+        if (this.isInnerColumn() != other.isInnerColumn())
+            return false;
         return true;
     }
 

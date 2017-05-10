@@ -29,6 +29,7 @@ public class GTScanRequestBuilder {
     private GTInfo info;
     private List<GTScanRange> ranges;
     private TupleFilter filterPushDown;
+    private TupleFilter havingFilterPushDown;
     private ImmutableBitSet dimensions;
     private ImmutableBitSet aggrGroupBy = null;
     private ImmutableBitSet aggrMetrics = null;
@@ -56,6 +57,11 @@ public class GTScanRequestBuilder {
         return this;
     }
 
+    public GTScanRequestBuilder setHavingFilterPushDown(TupleFilter havingFilterPushDown) {
+        this.havingFilterPushDown = havingFilterPushDown;
+        return this;
+    }
+    
     public GTScanRequestBuilder setDimensions(ImmutableBitSet dimensions) {
         this.dimensions = dimensions;
         return this;
@@ -131,6 +137,6 @@ public class GTScanRequestBuilder {
         this.startTime = startTime == -1 ? System.currentTimeMillis() : startTime;
         this.timeout = timeout == -1 ? 300000 : timeout;
 
-        return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, allowStorageAggregation, aggCacheMemThreshold, storageScanRowNumThreshold, storagePushDownLimit, storageBehavior, startTime, timeout);
+        return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, havingFilterPushDown, allowStorageAggregation, aggCacheMemThreshold, storageScanRowNumThreshold, storagePushDownLimit, storageBehavior, startTime, timeout);
     }
 }
