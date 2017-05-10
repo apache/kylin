@@ -76,10 +76,6 @@ public class JoinedFlatTable {
         return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + ";\n";
     }
 
-    public static String generateInsertPartialDataStatement(IJoinedFlatTableDesc flatDesc, String statement) {
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + statement + ";\n";
-    }
-
     public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT" + "\n");
