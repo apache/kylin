@@ -75,7 +75,7 @@ public class HiveCmdBuilderTest {
         hiveCmdBuilder.addStatement("SHOW\n TABLES;");
 
         String cmd = hiveCmdBuilder.build();
-        assertTrue(cmd.startsWith("beeline -u jdbc_url -f"));
+        assertTrue(cmd.startsWith("beeline -u jdbc_url"));
 
         String hqlFile = cmd.substring(cmd.lastIndexOf("-f ") + 3).trim();
         hqlFile = hqlFile.substring(0, hqlFile.length() - ";exit $ret_code".length());

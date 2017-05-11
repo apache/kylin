@@ -83,8 +83,8 @@ public class HiveCmdBuilder {
                     bw.newLine();
                 }
                 buf.append("beeline ");
-                buf.append(parseProps());
                 buf.append(kylinConfig.getHiveBeelineParams());
+                buf.append(parseProps());
                 buf.append(" -f ");
                 buf.append(tmpHql.getAbsolutePath());
                 buf.append(";ret_code=$?;rm -f ");
