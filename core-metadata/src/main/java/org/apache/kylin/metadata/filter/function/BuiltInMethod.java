@@ -18,8 +18,11 @@
 
 package org.apache.kylin.metadata.filter.function;
 
+import static org.apache.kylin.metadata.filter.function.LikeMatchers.LikeMatcher;
+
 import java.lang.reflect.Method;
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
 
@@ -28,8 +31,14 @@ import com.google.common.collect.ImmutableMap;
 public enum BuiltInMethod {
     UPPER(BuiltInMethod.class, "upper", String.class), LOWER(BuiltInMethod.class, "lower", String.class), SUBSTRING(BuiltInMethod.class, "substring", String.class, int.class, int.class), CHAR_LENGTH(BuiltInMethod.class, "charLength", String.class), LIKE(BuiltInMethod.class, "like", String.class, String.class), INITCAP(BuiltInMethod.class, "initcap", String.class);
     public final Method method;
-
     public static final ImmutableMap<String, BuiltInMethod> MAP;
+
+    private static ThreadLocal<Map<String, LikeMatcher>> likePatterns = new ThreadLocal<Map<String, LikeMatcher>>() {
+        @Override
+        public Map<String, LikeMatcher> initialValue() {
+            return new HashMap<>();
+        }
+    };
 
     static {
         final ImmutableMap.Builder<String, BuiltInMethod> builder = ImmutableMap.builder();
@@ -46,12 +55,26 @@ public enum BuiltInMethod {
     }
 
     /** SQL {@code LIKE} function. */
-    public static boolean like(String s, String pattern) {
-        if (s == null)
+    public static boolean like(String s, String patternStr) {
+        //TODO: escape in like is unsupported
+        //TODO: like is case sensitive now
+
+        if (s == null || patternStr == null)
             return false;
-        
-        final String regex = Like.sqlToRegexLike(pattern, null);
-        return Pattern.matches(regex, s);
+
+        Map<String, LikeMatcher> patterns = likePatterns.get();
+        LikeMatcher p = patterns.get(patternStr);
+        if (p == null) {
+
+            p = LikeMatchers.createMatcher(patternStr);
+
+            if (patterns.size() > 100) {
+                patterns.clear();//brutal but good enough
+            }
+            patterns.put(patternStr, p);
+        }
+
+        return p.matches(s);
     }
 
     /** SQL INITCAP(string) function. */
