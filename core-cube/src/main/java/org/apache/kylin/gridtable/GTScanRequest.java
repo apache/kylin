@@ -195,7 +195,7 @@ public class GTScanRequest {
                 return new EmptyGTScanner();
             }
 
-            if (!this.isAllowStorageAggregation()) {
+            if (!this.isAllowStorageAggregation() && havingFilterPushDown == null) {
                 logger.info("pre aggregation is not beneficial, skip it");
             } else if (this.hasAggregation()) {
                 logger.info("pre aggregating results before returning");
