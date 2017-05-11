@@ -125,7 +125,7 @@ public class JoinDesc implements Serializable {
         int n = foreignKey.length;
         for (int i = 0; i < n - 1 && cont; i++) {
             cont = false;
-            for (int j = i; j < n - 1; j++) {
+            for (int j = 0; j < n - 1 - i; j++) {
                 int jj = j + 1;
                 if (foreignKey[j].compareTo(foreignKey[jj]) > 0) {
                     swap(foreignKey, j, jj);
