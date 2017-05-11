@@ -55,6 +55,7 @@ KylinApp.controller('AccessCtrl', function ($scope, AccessService, MessageServic
 //            MessageService.sendMsg('Access granted!', 'success', {});
       SweetAlert.swal('Success!', 'Access granted!', 'success');
     }, function (e) {
+      grantRequst.uuid = uuid;
       if (e.status == 404) {
 //                MessageService.sendMsg('User not found!', 'error', {});
         SweetAlert.swal('Oops...', 'User not found!!', 'error');
