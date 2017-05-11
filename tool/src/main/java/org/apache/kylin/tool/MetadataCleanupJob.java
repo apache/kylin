@@ -48,14 +48,17 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
     @SuppressWarnings("static-access")
     private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused metadata").create("delete");
 
+    @SuppressWarnings("static-access")
+    private static final Option OPTION_THRESHOLD_FOR_JOB = OptionBuilder.withArgName("jobThreshold").hasArg().isRequired(false).withDescription("Specify how many days of job metadata keeping. Default 30 days").create("jobThreshold");
+
     protected static final Logger logger = LoggerFactory.getLogger(MetadataCleanupJob.class);
 
     boolean delete = false;
 
     private KylinConfig config = null;
 
-    public static final long TIME_THREADSHOLD = 1 * 3600 * 1000L; // 1 hour
-    public static final long TIME_THREADSHOLD_FOR_JOB = 30 * 24 * 3600 * 1000L; // 30 days
+    private static final long TIME_THREADSHOLD = 1 * 3600 * 1000L; // 1 hour
+    private static final int DEFAULT_DAY_THREADSHOLD_FOR_JOB = 30 ; // 30 days
 
     /*
      * (non-Javadoc)
@@ -68,10 +71,12 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
 
         logger.info("jobs args: " + Arrays.toString(args));
         options.addOption(OPTION_DELETE);
+        options.addOption(OPTION_THRESHOLD_FOR_JOB);
         parseOptions(options, args);
 
         logger.info("options: '" + getOptionsAsString() + "'");
         logger.info("delete option value: '" + getOptionValue(OPTION_DELETE) + "'");
+        logger.info("jobThreshold option value: '" + getOptionValue(OPTION_THRESHOLD_FOR_JOB) + "'");
         delete = Boolean.parseBoolean(getOptionValue(OPTION_DELETE));
 
         config = KylinConfig.getInstanceFromEnv();
@@ -148,7 +153,10 @@ public class MetadataCleanupJob extends AbstractHadoopJob {
         for (ExecutablePO executable : allExecutable) {
             long lastModified = executable.getLastModified();
             ExecutableOutputPO output = executableDao.getJobOutput(executable.getUuid());
-            if (System.currentTimeMillis() - lastModified > TIME_THREADSHOLD_FOR_JOB && (ExecutableState.SUCCEED.toString().equals(output.getStatus()) || ExecutableState.DISCARDED.toString().equals(output.getStatus()))) {
+            int jobThresholdDay = optionsHelper.hasOption(OPTION_THRESHOLD_FOR_JOB) ? Integer.valueOf(optionsHelper.getOptionValue(OPTION_THRESHOLD_FOR_JOB)) : DEFAULT_DAY_THREADSHOLD_FOR_JOB;
+            long jobThresholdTime = jobThresholdDay * 24 * 3600 * 1000L;
+
+            if (System.currentTimeMillis() - lastModified > jobThresholdTime && (ExecutableState.SUCCEED.toString().equals(output.getStatus()) || ExecutableState.DISCARDED.toString().equals(output.getStatus()))) {
                 toDeleteResource.add(ResourceStore.EXECUTE_RESOURCE_ROOT + "/" + executable.getUuid());
                 toDeleteResource.add(ResourceStore.EXECUTE_OUTPUT_RESOURCE_ROOT + "/" + executable.getUuid());
 
