@@ -106,6 +106,7 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
                     }
                 }
             }
+            logger.debug("getting a in clause with {} children", translated.getChildren().size());
 
         } catch (Exception e) {
             logger.debug(e.getMessage());
