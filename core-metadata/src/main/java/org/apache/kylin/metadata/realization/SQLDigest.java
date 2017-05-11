@@ -46,34 +46,52 @@ public class SQLDigest {
         }
     }
 
+    // model
     public String factTable;
-    public TupleFilter filter;
-    public List<JoinDesc> joinDescs;
     public Set<TblColRef> allColumns;
+    public List<JoinDesc> joinDescs;
+
+    // group by
     public List<TblColRef> groupbyColumns;
     public Set<TblColRef> subqueryJoinParticipants;
-    public Set<TblColRef> filterColumns;
+
+    // aggregation
     public Set<TblColRef> metricColumns;
     public List<FunctionDesc> aggregations; // storage level measure type, on top of which various sql aggr function may apply
     public List<SQLCall> aggrSqlCalls; // sql level aggregation function call
+
+    // filter
+    public Set<TblColRef> filterColumns;
+    public TupleFilter filter;
+    public TupleFilter havingFilter;
+
+    // sort & limit
     public List<TblColRef> sortColumns;
     public List<OrderEnum> sortOrders;
     public boolean isRawQuery;
     public boolean limitPrecedesAggr;
 
-    public SQLDigest(String factTable, TupleFilter filter, List<JoinDesc> joinDescs, Set<TblColRef> allColumns, //
-            List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, Set<TblColRef> filterColumns, Set<TblColRef> metricColumns, //
-            List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr) {
+    public SQLDigest(String factTable, Set<TblColRef> allColumns, List<JoinDesc> joinDescs, // model
+            List<TblColRef> groupbyColumns, Set<TblColRef> subqueryJoinParticipants, // group by
+            Set<TblColRef> metricColumns, List<FunctionDesc> aggregations, List<SQLCall> aggrSqlCalls, // aggregation
+            Set<TblColRef> filterColumns, TupleFilter filter, TupleFilter havingFilter, // filter
+            List<TblColRef> sortColumns, List<OrderEnum> sortOrders, boolean limitPrecedesAggr // sort & limit
+    ) {
         this.factTable = factTable;
-        this.filter = filter;
-        this.joinDescs = joinDescs;
         this.allColumns = allColumns;
+        this.joinDescs = joinDescs;
+
         this.groupbyColumns = groupbyColumns;
         this.subqueryJoinParticipants = subqueryJoinParticipants;
-        this.filterColumns = filterColumns;
+
         this.metricColumns = metricColumns;
         this.aggregations = aggregations;
         this.aggrSqlCalls = aggrSqlCalls;
+
+        this.filterColumns = filterColumns;
+        this.filter = filter;
+        this.havingFilter = havingFilter;
+
         this.sortColumns = sortColumns;
         this.sortOrders = sortOrders;
         this.isRawQuery = isRawQuery();

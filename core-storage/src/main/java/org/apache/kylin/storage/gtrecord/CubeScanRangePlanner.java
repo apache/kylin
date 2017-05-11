@@ -73,7 +73,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
     protected StorageContext context;
 
     public CubeScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, Set<TblColRef> groupByDims, //
-            Collection<FunctionDesc> metrics, StorageContext context) {
+            Collection<FunctionDesc> metrics, TupleFilter havingFilter, StorageContext context) {
         this.context = context;
 
         this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
@@ -100,6 +100,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         //replace the constant values in filter to dictionary codes
         Set<TblColRef> groupByPushDown = Sets.newHashSet(groupByDims);
         this.gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getCuboidDimensionsInGTOrder(), groupByPushDown);
+        this.havingFilter = havingFilter;
 
         this.gtDimensions = mapping.makeGridTableColumns(dimensions);
         this.gtAggrGroups = mapping.makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
@@ -115,15 +116,10 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
                 this.gtPartitionCol = gtInfo.colRef(index);
             }
         }
-
     }
 
     /**
-     * constrcut GTScanRangePlanner with incomplete information. only be used for UT  
-     * @param info
-     * @param gtStartAndEnd
-     * @param gtPartitionCol
-     * @param gtFilter
+     * Construct  GTScanRangePlanner with incomplete information. For UT only.
      */
     public CubeScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> gtStartAndEnd, TblColRef gtPartitionCol, TupleFilter gtFilter) {
 
@@ -152,7 +148,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
             scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(scanRanges).setDimensions(gtDimensions).//
                     setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs).setFilterPushDown(gtFilter).//
                     setAllowStorageAggregation(context.isNeedStorageAggregation()).setAggCacheMemThreshold(cubeSegment.getConfig().getQueryCoprocessorMemGB()).//
-                    setStoragePushDownLimit(context.getFinalPushDownLimit()).createGTScanRequest();
+                    setStoragePushDownLimit(context.getFinalPushDownLimit()).setHavingFilterPushDown(havingFilter).createGTScanRequest();
         } else {
             scanRequest = null;
         }

@@ -27,20 +27,24 @@ import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.storage.StorageContext;
 
+@SuppressWarnings("serial")
 public class GTCubeStorageQueryRequest implements Serializable {
     private Cuboid cuboid;
     private Set<TblColRef> dimensions;
     private Set<TblColRef> groups;
     private Set<FunctionDesc> metrics;
     private TupleFilter filter;
+    private TupleFilter havingFilter;
     private StorageContext context;
 
-    public GTCubeStorageQueryRequest(Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, Set<FunctionDesc> metrics, TupleFilter filter, StorageContext context) {
+    public GTCubeStorageQueryRequest(Cuboid cuboid, Set<TblColRef> dimensions, Set<TblColRef> groups, //
+            Set<FunctionDesc> metrics, TupleFilter filter, TupleFilter havingFilter, StorageContext context) {
         this.cuboid = cuboid;
         this.dimensions = dimensions;
         this.groups = groups;
         this.metrics = metrics;
         this.filter = filter;
+        this.havingFilter = havingFilter;
         this.context = context;
     }
 
@@ -82,6 +86,14 @@ public class GTCubeStorageQueryRequest implements Serializable {
 
     public void setFilter(TupleFilter filter) {
         this.filter = filter;
+    }
+
+    public TupleFilter getHavingFilter() {
+        return havingFilter;
+    }
+
+    public void setHavingFilter(TupleFilter havingFilter) {
+        this.havingFilter = havingFilter;
     }
 
     public StorageContext getContext() {

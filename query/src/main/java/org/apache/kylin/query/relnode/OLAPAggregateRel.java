@@ -167,6 +167,7 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         if (!this.afterAggregate) {
             addToContextGroupBy(this.groups);
             this.context.aggregations.addAll(this.aggregations);
+            this.context.aggrOutCols.addAll(columnRowType.getAllColumns().subList(groups.size(), columnRowType.getAllColumns().size()));
             this.context.afterAggregate = true;
 
             if (this.context.afterLimit) {
@@ -209,14 +210,15 @@ public class OLAPAggregateRel extends Aggregate implements OLAPRel {
         for (int i = 0; i < this.aggregations.size(); i++) {
             FunctionDesc aggFunc = this.aggregations.get(i);
             String aggOutName;
-            if (aggFunc != null && aggFunc.needRewriteField()) {
+            if (aggFunc != null) {
                 aggOutName = aggFunc.getRewriteFieldName();
             } else {
                 AggregateCall aggCall = this.rewriteAggCalls.get(i);
                 int index = aggCall.getArgList().get(0);
-                aggOutName = getSqlFuncName(aggCall) + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity() + "_";
+                aggOutName = getSqlFuncName(aggCall) + "_" + inputColumnRowType.getColumnByIndex(index).getIdentity().replace('.', '_') + "_";
             }
             TblColRef aggOutCol = TblColRef.newInnerColumn(aggOutName, TblColRef.InnerDataTypeEnum.LITERAL);
+            aggOutCol.getColumnDesc().setId("" + (i + 1)); // mark the index of aggregation
             columns.add(aggOutCol);
         }
         return new ColumnRowType(columns);

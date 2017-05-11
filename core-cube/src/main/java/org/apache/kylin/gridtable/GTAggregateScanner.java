@@ -30,9 +30,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.SortedMap;
-import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
@@ -40,11 +40,15 @@ import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.common.util.MemoryBudgetController;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.common.util.MemoryBudgetController.MemoryWaterLevel;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureAggregators;
+import org.apache.kylin.metadata.filter.IFilterCodeSystem;
+import org.apache.kylin.metadata.filter.TupleFilter;
+import org.apache.kylin.metadata.model.TblColRef;
+import org.apache.kylin.metadata.tuple.ITuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +71,7 @@ public class GTAggregateScanner implements IGTScanner {
     final long spillThreshold; // 0 means no memory control && no spill
     final int storagePushDownLimit;//default to be Int.MAX
     final boolean spillEnabled;
+    final TupleFilter havingFilter;
 
     private int aggregatedRowCount = 0;
     private MemoryWaterLevel memTracker;
@@ -92,6 +97,7 @@ public class GTAggregateScanner implements IGTScanner {
         this.aggrMask = new boolean[metricsAggrFuncs.length];
         this.storagePushDownLimit = req.getStoragePushDownLimit();
         this.spillEnabled = spillEnabled;
+        this.havingFilter = req.getHavingFilterPushDown();
 
         Arrays.fill(aggrMask, true);
     }
@@ -327,61 +333,142 @@ public class GTAggregateScanner implements IGTScanner {
         }
 
         public Iterator<GTRecord> iterator() {
+            Iterator<Entry<byte[], MeasureAggregator[]>> it = null;
+
             if (dumps.isEmpty()) {
                 // the all-in-mem case
-
-                return new Iterator<GTRecord>() {
-
-                    final Iterator<Entry<byte[], MeasureAggregator[]>> it = aggBufMap.entrySet().iterator();
-                    final ReturningRecord returningRecord = new ReturningRecord();
-
-                    @Override
-                    public boolean hasNext() {
-                        return it.hasNext();
-                    }
-
-                    @Override
-                    public GTRecord next() {
-                        Entry<byte[], MeasureAggregator[]> entry = it.next();
-                        returningRecord.load(entry.getKey(), entry.getValue());
-                        return returningRecord.record;
-                    }
-
-                    @Override
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
+                it = aggBufMap.entrySet().iterator();
             } else {
                 // the spill case
                 if (!aggBufMap.isEmpty()) {
-                    this.spillBuffMap(getEstimateSizeOfAggrCache()); // TODO allow merge in-mem map with spilled dumps
+                    spillBuffMap(getEstimateSizeOfAggrCache()); // TODO allow merge in-mem map with spilled dumps
+                }
+                DumpMerger merger = new DumpMerger(dumps);
+                it = merger.iterator();
+            }
+
+            final Iterator<Entry<byte[], MeasureAggregator[]>> input = it;
+
+            return new Iterator<GTRecord>() {
+
+                final ReturningRecord returningRecord = new ReturningRecord();
+                Entry<byte[], MeasureAggregator[]> returningEntry = null;
+                final HavingFilterChecker havingFilterChecker = (havingFilter == null) ? null : new HavingFilterChecker();
+
+                @Override
+                public boolean hasNext() {
+                    while (returningEntry == null && input.hasNext()) {
+                        returningEntry = input.next();
+                        if (havingFilterChecker != null)
+                            returningEntry = havingFilterChecker.check(returningEntry);
+                    }
+                    return returningEntry != null;
                 }
 
-                return new Iterator<GTRecord>() {
-                    final DumpMerger merger = new DumpMerger(dumps);
-                    final Iterator<Pair<byte[], MeasureAggregator[]>> it = merger.iterator();
-                    final ReturningRecord returningRecord = new ReturningRecord();
+                @Override
+                public GTRecord next() {
+                    returningRecord.load(returningEntry.getKey(), returningEntry.getValue());
+                    returningEntry = null;
+                    return returningRecord.record;
+                }
 
-                    @Override
-                    public boolean hasNext() {
-                        return it.hasNext();
-                    }
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
 
-                    @Override
-                    public GTRecord next() {
-                        Pair<byte[], MeasureAggregator[]> entry = it.next();
-                        returningRecord.load(entry.getKey(), entry.getValue());
-                        return returningRecord.record;
-                    }
+        class HavingFilterChecker {
 
-                    @Override
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
+            final HavingFilterTuple tuple = new HavingFilterTuple();
+            final IFilterCodeSystem cs = new HavingFilterCodeSys();
+
+            HavingFilterChecker() {
+                logger.info("Evaluating 'having' filter -- " + havingFilter);
+            }
+
+            public Entry<byte[], MeasureAggregator[]> check(Entry<byte[], MeasureAggregator[]> returningEntry) {
+                tuple.aggrValues = returningEntry.getValue();
+                boolean pass = havingFilter.evaluate(tuple, cs);
+                return pass ? returningEntry : null;
             }
         }
+
+        private class HavingFilterCodeSys implements IFilterCodeSystem {
+
+            Object o2Cache;
+            double n2Cache;
+
+            @Override
+            public int compare(Object o1, Object o2) {
+                if (o1 == null && o2 == null)
+                    return 0;
+
+                if (o1 == null) // null is bigger to align with CubeCodeSystem
+                    return 1;
+
+                if (o2 == null) // null is bigger to align with CubeCodeSystem
+                    return -1;
+
+                // for the 'having clause', we only concern numbers and BigDecimal
+                // we try to cache the o2, which should be a constant according to CompareTupleFilter.evaluate()
+
+                double n1 = ((Number) o1).doubleValue();
+                double n2 = (o2Cache == o2) ? n2Cache : Double.parseDouble((String) o2);
+                
+                if (o2Cache == null) {
+                    o2Cache = o2;
+                    n2Cache = n2;
+                }
+
+                return Double.compare(n1, n2);
+            }
+
+            @Override
+            public boolean isNull(Object code) {
+                return code == null;
+            }
+
+            @Override
+            public void serialize(Object code, ByteBuffer buf) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Object deserialize(ByteBuffer buf) {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        private class HavingFilterTuple implements ITuple {
+            MeasureAggregator[] aggrValues;
+
+            @Override
+            public Object getValue(TblColRef col) {
+                return aggrValues[col.getColumnDesc().getZeroBasedIndex()].getState();
+            }
+
+            @Override
+            public List<String> getAllFields() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public List<TblColRef> getAllColumns() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Object[] getAllValues() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public ITuple makeCopy() {
+                throw new UnsupportedOperationException();
+            }
+        };
 
         class ReturningRecord {
             final GTRecord record = new GTRecord(info);
@@ -468,8 +555,7 @@ public class GTAggregateScanner implements IGTScanner {
             }
 
             public void flush() throws IOException {
-                logger.info("AggregationCache(size={} est_mem_size={} threshold={}) will spill to {}",
-                        buffMap.size(), estMemSize, spillThreshold, dumpedFile.getAbsolutePath());
+                logger.info("AggregationCache(size={} est_mem_size={} threshold={}) will spill to {}", buffMap.size(), estMemSize, spillThreshold, dumpedFile.getAbsolutePath());
 
                 if (buffMap != null) {
                     DataOutputStream dos = null;
@@ -503,18 +589,18 @@ public class GTAggregateScanner implements IGTScanner {
             }
         }
 
-        class DumpMerger implements Iterable<Pair<byte[], MeasureAggregator[]>> {
-            final PriorityQueue<Pair<byte[], Integer>> minHeap;
+        class DumpMerger implements Iterable<Entry<byte[], MeasureAggregator[]>> {
+            final PriorityQueue<Entry<byte[], Integer>> minHeap;
             final List<Iterator<Pair<byte[], byte[]>>> dumpIterators;
             final List<Object[]> dumpCurrentValues;
             final MeasureAggregator[] resultMeasureAggregators = newAggregators();
             final MeasureAggregators resultAggrs = new MeasureAggregators(resultMeasureAggregators);
 
             public DumpMerger(List<Dump> dumps) {
-                minHeap = new PriorityQueue<>(dumps.size(), new Comparator<Pair<byte[], Integer>>() {
+                minHeap = new PriorityQueue<>(dumps.size(), new Comparator<Entry<byte[], Integer>>() {
                     @Override
-                    public int compare(Pair<byte[], Integer> o1, Pair<byte[], Integer> o2) {
-                        return bytesComparator.compare(o1.getFirst(), o2.getFirst());
+                    public int compare(Entry<byte[], Integer> o1, Entry<byte[], Integer> o2) {
+                        return bytesComparator.compare(o1.getKey(), o2.getKey());
                     }
                 });
                 dumpIterators = Lists.newArrayListWithCapacity(dumps.size());
@@ -536,7 +622,7 @@ public class GTAggregateScanner implements IGTScanner {
             private void enqueueFromDump(int index) {
                 if (dumpIterators.get(index) != null && dumpIterators.get(index).hasNext()) {
                     Pair<byte[], byte[]> pair = dumpIterators.get(index).next();
-                    minHeap.offer(new Pair(pair.getKey(), index));
+                    minHeap.offer(new SimpleEntry(pair.getKey(), index));
                     Object[] metricValues = new Object[metrics.trueBitCount()];
                     measureCodec.decode(ByteBuffer.wrap(pair.getValue()), metricValues);
                     dumpCurrentValues.set(index, metricValues);
@@ -544,21 +630,21 @@ public class GTAggregateScanner implements IGTScanner {
             }
 
             @Override
-            public Iterator<Pair<byte[], MeasureAggregator[]>> iterator() {
-                return new Iterator<Pair<byte[], MeasureAggregator[]>>() {
+            public Iterator<Entry<byte[], MeasureAggregator[]>> iterator() {
+                return new Iterator<Entry<byte[], MeasureAggregator[]>>() {
                     @Override
                     public boolean hasNext() {
                         return !minHeap.isEmpty();
                     }
 
                     private void internalAggregate() {
-                        Pair<byte[], Integer> peekEntry = minHeap.poll();
+                        Entry<byte[], Integer> peekEntry = minHeap.poll();
                         resultAggrs.aggregate(dumpCurrentValues.get(peekEntry.getValue()));
                         enqueueFromDump(peekEntry.getValue());
                     }
 
                     @Override
-                    public Pair<byte[], MeasureAggregator[]> next() {
+                    public Entry<byte[], MeasureAggregator[]> next() {
                         // Use minimum heap to merge sort the keys,
                         // also do aggregation for measures with same keys in different dumps
                         resultAggrs.reset();
@@ -570,7 +656,7 @@ public class GTAggregateScanner implements IGTScanner {
                             internalAggregate();
                         }
 
-                        return new Pair(peekKey, resultMeasureAggregators);
+                        return new SimpleEntry(peekKey, resultMeasureAggregators);
                     }
 
                     @Override
@@ -579,6 +665,33 @@ public class GTAggregateScanner implements IGTScanner {
                     }
                 };
             }
+        }
+    }
+
+    private static class SimpleEntry<K, V> implements Entry<K, V> {
+        K k;
+        V v;
+
+        SimpleEntry(K k, V v) {
+            this.k = k;
+            this.v = v;
+        }
+
+        @Override
+        public K getKey() {
+            return k;
+        }
+
+        @Override
+        public V getValue() {
+            return v;
+        }
+
+        @Override
+        public V setValue(V value) {
+            V oldV = v;
+            this.v = value;
+            return oldV;
         }
     }
 }

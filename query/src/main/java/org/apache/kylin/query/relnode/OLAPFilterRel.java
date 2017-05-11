@@ -355,7 +355,12 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         if (!context.afterAggregate) {
             translateFilter(context);
         } else {
-            context.afterHavingClauseFilter = true;//having clause is skipped
+            context.afterHavingClauseFilter = true;
+            
+            TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType);
+            TupleFilter havingFilter = this.condition.accept(visitor);
+            if (context.havingFilter == null)
+                context.havingFilter = havingFilter;
         }
     }
 
@@ -372,8 +377,10 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
 
         TupleFilterVisitor visitor = new TupleFilterVisitor(this.columnRowType);
         TupleFilter filter = this.condition.accept(visitor);
+        
         // optimize the filter, the optimization has to be segment-irrelevant
         new FilterOptimizeTransformer().transform(filter);
+        
         Set<TblColRef> filterColumns = Sets.newHashSet();
         TupleFilter.collectColumns(filter, filterColumns);
         for (TblColRef tblColRef : filterColumns) {
