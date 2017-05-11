@@ -103,7 +103,7 @@ public class QueryController extends BasicController {
     @ResponseBody
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
-        response.setContentType("text/" + format + ";charset=utf-8");
+        response.setContentType("text/" + format + ";charset=ansi");
         response.setHeader("Content-Disposition", "attachment; filename=\"result." + format + "\"");
         ICsvListWriter csvWriter = null;
 
