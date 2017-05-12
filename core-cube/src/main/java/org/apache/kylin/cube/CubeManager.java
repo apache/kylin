@@ -183,6 +183,20 @@ public class CubeManager implements IRealizationProvider {
         return cubeMap.get(cubeName);
     }
 
+    //get CubeInstance from store to ensure the cube metadata is latest
+    public CubeInstance getCubeFromStore(String cubeName) throws IOException {
+        String storePath = CubeInstance.concatResourcePath(cubeName);
+        CubeInstance cube = getStore().getResource(storePath, CubeInstance.class, CUBE_SERIALIZER);
+
+        CubeDesc cubeDesc = CubeDescManager.getInstance(config).getCubeDesc(cube.getDescName());
+        cube.setConfig((KylinConfigExt) cubeDesc.getConfig());
+
+        //update local cache
+        cubeMap.putLocal(cube.getName(), cube);
+
+        return cube;
+    }
+
     public CubeInstance getCubeByUuid(String uuid) {
         Collection<CubeInstance> copy = new ArrayList<CubeInstance>(cubeMap.values());
         for (CubeInstance cube : copy) {

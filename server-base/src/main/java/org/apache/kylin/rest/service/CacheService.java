@@ -74,23 +74,6 @@ public class CacheService extends BasicService {
             removeOLAPDataSource(project); // data availability (cube enabled/disabled) affects exposed schema to SQL
             cleanDataCache(project);
         }
-
-        @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
-            if ("cube".equals(entity) && event == Event.UPDATE) {
-                final String cubeName = cacheKey;
-                new Thread() { // do not block the event broadcast thread
-                    public void run() {
-                        try {
-                            Thread.sleep(1000);
-                            cubeService.updateOnNewSegmentReady(cubeName);
-                        } catch (Throwable ex) {
-                            logger.error("Error in updateOnNewSegmentReady()", ex);
-                        }
-                    }
-                }.start();
-            }
-        }
     };
 
     // for test

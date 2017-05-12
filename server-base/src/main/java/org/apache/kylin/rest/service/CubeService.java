@@ -28,18 +28,14 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.CubeUpdate;
 import org.apache.kylin.cube.cuboid.CuboidCLI;
 import org.apache.kylin.cube.model.CubeDesc;
-import org.apache.kylin.engine.EngineFactory;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.job.exception.JobException;
-import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.project.ProjectInstance;
@@ -62,8 +58,6 @@ import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import com.google.common.collect.Lists;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
@@ -479,80 +473,6 @@ public class CubeService extends BasicService {
         CubeUpdate update = new CubeUpdate(cube);
         update.setToRemoveSegs(cube.getSegments().toArray(new CubeSegment[cube.getSegments().size()]));
         CubeManager.getInstance(getConfig()).updateCube(update);
-    }
-
-    public void updateOnNewSegmentReady(String cubeName) {
-        final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        String serverMode = kylinConfig.getServerMode();
-        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
-            CubeInstance cube = getCubeManager().getCube(cubeName);
-            if (cube != null) {
-                CubeSegment seg = cube.getLatestBuiltSegment();
-                if (seg != null && seg.getStatus() == SegmentStatusEnum.READY) {
-                    keepCubeRetention(cubeName);
-                    mergeCubeSegment(cubeName);
-                }
-            }
-        }
-    }
-
-    private void keepCubeRetention(String cubeName) {
-        logger.info("checking keepCubeRetention");
-        CubeInstance cube = getCubeManager().getCube(cubeName);
-        CubeDesc desc = cube.getDescriptor();
-        if (desc.getRetentionRange() <= 0)
-            return;
-
-        synchronized (CubeService.class) {
-            cube = getCubeManager().getCube(cubeName);
-            List<CubeSegment> readySegs = cube.getSegments(SegmentStatusEnum.READY);
-            if (readySegs.isEmpty())
-                return;
-
-            List<CubeSegment> toRemoveSegs = Lists.newArrayList();
-            long tail = readySegs.get(readySegs.size() - 1).getDateRangeEnd();
-            long head = tail - desc.getRetentionRange();
-            for (CubeSegment seg : readySegs) {
-                if (seg.getDateRangeEnd() > 0) { // for streaming cube its initial value is 0
-                    if (seg.getDateRangeEnd() <= head) {
-                        toRemoveSegs.add(seg);
-                    }
-                }
-            }
-
-            if (toRemoveSegs.size() > 0) {
-                CubeUpdate cubeBuilder = new CubeUpdate(cube);
-                cubeBuilder.setToRemoveSegs(toRemoveSegs.toArray(new CubeSegment[toRemoveSegs.size()]));
-                try {
-                    this.getCubeManager().updateCube(cubeBuilder);
-                } catch (IOException e) {
-                    logger.error("Failed to remove old segment from cube " + cubeName, e);
-                }
-            }
-        }
-    }
-
-    private void mergeCubeSegment(String cubeName) {
-        CubeInstance cube = getCubeManager().getCube(cubeName);
-        if (!cube.needAutoMerge())
-            return;
-
-        synchronized (CubeService.class) {
-            try {
-                cube = getCubeManager().getCube(cubeName);
-                Pair<Long, Long> offsets = getCubeManager().autoMergeCubeSegments(cube);
-                if (offsets != null) {
-                    CubeSegment newSeg = getCubeManager().mergeSegments(cube, 0, 0, offsets.getFirst(), offsets.getSecond(), true);
-                    logger.debug("Will submit merge job on " + newSeg);
-                    DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
-                    getExecutableManager().addJob(job);
-                } else {
-                    logger.debug("Not ready for merge on cube " + cubeName);
-                }
-            } catch (IOException e) {
-                logger.error("Failed to auto merge cube " + cubeName, e);
-            }
-        }
     }
 
 }

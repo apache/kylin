@@ -33,7 +33,6 @@ import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.job.exception.ExecuteException;
-import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableContext;
 import org.apache.kylin.job.execution.ExecuteResult;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -42,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
+public class UpdateCubeInfoAfterBuildStep extends UpdateCubeInfoStep {
     private static final Logger logger = LoggerFactory.getLogger(UpdateCubeInfoAfterBuildStep.class);
 
     public UpdateCubeInfoAfterBuildStep() {
@@ -50,9 +49,9 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
     }
 
     @Override
-    protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
+    protected ExecuteResult work(ExecutableContext context, CubeInstance cube) throws ExecuteException {
         final CubeManager cubeManager = CubeManager.getInstance(context.getConfig());
-        final CubeInstance cube = cubeManager.getCube(CubingExecutableUtil.getCubeName(this.getParams()));
+
         final CubeSegment segment = cube.getSegmentById(CubingExecutableUtil.getSegmentId(this.getParams()));
 
         CubingJob cubingJob = (CubingJob) getManager().getJob(CubingExecutableUtil.getCubingJobId(this.getParams()));
