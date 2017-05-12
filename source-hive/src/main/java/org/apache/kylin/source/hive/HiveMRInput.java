@@ -19,6 +19,8 @@
 package org.apache.kylin.source.hive;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -118,8 +120,8 @@ public class HiveMRInput implements IMRInput {
         }
 
         @Override
-        public String[] parseMapperInput(Object mapperInput) {
-            return HiveTableReader.getRowAsStringArray((HCatRecord) mapperInput);
+        public List<String[]> parseMapperInput(Object mapperInput) {
+            return Collections.singletonList(HiveTableReader.getRowAsStringArray((HCatRecord) mapperInput));
         }
 
     }

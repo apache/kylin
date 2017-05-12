@@ -26,7 +26,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.DateFormat;
-import org.apache.kylin.common.util.StreamingMessage;
+import org.apache.kylin.common.util.StreamingMessageRow;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -62,11 +62,11 @@ public abstract class StreamingParser {
 
     /**
      * @param message
-     * @return StreamingMessage must not be NULL
+     * @return List<StreamingMessageRow> must not be NULL
      */
-    abstract public StreamingMessage parse(ByteBuffer message);
+    abstract public List<StreamingMessageRow> parse(ByteBuffer message);
 
-    abstract public boolean filter(StreamingMessage streamingMessage);
+    abstract public boolean filter(StreamingMessageRow streamingMessageRow);
 
     public static StreamingParser getStreamingParser(String parserName, String parserProperties, List<TblColRef> columns) throws ReflectiveOperationException {
         if (!StringUtils.isEmpty(parserName)) {

@@ -24,6 +24,8 @@ import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.TableDesc;
 
+import java.util.Collection;
+
 /**
  * Any ITableSource that wishes to serve as input of MapReduce build engine must adapt to this interface.
  */
@@ -50,7 +52,7 @@ public interface IMRInput {
         public void configureJob(Job job);
 
         /** Parse a mapper input object into column values. */
-        public String[] parseMapperInput(Object mapperInput);
+        public Collection<String[]> parseMapperInput(Object mapperInput);
     }
 
     /**

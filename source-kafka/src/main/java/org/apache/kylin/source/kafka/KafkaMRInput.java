@@ -19,7 +19,9 @@ package org.apache.kylin.source.kafka;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -32,7 +34,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
-import org.apache.kylin.common.util.StreamingMessage;
+import org.apache.kylin.common.util.StreamingMessageRow;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeJoinedFlatTableDesc;
 import org.apache.kylin.engine.mr.IMRInput;
@@ -127,11 +129,17 @@ public class KafkaMRInput implements IMRInput {
         }
 
         @Override
-        public String[] parseMapperInput(Object mapperInput) {
+        public Collection<String[]> parseMapperInput(Object mapperInput) {
             Text text = (Text) mapperInput;
             ByteBuffer buffer = ByteBuffer.wrap(text.getBytes(), 0, text.getLength());
-            StreamingMessage streamingMessage = streamingParser.parse(buffer);
-            return streamingMessage.getData().toArray(new String[streamingMessage.getData().size()]);
+            List<StreamingMessageRow>  streamingMessageRowList = streamingParser.parse(buffer);
+            List<String[]> parsedDataCollection = new ArrayList<>();
+
+            for (StreamingMessageRow row: streamingMessageRowList) {
+                parsedDataCollection.add(row.getData().toArray(new String[row.getData().size()]));
+            }
+
+            return parsedDataCollection;
         }
 
     }

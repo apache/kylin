@@ -19,6 +19,7 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
 import org.apache.kylin.engine.mr.MRUtil;
@@ -38,12 +39,14 @@ public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, O
 
     @Override
     public void doMap(KEYIN key, Object value, Context context) throws IOException, InterruptedException {
-        String[] row = flatTableInputFormat.parseMapperInput(value);
-        try {
-            outputKV(row, context);
+        Collection<String[]> rowCollection = flatTableInputFormat.parseMapperInput(value);
+        for (String[] row: rowCollection) {
+            try {
+                outputKV(row, context);
 
-        } catch (Exception ex) {
-            handleErrorRecord(row, ex);
+            } catch (Exception ex) {
+                handleErrorRecord(row, ex);
+            }
         }
     }
 

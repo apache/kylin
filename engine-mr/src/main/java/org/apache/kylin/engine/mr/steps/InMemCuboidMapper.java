@@ -20,6 +20,7 @@ package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -116,12 +117,14 @@ public class InMemCuboidMapper<KEYIN> extends KylinMapper<KEYIN, Object, ByteArr
     @Override
     public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         // put each row to the queue
-        String[] row = flatTableInputFormat.parseMapperInput(record);
-        List<String> rowAsList = Arrays.asList(row);
+        Collection<String[]> rowCollection = flatTableInputFormat.parseMapperInput(record);
 
-        while (!future.isDone()) {
-            if (queue.offer(rowAsList, 1, TimeUnit.SECONDS)) {
-                break;
+        for(String[] row: rowCollection) {
+            List<String> rowAsList = Arrays.asList(row);
+            while (!future.isDone()) {
+                if (queue.offer(rowAsList, 1, TimeUnit.SECONDS)) {
+                    break;
+                }
             }
         }
     }

@@ -32,7 +32,7 @@ import java.util.Arrays;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.ByteBufferBackedInputStream;
-import org.apache.kylin.common.util.StreamingMessage;
+import org.apache.kylin.common.util.StreamingMessageRow;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +100,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
     }
 
     @Override
-    public StreamingMessage parse(ByteBuffer buffer) {
+    public List<StreamingMessageRow> parse(ByteBuffer buffer) {
         try {
             Map<String, Object> message = mapper.readValue(new ByteBufferBackedInputStream(buffer), mapType);
             root.clear();
@@ -116,7 +116,10 @@ public final class TimedJsonStreamParser extends StreamingParser {
                 }
             }
 
-            return new StreamingMessage(result, 0, t, Collections.<String, Object>emptyMap());
+            StreamingMessageRow streamingMessageRow = new StreamingMessageRow(result, 0, t, Collections.<String, Object>emptyMap());
+            List<StreamingMessageRow> messageRowList = new ArrayList<StreamingMessageRow>();
+            messageRowList.add(streamingMessageRow);
+            return messageRowList;
         } catch (IOException e) {
             logger.error("error", e);
             throw new RuntimeException(e);
@@ -124,7 +127,7 @@ public final class TimedJsonStreamParser extends StreamingParser {
     }
 
     @Override
-    public boolean filter(StreamingMessage streamingMessage) {
+    public boolean filter(StreamingMessageRow streamingMessageRow) {
         return true;
     }
 

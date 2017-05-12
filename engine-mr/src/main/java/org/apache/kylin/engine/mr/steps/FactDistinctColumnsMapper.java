@@ -44,6 +44,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 
+
 /**
  */
 public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, Object> {
@@ -157,70 +158,72 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
 
     @Override
     public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
-        String[] row = flatTableInputFormat.parseMapperInput(record);
+        Collection<String[]> rowCollection = flatTableInputFormat.parseMapperInput(record);
 
-        context.getCounter(RawDataCounter.BYTES).increment(countSizeInBytes(row));
-        for (int i = 0; i < factDictCols.size(); i++) {
-            String fieldValue = row[dictionaryColumnIndex[i]];
-            if (fieldValue == null)
-                continue;
+        for (String[] row: rowCollection) {
+            context.getCounter(RawDataCounter.BYTES).increment(countSizeInBytes(row));
+            for (int i = 0; i < factDictCols.size(); i++) {
+                String fieldValue = row[dictionaryColumnIndex[i]];
+                if (fieldValue == null)
+                    continue;
 
-            int reducerIndex;
-            if (uhcIndex[i] == 0) {
-                //for the normal dictionary column
-                reducerIndex = columnIndexToReducerBeginId.get(i);
-            } else {
-                //for the uhc
-                reducerIndex = columnIndexToReducerBeginId.get(i) + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
-            }
-
-            tmpbuf.clear();
-            byte[] valueBytes = Bytes.toBytes(fieldValue);
-            int size = valueBytes.length + 1;
-            if (size >= tmpbuf.capacity()) {
-                tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
-            }
-            tmpbuf.put(Bytes.toBytes(reducerIndex)[3]);
-            tmpbuf.put(valueBytes);
-            outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
-            DataType type = factDictCols.get(i).getType();
-            sortableKey.init(outputKey, type);
-            //judge type
-            context.write(sortableKey, EMPTY_TEXT);
-
-            // log a few rows for troubleshooting
-            if (rowCount < 10) {
-                logger.info("Sample output: " + factDictCols.get(i) + " '" + fieldValue + "' => reducer " + reducerIndex);
-            }
-        }
-
-        if (collectStatistics) {
-            if (rowCount % 100 < samplingPercentage) {
-                if (isUsePutRowKeyToHllNewAlgorithm) {
-                    putRowKeyToHLLNew(row);
+                int reducerIndex;
+                if (uhcIndex[i] == 0) {
+                    //for the normal dictionary column
+                    reducerIndex = columnIndexToReducerBeginId.get(i);
                 } else {
-                    putRowKeyToHLLOld(row);
+                    //for the uhc
+                    reducerIndex = columnIndexToReducerBeginId.get(i) + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
+                }
+
+                tmpbuf.clear();
+                byte[] valueBytes = Bytes.toBytes(fieldValue);
+                int size = valueBytes.length + 1;
+                if (size >= tmpbuf.capacity()) {
+                    tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
+                }
+                tmpbuf.put(Bytes.toBytes(reducerIndex)[3]);
+                tmpbuf.put(valueBytes);
+                outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
+                DataType type = factDictCols.get(i).getType();
+                sortableKey.init(outputKey, type);
+                //judge type
+                context.write(sortableKey, EMPTY_TEXT);
+
+                // log a few rows for troubleshooting
+                if (rowCount < 10) {
+                    logger.info("Sample output: " + factDictCols.get(i) + " '" + fieldValue + "' => reducer " + reducerIndex);
                 }
             }
 
-            if (needFetchPartitionCol == true) {
-                String fieldValue = row[partitionColumnIndex];
-                if (fieldValue != null) {
-                    tmpbuf.clear();
-                    byte[] valueBytes = Bytes.toBytes(fieldValue);
-                    int size = valueBytes.length + 1;
-                    if (size >= tmpbuf.capacity()) {
-                        tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
+            if (collectStatistics) {
+                if (rowCount % 100 < samplingPercentage) {
+                    if (isUsePutRowKeyToHllNewAlgorithm) {
+                        putRowKeyToHLLNew(row);
+                    } else {
+                        putRowKeyToHLLOld(row);
                     }
-                    tmpbuf.put(MARK_FOR_PARTITION_COL);
-                    tmpbuf.put(valueBytes);
-                    outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
-                    sortableKey.init(outputKey, (byte) 0);
-                    context.write(sortableKey, EMPTY_TEXT);
+                }
+
+                if (needFetchPartitionCol == true) {
+                    String fieldValue = row[partitionColumnIndex];
+                    if (fieldValue != null) {
+                        tmpbuf.clear();
+                        byte[] valueBytes = Bytes.toBytes(fieldValue);
+                        int size = valueBytes.length + 1;
+                        if (size >= tmpbuf.capacity()) {
+                            tmpbuf = ByteBuffer.allocate(countNewSize(tmpbuf.capacity(), size));
+                        }
+                        tmpbuf.put(MARK_FOR_PARTITION_COL);
+                        tmpbuf.put(valueBytes);
+                        outputKey.set(tmpbuf.array(), 0, tmpbuf.position());
+                        sortableKey.init(outputKey, (byte) 0);
+                        context.write(sortableKey, EMPTY_TEXT);
+                    }
                 }
             }
+            rowCount++;
         }
-        rowCount++;
     }
 
     private long countSizeInBytes(String[] row) {
