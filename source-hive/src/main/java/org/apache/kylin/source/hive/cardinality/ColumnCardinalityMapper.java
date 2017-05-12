@@ -20,6 +20,7 @@ package org.apache.kylin.source.hive.cardinality;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -68,22 +69,24 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
     @Override
     public void doMap(T key, Object value, Context context) throws IOException, InterruptedException {
         ColumnDesc[] columns = tableDesc.getColumns();
-        String[] values = tableInputFormat.parseMapperInput(value);
+        Collection<String[]> valuesCollection = tableInputFormat.parseMapperInput(value);
 
-        for (int m = 0; m < columns.length; m++) {
-            String field = columns[m].getName();
-            String fieldValue = values[m];
-            if (fieldValue == null)
-                fieldValue = "NULL";
+        for (String[] values: valuesCollection) {
+            for (int m = 0; m < columns.length; m++) {
+                String field = columns[m].getName();
+                String fieldValue = values[m];
+                if (fieldValue == null)
+                    fieldValue = "NULL";
 
-            if (counter < 5 && m < 10) {
-                System.out.println("Get row " + counter + " column '" + field + "'  value: " + fieldValue);
+                if (counter < 5 && m < 10) {
+                    System.out.println("Get row " + counter + " column '" + field + "'  value: " + fieldValue);
+                }
+
+                getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
             }
 
-            getHllc(m).add(Bytes.toBytes(fieldValue.toString()));
+            counter++;
         }
-
-        counter++;
     }
 
     private HLLCounter getHllc(Integer key) {

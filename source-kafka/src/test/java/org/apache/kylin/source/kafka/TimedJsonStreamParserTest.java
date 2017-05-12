@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
-import org.apache.kylin.common.util.StreamingMessage;
+import org.apache.kylin.common.util.StreamingMessageRow;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.junit.AfterClass;
@@ -65,8 +65,8 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
         ByteBuffer buffer = getJsonByteBuffer(msg);
-        StreamingMessage sMsg = parser.parse(buffer);
-        List<String> result = sMsg.getData();
+        List<StreamingMessageRow> msgList = parser.parse(buffer);
+        List<String> result = msgList.get(0).getData();
         assertEquals("Jul 20, 2016 9:59:17 AM", result.get(0));
         assertEquals("755703618762862600", result.get(1));
         assertEquals("false", result.get(2));
@@ -80,8 +80,8 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
         ByteBuffer buffer = getJsonByteBuffer(msg);
-        StreamingMessage sMsg = parser.parse(buffer);
-        List<String> result = sMsg.getData();
+        List<StreamingMessageRow> msgList = parser.parse(buffer);
+        List<String> result = msgList.get(0).getData();
         assertEquals("4853763947", result.get(0));
         assertEquals("Noticias", result.get(1));
         assertEquals("false", result.get(2));
@@ -96,8 +96,8 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         HashMap<String, Object> map = (HashMap<String, Object>) msg;
         Object array = map.get("mediaEntities");
         ByteBuffer buffer = getJsonByteBuffer(msg);
-        StreamingMessage sMsg = parser.parse(buffer);
-        List<String> result = sMsg.getData();
+        List<StreamingMessageRow> msgList = parser.parse(buffer);
+        List<String> result = msgList.get(0).getData();
         System.out.println(result);
 
     }
@@ -109,8 +109,8 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
         ByteBuffer buffer = getJsonByteBuffer(msg);
-        StreamingMessage sMsg = parser.parse(buffer);
-        List<String> result = sMsg.getData();
+        List<StreamingMessageRow> msgList = parser.parse(buffer);
+        List<String> result = msgList.get(0).getData();
 
     }
 
@@ -121,8 +121,8 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
         TimedJsonStreamParser parser = new TimedJsonStreamParser(allCol, null);
         Object msg = mapper.readValue(new File(jsonFilePath), mapType);
         ByteBuffer buffer = getJsonByteBuffer(msg);
-        StreamingMessage sMsg = parser.parse(buffer);
-        List<String> result = sMsg.getData();
+        List<StreamingMessageRow> msgList = parser.parse(buffer);
+        List<String> result = msgList.get(0).getData();
         assertEquals(StringUtils.EMPTY, result.get(0));
         assertEquals(StringUtils.EMPTY, result.get(1));
     }

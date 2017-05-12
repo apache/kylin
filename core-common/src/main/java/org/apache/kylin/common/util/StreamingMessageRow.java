@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  */
-public class StreamingMessage {
+public class StreamingMessageRow {
 
     private final List<String> data;
 
@@ -33,7 +33,7 @@ public class StreamingMessage {
 
     private Map<String, Object> params;
 
-    public StreamingMessage(List<String> data, long offset, long timestamp, Map<String, Object> params) {
+    public StreamingMessageRow(List<String> data, long offset, long timestamp, Map<String, Object> params) {
         this.data = data;
         this.offset = offset;
         this.timestamp = timestamp;
