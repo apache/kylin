@@ -43,6 +43,9 @@ public class InitialTaskManager implements InitializingBean {
         // init metrics system for kylin
         QueryMetricsFacade.init();
         
+        // setDefaultUncaughtExceptionHandler
+        Thread.setDefaultUncaughtExceptionHandler(new DefaultUncaughtExceptionHandler());
+        
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String initTasks = kylinConfig.getInitTasks();
         if (!StringUtils.isEmpty(initTasks)) {
@@ -57,6 +60,13 @@ public class InitialTaskManager implements InitializingBean {
                 }
             }
             logger.info("All initial tasks finished.");
+        }
+    }
+    
+    private static class DefaultUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            logger.error("Uncaught exception in thread " + t, e);
         }
     }
 }
