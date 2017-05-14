@@ -142,7 +142,7 @@ public class Broadcaster {
     }
 
     public void registerListener(Listener listener, String... entities) {
-        synchronized (CACHE) {
+        synchronized (listenerMap) {
             // ignore re-registration
             List<Listener> all = listenerMap.get(SYNC_ALL);
             if (all != null && all.contains(listener)) {
@@ -181,43 +181,41 @@ public class Broadcaster {
     }
 
     public void notifyListener(String entity, Event event, String cacheKey) throws IOException {
-        synchronized (CACHE) {
-            List<Listener> list = listenerMap.get(entity);
-            if (list == null)
-                return;
+        List<Listener> list = listenerMap.get(entity);
+        if (list == null)
+            return;
 
-            logger.debug("Broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey + ", listeners=" + list);
+        logger.debug("Broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey + ", listeners=" + list);
 
-            // prevents concurrent modification exception
-            list = Lists.newArrayList(list);
-            switch (entity) {
-            case SYNC_ALL:
-                for (Listener l : list) {
-                    l.onClearAll(this);
-                }
-                clearCache(); // clear broadcaster too in the end
-                break;
-            case SYNC_PRJ_SCHEMA:
-                ProjectManager.getInstance(config).clearL2Cache();
-                for (Listener l : list) {
-                    l.onProjectSchemaChange(this, cacheKey);
-                }
-                break;
-            case SYNC_PRJ_DATA:
-                ProjectManager.getInstance(config).clearL2Cache(); // cube's first becoming ready leads to schema change too
-                for (Listener l : list) {
-                    l.onProjectDataChange(this, cacheKey);
-                }
-                break;
-            default:
-                for (Listener l : list) {
-                    l.onEntityChange(this, entity, event, cacheKey);
-                }
-                break;
+        // prevents concurrent modification exception
+        list = Lists.newArrayList(list);
+        switch (entity) {
+        case SYNC_ALL:
+            for (Listener l : list) {
+                l.onClearAll(this);
             }
-
-            logger.debug("Done broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey);
+            clearCache(); // clear broadcaster too in the end
+            break;
+        case SYNC_PRJ_SCHEMA:
+            ProjectManager.getInstance(config).clearL2Cache();
+            for (Listener l : list) {
+                l.onProjectSchemaChange(this, cacheKey);
+            }
+            break;
+        case SYNC_PRJ_DATA:
+            ProjectManager.getInstance(config).clearL2Cache(); // cube's first becoming ready leads to schema change too
+            for (Listener l : list) {
+                l.onProjectDataChange(this, cacheKey);
+            }
+            break;
+        default:
+            for (Listener l : list) {
+                l.onEntityChange(this, entity, event, cacheKey);
+            }
+            break;
         }
+
+        logger.debug("Done broadcasting metadata change: entity=" + entity + ", event=" + event + ", cacheKey=" + cacheKey);
     }
 
     /**
