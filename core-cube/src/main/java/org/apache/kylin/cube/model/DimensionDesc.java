@@ -33,6 +33,7 @@ import com.google.common.base.Objects;
 
 /**
  */
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DimensionDesc implements java.io.Serializable {
 
@@ -178,7 +179,7 @@ public class DimensionDesc implements java.io.Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((column == null) ? 0 : name.hashCode());
+        result = prime * result + ((column == null) ? 0 : column.hashCode());
         result = prime * result + ((table == null) ? 0 : table.hashCode());
         result = prime * result + ((derived == null) ? 0 : derived.hashCode());
         return result;
