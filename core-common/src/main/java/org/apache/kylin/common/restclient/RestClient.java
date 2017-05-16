@@ -287,8 +287,4 @@ public class RestClient {
         return result.toString();
     }
 
-    @Override
-    public String toString() {
-        return String.format("RestClient(%s:%d)", host, port);
-    }
 }
