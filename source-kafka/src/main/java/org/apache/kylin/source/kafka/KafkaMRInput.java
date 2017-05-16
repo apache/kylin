@@ -117,7 +117,6 @@ public class KafkaMRInput implements IMRInput {
         @Override
         public void configureJob(Job job) {
             job.setInputFormatClass(SequenceFileInputFormat.class);
-            job.setMapOutputValueClass(Text.class);
             String jobId = job.getConfiguration().get(BatchConstants.ARG_CUBING_JOB_ID);
             IJoinedFlatTableDesc flatHiveTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
             String inputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));

@@ -559,7 +559,7 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         HadoopUtil.deletePath(conf, path);
     }
 
-    protected double getTotalMapInputMB() throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    public static double getTotalMapInputMB(Job job) throws ClassNotFoundException, IOException, InterruptedException, JobException {
         if (job == null) {
             throw new JobException("Job is null");
         }
@@ -574,6 +574,10 @@ public abstract class AbstractHadoopJob extends Configured implements Tool {
         }
         double totalMapInputMB = (double) mapInputBytes / 1024 / 1024;
         return totalMapInputMB;
+    }
+
+    protected double getTotalMapInputMB() throws ClassNotFoundException, IOException, InterruptedException, JobException {
+        return getTotalMapInputMB(job);
     }
 
     protected int getMapInputSplitCount() throws ClassNotFoundException, JobException, IOException, InterruptedException {

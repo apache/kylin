@@ -19,15 +19,14 @@
 package org.apache.kylin.engine.mr.steps;
 
 import org.apache.commons.cli.Options;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.IMROutput2;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 
 public class MergeCuboidJob extends CuboidJob {
@@ -44,11 +43,14 @@ public class MergeCuboidJob extends CuboidJob {
             options.addOption(OPTION_OUTPUT_PATH);
             parseOptions(options, args);
 
+            String input = getOptionValue(OPTION_INPUT_PATH);
+            String output = getOptionValue(OPTION_OUTPUT_PATH);
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             String segmentID = getOptionValue(OPTION_SEGMENT_ID);
 
             CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
             CubeInstance cube = cubeMgr.getCube(cubeName);
+            CubeSegment cubeSeg = cube.getSegmentById(segmentID);
 
             // start job
             String jobName = getOptionValue(OPTION_JOB_NAME);
@@ -57,34 +59,31 @@ public class MergeCuboidJob extends CuboidJob {
 
             setJobClasspath(job, cube.getConfig());
 
-            // set inputs
-            addInputDirs(getOptionValue(OPTION_INPUT_PATH), job);
-
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
-            FileOutputFormat.setOutputPath(job, output);
-
-            // Mapper
-            job.setInputFormatClass(SequenceFileInputFormat.class);
-            job.setMapperClass(MergeCuboidMapper.class);
-            job.setMapOutputKeyClass(Text.class);
-            job.setMapOutputValueClass(Text.class);
-
-            job.setReducerClass(CuboidReducer.class);
-            job.setOutputFormatClass(SequenceFileOutputFormat.class);
-            job.setOutputKeyClass(Text.class);
-            job.setOutputValueClass(Text.class);
-
-            // set job configuration
-            job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
-            job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
-
             // add metadata to distributed cache
             // TODO actually only dictionaries from merging segments are needed
             attachCubeMetadataWithDict(cube, job.getConfiguration());
 
-            job.setNumReduceTasks(LayerReducerNumSizing.getReduceTaskNum(cube.getSegmentById(segmentID), getTotalMapInputMB(), -1));
+            // Mapper
+            job.setMapperClass(MergeCuboidMapper.class);
+            job.setMapOutputKeyClass(Text.class);
+            job.setMapOutputValueClass(Text.class);
 
-            this.deletePath(job.getConfiguration(), output);
+            // Reducer
+            job.setReducerClass(CuboidReducer.class);
+            job.setOutputKeyClass(Text.class);
+            job.setOutputValueClass(Text.class);
+
+            // set inputs
+            IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(cubeSeg).getOuputFormat();
+            outputFormat.configureJobInput(job, input);
+            addInputDirs(input, job);
+
+            // set output
+            outputFormat.configureJobOutput(job, output, cubeSeg);
+
+            // set job configuration
+            job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
+            job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
 
             return waitForCompletion(job);
         } finally {

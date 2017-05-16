@@ -23,8 +23,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -44,7 +42,9 @@ import org.apache.kylin.cube.kv.RowKeyEncoder;
 import org.apache.kylin.cube.kv.RowKeyEncoderProvider;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dict.DictionaryManager;
+import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.KylinMapper;
+import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.apache.kylin.measure.BufferedMeasureCodec;
@@ -110,7 +110,8 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
         // decide which source segment
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
-        sourceCubeSegment = findSourceSegment(fileSplit, cube);
+        IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(mergedCubeSegment).getOuputFormat();
+        sourceCubeSegment = outputFormat.findSourceSegment(fileSplit, cube);
 
         rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
         rowKeyEncoderProvider = new RowKeyEncoderProvider(mergedCubeSegment);
@@ -144,34 +145,6 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                 dictMeasures.add(Pair.newPair(i, measureType.newIngester()));
             }
         }
-    }
-
-    private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
-
-    public CubeSegment findSourceSegment(FileSplit fileSplit, CubeInstance cube) {
-        String filePath = fileSplit.getPath().toString();
-        String jobID = extractJobIDFromPath(filePath);
-        return findSegmentWithUuid(jobID, cube);
-    }
-
-    private static String extractJobIDFromPath(String path) {
-        Matcher matcher = JOB_NAME_PATTERN.matcher(path);
-        // check the first occurrence
-        if (matcher.find()) {
-            return matcher.group(1);
-        } else {
-            throw new IllegalStateException("Can not extract job ID from file path : " + path);
-        }
-    }
-
-    private static CubeSegment findSegmentWithUuid(String jobID, CubeInstance cubeInstance) {
-        for (CubeSegment segment : cubeInstance.getSegments()) {
-            String lastBuildJobID = segment.getLastBuildJobID();
-            if (lastBuildJobID != null && lastBuildJobID.equalsIgnoreCase(jobID)) {
-                return segment;
-            }
-        }
-        throw new IllegalStateException("No merging segment's last build job ID equals " + jobID);
     }
 
     @Override

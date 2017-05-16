@@ -19,7 +19,9 @@
 package org.apache.kylin.engine.mr.steps;
 
 import java.io.IOException;
+import java.util.Map;
 
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.cube.model.CubeDesc;
@@ -28,11 +30,11 @@ import org.apache.kylin.job.exception.JobException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LayerReducerNumSizing {
+public class ReducerNumSizing {
 
-    private static final Logger logger = LoggerFactory.getLogger(LayerReducerNumSizing.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReducerNumSizing.class);
 
-    public static int getReduceTaskNum(CubeSegment cubeSegment, double totalMapInputMB, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
+    public static int getLayeredCubingReduceTaskNum(CubeSegment cubeSegment, double totalMapInputMB, int level) throws ClassNotFoundException, IOException, InterruptedException, JobException {
         CubeDesc cubeDesc = cubeSegment.getCubeDesc();
         KylinConfig kylinConfig = cubeDesc.getConfig();
 
@@ -77,4 +79,28 @@ public class LayerReducerNumSizing {
         return numReduceTasks;
     }
 
+    public static int getInmemCubingReduceTaskNum(CubeSegment cubeSeg) throws IOException {
+        KylinConfig kylinConfig = cubeSeg.getConfig();
+
+        Map<Long, Double> cubeSizeMap = new CubeStatsReader(cubeSeg, kylinConfig).getCuboidSizeMap();
+        double totalSizeInM = 0;
+        for (Double cuboidSize : cubeSizeMap.values()) {
+            totalSizeInM += cuboidSize;
+        }
+
+        double perReduceInputMB = kylinConfig.getDefaultHadoopJobReducerInputMB();
+
+        // number of reduce tasks
+        int numReduceTasks = (int) Math.round(totalSizeInM / perReduceInputMB);
+
+        // at least 1 reducer by default
+        numReduceTasks = Math.max(kylinConfig.getHadoopJobMinReducerNumber(), numReduceTasks);
+        // no more than 500 reducer by default
+        numReduceTasks = Math.min(kylinConfig.getHadoopJobMaxReducerNumber(), numReduceTasks);
+
+        logger.info("Having total map input MB " + Math.round(totalSizeInM));
+        logger.info("Having per reduce MB " + perReduceInputMB);
+        logger.info("Setting " + Reducer.Context.NUM_REDUCES + "=" + numReduceTasks);
+        return numReduceTasks;
+    }
 }

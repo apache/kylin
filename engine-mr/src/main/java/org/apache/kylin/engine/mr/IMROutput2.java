@@ -18,10 +18,13 @@
 
 package org.apache.kylin.engine.mr;
 
+import java.util.List;
+
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
-
-import java.util.List;
 
 public interface IMROutput2 {
 
@@ -53,6 +56,19 @@ public interface IMROutput2 {
 
         /** Add step that does any necessary clean up. */
         public void addStepPhase4_Cleanup(DefaultChainedExecutable jobFlow);
+
+        public IMROutputFormat getOuputFormat();
+
+    }
+
+    public interface IMROutputFormat {
+
+        /** Configure the InputFormat of given job. */
+        public void configureJobInput(Job job, String input) throws Exception;
+
+        /** Configure the OutputFormat of given job. */
+        public void configureJobOutput(Job job, String output, CubeSegment segment, int level) throws Exception;
+
     }
 
     /** Return a helper to participate in batch merge job flow. */
@@ -82,6 +98,19 @@ public interface IMROutput2 {
 
         /** Add step that does any necessary clean up. */
         public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow);
+
+        public IMRMergeOutputFormat getOuputFormat();
+    }
+
+    public interface IMRMergeOutputFormat {
+
+        /** Configure the InputFormat of given job. */
+        public void configureJobInput(Job job, String input) throws Exception;
+
+        /** Configure the OutputFormat of given job. */
+        public void configureJobOutput(Job job, String output, CubeSegment segment) throws Exception;
+
+        public CubeSegment findSourceSegment(FileSplit fileSplit, CubeInstance cube);
     }
 
 }

@@ -18,24 +18,19 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.CubingJob;
 import org.apache.kylin.engine.mr.IMRInput.IMRTableInputFormat;
+import org.apache.kylin.engine.mr.IMROutput2;
 import org.apache.kylin.engine.mr.MRUtil;
 import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 import org.apache.kylin.engine.mr.common.BatchConstants;
@@ -84,11 +79,10 @@ public class CuboidJob extends AbstractHadoopJob {
             options.addOption(OPTION_INPUT_PATH);
             options.addOption(OPTION_OUTPUT_PATH);
             options.addOption(OPTION_NCUBOID_LEVEL);
-            options.addOption(OPTION_INPUT_FORMAT);
             options.addOption(OPTION_CUBING_JOB_ID);
             parseOptions(options, args);
 
-            Path output = new Path(getOptionValue(OPTION_OUTPUT_PATH));
+            String output = getOptionValue(OPTION_OUTPUT_PATH);
             String cubeName = getOptionValue(OPTION_CUBE_NAME).toUpperCase();
             int nCuboidLevel = Integer.parseInt(getOptionValue(OPTION_NCUBOID_LEVEL));
             String segmentID = getOptionValue(OPTION_SEGMENT_ID);
@@ -109,8 +103,10 @@ public class CuboidJob extends AbstractHadoopJob {
 
             setJobClasspath(job, cube.getConfig());
 
+            // add metadata to distributed cache
+            attachSegmentMetadataWithDict(segment, job.getConfiguration());
+
             // Mapper
-            configureMapperInputFormat(segment);
             job.setMapperClass(this.mapperClass);
             job.setMapOutputKeyClass(Text.class);
             job.setMapOutputValueClass(Text.class);
@@ -118,22 +114,20 @@ public class CuboidJob extends AbstractHadoopJob {
 
             // Reducer
             job.setReducerClass(CuboidReducer.class);
-            job.setOutputFormatClass(SequenceFileOutputFormat.class);
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
 
-            FileOutputFormat.setOutputPath(job, output);
+            // set input
+            configureMapperInputFormat(segment);
+
+            // set output
+            IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(segment).getOuputFormat();
+            outputFormat.configureJobOutput(job, output, segment, nCuboidLevel);
 
             // set job configuration
             job.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, cubeName);
             job.getConfiguration().set(BatchConstants.CFG_CUBE_SEGMENT_ID, segmentID);
             job.getConfiguration().setInt(BatchConstants.CFG_CUBE_CUBOID_LEVEL, nCuboidLevel);
-            // add metadata to distributed cache
-            attachSegmentMetadataWithDict(segment, job.getConfiguration());
-
-            job.setNumReduceTasks(LayerReducerNumSizing.getReduceTaskNum(segment, getTotalMapInputMB(), nCuboidLevel));
-
-            this.deletePath(job.getConfiguration(), output);
 
             return waitForCompletion(job);
         } finally {
@@ -142,7 +136,7 @@ public class CuboidJob extends AbstractHadoopJob {
         }
     }
 
-    private void configureMapperInputFormat(CubeSegment cubeSeg) throws IOException {
+    private void configureMapperInputFormat(CubeSegment cubeSeg) throws Exception {
         String input = getOptionValue(OPTION_INPUT_PATH);
 
         if ("FLAT_TABLE".equals(input)) {
@@ -151,12 +145,9 @@ public class CuboidJob extends AbstractHadoopJob {
             flatTableInputFormat.configureJob(job);
         } else {
             // n-dimension cuboid case
+            IMROutput2.IMROutputFormat outputFormat = MRUtil.getBatchCubingOutputSide2(cubeSeg).getOuputFormat();
+            outputFormat.configureJobInput(job, input);
             FileInputFormat.setInputPaths(job, new Path(input));
-            if (hasOption(OPTION_INPUT_FORMAT) && ("textinputformat".equalsIgnoreCase(getOptionValue(OPTION_INPUT_FORMAT)))) {
-                job.setInputFormatClass(TextInputFormat.class);
-            } else {
-                job.setInputFormatClass(SequenceFileInputFormat.class);
-            }
         }
     }
 
