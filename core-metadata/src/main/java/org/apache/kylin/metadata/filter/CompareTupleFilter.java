@@ -215,7 +215,8 @@ public class CompareTupleFilter extends TupleFilter {
     @Override
     public boolean isEvaluable() {
         return (column != null || (function != null && function.isEvaluable())) //
-                && !conditionValues.isEmpty() && secondColumn == null;
+                && (!conditionValues.isEmpty() || operator == FilterOperatorEnum.ISNOTNULL || operator == FilterOperatorEnum.ISNULL) //
+                && secondColumn == null;
     }
 
     public boolean alwaysReturnTrue() {
