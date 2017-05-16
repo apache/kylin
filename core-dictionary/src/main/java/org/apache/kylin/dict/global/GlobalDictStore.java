@@ -37,7 +37,7 @@ public abstract class GlobalDictStore {
     }
 
     // workingDir should be an absolute path, will create if not exists
-    abstract void prepareForWrite(String workingDir) throws IOException;
+    abstract void prepareForWrite(String workingDir, boolean isGlobal) throws IOException;
 
     /**
      * @return all versions of this dictionary in ascending order
@@ -87,9 +87,10 @@ public abstract class GlobalDictStore {
      * commit the <i>DictSlice</i> and <i>GlobalDictMetadata</i> in workingDir to new versionDir
      * @param workingDir where store the tmp slice and index, should exist
      * @param globalDictMetadata the metadata of global dict
+     * @param isAppendDictGlobal mark the append dict whether is global or not
      * @throws IOException on I/O error
      */
-    public abstract void commit(String workingDir, GlobalDictMetadata globalDictMetadata) throws IOException;
+    public abstract void commit(String workingDir, GlobalDictMetadata globalDictMetadata, boolean isAppendDictGlobal) throws IOException;
 
     /**
      * Copy the latest version of this dict to another meta. The source is unchanged.

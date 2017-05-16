@@ -38,7 +38,6 @@ public class GlobalDictMetadata {
 
     public GlobalDictMetadata(int baseId, int maxId, int maxValueLength, int nValues, BytesConverter bytesConverter, NavigableMap<AppendDictSliceKey, String> sliceFileMap) {
 
-        Preconditions.checkNotNull(bytesConverter, "bytesConverter");
         Preconditions.checkNotNull(sliceFileMap, "sliceFileMap");
 
         this.baseId = baseId;

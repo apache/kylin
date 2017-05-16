@@ -126,25 +126,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
 
             @Override
             public BitmapCounter reEncodeDictionary(BitmapCounter value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
-                if (!needDictionaryColumn(measureDesc.getFunction())) {
-                    return value;
-                }
-                TblColRef colRef = measureDesc.getFunction().getParameter().getColRefs().get(0);
-                Dictionary<String> sourceDict = oldDicts.get(colRef);
-                Dictionary<String> mergedDict = newDicts.get(colRef);
-
-                BitmapCounter retValue = factory.newBitmap();
-                for (int id : value) {
-                    int newId;
-                    String v = sourceDict.getValueFromId(id);
-                    if (v == null) {
-                        newId = mergedDict.nullId();
-                    } else {
-                        newId = mergedDict.getIdFromValue(v);
-                    }
-                    retValue.add(newId);
-                }
-                return retValue;
+                //BitmapCounter needn't reEncode
+                return value;
             }
 
             @Override

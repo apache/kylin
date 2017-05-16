@@ -534,7 +534,18 @@
 </script>
 <script type="text/ng-template" id="AdvancedDictionariesTip.html">
   <div>
-    <h4>Special settings for dictionaries. Leave blank by default.</h4>
+    <h4>Special settings for dictionaries.</h4>
+    <ol>
+      <li>
+        "Global Dictionary" is the default dict for precise count distinct measure, which support rollup among all segments.
+      </li>
+      <li>
+        "Segment Dictionary" is the special dict for precise count distinct measure, which is based on one segment and could not
+        support rollup among segments.
+        Specifically, if your cube isn't partitioned or you can ensure all your SQLs will group by your partition_column,
+        you could use "Segment Dictionary" instead of "Global Dictionary".
+      </li>
+    </ol>
   </div>
 </script>
 

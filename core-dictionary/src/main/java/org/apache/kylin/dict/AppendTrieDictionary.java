@@ -38,8 +38,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -72,7 +72,12 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         this.baseDir = baseDir;
         final GlobalDictStore globalDictStore = new GlobalDictHDFSStore(baseDir);
         Long[] versions = globalDictStore.listAllVersions();
-        checkState(versions.length > 0, "Global dict at %s is empty", baseDir);
+
+        if (versions.length == 0) {
+            this.metadata = new GlobalDictMetadata(0, 0, 0, 0, null, new TreeMap<AppendDictSliceKey, String>());
+            return; // for the removed SegmentAppendTrieDictBuilder
+        }
+
         final long latestVersion = versions[versions.length - 1];
         final Path latestVersionPath = globalDictStore.getVersionDir(latestVersion);
         this.metadata = globalDictStore.getMetadata(latestVersion);

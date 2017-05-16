@@ -59,13 +59,6 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         this.basePath = new Path(baseDir);
         this.conf = HadoopUtil.getCurrentConfiguration();
         this.fileSystem = HadoopUtil.getFileSystem(baseDir);
-
-        if (!fileSystem.exists(basePath)) {
-            logger.info("Global dict at {} doesn't exist, create a new one", basePath);
-            fileSystem.mkdirs(basePath);
-        }
-
-        migrateOldLayout();
     }
 
     // Previously we put slice files and index file directly in base directory,
@@ -111,8 +104,15 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
     }
 
     @Override
-    void prepareForWrite(String workingDir) throws IOException {
-        // TODO create lock file
+    void prepareForWrite(String workingDir, boolean isGlobal) throws IOException {
+        if (!fileSystem.exists(basePath)) {
+            logger.info("Global dict at {} doesn't exist, create a new one", basePath);
+            fileSystem.mkdirs(basePath);
+        }
+
+        migrateOldLayout();
+
+        logger.info("Prepare to write Global dict at {}, isGlobal={}", workingDir, isGlobal);
         Path working = new Path(workingDir);
 
         if (fileSystem.exists(working)) {
@@ -122,7 +122,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
 
         // when build dict, copy all data into working dir and work on it, avoiding suddenly server crash made data corrupt
         Long[] versions = listAllVersions();
-        if (versions.length > 0) {
+        if (versions.length > 0 && isGlobal) {
             Path latestVersion = getVersionDir(versions[versions.length - 1]);
             FileUtil.copy(fileSystem, latestVersion, fileSystem, working, false, true, conf);
         } else {
@@ -132,6 +132,10 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
 
     @Override
     public Long[] listAllVersions() throws IOException {
+        if (!fileSystem.exists(basePath)) {
+            return new Long[0];  // for the removed SegmentAppendTrieDictBuilder
+        }
+
         FileStatus[] versionDirs = fileSystem.listStatus(basePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -208,7 +212,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
     }
 
     @Override
-    public void commit(String workingDir, GlobalDictMetadata metadata) throws IOException {
+    public void commit(String workingDir, GlobalDictMetadata metadata, boolean isAppendDictGlobal) throws IOException {
         Path workingPath = new Path(workingDir);
 
         // delete v1 index file
@@ -225,22 +229,38 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         Path newVersionPath = new Path(basePath, VERSION_PREFIX + System.currentTimeMillis());
         fileSystem.rename(workingPath, newVersionPath);
 
-        cleanUp();
+        cleanUp(isAppendDictGlobal);
     }
 
     // Check versions count, delete expired versions
-    private void cleanUp() throws IOException {
-        Long[] versions = listAllVersions();
+    private void cleanUp(boolean isAppendDictGlobal) throws IOException {
         long timestamp = System.currentTimeMillis();
-        for (int i = 0; i < versions.length - maxVersions; i++) {
-            if (versions[i] + versionTTL < timestamp) {
-                fileSystem.delete(getVersionDir(versions[i]), true);
+        if (isAppendDictGlobal) {
+            Long[] versions = listAllVersions();
+            for (int i = 0; i < versions.length - maxVersions; i++) {
+                if (versions[i] + versionTTL < timestamp) {
+                    fileSystem.delete(getVersionDir(versions[i]), true);
+                }
+            }
+        } else {
+            FileStatus[] segmentDictDirs = fileSystem.listStatus(basePath.getParent());
+            for (FileStatus fileStatus : segmentDictDirs) {
+                String filePath = fileStatus.getPath().getName();
+                Long version = Long.parseLong(filePath.split("_")[1]);
+                if (version + versionTTL < timestamp) {
+                    fileSystem.delete(new Path(basePath.getParent() + "/" + filePath), true);
+                }
             }
         }
     }
 
     @Override
     public String copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
+        if (baseDir.contains("resources/SegmentDict")) {
+            logger.info("SegmentAppendTrieDict needn't to copy");
+            return baseDir;
+        }
+
         checkArgument(baseDir.startsWith(srcConfig.getHdfsWorkingDirectory()), "Please check why current directory {} doesn't belong to source working directory {}", baseDir, srcConfig.getHdfsWorkingDirectory());
 
         final String dstBaseDir = baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory());
