@@ -90,6 +90,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.roaringbitmap.buffer.MappeableContainer[].class);
         kyroClasses.add(org.roaringbitmap.buffer.MutableRoaringBitmap.class);
         kyroClasses.add(org.roaringbitmap.buffer.MappeableArrayContainer.class);
+        kyroClasses.add(org.roaringbitmap.buffer.MappeableBitmapContainer.class);
         kyroClasses.add(com.tdunning.math.stats.AVLTreeDigest.class);
         kyroClasses.add(com.tdunning.math.stats.Centroid.class);
 
