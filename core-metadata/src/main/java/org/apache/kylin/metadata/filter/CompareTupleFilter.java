@@ -167,7 +167,13 @@ public class CompareTupleFilter extends TupleFilter {
                 return true;
             else
                 return false;
+        } else {
+            if (operator == FilterOperatorEnum.ISNOTNULL)
+                return true;
+            else if (operator == FilterOperatorEnum.ISNULL)
+                return false;
         }
+        
         if (cs.isNull(firstCondValue)) {
             return false;
         }
