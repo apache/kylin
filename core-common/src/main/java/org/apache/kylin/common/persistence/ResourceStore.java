@@ -18,7 +18,9 @@
 
 package org.apache.kylin.common.persistence;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -27,6 +29,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.UUID;
@@ -237,6 +240,11 @@ abstract public class ResourceStore {
     final public void putResource(String resPath, InputStream content, long ts) throws IOException {
         resPath = norm(resPath);
         logger.trace("Directly saving resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
+        putResourceCheckpoint(resPath, content, ts);
+    }
+
+    private void putResourceCheckpoint(String resPath, InputStream content, long ts) throws IOException {
+        beforeChange(resPath);
         putResourceImpl(resPath, content, ts);
     }
 
@@ -266,7 +274,7 @@ abstract public class ResourceStore {
             dout.close();
             buf.close();
 
-            newTS = checkAndPutResourceImpl(resPath, buf.toByteArray(), oldTS, newTS);
+            newTS = checkAndPutResourceCheckpoint(resPath, buf.toByteArray(), oldTS, newTS);
             obj.setLastModified(newTS); // update again the confirmed TS
             return newTS;
         } catch (IOException e) {
@@ -276,6 +284,11 @@ abstract public class ResourceStore {
             obj.setLastModified(oldTS); // roll back TS when write fail
             throw e;
         }
+    }
+
+    private long checkAndPutResourceCheckpoint(String resPath, byte[] content, long oldTS, long newTS) throws IOException {
+        beforeChange(resPath);
+        return checkAndPutResourceImpl(resPath, content, oldTS, newTS);
     }
 
     /**
@@ -288,7 +301,12 @@ abstract public class ResourceStore {
      */
     final public void deleteResource(String resPath) throws IOException {
         logger.trace("Deleting resource " + resPath + " (Store " + kylinConfig.getMetadataUrl() + ")");
-        deleteResourceImpl(norm(resPath));
+        deleteResourceCheckpoint(norm(resPath));
+    }
+
+    private void deleteResourceCheckpoint(String resPath) throws IOException {
+        beforeChange(resPath);
+        deleteResourceImpl(resPath);
     }
 
     abstract protected void deleteResourceImpl(String resPath) throws IOException;
@@ -311,6 +329,87 @@ abstract public class ResourceStore {
         if (resPath.startsWith("/") == false)
             resPath = "/" + resPath;
         return resPath;
+    }
+
+    // ============================================================================
+
+    ThreadLocal<Checkpoint> checkpointing = new ThreadLocal<>();
+
+    public Checkpoint checkpoint() {
+        Checkpoint cp = checkpointing.get();
+        if (cp != null)
+            throw new IllegalStateException("A checkpoint has been open for this thread: " + cp);
+
+        cp = new Checkpoint();
+        checkpointing.set(cp);
+        return cp;
+    }
+
+    private void beforeChange(String resPath) throws IOException {
+        Checkpoint cp = checkpointing.get();
+        if (cp != null)
+            cp.beforeChange(resPath);
+    }
+
+    public class Checkpoint implements Closeable {
+
+        LinkedHashMap<String, byte[]> origResData = new LinkedHashMap<>();
+        LinkedHashMap<String, Long> origResTimestamp = new LinkedHashMap<>();
+
+        private void beforeChange(String resPath) throws IOException {
+            if (origResData.containsKey(resPath))
+                return;
+
+            RawResource raw = getResourceImpl(resPath);
+            if (raw == null) {
+                origResData.put(resPath, null);
+                origResTimestamp.put(resPath, null);
+            } else {
+                origResData.put(resPath, readAll(raw.inputStream));
+                origResTimestamp.put(resPath, raw.timestamp);
+            }
+        }
+
+        private byte[] readAll(InputStream inputStream) throws IOException {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            IOUtils.copy(inputStream, out);
+            inputStream.close();
+            out.close();
+            return out.toByteArray();
+        }
+
+        public void rollback() {
+            checkThread();
+
+            for (String resPath : origResData.keySet()) {
+                logger.debug("Rollbacking " + resPath);
+                try {
+                    byte[] data = origResData.get(resPath);
+                    Long ts = origResTimestamp.get(resPath);
+                    if (data == null || ts == null)
+                        deleteResourceImpl(resPath);
+                    else
+                        putResourceImpl(resPath, new ByteArrayInputStream(data), ts);
+                } catch (IOException ex) {
+                    logger.error("Failed to rollback " + resPath, ex);
+                }
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            checkThread();
+
+            origResData = null;
+            origResTimestamp = null;
+            checkpointing.set(null);
+        }
+
+        private void checkThread() {
+            Checkpoint cp = checkpointing.get();
+            if (this != cp)
+                throw new IllegalStateException();
+        }
     }
 
     // ============================================================================
