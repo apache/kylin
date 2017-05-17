@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.UserService;
@@ -39,8 +40,8 @@ public class MockAclHBaseStorage implements AclHBaseStorage {
     private RealAclHBaseStorage realAcl;
 
     public MockAclHBaseStorage() {
-        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
-        if (metadataUrl != null && metadataUrl.endsWith("hbase")) {
+        StorageURL metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        if (metadataUrl.getScheme().endsWith("hbase")) {
             // hbase must be available since metadata is on it
             // in this case, let us use a real ACL instead of mockup
             realAcl = new RealAclHBaseStorage();

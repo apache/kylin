@@ -55,7 +55,7 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
         this.createTestMetadata();
         // hack for distributed cache
         FileUtils.deleteDirectory(new File("../job/meta"));
-        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), new File("../job/meta"));
+        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl().toString()), new File("../job/meta"));
         CubeDesc desc = CubeManager.getInstance(getTestConfig()).getCube(cubeName).getDescriptor();
         codec = new MeasureCodec(desc.getMeasures());
     }
@@ -70,7 +70,7 @@ public class CubeHFileMapper2Test extends LocalFileMetadataTestCase {
     public void testBasic() throws Exception {
 
         Configuration hconf = HadoopUtil.getCurrentConfiguration();
-        Context context = MockupMapContext.create(hconf, getTestConfig().getMetadataUrl(), cubeName, outKV);
+        Context context = MockupMapContext.create(hconf, cubeName, outKV);
 
         CubeHFileMapper mapper = new CubeHFileMapper();
         mapper.setup(context);

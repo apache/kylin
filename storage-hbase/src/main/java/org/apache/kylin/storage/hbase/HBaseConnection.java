@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +46,7 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Threads;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
@@ -62,8 +64,8 @@ public class HBaseConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
 
-    private static final Map<String, Configuration> configCache = new ConcurrentHashMap<String, Configuration>();
-    private static final Map<String, Connection> connPool = new ConcurrentHashMap<String, Connection>();
+    private static final Map<StorageURL, Configuration> configCache = new ConcurrentHashMap<StorageURL, Configuration>();
+    private static final Map<StorageURL, Connection> connPool = new ConcurrentHashMap<StorageURL, Connection>();
     private static final ThreadLocal<Configuration> configThreadLocal = new ThreadLocal<>();
 
     private static ExecutorService coprocessorPool = null;
@@ -78,7 +80,7 @@ public class HBaseConnection {
                     try {
                         conn.close();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.error("error closing hbase connection " + conn, e);
                     }
                 }
             }
@@ -133,15 +135,15 @@ public class HBaseConnection {
 
     public static Configuration getCurrentHBaseConfiguration() {
         if (configThreadLocal.get() == null) {
-            String storageUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
+            StorageURL storageUrl = KylinConfig.getInstanceFromEnv().getStorageUrl();
             configThreadLocal.set(newHBaseConfiguration(storageUrl));
         }
         return configThreadLocal.get();
     }
 
-    private static Configuration newHBaseConfiguration(String url) {
+    private static Configuration newHBaseConfiguration(StorageURL url) {
         // using a hbase:xxx URL is deprecated, instead hbase config is always loaded from hbase-site.xml in classpath
-        if (!(StringUtils.isEmpty(url) || "hbase".equals(url)))
+        if (!"hbase".equals(url.getScheme()))
             throw new IllegalArgumentException("to use hbase storage, pls set 'kylin.storage.url=hbase' in kylin.properties");
 
         Configuration conf = HBaseConfiguration.create(HadoopUtil.getCurrentConfiguration());
@@ -160,6 +162,10 @@ public class HBaseConnection {
         }
         if (StringUtils.isBlank(conf.get("hbase.fs.tmp.dir"))) {
             conf.set("hbase.fs.tmp.dir", "/tmp");
+        }
+        
+        for (Entry<String, String> entry : url.getAllParameters().entrySet()) {
+            conf.set(entry.getKey(), entry.getValue());
         }
 
         return conf;
@@ -212,7 +218,7 @@ public class HBaseConnection {
 
     // returned Connection can be shared by multiple threads and does not require close()
     @SuppressWarnings("resource")
-    public static Connection get(String url) {
+    public static Connection get(StorageURL url) {
         // find configuration
         Configuration conf = configCache.get(url);
         if (conf == null) {
@@ -254,15 +260,15 @@ public class HBaseConnection {
         }
     }
 
-    public static boolean tableExists(String hbaseUrl, String tableName) throws IOException {
+    public static boolean tableExists(StorageURL hbaseUrl, String tableName) throws IOException {
         return tableExists(HBaseConnection.get(hbaseUrl), tableName);
     }
 
-    public static void createHTableIfNeeded(String hbaseUrl, String tableName, String... families) throws IOException {
+    public static void createHTableIfNeeded(StorageURL hbaseUrl, String tableName, String... families) throws IOException {
         createHTableIfNeeded(HBaseConnection.get(hbaseUrl), tableName, families);
     }
 
-    public static void deleteTable(String hbaseUrl, String tableName) throws IOException {
+    public static void deleteTable(StorageURL hbaseUrl, String tableName) throws IOException {
         deleteTable(HBaseConnection.get(hbaseUrl), tableName);
     }
 

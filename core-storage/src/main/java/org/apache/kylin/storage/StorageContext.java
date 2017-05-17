@@ -20,6 +20,7 @@ package org.apache.kylin.storage;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.realization.IRealization;
@@ -35,7 +36,7 @@ import com.google.common.collect.Range;
 public class StorageContext {
     private static final Logger logger = LoggerFactory.getLogger(StorageContext.class);
 
-    private String connUrl;
+    private StorageURL connUrl;
     private int limit = Integer.MAX_VALUE;
     private boolean overlookOuterLimit = false;
     private int offset = 0;
@@ -56,11 +57,11 @@ public class StorageContext {
 
     private Range<Long> reusedPeriod;
 
-    public String getConnUrl() {
+    public StorageURL getConnUrl() {
         return connUrl;
     }
 
-    public void setConnUrl(String connUrl) {
+    public void setConnUrl(StorageURL connUrl) {
         this.connUrl = connUrl;
     }
 

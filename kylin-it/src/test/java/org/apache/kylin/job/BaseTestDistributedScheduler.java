@@ -75,7 +75,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         KylinConfig srcConfig = KylinConfig.getInstanceFromEnv();
 
         localMetaDir = Files.createTempDir();
-        String backup = srcConfig.getMetadataUrl();
+        String backup = srcConfig.getMetadataUrl().toString();
         srcConfig.setProperty("kylin.metadata.url", localMetaDir.getAbsolutePath());
         srcConfig.writeProperties(new File(confDstPath1));
         srcConfig.writeProperties(new File(confDstPath2));
@@ -197,6 +197,10 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     }
 
     private String getLockPath(String pathName) {
-        return ZookeeperDistributedJobLock.ZOOKEEPER_LOCK_PATH + "/" + kylinConfig1.getMetadataUrlPrefix() + "/" + pathName;
+        String metadataUrlPrefix = kylinConfig1.getMetadataUrlPrefix();
+        String path = ZookeeperDistributedJobLock.dropDoubleSlash(//
+                ZookeeperDistributedJobLock.ZOOKEEPER_LOCK_PATH + "/" + metadataUrlPrefix + "/" + pathName);
+        logger.debug("Building lock path " + path);
+        return path;
     }
 }

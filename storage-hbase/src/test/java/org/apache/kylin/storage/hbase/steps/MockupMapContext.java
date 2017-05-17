@@ -53,7 +53,7 @@ public class MockupMapContext implements MapContext {
 
     private Object[] outKV;
 
-    public static Context create(final Configuration hconf, String metadataUrl, String cubeName, final Object[] outKV) {
+    public static Context create(final Configuration hconf, String cubeName, final Object[] outKV) {
 
         hconf.set(BatchConstants.CFG_CUBE_NAME, cubeName);
 

@@ -248,7 +248,7 @@ public class ResourceStoreTest {
     }
 
     public static String replaceMetadataUrl(KylinConfig kylinConfig, String newUrl) {
-        String oldUrl = kylinConfig.getMetadataUrl();
+        String oldUrl = kylinConfig.getMetadataUrl().toString();
         kylinConfig.setProperty("kylin.metadata.url", newUrl);
         return oldUrl;
     }

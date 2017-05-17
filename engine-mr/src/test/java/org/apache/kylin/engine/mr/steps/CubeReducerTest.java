@@ -60,7 +60,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         // hack for distributed cache
         FileUtils.deleteDirectory(new File("../job/meta"));
-        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl()), new File("../job/meta"));
+        FileUtils.copyDirectory(new File(getTestConfig().getMetadataUrl().toString()), new File("../job/meta"));
 
         CuboidReducer reducer = new CuboidReducer();
         reduceDriver = ReduceDriver.newReduceDriver(reducer);

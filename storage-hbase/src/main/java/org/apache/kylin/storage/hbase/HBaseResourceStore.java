@@ -22,7 +22,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -45,6 +47,7 @@ import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.Bytes;
@@ -66,24 +69,34 @@ public class HBaseResourceStore extends ResourceStore {
     private static final String COLUMN_TS = "t";
     private static final byte[] B_COLUMN_TS = Bytes.toBytes(COLUMN_TS);
 
-    final String tableNameBase;
-    final String hbaseUrl;
+    final String tableName;
+    final StorageURL metadataUrl;
 
     Connection getConnection() throws IOException {
-        return HBaseConnection.get(hbaseUrl);
+        return HBaseConnection.get(metadataUrl);
     }
 
     public HBaseResourceStore(KylinConfig kylinConfig) throws IOException {
         super(kylinConfig);
 
-        String metadataUrl = kylinConfig.getMetadataUrl();
-        // split TABLE@HBASE_URL
-        int cut = metadataUrl.indexOf('@');
-        tableNameBase = cut < 0 ? DEFAULT_STORE_NAME : metadataUrl.substring(0, cut);
-        hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
-        if (!hbaseUrl.equals("hbase"))
-            throw new IOException("Can not create HBaseResourceStore. Url not match. Url:" + hbaseUrl);
+        metadataUrl = buildMetadataUrl(kylinConfig);
+        tableName = metadataUrl.getIdentifier();
         createHTableIfNeeded(getAllInOneTableName());
+    }
+
+    private StorageURL buildMetadataUrl(KylinConfig kylinConfig) throws IOException {
+        StorageURL url = kylinConfig.getMetadataUrl();
+        if (!url.getScheme().equals("hbase"))
+            throw new IOException("Cannot create HBaseResourceStore. Url not match. Url: " + url);
+
+        // control timeout for prompt error report
+        Map<String, String> newParams = new LinkedHashMap<>();
+        newParams.put("hbase.client.scanner.timeout.period", "10000");
+        newParams.put("hbase.rpc.timeout", "5000");
+        newParams.put("hbase.client.retries.number", "1");
+        newParams.putAll(url.getAllParameters());
+
+        return url.copy(newParams);
     }
 
     private void createHTableIfNeeded(String tableName) throws IOException {
@@ -91,7 +104,7 @@ public class HBaseResourceStore extends ResourceStore {
     }
 
     private String getAllInOneTableName() {
-        return tableNameBase;
+        return tableName;
     }
 
     @Override
@@ -160,6 +173,7 @@ public class HBaseResourceStore extends ResourceStore {
         void visit(String childPath, String fullPath, Result hbaseResult) throws IOException;
     }
 
+    /* override get meta store uuid method for backward compatibility */
     @Override
     protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
         FilterList filter = generateTimeFilterList(timeStart, timeEndExclusive);
