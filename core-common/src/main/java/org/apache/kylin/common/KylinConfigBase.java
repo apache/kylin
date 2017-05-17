@@ -604,10 +604,6 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.job.sampling-hll-precision", "14"));
     }
 
-    public String getJobControllerLock() {
-        return getOptional("kylin.job.lock", "org.apache.kylin.storage.hbase.util.ZookeeperJobLock");
-    }
-
     public Map<Integer, String> getSchedulers() {
         Map<Integer, String> r = Maps.newLinkedHashMap();
         r.put(0, "org.apache.kylin.job.impl.threadpool.DefaultScheduler");
