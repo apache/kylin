@@ -100,10 +100,10 @@ fi
 
 function checkFileExist()
 {
-    files=$1
+    files=(`echo $1 | cut -d ":" -f 1- | sed 's/:/ /g'`)
     misFiles=0
     outputMissFiles=
-    for file in ${files//:/ }
+    for file in ${files}
     do
         let allFiles++
         if [ ! -f "${file}" ]; then
@@ -111,8 +111,10 @@ function checkFileExist()
             let misFiles++
         fi
     done
-    ratio=`echo "scale=3; ${misFiles}/${allFiles}" | bc`
-    [[ `echo "$ratio < 0.01" | bc ` -eq 1 ]] || quit "A couple of hive jars can't be found: ${outputMisFiles}!"
+    if [ 0 != ${misFiles} ]; then
+        times=`expr ${allFiles} / ${misFiles}`
+        [[ ${times} -gt 10 ]] || quit "A couple of hive jars can't be found: ${outputMisFiles}, please export HIVE_LIB='YOUR_LOCAL_HIVE_LIB'"
+    fi
 }
 
 function validateDirectory()
