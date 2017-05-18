@@ -90,13 +90,17 @@ public class DictionaryManager {
 
     private DictionaryManager(KylinConfig config) {
         this.config = config;
-        this.dictCache = CacheBuilder.newBuilder().removalListener(new RemovalListener<String, DictionaryInfo>() {
-            @Override
-            public void onRemoval(RemovalNotification<String, DictionaryInfo> notification) {
-                DictionaryManager.logger.info("Dict with resource path " + notification.getKey() + " is removed due to " + notification.getCause());
-            }
-        }).maximumSize(config.getCachedDictMaxEntrySize())//
-                .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, DictionaryInfo>() {
+        this.dictCache = CacheBuilder.newBuilder()//
+                .softValues()//
+                .removalListener(new RemovalListener<String, DictionaryInfo>() {
+                    @Override
+                    public void onRemoval(RemovalNotification<String, DictionaryInfo> notification) {
+                        DictionaryManager.logger.info("Dict with resource path " + notification.getKey() + " is removed due to " + notification.getCause());
+                    }
+                })//
+                .maximumSize(config.getCachedDictMaxEntrySize())//
+                .expireAfterWrite(1, TimeUnit.DAYS)//
+                .build(new CacheLoader<String, DictionaryInfo>() {
                     @Override
                     public DictionaryInfo load(String key) throws Exception {
                         DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);

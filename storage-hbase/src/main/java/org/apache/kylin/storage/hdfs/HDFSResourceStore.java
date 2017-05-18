@@ -18,20 +18,6 @@
 
 package org.apache.kylin.storage.hdfs;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.RawResource;
-import org.apache.kylin.common.persistence.ResourceStore;
-import org.apache.kylin.common.util.HadoopUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +25,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.persistence.RawResource;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.util.HadoopUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 public class HDFSResourceStore extends ResourceStore {
 
@@ -50,16 +52,12 @@ public class HDFSResourceStore extends ResourceStore {
 
     public HDFSResourceStore(KylinConfig kylinConfig) throws Exception {
         super(kylinConfig);
-        String metadataUrl = kylinConfig.getMetadataUrl();
-        int cut = metadataUrl.indexOf('@');
-        if (cut < 0) {
-            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore: " + metadataUrl);
-        }
-        String suffix = metadataUrl.substring(cut + 1);
-        if (!suffix.equals("hdfs"))
-            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore:" + suffix);
+        StorageURL metadataUrl = kylinConfig.getMetadataUrl();
+        
+        if (!metadataUrl.getScheme().equals("hdfs"))
+            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore:" + metadataUrl);
 
-        String path = metadataUrl.substring(0, cut);
+        String path = metadataUrl.getIdentifier();
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
         if (fs.exists(metadataPath) == false) {
@@ -220,22 +218,4 @@ public class HDFSResourceStore extends ResourceStore {
             resourcePath = resourcePath.substring(1, resourcePath.length());
         return new Path(this.hdfsMetaPath, resourcePath);
     }
-
-    private static String getRelativePath(Path hdfsPath) {
-        String path = hdfsPath.toString();
-        int index = path.indexOf("://");
-        if (index > 0) {
-            path = path.substring(index + 3);
-        }
-
-        if (path.startsWith("/") == false) {
-            if (path.indexOf("/") > 0) {
-                path = path.substring(path.indexOf("/"));
-            } else {
-                path = "/" + path;
-            }
-        }
-        return path;
-    }
-
 }

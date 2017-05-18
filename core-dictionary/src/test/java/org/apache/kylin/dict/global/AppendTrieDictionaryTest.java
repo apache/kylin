@@ -46,8 +46,8 @@ import java.util.UUID;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.dict.AppendTrieDictionary;
 import org.apache.kylin.dict.BytesConverter;
@@ -60,13 +60,14 @@ import org.junit.Test;
 public class AppendTrieDictionaryTest extends LocalFileMetadataTestCase {
     private static final String RESOURCE_DIR = "/dict/append_dict_test/" + UUID.randomUUID();
     private static String BASE_DIR;
-    private static String LOCAL_BASE_DIR = "/tmp/kylin/kylin_metadata/resources/GlobalDict" + RESOURCE_DIR + "/";
+    private static String LOCAL_BASE_DIR;
 
     @Before
     public void beforeTest() {
         staticCreateTestMetadata();
         KylinConfig.getInstanceFromEnv().setProperty("kylin.dictionary.append-entry-size", "50000");
         BASE_DIR = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict" + RESOURCE_DIR + "/";
+        LOCAL_BASE_DIR = getLocalWorkingDirectory() + "/resources/GlobalDict" + RESOURCE_DIR + "/";
     }
 
     @After

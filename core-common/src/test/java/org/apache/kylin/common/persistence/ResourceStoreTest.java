@@ -18,19 +18,19 @@
 
 package org.apache.kylin.common.persistence;
 
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.NavigableSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.ClassUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Be called by LocalFileResourceStoreTest, ITHBaseResourceStoreTest and ITHDFSResourceStoreTest.
@@ -200,7 +200,7 @@ public class ResourceStoreTest {
     }
 
     public static String replaceMetadataUrl(KylinConfig kylinConfig, String newUrl) {
-        String oldUrl = kylinConfig.getMetadataUrl();
+        String oldUrl = kylinConfig.getMetadataUrl().toString();
         kylinConfig.setProperty("kylin.metadata.url", newUrl);
         return oldUrl;
     }

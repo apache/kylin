@@ -40,6 +40,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.JsonSerializer;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -172,26 +173,15 @@ public class CubeMigrationCLI {
         checkCLI.execute(cubeName);
     }
 
-    private static String checkAndGetHbaseUrl() {
-        String srcMetadataUrl = srcConfig.getMetadataUrl();
-        String dstMetadataUrl = dstConfig.getMetadataUrl();
+    private static void checkAndGetHbaseUrl() {
+        StorageURL srcMetadataUrl = srcConfig.getMetadataUrl();
+        StorageURL dstMetadataUrl = dstConfig.getMetadataUrl();
 
         logger.info("src metadata url is " + srcMetadataUrl);
         logger.info("dst metadata url is " + dstMetadataUrl);
 
-        int srcIndex = srcMetadataUrl.toLowerCase().indexOf("hbase");
-        int dstIndex = dstMetadataUrl.toLowerCase().indexOf("hbase");
-        if (srcIndex < 0 || dstIndex < 0)
+        if (!"hbase".equals(srcMetadataUrl.getScheme()) || !"hbase".equals(dstMetadataUrl.getScheme()))
             throw new IllegalStateException("Both metadata urls should be hbase metadata url");
-
-        String srcHbaseUrl = srcMetadataUrl.substring(srcIndex).trim();
-        String dstHbaseUrl = dstMetadataUrl.substring(dstIndex).trim();
-        if (!srcHbaseUrl.equalsIgnoreCase(dstHbaseUrl)) {
-            throw new IllegalStateException("hbase url not equal! ");
-        }
-
-        logger.info("hbase url is " + srcHbaseUrl.trim());
-        return srcHbaseUrl.trim();
     }
 
     private static void renameFoldersInHdfs(CubeInstance cube) {

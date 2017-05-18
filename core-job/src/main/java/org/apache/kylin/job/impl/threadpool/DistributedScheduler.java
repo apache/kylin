@@ -320,13 +320,20 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     }
 
     public String getLockPath(String pathName) {
-        return ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/" + pathName;
+        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/" + pathName);
     }
 
     private String getWatchPath() {
-        return ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
+        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix());
     }
 
+    public static String dropDoubleSlash(String path) {
+        for (int n = Integer.MAX_VALUE; n > path.length();) {
+            n = path.length();
+            path = path.replace("//", "/");
+        }
+        return path;
+    }
     @Override
     public void shutdown() throws SchedulerException {
         logger.info("Will shut down Job Engine ....");

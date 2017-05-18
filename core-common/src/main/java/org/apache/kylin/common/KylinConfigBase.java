@@ -169,7 +169,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String toString() {
-        return getMetadataUrl();
+        return getMetadataUrl().toString();
     }
 
     // ============================================================================
@@ -205,8 +205,8 @@ abstract public class KylinConfigBase implements Serializable {
     // METADATA
     // ============================================================================
 
-    public String getMetadataUrl() {
-        return getOptional("kylin.metadata.url");
+    public StorageURL getMetadataUrl() {
+        return StorageURL.valueOf(getOptional("kylin.metadata.url", ""));
     }
 
     // for test only
@@ -215,14 +215,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getMetadataUrlPrefix() {
-        String metadataUrl = getMetadataUrl();
-        String defaultPrefix = "kylin_metadata";
-
-        int cut = metadataUrl.lastIndexOf('@');
-        if (cut > 0) {
-            return metadataUrl.substring(0, cut);
-        }
-        return defaultPrefix;
+        return getMetadataUrl().getIdentifier();
     }
 
     public String[] getRealizationProviders() {
@@ -558,8 +551,14 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.storage.default", "2"));
     }
 
-    public String getStorageUrl() {
-        return getOptional("kylin.storage.url");
+    public StorageURL getStorageUrl() {
+        String url = getOptional("kylin.storage.url", "default@hbase");
+
+        // for backward compatibility
+        if ("hbase".equals(url))
+            url = "default@hbase";
+        
+        return StorageURL.valueOf(url);
     }
 
     public String getHBaseClusterFs() {
@@ -987,10 +986,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getResourceStoreImpl() {
-        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
-        int cut = metadataUrl.indexOf('@');
-        String key = cut < 0 ? "" : metadataUrl.substring(cut + 1);
-        return getResourceStoreImpls().get(key);
+        return getResourceStoreImpls().get(getMetadataUrl().getScheme());
     }
 
     public String getJobTrackingURLPattern() {

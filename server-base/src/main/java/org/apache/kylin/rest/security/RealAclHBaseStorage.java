@@ -18,33 +18,32 @@
 
 package org.apache.kylin.rest.security;
 
+import java.io.IOException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.rest.service.LegacyAclService;
-import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.LegacyUserService;
+import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.storage.hbase.HBaseConnection;
-
-import java.io.IOException;
 
 /**
  */
 @Deprecated
 public class RealAclHBaseStorage implements AclHBaseStorage {
 
-    private String hbaseUrl;
+    private StorageURL hbaseUrl;
     private String aclTableName;
     private String userTableName;
 
     @Override
     public String prepareHBaseTable(Class<?> clazz) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        String metadataUrl = kylinConfig.getMetadataUrl();
-        int cut = metadataUrl.indexOf('@');
-        hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
-        String tableNameBase = kylinConfig.getMetadataUrlPrefix();
+        hbaseUrl = kylinConfig.getMetadataUrl();
+        String tableNameBase = hbaseUrl.getIdentifier();
 
         if (clazz == LegacyAclService.class) {
             aclTableName = tableNameBase + ACL_TABLE_NAME;
