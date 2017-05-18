@@ -140,12 +140,24 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
                 implementor.freeContext();
             }
         }
+
+        if (leftHasSubquery) {
+            // After KYLIN-2579, leftHasSubquery means right side have to be separate olap context 
+            implementor.setNewOLAPContextRequired(true);
+        }
+
         implementor.fixSharedOlapTableScanOnTheRight(this);
         implementor.visitChild(this.right, this);
         if (this.context != implementor.getContext() || ((OLAPRel) this.right).hasSubQuery()) {
             this.hasSubQuery = true;
             rightHasSubquery = true;
             // if child is also an OLAPJoin, then the context has already been popped
+
+            if (leftHasSubquery) {
+                Preconditions.checkState(!implementor.isNewOLAPContextRequired());//should have been satisfied
+                Preconditions.checkState(this.context != implementor.getContext(), "missing a new olapcontext");
+            }
+
             if (this.context != implementor.getContext()) {
                 implementor.freeContext();
             }
