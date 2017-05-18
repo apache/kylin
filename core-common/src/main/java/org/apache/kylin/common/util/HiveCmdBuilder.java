@@ -27,16 +27,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import com.google.common.collect.Lists;
 
 public class HiveCmdBuilder {
     private static final Logger logger = LoggerFactory.getLogger(HiveCmdBuilder.class);
+
+    public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
 
     public enum HiveClientMode {
         CLI, BEELINE
@@ -50,6 +58,7 @@ public class HiveCmdBuilder {
     public HiveCmdBuilder() {
         kylinConfig = KylinConfig.getInstanceFromEnv();
         clientMode = HiveClientMode.valueOf(kylinConfig.getHiveClientMode().toUpperCase());
+        loadHiveConfiguration();
     }
 
     public String build() {
@@ -75,8 +84,8 @@ public class HiveCmdBuilder {
                     bw.newLine();
                 }
                 buf.append("beeline ");
-                buf.append(parseProps());
                 buf.append(kylinConfig.getHiveBeelineParams());
+                buf.append(parseProps());
                 buf.append(" -f ");
                 buf.append(tmpHql.getAbsolutePath());
                 buf.append(";ret_code=$?;rm -f ");
@@ -123,6 +132,7 @@ public class HiveCmdBuilder {
     }
 
     public void setHiveConfProps(Map<String, String> hiveConfProps) {
+        this.hiveConfProps.clear();
         this.hiveConfProps.putAll(hiveConfProps);
     }
 
@@ -143,5 +153,49 @@ public class HiveCmdBuilder {
     @Override
     public String toString() {
         return build();
+    }
+
+    private void loadHiveConfiguration() {
+
+        File hiveConfFile;
+        String hiveConfFileName = (HIVE_CONF_FILENAME + ".xml");
+        String path = System.getProperty(KylinConfig.KYLIN_CONF);
+
+        if (StringUtils.isNotEmpty(path)) {
+            hiveConfFile = new File(path, hiveConfFileName);
+        } else {
+            path = KylinConfig.getKylinHome();
+            if (StringUtils.isEmpty(path)) {
+                logger.error("KYLIN_HOME is not set, can not locate hive conf: {}.xml", HIVE_CONF_FILENAME);
+                return;
+            }
+            hiveConfFile = new File(path + File.separator + "conf", hiveConfFileName);
+        }
+
+        if (hiveConfFile == null || !hiveConfFile.exists()) {
+            throw new RuntimeException("Failed to read " + HIVE_CONF_FILENAME + ".xml");
+        }
+
+        String fileUrl = OptionsHelper.convertToFileURL(hiveConfFile.getAbsolutePath());
+
+        try {
+            File file = new File(fileUrl);
+            if (file.exists()) {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                Document doc = builder.parse(file);
+                NodeList nl = doc.getElementsByTagName("property");
+                hiveConfProps.clear();
+                for (int i = 0; i < nl.getLength(); i++) {
+                    String key = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
+                    String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
+                    if (!key.equals("tmpjars")) {
+                        hiveConfProps.put(key, value);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse hive conf file ", e);
+        }
     }
 }

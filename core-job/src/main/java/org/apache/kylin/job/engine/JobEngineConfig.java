@@ -20,19 +20,12 @@ package org.apache.kylin.job.engine;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 
 /**
  * @author ysong1
@@ -40,7 +33,6 @@ import org.w3c.dom.NodeList;
 public class JobEngineConfig {
     private static final Logger logger = LoggerFactory.getLogger(JobEngineConfig.class);
     public static final String HADOOP_JOB_CONF_FILENAME = "kylin_job_conf";
-    public static final String HIVE_CONF_FILENAME = "kylin_hive_conf";
     public static final String DEFAUL_JOB_CONF_SUFFIX = "";
     public static final String IN_MEM_JOB_CONF_SUFFIX = "inmem";
 
@@ -100,41 +92,6 @@ public class JobEngineConfig {
             }
         }
         return path;
-    }
-
-    public String getHiveConfFilePath() {
-        String hiveConfFile = (HIVE_CONF_FILENAME + ".xml");
-
-        File jobConfig = getJobConfig(hiveConfFile);
-        if (jobConfig == null || !jobConfig.exists()) {
-
-            logger.error("fail to locate " + HIVE_CONF_FILENAME + ".xml");
-            throw new RuntimeException("fail to locate " + HIVE_CONF_FILENAME + ".xml");
-        }
-        return OptionsHelper.convertToFileURL(jobConfig.getAbsolutePath());
-    }
-
-    public Map<String, String> getHivePropsFromFile() {
-        Map<String, String> props = new HashMap<>();
-        try {
-            File file = new File(getHiveConfFilePath());
-            if (file.exists()) {
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document doc = builder.parse(file);
-                NodeList nl = doc.getElementsByTagName("property");
-                for (int i = 0; i < nl.getLength(); i++) {
-                    String key = doc.getElementsByTagName("name").item(i).getFirstChild().getNodeValue();
-                    String value = doc.getElementsByTagName("value").item(i).getFirstChild().getNodeValue();
-                    if (!key.equals("tmpjars")) {
-                        props.put(key, value);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse hive conf file ", e);
-        }
-        return props;
     }
 
     // there should be no setters
