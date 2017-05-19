@@ -87,6 +87,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     private final String tableName;
     private final int[] fields;
     private String alias;
+    private String backupAlias;
     private ColumnRowType columnRowType;
     private OLAPContext context;
 
@@ -212,7 +213,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         if (implementor.getContext() == null || !(implementor.getParentNode() instanceof OLAPJoinRel) || implementor.isNewOLAPContextRequired()) {
             implementor.allocateContext();
         }
-        
+
         columnRowType = buildColumnRowType();
         context = implementor.getContext();
         context.allTableScans.add(this);
@@ -262,7 +263,17 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         for (TblColRef col : columnRowType.getAllColumns()) {
             TblColRef.fixUnknownModel(model, newAlias, col);
         }
+
+        this.backupAlias = this.alias;
         this.alias = newAlias;
+    }
+
+    public void unfixColumnRowTypeWithModel() {
+        this.alias = this.backupAlias;
+
+        for (TblColRef col : columnRowType.getAllColumns()) {
+            TblColRef.unfixUnknownModel(col);
+        }
     }
 
     @Override

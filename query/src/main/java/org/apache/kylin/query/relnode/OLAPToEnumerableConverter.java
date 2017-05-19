@@ -18,7 +18,6 @@
 
 package org.apache.kylin.query.relnode;
 
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -45,9 +44,7 @@ import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.metadata.realization.IRealization;
-import org.apache.kylin.query.routing.ModelChooser;
-import org.apache.kylin.query.routing.QueryRouter;
+import org.apache.kylin.query.routing.RealizationChooser;
 import org.apache.kylin.query.schema.OLAPTable;
 
 import com.google.common.collect.Lists;
@@ -79,19 +76,17 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
             System.out.println("EXECUTION PLAN BEFORE REWRITE");
             System.out.println(dumpPlan);
         }
-        
+
         // post-order travel children
         OLAPRel.OLAPImplementor olapImplementor = new OLAPRel.OLAPImplementor();
         olapImplementor.visitChild(getInput(), this);
 
         // identify model
         List<OLAPContext> contexts = listContextsHavingScan();
-        IdentityHashMap<OLAPContext, Set<IRealization>> candidates = ModelChooser.selectModel(contexts);
+        RealizationChooser.selectRealization(contexts);
 
         // identify realization for each context
         for (OLAPContext context : contexts) {
-            IRealization realization = QueryRouter.selectRealization(context, candidates.get(context));
-            context.realization = realization;
             doAccessControl(context);
         }
 

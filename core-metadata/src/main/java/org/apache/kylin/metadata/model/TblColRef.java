@@ -87,8 +87,12 @@ public class TblColRef implements Serializable {
         checkArgument(col.table.getModel() == UNKNOWN_MODEL || col.table.getModel() == model);
         TableRef tableRef = model.findTable(alias);
         checkArgument(tableRef.getTableDesc().getIdentity().equals(col.column.getTable().getIdentity()));
-        col.table = tableRef;
-        col.identity = null;
+        checkArgument(tableRef.getTableDesc() == col.column.getTable());
+        col.fixTableRef(tableRef);
+    }
+
+    public static void unfixUnknownModel(TblColRef col) {
+        col.unfixTableRef();
     }
 
     // for test mainly
@@ -105,6 +109,7 @@ public class TblColRef implements Serializable {
     // ============================================================================
 
     private TableRef table;
+    private TableRef backupTable;// only used in fixTableRef()
     private ColumnDesc column;
     private String identity;
     private String parserDescription;
@@ -117,6 +122,17 @@ public class TblColRef implements Serializable {
         checkArgument(table.getTableDesc().getIdentity().equals(column.getTable().getIdentity()));
         this.table = table;
         this.column = column;
+    }
+
+    public void fixTableRef(TableRef tableRef) {
+        this.backupTable = this.table;
+        this.table = tableRef;
+        this.identity = null;
+    }
+
+    public void unfixTableRef() {
+        this.table = backupTable;
+        this.identity = null;
     }
 
     public ColumnDesc getColumnDesc() {

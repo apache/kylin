@@ -19,7 +19,6 @@
 package org.apache.kylin.query.routing;
 
 import java.util.Comparator;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,51 +38,53 @@ import org.apache.kylin.metadata.realization.IRealization;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.relnode.OLAPTableScan;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class ModelChooser {
+public class RealizationChooser {
+
+    private static final Logger logger = LoggerFactory.getLogger(RealizationChooser.class);
 
     // select models for given contexts, return realization candidates for each context
-    public static IdentityHashMap<OLAPContext, Set<IRealization>> selectModel(List<OLAPContext> contexts) {
-
-        IdentityHashMap<OLAPContext, Set<IRealization>> candidates = new IdentityHashMap<>();
-
-        // attempt one model for all contexts
-        //        Set<IRealization> reals = attemptSelectModel(contexts);
-        //        if (reals != null) {
-        //            for (OLAPContext ctx : contexts) {
-        //                candidates.put(ctx, reals);
-        //            }
-        //            return candidates;
-        //        }
-
+    public static void selectRealization(List<OLAPContext> contexts) {
         // try different model for different context
         for (OLAPContext ctx : contexts) {
-            Set<IRealization> reals = attemptSelectModel(ImmutableList.of(ctx));
-            if (reals == null)
-                throw new NoRealizationFoundException("No model found for" + toErrorMsg(ctx));
-
-            candidates.put(ctx, reals);
+            attemptSelectRealization(ctx);
+            Preconditions.checkNotNull(ctx.realization);
         }
-        return candidates;
     }
 
-    private static Set<IRealization> attemptSelectModel(List<OLAPContext> contexts) {
-        Map<DataModelDesc, Set<IRealization>> modelMap = makeOrderedModelMap(contexts);
+    private static void attemptSelectRealization(OLAPContext context) {
+        Map<DataModelDesc, Set<IRealization>> modelMap = makeOrderedModelMap(context);
+
+        if (modelMap.size() == 0) {
+            throw new NoRealizationFoundException("No model found for" + toErrorMsg(context));
+        }
 
         for (DataModelDesc model : modelMap.keySet()) {
-            Map<String, String> aliasMap = matches(model, contexts);
+            Map<String, String> aliasMap = matches(model, context);
             if (aliasMap != null) {
-                for (OLAPContext ctx : contexts)
-                    fixModel(ctx, model, aliasMap);
-                return modelMap.get(model);
+                fixModel(context, model, aliasMap);
+
+                IRealization realization = QueryRouter.selectRealization(context, modelMap.get(model));
+                if (realization == null) {
+                    logger.info("Give up on model {} because no suitable realization is found", model);
+                    unfixModel(context);
+                    continue;
+                }
+
+                context.realization = realization;
+                return;
             }
         }
-        return null;
+
+        throw new NoRealizationFoundException("No realization found for " + toErrorMsg(context));
+
     }
 
     private static String toErrorMsg(OLAPContext ctx) {
@@ -94,40 +95,38 @@ public class ModelChooser {
         return buf.toString();
     }
 
-    private static Map<String, String> matches(DataModelDesc model, List<OLAPContext> contexts) {
+    private static Map<String, String> matches(DataModelDesc model, OLAPContext ctx) {
         Map<String, String> result = Maps.newHashMap();
 
-        for (OLAPContext ctx : contexts) {
-            TableRef firstTable = ctx.firstTableScan.getTableRef();
+        TableRef firstTable = ctx.firstTableScan.getTableRef();
 
-            Map<String, String> matchUp = null;
+        Map<String, String> matchUp = null;
 
-            if (ctx.joins.isEmpty() && model.isLookupTable(firstTable.getTableIdentity())) {
-                // one lookup table
-                String modelAlias = model.findFirstTable(firstTable.getTableIdentity()).getAlias();
-                matchUp = ImmutableMap.of(firstTable.getAlias(), modelAlias);
-            } else if (ctx.joins.size() != ctx.allTableScans.size() - 1) {
-                // has hanging tables
-                throw new NoRealizationFoundException("Please adjust the sequence of join tables and put subquery or temporary table after lookup tables. " + toErrorMsg(ctx));
-            } else {
-                // normal big joins
-                if (ctx.joinsTree == null) {
-                    ctx.joinsTree = new JoinsTree(firstTable, ctx.joins);
-                }
-                matchUp = ctx.joinsTree.matches(model.getJoinsTree(), result);
+        if (ctx.joins.isEmpty() && model.isLookupTable(firstTable.getTableIdentity())) {
+            // one lookup table
+            String modelAlias = model.findFirstTable(firstTable.getTableIdentity()).getAlias();
+            matchUp = ImmutableMap.of(firstTable.getAlias(), modelAlias);
+        } else if (ctx.joins.size() != ctx.allTableScans.size() - 1) {
+            // has hanging tables
+            throw new IllegalStateException("Please adjust the sequence of join tables. " + toErrorMsg(ctx));
+        } else {
+            // normal big joins
+            if (ctx.joinsTree == null) {
+                ctx.joinsTree = new JoinsTree(firstTable, ctx.joins);
             }
-
-            if (matchUp == null)
-                return null;
-
-            result.putAll(matchUp);
+            matchUp = ctx.joinsTree.matches(model.getJoinsTree(), result);
         }
+
+        if (matchUp == null)
+            return null;
+
+        result.putAll(matchUp);
+
         return result;
     }
 
-    private static Map<DataModelDesc, Set<IRealization>> makeOrderedModelMap(List<OLAPContext> contexts) {
-        // the first context, which is the top most context, contains all columns from all contexts
-        OLAPContext first = contexts.get(0);
+    private static Map<DataModelDesc, Set<IRealization>> makeOrderedModelMap(OLAPContext context) {
+        OLAPContext first = context;
         KylinConfig kylinConfig = first.olapSchema.getConfig();
         String projectName = first.olapSchema.getProjectName();
         String factTableName = first.firstTableScan.getOlapTable().getTableName();
@@ -187,6 +186,12 @@ public class ModelChooser {
     private static void fixModel(OLAPContext context, DataModelDesc model, Map<String, String> aliasMap) {
         for (OLAPTableScan tableScan : context.allTableScans) {
             tableScan.fixColumnRowTypeWithModel(model, aliasMap);
+        }
+    }
+
+    private static void unfixModel(OLAPContext context) {
+        for (OLAPTableScan tableScan : context.allTableScans) {
+            tableScan.unfixColumnRowTypeWithModel();
         }
     }
 
