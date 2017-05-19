@@ -99,9 +99,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
     protected GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
         context.setStorageQuery(this);
 
-        //deal with participant columns in subquery join
-        sqlDigest.includeSubqueryJoinParticipants();
-
         //cope with queries with no aggregations
         RawQueryLastHacker.hackNoAggregations(sqlDigest, cubeDesc, returnTupleInfo);
 

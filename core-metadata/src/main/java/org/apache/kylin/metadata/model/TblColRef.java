@@ -56,7 +56,7 @@ public class TblColRef implements Serializable {
     public static TblColRef newInnerColumn(String columnName, InnerDataTypeEnum dataType) {
         return newInnerColumn(columnName, dataType, null);
     }
-    
+
     // used by projection rewrite, see OLAPProjectRel
     public static TblColRef newInnerColumn(String columnName, InnerDataTypeEnum dataType, String parserDescription) {
         ColumnDesc column = new ColumnDesc();
@@ -68,27 +68,30 @@ public class TblColRef implements Serializable {
         colRef.parserDescription = parserDescription;
         return colRef;
     }
-    
+
     private static final DataModelDesc UNKNOWN_MODEL = new DataModelDesc();
     static {
         UNKNOWN_MODEL.setName("UNKNOWN_MODEL");
     }
-    
+
     public static TableRef tableForUnknownModel(String tempTableAlias, TableDesc table) {
         return new TableRef(UNKNOWN_MODEL, tempTableAlias, table);
     }
-    
+
     public static TblColRef columnForUnknownModel(TableRef table, ColumnDesc colDesc) {
         checkArgument(table.getModel() == UNKNOWN_MODEL);
         return new TblColRef(table, colDesc);
     }
-    
+
     public static void fixUnknownModel(DataModelDesc model, String alias, TblColRef col) {
         checkArgument(col.table.getModel() == UNKNOWN_MODEL || col.table.getModel() == model);
         TableRef tableRef = model.findTable(alias);
         checkArgument(tableRef.getTableDesc() == col.column.getTable());
-        col.table = tableRef;
-        col.identity = null;
+        col.fixTableRef(tableRef);
+    }
+
+    public static void unfixUnknownModel(TblColRef col) {
+        col.unfixTableRef();
     }
 
     // for test mainly
@@ -101,10 +104,11 @@ public class TblColRef implements Serializable {
         desc.init(table);
         return new TblColRef(desc);
     }
-    
+
     // ============================================================================
 
     private TableRef table;
+    private TableRef backupTable;// only used in fixTableRef()
     private ColumnDesc column;
     private String identity;
     private String parserDescription;
@@ -112,13 +116,24 @@ public class TblColRef implements Serializable {
     TblColRef(ColumnDesc column) {
         this.column = column;
     }
-    
+
     TblColRef(TableRef table, ColumnDesc column) {
         checkArgument(table.getTableDesc() == column.getTable());
         this.table = table;
         this.column = column;
     }
-    
+
+    public void fixTableRef(TableRef tableRef) {
+        this.backupTable = this.table;
+        this.table = tableRef;
+        this.identity = null;
+    }
+
+    public void unfixTableRef() {
+        this.table = backupTable;
+        this.identity = null;
+    }
+
     public ColumnDesc getColumnDesc() {
         return column;
     }
@@ -130,15 +145,15 @@ public class TblColRef implements Serializable {
     public TableRef getTableRef() {
         return table;
     }
-    
+
     public boolean isQualified() {
         return table != null;
     }
-    
+
     public String getTableAlias() {
         return table != null ? table.getAlias() : "UNKNOWN_ALIAS";
     }
-    
+
     public String getTable() {
         if (column.getTable() == null) {
             return null;
@@ -209,7 +224,7 @@ public class TblColRef implements Serializable {
     public String toString() {
         if (isInnerColumn() && parserDescription != null)
             return parserDescription;
-        
+
         String alias = table == null ? "UNKNOWN_MODEL" : table.getAlias();
         String tableName = column.getTable() == null ? "NULL" : column.getTable().getName();
         String tableIdentity = column.getTable() == null ? "NULL" : column.getTable().getIdentity();
