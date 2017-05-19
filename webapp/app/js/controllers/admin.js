@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, $modal, SweetAlert,kylinConfig,ProjectModel,$window) {
+KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, ProjectService, $modal, SweetAlert,kylinConfig,ProjectModel,$window) {
   $scope.configStr = "";
   $scope.envStr = "";
 
@@ -84,7 +84,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       }
     });
   }
-  
+
   $scope.reloadMeta = function () {
     SweetAlert.swal({
       title: '',
@@ -98,6 +98,9 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       if (isConfirm) {
         CacheService.clean({}, function () {
           SweetAlert.swal('Success!', 'Cache reload successfully', 'success');
+          ProjectService.listReadable({}, function(projects) {
+            ProjectModel.setProjects(projects);
+          });
         }, function (e) {
           if (e.data && e.data.exception) {
             var message = e.data.exception;
