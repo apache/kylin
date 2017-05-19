@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,6 @@ import org.apache.kylin.job.SchedulerFactory;
 import org.apache.kylin.job.constant.JobStatusEnum;
 import org.apache.kylin.job.constant.JobTimeFilterEnum;
 import org.apache.kylin.job.engine.JobEngineConfig;
-import org.apache.kylin.job.exception.JobException;
 import org.apache.kylin.job.exception.SchedulerException;
 import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -56,6 +55,8 @@ import org.apache.kylin.metadata.model.SegmentStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.source.ISource;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
@@ -63,12 +64,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -88,6 +89,7 @@ public class JobService extends BasicService implements InitializingBean {
     private JobLock jobLock;
 
     @Autowired
+    @Qualifier("accessService")
     private AccessService accessService;
 
     /*
@@ -148,54 +150,59 @@ public class JobService extends BasicService implements InitializingBean {
         return states;
     }
 
-    private long getTimeStartInMillis(Calendar calendar, JobTimeFilterEnum timeFilter) {
-        switch (timeFilter) {
-        case LAST_ONE_DAY:
-            calendar.add(Calendar.DAY_OF_MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_WEEK:
-            calendar.add(Calendar.WEEK_OF_MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_MONTH:
-            calendar.add(Calendar.MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_YEAR:
-            calendar.add(Calendar.YEAR, -1);
-            return calendar.getTimeInMillis();
-        case ALL:
-            return 0;
-        default:
-            throw new RuntimeException("illegal timeFilter for job history:" + timeFilter);
+    private ExecutableState parseToExecutableState(JobStatusEnum status) {
+        Message msg = MsgPicker.getMsg();
+
+        switch (status) {
+            case DISCARDED:
+                return ExecutableState.DISCARDED;
+            case ERROR:
+                return ExecutableState.ERROR;
+            case FINISHED:
+                return ExecutableState.SUCCEED;
+            case NEW:
+                return ExecutableState.READY;
+            case PENDING:
+                return ExecutableState.READY;
+            case RUNNING:
+                return ExecutableState.RUNNING;
+            case STOPPED:
+                return ExecutableState.STOPPED;
+            default:
+                throw new BadRequestException(String.format(msg.getILLEGAL_EXECUTABLE_STATE(), status));
         }
     }
 
-    private ExecutableState parseToExecutableState(JobStatusEnum status) {
-        switch (status) {
-        case DISCARDED:
-            return ExecutableState.DISCARDED;
-        case ERROR:
-            return ExecutableState.ERROR;
-        case FINISHED:
-            return ExecutableState.SUCCEED;
-        case NEW:
-            return ExecutableState.READY;
-        case PENDING:
-            return ExecutableState.READY;
-        case RUNNING:
-            return ExecutableState.RUNNING;
-        case STOPPED:
-            return ExecutableState.STOPPED;
-        default:
-            throw new RuntimeException("illegal status:" + status);
+    private long getTimeStartInMillis(Calendar calendar, JobTimeFilterEnum timeFilter) {
+        Message msg = MsgPicker.getMsg();
+
+        switch (timeFilter) {
+            case LAST_ONE_DAY:
+                calendar.add(Calendar.DAY_OF_MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_WEEK:
+                calendar.add(Calendar.WEEK_OF_MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_MONTH:
+                calendar.add(Calendar.MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_YEAR:
+                calendar.add(Calendar.YEAR, -1);
+                return calendar.getTimeInMillis();
+            case ALL:
+                return 0;
+            default:
+                throw new BadRequestException(String.format(msg.getILLEGAL_TIME_FILTER(), timeFilter));
         }
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, //
-            Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd, CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException, JobException {
+                                 Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd, CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+        Message msg = MsgPicker.getMsg();
 
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
-            throw new BadRequestException("Broken cube " + cube.getName() + " can't be built");
+            throw new BadRequestException(String.format(msg.getBUILD_BROKEN_CUBE(), cube.getName()));
         }
 
         checkCubeDescSignature(cube);
@@ -216,7 +223,7 @@ public class JobService extends BasicService implements InitializingBean {
                 newSeg = getCubeManager().refreshSegment(cube, startDate, endDate, startOffset, endOffset);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter);
             } else {
-                throw new JobException("invalid build type:" + buildType);
+                throw new BadRequestException(String.format(msg.getINVALID_BUILD_TYPE(), buildType));
             }
 
             getExecutableManager().addJob(job);
@@ -246,11 +253,13 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     private void checkCubeDescSignature(CubeInstance cube) {
+        Message msg = MsgPicker.getMsg();
+
         if (!cube.getDescriptor().checkSignature())
-            throw new IllegalStateException("Inconsistent cube desc signature for " + cube.getDescriptor() + ", if it's right after a upgrade, please try 'Edit CubeDesc' to delete the 'signature' field. Or use 'bin/metastore.sh refresh-cube-signature' to batch refresh all cubes' signatures, then reload metadata to take effect");
+            throw new BadRequestException(String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
     }
 
-    public JobInstance getJobInstance(String uuid) throws IOException, JobException {
+    public JobInstance getJobInstance(String uuid) {
         return getSingleJobInstance(getExecutableManager().getJob(uuid));
     }
 
@@ -258,11 +267,16 @@ public class JobService extends BasicService implements InitializingBean {
         return getExecutableManager().getOutput(id);
     }
 
-    private JobInstance getSingleJobInstance(AbstractExecutable job) {
+    protected JobInstance getSingleJobInstance(AbstractExecutable job) {
+        Message msg = MsgPicker.getMsg();
+
         if (job == null) {
             return null;
         }
-        Preconditions.checkState(job instanceof CubingJob, "illegal job type, id:" + job.getId());
+        if (!(job instanceof CubingJob)) {
+            throw new BadRequestException(String.format(msg.getILLEGAL_JOB_TYPE(), job.getId()));
+        }
+
         CubingJob cubeJob = (CubingJob) job;
         final JobInstance result = new JobInstance();
         result.setName(job.getName());
@@ -283,17 +297,17 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public void resumeJob(JobInstance job) throws IOException, JobException {
+    public void resumeJob(JobInstance job) {
         getExecutableManager().resumeJob(job.getId());
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public void rollbackJob(JobInstance job, String stepId) throws IOException, JobException {
+    public void rollbackJob(JobInstance job, String stepId) {
         getExecutableManager().rollbackJob(job.getId(), stepId);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public JobInstance cancelJob(JobInstance job) throws IOException, JobException {
+    public JobInstance cancelJob(JobInstance job) throws IOException {
         if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())) {
             getExecutableManager().discardJob(job.getId());
             return job;
@@ -316,13 +330,13 @@ public class JobService extends BasicService implements InitializingBean {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public JobInstance pauseJob(JobInstance job) throws IOException, JobException {
+    public JobInstance pauseJob(JobInstance job) {
         getExecutableManager().pauseJob(job.getId());
         return job;
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
-    public void dropJob(JobInstance job) throws IOException, JobException {
+    public void dropJob(JobInstance job) throws IOException {
         cancelJob(job);
         getExecutableManager().deleteJob(job.getId());
     }
@@ -331,7 +345,7 @@ public class JobService extends BasicService implements InitializingBean {
      * currently only support substring match
      * @return
      */
-    public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue, final JobTimeFilterEnum timeFilter) throws IOException, JobException {
+    public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue, final JobTimeFilterEnum timeFilter) {
         Integer limit = (null == limitValue) ? 30 : limitValue;
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
         List<JobInstance> jobs = searchJobs(cubeNameSubstring, projectName, statusList, timeFilter);
@@ -348,7 +362,7 @@ public class JobService extends BasicService implements InitializingBean {
         return jobs.subList(offset, offset + limit);
     }
 
-    private List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+    public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);

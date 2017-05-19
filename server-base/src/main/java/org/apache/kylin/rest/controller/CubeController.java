@@ -53,10 +53,12 @@ import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -85,12 +87,18 @@ public class CubeController extends BasicController {
     private static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     @Autowired
+    @Qualifier("cubeMgmtService")
     private CubeService cubeService;
 
     @Autowired
+    @Qualifier("jobService")
     private JobService jobService;
 
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @Autowired
+    @Qualifier("projectService")
+    private ProjectService projectService;
+
+    @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<CubeInstance> getCubes(@RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         List<CubeInstance> cubes;
@@ -110,7 +118,7 @@ public class CubeController extends BasicController {
         return cubes.subList(coffset, coffset + climit);
     }
 
-    @RequestMapping(value = "validEncodings", method = { RequestMethod.GET })
+    @RequestMapping(value = "validEncodings", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public Map<String, Integer> getValidEncodings() {
         Map<String, Integer> encodings;
@@ -123,7 +131,7 @@ public class CubeController extends BasicController {
         return encodings;
     }
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance getCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -141,17 +149,17 @@ public class CubeController extends BasicController {
      * @throws UnknownHostException
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/sql", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse getSql(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         IJoinedFlatTableDesc flatTableDesc = EngineFactory.getJoinedFlatTableDesc(cube.getDescriptor());
         String sql = JoinedFlatTable.generateSelectDataStatement(flatTableDesc);
 
-        GeneralResponse repsonse = new GeneralResponse();
-        repsonse.setProperty("sql", sql);
+        GeneralResponse response = new GeneralResponse();
+        response.setProperty("sql", sql);
 
-        return repsonse;
+        return response;
     }
 
     /**
@@ -161,7 +169,7 @@ public class CubeController extends BasicController {
      * @param notifyList
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/notify_list", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public void updateNotifyList(@PathVariable String cubeName, @RequestBody List<String> notifyList) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -179,7 +187,7 @@ public class CubeController extends BasicController {
 
     }
 
-    @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/cost", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance updateCubeCost(@PathVariable String cubeName, @RequestParam(value = "cost") int cost) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -201,7 +209,7 @@ public class CubeController extends BasicController {
      *
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}/refresh_lookup", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance rebuildLookupSnapshot(@PathVariable String cubeName, @PathVariable String segmentName, @RequestParam(value = "lookupTable") String lookupTable) {
         try {
@@ -219,7 +227,7 @@ public class CubeController extends BasicController {
      *
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/segs/{segmentName}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{cubeName}/segs/{segmentName}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance deleteSegment(@PathVariable String cubeName, @PathVariable String segmentName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -242,21 +250,23 @@ public class CubeController extends BasicController {
     }
 
     /** Build/Rebuild a cube segment */
-    @RequestMapping(value = "/{cubeName}/build", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/build", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance build(@PathVariable String cubeName, @RequestBody JobBuildRequest req) {
         return rebuild(cubeName, req);
     }
 
     /** Build/Rebuild a cube segment */
-    @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT })
+
+    /** Build/Rebuild a cube segment */
+    @RequestMapping(value = "/{cubeName}/rebuild", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance rebuild(@PathVariable String cubeName, @RequestBody JobBuildRequest req) {
         return buildInternal(cubeName, req.getStartTime(), req.getEndTime(), 0, 0, null, null, req.getBuildType(), req.isForce() || req.isForceMergeEmptySegment());
     }
 
     /** Build/Rebuild a cube segment by source offset */
-    @RequestMapping(value = "/{cubeName}/build2", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/build2", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance build2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
         boolean existKafkaClient = false;
@@ -275,7 +285,7 @@ public class CubeController extends BasicController {
     }
 
     /** Build/Rebuild a cube segment by source offset */
-    @RequestMapping(value = "/{cubeName}/rebuild2", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/rebuild2", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance rebuild2(@PathVariable String cubeName, @RequestBody JobBuildRequest2 req) {
         return buildInternal(cubeName, 0, 0, req.getSourceOffsetStart(), req.getSourceOffsetEnd(), req.getSourcePartitionOffsetStart(), req.getSourcePartitionOffsetEnd(), req.getBuildType(), req.isForce());
@@ -290,6 +300,9 @@ public class CubeController extends BasicController {
             if (cube == null) {
                 throw new InternalErrorException("Cannot find cube " + cubeName);
             }
+            if (cube.getStatus() != null && cube.getStatus().equals("DRAFT")) {
+                throw new BadRequestException("Cannot build draft cube");
+            }
             return jobService.submitJob(cube, startTime, endTime, startOffset, endOffset, //
                     sourcePartitionOffsetStart, sourcePartitionOffsetEnd, CubeBuildTypeEnum.valueOf(buildType), force, submitter);
         } catch (Throwable e) {
@@ -298,7 +311,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/disable", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance disableCube(@PathVariable String cubeName) {
         try {
@@ -316,7 +329,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/purge", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance purgeCube(@PathVariable String cubeName) {
         try {
@@ -339,7 +352,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}/clone", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/clone", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance cloneCube(@PathVariable String cubeName, @RequestBody CubeRequest cubeRequest) {
         String newCubeName = cubeRequest.getCubeName();
@@ -376,7 +389,7 @@ public class CubeController extends BasicController {
 
     }
 
-    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/enable", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeInstance enableCube(@PathVariable String cubeName) {
         try {
@@ -393,7 +406,7 @@ public class CubeController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public void deleteCube(@PathVariable String cubeName) {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
@@ -417,7 +430,7 @@ public class CubeController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.POST })
+    @RequestMapping(value = "", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public CubeRequest saveCubeDesc(@RequestBody CubeRequest cubeRequest) {
 
@@ -458,7 +471,7 @@ public class CubeController extends BasicController {
      * @throws JsonProcessingException
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.PUT })
+    @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CubeRequest updateCubeDesc(@RequestBody CubeRequest cubeRequest) throws JsonProcessingException {
 
@@ -516,7 +529,7 @@ public class CubeController extends BasicController {
      * @return true
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/hbase", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<HBaseResponse> getHBaseInfo(@PathVariable String cubeName) {
         List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
@@ -566,7 +579,7 @@ public class CubeController extends BasicController {
      * @return a list of CubeSegment, each representing a hole
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<CubeSegment> getHoles(@PathVariable String cubeName) {
         checkCubeName(cubeName);
@@ -579,7 +592,7 @@ public class CubeController extends BasicController {
      * @return a list of JobInstances to fill the holes
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/holes", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public List<JobInstance> fillHoles(@PathVariable String cubeName) {
         checkCubeName(cubeName);
@@ -635,7 +648,7 @@ public class CubeController extends BasicController {
      * @param cubeName
      * @return
      */
-    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{cubeName}/init_start_offsets", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse initStartOffsets(@PathVariable String cubeName) {
         checkCubeName(cubeName);
@@ -666,7 +679,7 @@ public class CubeController extends BasicController {
      * @param aggregationGroupStr
      * @return number of cuboid, -1 if failed
      */
-    @RequestMapping(value = "aggregationgroups/cuboid", method = RequestMethod.POST)
+    @RequestMapping(value = "aggregationgroups/cuboid", method = RequestMethod.POST, produces = { "application/json" })
     @ResponseBody
     public long calculateCuboidCombination(@RequestBody String aggregationGroupStr) {
         AggregationGroup aggregationGroup = deserializeAggregationGroup(aggregationGroupStr);

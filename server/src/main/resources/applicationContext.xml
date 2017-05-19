@@ -49,7 +49,7 @@
 
     <!-- Rest service binding -->
     <bean
-            class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
+            class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
 
     <bean id="mappingJacksonHttpMessageConverter"
           class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
@@ -59,7 +59,7 @@
           class="org.springframework.http.converter.FormHttpMessageConverter"/>
 
     <bean
-            class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+            class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
         <property name="messageConverters">
             <list>
                 <ref bean="mappingJacksonHttpMessageConverter"/>

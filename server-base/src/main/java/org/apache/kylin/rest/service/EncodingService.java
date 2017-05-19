@@ -28,6 +28,9 @@ import org.apache.kylin.dimension.FixedLenHexDimEnc;
 import org.apache.kylin.dimension.IntegerDimEnc;
 import org.apache.kylin.dimension.TimeDimEnc;
 import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
@@ -36,6 +39,8 @@ import com.google.common.collect.Lists;
 public class EncodingService extends BasicService {
 
     public List<String> getValidEncodings(DataType dataType) {
+        Message msg = MsgPicker.getMsg();
+
         if (dataType.isIntegerFamily()) {
             return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
         } else if (dataType.isNumberFamily()) { //numbers include integers
@@ -46,7 +51,7 @@ public class EncodingService extends BasicService {
             return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME, FixedLenDimEnc.ENCODING_NAME, //
                     FixedLenHexDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
         } else {
-            throw new IllegalArgumentException("can't provide valid encodings for datatype:" + dataType);
+            throw new BadRequestException(String.format(msg.getVALID_ENCODING_NOT_AVAILABLE(), dataType));
         }
     }
 

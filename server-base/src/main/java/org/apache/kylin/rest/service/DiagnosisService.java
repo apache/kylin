@@ -28,6 +28,9 @@ import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,14 +43,16 @@ public class DiagnosisService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisService.class);
 
-    private File getDumpDir() {
+    protected File getDumpDir() {
         return Files.createTempDir();
     }
 
     private String getDiagnosisPackageName(File destDir) {
+        Message msg = MsgPicker.getMsg();
+
         File[] files = destDir.listFiles();
         if (files == null) {
-            throw new RuntimeException("Diagnosis package is not available in directory: " + destDir.getAbsolutePath());
+            throw new BadRequestException(String.format(msg.getDIAG_PACKAGE_NOT_AVAILABLE(), destDir.getAbsolutePath()));
         }
         for (File subDir : files) {
             if (subDir.isDirectory()) {
@@ -58,7 +63,7 @@ public class DiagnosisService extends BasicService {
                 }
             }
         }
-        throw new RuntimeException("Diagnosis package not found in directory: " + destDir.getAbsolutePath());
+        throw new BadRequestException(String.format(msg.getDIAG_PACKAGE_NOT_FOUND(), destDir.getAbsolutePath()));
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
@@ -83,13 +88,15 @@ public class DiagnosisService extends BasicService {
     }
 
     private void runDiagnosisCLI(String[] args) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
         File cwd = new File("");
         logger.debug("Current path: " + cwd.getAbsolutePath());
 
         logger.debug("DiagnosisInfoCLI args: " + Arrays.toString(args));
         File script = new File(KylinConfig.getKylinHome() + File.separator + "bin", "diag.sh");
         if (!script.exists()) {
-            throw new RuntimeException("diag.sh not found at " + script.getAbsolutePath());
+            throw new BadRequestException(String.format(msg.getDIAG_NOT_FOUND(), script.getAbsolutePath()));
         }
 
         String diagCmd = script.getAbsolutePath() + " " + StringUtils.join(args, " ");
@@ -97,7 +104,8 @@ public class DiagnosisService extends BasicService {
         Pair<Integer, String> cmdOutput = executor.execute(diagCmd);
 
         if (cmdOutput.getKey() != 0) {
-            throw new RuntimeException("Failed to generate diagnosis package.");
+            throw new BadRequestException(msg.getGENERATE_DIAG_PACKAGE_FAIL());
         }
     }
+
 }

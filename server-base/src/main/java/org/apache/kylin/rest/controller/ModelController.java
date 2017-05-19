@@ -35,9 +35,11 @@ import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,9 +66,14 @@ public class ModelController extends BasicController {
     private static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     @Autowired
+    @Qualifier("modelMgmtService")
     private ModelService modelService;
 
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @Autowired
+    @Qualifier("projectService")
+    private ProjectService projectService;
+
+    @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<DataModelDesc> getModels(@RequestParam(value = "modelName", required = false) String modelName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         try {
@@ -82,7 +89,7 @@ public class ModelController extends BasicController {
      * create model
      * @throws java.io.IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.POST })
+    @RequestMapping(value = "", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public ModelRequest saveModelDesc(@RequestBody ModelRequest modelRequest) {
         //Update Model
@@ -116,7 +123,7 @@ public class ModelController extends BasicController {
         return modelRequest;
     }
 
-    @RequestMapping(value = "", method = { RequestMethod.PUT })
+    @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public ModelRequest updateModelDesc(@RequestBody ModelRequest modelRequest) throws JsonProcessingException {
         DataModelDesc modelDesc = deserializeDataModelDesc(modelRequest);
@@ -143,7 +150,7 @@ public class ModelController extends BasicController {
         return modelRequest;
     }
 
-    @RequestMapping(value = "/{modelName}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{modelName}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public void deleteModel(@PathVariable String modelName) {
         DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);
@@ -158,7 +165,7 @@ public class ModelController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public ModelRequest cloneModel(@PathVariable String modelName, @RequestBody ModelRequest modelRequest) {
         String project = modelRequest.getProject();

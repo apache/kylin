@@ -63,6 +63,16 @@ public class JoinsTree implements Serializable {
         return matchUp;
     }
 
+    public int matchNum(JoinsTree another) {
+        Map<String, String> matchUp = new HashMap<>();
+
+        for (Chain chain : tableChains.values()) {
+            matchInTree(chain, another, Collections.<String, String> emptyMap(), matchUp);
+        }
+
+        return matchUp.size();
+    }
+
     private boolean matchInTree(Chain chain, JoinsTree another, Map<String, String> constraints, Map<String, String> matchUp) {
         String thisAlias = chain.table.getAlias();
         if (matchUp.containsKey(thisAlias))

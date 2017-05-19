@@ -31,6 +31,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import net.sf.ehcache.CacheManager;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author xduo
@@ -39,7 +40,9 @@ public class QueryControllerTest extends ServiceTestBase {
 
     private QueryController queryController;
     @Autowired
+    @Qualifier("queryService")
     QueryService queryService;
+
     @Autowired
     private CacheManager cacheManager;
 

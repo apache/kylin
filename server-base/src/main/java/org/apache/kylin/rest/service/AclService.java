@@ -33,9 +33,14 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.domain.AccessControlEntryImpl;
 import org.springframework.security.acls.domain.AclAuthorizationStrategy;
 import org.springframework.security.acls.domain.AclImpl;
@@ -56,10 +61,8 @@ import org.springframework.security.acls.model.PermissionGrantingStrategy;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.util.FieldUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -91,18 +94,17 @@ public class AclService implements MutableAclService {
     protected ResourceStore aclStore;
 
     @Autowired
+    @Qualifier("userService")
     protected UserService userService;
 
     public AclService() throws IOException {
         fieldAces.setAccessible(true);
         fieldAcl.setAccessible(true);
         aclStore = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-        logger.debug("Acl service2 create");
     }
 
     @Override
     public List<ObjectIdentity> findChildren(ObjectIdentity parentIdentity) {
-        logger.debug("invoke method : findChildren");
         List<ObjectIdentity> oids = new ArrayList<ObjectIdentity>();
         try {
             List<AclRecord> allAclRecords = aclStore.getAllResources(String.valueOf(DIR_PREFIX), AclRecord.class, AclRecordSerializer.getInstance());
@@ -115,7 +117,7 @@ public class AclService implements MutableAclService {
             }
             return oids;
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new InternalErrorException(e);
         }
     }
 
@@ -127,8 +129,11 @@ public class AclService implements MutableAclService {
 
     @Override
     public Acl readAclById(ObjectIdentity object, List<Sid> sids) throws NotFoundException {
+        Message msg = MsgPicker.getMsg();
         Map<ObjectIdentity, Acl> aclsMap = readAclsById(Arrays.asList(object), sids);
-        Assert.isTrue(aclsMap.containsKey(object), "There should have been an Acl entry for ObjectIdentity " + object);
+        if (!aclsMap.containsKey(object)) {
+            throw new BadRequestException(String.format(msg.getNO_ACL_ENTRY(), object));
+        }
         return aclsMap.get(object);
     }
 
@@ -139,7 +144,7 @@ public class AclService implements MutableAclService {
 
     @Override
     public Map<ObjectIdentity, Acl> readAclsById(List<ObjectIdentity> oids, List<Sid> sids) throws NotFoundException {
-        logger.debug("invoke method : readAclsById");
+        Message msg = MsgPicker.getMsg();
         Map<ObjectIdentity, Acl> aclMaps = new HashMap<ObjectIdentity, Acl>();
         try {
             for (ObjectIdentity oid : oids) {
@@ -161,18 +166,17 @@ public class AclService implements MutableAclService {
 
                     aclMaps.put(oid, acl);
                 } else {
-                    throw new NotFoundException("Unable to find ACL information for object identity '" + oid + "'");
+                    throw new NotFoundException(String.format(msg.getACL_INFO_NOT_FOUND(), oid));
                 }
             }
             return aclMaps;
         } catch (IOException e) {
-            throw new NotFoundException(e.getMessage(), e);
+            throw new InternalErrorException(e);
         }
     }
 
     @Override
     public MutableAcl createAcl(ObjectIdentity objectIdentity) throws AlreadyExistsException {
-        logger.debug("invoke method : createAcl");
         Acl acl = null;
 
         try {
@@ -190,18 +194,18 @@ public class AclService implements MutableAclService {
             aclStore.putResource(getQueryKeyById(String.valueOf(objectIdentity.getIdentifier())), record, 0, AclRecordSerializer.getInstance());
             logger.debug("ACL of " + objectIdentity + " created successfully.");
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new InternalErrorException(e);
         }
         return (MutableAcl) readAclById(objectIdentity);
     }
 
     @Override
     public void deleteAcl(ObjectIdentity objectIdentity, boolean deleteChildren) throws ChildrenExistException {
+        Message msg = MsgPicker.getMsg();
         try {
-            logger.debug("invoke method : deleteAcl");
             List<ObjectIdentity> children = findChildren(objectIdentity);
             if (!deleteChildren && children.size() > 0) {
-                throw new ChildrenExistException("Children exists for " + objectIdentity);
+                throw new BadRequestException(String.format(msg.getIDENTITY_EXIST_CHILDREN(), objectIdentity));
             }
             for (ObjectIdentity oid : children) {
                 deleteAcl(oid, deleteChildren);
@@ -209,14 +213,14 @@ public class AclService implements MutableAclService {
             aclStore.deleteResource(getQueryKeyById(String.valueOf(objectIdentity.getIdentifier())));
             logger.debug("ACL of " + objectIdentity + " deleted successfully.");
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new InternalErrorException(e);
         }
     }
 
     @Override
     public MutableAcl updateAcl(MutableAcl mutableAcl) throws NotFoundException {
+        Message msg = MsgPicker.getMsg();
         try {
-            logger.debug("invoke method : updateAcl");
             readAclById(mutableAcl.getObjectIdentity());
         } catch (NotFoundException e) {
             throw e;
@@ -226,7 +230,6 @@ public class AclService implements MutableAclService {
             String id = getQueryKeyById(String.valueOf(mutableAcl.getObjectIdentity().getIdentifier()));
             AclRecord record = aclStore.getResource(id, AclRecord.class, AclRecordSerializer.getInstance());
             aclStore.deleteResource(id);
-            //logger.debug("Exist? {}", aclStore.exists(id));
             if (mutableAcl.getParentAcl() != null) {
                 record.setParentDomainObjectInfo(new DomainObjectInfo(mutableAcl.getParentAcl().getObjectIdentity()));
             }
@@ -240,9 +243,8 @@ public class AclService implements MutableAclService {
                 if (ace.getSid() instanceof PrincipalSid) {
                     PrincipalSid psid = (PrincipalSid) ace.getSid();
                     String userName = psid.getPrincipal();
-                    logger.debug("ACE SID name: " + userName);
                     if (!userService.userExists(userName))
-                        throw new UsernameNotFoundException("User " + userName + " does not exist. Please make sure the user has logged in before");
+                        throw new BadRequestException(String.format(msg.getUSER_NOT_EXIST(), userName));
                 }
                 AceInfo aceInfo = new AceInfo(ace);
                 allAceInfo.put(String.valueOf(aceInfo.getSidInfo().getSid()), aceInfo);
@@ -250,12 +252,12 @@ public class AclService implements MutableAclService {
             aclStore.putResource(id, record, 0, AclRecordSerializer.getInstance());
             logger.debug("ACL of " + mutableAcl.getObjectIdentity() + " updated successfully.");
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new InternalErrorException(e);
         }
         return (MutableAcl) readAclById(mutableAcl.getObjectIdentity());
     }
 
-    private void genAces(List<Sid> sids, AclRecord record, AclImpl acl) throws JsonParseException, JsonMappingException, IOException {
+    protected void genAces(List<Sid> sids, AclRecord record, AclImpl acl) throws JsonParseException, JsonMappingException, IOException {
         List<AceInfo> aceInfos = new ArrayList<AceInfo>();
         Map<String, AceInfo> allAceInfos = record.getAllAceInfo();
         if (allAceInfos != null) {
@@ -306,12 +308,6 @@ public class AclService implements MutableAclService {
         return DIR_PREFIX + id;
     }
 
-    private boolean equal(ObjectIdentity o1, ObjectIdentity o2) {
-        if (o1.getIdentifier().equals(o2.getIdentifier()) && o1.getType().equals(o2.getType()))
-            return true;
-        return false;
-    }
-
     protected static class AclRecordSerializer implements Serializer<AclRecord> {
 
         private static final AclRecordSerializer serializer = new AclRecordSerializer();
@@ -339,6 +335,7 @@ public class AclService implements MutableAclService {
 
 }
 
+@SuppressWarnings("serial")
 class AclRecord extends RootPersistentEntity {
 
     @JsonProperty()

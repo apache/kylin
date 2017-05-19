@@ -26,6 +26,7 @@ import org.apache.kylin.rest.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,6 +50,7 @@ public class LdapProvider extends LdapAuthenticationProvider {
     private static final Logger logger = LoggerFactory.getLogger(LdapProvider.class);
 
     @Autowired
+    @Qualifier("userService")
     UserService userService;
 
     @Autowired

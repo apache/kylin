@@ -39,6 +39,7 @@ import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,13 +64,18 @@ public class StreamingController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(StreamingController.class);
 
     @Autowired
+    @Qualifier("streamingMgmtService")
     private StreamingService streamingService;
+
     @Autowired
+    @Qualifier("kafkaMgmtService")
     private KafkaConfigService kafkaConfigService;
+
     @Autowired
+    @Qualifier("tableService")
     private TableService tableService;
 
-    @RequestMapping(value = "/getConfig", method = { RequestMethod.GET })
+    @RequestMapping(value = "/getConfig", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<StreamingConfig> getStreamings(@RequestParam(value = "table", required = false) String table, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         try {
@@ -80,7 +86,7 @@ public class StreamingController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/getKfkConfig", method = { RequestMethod.GET })
+    @RequestMapping(value = "/getKfkConfig", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<KafkaConfig> getKafkaConfigs(@RequestParam(value = "kafkaConfigName", required = false) String kafkaConfigName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         try {
@@ -96,7 +102,7 @@ public class StreamingController extends BasicController {
      * create Streaming Schema
      * @throws java.io.IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.POST })
+    @RequestMapping(value = "", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public StreamingRequest saveStreamingConfig(@RequestBody StreamingRequest streamingRequest) {
 
@@ -170,7 +176,7 @@ public class StreamingController extends BasicController {
         return streamingRequest;
     }
 
-    @RequestMapping(value = "", method = { RequestMethod.PUT })
+    @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public StreamingRequest updateStreamingConfig(@RequestBody StreamingRequest streamingRequest) throws JsonProcessingException {
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
@@ -201,7 +207,7 @@ public class StreamingController extends BasicController {
         return streamingRequest;
     }
 
-    @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{configName}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public void deleteConfig(@PathVariable String configName) throws IOException {
         StreamingConfig config = streamingService.getStreamingManager().getStreamingConfig(configName);

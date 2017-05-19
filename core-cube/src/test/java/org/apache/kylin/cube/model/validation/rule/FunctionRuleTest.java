@@ -23,7 +23,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -67,7 +69,9 @@ public class FunctionRuleTest extends LocalFileMetadataTestCase {
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
 
         MeasureDesc measureDescDuplicated = desc.getMeasures().get(1);
-        desc.getMeasures().add(measureDescDuplicated);
+        List<MeasureDesc> newMeasures = Lists.newArrayList(desc.getMeasures());
+        newMeasures.add(measureDescDuplicated);
+        desc.setMeasures(newMeasures);
 
         desc.init(config);
     }

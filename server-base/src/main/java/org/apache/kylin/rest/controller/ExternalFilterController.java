@@ -31,6 +31,7 @@ import org.apache.kylin.rest.service.ExtFilterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,9 +51,10 @@ public class ExternalFilterController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(ExternalFilterController.class);
 
     @Autowired
+    @Qualifier("extFilterService")
     private ExtFilterService extFilterService;
 
-    @RequestMapping(value = "/saveExtFilter", method = { RequestMethod.POST })
+    @RequestMapping(value = "/saveExtFilter", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public Map<String, String> saveExternalFilter(@RequestBody ExternalFilterRequest request) throws IOException {
         Map<String, String> result = new HashMap();
@@ -65,7 +67,7 @@ public class ExternalFilterController extends BasicController {
         return result;
     }
 
-    @RequestMapping(value = "/updateExtFilter", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/updateExtFilter", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public Map<String, String> updateExternalFilter(@RequestBody ExternalFilterRequest request) throws IOException {
         Map<String, String> result = new HashMap();
@@ -76,7 +78,7 @@ public class ExternalFilterController extends BasicController {
         return result;
     }
 
-    @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{filter}/{project}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public Map<String, String> removeFilter(@PathVariable String filter, @PathVariable String project) throws IOException {
         Map<String, String> result = new HashMap<String, String>();
@@ -86,7 +88,7 @@ public class ExternalFilterController extends BasicController {
         return result;
     }
 
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<ExternalFilterDesc> getExternalFilters(@RequestParam(value = "project", required = true) String project) throws IOException {
         List<ExternalFilterDesc> filterDescs = Lists.newArrayList();

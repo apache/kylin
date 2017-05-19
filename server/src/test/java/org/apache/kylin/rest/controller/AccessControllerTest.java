@@ -32,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -62,12 +63,15 @@ public class AccessControllerTest extends ServiceTestBase implements AclEntityTy
     private String ADMIN = "ADMIN";
 
     @Autowired
+    @Qualifier("projectService")
     ProjectService projectService;
 
     @Autowired
+    @Qualifier("cubeMgmtService")
     CubeService cubeService;
 
     @Autowired
+    @Qualifier("accessService")
     AccessService accessService;
 
     @Before

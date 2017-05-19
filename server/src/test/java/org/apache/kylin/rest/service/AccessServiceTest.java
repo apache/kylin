@@ -26,6 +26,7 @@ import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
@@ -37,6 +38,7 @@ import org.springframework.security.acls.model.Sid;
 public class AccessServiceTest extends ServiceTestBase {
 
     @Autowired
+    @Qualifier("accessService")
     AccessService accessService;
 
     @Test

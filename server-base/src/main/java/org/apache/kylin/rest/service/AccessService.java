@@ -25,10 +25,14 @@ import java.util.List;
 import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclEntityFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
@@ -46,7 +50,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 
 /**
  * @author xduo
@@ -56,9 +59,11 @@ import org.springframework.util.Assert;
 public class AccessService {
 
     @Autowired
+    @Qualifier("aclService")
     private AclService aclService;
 
     @Autowired
+    @Qualifier("userService")
     UserService userService;
 
     // ~ Methods to manage acl life circle of domain objects ~
@@ -87,9 +92,14 @@ public class AccessService {
     @Transactional
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public Acl grant(AclEntity ae, Permission permission, Sid sid) {
-        Assert.notNull(ae, "Acl domain object required");
-        Assert.notNull(permission, "Acl permission required");
-        Assert.notNull(sid, "Sid required");
+        Message msg = MsgPicker.getMsg();
+
+        if (ae == null)
+            throw new BadRequestException(msg.getACL_DOMAIN_NOT_FOUND());
+        if (permission == null)
+            throw new BadRequestException(msg.getACL_PERMISSION_REQUIRED());
+        if (sid == null)
+            throw new BadRequestException(msg.getSID_REQUIRED());
 
         ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
         MutableAcl acl = null;
@@ -124,9 +134,14 @@ public class AccessService {
     @Transactional
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public Acl update(AclEntity ae, Long accessEntryId, Permission newPermission) {
-        Assert.notNull(ae, "Acl domain object required");
-        Assert.notNull(accessEntryId, "Ace id required");
-        Assert.notNull(newPermission, "Acl permission required");
+        Message msg = MsgPicker.getMsg();
+
+        if (ae == null)
+            throw new BadRequestException(msg.getACL_DOMAIN_NOT_FOUND());
+        if (accessEntryId == null)
+            throw new BadRequestException(msg.getACE_ID_REQUIRED());
+        if (newPermission == null)
+            throw new BadRequestException(msg.getACL_PERMISSION_REQUIRED());
 
         ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
         MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
@@ -157,8 +172,12 @@ public class AccessService {
     @Transactional
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public Acl revoke(AclEntity ae, Long accessEntryId) {
-        Assert.notNull(ae, "Acl domain object required");
-        Assert.notNull(accessEntryId, "Ace id required");
+        Message msg = MsgPicker.getMsg();
+
+        if (ae == null)
+            throw new BadRequestException(msg.getACL_DOMAIN_NOT_FOUND());
+        if (accessEntryId == null)
+            throw new BadRequestException(msg.getACE_ID_REQUIRED());
 
         ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
         MutableAcl acl = (MutableAcl) aclService.readAclById(objectIdentity);
@@ -188,8 +207,14 @@ public class AccessService {
 
     @Transactional
     public void inherit(AclEntity ae, AclEntity parentAe) {
-        Assert.notNull(ae, "Acl domain object required");
-        Assert.notNull(parentAe, "Parent acl required");
+        Message msg = MsgPicker.getMsg();
+
+        if (ae == null) {
+            throw new BadRequestException(msg.getACL_DOMAIN_NOT_FOUND());
+        }
+        if (parentAe == null) {
+            throw new BadRequestException(msg.getPARENT_ACL_NOT_FOUND());
+        }
 
         ObjectIdentity objectIdentity = new ObjectIdentityImpl(ae.getClass(), ae.getId());
         MutableAcl acl = null;
@@ -219,7 +244,11 @@ public class AccessService {
     @Transactional
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#ae, 'ADMINISTRATION')")
     public void clean(AclEntity ae, boolean deleteChildren) {
-        Assert.notNull(ae, "Acl domain object required");
+        Message msg = MsgPicker.getMsg();
+
+        if (ae == null) {
+            throw new BadRequestException(msg.getACL_DOMAIN_NOT_FOUND());
+        }
 
         // For those may have null uuid, like DataModel, won't delete Acl.
         if (ae.getId() == null)
@@ -285,14 +314,16 @@ public class AccessService {
 
     /**
      * Protect admin permission granted to acl owner.
-     * 
+     *
      * @param acl
      * @param indexOfAce
      */
     private void secureOwner(MutableAcl acl, int indexOfAce) {
+        Message msg = MsgPicker.getMsg();
+
         // Can't revoke admin permission from domain object owner
         if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid()) && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
-            throw new ForbiddenException("Can't revoke admin permission of owner.");
+            throw new ForbiddenException(msg.getREVOKE_ADMIN_PERMISSION());
         }
     }
 }

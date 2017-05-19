@@ -25,7 +25,9 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Component;
 
@@ -64,8 +66,10 @@ public class StreamingService extends BasicService {
     }
 
     public StreamingConfig createStreamingConfig(StreamingConfig config) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
         if (getStreamingManager().getStreamingConfig(config.getName()) != null) {
-            throw new InternalErrorException("The streamingConfig named " + config.getName() + " already exists");
+            throw new BadRequestException(String.format(msg.getSTREAMING_CONFIG_ALREADY_EXIST(), config.getName()));
         }
         StreamingConfig streamingConfig = getStreamingManager().saveStreamingConfig(config);
         return streamingConfig;

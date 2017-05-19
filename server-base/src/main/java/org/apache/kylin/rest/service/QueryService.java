@@ -86,6 +86,7 @@ import org.apache.kylin.storage.hybrid.HybridInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -114,15 +115,16 @@ public class QueryService extends BasicService {
     public static final String EXCEPTION_QUERY_CACHE = "ExceptionQueryCache";
 
     private final Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
-    private final BadQueryDetector badQueryDetector = new BadQueryDetector();
+    protected final BadQueryDetector badQueryDetector = new BadQueryDetector();
 
     private final StorageURL hbaseUrl;
     private final String userTableName;
 
     @Autowired
-    private CacheManager cacheManager;
+    protected CacheManager cacheManager;
 
     @Autowired
+    @Qualifier("cacheService")
     private CacheService cacheService;
 
     @Autowired
@@ -524,7 +526,7 @@ public class QueryService extends BasicService {
         return tableMetas;
     }
 
-    private void processStatementAttr(Statement s, SQLRequest sqlRequest) throws SQLException {
+    protected void processStatementAttr(Statement s, SQLRequest sqlRequest) throws SQLException {
         Integer statementMaxRows = BackdoorToggles.getStatementMaxRows();
         if (statementMaxRows != null) {
             logger.info("Setting current statement's max rows to {}", statementMaxRows);
@@ -672,7 +674,7 @@ public class QueryService extends BasicService {
         }
     }
 
-    private int getInt(String content) {
+    protected int getInt(String content) {
         try {
             return Integer.parseInt(content);
         } catch (Exception e) {
@@ -680,7 +682,7 @@ public class QueryService extends BasicService {
         }
     }
 
-    private short getShort(String content) {
+    protected short getShort(String content) {
         try {
             return Short.parseShort(content);
         } catch (Exception e) {
@@ -688,7 +690,7 @@ public class QueryService extends BasicService {
         }
     }
 
-    private static void close(ResultSet resultSet, Statement stat, Connection conn) {
+    protected static void close(ResultSet resultSet, Statement stat, Connection conn) {
         OLAPContext.clearParameter();
         DBUtils.closeQuietly(resultSet);
         DBUtils.closeQuietly(stat);

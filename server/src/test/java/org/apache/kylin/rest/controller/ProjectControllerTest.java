@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  */
@@ -41,6 +42,7 @@ public class ProjectControllerTest extends ServiceTestBase {
     private ProjectController projectController;
 
     @Autowired
+    @Qualifier("projectService")
     ProjectService projectService;
 
     @Before

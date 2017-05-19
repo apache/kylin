@@ -18,12 +18,14 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.kylin.rest.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,14 +46,15 @@ public class UserController extends BasicController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     @Autowired
+    @Qualifier("userService")
     UserService userService;
 
-    @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = "application/json")
+    @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = { "application/json" })
     public UserDetails authenticate() {
         return authenticatedUser();
     }
 
-    @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = { "application/json" })
     public UserDetails authenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -73,8 +76,8 @@ public class UserController extends BasicController {
         return null;
     }
 
-    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = "application/json")
-    public List<String> getAuthorities() {
+    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = { "application/json" })
+    public List<String> getAuthorities() throws IOException {
         return userService.listUserAuthorities();
     }
 

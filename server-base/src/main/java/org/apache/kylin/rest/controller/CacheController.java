@@ -26,6 +26,7 @@ import org.apache.kylin.rest.service.CacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,12 +46,13 @@ public class CacheController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 
     @Autowired
+    @Qualifier("cacheService")
     private CacheService cacheService;
 
     /**
      * Announce wipe cache to all cluster nodes
      */
-    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public void announceWipeCache(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
         cacheService.annouceWipeCache(entity, event, cacheKey);
@@ -59,13 +61,13 @@ public class CacheController extends BasicController {
     /**
      * Wipe cache on this node
      */
-    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public void wipeCache(@PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
         cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
     }
 
-    @RequestMapping(value = "/announce/config", method = { RequestMethod.POST })
+    @RequestMapping(value = "/announce/config", method = { RequestMethod.POST }, produces = { "application/json" })
     public void hotLoadKylinConfig() throws IOException {
         KylinConfig.getInstanceFromEnv().hotLoadKylinProperties();
         cacheService.notifyMetadataChange(Broadcaster.SYNC_ALL, Broadcaster.Event.UPDATE, Broadcaster.SYNC_ALL);

@@ -53,6 +53,7 @@ import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -62,15 +63,19 @@ public class TableService extends BasicService {
     private static final Logger logger = LoggerFactory.getLogger(TableService.class);
 
     @Autowired
+    @Qualifier("modelMgmtService")
     private ModelService modelService;
 
     @Autowired
+    @Qualifier("projectService")
     private ProjectService projectService;
 
     @Autowired
+    @Qualifier("streamingMgmtService")
     private StreamingService streamingService;
 
     @Autowired
+    @Qualifier("kafkaMgmtService")
     private KafkaConfigService kafkaConfigService;
 
     public List<TableDesc> getTableDescByProject(String project, boolean withExt) throws IOException {
@@ -100,7 +105,7 @@ public class TableService extends BasicService {
         return result;
     }
 
-    private void unLoadHiveTable(String tableName) throws IOException {
+    protected void unLoadHiveTable(String tableName) throws IOException {
         tableName = normalizeHiveTableName(tableName);
         MetadataManager metaMgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         metaMgr.removeSourceTable(tableName);
@@ -111,7 +116,7 @@ public class TableService extends BasicService {
         getProjectManager().addTableDescToProject(tables, project);
     }
 
-    private void removeTableFromProject(String tableName, String projectName) throws IOException {
+    protected void removeTableFromProject(String tableName, String projectName) throws IOException {
         tableName = normalizeHiveTableName(tableName);
         getProjectManager().removeTableDescFromProject(tableName, projectName);
     }

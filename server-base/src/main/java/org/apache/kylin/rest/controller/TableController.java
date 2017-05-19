@@ -35,6 +35,7 @@ import org.apache.kylin.rest.service.TableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,6 +57,7 @@ public class TableController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(TableController.class);
 
     @Autowired
+    @Qualifier("tableService")
     private TableService tableService;
 
     /**
@@ -64,7 +66,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<TableDesc> getTableDesc(@RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = true) String project) throws IOException {
         try {
@@ -81,7 +83,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableName:.+}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{tableName:.+}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public TableDesc getTableDesc(@PathVariable String tableName) {
         TableDesc table = tableService.getTableDescByName(tableName, false);
@@ -90,7 +92,7 @@ public class TableController extends BasicController {
         return table;
     }
 
-    @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST })
+    @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public Map<String, String[]> loadHiveTables(@PathVariable String tables, @PathVariable String project, @RequestBody HiveTableRequest request) throws IOException {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -119,7 +121,7 @@ public class TableController extends BasicController {
         return result;
     }
 
-    @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public Map<String, String[]> unLoadHiveTables(@PathVariable String tables, @PathVariable String project) {
         Set<String> unLoadSuccess = Sets.newHashSet();
@@ -148,7 +150,7 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) throws IOException {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -170,7 +172,7 @@ public class TableController extends BasicController {
      * @return Hive databases list
      * @throws IOException
      */
-    @RequestMapping(value = "/hive", method = { RequestMethod.GET })
+    @RequestMapping(value = "/hive", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     private List<String> showHiveDatabases() throws IOException {
         try {
@@ -187,7 +189,7 @@ public class TableController extends BasicController {
      * @return Hive table list
      * @throws IOException
      */
-    @RequestMapping(value = "/hive/{database}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/hive/{database}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     private List<String> showHiveTables(@PathVariable String database) throws IOException {
         try {

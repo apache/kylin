@@ -18,10 +18,6 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.metadata.model.DataModelDesc;
@@ -30,10 +26,15 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.security.AclPermission;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author jiazhong
@@ -42,7 +43,12 @@ import org.springframework.stereotype.Component;
 public class ModelService extends BasicService {
 
     @Autowired
+    @Qualifier("accessService")
     private AccessService accessService;
+
+    @Autowired
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
     public List<DataModelDesc> listAllModels(final String modelName, final String projectName) throws IOException {
@@ -138,5 +144,11 @@ public class ModelService extends BasicService {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         tableName = dbTableName[0] + "." + dbTableName[1];
         return getMetadataManager().getModelsUsingTable(tableName, projectName);
+    }
+
+    public boolean checkNameAvailability(String modelName) throws IOException {
+        List<DataModelDesc> models = listAllModels(modelName, null);
+
+        return models.isEmpty();
     }
 }

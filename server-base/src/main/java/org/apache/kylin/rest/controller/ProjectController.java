@@ -38,6 +38,7 @@ import org.apache.kylin.rest.util.AclUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
@@ -62,10 +63,15 @@ public class ProjectController extends BasicController {
     private static final char[] VALID_PROJECTNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     @Autowired
+    @Qualifier("projectService")
     private ProjectService projectService;
+
     @Autowired
+    @Qualifier("accessService")
     private AccessService accessService;
+
     @Autowired
+    @Qualifier("cubeMgmtService")
     private CubeService cubeService;
     @Autowired
     private AclUtil aclUtil;
@@ -76,20 +82,20 @@ public class ProjectController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<ProjectInstance> getProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         return projectService.listProjects(limit, offset);
     }
 
-    @RequestMapping(value = "/readable", method = { RequestMethod.GET })
+    @RequestMapping(value = "/readable", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<ProjectInstance> getReadableProjects(@RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         List<ProjectInstance> readableProjects = new ArrayList<ProjectInstance>();
         //list all projects first
         List<ProjectInstance> projectInstances = projectService.listAllProjects(limit, offset);
 
-        //get user infomation
+        //get user information
         UserDetails userDetails = aclUtil.getCurrentUser();
         String userName = userDetails.getUsername();
 
@@ -159,9 +165,8 @@ public class ProjectController extends BasicController {
         return readableProjects;
     }
 
-    @RequestMapping(value = "", method = { RequestMethod.POST })
+    @RequestMapping(value = "", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
-
     public ProjectInstance saveProject(@RequestBody ProjectRequest projectRequest) {
         ProjectInstance projectDesc = deserializeProjectDesc(projectRequest);
 
@@ -185,7 +190,7 @@ public class ProjectController extends BasicController {
         return createdProj;
     }
 
-    @RequestMapping(value = "", method = { RequestMethod.PUT })
+    @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public ProjectInstance updateProject(@RequestBody ProjectRequest projectRequest) {
         String formerProjectName = projectRequest.getFormerProjectName();
@@ -223,7 +228,7 @@ public class ProjectController extends BasicController {
         return projectDesc;
     }
 
-    @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{projectName}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public void deleteProject(@PathVariable String projectName) {
         try {

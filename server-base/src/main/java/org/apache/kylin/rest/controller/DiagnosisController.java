@@ -32,6 +32,7 @@ import org.apache.kylin.rest.service.DiagnosisService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,12 +48,13 @@ public class DiagnosisController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisController.class);
 
     @Autowired
+    @Qualifier("diagnosisService")
     private DiagnosisService dgService;
 
     /**
      * Get bad query history
      */
-    @RequestMapping(value = "/{project}/sql", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{project}/sql", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<BadQueryEntry> getBadQuerySql(@PathVariable String project) {
 
@@ -70,7 +72,7 @@ public class DiagnosisController extends BasicController {
     /**
      * Get diagnosis information for project
      */
-    @RequestMapping(value = "/project/{project}/download", method = { RequestMethod.GET })
+    @RequestMapping(value = "/project/{project}/download", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public void dumpProjectDiagnosisInfo(@PathVariable String project, final HttpServletRequest request, final HttpServletResponse response) {
         String filePath;
@@ -86,7 +88,7 @@ public class DiagnosisController extends BasicController {
     /**
      * Get diagnosis information for job
      */
-    @RequestMapping(value = "/job/{jobId}/download", method = { RequestMethod.GET })
+    @RequestMapping(value = "/job/{jobId}/download", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public void dumpJobDiagnosisInfo(@PathVariable String jobId, final HttpServletRequest request, final HttpServletResponse response) {
         String filePath;
@@ -98,4 +100,5 @@ public class DiagnosisController extends BasicController {
 
         setDownloadResponse(filePath, response);
     }
+
 }

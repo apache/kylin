@@ -67,6 +67,8 @@ public class DataModelDesc extends RootPersistentEntity {
         SMALL, MEDIUM, LARGE
     }
 
+    public static final String STATUS_DRAFT = "DRAFT";
+
     private KylinConfig config;
 
     @JsonProperty("name")
@@ -74,6 +76,9 @@ public class DataModelDesc extends RootPersistentEntity {
 
     @JsonProperty("owner")
     private String owner;
+
+    @JsonProperty("status")
+    private String status;
 
     @JsonProperty("description")
     private String description;
@@ -130,8 +135,7 @@ public class DataModelDesc extends RootPersistentEntity {
         return name;
     }
 
-    // for test mainly
-    @Deprecated
+    // for updating name from draft to ready
     public void setName(String name) {
         this.name = name;
     }
@@ -144,12 +148,32 @@ public class DataModelDesc extends RootPersistentEntity {
         this.owner = owner;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public String getDescription() {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public TableRef getRootFactTable() {
         return rootFactTableRef;
+    }
+
+    public String getRootFactTableName() {
+        return rootFactTable;
+    }
+
+    public void setRootFactTableName(String rootFactTable) {
+        this.rootFactTable = rootFactTable;
     }
 
     public Set<TableRef> getAllTables() {
@@ -166,6 +190,10 @@ public class DataModelDesc extends RootPersistentEntity {
 
     public JoinTableDesc[] getJoinTables() {
         return joinTables;
+    }
+
+    public void setJoinTables(JoinTableDesc[] joinTables) {
+        this.joinTables = joinTables;
     }
 
     public JoinDesc getJoinByPKSide(TableRef table) {
@@ -227,7 +255,6 @@ public class DataModelDesc extends RootPersistentEntity {
         return filterCondition;
     }
 
-    // for internal only
     public void setFilterCondition(String filterCondition) {
         this.filterCondition = filterCondition;
     }
@@ -236,13 +263,16 @@ public class DataModelDesc extends RootPersistentEntity {
         return partitionDesc;
     }
 
-    // for test only
     public void setPartitionDesc(PartitionDesc partitionDesc) {
         this.partitionDesc = partitionDesc;
     }
 
     public RealizationCapacity getCapacity() {
         return capacity;
+    }
+
+    public void setCapacity(RealizationCapacity capacity) {
+        this.capacity = capacity;
     }
 
     public TblColRef findColumn(String table, String column) throws IllegalArgumentException {
@@ -385,9 +415,10 @@ public class DataModelDesc extends RootPersistentEntity {
 
             TableDesc tableDesc = tables.get(join.getTable());
             String alias = join.getAlias();
-            if (alias == null)
+            if (alias == null) {
                 alias = tableDesc.getName();
-
+                join.setAlias(alias);
+            }
             TableRef ref = new TableRef(this, alias, tableDesc);
 
             join.setTableRef(ref);
@@ -696,6 +727,10 @@ public class DataModelDesc extends RootPersistentEntity {
         return computedColumnDescs;
     }
 
+    public void setComputedColumnDescs(List<ComputedColumnDesc> computedColumnDescs) {
+        this.computedColumnDescs = computedColumnDescs;
+    }
+
     public String[] getMetrics() {
         return metrics;
     }
@@ -713,6 +748,7 @@ public class DataModelDesc extends RootPersistentEntity {
     public static DataModelDesc getCopyOf(DataModelDesc orig) {
         DataModelDesc copy = new DataModelDesc();
         copy.name = orig.name;
+        copy.status = orig.status;
         copy.owner = orig.owner;
         copy.description = orig.description;
         copy.rootFactTable = orig.rootFactTable;
@@ -725,5 +761,4 @@ public class DataModelDesc extends RootPersistentEntity {
         copy.updateRandomUuid();
         return copy;
     }
-
 }

@@ -23,7 +23,9 @@ import java.util.List;
 
 import org.apache.kylin.metadata.model.ExternalFilterDesc;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,16 +38,20 @@ public class ExtFilterService extends BasicService {
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void saveExternalFilter(ExternalFilterDesc desc) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
         if (getMetadataManager().getExtFilterDesc(desc.getName()) != null) {
-            throw new InternalErrorException("The filter named " + desc.getName() + " already exists");
+            throw new BadRequestException(String.format(msg.getFILTER_ALREADY_EXIST(), desc.getName()));
         }
         getMetadataManager().saveExternalFilter(desc);
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public void updateExternalFilter(ExternalFilterDesc desc) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
         if (getMetadataManager().getExtFilterDesc(desc.getName()) == null) {
-            throw new InternalErrorException("The filter named " + desc.getName() + " does not exists");
+            throw new BadRequestException(String.format(msg.getFILTER_NOT_FOUND(), desc.getName()));
         }
         getMetadataManager().saveExternalFilter(desc);
     }

@@ -102,6 +102,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         LOOKUP, PK_FK, EXTENDED_COLUMN
     }
 
+    public static final String STATUS_DRAFT = "DRAFT";
+
     public static class DeriveInfo implements java.io.Serializable {
         public DeriveType type;
         public JoinDesc join;
@@ -127,6 +129,8 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
     @JsonProperty("name")
     private String name;
+    @JsonProperty("status")
+    private String status;
     @JsonProperty("model_name")
     private String modelName;
     @JsonProperty("description")
@@ -199,18 +203,18 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
      * @return all columns this cube can support, including derived
      */
     public Set<TblColRef> listAllColumns() {
-        return allColumns;
+        return allColumns == null ? null : Collections.unmodifiableSet(allColumns);
     }
 
     public Set<ColumnDesc> listAllColumnDescs() {
-        return allColumnDescs;
+        return allColumnDescs == null ? null : Collections.unmodifiableSet(allColumnDescs);
     }
 
     /**
      * @return dimension columns including derived, BUT NOT measures
      */
     public Set<TblColRef> listDimensionColumnsIncludingDerived() {
-        return dimensionColumns;
+        return dimensionColumns == null ? null : Collections.unmodifiableSet(dimensionColumns);
     }
 
     /**
@@ -322,6 +326,14 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.name = name;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public String getModelName() {
         return modelName;
     }
@@ -351,7 +363,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public List<DimensionDesc> getDimensions() {
-        return dimensions;
+        return dimensions == null ? null : Collections.unmodifiableList(dimensions);
     }
 
     public void setDimensions(List<DimensionDesc> dimensions) {
@@ -359,7 +371,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public List<MeasureDesc> getMeasures() {
-        return measures;
+        return measures == null ? null : Collections.unmodifiableList(measures);
     }
 
     public void setMeasures(List<MeasureDesc> measures) {
@@ -367,10 +379,10 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public List<DictionaryDesc> getDictionaries() {
-        return dictionaries;
+        return dictionaries == null ? null : Collections.unmodifiableList(dictionaries);
     }
 
-    void setDictionaries(List<DictionaryDesc> dictionaries) {
+    public void setDictionaries(List<DictionaryDesc> dictionaries) {
         this.dictionaries = dictionaries;
     }
 
@@ -383,7 +395,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public List<AggregationGroup> getAggregationGroups() {
-        return aggregationGroups;
+        return aggregationGroups == null ? null : Collections.unmodifiableList(aggregationGroups);
     }
 
     public void setAggregationGroups(List<AggregationGroup> aggregationGroups) {
@@ -399,7 +411,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public List<String> getNotifyList() {
-        return notifyList;
+        return notifyList == null ? null : Collections.unmodifiableList(notifyList);
     }
 
     public void setNotifyList(List<String> notifyList) {
@@ -407,7 +419,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     }
 
     public List<String> getStatusNeedNotify() {
-        return statusNeedNotify;
+        return statusNeedNotify == null ? null : Collections.unmodifiableList(statusNeedNotify);
     }
 
     public void setStatusNeedNotify(List<String> statusNeedNotify) {
@@ -594,6 +606,29 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         initDictionaryDesc();
         amendAllColumns();
+    }
+
+    // initialize config only for draft cube desc
+    public void initConfig(KylinConfig config) {
+        this.errors.clear();
+
+        checkArgument(StringUtils.isNotBlank(name), "CubeDesc name is blank");
+        checkArgument(StringUtils.isNotBlank(modelName), "CubeDesc (%s) has blank model name", name);
+
+        // note CubeDesc.name == CubeInstance.name
+        List<ProjectInstance> ownerPrj = ProjectManager.getInstance(config).findProjects(RealizationType.CUBE, name);
+
+        // cube inherit the project override props
+        if (ownerPrj.size() == 1) {
+            Map<String, String> prjOverrideProps = ownerPrj.get(0).getOverrideKylinProps();
+            for (Entry<String, String> entry : prjOverrideProps.entrySet()) {
+                if (!overrideKylinProps.containsKey(entry.getKey())) {
+                    overrideKylinProps.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
     }
 
     public void validateAggregationGroups() {
@@ -1218,6 +1253,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     public static CubeDesc getCopyOf(CubeDesc cubeDesc) {
         CubeDesc newCubeDesc = new CubeDesc();
         newCubeDesc.setName(cubeDesc.getName());
+        newCubeDesc.setStatus(cubeDesc.getStatus());
         newCubeDesc.setModelName(cubeDesc.getModelName());
         newCubeDesc.setDescription(cubeDesc.getDescription());
         newCubeDesc.setNullStrings(cubeDesc.getNullStrings());

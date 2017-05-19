@@ -40,12 +40,12 @@ public class ModelDescController extends BasicController {
     /**
      * Get detail information of the "Model ID"
      * 
-     * @param modelDescName
+     * @param model_name
      *            Model ID
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{model_name}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{model_name}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public DataModelDesc getModel(@PathVariable String model_name) {
         MetadataManager metaManager = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());

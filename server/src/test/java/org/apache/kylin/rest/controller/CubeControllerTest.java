@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author xduo
@@ -48,10 +49,15 @@ public class CubeControllerTest extends ServiceTestBase {
     private CubeDescController cubeDescController;
 
     @Autowired
+    @Qualifier("cubeMgmtService")
     CubeService cubeService;
+
     @Autowired
+    @Qualifier("jobService")
     JobService jobService;
+
     @Autowired
+    @Qualifier("streamingMgmtService")
     StreamingService streamingService;
 
     @Before

@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author xduo
@@ -36,9 +37,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 public class CubeServiceTest extends ServiceTestBase {
 
     @Autowired
+    @Qualifier("cubeMgmtService")
     CubeService cubeService;
 
     @Autowired
+    @Qualifier("cacheService")
     private CacheService cacheService;
 
     @Test

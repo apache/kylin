@@ -24,29 +24,29 @@ import java.io.Serializable;
  */
 public class ColumnMeta implements Serializable {
     private static final long serialVersionUID = 1L;
-    private String TABLE_CAT;
-    private String TABLE_SCHEM;
-    private String TABLE_NAME;
-    private String COLUMN_NAME;
-    private int DATA_TYPE;
-    private String TYPE_NAME;
-    private int COLUMN_SIZE;
-    private int BUFFER_LENGTH;
-    private int DECIMAL_DIGITS;
-    private int NUM_PREC_RADIX;
-    private int NULLABLE;
-    private String REMARKS;
-    private String COLUMN_DEF;
-    private int SQL_DATA_TYPE;
-    private int SQL_DATETIME_SUB;
-    private int CHAR_OCTET_LENGTH;
-    private int ORDINAL_POSITION;
-    private String IS_NULLABLE;
-    private String SCOPE_CATLOG;
-    private String SCOPE_SCHEMA;
-    private String SCOPE_TABLE;
-    private short SOURCE_DATA_TYPE;
-    private String IS_AUTOINCREMENT;
+    protected String TABLE_CAT;
+    protected String TABLE_SCHEM;
+    protected String TABLE_NAME;
+    protected String COLUMN_NAME;
+    protected int DATA_TYPE;
+    protected String TYPE_NAME;
+    protected int COLUMN_SIZE;
+    protected int BUFFER_LENGTH;
+    protected int DECIMAL_DIGITS;
+    protected int NUM_PREC_RADIX;
+    protected int NULLABLE;
+    protected String REMARKS;
+    protected String COLUMN_DEF;
+    protected int SQL_DATA_TYPE;
+    protected int SQL_DATETIME_SUB;
+    protected int CHAR_OCTET_LENGTH;
+    protected int ORDINAL_POSITION;
+    protected String IS_NULLABLE;
+    protected String SCOPE_CATLOG;
+    protected String SCOPE_SCHEMA;
+    protected String SCOPE_TABLE;
+    protected short SOURCE_DATA_TYPE;
+    protected String IS_AUTOINCREMENT;
 
     public ColumnMeta() {
     }

@@ -23,6 +23,7 @@ import java.io.Serializable;
 public class HBaseResponse implements Serializable {
     private static final long serialVersionUID = 7263557115683263492L;
     private String segmentName;
+    private String segmentUUID;
     private String segmentStatus;
     private String tableName;
     private long tableSize;
@@ -117,6 +118,14 @@ public class HBaseResponse implements Serializable {
 
     public void setSegmentName(String segmentName) {
         this.segmentName = segmentName;
+    }
+
+    public String getSegmentUUID() {
+        return segmentUUID;
+    }
+
+    public void setSegmentUUID(String segmentUUID) {
+        this.segmentUUID = segmentUUID;
     }
 
     public String getSegmentStatus() {

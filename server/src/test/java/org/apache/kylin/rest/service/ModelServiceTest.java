@@ -35,10 +35,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 public class ModelServiceTest extends ServiceTestBase {
 
     @Autowired
+    @Qualifier("modelMgmtService")
     ModelService modelService;
 
     @Rule

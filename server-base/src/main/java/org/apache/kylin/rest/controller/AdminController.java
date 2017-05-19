@@ -18,7 +18,12 @@
 
 package org.apache.kylin.rest.controller;
 
+import java.io.IOException;
+
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetricsRequest;
 import org.apache.kylin.rest.request.UpdateConfigRequest;
 import org.apache.kylin.rest.response.GeneralResponse;
@@ -26,6 +31,7 @@ import org.apache.kylin.rest.response.MetricsResponse;
 import org.apache.kylin.rest.service.AdminService;
 import org.apache.kylin.rest.service.CubeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,24 +49,32 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class AdminController extends BasicController {
 
     @Autowired
+    @Qualifier("adminService")
     private AdminService adminService;
+
     @Autowired
+    @Qualifier("cubeMgmtService")
     private CubeService cubeMgmtService;
 
-    @RequestMapping(value = "/env", method = { RequestMethod.GET })
+    @RequestMapping(value = "/env", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public GeneralResponse getEnv() {
-        String env = adminService.getEnv();
+        Message msg = MsgPicker.getMsg();
+        try {
+            String env = adminService.getEnv();
 
-        GeneralResponse envRes = new GeneralResponse();
-        envRes.put("env", env);
+            GeneralResponse envRes = new GeneralResponse();
+            envRes.put("env", env);
 
-        return envRes;
+            return envRes;
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(msg.getGET_ENV_CONFIG_FAIL(), e);
+        }
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.GET })
+    @RequestMapping(value = "/config", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public GeneralResponse getConfig() {
+    public GeneralResponse getConfig() throws IOException {
         String config = adminService.getConfigAsString();
 
         GeneralResponse configRes = new GeneralResponse();
@@ -69,19 +83,19 @@ public class AdminController extends BasicController {
         return configRes;
     }
 
-    @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET })
+    @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public MetricsResponse cubeMetrics(MetricsRequest request) {
         return cubeMgmtService.calculateMetrics(request);
     }
 
-    @RequestMapping(value = "/storage", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/storage", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public void cleanupStorage() {
         adminService.cleanupStorage();
     }
 
-    @RequestMapping(value = "/config", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/config", method = { RequestMethod.PUT }, produces = { "application/json" })
     public void updateKylinConfig(@RequestBody UpdateConfigRequest updateConfigRequest) {
         KylinConfig.getInstanceFromEnv().setProperty(updateConfigRequest.getKey(), updateConfigRequest.getValue());
     }

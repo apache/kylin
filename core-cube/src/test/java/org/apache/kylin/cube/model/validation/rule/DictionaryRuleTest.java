@@ -28,7 +28,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
@@ -109,9 +111,11 @@ public class DictionaryRuleTest extends LocalFileMetadataTestCase {
         File f = new File(LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/cube_desc/test_kylin_cube_without_slr_left_join_desc.json");
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
 
+        List<DictionaryDesc> newDicts = Lists.newArrayList(desc.getDictionaries());
         for (DictionaryDesc dictDesc : descs) {
-            desc.getDictionaries().add(dictDesc);
+            newDicts.add(dictDesc);
         }
+        desc.setDictionaries(newDicts);
 
         desc.init(config);
         ValidateContext vContext = new ValidateContext();

@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -167,6 +166,10 @@ public class MetadataManager {
 
     public Map<String, TableDesc> getAllTablesMap() {
         return Collections.unmodifiableMap(srcTableMap.getMap());
+    }
+
+    public Map<String, CCInfo> getCcInfoMap() {
+        return ccInfoMap;
     }
 
     public Map<String, TableExtDesc> listAllTableExdMap() {
@@ -532,7 +535,7 @@ public class MetadataManager {
 
     public List<DataModelDesc> getModels(String projectName) throws IOException {
         ProjectInstance projectInstance = ProjectManager.getInstance(config).getProject(projectName);
-        HashSet<DataModelDesc> ret = new HashSet<>();
+        ArrayList<DataModelDesc> ret = new ArrayList<>();
 
         if (projectInstance != null && projectInstance.getModels() != null) {
             for (String modelName : projectInstance.getModels()) {
@@ -545,7 +548,7 @@ public class MetadataManager {
             }
         }
 
-        return new ArrayList<>(ret);
+        return ret;
     }
 
     public boolean isTableInModel(String tableName, String projectName) throws IOException {
@@ -600,7 +603,9 @@ public class MetadataManager {
         ResourceStore store = getStore();
         try {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
-            dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
+            if (dataModelDesc.getStatus() == null)
+                dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
+
             dataModelDescMap.putLocal(dataModelDesc.getName(), dataModelDesc);
             return dataModelDesc;
         } catch (Exception e) {
@@ -648,7 +653,8 @@ public class MetadataManager {
     }
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-        dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
+        if (dataModelDesc.getStatus() == null)
+            dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
 
         String path = dataModelDesc.getResourcePath();
         getStore().putResource(path, dataModelDesc, MODELDESC_SERIALIZER);

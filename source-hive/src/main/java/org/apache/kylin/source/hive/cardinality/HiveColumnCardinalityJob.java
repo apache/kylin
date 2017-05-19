@@ -87,7 +87,7 @@ public class HiveColumnCardinalityJob extends AbstractHadoopJob {
         job.getConfiguration().set("mapreduce.output.fileoutputformat.compress", "false");
 
         // Mapper
-        IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table, true);
+        IMRTableInputFormat tableInputFormat = MRUtil.getTableInputFormat(table);
         tableInputFormat.configureJob(job);
 
         job.setMapperClass(ColumnCardinalityMapper.class);

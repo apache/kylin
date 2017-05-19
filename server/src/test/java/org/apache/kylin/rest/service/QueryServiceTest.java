@@ -28,6 +28,7 @@ import org.apache.kylin.rest.response.SQLResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author xduo
@@ -35,9 +36,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class QueryServiceTest extends ServiceTestBase {
 
     @Autowired
+    @Qualifier("queryService")
     QueryService queryService;
 
     @Autowired
+    @Qualifier("cacheService")
     private CacheService cacheService;
 
     @Test

@@ -39,7 +39,7 @@ public class HybridController extends BasicController {
     @Autowired
     private HybridService hybridService;
 
-    @RequestMapping(value = "", method = RequestMethod.POST)
+    @RequestMapping(value = "", method = RequestMethod.POST, produces = { "application/json" })
     @ResponseBody
     public HybridInstance create(@RequestBody HybridRequest request) {
         checkRequiredArg("hybrid", request.getHybrid());
@@ -50,7 +50,7 @@ public class HybridController extends BasicController {
         return instance;
     }
 
-    @RequestMapping(value = "", method = RequestMethod.PUT)
+    @RequestMapping(value = "", method = RequestMethod.PUT, produces = { "application/json" })
     @ResponseBody
     public HybridInstance update(@RequestBody HybridRequest request) {
         checkRequiredArg("hybrid", request.getHybrid());
@@ -61,7 +61,7 @@ public class HybridController extends BasicController {
         return instance;
     }
 
-    @RequestMapping(value = "", method = RequestMethod.DELETE)
+    @RequestMapping(value = "", method = RequestMethod.DELETE, produces = { "application/json" })
     @ResponseBody
     public void delete(@RequestBody HybridRequest request) {
         checkRequiredArg("hybrid", request.getHybrid());
@@ -70,15 +70,16 @@ public class HybridController extends BasicController {
         hybridService.deleteHybridCube(request.getHybrid(), request.getProject(), request.getModel());
     }
 
-    @RequestMapping(value = "", method = RequestMethod.GET)
+    @RequestMapping(value = "", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
     public Collection<HybridInstance> list(@RequestParam(required = false) String project, @RequestParam(required = false) String model) {
         return hybridService.listHybrids(project, model);
     }
 
-    @RequestMapping(value = "{hybrid}", method = RequestMethod.GET)
+    @RequestMapping(value = "{hybrid}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
     public HybridInstance get(@PathVariable String hybrid) {
         return hybridService.getHybridInstance(hybrid);
     }
+
 }

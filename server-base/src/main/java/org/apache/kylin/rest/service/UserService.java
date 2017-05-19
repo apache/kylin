@@ -31,6 +31,9 @@ import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.persistence.Serializer;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.rest.constant.Constant;
+import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -55,7 +58,6 @@ public class UserService implements UserDetailsManager {
     @PostConstruct
     public void init() throws IOException {
         aclStore = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
-        logger.debug("UserService init");
     }
 
     @Override
@@ -73,7 +75,7 @@ public class UserService implements UserDetailsManager {
             aclStore.putResource(id, new UserInfo(user), 0, UserInfoSerializer.getInstance());
             logger.debug("update user : {}", user.getUsername());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InternalErrorException(e);
         }
     }
 
@@ -84,7 +86,7 @@ public class UserService implements UserDetailsManager {
             aclStore.deleteResource(id);
             logger.debug("delete user : {}", userName);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InternalErrorException(e);
         }
     }
 
@@ -99,25 +101,26 @@ public class UserService implements UserDetailsManager {
             logger.debug("judge user exist: {}", userName);
             return aclStore.exists(getId(userName));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InternalErrorException(e);
         }
     }
 
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+        Message msg = MsgPicker.getMsg();
         try {
             UserInfo userInfo = aclStore.getResource(getId(userName), UserInfo.class, UserInfoSerializer.getInstance());
             if (userInfo == null) {
-                throw new UsernameNotFoundException("User:" + userName + " Not found");
+                throw new UsernameNotFoundException(String.format(msg.getUSER_NOT_FOUND(), userName));
             }
             logger.debug("load user : {}", userName);
             return wrap(userInfo);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new InternalErrorException(e);
         }
     }
 
-    public List<String> listUserAuthorities() {
+    public List<String> listUserAuthorities() throws IOException {
         List<String> all = new ArrayList<String>();
         for (UserDetails user : listUsers()) {
             for (GrantedAuthority auth : user.getAuthorities()) {
@@ -129,15 +132,11 @@ public class UserService implements UserDetailsManager {
         return all;
     }
 
-    public List<UserDetails> listUsers() {
+    public List<UserDetails> listUsers() throws IOException {
         List<UserDetails> all = new ArrayList<UserDetails>();
-        try {
-            List<UserInfo> userInfos = aclStore.getAllResources(DIR_PREFIX, UserInfo.class, UserInfoSerializer.getInstance());
-            for (UserInfo info : userInfos) {
-                all.add(wrap(info));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to list users", e);
+        List<UserInfo> userInfos = aclStore.getAllResources(DIR_PREFIX, UserInfo.class, UserInfoSerializer.getInstance());
+        for (UserInfo info : userInfos) {
+            all.add(wrap(info));
         }
         return all;
     }
@@ -146,7 +145,7 @@ public class UserService implements UserDetailsManager {
         return DIR_PREFIX + userName;
     }
 
-    private User wrap(UserInfo userInfo) {
+    protected User wrap(UserInfo userInfo) {
         if (userInfo == null)
             return null;
         List<GrantedAuthority> authorities = new ArrayList<>();

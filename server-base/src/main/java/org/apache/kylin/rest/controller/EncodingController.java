@@ -29,6 +29,7 @@ import org.apache.kylin.rest.service.EncodingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -44,6 +45,7 @@ public class EncodingController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(EncodingController.class);
 
     @Autowired
+    @Qualifier("encodingService")
     private EncodingService encodingService;
 
     /**
@@ -51,7 +53,7 @@ public class EncodingController extends BasicController {
      *
      * @return suggestion map
      */
-    @RequestMapping(value = "valid_encodings", method = { RequestMethod.GET })
+    @RequestMapping(value = "valid_encodings", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public EnvelopeResponse getValidEncodings() {
 
@@ -68,4 +70,5 @@ public class EncodingController extends BasicController {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, datatypeValidEncodings, "");
     }
+
 }

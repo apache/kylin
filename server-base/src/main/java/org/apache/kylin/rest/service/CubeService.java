@@ -18,15 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
-
+import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
@@ -58,12 +50,20 @@ import org.apache.kylin.storage.hbase.util.HBaseRegionSizeCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Stateless & lightweight service facade of cube management functions.
@@ -79,9 +79,11 @@ public class CubeService extends BasicService {
     private WeakHashMap<String, HBaseResponse> htableInfoCache = new WeakHashMap<>();
 
     @Autowired
+    @Qualifier("accessService")
     private AccessService accessService;
 
     @Autowired
+    @Qualifier("jobService")
     private JobService jobService;
 
     @PostFilter(Constant.ACCESS_POST_FILTER_READ)
@@ -158,12 +160,14 @@ public class CubeService extends BasicService {
             throw new InternalErrorException(createdDesc.getError().get(0));
         }
 
-        try {
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
-            logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
-        } catch (Exception e) {
-            getCubeDescManager().removeCubeDesc(createdDesc);
-            throw new InternalErrorException("Failed to deal with the request.", e);
+        if (desc.getStatus() == null) {
+            try {
+                int cuboidCount = CuboidCLI.simulateCuboidGeneration(createdDesc, false);
+                logger.info("New cube " + cubeName + " has " + cuboidCount + " cuboids");
+            } catch (Exception e) {
+                getCubeDescManager().removeCubeDesc(createdDesc);
+                throw new InternalErrorException("Failed to deal with the request.", e);
+            }
         }
 
         createdCube = getCubeManager().createCube(cubeName, projectName, createdDesc, owner);
@@ -194,7 +198,7 @@ public class CubeService extends BasicService {
         return result;
     }
 
-    private boolean isCubeInProject(String projectName, CubeInstance target) {
+    protected boolean isCubeInProject(String projectName, CubeInstance target) {
         ProjectManager projectManager = getProjectManager();
         ProjectInstance project = projectManager.getProject(projectName);
         if (project == null) {
@@ -230,8 +234,10 @@ public class CubeService extends BasicService {
             }
 
             CubeDesc updatedCubeDesc = getCubeDescManager().updateCubeDesc(desc);
-            int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc, false);
-            logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
+            if (desc.getStatus() == null) {
+                int cuboidCount = CuboidCLI.simulateCuboidGeneration(updatedCubeDesc, false);
+                logger.info("Updated cube " + cube.getName() + " has " + cuboidCount + " cuboids");
+            }
 
             ProjectManager projectManager = getProjectManager();
             if (!isCubeInProject(newProjectName, cube)) {
@@ -457,7 +463,7 @@ public class CubeService extends BasicService {
         return CubeManager.getInstance(getConfig()).updateCube(update);
     }
 
-    private void releaseAllJobs(CubeInstance cube) {
+    protected void releaseAllJobs(CubeInstance cube) {
         final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null);
         for (CubingJob cubingJob : cubingJobs) {
             final ExecutableState status = cubingJob.getStatus();
@@ -553,6 +559,15 @@ public class CubeService extends BasicService {
                 logger.error("Failed to auto merge cube " + cubeName, e);
             }
         }
+    }
+
+    public boolean checkNameAvailability(String cubeName) {
+        List<CubeInstance> cubes = listAllCubes(cubeName, null, null);
+        for (CubeInstance cube : cubes) {
+            if (cube.getName().equals(cubeName))
+                return false;
+        }
+        return true;
     }
 
 }

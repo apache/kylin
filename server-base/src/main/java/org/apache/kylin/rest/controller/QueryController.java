@@ -39,6 +39,7 @@ import org.apache.kylin.rest.service.QueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -61,9 +62,10 @@ public class QueryController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(QueryController.class);
 
     @Autowired
+    @Qualifier("queryService")
     private QueryService queryService;
 
-    @RequestMapping(value = "/query", method = RequestMethod.POST)
+    @RequestMapping(value = "/query", method = RequestMethod.POST, produces = { "application/json" })
     @ResponseBody
     public SQLResponse query(@RequestBody SQLRequest sqlRequest) {
         return queryService.doQueryWithCache(sqlRequest);
@@ -76,7 +78,7 @@ public class QueryController extends BasicController {
         return queryService.doQueryWithCache(sqlRequest);
     }
 
-    @RequestMapping(value = "/saved_queries", method = RequestMethod.POST)
+    @RequestMapping(value = "/saved_queries", method = RequestMethod.POST, produces = { "application/json" })
     @ResponseBody
     public void saveQuery(@RequestBody SaveSqlRequest sqlRequest) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -85,21 +87,21 @@ public class QueryController extends BasicController {
         queryService.saveQuery(creator, newQuery);
     }
 
-    @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE, produces = { "application/json" })
     @ResponseBody
     public void removeQuery(@PathVariable String id) throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         queryService.removeQuery(creator, id);
     }
 
-    @RequestMapping(value = "/saved_queries", method = RequestMethod.GET)
+    @RequestMapping(value = "/saved_queries", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
     public List<Query> getQueries() throws IOException {
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         return queryService.getQueries(creator);
     }
 
-    @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET)
+    @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
     public void downloadQueryResult(@PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
@@ -129,7 +131,7 @@ public class QueryController extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/tables_and_columns", method = RequestMethod.GET)
+    @RequestMapping(value = "/tables_and_columns", method = RequestMethod.GET, produces = { "application/json" })
     @ResponseBody
     public List<TableMeta> getMetadata(MetaRequest metaRequest) {
         try {

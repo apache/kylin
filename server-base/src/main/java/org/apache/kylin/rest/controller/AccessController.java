@@ -27,6 +27,7 @@ import org.apache.kylin.rest.response.AccessEntryResponse;
 import org.apache.kylin.rest.security.AclPermissionFactory;
 import org.apache.kylin.rest.service.AccessService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.acls.model.Sid;
@@ -46,6 +47,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class AccessController extends BasicController {
 
     @Autowired
+    @Qualifier("accessService")
     private AccessService accessService;
 
     /**
@@ -55,7 +57,7 @@ public class AccessController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<AccessEntryResponse> getAccessEntities(@PathVariable String type, @PathVariable String uuid) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
@@ -69,7 +71,7 @@ public class AccessController extends BasicController {
      * 
      * @param accessRequest
      */
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
     public List<AccessEntryResponse> grant(@PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
@@ -85,7 +87,7 @@ public class AccessController extends BasicController {
      * 
      * @param accessRequest
      */
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public List<AccessEntryResponse> update(@PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
@@ -98,9 +100,9 @@ public class AccessController extends BasicController {
     /**
      * Revoke access on a domain object from a user/role
      * 
-     * @param AccessRequest
+     * @param accessRequest
      */
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = { "application/json" })
     public List<AccessEntryResponse> revoke(@PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) {
         AclEntity ae = accessService.getAclEntity(type, uuid);
         Acl acl = accessService.revoke(ae, accessRequest.getAccessEntryId());

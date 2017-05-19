@@ -27,16 +27,16 @@ import java.util.List;
 public class TableMeta implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private String TABLE_CAT;
-    private String TABLE_SCHEM;
-    private String TABLE_NAME;
-    private String TABLE_TYPE;
-    private String REMARKS;
-    private String TYPE_CAT;
-    private String TYPE_SCHEM;
-    private String TYPE_NAME;
-    private String SELF_REFERENCING_COL_NAME;
-    private String REF_GENERATION;
+    protected String TABLE_CAT;
+    protected String TABLE_SCHEM;
+    protected String TABLE_NAME;
+    protected String TABLE_TYPE;
+    protected String REMARKS;
+    protected String TYPE_CAT;
+    protected String TYPE_SCHEM;
+    protected String TYPE_NAME;
+    protected String SELF_REFERENCING_COL_NAME;
+    protected String REF_GENERATION;
     private List<ColumnMeta> columns = new ArrayList<ColumnMeta>();
 
     public TableMeta() {

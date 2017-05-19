@@ -34,6 +34,7 @@ import org.apache.kylin.rest.service.JobService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,6 +47,7 @@ public class JobController extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(JobController.class);
 
     @Autowired
+    @Qualifier("jobService")
     private JobService jobService;
 
     /**
@@ -54,7 +56,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "", method = { RequestMethod.GET })
+    @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public List<JobInstance> list(JobListRequest jobRequest) {
 
@@ -84,7 +86,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{jobId}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public JobInstance get(@PathVariable String jobId) {
         JobInstance jobInstance = null;
@@ -104,7 +106,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{jobId}/steps/{stepId}/output", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public Map<String, String> getStepOutput(@PathVariable String jobId, @PathVariable String stepId) {
         Map<String, String> result = new HashMap<String, String>();
@@ -120,7 +122,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{jobId}/resume", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance resume(@PathVariable String jobId) {
         try {
@@ -139,7 +141,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/cancel", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{jobId}/cancel", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance cancel(@PathVariable String jobId) {
 
@@ -150,10 +152,7 @@ public class JobController extends BasicController {
             logger.error(e.getLocalizedMessage(), e);
             throw new InternalErrorException(e);
         }
-
     }
-
-
 
     /**
      * Pause a job
@@ -161,7 +160,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/pause", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{jobId}/pause", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance pause(@PathVariable String jobId) {
 
@@ -181,7 +180,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/steps/{stepId}/rollback", method = { RequestMethod.PUT })
+    @RequestMapping(value = "/{jobId}/steps/{stepId}/rollback", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
     public JobInstance rollback(@PathVariable String jobId, @PathVariable String stepId) {
         try {
@@ -200,7 +199,7 @@ public class JobController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{jobId}/drop", method = { RequestMethod.DELETE })
+    @RequestMapping(value = "/{jobId}/drop", method = { RequestMethod.DELETE }, produces = { "application/json" })
     @ResponseBody
     public JobInstance dropJob(@PathVariable String jobId) {
         JobInstance jobInstance = null;

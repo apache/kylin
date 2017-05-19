@@ -27,6 +27,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author xduo
@@ -36,8 +37,11 @@ public class AdminControllerTest extends ServiceTestBase {
     private AdminController adminController;
 
     @Autowired
+    @Qualifier("adminService")
     private AdminService adminService;
+
     @Autowired
+    @Qualifier("cubeMgmtService")
     private CubeService cubeService;
 
     @Before

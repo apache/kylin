@@ -23,7 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Component;
@@ -66,8 +68,10 @@ public class KafkaConfigService extends BasicService {
     }
 
     public KafkaConfig createKafkaConfig(KafkaConfig config) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
         if (getKafkaManager().getKafkaConfig(config.getName()) != null) {
-            throw new InternalErrorException("The kafkaConfig named " + config.getName() + " already exists");
+            throw new BadRequestException(String.format(msg.getKAFKA_CONFIG_ALREADY_EXIST(), config.getName()));
         }
         getKafkaManager().createKafkaConfig(config.getName(), config);
         return config;

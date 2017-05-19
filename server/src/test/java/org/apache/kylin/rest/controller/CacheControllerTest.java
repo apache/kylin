@@ -25,6 +25,7 @@ import org.apache.kylin.rest.service.ServiceTestBase;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author shaoshi
@@ -34,6 +35,7 @@ public class CacheControllerTest extends ServiceTestBase {
     private CacheController cacheController;
 
     @Autowired
+    @Qualifier("cacheService")
     private CacheService cacheService;
 
     @Before

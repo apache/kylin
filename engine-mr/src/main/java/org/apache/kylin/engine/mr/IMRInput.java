@@ -37,9 +37,6 @@ public interface IMRInput {
     /** Return an InputFormat that reads from specified table. */
     public IMRTableInputFormat getTableInputFormat(TableDesc table);
 
-    /** Return an InputFormat that reads from specified table; "isFullTable" indicates whether it is a full table read or not. */
-    public IMRTableInputFormat getTableInputFormat(TableDesc table, boolean isFullTable);
-
     /** Return a helper to participate in batch cubing merge job flow. */
     public IMRBatchMergeInputSide getBatchMergeInputSide(ISegment seg);
 

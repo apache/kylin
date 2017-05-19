@@ -24,6 +24,7 @@ import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.rest.service.CubeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +40,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class CubeDescController extends BasicController {
 
     @Autowired
+    @Qualifier("cubeMgmtService")
     private CubeService cubeService;
 
     /**
@@ -49,7 +51,7 @@ public class CubeDescController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public CubeDesc[] getCube(@PathVariable String cubeName) {
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
@@ -73,7 +75,7 @@ public class CubeDescController extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{cubeName}/desc", method = { RequestMethod.GET })
+    @RequestMapping(value = "/{cubeName}/desc", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
     public CubeDesc getDesc(@PathVariable String cubeName) {
         CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);

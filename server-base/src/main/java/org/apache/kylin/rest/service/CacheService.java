@@ -18,10 +18,7 @@
 
 package org.apache.kylin.rest.service;
 
-import java.io.IOException;
-
-import javax.sql.DataSource;
-
+import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
@@ -30,9 +27,11 @@ import org.apache.kylin.query.QueryDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import net.sf.ehcache.CacheManager;
+import javax.sql.DataSource;
+import java.io.IOException;
 
 /**
  */
@@ -44,6 +43,7 @@ public class CacheService extends BasicService {
     private static QueryDataSource queryDataSource = new QueryDataSource();
 
     @Autowired
+    @Qualifier("cubeMgmtService")
     private CubeService cubeService;
 
     @Autowired

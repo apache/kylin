@@ -185,7 +185,11 @@ public class CubeDescManager {
             throw new IllegalArgumentException("No cube desc found at " + path);
 
         try {
-            ndesc.init(config);
+            if (ndesc.getStatus() == null) {
+                ndesc.init(config);
+            } else {
+                ndesc.initConfig(config);
+            }
         } catch (Exception e) {
             logger.warn("Broken cube desc " + path, e);
             ndesc.addError(e.getMessage());
@@ -211,25 +215,34 @@ public class CubeDescManager {
         if (cubeDescMap.containsKey(cubeDesc.getName()))
             throw new IllegalArgumentException("CubeDesc '" + cubeDesc.getName() + "' already exists");
 
-        try {
-            cubeDesc.init(config);
-        } catch (Exception e) {
-            logger.warn("Broken cube desc " + cubeDesc, e);
-            cubeDesc.addError(e.getMessage());
-        }
-        postProcessCubeDesc(cubeDesc);
-        // Check base validation
-        if (!cubeDesc.getError().isEmpty()) {
-            return cubeDesc;
-        }
-        // Semantic validation
-        CubeMetadataValidator validator = new CubeMetadataValidator();
-        ValidateContext context = validator.validate(cubeDesc);
-        if (!context.ifPass()) {
-            return cubeDesc;
-        }
+        if (cubeDesc.getStatus() == null) {
+            try {
+                cubeDesc.init(config);
+            } catch (Exception e) {
+                logger.warn("Broken cube desc " + cubeDesc, e);
+                cubeDesc.addError(e.getMessage());
+            }
+            postProcessCubeDesc(cubeDesc);
+            // Check base validation
+            if (!cubeDesc.getError().isEmpty()) {
+                return cubeDesc;
+            }
+            // Semantic validation
+            CubeMetadataValidator validator = new CubeMetadataValidator();
+            ValidateContext context = validator.validate(cubeDesc);
+            if (!context.ifPass()) {
+                return cubeDesc;
+            }
 
-        cubeDesc.setSignature(cubeDesc.calculateSignature());
+            cubeDesc.setSignature(cubeDesc.calculateSignature());
+        } else {
+            try {
+                cubeDesc.initConfig(config);
+            } catch (Exception e) {
+                logger.warn("Broken cube desc " + cubeDesc, e);
+                cubeDesc.addError(e.getMessage());
+            }
+        }
 
         String path = cubeDesc.getResourcePath();
         getStore().putResource(path, cubeDesc, CUBE_DESC_SERIALIZER);
@@ -336,23 +349,33 @@ public class CubeDescManager {
             throw new IllegalArgumentException("CubeDesc '" + name + "' does not exist.");
         }
 
-        try {
-            desc.init(config);
-        } catch (Exception e) {
-            logger.warn("Broken cube desc " + desc, e);
-            desc.addError(e.getMessage());
-            return desc;
-        }
+        if (desc.getStatus() == null) {
+            try {
+                desc.init(config);
+            } catch (Exception e) {
+                logger.warn("Broken cube desc " + desc, e);
+                desc.addError(e.getMessage());
+                return desc;
+            }
 
-        postProcessCubeDesc(desc);
-        // Semantic validation
-        CubeMetadataValidator validator = new CubeMetadataValidator();
-        ValidateContext context = validator.validate(desc);
-        if (!context.ifPass()) {
-            return desc;
-        }
+            postProcessCubeDesc(desc);
+            // Semantic validation
+            CubeMetadataValidator validator = new CubeMetadataValidator();
+            ValidateContext context = validator.validate(desc);
+            if (!context.ifPass()) {
+                return desc;
+            }
 
-        desc.setSignature(desc.calculateSignature());
+            desc.setSignature(desc.calculateSignature());
+        } else {
+            try {
+                desc.initConfig(config);
+            } catch (Exception e) {
+                logger.warn("Broken cube desc " + desc, e);
+                desc.addError(e.getMessage());
+                return desc;
+            }
+        }
 
         // Save Source
         String path = desc.getResourcePath();

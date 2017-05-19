@@ -42,6 +42,8 @@ public class TableExtDesc extends RootPersistentEntity {
     @JsonProperty("last_build_job_id")
     private String jodID;
 
+    @JsonProperty("frequency")
+    private int frequency;
     @JsonProperty("columns_stats")
     private List<ColumnStats> columnStats = new ArrayList<>();
 
@@ -66,6 +68,14 @@ public class TableExtDesc extends RootPersistentEntity {
 
     public static String concatResourcePath(String tableIdentity) {
         return ResourceStore.TABLE_EXD_RESOURCE_ROOT + "/" + tableIdentity + ".json";
+    }
+
+    public int getFrequency() {
+        return this.frequency;
+    }
+
+    public void setFrequency(int frequency) {
+        this.frequency = frequency;
     }
 
     public String getName() {
