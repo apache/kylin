@@ -123,7 +123,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             throw new NullPointerException("client must not be null");
         if (zkPathBase == null)
             throw new NullPointerException("zkPathBase must not be null");
-        
+
         this.curator = curator;
         this.zkPathBase = zkPathBase;
         this.client = client;
@@ -138,7 +138,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     @Override
     public boolean lock(String lockPath) {
         lockPath = norm(lockPath);
-        
+
         logger.debug(client + " trying to lock " + lockPath);
 
         try {
@@ -148,7 +148,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         } catch (Exception ex) {
             throw new RuntimeException("Error while " + client + " trying to lock " + lockPath, ex);
         }
-        
+
         String lockOwner = peekLock(lockPath);
         if (client.equals(lockOwner)) {
             logger.info(client + " acquired lock at " + lockPath);
@@ -214,7 +214,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     public boolean isLockedByMe(String lockPath) {
         return client.equals(peekLock(lockPath));
     }
-    
+
     @Override
     public void unlock(String lockPath) {
         lockPath = norm(lockPath);
@@ -236,7 +236,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             throw new RuntimeException("Error while " + client + " trying to unlock " + lockPath, ex);
         }
     }
-    
+
     @Override
     public void purgeLocks(String lockPathRoot) {
         lockPathRoot = norm(lockPathRoot);
@@ -245,7 +245,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             curator.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPathRoot);
 
             logger.info(client + " purged all locks under " + lockPathRoot);
-            
+
         } catch (Exception ex) {
             throw new RuntimeException("Error while " + client + " trying to purge " + lockPathRoot, ex);
         }
@@ -278,13 +278,21 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         }
         return cache;
     }
-    
+
     // normalize lock path
     private String norm(String lockPath) {
-        if (lockPath.startsWith(zkPathBase))
-            return lockPath;
-        else
-            return zkPathBase + (lockPath.startsWith("/") ? "" : "/") + lockPath;
+        if (!lockPath.startsWith(zkPathBase))
+            lockPath = zkPathBase + (lockPath.startsWith("/") ? "" : "/") + lockPath;
+
+        return dropDoubleSlash(lockPath);
+    }
+
+    public static String dropDoubleSlash(String path) {
+        for (int n = Integer.MAX_VALUE; n > path.length();) {
+            n = path.length();
+            path = path.replace("//", "/");
+        }
+        return path;
     }
 
     // ============================================================================
