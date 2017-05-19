@@ -81,7 +81,11 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
         String dir = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory();
         if (dir.startsWith("file://"))
             dir = dir.substring("file://".length());
-        return dir;
+        try {
+            return new File(dir).getCanonicalPath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected ResourceStore getStore() {
