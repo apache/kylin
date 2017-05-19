@@ -319,6 +319,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         }
         return path;
     }
+    
     @Override
     public void shutdown() throws SchedulerException {
         logger.info("Will shut down Job Engine ....");
