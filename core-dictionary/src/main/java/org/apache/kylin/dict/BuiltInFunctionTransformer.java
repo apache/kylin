@@ -58,13 +58,13 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
             //normal case
             translated = translateCompareTupleFilter((CompareTupleFilter) tupleFilter);
             if (translated != null) {
-                logger.debug("Translated {{}} to IN clause: {{}}", tupleFilter, translated);
+                logger.debug("Translated {{}} to IN clause. ", tupleFilter);
             }
         } else if (tupleFilter instanceof BuiltInFunctionTupleFilter) {
-            //like case
+            //like,tolower case
             translated = translateFunctionTupleFilter((BuiltInFunctionTupleFilter) tupleFilter);
             if (translated != null) {
-                logger.debug("Translated {{}} to IN clause: {{}}", tupleFilter, translated);
+                logger.debug("Translated {{}} to IN clause. ", tupleFilter);
             }
         } else if (tupleFilter instanceof LogicalTupleFilter) {
             @SuppressWarnings("unchecked")
@@ -106,7 +106,7 @@ public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
                     }
                 }
             }
-
+            logger.debug("getting a in clause with {} children", translated.getChildren().size());
         } catch (Exception e) {
             logger.debug(e.getMessage());
             return null;

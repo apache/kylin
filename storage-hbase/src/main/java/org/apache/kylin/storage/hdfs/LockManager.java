@@ -17,6 +17,8 @@
 */
 package org.apache.kylin.storage.hdfs;
 
+import java.io.IOException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -24,17 +26,15 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock;
 import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 public class LockManager {
 
-    private static Logger logger = LoggerFactory.getLogger(ZookeeperDistributedJobLock.class);
+    private static Logger logger = LoggerFactory.getLogger(LockManager.class);
 
+    @SuppressWarnings("unused")
     final private KylinConfig config;
 
     final CuratorFramework zkClient;

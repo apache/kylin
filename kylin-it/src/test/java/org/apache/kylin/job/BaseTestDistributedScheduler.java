@@ -36,7 +36,7 @@ import org.apache.kylin.job.execution.AbstractExecutable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.impl.threadpool.DistributedScheduler;
-import org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock;
+import org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock;
 import org.apache.kylin.storage.hbase.util.ZookeeperUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -47,9 +47,10 @@ import com.google.common.io.Files;
 
 public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
     static ExecutableManager execMgr;
-    static ZookeeperDistributedJobLock jobLock;
     static DistributedScheduler scheduler1;
     static DistributedScheduler scheduler2;
+    static ZookeeperDistributedLock jobLock1;
+    static ZookeeperDistributedLock jobLock2;
     static KylinConfig kylinConfig1;
     static KylinConfig kylinConfig2;
     static CuratorFramework zkClient;
@@ -85,9 +86,10 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         kylinConfig2 = KylinConfig.createInstanceFromUri(new File(confDstPath2).getAbsolutePath());
 
         initZk();
-
-        if (jobLock == null)
-            jobLock = new ZookeeperDistributedJobLock(kylinConfig1);
+        
+        ZookeeperDistributedLock.Factory factory = new ZookeeperDistributedLock.Factory(kylinConfig1);
+        jobLock1 = (ZookeeperDistributedLock) factory.lockForClient(serverName1);
+        jobLock2 = (ZookeeperDistributedLock) factory.lockForClient(serverName2);
 
         execMgr = ExecutableManager.getInstance(kylinConfig1);
         for (String jobId : execMgr.getAllJobIds()) {
@@ -95,15 +97,13 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         }
 
         scheduler1 = DistributedScheduler.getInstance(kylinConfig1);
-        scheduler1.setServerName(serverName1);
-        scheduler1.init(new JobEngineConfig(kylinConfig1), jobLock);
+        scheduler1.init(new JobEngineConfig(kylinConfig1), jobLock1);
         if (!scheduler1.hasStarted()) {
             throw new RuntimeException("scheduler1 not started");
         }
 
         scheduler2 = DistributedScheduler.getInstance(kylinConfig2);
-        scheduler2.setServerName(serverName2);
-        scheduler2.init(new JobEngineConfig(kylinConfig2), jobLock);
+        scheduler2.init(new JobEngineConfig(kylinConfig2), jobLock2);
         if (!scheduler2.hasStarted()) {
             throw new RuntimeException("scheduler2 not started");
         }
@@ -120,10 +120,6 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         if (scheduler2 != null) {
             scheduler2.shutdown();
             scheduler2 = null;
-        }
-        if (jobLock != null) {
-            jobLock.close();
-            jobLock = null;
         }
         if (zkClient != null) {
             zkClient.close();
@@ -167,8 +163,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         }
     }
 
-    boolean lock(ZookeeperDistributedJobLock jobLock, String cubeName, String serverName) {
-        return jobLock.lockPath(getLockPath(cubeName), serverName);
+    boolean lock(ZookeeperDistributedLock jobLock, String segName) {
+        return jobLock.lock(DistributedScheduler.getLockPath(segName));
     }
 
     private static void initZk() {
@@ -181,8 +177,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         zkClient.start();
     }
 
-    String getServerName(String cubeName) {
-        String lockPath = getLockPath(cubeName);
+    String getServerName(String segName) {
+        String lockPath = getFullLockPath(segName);
         String serverName = null;
         if (zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
             try {
@@ -197,8 +193,7 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
         return serverName;
     }
 
-    private String getLockPath(String pathName) {
-        return DistributedScheduler.dropDoubleSlash(//
-                DistributedScheduler.ZOOKEEPER_LOCK_PATH + "/" + kylinConfig1.getMetadataUrlPrefix() + "/" + pathName);
+    private String getFullLockPath(String segName) {
+        return DistributedScheduler.dropDoubleSlash("/kylin/" + kylinConfig1.getMetadataUrlPrefix() + DistributedScheduler.getLockPath(segName));
     }
 }

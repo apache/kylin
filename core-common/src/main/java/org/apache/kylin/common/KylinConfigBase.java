@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.lock.DistributedLock;
+import org.apache.kylin.common.lock.DistributedLockFactory;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.slf4j.Logger;
@@ -231,9 +231,9 @@ abstract public class KylinConfigBase implements Serializable {
         return getPropertiesByPrefix("kylin.metadata.custom-measure-types.");
     }
 
-    public DistributedLock getDistributedLock() {
-        String clsName = getOptional("kylin.metadata.distributed-lock-impl", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedJobLock");
-        return (DistributedLock) ClassUtil.newInstance(clsName);
+    public DistributedLockFactory getDistributedLockFactory() {
+        String clsName = getOptional("kylin.metadata.distributed-lock-impl", "org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock$Factory");
+        return (DistributedLockFactory) ClassUtil.newInstance(clsName);
     }
 
     // ============================================================================

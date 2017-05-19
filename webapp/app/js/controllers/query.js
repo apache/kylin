@@ -185,14 +185,14 @@ KylinApp
             angular.forEach(result.results, function (row, index) {
                 var oneRow = {};
                 angular.forEach(result.columnMetas, function (meta, metaIndex) {
-                    oneRow[meta.name] = row[metaIndex];
+                    oneRow[meta.label] = row[metaIndex];
                 });
                 data.push(oneRow);
             });
 
             var columnDefs = [];
             angular.forEach(result.columnMetas, function (meta, metaIndex) {
-                columnDefs.push({field: meta.name, width: 120});
+                columnDefs.push({field: meta.label, width: 120});
             });
 
             if (oneQuery.result.results) {

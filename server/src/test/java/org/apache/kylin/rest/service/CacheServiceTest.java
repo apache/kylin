@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.CheckUtil;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.cube.CubeDescManager;
 import org.apache.kylin.cube.CubeInstance;
@@ -72,13 +73,16 @@ public class CacheServiceTest extends LocalFileMetadataTestCase {
     @BeforeClass
     public static void beforeClass() throws Exception {
         staticCreateTestMetadata();
+
+        int port = CheckUtil.randomAvailablePort(40000, 50000);
+        logger.info("Chosen port for CacheServiceTest is " + port);
         configA = KylinConfig.getInstanceFromEnv();
-        configA.setProperty("kylin.server.cluster-servers", "localhost:7777");
+        configA.setProperty("kylin.server.cluster-servers", "localhost:" + port);
         configB = KylinConfig.createKylinConfig(configA);
-        configB.setProperty("kylin.server.cluster-servers", "localhost:7777");
+        configB.setProperty("kylin.server.cluster-servers", "localhost:" + port);
         configB.setMetadataUrl("../examples/test_metadata");
 
-        server = new Server(7777);
+        server = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
         server.setHandler(context);

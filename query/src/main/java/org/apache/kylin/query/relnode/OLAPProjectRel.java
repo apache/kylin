@@ -65,6 +65,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
     private boolean hasJoin;
     private boolean afterJoin;
     private boolean afterAggregate;
+    private boolean isMerelyPermutation = false;//project additionally added by OLAPJoinPushThroughJoinRule
 
     public OLAPProjectRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, List<RexNode> exps, RelDataType rowType) {
         super(cluster, traitSet, child, exps, rowType);
@@ -106,6 +107,10 @@ public class OLAPProjectRel extends Project implements OLAPRel {
 
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
+        if (this.getPermutation() != null && !(implementor.getParentNode() instanceof OLAPToEnumerableConverter)) {
+            isMerelyPermutation = true;
+        }
+
         implementor.fixSharedOlapTableScan(this);
         implementor.visitChild(getInput(), this);
 
@@ -172,8 +177,10 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         // check it for rewrite count
         if (index < inputColumnRowType.size()) {
             TblColRef column = inputColumnRowType.getColumnByIndex(index);
-            if (!column.isInnerColumn() && !this.rewriting && !this.afterAggregate) {
-                context.allColumns.add(column);
+            if (!column.isInnerColumn() && context.belongToContextTables(column) && !this.rewriting && !this.afterAggregate) {
+                if (!isMerelyPermutation) {
+                    context.allColumns.add(column);
+                }
                 sourceCollector.add(column);
             }
             return column;
@@ -301,5 +308,9 @@ public class OLAPProjectRel extends Project implements OLAPRel {
         RelTraitSet oldTraitSet = this.traitSet;
         this.traitSet = this.traitSet.replace(trait);
         return oldTraitSet;
+    }
+
+    public boolean isMerelyPermutation() {
+        return isMerelyPermutation;
     }
 }

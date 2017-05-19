@@ -16,9 +16,28 @@
  * limitations under the License.
  */
 
-package org.apache.kylin.job.lock;
+package org.apache.kylin.common.lock;
 
-import org.apache.kylin.common.lock.DistributedLock;
+import java.lang.management.ManagementFactory;
 
-public interface DistributedJobLock extends JobLock, DistributedLock {
+public abstract class DistributedLockFactory {
+
+    abstract public DistributedLock lockForClient(String client);
+
+    public DistributedLock lockForCurrentThread() {
+        return lockForClient(threadProcessAndHost());
+    }
+
+    public DistributedLock lockForCurrentProcess() {
+        return lockForClient(processAndHost());
+    }
+
+    private static String threadProcessAndHost() {
+        return Thread.currentThread().getId() + "-" + processAndHost();
+    }
+    
+    private static String processAndHost() {
+        byte[] bytes = ManagementFactory.getRuntimeMXBean().getName().getBytes();
+        return new String(bytes);
+    }
 }

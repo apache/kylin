@@ -32,9 +32,20 @@ else
     hadoop_conf_param="--config ${kylin_hadoop_conf_dir}"
 fi
 
-echo "Loading sample data into HDFS tmp path: /tmp/kylin/sample_cube/data"
-hadoop ${hadoop_conf_param} fs -mkdir -p /tmp/kylin/sample_cube/data
-hadoop ${hadoop_conf_param} fs -put * /tmp/kylin/sample_cube/data/
+if [ -z "$1" ]; then
+    hdfs_tmp_dir=/tmp/kylin
+else
+    hdfs_tmp_dir=$1
+fi
+
+echo "Loading sample data into HDFS tmp path: ${hdfs_tmp_dir}/sample_cube/data"
+hadoop ${hadoop_conf_param} fs -mkdir -p ${hdfs_tmp_dir}/sample_cube/data
+if [ $? != 0 ]
+then
+    quit "Failed to create ${hdfs_tmp_dir}/sample_cube/data. Please make sure the user has right to access ${hdfs_tmp_dir}/sample_cube/data or usage: sample.sh hdfs_tmp_dir"
+fi
+
+hadoop ${hadoop_conf_param} fs -put * ${hdfs_tmp_dir}/sample_cube/data/
 
 hive_client_mode=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.client`
 sample_database=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.source.hive.database-for-flat-table`
@@ -52,14 +63,15 @@ then
     else
         beeline_params=${beeline_params/${hive2_url}/${hive2_url}${sample_database}}
     fi
-    beeline ${hive_conf_properties} ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+    
+    beeline ${hive_conf_properties} --hivevar hdfs_tmp_dir=${hdfs_tmp_dir} ${beeline_params} -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 else
     hive ${hive_conf_properties} -e "CREATE DATABASE IF NOT EXISTS "$sample_database
-    hive ${hive_conf_properties} --database $sample_database -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
+    hive ${hive_conf_properties} --hivevar hdfs_tmp_dir=${hdfs_tmp_dir} --database $sample_database -f ${KYLIN_HOME}/sample_cube/create_sample_tables.sql  || { exit 1; }
 fi
 
 echo "Sample hive tables are created successfully; Going to create sample cube..."
-hadoop ${hadoop_conf_param} fs -rm -r /tmp/kylin/sample_cube
+hadoop ${hadoop_conf_param} fs -rm -r ${hdfs_tmp_dir}/sample_cube
 
 # set engine type and storage type to cube desc
 default_engine_type=`bash ${KYLIN_HOME}/bin/get-properties.sh kylin.engine.default`

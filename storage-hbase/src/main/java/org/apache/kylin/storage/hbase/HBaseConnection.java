@@ -46,6 +46,7 @@ import org.apache.hadoop.hbase.util.Threads;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.StorageURL;
+import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.persistence.StorageException;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.slf4j.Logger;
@@ -272,17 +273,20 @@ public class HBaseConnection {
     }
 
     public static void createHTableIfNeeded(Connection conn, String table, String... families) throws IOException {
-        Admin hbase = conn.getAdmin();
+        Admin admin = conn.getAdmin();
         TableName tableName = TableName.valueOf(table);
+        DistributedLock lock = null;
+        String lockPath = getLockPath(table);
+        
         try {
             if (tableExists(conn, table)) {
                 logger.debug("HTable '" + table + "' already exists");
-                Set<String> existingFamilies = getFamilyNames(hbase.getTableDescriptor(tableName));
+                Set<String> existingFamilies = getFamilyNames(admin.getTableDescriptor(tableName));
                 boolean wait = false;
                 for (String family : families) {
                     if (existingFamilies.contains(family) == false) {
                         logger.debug("Adding family '" + family + "' to HTable '" + table + "'");
-                        hbase.addColumn(tableName, newFamilyDescriptor(family));
+                        admin.addColumn(tableName, newFamilyDescriptor(family));
                         // addColumn() is async, is there a way to wait it finish?
                         wait = true;
                     }
@@ -297,6 +301,15 @@ public class HBaseConnection {
                 return;
             }
 
+            lock = KylinConfig.getInstanceFromEnv().getDistributedLockFactory().lockForCurrentProcess();
+            if (!lock.lock(lockPath, Long.MAX_VALUE))
+                throw new RuntimeException("Cannot acquire lock to create HTable " + table);
+
+            if (tableExists(conn, table)) {
+                logger.debug("HTable '" + table + "' already exists");
+                return;
+            }
+
             logger.debug("Creating HTable '" + table + "'");
 
             HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(table));
@@ -308,12 +321,13 @@ public class HBaseConnection {
                 }
             }
 
-            //desc.setValue(HTABLE_UUID_TAG, UUID.randomUUID().toString());
-            hbase.createTable(desc);
+            admin.createTable(desc);
 
             logger.debug("HTable '" + table + "' created");
         } finally {
-            hbase.close();
+            admin.close();
+            if (lock != null && lock.isLockedByMe(lockPath))
+                lock.unlock(lockPath);
         }
     }
 
@@ -355,6 +369,10 @@ public class HBaseConnection {
         } finally {
             hbase.close();
         }
+    }
+
+    private static String getLockPath(String table) {
+        return "/create_htable/" + table + "/lock";
     }
 
 }

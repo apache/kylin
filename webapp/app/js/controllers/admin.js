@@ -18,7 +18,7 @@
 
 'use strict';
 
-KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, $modal, SweetAlert,kylinConfig,ProjectModel,$window) {
+KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, TableService, loadingRequest, MessageService, ProjectService, $modal, SweetAlert,kylinConfig,ProjectModel,$window) {
   $scope.configStr = "";
   $scope.envStr = "";
 
@@ -71,6 +71,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       if (isConfirm) {
         CacheService.reloadConfig({}, function () {
           SweetAlert.swal('Success!', 'config reload successfully', 'success');
+          $scope.getConfig();
         }, function (e) {
           if (e.data && e.data.exception) {
             var message = e.data.exception;
@@ -83,7 +84,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       }
     });
   }
-  
+
   $scope.reloadMeta = function () {
     SweetAlert.swal({
       title: '',
@@ -97,6 +98,9 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       if (isConfirm) {
         CacheService.clean({}, function () {
           SweetAlert.swal('Success!', 'Cache reload successfully', 'success');
+          ProjectService.listReadable({}, function(projects) {
+            ProjectModel.setProjects(projects);
+          });
         }, function (e) {
           if (e.data && e.data.exception) {
             var message = e.data.exception;
@@ -214,6 +218,7 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
     $modal.open({
       templateUrl: 'updateConfig.html',
       controller: updateConfigCtrl,
+      scope: $scope,
       resolve: {}
     });
   }
@@ -256,11 +261,10 @@ KylinApp.controller('AdminCtrl', function ($scope, AdminService, CacheService, T
       $modalInstance.dismiss('cancel');
     };
     $scope.update = function () {
-
-
       AdminService.updateConfig({}, {key: $scope.state.key, value: $scope.state.value}, function (result) {
         SweetAlert.swal('Success!', 'Config updated successfully!', 'success');
         $modalInstance.dismiss();
+        $scope.getConfig();
       }, function (e) {
         if (e.data && e.data.exception) {
           var message = e.data.exception;

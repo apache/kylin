@@ -20,8 +20,6 @@ package org.apache.kylin.job.impl.threadpool;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +49,6 @@ import org.apache.kylin.job.execution.Executable;
 import org.apache.kylin.job.execution.ExecutableManager;
 import org.apache.kylin.job.execution.ExecutableState;
 import org.apache.kylin.job.execution.Output;
-import org.apache.kylin.job.lock.DistributedJobLock;
 import org.apache.kylin.job.lock.JobLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,9 +80,11 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     private volatile boolean initialized = false;
     private volatile boolean hasStarted = false;
     private JobEngineConfig jobEngineConfig;
+    private String serverName;
+
 
     private final static String SEGMENT_ID = "segmentId";
-    public static final String ZOOKEEPER_LOCK_PATH = "/kylin/job_engine/lock";
+    public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /kylin/metadata
 
     //only for it test
     public static DistributedScheduler getInstance(KylinConfig config) {
@@ -152,24 +151,6 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         }
     }
 
-    private String serverName = getServerName();
-
-    public String getServerName() {
-        String serverName = null;
-        try {
-            serverName = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            logger.error("fail to get the serverName");
-        }
-        return serverName;
-    }
-
-    //only for it test
-    public void setServerName(String serverName) {
-        this.serverName = serverName;
-        logger.info("serverName update to:" + this.serverName);
-    }
-
     private class JobRunner implements Runnable {
 
         private final AbstractExecutable executable;
@@ -182,7 +163,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         public void run() {
             try (SetThreadName ignored = new SetThreadName("Job %s", executable.getId())) {
                 String segmentId = executable.getParam(SEGMENT_ID);
-                if (jobLock.lockPath(getLockPath(segmentId), serverName)) {
+                if (jobLock.lock(getLockPath(segmentId))) {
                     logger.info(executable.toString() + " scheduled in server: " + serverName);
 
                     context.addRunningJob(executable);
@@ -210,7 +191,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
                 if (state != ExecutableState.READY && state != ExecutableState.RUNNING) {
                     if (segmentWithLocks.contains(segmentId)) {
                         logger.info(executable.toString() + " will release the lock for the segment: " + segmentId);
-                        jobLock.unlockPath(getLockPath(segmentId), serverName);
+                        jobLock.unlock(getLockPath(segmentId));
                         segmentWithLocks.remove(segmentId);
                     }
                 }
@@ -219,7 +200,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     }
 
     //when the segment lock released but the segment related job still running, resume the job.
-    private class WatcherProcessImpl implements org.apache.kylin.common.lock.DistributedLock.Watcher {
+    private class WatcherProcessImpl implements DistributedLock.Watcher {
         private String serverName;
 
         public WatcherProcessImpl(String serverName) {
@@ -227,7 +208,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         }
 
         @Override
-        public void process(String path, String nodeData) {
+        public void onUnlock(String path, String nodeData) {
             String[] paths = path.split("/");
             String segmentId = paths[paths.length - 1];
 
@@ -238,7 +219,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
                     if (executable instanceof DefaultChainedExecutable && executable.getParams().get(SEGMENT_ID).equalsIgnoreCase(segmentId) && !nodeData.equalsIgnoreCase(serverName)) {
                         try {
                             logger.warn(nodeData + " has released the lock for: " + segmentId + " but the job still running. so " + serverName + " resume the job");
-                            if (!jobLock.isPathLocked(getLockPath(segmentId))) {
+                            if (!jobLock.isLocked(getLockPath(segmentId))) {
                                 executableManager.resumeRunningJobForce(executable.getId());
                                 fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
                                 break;
@@ -251,6 +232,9 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
             }
         }
 
+        @Override
+        public void onLock(String lockPath, String client) {
+        }
     }
 
     @Override
@@ -280,7 +264,8 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         }
 
         this.jobEngineConfig = jobEngineConfig;
-        this.jobLock = (DistributedJobLock) jobLock;
+        this.jobLock = (DistributedLock) jobLock;
+        this.serverName = this.jobLock.getClient(); // the lock's client string contains node name of this server
 
         executableManager = ExecutableManager.getInstance(jobEngineConfig.getConfig());
         //load all executable, set them to a consistent status
@@ -289,7 +274,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         //watch the zookeeper node change, so that when one job server is down, other job servers can take over.
         watchPool = Executors.newFixedThreadPool(1);
         WatcherProcessImpl watcherProcess = new WatcherProcessImpl(this.serverName);
-        lockWatch = this.jobLock.watchPath(getWatchPath(), watchPool, watcherProcess);
+        lockWatch = this.jobLock.watchLocks(getWatchPath(), watchPool, watcherProcess);
 
         int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
         jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS, new SynchronousQueue<Runnable>());
@@ -308,7 +293,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
             AbstractExecutable executable = executableManager.getJob(id);
             if (output.getState() == ExecutableState.RUNNING && executable instanceof DefaultChainedExecutable) {
                 try {
-                    if (!jobLock.isPathLocked(getLockPath(executable.getParam(SEGMENT_ID)))) {
+                    if (!jobLock.isLocked(getLockPath(executable.getParam(SEGMENT_ID)))) {
                         executableManager.resumeRunningJobForce(executable.getId());
                         fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
                     }
@@ -319,12 +304,12 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         }
     }
 
-    public String getLockPath(String pathName) {
-        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/" + pathName);
+    public static String getLockPath(String pathName) {
+        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + pathName);
     }
 
-    private String getWatchPath() {
-        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix());
+    private static String getWatchPath() {
+        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH);
     }
 
     public static String dropDoubleSlash(String path) {
@@ -356,7 +341,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
 
     private void releaseAllLocks() {
         for (String segmentId : segmentWithLocks) {
-            jobLock.unlockPath(getLockPath(segmentId), serverName);
+            jobLock.unlock(getLockPath(segmentId));
         }
     }
 

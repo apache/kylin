@@ -107,13 +107,21 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         return super.estimateRowCount(mq) * 0.1;
     }
 
+    private boolean isParentMerelyPermutation(OLAPImplementor implementor) {
+        if (implementor.getParentNode() instanceof OLAPProjectRel) {
+            return ((OLAPProjectRel) implementor.getParentNode()).isMerelyPermutation();
+        }
+        return false;
+    }
+
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
 
         // create context for root join
-        if (!(implementor.getParentNode() instanceof OLAPJoinRel)) {
+        if (!(implementor.getParentNode() instanceof OLAPJoinRel) && !isParentMerelyPermutation(implementor)) {
             implementor.allocateContext();
         }
+
         this.context = implementor.getContext();
         this.isTopJoin = !this.context.hasJoin;
         this.context.hasJoin = true;
@@ -161,7 +169,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
             join.setType(joinType);
 
             this.context.joins.add(join);
-        } else if (leftHasSubquery != rightHasSubquery) {
+        } else {
             //When join contains subquery, the join-condition fields of fact_table will add into context.
             Map<TblColRef, TblColRef> joinCol = new HashMap<TblColRef, TblColRef>();
             translateJoinColumn(this.getCondition(), joinCol);

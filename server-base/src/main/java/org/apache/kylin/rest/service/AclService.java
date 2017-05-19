@@ -408,4 +408,3 @@ class AclRecord extends RootPersistentEntity {
     }
 
 }
-

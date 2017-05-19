@@ -21,17 +21,68 @@ package org.apache.kylin.common.lock;
 import java.io.Closeable;
 import java.util.concurrent.Executor;
 
-public interface DistributedLock extends Closeable {
+/**
+ * A distributed lock. Every instance is owned by a client, on whose behalf locks are acquired and/or released.
+ * 
+ * Implementation must ensure all <code>lockPath</code> will be prefix-ed with "/kylin/metadata-prefix" automatically.
+ */
+public interface DistributedLock {
 
-    boolean lockPath(String lockPath, String lockClient);
+    /**
+     * Returns the client that owns this instance.
+     */
+    String getClient();
+    
+    /**
+     * Acquire the lock at given path, non-blocking.
+     * 
+     * @return If the lock is acquired or not.
+     */
+    boolean lock(String lockPath);
+    
+    /**
+     * Acquire the lock at given path, block until given timeout.
+     * 
+     * @return If the lock is acquired or not.
+     */
+    boolean lock(String lockPath, long timeout);
 
-    boolean isPathLocked(String lockPath);
+    /**
+     * Returns if lock is available at given path.
+     */
+    boolean isLocked(String lockPath);
+    
+    /**
+     * Returns if lock is available at given path.
+     */
+    boolean isLockedByMe(String lockPath);
+    
+    /**
+     * Returns the owner of a lock path; returns null if the path is not locked by any one.
+     */
+    String peekLock(String lockPath);
 
-    void unlockPath(String lockPath, String lockClient);
+    /**
+     * Unlock the lock at given path.
+     * 
+     * @throws IllegalStateException if the client is not holding the lock.
+     */
+    void unlock(String lockPath) throws IllegalStateException;
 
-    Closeable watchPath(String watchPath, Executor watchExecutor, Watcher process);
+    /**
+     * Purge all locks under given path. For clean up.
+     */
+    void purgeLocks(String lockPathRoot);
+    
+    /**
+     * Watch lock events under given path, notifies the watcher on all lock/unlock events under the given path root.
+     * 
+     * @return A Closeable that caller must close once the watch is finished.
+     */
+    Closeable watchLocks(String lockPathRoot, Executor executor, Watcher watcher);
 
     public interface Watcher {
-        void process(String path, String data);
+        void onLock(String lockPath, String client);
+        void onUnlock(String lockPath, String client);
     }
 }

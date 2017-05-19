@@ -52,8 +52,11 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
         this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
 
         String[] defaultRoles = StringUtils.split(defaultRole, ",");
-        if (ArrayUtils.contains(defaultRoles, Constant.ROLE_MODELER))
+        if (ArrayUtils.contains(defaultRoles, Constant.ROLE_MODELER)) {
             this.defaultAuthorities.add(modelerAuthority);
+            this.defaultAuthorities.add(analystAuthority);
+        }
+
         if (ArrayUtils.contains(defaultRoles, Constant.ROLE_ANALYST))
             this.defaultAuthorities.add(analystAuthority);
     }
@@ -62,19 +65,16 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
     public Set<GrantedAuthority> getGroupMembershipRoles(String userDn, String username) {
         Set<GrantedAuthority> authorities = super.getGroupMembershipRoles(userDn, username);
 
-        authorities.addAll(defaultAuthorities);
+        Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();
+        userAuthorities.addAll(defaultAuthorities);
 
         if (authorities.contains(adminRoleAsAuthority)) {
-            authorities.add(adminAuthority);
-            authorities.add(modelerAuthority);
-            authorities.add(analystAuthority);
+            userAuthorities.add(adminAuthority);
+            userAuthorities.add(modelerAuthority);
+            userAuthorities.add(analystAuthority);
         }
 
-        if (authorities.contains(modelerAuthority)) {
-            authorities.add(analystAuthority);
-        }
-
-        return authorities;
+        return userAuthorities;
     }
 
 }

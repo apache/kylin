@@ -367,7 +367,7 @@ KylinApp.controller('CubeMeasuresCtrl', function ($scope, $modal,MetaModel,cubes
 
       switch($scope.newMeasure.function.expression){
         case "SUM":
-          if(colType==="smallint"||colType==="int"||colType==="bigint"||colType==="integer"){
+          if(colType==="tinyint"||colType==="smallint"||colType==="int"||colType==="bigint"||colType==="integer"){
             $scope.newMeasure.function.returntype= 'bigint';
           }else{
            if(colType.indexOf('decimal')!=-1||colType==="double"||colType==="float"){

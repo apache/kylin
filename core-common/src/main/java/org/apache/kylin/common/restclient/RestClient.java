@@ -40,6 +40,9 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.util.JsonUtil;
 
@@ -58,6 +61,9 @@ public class RestClient {
     protected DefaultHttpClient client;
 
     protected static Pattern fullRestPattern = Pattern.compile("(?:([^:]+)[:]([^@]+)[@])?([^:]+)(?:[:](\\d+))?");
+
+    private static final int HTTP_CONNECTION_TIMEOUT_MS = 30000;
+    private static final int HTTP_SOCKET_TIMEOUT_MS = 120000;
 
     public static boolean matchFullRestPattern(String uri) {
         Matcher m = fullRestPattern.matcher(uri);
@@ -93,7 +99,11 @@ public class RestClient {
         this.password = password;
         this.baseUrl = "http://" + host + ":" + port + "/kylin/api";
 
-        client = new DefaultHttpClient();
+        final HttpParams httpParams = new BasicHttpParams();
+        HttpConnectionParams.setSoTimeout(httpParams, HTTP_SOCKET_TIMEOUT_MS);
+        HttpConnectionParams.setConnectionTimeout(httpParams, HTTP_CONNECTION_TIMEOUT_MS);
+
+        client = new DefaultHttpClient(httpParams);
 
         if (userName != null && password != null) {
             CredentialsProvider provider = new BasicCredentialsProvider();
@@ -263,14 +273,14 @@ public class RestClient {
         InputStreamReader reader = null;
         BufferedReader rd = null;
         StringBuffer result = new StringBuffer();
-        try{
+        try {
             reader = new InputStreamReader(response.getEntity().getContent());
             rd = new BufferedReader(reader);
             String line = null;
             while ((line = rd.readLine()) != null) {
                 result.append(line);
             }
-        }finally {
+        } finally {
             IOUtils.closeQuietly(reader);
             IOUtils.closeQuietly(rd);
         }
