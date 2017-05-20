@@ -113,12 +113,12 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         new Thread() {
             @Override
             public void run() {
-                d.lock(path, 10000);
+                d.lock(path, 15000);
             }
         }.start();
         c.unlock(path);
 
-        Thread.sleep(10000);
+        Thread.sleep(20000);
 
         assertTrue(c.isLocked(path));
         assertEquals(d.getClient(), d.peekLock(path));
