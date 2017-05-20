@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.NavigableSet;
 
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.util.ClassUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,13 +44,13 @@ public class ResourceStoreTest {
 
     public static void testAStore(String url, KylinConfig kylinConfig) throws Exception {
         String oldUrl = replaceMetadataUrl(kylinConfig, url);
-        testAStore(getStoreByName(kylinConfig.getResourceStoreImpl(), kylinConfig));
+        testAStore(ResourceStore.getStore(kylinConfig));
         replaceMetadataUrl(kylinConfig, oldUrl);
     }
 
     public static void testPerformance(String url, KylinConfig kylinConfig) throws Exception {
         String oldUrl = replaceMetadataUrl(kylinConfig, url);
-        testPerformance(getStoreByName(kylinConfig.getResourceStoreImpl(), kylinConfig));
+        testPerformance(ResourceStore.getStore(kylinConfig));
         replaceMetadataUrl(kylinConfig, oldUrl);
     }
 
@@ -203,12 +202,6 @@ public class ResourceStoreTest {
         String oldUrl = kylinConfig.getMetadataUrl().toString();
         kylinConfig.setProperty("kylin.metadata.url", newUrl);
         return oldUrl;
-    }
-
-    private static ResourceStore getStoreByName(String storeName, KylinConfig kylinConfig) throws Exception {
-        Class<? extends ResourceStore> cls = ClassUtil.forName(storeName, ResourceStore.class);
-        ResourceStore store = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
-        return store;
     }
 
 }

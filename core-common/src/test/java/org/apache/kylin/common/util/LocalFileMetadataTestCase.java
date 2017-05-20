@@ -63,11 +63,12 @@ public class LocalFileMetadataTestCase extends AbstractKylinTestCase {
     }
 
     public static void cleanAfterClass() {
-        String tempTestMetadataUrl = LOCALMETA_TEMP_DATA;
+        File directory = new File(LOCALMETA_TEMP_DATA);
         try {
-            FileUtils.deleteDirectory(new File(tempTestMetadataUrl));
+            FileUtils.deleteDirectory(directory);
         } catch (IOException e) {
-            throw new IllegalStateException("Can't delete directory " + tempTestMetadataUrl, e);
+            if (directory.exists() && directory.list().length > 0)
+                throw new IllegalStateException("Can't delete directory " + directory, e);
         }
         staticCleanupTestMetadata();
     }

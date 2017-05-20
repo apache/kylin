@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.ClassUtil;
 import org.apache.kylin.common.util.OptionsHelper;
 import org.slf4j.Logger;
@@ -68,46 +69,24 @@ abstract public class ResourceStore {
     public static final String CUBE_STATISTICS_ROOT = "/cube_statistics";
     public static final String BAD_QUERY_RESOURCE_ROOT = "/bad_query";
 
-    protected static final String DEFAULT_STORE_NAME = "kylin_metadata";
-
     public static final String METASTORE_UUID_TAG = "/UUID";
 
     private static final ConcurrentMap<KylinConfig, ResourceStore> CACHE = new ConcurrentHashMap<KylinConfig, ResourceStore>();
 
-    private static final ArrayList<Class<? extends ResourceStore>> knownImpl = new ArrayList<Class<? extends ResourceStore>>();
-
-    private static ArrayList<Class<? extends ResourceStore>> getKnownImpl(KylinConfig kylinConfig) {
-        if (knownImpl.isEmpty()) {
-            knownImpl.add(FileResourceStore.class);
-            try {
-                String implName = kylinConfig.getResourceStoreImpl();
-                knownImpl.add(ClassUtil.forName(implName, ResourceStore.class));
-            } catch (Throwable e) {
-                logger.warn("Failed to load HBaseResourceStore impl class: " + e.toString());
-            }
-        }
-        return knownImpl;
-    }
-
     private static ResourceStore createResourceStore(KylinConfig kylinConfig) {
-        List<Throwable> es = new ArrayList<Throwable>();
-        logger.info("Using metadata url " + kylinConfig.getMetadataUrl() + " for resource store");
-        for (Class<? extends ResourceStore> cls : getKnownImpl(kylinConfig)) {
-            try {
-                ResourceStore store = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
-                if (!store.exists(METASTORE_UUID_TAG)) {
-                    store.putResource(METASTORE_UUID_TAG, new StringEntity(store.createMetaStoreUUID()), 0, StringEntity.serializer);
-                }
-                return store;
-            } catch (Throwable e) {
-
-                es.add(e);
+        StorageURL metadataUrl = kylinConfig.getMetadataUrl();
+        logger.info("Using metadata url " + metadataUrl + " for resource store");
+        String clsName = kylinConfig.getResourceStoreImpls().get(metadataUrl.getScheme());
+        try {
+            Class<? extends ResourceStore> cls = ClassUtil.forName(clsName, ResourceStore.class);
+            ResourceStore store = cls.getConstructor(KylinConfig.class).newInstance(kylinConfig);
+            if (!store.exists(METASTORE_UUID_TAG)) {
+                store.putResource(METASTORE_UUID_TAG, new StringEntity(store.createMetaStoreUUID()), 0, StringEntity.serializer);
             }
+            return store;
+        } catch (Throwable e) {
+            throw new IllegalArgumentException("Failed to find metadata store by url: " + metadataUrl, e);
         }
-        for (Throwable exceptionOrError : es) {
-            logger.error("Create new store instance failed ", exceptionOrError);
-        }
-        throw new IllegalArgumentException("Failed to find metadata store by url: " + kylinConfig.getMetadataUrl());
     }
 
     public static ResourceStore getStore(KylinConfig kylinConfig) {

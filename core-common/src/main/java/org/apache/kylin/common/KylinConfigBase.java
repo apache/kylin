@@ -218,6 +218,16 @@ abstract public class KylinConfigBase implements Serializable {
         return getMetadataUrl().getIdentifier();
     }
 
+    public Map<String, String> getResourceStoreImpls() {
+        Map<String, String> r = Maps.newLinkedHashMap();
+        // ref constants in ISourceAware
+        r.put("", "org.apache.kylin.common.persistence.FileResourceStore");
+        r.put("hbase", "org.apache.kylin.storage.hbase.HBaseResourceStore");
+        r.put("hdfs", "org.apache.kylin.storage.hdfs.HDFSResourceStore");
+        r.putAll(getPropertiesByPrefix("kylin.metadata.resource-store-provider.")); // note the naming convention -- http://kylin.apache.org/development/coding_naming_convention.html
+        return r;
+    }
+
     public String[] getRealizationProviders() {
         return getOptionalStringArray("kylin.metadata.realization-providers", //
                 new String[] { "org.apache.kylin.cube.CubeManager", "org.apache.kylin.storage.hybrid.HybridManager" });
@@ -456,6 +466,10 @@ abstract public class KylinConfigBase implements Serializable {
         return getOptional("kylin.job.advanced-flat-table.class");
     }
 
+    public String getJobTrackingURLPattern() {
+        return getOptional("kylin.job.tracking-url-pattern", "");
+    }
+    
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================
@@ -970,26 +984,4 @@ abstract public class KylinConfigBase implements Serializable {
         return Boolean.parseBoolean(getOptional("kylin.web.cross-domain-enabled", "true"));
     }
 
-    //ResourceStore Impl
-    /*public String getResourceStoreImpl() {
-        return getOptional("kylin.metadata.default-resource-store-impl", "org.apache.kylin.storage.hbase.HBaseResourceStore");
-    }*/
-
-    public Map<String, String> getResourceStoreImpls() {
-        Map<String, String> r = Maps.newLinkedHashMap();
-        // ref constants in ISourceAware
-        r.put("", "org.apache.kylin.common.persistence.FileResourceStore");
-        r.put("hbase", "org.apache.kylin.storage.hbase.HBaseResourceStore");
-        r.put("hdfs", "org.apache.kylin.storage.hdfs.HDFSResourceStore");
-        r.putAll(getPropertiesByPrefix("kylin.resource.store.provider."));
-        return r;
-    }
-
-    public String getResourceStoreImpl() {
-        return getResourceStoreImpls().get(getMetadataUrl().getScheme());
-    }
-
-    public String getJobTrackingURLPattern() {
-        return getOptional("kylin.job.tracking-url-pattern", "");
-    }
 }
