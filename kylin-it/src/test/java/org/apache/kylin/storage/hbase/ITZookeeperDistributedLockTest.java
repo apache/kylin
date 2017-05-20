@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.storage.hbase.util;
+package org.apache.kylin.storage.hbase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.lock.DistributedLock.Watcher;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.storage.hbase.util.ZookeeperDistributedLock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -112,12 +113,12 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         new Thread() {
             @Override
             public void run() {
-                d.lock(path, 10000);
+                d.lock(path, 15000);
             }
         }.start();
         c.unlock(path);
 
-        Thread.sleep(10000);
+        Thread.sleep(20000);
 
         assertTrue(c.isLocked(path));
         assertEquals(d.getClient(), d.peekLock(path));
@@ -175,6 +176,8 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         for (int i = 0; i < nClients; i++) {
             threads[i].join();
         }
+        
+        Thread.sleep(3000);
 
         // verify counters
         assertEquals(0, lockCounter.get() - unlockCounter.get());

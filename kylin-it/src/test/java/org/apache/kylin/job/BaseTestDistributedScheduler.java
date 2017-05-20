@@ -113,6 +113,8 @@ public class BaseTestDistributedScheduler extends HBaseMetadataTestCase {
 
     @AfterClass
     public static void after() throws Exception {
+        jobLock1.purgeLocks("");
+        
         if (scheduler1 != null) {
             scheduler1.shutdown();
             scheduler1 = null;
