@@ -167,7 +167,7 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String toString() {
-        return getMetadataUrl().toString();
+        return getMetadataUrl();
     }
 
     // ============================================================================
@@ -203,8 +203,8 @@ abstract public class KylinConfigBase implements Serializable {
     // METADATA
     // ============================================================================
 
-    public StorageURL getMetadataUrl() {
-        return StorageURL.valueOf(getOptional("kylin.metadata.url", ""));
+    public String getMetadataUrl() {
+        return getOptional("kylin.metadata.url");
     }
 
     // for test only
@@ -213,7 +213,14 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getMetadataUrlPrefix() {
-        return getMetadataUrl().getIdentifier();
+        String metadataUrl = getMetadataUrl();
+        String defaultPrefix = "kylin_metadata";
+
+        int cut = metadataUrl.lastIndexOf('@');
+        if (cut > 0) {
+            return metadataUrl.substring(0, cut);
+        }
+        return defaultPrefix;
     }
 
     public String[] getRealizationProviders() {
@@ -536,14 +543,8 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(getOptional("kylin.storage.default", "2"));
     }
 
-    public StorageURL getStorageUrl() {
-        String url = getOptional("kylin.storage.url", "default@hbase");
-
-        // for backward compatibility
-        if ("hbase".equals(url))
-            url = "default@hbase";
-        
-        return StorageURL.valueOf(url);
+    public String getStorageUrl() {
+        return getOptional("kylin.storage.url");
     }
 
     public String getHBaseClusterFs() {
@@ -971,7 +972,10 @@ abstract public class KylinConfigBase implements Serializable {
     }
 
     public String getResourceStoreImpl() {
-        return getResourceStoreImpls().get(getMetadataUrl().getScheme());
+        String metadataUrl = KylinConfig.getInstanceFromEnv().getMetadataUrl();
+        int cut = metadataUrl.indexOf('@');
+        String key = cut < 0 ? "" : metadataUrl.substring(cut + 1);
+        return getResourceStoreImpls().get(key);
     }
 
     public String getJobTrackingURLPattern() {

@@ -36,7 +36,6 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
-import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -74,7 +73,7 @@ public class GridTableHBaseBenchmark {
 
     public static void testGridTable(double hitRatio, double indexRatio) throws IOException {
         System.out.println("Testing grid table scanning, hit ratio " + hitRatio + ", index ratio " + indexRatio);
-        StorageURL hbaseUrl = StorageURL.valueOf("default@hbase"); // use hbase-site.xml on classpath
+        String hbaseUrl = "hbase"; // use hbase-site.xml on classpath
 
         Connection conn = HBaseConnection.get(hbaseUrl);
         createHTableIfNeeded(conn, TEST_TABLE);

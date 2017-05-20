@@ -38,8 +38,7 @@ public class LocalFileResourceStoreTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testFileStore() throws Exception {
-        KylinConfig config = KylinConfig.getInstanceFromEnv();
-        ResourceStoreTest.testAStore(config.getMetadataUrl().toString(), config);
+        ResourceStoreTest.testAStore("", KylinConfig.getInstanceFromEnv());
     }
 
 }

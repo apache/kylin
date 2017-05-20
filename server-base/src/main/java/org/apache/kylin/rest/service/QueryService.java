@@ -55,7 +55,6 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.QueryContext;
-import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.debug.BackdoorToggles;
 import org.apache.kylin.common.exceptions.ResourceLimitExceededException;
 import org.apache.kylin.common.util.Bytes;
@@ -116,7 +115,7 @@ public class QueryService extends BasicService {
     private final Serializer<Query[]> querySerializer = new Serializer<Query[]>(Query[].class);
     private final BadQueryDetector badQueryDetector = new BadQueryDetector();
 
-    private final StorageURL hbaseUrl;
+    private final String hbaseUrl;
     private final String userTableName;
 
     @Autowired
@@ -132,8 +131,12 @@ public class QueryService extends BasicService {
 
     public QueryService() {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        hbaseUrl = kylinConfig.getMetadataUrl();
-        userTableName = hbaseUrl.getIdentifier() + USER_TABLE_NAME;
+        String metadataUrl = kylinConfig.getMetadataUrl();
+        // split TABLE@HBASE_URL
+        int cut = metadataUrl.indexOf('@');
+        hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        String tableNameBase = kylinConfig.getMetadataUrlPrefix();
+        userTableName = tableNameBase + USER_TABLE_NAME;
 
         badQueryDetector.start();
     }

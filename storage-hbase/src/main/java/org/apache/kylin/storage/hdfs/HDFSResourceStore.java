@@ -33,7 +33,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.common.persistence.RawResource;
 import org.apache.kylin.common.persistence.ResourceStore;
 import org.apache.kylin.common.util.HadoopUtil;
@@ -52,12 +51,16 @@ public class HDFSResourceStore extends ResourceStore {
 
     public HDFSResourceStore(KylinConfig kylinConfig) throws Exception {
         super(kylinConfig);
-        StorageURL metadataUrl = kylinConfig.getMetadataUrl();
-        
-        if (!metadataUrl.getScheme().equals("hdfs"))
-            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore:" + metadataUrl);
+        String metadataUrl = kylinConfig.getMetadataUrl();
+        int cut = metadataUrl.indexOf('@');
+        if (cut < 0) {
+            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore: " + metadataUrl);
+        }
+        String suffix = metadataUrl.substring(cut + 1);
+        if (!suffix.equals("hdfs"))
+            throw new IOException("kylin.metadata.url not recognized for HDFSResourceStore:" + suffix);
 
-        String path = metadataUrl.getIdentifier();
+        String path = metadataUrl.substring(0, cut);
         fs = HadoopUtil.getFileSystem(path);
         Path metadataPath = new Path(path);
         if (fs.exists(metadataPath) == false) {
@@ -218,4 +221,22 @@ public class HDFSResourceStore extends ResourceStore {
             resourcePath = resourcePath.substring(1, resourcePath.length());
         return new Path(this.hdfsMetaPath, resourcePath);
     }
+
+    private static String getRelativePath(Path hdfsPath) {
+        String path = hdfsPath.toString();
+        int index = path.indexOf("://");
+        if (index > 0) {
+            path = path.substring(index + 3);
+        }
+
+        if (path.startsWith("/") == false) {
+            if (path.indexOf("/") > 0) {
+                path = path.substring(path.indexOf("/"));
+            } else {
+                path = "/" + path;
+            }
+        }
+        return path;
+    }
+
 }

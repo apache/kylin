@@ -25,7 +25,6 @@ import java.util.Set;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.model.TableDesc;
@@ -41,7 +40,7 @@ public class OLAPSchema extends AbstractSchema {
     private KylinConfig config;
     private String projectName;
     private String schemaName;
-    private StorageURL storageUrl;
+    private String storageUrl;
     private String starSchemaUrl;
     private String starSchemaUser;
     private String starSchemaPassword;
@@ -90,7 +89,7 @@ public class OLAPSchema extends AbstractSchema {
         return schemaName;
     }
 
-    public StorageURL getStorageUrl() {
+    public String getStorageUrl() {
         return storageUrl;
     }
 

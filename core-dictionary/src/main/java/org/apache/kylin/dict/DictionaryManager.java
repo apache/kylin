@@ -99,8 +99,7 @@ public class DictionaryManager {
                     }
                 })//
                 .maximumSize(config.getCachedDictMaxEntrySize())//
-                .expireAfterWrite(1, TimeUnit.DAYS)//
-                .build(new CacheLoader<String, DictionaryInfo>() {
+                .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, DictionaryInfo>() {
                     @Override
                     public DictionaryInfo load(String key) throws Exception {
                         DictionaryInfo dictInfo = DictionaryManager.this.load(key, true);

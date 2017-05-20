@@ -235,21 +235,11 @@ public class ZookeeperDistributedJobLock implements DistributedJobLock {
     }
 
     private String getLockPath(String pathName) {
-        String metadataUrlPrefix = config.getMetadataUrlPrefix();
-        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + metadataUrlPrefix + "/" + pathName);
+        return ZOOKEEPER_LOCK_PATH + "/" + config.getMetadataUrlPrefix() + "/" + pathName;
     }
 
     private String getWatchPath() {
-        String metadataUrlPrefix = config.getMetadataUrlPrefix();
-        return dropDoubleSlash(ZOOKEEPER_LOCK_PATH + "/" + metadataUrlPrefix);
-    }
-
-    public static String dropDoubleSlash(String path) {
-        for (int n = Integer.MAX_VALUE; n > path.length();) {
-            n = path.length();
-            path = path.replace("//", "/");
-        }
-        return path;
+        return ZOOKEEPER_LOCK_PATH + "/" + config.getMetadataUrlPrefix();
     }
 
     @Override

@@ -24,7 +24,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.StorageURL;
 import org.apache.kylin.rest.service.AclService;
 import org.apache.kylin.rest.service.QueryService;
 import org.apache.kylin.rest.service.UserService;
@@ -34,15 +33,17 @@ import org.apache.kylin.storage.hbase.HBaseConnection;
  */
 public class RealAclHBaseStorage implements AclHBaseStorage {
 
-    private StorageURL hbaseUrl;
+    private String hbaseUrl;
     private String aclTableName;
     private String userTableName;
 
     @Override
     public String prepareHBaseTable(Class<?> clazz) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        hbaseUrl = kylinConfig.getMetadataUrl();
-        String tableNameBase = hbaseUrl.getIdentifier();
+        String metadataUrl = kylinConfig.getMetadataUrl();
+        int cut = metadataUrl.indexOf('@');
+        hbaseUrl = cut < 0 ? metadataUrl : metadataUrl.substring(cut + 1);
+        String tableNameBase = kylinConfig.getMetadataUrlPrefix();
 
         if (clazz == AclService.class) {
             aclTableName = tableNameBase + ACL_TABLE_NAME;
