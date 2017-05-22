@@ -188,7 +188,7 @@ KylinApp.controller('PageCtrl', function ($scope, $q, AccessService, $modal, $lo
 
 });
 
-var projCtrl = function ($scope, $location, $modalInstance, ProjectService, MessageService, projects, project, SweetAlert, ProjectModel, $cookieStore, $route) {
+var projCtrl = function ($scope, $location, $modalInstance, ProjectService, MessageService, projects, project, SweetAlert, ProjectModel, $cookieStore, $route, $timeout) {
   $scope.state = {
     isEdit: false,
     oldProjName: null,
@@ -240,10 +240,20 @@ var projCtrl = function ($scope, $location, $modalInstance, ProjectService, Mess
     }
     else {
       ProjectService.save({}, {projectDescData: angular.toJson($scope.proj)}, function (newProj) {
-        SweetAlert.swal('Success!', 'New project created successfully!', 'success');
         $modalInstance.dismiss('cancel');
         $cookieStore.put("project", newProj.name);
-        location.reload();
+        SweetAlert.swal({
+          title: "Success!",
+          text: "New project created successfully!",
+          confirmButtonClass: 'btn-primary',
+          type: "success"
+        },function(){
+          location.reload();
+        });
+
+        $timeout(function () {
+          location.reload();
+        }, 3000);
       }, function (e) {
         if (e.data && e.data.exception) {
           var message = e.data.exception;
