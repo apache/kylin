@@ -46,7 +46,7 @@ __Companies & Organizations__
 * [Qunar](https://www.qunar.com)  (_NASDAQ:QUNR_)
     * Apache Kylin is used at Qunar for Data Analysis Engine on Hadoop, which offers powerful OLAP capability for flight business with good performance.
 * [Strikingly](https://strikingly.com/) 
-    *  Strikingly adopted Kylin + AWS EMR solution. By adopting Kylin, the query performance was improved from 5 ~ 10 seconds to less than 1 second, and it can serve much more concurrent requests now. When workload and data increases, we just need add EMR nodes on demand then get capacity expanded. This architecture ensures we don't need worry about the data growth in next couple years.
+    * Strikingly adopted Kylin + AWS EMR solution. By adopting Kylin, the query performance was improved from 5 ~ 10 seconds to less than 1 second, and it can serve much more concurrent requests now. When workload and data increases, we just need add EMR nodes on demand then get capacity expanded. This architecture ensures we don't need worry about the data growth in next couple years.
 * [Yahoo! Japan](https://about.yahoo.co.jp/info/en/) 
-    *  Yahoo! JAPAN uses Apache Kylin to generate tailored report for Yahoo! Shopping. Apache Kylin contributes to minimize the latency for viewing the report. Consequently, the platform team has been released from ad hoc tasks to improve performance and it has become possible to focus on adding functions for users.
+    * Yahoo! JAPAN uses Apache Kylin to generate tailored report for Yahoo! Shopping. Apache Kylin contributes to minimize the latency for viewing the report. Consequently, the platform team has been released from ad hoc tasks to improve performance and it has become possible to focus on adding functions for users.
 
