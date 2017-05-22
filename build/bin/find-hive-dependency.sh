@@ -46,7 +46,8 @@ fi
 for data in ${arr[@]}
 do
     result=`echo $data | grep -e 'hive-exec[a-z0-9A-Z\.-]*.jar'`
-    if [ $result ]
+    # In some cases there are more than one lib dirs, only the first one will be applied.
+    if [ $result ] && [ -z "$hive_exec_path" ]
     then
         hive_exec_path=$data
     fi
