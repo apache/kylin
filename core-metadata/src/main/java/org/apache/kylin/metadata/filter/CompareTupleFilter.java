@@ -32,7 +32,11 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 /**
  * @author xjiang
  */
-public class CompareTupleFilter extends TupleFilter {
+public class CompareTupleFilter extends TupleFilter implements IOptimizeableTupleFilter {
+
+    public enum CompareResultType {
+        AlwaysTrue, AlwaysFalse, Unknown
+    }
 
     // operand 1 is either a column or a function
     private TblColRef column;
@@ -225,18 +229,20 @@ public class CompareTupleFilter extends TupleFilter {
                 && secondColumn == null;
     }
 
-    public boolean alwaysReturnTrue() {
-        // 1 = 1
-        if (this.operator == FilterOperatorEnum.EQ) {
+    public CompareResultType getCompareResultType() {
+        // cases like 1 = 1, or 'a' <> 'b'
+        if (this.operator == FilterOperatorEnum.EQ || this.operator == FilterOperatorEnum.NEQ) {
             if (this.children != null && this.children.size() == 2 && //
                     this.children.get(0) instanceof ConstantTupleFilter && //
-                    this.children.get(1) instanceof ConstantTupleFilter && //
-                    ((ConstantTupleFilter) this.children.get(0)).getValues().equals(((ConstantTupleFilter) this.children.get(1)).getValues())) {
-                return true;
+                    this.children.get(1) instanceof ConstantTupleFilter) {
+                if (((ConstantTupleFilter) this.children.get(0)).getValues().equals(((ConstantTupleFilter) this.children.get(1)).getValues())) {
+                    return this.operator == FilterOperatorEnum.EQ ? CompareResultType.AlwaysTrue : CompareResultType.AlwaysFalse;
+                } else {
+                    return this.operator == FilterOperatorEnum.EQ ? CompareResultType.AlwaysFalse : CompareResultType.AlwaysTrue;
+                }
             }
         }
-
-        return false;
+        return CompareResultType.Unknown;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -260,6 +266,11 @@ public class CompareTupleFilter extends TupleFilter {
             Object value = cs.deserialize(buffer);
             bindVariable(name, value);
         }
+    }
+
+    @Override
+    public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
+        return transformer.visit(this);
     }
 
 }

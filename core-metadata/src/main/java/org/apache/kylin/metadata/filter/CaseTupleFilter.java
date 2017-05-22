@@ -26,11 +26,13 @@ import java.util.List;
 
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
+import com.google.common.collect.Lists;
+
 /**
  * @author xjiang
  * 
  */
-public class CaseTupleFilter extends TupleFilter {
+public class CaseTupleFilter extends TupleFilter implements IOptimizeableTupleFilter {
 
     private List<TupleFilter> whenFilters;
     private List<TupleFilter> thenFilters;
@@ -40,6 +42,12 @@ public class CaseTupleFilter extends TupleFilter {
 
     public CaseTupleFilter() {
         super(new ArrayList<TupleFilter>(), FilterOperatorEnum.CASE);
+        reinit();
+    }
+
+    private void reinit() {
+        this.children.clear();
+
         this.filterIndex = 0;
         this.values = Collections.emptyList();
         this.whenFilters = new ArrayList<TupleFilter>();
@@ -47,14 +55,31 @@ public class CaseTupleFilter extends TupleFilter {
         this.elseFilter = null;
     }
 
+    public List<TupleFilter> getWhenFilters() {
+        return Collections.unmodifiableList(whenFilters);
+    }
+
+    public List<TupleFilter> getThenFilters() {
+        return Collections.unmodifiableList(thenFilters);
+    }
+
+    public TupleFilter getElseFilter() {
+        return elseFilter;
+    }
+
     @Override
     public void addChild(TupleFilter child) {
-        super.addChild(child);
+
         if (this.filterIndex % 2 == 0) {
-            this.whenFilters.add(child);
+            this.elseFilter = child;
         } else {
+            this.whenFilters.add(this.elseFilter);
             this.thenFilters.add(child);
+            this.elseFilter = null;
         }
+
+        super.addChild(child);
+
         this.filterIndex++;
     }
 
@@ -65,9 +90,7 @@ public class CaseTupleFilter extends TupleFilter {
 
     @Override
     public boolean evaluate(IEvaluatableTuple tuple, IFilterCodeSystem<?> cs) {
-        if (whenFilters.size() != thenFilters.size()) {
-            elseFilter = whenFilters.remove(whenFilters.size() - 1);
-        }
+
         boolean matched = false;
         for (int i = 0; i < whenFilters.size(); i++) {
             TupleFilter whenFilter = whenFilters.get(i);
@@ -108,6 +131,23 @@ public class CaseTupleFilter extends TupleFilter {
 
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
+    }
+
+    @Override
+    public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
+        List<TupleFilter> newChildren = Lists.newArrayList();
+        for (TupleFilter child : this.getChildren()) {
+            if (child instanceof IOptimizeableTupleFilter) {
+                newChildren.add(((IOptimizeableTupleFilter) child).acceptOptimizeTransformer(transformer));
+            } else {
+                newChildren.add(child);
+            }
+        }
+
+        this.reinit();
+        this.addChildren(newChildren);
+
+        return transformer.visit(this);
     }
 
 }

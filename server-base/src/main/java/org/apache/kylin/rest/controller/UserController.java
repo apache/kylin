@@ -64,12 +64,12 @@ public class UserController extends BasicController {
         }
 
         if (authentication.getPrincipal() instanceof UserDetails) {
-            logger.debug("authentication.getPrincipal() is " + authentication.getPrincipal());
+            //logger.debug("authentication.getPrincipal() is " + authentication.getPrincipal());
             return (UserDetails) authentication.getPrincipal();
         }
 
         if (authentication.getDetails() instanceof UserDetails) {
-            logger.debug("authentication.getDetails() is " + authentication.getDetails());
+            //logger.debug("authentication.getDetails() is " + authentication.getDetails());
             return (UserDetails) authentication.getDetails();
         }
 

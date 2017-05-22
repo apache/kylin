@@ -107,6 +107,7 @@ public class OLAPJoinRel extends EnumerableJoin implements OLAPRel {
         return super.estimateRowCount(mq) * 0.1;
     }
 
+    //when OLAPJoinPushThroughJoinRule is applied, a "MerelyPermutation" project rel will be created
     private boolean isParentMerelyPermutation(OLAPImplementor implementor) {
         if (implementor.getParentNode() instanceof OLAPProjectRel) {
             return ((OLAPProjectRel) implementor.getParentNode()).isMerelyPermutation();
