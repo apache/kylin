@@ -41,6 +41,8 @@ import com.google.common.primitives.Primitives;
 
 /**
  * only take effect when the compare filter has function
+ * 
+ * is a first type transformer defined in ITupleFilterTransformer
  */
 public class BuiltInFunctionTransformer implements ITupleFilterTransformer {
     public static final Logger logger = LoggerFactory.getLogger(BuiltInFunctionTransformer.class);

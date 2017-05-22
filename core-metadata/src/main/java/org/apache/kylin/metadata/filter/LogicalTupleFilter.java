@@ -27,17 +27,26 @@ import java.util.List;
 
 import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 
-public class LogicalTupleFilter extends TupleFilter {
+import com.google.common.collect.Lists;
+
+public class LogicalTupleFilter extends TupleFilter implements IOptimizeableTupleFilter {
 
     public LogicalTupleFilter(FilterOperatorEnum op) {
         super(new ArrayList<TupleFilter>(2), op);
+
         boolean opGood = (op == FilterOperatorEnum.AND || op == FilterOperatorEnum.OR || op == FilterOperatorEnum.NOT);
         if (opGood == false)
             throw new IllegalArgumentException("Unsupported operator " + op);
     }
 
+    //private
     private LogicalTupleFilter(List<TupleFilter> filters, FilterOperatorEnum op) {
         super(filters, op);
+    }
+
+    private void reinitWithChildren(List<TupleFilter> newTupleFilter) {
+        this.children.clear();
+        this.addChildren(newTupleFilter);
     }
 
     @Override
@@ -143,6 +152,22 @@ public class LogicalTupleFilter extends TupleFilter {
     @Override
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
 
+    }
+
+    @Override
+    public TupleFilter acceptOptimizeTransformer(FilterOptimizeTransformer transformer) {
+        List<TupleFilter> newChildren = Lists.newArrayList();
+        for (TupleFilter child : this.getChildren()) {
+            if (child instanceof IOptimizeableTupleFilter) {
+                newChildren.add(((IOptimizeableTupleFilter) child).acceptOptimizeTransformer(transformer));
+            } else {
+                newChildren.add(child);
+            }
+        }
+
+        this.reinitWithChildren(newChildren);
+
+        return transformer.visit(this);
     }
 
 }

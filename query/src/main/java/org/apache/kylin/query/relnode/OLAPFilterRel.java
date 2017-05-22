@@ -379,7 +379,7 @@ public class OLAPFilterRel extends Filter implements OLAPRel {
         TupleFilter filter = this.condition.accept(visitor);
         
         // optimize the filter, the optimization has to be segment-irrelevant
-        new FilterOptimizeTransformer().transform(filter);
+        filter = new FilterOptimizeTransformer().transform(filter);
         
         Set<TblColRef> filterColumns = Sets.newHashSet();
         TupleFilter.collectColumns(filter, filterColumns);
