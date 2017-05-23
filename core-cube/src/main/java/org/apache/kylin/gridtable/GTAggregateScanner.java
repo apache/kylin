@@ -45,6 +45,9 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.measure.BufferedMeasureCodec;
 import org.apache.kylin.measure.MeasureAggregator;
 import org.apache.kylin.measure.MeasureAggregators;
+import org.apache.kylin.measure.bitmap.BitmapCounter;
+import org.apache.kylin.measure.hllc.HLLCounter;
+import org.apache.kylin.measure.percentile.PercentileCounter;
 import org.apache.kylin.metadata.filter.IFilterCodeSystem;
 import org.apache.kylin.metadata.filter.TupleFilter;
 import org.apache.kylin.metadata.model.TblColRef;
@@ -414,9 +417,21 @@ public class GTAggregateScanner implements IGTScanner {
                 // for the 'having clause', we only concern numbers and BigDecimal
                 // we try to cache the o2, which should be a constant according to CompareTupleFilter.evaluate()
 
-                double n1 = ((Number) o1).doubleValue();
+                double n1;
+                if (o1 instanceof Number) {
+                    n1 = ((Number) o1).doubleValue();
+                } else if (o1 instanceof HLLCounter) {
+                    n1 = ((HLLCounter) o1).getCountEstimate();
+                } else if (o1 instanceof BitmapCounter) {
+                    n1 = ((BitmapCounter) o1).getCount();
+                } else if (o1 instanceof PercentileCounter) {
+                    n1 = ((PercentileCounter) o1).getResultEstimate();
+                } else {
+                    throw new RuntimeException("Unknown datatype: value=" + o1 + ", class=" + o1.getClass());
+                }
+
                 double n2 = (o2Cache == o2) ? n2Cache : Double.parseDouble((String) o2);
-                
+
                 if (o2Cache == null) {
                     o2Cache = o2;
                     n2Cache = n2;
