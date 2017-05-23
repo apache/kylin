@@ -18,45 +18,48 @@
 
 package org.apache.kylin.metadata.filter;
 
+import java.util.List;
 import java.util.ListIterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
+
 /**
  * optimize the filter if possible, not limited to:
- * <p>
  * 1. prune filters like (a = ? OR 1 = 1)
+ * 
+ * is a first type transformer defined in ITupleFilterTransformer
  */
 public class FilterOptimizeTransformer implements ITupleFilterTransformer {
     public static final Logger logger = LoggerFactory.getLogger(FilterOptimizeTransformer.class);
 
     @Override
     public TupleFilter transform(TupleFilter tupleFilter) {
-        TupleFilter translated = null;
-        if (tupleFilter instanceof CompareTupleFilter) {
-            //normal case
-            translated = replaceAlwaysTrueCompareFilter((CompareTupleFilter) tupleFilter);
-        } else if (tupleFilter instanceof LogicalTupleFilter) {
-            @SuppressWarnings("unchecked")
-            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) tupleFilter.getChildren().listIterator();
-            while (childIterator.hasNext()) {
-                TupleFilter transformed = transform(childIterator.next());
-                if (transformed != null) {
-                    childIterator.set(transformed);
-                } else {
-                    throw new IllegalStateException("Should not be null");
-                }
-            }
-
-            translated = replaceAlwaysTrueLogicalFilter((LogicalTupleFilter) tupleFilter);
-
-        }
-        return translated == null ? tupleFilter : translated;
-
+        if (tupleFilter == null || !(tupleFilter instanceof IOptimizeableTupleFilter))
+            return tupleFilter;
+        else
+            return ((IOptimizeableTupleFilter) tupleFilter).acceptOptimizeTransformer(this);
     }
 
-    private TupleFilter replaceAlwaysTrueLogicalFilter(LogicalTupleFilter logicalTupleFilter) {
+    public TupleFilter visit(CompareTupleFilter compareTupleFilter) {
+        if (compareTupleFilter != null) {
+            CompareTupleFilter.CompareResultType compareResultType = compareTupleFilter.getCompareResultType();
+
+            if (compareResultType == CompareTupleFilter.CompareResultType.AlwaysTrue) {
+                logger.debug("Optimize CompareTupleFilter {{}} to ConstantTupleFilter.TRUE", compareTupleFilter);
+                return ConstantTupleFilter.TRUE;
+            } else if (compareResultType == CompareTupleFilter.CompareResultType.AlwaysFalse) {
+                logger.debug("Optimize CompareTupleFilter {{}} to ConstantTupleFilter.FALSE", compareTupleFilter);
+                return ConstantTupleFilter.FALSE;
+            }
+        }
+
+        return compareTupleFilter;
+    }
+
+    public TupleFilter visit(LogicalTupleFilter logicalTupleFilter) {
         if (logicalTupleFilter == null) {
             return null;
         }
@@ -67,8 +70,18 @@ public class FilterOptimizeTransformer implements ITupleFilterTransformer {
             while (childIterator.hasNext()) {
                 TupleFilter next = childIterator.next();
                 if (ConstantTupleFilter.TRUE == next) {
-                    logger.debug("Translated {{}} to ConstantTupleFilter.TRUE", logicalTupleFilter);
+                    logger.debug("Optimized {{}} to ConstantTupleFilter.TRUE", logicalTupleFilter);
                     return ConstantTupleFilter.TRUE;
+                }
+            }
+        } else if (logicalTupleFilter.getOperator() == TupleFilter.FilterOperatorEnum.AND) {
+            @SuppressWarnings("unchecked")
+            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren().listIterator();
+            while (childIterator.hasNext()) {
+                TupleFilter next = childIterator.next();
+                if (ConstantTupleFilter.FALSE == next) {
+                    logger.debug("Optimized {{}} to ConstantTupleFilter.FALSE", logicalTupleFilter);
+                    return ConstantTupleFilter.FALSE;
                 }
             }
         }
@@ -76,14 +89,37 @@ public class FilterOptimizeTransformer implements ITupleFilterTransformer {
         return logicalTupleFilter;
     }
 
-    private TupleFilter replaceAlwaysTrueCompareFilter(CompareTupleFilter compareTupleFilter) {
+    public TupleFilter visit(CaseTupleFilter caseTupleFilter) {
 
-        if (compareTupleFilter != null && compareTupleFilter.alwaysReturnTrue()) {
-            logger.debug("Translated {{}} to ConstantTupleFilter.TRUE", compareTupleFilter);
-            return ConstantTupleFilter.TRUE;
+        List<TupleFilter> whenFilters = caseTupleFilter.getWhenFilters();
+        List<TupleFilter> thenFilters = caseTupleFilter.getThenFilters();
+        List<TupleFilter> newFilters = Lists.newArrayList();
+        boolean changed = false;
+        for (int i = 0; i < whenFilters.size(); i++) {
+            if (whenFilters.get(i) == ConstantTupleFilter.TRUE) {
+                return thenFilters.get(i);
+            }
+
+            if (whenFilters.get(i) == ConstantTupleFilter.FALSE) {
+                changed = true;
+                continue;
+            }
+
+            newFilters.add(whenFilters.get(i));
+            newFilters.add(thenFilters.get(i));
         }
+        newFilters.add(caseTupleFilter.getElseFilter());
 
-        return compareTupleFilter;
+        if (!changed) {
+            return caseTupleFilter;
+        } else {
+            if (newFilters.size() == 1) {
+                return newFilters.get(0);
+            }
+            
+            CaseTupleFilter newCaseTupleFilter = new CaseTupleFilter();
+            newCaseTupleFilter.addChildren(newFilters);
+            return newCaseTupleFilter;
+        }
     }
-
 }

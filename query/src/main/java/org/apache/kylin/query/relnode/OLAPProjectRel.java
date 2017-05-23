@@ -18,6 +18,8 @@
 
 package org.apache.kylin.query.relnode;
 
+import static org.apache.kylin.metadata.filter.CompareTupleFilter.CompareResultType;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -46,13 +48,16 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexProgram;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlCaseOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.model.TblColRef.InnerDataTypeEnum;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  */
@@ -208,10 +213,64 @@ public class OLAPProjectRel extends Project implements OLAPRel {
             }
         }
 
-        for (RexNode operand : call.getOperands()) {
+        List<RexNode> children = limitTranslateScope(call.getOperands(), operator);
+
+        for (RexNode operand : children) {
             translateRexNode(operand, inputColumnRowType, fieldName, sourceCollector);
         }
         return TblColRef.newInnerColumn(fieldName, InnerDataTypeEnum.LITERAL, call.toString());
+    }
+
+    //in most cases it will return children itself
+    private List<RexNode> limitTranslateScope(List<RexNode> children, SqlOperator operator) {
+
+        //group by case when 1 = 1 then x 1 = 2 then y else z 
+        if (operator instanceof SqlCaseOperator) {
+            int unknownWhenCalls = 0;
+            for (int i = 0; i < children.size() - 1; i += 2) {
+                if (children.get(i) instanceof RexCall) {
+                    RexCall whenCall = (RexCall) children.get(i);
+                    CompareResultType compareResultType = getCompareResultType(whenCall);
+                    if (compareResultType == CompareResultType.AlwaysTrue) {
+                        return Lists.newArrayList(children.get(i), children.get(i + 1));
+                    } else if (compareResultType == CompareResultType.Unknown) {
+                        unknownWhenCalls++;
+                    }
+                }
+            }
+
+            if (unknownWhenCalls == 0) {
+                return Lists.newArrayList(children.get(children.size() - 1));
+            }
+        }
+
+        return children;
+    }
+
+    private CompareResultType getCompareResultType(RexCall whenCall) {
+        List<RexNode> operands = whenCall.getOperands();
+        if (SqlKind.EQUALS == whenCall.getKind() && operands != null && operands.size() == 2) {
+            if (operands.get(0).equals(operands.get(1))) {
+                return CompareResultType.AlwaysTrue;
+            }
+
+            if (isConstant(operands.get(0)) && isConstant(operands.get(1))) {
+                return CompareResultType.AlwaysFalse;
+            }
+        }
+        return CompareResultType.Unknown;
+    }
+
+    private boolean isConstant(RexNode rexNode) {
+        if (rexNode instanceof RexLiteral) {
+            return true;
+        }
+
+        if (rexNode instanceof RexCall && SqlKind.CAST.equals(rexNode.getKind()) && ((RexCall) rexNode).getOperands().get(0) instanceof RexLiteral) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

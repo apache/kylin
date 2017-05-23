@@ -77,6 +77,7 @@ public interface OLAPRel extends RelNode {
         private RelNode parentNode = null;
         private int ctxSeq = 0;
         private Stack<OLAPContext> ctxStack = new Stack<OLAPContext>();
+        private boolean newOLAPContextRequired = false;
 
         public void visitChild(RelNode input, RelNode parentNode) {
             this.parentNode = parentNode;
@@ -102,6 +103,16 @@ public interface OLAPRel extends RelNode {
             OLAPContext context = new OLAPContext(ctxSeq++);
             ctxStack.push(context);
             OLAPContext.registerContext(context);
+            setNewOLAPContextRequired(false);
+        }
+
+        // set the flag to let OLAPImplementor allocate a new context more proactively
+        public void setNewOLAPContextRequired(boolean newOLAPContextRequired) {
+            this.newOLAPContextRequired = newOLAPContextRequired;
+        }
+
+        public boolean isNewOLAPContextRequired() {
+            return this.newOLAPContextRequired;
         }
 
         public void fixSharedOlapTableScan(SingleRel parent) {
@@ -115,19 +126,19 @@ public interface OLAPRel extends RelNode {
             if (copy != null)
                 parent.replaceInput(0, copy);
         }
-        
+
         public void fixSharedOlapTableScanOnTheRight(BiRel parent) {
             OLAPTableScan copy = copyTableScanIfNeeded(parent.getRight());
             if (copy != null)
                 parent.replaceInput(1, copy);
         }
-        
+
         public void fixSharedOlapTableScanAt(RelNode parent, int ordinalInParent) {
             OLAPTableScan copy = copyTableScanIfNeeded(parent.getInputs().get(ordinalInParent));
             if (copy != null)
                 parent.replaceInput(ordinalInParent, copy);
         }
-        
+
         private OLAPTableScan copyTableScanIfNeeded(RelNode input) {
             if (input instanceof OLAPTableScan) {
                 OLAPTableScan tableScan = (OLAPTableScan) input;
@@ -165,11 +176,11 @@ public interface OLAPRel extends RelNode {
         public static boolean needRewrite(OLAPContext ctx) {
             if (ctx.hasJoin)
                 return true;
-            
+
             String realRootFact = ctx.realization.getModel().getRootFactTable().getTableIdentity();
             if (ctx.firstTableScan.getTableName().equals(realRootFact))
                 return true;
-            
+
             return false;
         }
     }
@@ -205,15 +216,7 @@ public interface OLAPRel extends RelNode {
 
         @Override
         public EnumerableRel.Result visitChild(EnumerableRel parent, int ordinal, EnumerableRel child, EnumerableRel.Prefer prefer) {
-            // OLAPTableScan is shared instance when the same table appears multiple times in the tree.
-            // Its context must be set (or corrected) right before visiting.
-            if (child instanceof OLAPTableScan) {
-                OLAPContext parentContext = relContexts.get(parent);
-                if (parentContext != null) {
-                    ((OLAPTableScan) child).overrideContext(parentContext);
-                }
-            }
-
+            
             if (calciteDebug) {
                 OLAPContext context;
                 if (child instanceof OLAPRel)

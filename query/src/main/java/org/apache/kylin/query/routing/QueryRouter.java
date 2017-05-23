@@ -59,7 +59,7 @@ public class QueryRouter {
         RoutingRule.applyRules(candidates);
 
         if (candidates.size() == 0) {
-            throw new NoRealizationFoundException("Can't find any realization. Please confirm with providers. SQL digest: " + sqlDigest.toString());
+            return null;
         }
 
         Candidate chosen = candidates.get(0);

@@ -87,6 +87,7 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     private final String tableName;
     private final int[] fields;
     private String alias;
+    private String backupAlias;
     private ColumnRowType columnRowType;
     private OLAPContext context;
 
@@ -180,7 +181,6 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
         // distinct count will be split into a separated query that is joined with the left query
         planner.removeRule(AggregateExpandDistinctAggregatesRule.INSTANCE);
 
-
         // see Dec 26th email @ http://mail-archives.apache.org/mod_mbox/calcite-dev/201412.mbox/browser
         planner.removeRule(ExpandConversionRule.INSTANCE);
     }
@@ -208,11 +208,12 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     @Override
     public void implementOLAP(OLAPImplementor implementor) {
         Preconditions.checkState(columnRowType == null, "OLAPTableScan MUST NOT be shared by more than one prent");
-        
+
         // create context in case of non-join
-        if (implementor.getContext() == null || !(implementor.getParentNode() instanceof OLAPJoinRel)) {
+        if (implementor.getContext() == null || !(implementor.getParentNode() instanceof OLAPJoinRel) || implementor.isNewOLAPContextRequired()) {
             implementor.allocateContext();
         }
+
         columnRowType = buildColumnRowType();
         context = implementor.getContext();
         context.allTableScans.add(this);
@@ -231,38 +232,48 @@ public class OLAPTableScan extends TableScan implements OLAPRel, EnumerableRel {
     public String getAlias() {
         return alias;
     }
-    
+
     private ColumnRowType buildColumnRowType() {
         this.alias = Integer.toHexString(System.identityHashCode(this));
         TableRef tableRef = TblColRef.tableForUnknownModel(this.alias, olapTable.getSourceTable());
-        
+
         List<TblColRef> columns = new ArrayList<TblColRef>();
         for (ColumnDesc sourceColumn : olapTable.getExposedColumns()) {
             TblColRef colRef = TblColRef.columnForUnknownModel(tableRef, sourceColumn);
             columns.add(colRef);
         }
-        
+
         if (columns.size() != rowType.getFieldCount()) {
             throw new IllegalStateException("RowType=" + rowType.getFieldCount() + ", ColumnRowType=" + columns.size());
         }
         return new ColumnRowType(columns);
     }
-    
+
     public TableRef getTableRef() {
         return columnRowType.getColumnByIndex(0).getTableRef();
     }
-    
+
     @SuppressWarnings("deprecation")
     public TblColRef makeRewriteColumn(String name) {
         return getTableRef().makeFakeColumn(name);
     }
-    
+
     public void fixColumnRowTypeWithModel(DataModelDesc model, Map<String, String> aliasMap) {
         String newAlias = aliasMap.get(this.alias);
         for (TblColRef col : columnRowType.getAllColumns()) {
             TblColRef.fixUnknownModel(model, newAlias, col);
         }
+
+        this.backupAlias = this.alias;
         this.alias = newAlias;
+    }
+
+    public void unfixColumnRowTypeWithModel() {
+        this.alias = this.backupAlias;
+
+        for (TblColRef col : columnRowType.getAllColumns()) {
+            TblColRef.unfixUnknownModel(col);
+        }
     }
 
     @Override

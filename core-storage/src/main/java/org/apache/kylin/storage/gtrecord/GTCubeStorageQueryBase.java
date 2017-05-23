@@ -36,6 +36,7 @@ import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.cube.model.CubeDesc.DeriveInfo;
 import org.apache.kylin.dict.lookup.LookupStringTable;
 import org.apache.kylin.measure.MeasureType;
+import org.apache.kylin.metadata.filter.CaseTupleFilter;
 import org.apache.kylin.metadata.filter.ColumnTupleFilter;
 import org.apache.kylin.metadata.filter.CompareTupleFilter;
 import org.apache.kylin.metadata.filter.LogicalTupleFilter;
@@ -85,7 +86,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             }
 
             scanner = new CubeSegmentScanner(cubeSeg, request.getCuboid(), request.getDimensions(), request.getGroups(), request.getMetrics(), request.getFilter(), request.getHavingFilter(), request.getContext());
-            
             if (!scanner.isSegmentSkipped())
                 scanners.add(scanner);
         }
@@ -98,9 +98,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
 
     protected GTCubeStorageQueryRequest getStorageQueryRequest(StorageContext context, SQLDigest sqlDigest, TupleInfo returnTupleInfo) {
         context.setStorageQuery(this);
-
-        //deal with participant columns in subquery join
-        sqlDigest.includeSubqueryJoinParticipants();
 
         //cope with queries with no aggregations
         RawQueryLastHacker.hackNoAggregations(sqlDigest, cubeDesc, returnTupleInfo);
@@ -150,10 +147,10 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         enableStreamAggregateIfBeneficial(cuboid, groupsD, context);
         // set query deadline
         context.setDeadline(cubeInstance);
-        
+
         // push down having clause filter if possible
         TupleFilter havingFilter = checkHavingCanPushDown(sqlDigest.havingFilter, groupsD, sqlDigest.aggregations, metrics);
-        
+
         logger.info("Cuboid identified: cube={}, cuboidId={}, groupsD={}, filterD={}, limitPushdown={}, storageAggr={}", cubeInstance.getName(), cuboid.getId(), groupsD, filterColumnD, context.getFinalPushDownLimit(), context.isNeedStorageAggregation());
 
         return new GTCubeStorageQueryRequest(cuboid, dimensionsD, groupsD, filterColumnD, metrics, filterD, havingFilter, context);
@@ -293,8 +290,13 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             LogicalTupleFilter r = new LogicalTupleFilter(filter.getOperator());
             r.addChildren(newChildren);
             return r;
-        } else
+        } else if (filter instanceof CaseTupleFilter) {
+            CaseTupleFilter r = new CaseTupleFilter();
+            r.addChildren(newChildren);
+            return r;
+        } else {
             throw new IllegalStateException("Cannot replaceChildren on " + filter);
+        }
     }
 
     private TupleFilter translateDerivedInCompare(CompareTupleFilter compf, Set<TblColRef> collector) {
@@ -427,24 +429,24 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
         Segments<CubeSegment> readySegs = cubeInstance.getSegments(SegmentStatusEnum.READY);
         if (readySegs.size() != 1)
             return null;
-        
+
         // sharded-by column must on group by
         CubeDesc desc = cubeInstance.getDescriptor();
         Set<TblColRef> shardBy = desc.getShardByColumns();
         if (groupsD == null || shardBy.isEmpty() || !groupsD.containsAll(shardBy))
             return null;
-        
+
         // OK, push down
         logger.info("Push down having filter " + havingFilter);
-        
+
         // convert columns in the filter
         Set<TblColRef> aggrOutCols = new HashSet<>();
         TupleFilter.collectColumns(havingFilter, aggrOutCols);
-        
+
         for (TblColRef aggrOutCol : aggrOutCols) {
             int aggrIdxOnSql = aggrOutCol.getColumnDesc().getZeroBasedIndex(); // aggr index marked in OLAPAggregateRel
             FunctionDesc aggrFunc = aggregations.get(aggrIdxOnSql);
-            
+
             // calculate the index of this aggr among all the metrics that is sending to storage
             int aggrIdxAmongMetrics = 0;
             for (MeasureDesc m : cubeDesc.getMeasures()) {
@@ -455,7 +457,6 @@ public abstract class GTCubeStorageQueryBase implements IStorageQuery {
             }
             aggrOutCol.getColumnDesc().setId("" + (aggrIdxAmongMetrics + 1));
         }
-        
         return havingFilter;
     }
 
