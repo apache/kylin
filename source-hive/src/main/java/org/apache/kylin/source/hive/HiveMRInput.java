@@ -193,7 +193,7 @@ public class HiveMRInput implements IMRInput {
                 if (lookUpTableDesc.isView()) {
                     StringBuilder createIntermediateTableHql = new StringBuilder();
                     createIntermediateTableHql.append("DROP TABLE IF EXISTS " + lookUpTableDesc.getMaterializedName() + ";\n");
-                    createIntermediateTableHql.append("CREATE TABLE IF NOT EXISTS " + lookUpTableDesc.getMaterializedName() + "\n");
+                    createIntermediateTableHql.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + lookUpTableDesc.getMaterializedName() + "\n");
                     createIntermediateTableHql.append("LOCATION '" + jobWorkingDir + "/" + lookUpTableDesc.getMaterializedName() + "'\n");
                     createIntermediateTableHql.append("AS SELECT * FROM " + lookUpTableDesc.getIdentity() + ";\n");
                     hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
