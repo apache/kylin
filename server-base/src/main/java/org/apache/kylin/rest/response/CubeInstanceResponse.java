@@ -18,13 +18,16 @@
 
 package org.apache.kylin.rest.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Comparator;
+
 import org.apache.kylin.cube.CubeInstance;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created by luwei on 17-4-17.
  */
-public class CubeInstanceResponse extends CubeInstance{
+public class CubeInstanceResponse extends CubeInstance {
 
     public void setProject(String project) {
         this.project = project;
@@ -68,5 +71,21 @@ public class CubeInstanceResponse extends CubeInstance{
         setStatus(cubeInstance.getStatus());
         setSegments(cubeInstance.getSegments());
         setCreateTimeUTC(cubeInstance.getCreateTimeUTC());
+    }
+
+    public static class CubeComparator implements Comparator<CubeInstanceResponse> {
+        @Override
+        public int compare(CubeInstanceResponse o1, CubeInstanceResponse o2) {
+            String name1 = o1.getName(), name2 = o2.getName();
+            if (name1.endsWith("_draft")) {
+                name1 = name1.substring(0, name1.lastIndexOf("_draft"));
+            }
+            if (name2.endsWith("_draft")) {
+                name2 = name2.substring(0, name2.lastIndexOf("_draft"));
+            }
+            if (name1.equals(name2))
+                return o1.getName().compareTo(o2.getName());
+            return name1.compareTo(name2);
+        }
     }
 }

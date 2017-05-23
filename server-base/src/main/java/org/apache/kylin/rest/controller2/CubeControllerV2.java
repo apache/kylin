@@ -21,6 +21,7 @@ package org.apache.kylin.rest.controller2;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,7 @@ import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobBuildRequest;
 import org.apache.kylin.rest.request.JobBuildRequest2;
 import org.apache.kylin.rest.response.CubeInstanceResponse;
+import org.apache.kylin.rest.response.CubeInstanceResponse.CubeComparator;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
@@ -74,7 +76,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.collect.Lists;
 
@@ -149,6 +150,8 @@ public class CubeControllerV2 extends BasicController {
 
             cubeInstanceResponses.add(cubeInstanceResponse);
         }
+        CubeComparator cubeComparator = new CubeComparator();
+        Collections.sort(cubeInstanceResponses, cubeComparator);
         data.put("cubes", cubeInstanceResponses);
         data.put("size", cubes.size());
 
@@ -468,58 +471,6 @@ public class CubeControllerV2 extends BasicController {
     }
 
     /**
-     * update CubDesc
-     *
-     * @return Table metadata array
-     * @throws JsonProcessingException
-     * @throws IOException
-     */
-
-    @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse updateCubeDescV2(@RequestHeader("Accept-Language") String lang, @RequestBody CubeRequest cubeRequest) throws IOException {
-        MsgPicker.setMsg(lang);
-
-        CubeDesc desc = deserializeCubeDescV2(cubeRequest);
-        cubeServiceV2.validateCubeDesc(desc, false);
-
-        boolean createNew = cubeServiceV2.unifyCubeDesc(desc, false);
-
-        String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
-
-        desc = cubeServiceV2.updateCubeToResourceStore(desc, projectName, createNew, false);
-
-        String descData = JsonUtil.writeValueAsIndentString(desc);
-        GeneralResponse data = new GeneralResponse();
-        data.setProperty("uuid", desc.getUuid());
-        data.setProperty("cubeDescData", descData);
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
-    }
-
-    @RequestMapping(value = "/draft", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse updateCubeDescDraftV2(@RequestHeader("Accept-Language") String lang, @RequestBody CubeRequest cubeRequest) throws IOException {
-        MsgPicker.setMsg(lang);
-
-        CubeDesc desc = deserializeCubeDescV2(cubeRequest);
-        cubeServiceV2.validateCubeDesc(desc, true);
-
-        boolean createNew = cubeServiceV2.unifyCubeDesc(desc, true);
-
-        String projectName = (null == cubeRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : cubeRequest.getProject();
-
-        desc = cubeServiceV2.updateCubeToResourceStore(desc, projectName, createNew, true);
-
-        String descData = JsonUtil.writeValueAsIndentString(desc);
-        GeneralResponse data = new GeneralResponse();
-        data.setProperty("uuid", desc.getUuid());
-        data.setProperty("cubeDescData", descData);
-
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
-    }
-
-    /**
      * get Hbase Info
      *
      * @return true
@@ -702,23 +653,6 @@ public class CubeControllerV2 extends BasicController {
     public EnvelopeResponse checkNameAvailabilityV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.checkNameAvailability(cubeName), "");
-    }
-
-    private CubeDesc deserializeCubeDescV2(CubeRequest cubeRequest) throws IOException {
-        Message msg = MsgPicker.getMsg();
-
-        CubeDesc desc = null;
-        try {
-            logger.debug("Saving cube " + cubeRequest.getCubeDescData());
-            desc = JsonUtil.readValue(cubeRequest.getCubeDescData(), CubeDesc.class);
-        } catch (JsonParseException e) {
-            logger.error("The cube definition is not valid.", e);
-            throw new BadRequestException(msg.getINVALID_CUBE_DEFINITION());
-        } catch (JsonMappingException e) {
-            logger.error("The cube definition is not valid.", e);
-            throw new BadRequestException(msg.getINVALID_CUBE_DEFINITION());
-        }
-        return desc;
     }
 
     private AggregationGroup deserializeAggregationGroupV2(String aggregationGroupStr) throws IOException {

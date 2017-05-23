@@ -78,7 +78,6 @@ public class CubeServiceV2 extends CubeService {
     @Qualifier("modelMgmtServiceV2")
     private ModelServiceV2 modelServiceV2;
 
-
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
         Message msg = MsgPicker.getMsg();
@@ -345,118 +344,75 @@ public class CubeServiceV2 extends CubeService {
     }
 
     public boolean unifyCubeDesc(CubeDesc desc, boolean isDraft) throws IOException {
-        Message msg = MsgPicker.getMsg();
-
         boolean createNew = false;
-        String cubeName = desc.getName();
-        String originName = null;   // for draft rename check
-        if (desc.getUuid() != null) {
-            originName = getNameByUuid(desc.getUuid());
+        String name = desc.getName();
+        if (isDraft) {
+            name += "_draft";
+            desc.setName(name);
+            desc.setStatus(STATUS_DRAFT);
+        } else {
+            desc.setStatus(null);
         }
 
-        if (!isDraft) { // save as official cube
-            if (desc.getStatus() != null && desc.getStatus().equals(STATUS_DRAFT)) {  // from draft
-                if (originName == null) {
-                    throw new BadRequestException(msg.getORIGIN_CUBE_NOT_FOUND());
-                }
-                originName = originName.substring(0, originName.lastIndexOf("_draft"));
-                if (!originName.equals(cubeName)) {     // if rename draft
-                    CubeDesc parentDesc = getCubeDescManager().getCubeDesc(originName);
-                    if (parentDesc == null) {   // only allow rename when official cube has not been saved
-                        createNew = true;
-                        deleteCubeByUuid(desc.getUuid());
-                        desc.setStatus(null);
-                        desc.setLastModified(0);
-                        desc.setUuid(UUID.randomUUID().toString());
-                    } else {
-                        throw new BadRequestException(msg.getCUBE_RENAME());
-                    }
-                } else {    // without rename draft
-                    desc.setStatus(null);
-                    CubeDesc parentDesc = getCubeDescManager().getCubeDesc(cubeName);
-                    if (parentDesc == null) {   // official cube doesn't exist, create new one
-                        createNew = true;
-                        desc.setLastModified(0);
-                        desc.setUuid(UUID.randomUUID().toString());
-                    } else {    // update existing
-                        desc.setLastModified(parentDesc.getLastModified());
-                        desc.setUuid(parentDesc.getUuid());
-                    }
-                }
-            } else {    // from official
-                if (originName == null) {   // official cube doesn't exist, create new one
-                    createNew = true;
-                    desc.setLastModified(0);
-                    desc.setUuid(UUID.randomUUID().toString());
-                } else {
-                    if (!originName.equals(cubeName)) {    // do not allow official cube rename
-                        throw new BadRequestException(msg.getCUBE_RENAME());
-                    }
-                }
-            }
-        } else {    // save as draft model
-            if (desc.getStatus() == null) {    // from official
-                cubeName += "_draft";
-                desc.setName(cubeName);
-                desc.setStatus(STATUS_DRAFT);
-                CubeDesc draftDesc = getCubeDescManager().getCubeDesc(cubeName);
-                if (draftDesc == null) {
-                    createNew = true;
-                    desc.setLastModified(0);
-                    desc.setUuid(UUID.randomUUID().toString());
-                } else if (draftDesc.getStatus() != null && draftDesc.getStatus().equals(STATUS_DRAFT)) {   // update existing
-                    desc.setLastModified(draftDesc.getLastModified());
-                    desc.setUuid(draftDesc.getUuid());
-                } else {    // already exist an official draft with name ends with '_draft'
-                    throw new BadRequestException(String.format(msg.getNON_DRAFT_CUBE_ALREADY_EXIST(), cubeName));
-                }
-            } else if (desc.getStatus().equals(STATUS_DRAFT)) {    // from draft
-                if (originName == null) {
-                    throw new BadRequestException(msg.getORIGIN_CUBE_NOT_FOUND());
-                }
-                originName = originName.substring(0, originName.lastIndexOf("_draft"));
-                if (!originName.equals(cubeName)) {    // if rename draft
-                    CubeDesc parentDesc = getCubeDescManager().getCubeDesc(originName);
-                    if (parentDesc == null) {   // only allow rename when official cube has not been saved
-                        createNew = true;
-                        deleteCubeByUuid(desc.getUuid());
-                        cubeName += "_draft";
-                        desc.setName(cubeName);
-                        desc.setStatus(STATUS_DRAFT);
-                        desc.setLastModified(0);
-                        desc.setUuid(UUID.randomUUID().toString());
-                    } else {
-                        throw new BadRequestException(msg.getMODEL_RENAME());
-                    }
-                } else {    // without rename draft
-                    cubeName += "_draft";
-                    desc.setName(cubeName);
-                }
-            }
+        if (desc.getUuid() == null) {
+            desc.setLastModified(0);
+            desc.setUuid(UUID.randomUUID().toString());
+            return true;
         }
+
+        CubeDesc youngerSelf = killSameUuid(desc.getUuid(), name, isDraft);
+        if (youngerSelf != null) {
+            desc.setLastModified(youngerSelf.getLastModified());
+        } else {
+            createNew = true;
+            desc.setLastModified(0);
+        }
+
         return createNew;
     }
 
-    public String getNameByUuid(String uuid) {
+    public CubeDesc killSameUuid(String uuid, String name, boolean isDraft) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
+        CubeDesc youngerSelf = null, official = null;
+        boolean rename = false;
         List<CubeInstance> cubes = getCubeManager().listAllCubes();
         for (CubeInstance cube : cubes) {
-            if (cube.getDescriptor().getUuid().equals(uuid)) {
-                return cube.getName();
+            CubeDesc cubeDesc = cube.getDescriptor();
+            if (cubeDesc.getUuid().equals(uuid)) {
+                boolean toDrop = true;
+                boolean sameStatus = sameStatus(cubeDesc.getStatus(), isDraft);
+                if (sameStatus && !cubeDesc.getName().equals(name)) {
+                    rename = true;
+                }
+                if (sameStatus && cubeDesc.getName().equals(name)) {
+                    youngerSelf = cubeDesc;
+                    toDrop = false;
+                }
+                if (cubeDesc.getStatus() == null) {
+                    official = cubeDesc;
+                    toDrop = false;
+                }
+                if (toDrop) {
+                    deleteCube(cube);
+                }
             }
         }
-        return null;
+        if (official != null && rename) {
+            throw new BadRequestException(msg.getCUBE_RENAME());
+        }
+        return youngerSelf;
     }
 
-    public void deleteCubeByUuid(String uuid) throws IOException {
-        List<CubeInstance> cubes = getCubeManager().listAllCubes();
-        for (CubeInstance cube : cubes) {
-            if (cube.getDescriptor().getUuid().equals(uuid)) {
-                deleteCube(cube);
-            }
+    public boolean sameStatus(String status, boolean isDraft) {
+        if (status == null || !status.equals(STATUS_DRAFT)) {
+            return !isDraft;
+        } else {
+            return isDraft;
         }
     }
 
-    public CubeDesc updateCubeToResourceStore(CubeDesc desc, String projectName, boolean createNew, boolean isDraft) throws IOException {
+    public CubeDesc updateCubeToResourceStore(CubeDesc desc, String projectName, boolean createNew) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         String cubeName = desc.getName();
@@ -481,15 +437,6 @@ public class CubeServiceV2 extends CubeService {
 
             if (!desc.getError().isEmpty()) {
                 throw new BadRequestException(String.format(msg.getBROKEN_CUBE_DESC(), cubeName));
-            }
-        }
-
-        if (!isDraft) {
-            String draftName = desc.getName() + "_draft";
-            CubeInstance draftCube = getCubeManager().getCube(draftName);
-            if (null != draftCube && draftCube.getDescriptor().getStatus() != null && draftCube.getDescriptor().getStatus().equals(STATUS_DRAFT)) {
-                //drop draft Cube
-                deleteCube(draftCube);
             }
         }
         return desc;

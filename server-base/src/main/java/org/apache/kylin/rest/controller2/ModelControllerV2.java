@@ -18,11 +18,18 @@
 
 package org.apache.kylin.rest.controller2;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+import org.apache.kylin.common.persistence.ResourceStore.Checkpoint;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.MetadataManager;
@@ -35,9 +42,11 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.ModelRequest;
 import org.apache.kylin.rest.response.DataModelDescResponse;
+import org.apache.kylin.rest.response.DataModelDescResponse.ModelComparator;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.ResponseCode;
+import org.apache.kylin.rest.service.CacheService;
 import org.apache.kylin.rest.service.ModelServiceV2;
 import org.apache.kylin.rest.service.ProjectServiceV2;
 import org.slf4j.Logger;
@@ -53,12 +62,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.common.collect.Sets;
 
 /**
  * ModelController is defined as Restful API entrance for UI.
@@ -79,6 +85,10 @@ public class ModelControllerV2 extends BasicController {
     @Autowired
     @Qualifier("projectServiceV2")
     private ProjectServiceV2 projectServiceV2;
+
+    @Autowired
+    @Qualifier("cacheService")
+    private CacheService cacheService;
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -111,6 +121,8 @@ public class ModelControllerV2 extends BasicController {
 
             dataModelDescResponses.add(dataModelDescResponse);
         }
+        ModelComparator modelComparator = new ModelComparator();
+        Collections.sort(dataModelDescResponses, modelComparator);
         data.put("models", dataModelDescResponses);
         data.put("size", models.size());
 
@@ -121,17 +133,24 @@ public class ModelControllerV2 extends BasicController {
     @ResponseBody
     public EnvelopeResponse updateModelDescV2(@RequestHeader("Accept-Language") String lang, @RequestBody ModelRequest modelRequest) throws IOException {
         MsgPicker.setMsg(lang);
-        Message msg = MsgPicker.getMsg();
 
-        //Update Model
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
         modelServiceV2.validateModelDesc(modelDesc);
 
-        boolean createNew = modelServiceV2.unifyModelDesc(modelDesc, false);
-
         String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
 
-        modelDesc = modelServiceV2.updateModelToResourceStore(modelDesc, projectName, createNew, false);
+        ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+        Checkpoint cp = store.checkpoint();
+        try {
+            boolean createNew = modelServiceV2.unifyModelDesc(modelDesc, false);
+            modelDesc = modelServiceV2.updateModelToResourceStore(modelDesc, projectName, createNew, false);
+        } catch (Exception ex) {
+            cp.rollback();
+            cacheService.wipeAllCache();
+            throw ex;
+        } finally {
+            cp.close();
+        }
 
         String descData = JsonUtil.writeValueAsIndentString(modelDesc);
         GeneralResponse data = new GeneralResponse();
@@ -145,16 +164,24 @@ public class ModelControllerV2 extends BasicController {
     @ResponseBody
     public EnvelopeResponse updateModelDescDraftV2(@RequestHeader("Accept-Language") String lang, @RequestBody ModelRequest modelRequest) throws IOException {
         MsgPicker.setMsg(lang);
-        Message msg = MsgPicker.getMsg();
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
         modelServiceV2.validateModelDesc(modelDesc);
 
-        boolean createNew = modelServiceV2.unifyModelDesc(modelDesc, true);
-
         String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
 
-        modelDesc = modelServiceV2.updateModelToResourceStore(modelDesc, projectName, createNew, true);
+        ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
+        Checkpoint cp = store.checkpoint();
+        try {
+            boolean createNew = modelServiceV2.unifyModelDesc(modelDesc, true);
+            modelDesc = modelServiceV2.updateModelToResourceStore(modelDesc, projectName, createNew, true);
+        } catch (Exception ex) {
+            cp.rollback();
+            cacheService.wipeAllCache();
+            throw ex;
+        } finally {
+            cp.close();
+        }
 
         String descData = JsonUtil.writeValueAsIndentString(modelDesc);
         GeneralResponse data = new GeneralResponse();

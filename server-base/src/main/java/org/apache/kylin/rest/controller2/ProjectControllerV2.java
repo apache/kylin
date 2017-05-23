@@ -19,16 +19,12 @@
 package org.apache.kylin.rest.controller2;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.common.util.JsonUtil;
-import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
@@ -36,19 +32,11 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
-import org.apache.kylin.rest.service.AccessService;
-import org.apache.kylin.rest.service.CubeServiceV2;
 import org.apache.kylin.rest.service.ProjectServiceV2;
-import org.apache.kylin.rest.util.AclUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.acls.domain.GrantedAuthoritySid;
-import org.springframework.security.acls.domain.PrincipalSid;
-import org.springframework.security.acls.model.AccessControlEntry;
-import org.springframework.security.acls.model.Acl;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,17 +60,6 @@ public class ProjectControllerV2 extends BasicController {
     @Qualifier("projectServiceV2")
     private ProjectServiceV2 projectServiceV2;
 
-    @Autowired
-    @Qualifier("accessService")
-    private AccessService accessService;
-
-    @Autowired
-    private AclUtil aclUtil;
-
-    @Autowired
-    @Qualifier("cubeMgmtServiceV2")
-    private CubeServiceV2 cubeServiceV2;
-
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getProjectsV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
@@ -101,92 +78,9 @@ public class ProjectControllerV2 extends BasicController {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
 
-        List<ProjectInstance> readableProjects = new ArrayList<ProjectInstance>();
+        List<ProjectInstance> readableProjects = projectServiceV2.getReadableProjects();
         int offset = pageOffset * pageSize;
         int limit = pageSize;
-
-        //list all projects first
-        List<ProjectInstance> projectInstances = projectServiceV2.getProjectManager().listAllProjects();
-
-        if (projectInstances.size() <= offset) {
-            offset = projectInstances.size();
-            limit = 0;
-        }
-
-        if ((projectInstances.size() - offset) < limit) {
-            limit = projectInstances.size() - offset;
-        }
-
-        //get user infomation
-        UserDetails userDetails = aclUtil.getCurrentUser();
-        String userName = userDetails.getUsername();
-
-        //check if ROLE_ADMIN return all,also get user role list
-        List<String> userAuthority = aclUtil.getAuthorityList();
-        for (String auth : userAuthority) {
-            if (auth.equals(Constant.ROLE_ADMIN)) {
-                data.put("readableProjects", projectInstances.subList(offset, offset + limit));
-                data.put("size", projectInstances.size());
-                return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
-            }
-        }
-
-        for (ProjectInstance projectInstance : projectInstances) {
-            if (projectInstance == null) {
-                continue;
-            }
-
-            boolean hasProjectPermission = false;
-            AclEntity ae = accessService.getAclEntity("ProjectInstance", projectInstance.getId());
-            Acl projectAcl = accessService.getAcl(ae);
-            //project no Acl info will be skipped
-            if (projectAcl != null) {
-
-                //project owner has permission
-                if (((PrincipalSid) projectAcl.getOwner()).getPrincipal().equals(userName)) {
-                    readableProjects.add(projectInstance);
-                    continue;
-                }
-
-                //check project permission and role
-                for (AccessControlEntry ace : projectAcl.getEntries()) {
-                    if (ace.getSid() instanceof PrincipalSid && ((PrincipalSid) ace.getSid()).getPrincipal().equals(userName)) {
-                        hasProjectPermission = true;
-                        readableProjects.add(projectInstance);
-                        break;
-
-                    } else if (ace.getSid() instanceof GrantedAuthoritySid) {
-                        String projectAuthority = ((GrantedAuthoritySid) ace.getSid()).getGrantedAuthority();
-                        if (userAuthority.contains(projectAuthority)) {
-                            hasProjectPermission = true;
-                            readableProjects.add(projectInstance);
-                            break;
-                        }
-
-                    }
-
-                }
-            }
-
-            if (!hasProjectPermission) {
-                List<CubeInstance> cubeInstances = cubeServiceV2.listAllCubes(projectInstance.getName());
-
-                for (CubeInstance cubeInstance : cubeInstances) {
-                    if (cubeInstance == null) {
-                        continue;
-                    }
-
-                    if (aclUtil.isHasCubePermission(cubeInstance)) {
-                        hasProjectPermission = true;
-                        break;
-                    }
-                }
-                if (hasProjectPermission) {
-                    readableProjects.add(projectInstance);
-                }
-            }
-
-        }
 
         if (readableProjects.size() <= offset) {
             offset = readableProjects.size();
@@ -260,7 +154,6 @@ public class ProjectControllerV2 extends BasicController {
     @ResponseBody
     public void deleteProjectV2(@RequestHeader("Accept-Language") String lang, @PathVariable String projectName) throws IOException {
         MsgPicker.setMsg(lang);
-        Message msg = MsgPicker.getMsg();
 
         ProjectInstance project = projectServiceV2.getProjectManager().getProject(projectName);
         projectServiceV2.deleteProject(projectName, project);

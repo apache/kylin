@@ -80,9 +80,11 @@ public class ModelServiceV2 extends ModelService {
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         createdDesc = getMetadataManager().createDataModelDesc(desc, projectName, owner);
 
-        accessService.init(createdDesc, AclPermission.ADMINISTRATION);
-        ProjectInstance project = getProjectManager().getProject(projectName);
-        accessService.inherit(createdDesc, project);
+        if (desc.getStatus() == null || !desc.getStatus().equals(STATUS_DRAFT)) {
+            accessService.init(createdDesc, AclPermission.ADMINISTRATION);
+            ProjectInstance project = getProjectManager().getProject(projectName);
+            accessService.inherit(createdDesc, project);
+        }
         return createdDesc;
     }
 
@@ -208,115 +210,71 @@ public class ModelServiceV2 extends ModelService {
         }
     }
 
-    public boolean unifyModelDesc(DataModelDesc modelDesc, boolean isDraft) throws IOException {
-        Message msg = MsgPicker.getMsg();
-
+    public boolean unifyModelDesc(DataModelDesc desc, boolean isDraft) throws IOException {
         boolean createNew = false;
-        String modelName = modelDesc.getName();
-        String originName = null;   // for draft rename check
-        if (modelDesc.getUuid() != null) {
-            originName = getNameByUuid(modelDesc.getUuid());
+        String name = desc.getName();
+        if (isDraft) {
+            name += "_draft";
+            desc.setName(name);
+            desc.setStatus(STATUS_DRAFT);
+        } else {
+            desc.setStatus(null);
         }
 
-        if (!isDraft) { // save as official model
-            if (modelDesc.getStatus() != null && modelDesc.getStatus().equals(STATUS_DRAFT)) {  // from draft
-                if (originName == null) {
-                    throw new BadRequestException(msg.getORIGIN_MODEL_NOT_FOUND());
-                }
-                originName = originName.substring(0, originName.lastIndexOf("_draft"));
-                if (!originName.equals(modelName)) {     // if rename draft
-                    DataModelDesc parentDesc = getMetadataManager().getDataModelDesc(originName);
-                    if (parentDesc == null) {   // only allow rename when official model has not been saved
-                        createNew = true;
-                        dropModelByUuid(modelDesc.getUuid());
-                        modelDesc.setStatus(null);
-                        modelDesc.setLastModified(0);
-                        modelDesc.setUuid(UUID.randomUUID().toString());
-                    } else {
-                        throw new BadRequestException(msg.getMODEL_RENAME());
-                    }
-                } else {    // without rename draft
-                    modelDesc.setStatus(null);
-                    DataModelDesc parentDesc = getMetadataManager().getDataModelDesc(modelName);
-                    if (parentDesc == null) {   // official model doesn't exist, create new one
-                        createNew = true;
-                        modelDesc.setLastModified(0);
-                        modelDesc.setUuid(UUID.randomUUID().toString());
-                    } else {    // update existing
-                        modelDesc.setLastModified(parentDesc.getLastModified());
-                        modelDesc.setUuid(parentDesc.getUuid());
-                    }
-                }
-            } else {    // from official
-                if (originName == null) {   // official model doesn't exist, create new one
-                    createNew = true;
-                    modelDesc.setLastModified(0);
-                    modelDesc.setUuid(UUID.randomUUID().toString());
-                } else {
-                    if (!originName.equals(modelName)) {    // do not allow official model rename
-                        throw new BadRequestException(msg.getMODEL_RENAME());
-                    }
-                }
-            }
-        } else {    // save as draft model
-            if (modelDesc.getStatus() == null) {    // from official
-                modelName += "_draft";
-                modelDesc.setName(modelName);
-                modelDesc.setStatus(STATUS_DRAFT);
-                DataModelDesc draftDesc = getMetadataManager().getDataModelDesc(modelName);
-                if (draftDesc == null) {    // draft model doesn't exist, create new one
-                    createNew = true;
-                    modelDesc.setLastModified(0);
-                    modelDesc.setUuid(UUID.randomUUID().toString());
-                } else if (draftDesc.getStatus() != null && draftDesc.getStatus().equals(STATUS_DRAFT)) {   // update existing
-                    modelDesc.setLastModified(draftDesc.getLastModified());
-                    modelDesc.setUuid(draftDesc.getUuid());
-                } else {    // already exist an official draft with name ends with '_draft'
-                    throw new BadRequestException(String.format(msg.getNON_DRAFT_MODEL_ALREADY_EXIST(), modelName));
-                }
-            } else if (modelDesc.getStatus().equals(STATUS_DRAFT)) {    // from draft
-                if (originName == null) {
-                    throw new BadRequestException(msg.getORIGIN_MODEL_NOT_FOUND());
-                }
-                originName = originName.substring(0, originName.lastIndexOf("_draft"));
-                if (!originName.equals(modelName)) {    // if rename draft
-                    DataModelDesc parentDesc = getMetadataManager().getDataModelDesc(originName);
-                    if (parentDesc == null) {   // only allow rename when official model has not been saved
-                        createNew = true;
-                        dropModelByUuid(modelDesc.getUuid());
-                        modelName += "_draft";
-                        modelDesc.setName(modelName);
-                        modelDesc.setStatus(STATUS_DRAFT);
-                        modelDesc.setLastModified(0);
-                        modelDesc.setUuid(UUID.randomUUID().toString());
-                    } else {
-                        throw new BadRequestException(msg.getMODEL_RENAME());
-                    }
-                } else {    // without rename draft
-                    modelName += "_draft";
-                    modelDesc.setName(modelName);
-                }
-            }
+        if (desc.getUuid() == null) {
+            desc.setLastModified(0);
+            desc.setUuid(UUID.randomUUID().toString());
+            return true;
         }
+
+        DataModelDesc youngerSelf = killSameUuid(desc.getUuid(), name, isDraft);
+        if (youngerSelf != null) {
+            desc.setLastModified(youngerSelf.getLastModified());
+        } else {
+            createNew = true;
+            desc.setLastModified(0);
+        }
+
         return createNew;
     }
 
-    public String getNameByUuid(String uuid) {
+    public DataModelDesc killSameUuid(String uuid, String name, boolean isDraft) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
+        DataModelDesc youngerSelf = null, official = null;
+        boolean rename = false;
         List<DataModelDesc> models = getMetadataManager().getModels();
         for (DataModelDesc model : models) {
             if (model.getUuid().equals(uuid)) {
-                return model.getName();
+                boolean toDrop = true;
+                boolean sameStatus = sameStatus(model.getStatus(), isDraft);
+                if (sameStatus && !model.getName().equals(name)) {
+                    rename = true;
+                }
+                if (sameStatus && model.getName().equals(name)) {
+                    youngerSelf = model;
+                    toDrop = false;
+                }
+                if (model.getStatus() == null) {
+                    official = model;
+                    toDrop = false;
+                }
+                if (toDrop) {
+                    dropModel(model);
+                }
             }
         }
-        return null;
+        if (official != null && rename) {
+            throw new BadRequestException(msg.getMODEL_RENAME());
+        }
+        return youngerSelf;
     }
 
-    public void dropModelByUuid(String uuid) throws IOException {
-        List<DataModelDesc> models = getMetadataManager().getModels();
-        for (DataModelDesc model : models) {
-            if (model.getUuid().equals(uuid)) {
-                dropModel(model);
-            }
+    public boolean sameStatus(String status, boolean isDraft) {
+        if (status == null || !status.equals(STATUS_DRAFT)) {
+            return !isDraft;
+        } else {
+            return isDraft;
         }
     }
 
@@ -337,13 +295,6 @@ public class ModelServiceV2 extends ModelService {
 
             if (!modelDesc.getError().isEmpty()) {
                 throw new BadRequestException(String.format(msg.getBROKEN_MODEL_DESC(), modelDesc.getName()));
-            }
-        }
-
-        if (!isDraft) {
-            DataModelDesc draftDesc = getMetadataManager().getDataModelDesc(modelDesc.getName() + "_draft");
-            if (null != draftDesc && draftDesc.getStatus() != null && draftDesc.getStatus().equals(STATUS_DRAFT)) {
-                dropModel(draftDesc);
             }
         }
         return modelDesc;

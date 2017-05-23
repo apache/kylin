@@ -18,7 +18,10 @@
 
 package org.apache.kylin.rest.service;
 
-import net.sf.ehcache.CacheManager;
+import java.io.IOException;
+
+import javax.sql.DataSource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.metadata.cachesync.Broadcaster;
 import org.apache.kylin.metadata.cachesync.Broadcaster.Event;
@@ -30,8 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-import java.io.IOException;
+import net.sf.ehcache.CacheManager;
 
 /**
  */
@@ -39,7 +41,7 @@ import java.io.IOException;
 public class CacheService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
-    
+
     private static QueryDataSource queryDataSource = new QueryDataSource();
 
     @Autowired
@@ -89,6 +91,10 @@ public class CacheService extends BasicService {
     // for test
     public void setCubeService(CubeService cubeService) {
         this.cubeService = cubeService;
+    }
+
+    public void wipeAllCache() {
+        annouceWipeCache("all", "update", "all");
     }
 
     public void annouceWipeCache(String entity, String event, String cacheKey) {

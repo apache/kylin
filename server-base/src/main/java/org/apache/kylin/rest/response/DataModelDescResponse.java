@@ -18,10 +18,13 @@
 
 package org.apache.kylin.rest.response;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Comparator;
+
 import org.apache.kylin.metadata.model.DataModelDesc;
 import org.apache.kylin.metadata.model.PartitionDesc;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created by luwei on 17-4-19.
@@ -58,5 +61,21 @@ public class DataModelDescResponse extends DataModelDesc {
             setPartitionDesc(PartitionDesc.getCopyOf(dataModelDesc.getPartitionDesc()));
         setCapacity(dataModelDesc.getCapacity());
         setComputedColumnDescs(dataModelDesc.getComputedColumnDescs());
+    }
+
+    public static class ModelComparator implements Comparator<DataModelDescResponse> {
+        @Override
+        public int compare(DataModelDescResponse o1, DataModelDescResponse o2) {
+            String name1 = o1.getName(), name2 = o2.getName();
+            if (name1.endsWith("_draft")) {
+                name1 = name1.substring(0, name1.lastIndexOf("_draft"));
+            }
+            if (name2.endsWith("_draft")) {
+                name2 = name2.substring(0, name2.lastIndexOf("_draft"));
+            }
+            if (name1.equals(name2))
+                return o1.getName().compareTo(o2.getName());
+            return name1.compareTo(name2);
+        }
     }
 }

@@ -28,11 +28,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.kylin.metadata.badquery.BadQueryEntry;
 import org.apache.kylin.metadata.badquery.BadQueryHistory;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.DiagnosisService;
+import org.apache.kylin.rest.service.ProjectServiceV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,19 +59,30 @@ public class DiagnosisControllerV2 extends BasicController {
     @Qualifier("diagnosisService")
     private DiagnosisService dgService;
 
+    @Autowired
+    @Qualifier("projectServiceV2")
+    private ProjectServiceV2 projectServiceV2;
+
     /**
      * Get bad query history
      */
 
-    @RequestMapping(value = "/{project}/sql", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/sql", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getBadQuerySqlV2(@RequestHeader("Accept-Language") String lang, @PathVariable String project, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
+    public EnvelopeResponse getBadQuerySqlV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "project", required = false) String project, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
         MsgPicker.setMsg(lang);
 
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<BadQueryEntry> badEntry = Lists.newArrayList();
-        BadQueryHistory badQueryHistory = dgService.getProjectBadQueryHistory(project);
-        badEntry.addAll(badQueryHistory.getEntries());
+        if (project != null) {
+            BadQueryHistory badQueryHistory = dgService.getProjectBadQueryHistory(project);
+            badEntry.addAll(badQueryHistory.getEntries());
+        } else {
+            for (ProjectInstance projectInstance : projectServiceV2.getReadableProjects()) {
+                BadQueryHistory badQueryHistory = dgService.getProjectBadQueryHistory(projectInstance.getName());
+                badEntry.addAll(badQueryHistory.getEntries());
+            }
+        }
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
