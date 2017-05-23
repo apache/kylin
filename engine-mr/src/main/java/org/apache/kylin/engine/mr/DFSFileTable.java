@@ -28,11 +28,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.Pair;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 
 /**
  */
-public class DFSFileTable implements ReadableTable {
+public class DFSFileTable implements IReadableTable {
 
     public static final String DELIM_AUTO = "auto";
     public static final String DELIM_COMMA = ",";

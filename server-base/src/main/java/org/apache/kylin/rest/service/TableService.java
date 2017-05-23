@@ -25,12 +25,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HadoopUtil;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.engine.mr.common.HadoopShellExecutable;
 import org.apache.kylin.engine.mr.common.MapReduceExecutable;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
@@ -44,11 +45,8 @@ import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.response.TableDescResponse;
-import org.apache.kylin.source.hive.HiveClientFactory;
-import org.apache.kylin.source.hive.HiveSourceTableLoader;
-import org.apache.kylin.source.hive.IHiveClient;
-import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
-import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob;
+import org.apache.kylin.source.ISourceMetadataExplorer;
+import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +54,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.SetMultimap;
 
 @Component("tableService")
 public class TableService extends BasicService {
@@ -90,17 +93,76 @@ public class TableService extends BasicService {
     }
 
     public TableDesc getTableDescByName(String tableName, boolean withExt) {
-        TableDesc table =  getMetadataManager().getTableDesc(tableName);
-        if(withExt){
+        TableDesc table = getMetadataManager().getTableDesc(tableName);
+        if (withExt) {
             table = cloneTableDesc(table);
         }
         return table;
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public String[] loadHiveTablesToProject(String[] tables, String project) throws IOException {
-        Set<String> loaded = HiveSourceTableLoader.loadHiveTables(tables, getConfig());
-        String[] result = (String[]) loaded.toArray(new String[loaded.size()]);
+    public String[] loadHiveTablesToProject(String[] tables, String project) throws Exception {
+        // de-dup
+        SetMultimap<String, String> db2tables = LinkedHashMultimap.create();
+        for (String fullTableName : tables) {
+            String[] parts = HadoopUtil.parseHiveTableName(fullTableName);
+            db2tables.put(parts[0].toUpperCase(), parts[1].toUpperCase());
+        }
+
+        // load all tables first
+        List<Pair<TableDesc, TableExtDesc>> allMeta = Lists.newArrayList();
+        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
+        for (Map.Entry<String, String> entry : db2tables.entries()) {
+            Pair<TableDesc, TableExtDesc> pair = explr.loadTableMetadata(entry.getKey(), entry.getValue());
+            TableDesc tableDesc = pair.getFirst();
+            Preconditions.checkState(tableDesc.getDatabase().equals(entry.getKey()));
+            Preconditions.checkState(tableDesc.getName().equals(entry.getValue()));
+            Preconditions.checkState(tableDesc.getIdentity().equals(entry.getKey() + "." + entry.getValue()));
+            TableExtDesc extDesc = pair.getSecond();
+            Preconditions.checkState(tableDesc.getIdentity().equals(extDesc.getName()));
+            allMeta.add(pair);
+        }
+
+        // do schema check
+        MetadataManager metaMgr = MetadataManager.getInstance(getConfig());
+        CubeManager cubeMgr = CubeManager.getInstance(getConfig());
+        TableSchemaUpdateChecker checker = new TableSchemaUpdateChecker(metaMgr, cubeMgr);
+        for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
+            TableDesc tableDesc = pair.getFirst();
+            TableSchemaUpdateChecker.CheckResult result = checker.allowReload(tableDesc);
+            result.raiseExceptionWhenInvalid();
+        }
+
+        // save table meta
+        List<String> saved = Lists.newArrayList();
+        for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
+            TableDesc tableDesc = pair.getFirst();
+            TableExtDesc extDesc = pair.getSecond();
+            
+            TableDesc origTable = metaMgr.getTableDesc(tableDesc.getIdentity());
+            if (origTable == null) {
+                tableDesc.setUuid(UUID.randomUUID().toString());
+                tableDesc.setLastModified(0);
+            } else {
+                tableDesc.setUuid(origTable.getUuid());
+                tableDesc.setLastModified(origTable.getLastModified());
+            }
+            
+            TableExtDesc origExt = metaMgr.getTableExt(tableDesc.getIdentity());
+            if (origExt == null) {
+                extDesc.setUuid(UUID.randomUUID().toString());
+                extDesc.setLastModified(0);
+            } else {
+                extDesc.setUuid(origExt.getUuid());
+                extDesc.setLastModified(origExt.getLastModified());
+            }
+
+            metaMgr.saveTableExt(extDesc);
+            metaMgr.saveSourceTable(tableDesc);
+            saved.add(tableDesc.getIdentity());
+        }
+
+        String[] result = (String[]) saved.toArray(new String[saved.size()]);
         syncTableToProject(result, project);
         return result;
     }
@@ -197,9 +259,8 @@ public class TableService extends BasicService {
      * @throws Exception
      */
     public List<String> getHiveDbNames() throws Exception {
-        IHiveClient hiveClient = HiveClientFactory.getHiveClient();
-        List<String> results = hiveClient.getHiveDbNames();
-        return results;
+        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
+        return explr.listDatabases();
     }
 
     /**
@@ -209,9 +270,8 @@ public class TableService extends BasicService {
      * @throws Exception
      */
     public List<String> getHiveTableNames(String database) throws Exception {
-        IHiveClient hiveClient = HiveClientFactory.getHiveClient();
-        List<String> results = hiveClient.getHiveTableNames(database);
-        return results;
+        ISourceMetadataExplorer explr = SourceFactory.getDefaultSource().getSourceMetadataExplorer();
+        return explr.listTables(database);
     }
 
     private TableDescResponse cloneTableDesc(TableDesc table) {
@@ -241,7 +301,6 @@ public class TableService extends BasicService {
         return rtableDesc;
     }
 
-
     private List<TableDesc> cloneTableDesc(List<TableDesc> tables) throws IOException {
         List<TableDesc> descs = new ArrayList<TableDesc>();
         Iterator<TableDesc> it = tables.iterator();
@@ -255,7 +314,7 @@ public class TableService extends BasicService {
     }
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws IOException {
+    public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws Exception {
         MetadataManager metaMgr = getMetadataManager();
         ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
         for (String table : tables) {
@@ -274,7 +333,7 @@ public class TableService extends BasicService {
      * @param tableName
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinality(String tableName, String submitter) throws IOException {
+    public void calculateCardinality(String tableName, String submitter) throws Exception {
         tableName = normalizeHiveTableName(tableName);
         TableDesc table = getMetadataManager().getTableDesc(tableName);
         final TableExtDesc tableExt = getMetadataManager().getTableExt(tableName);
@@ -295,7 +354,7 @@ public class TableService extends BasicService {
 
         MapReduceExecutable step1 = new MapReduceExecutable();
 
-        step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
+        step1.setMapReduceJobClass(org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob.class);
         step1.setMapReduceParams(param);
         step1.setParam("segmentId", tableName);
 
@@ -303,7 +362,7 @@ public class TableService extends BasicService {
 
         HadoopShellExecutable step2 = new HadoopShellExecutable();
 
-        step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
+        step2.setJobClass(org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob.class);
         step2.setJobParams(param);
         step2.setParam("segmentId", tableName);
         job.addTask(step2);
@@ -313,7 +372,7 @@ public class TableService extends BasicService {
         getExecutableManager().addJob(job);
     }
 
-    public String normalizeHiveTableName(String tableName){
+    public String normalizeHiveTableName(String tableName) {
         String[] dbTableName = HadoopUtil.parseHiveTableName(tableName);
         return (dbTableName[0] + "." + dbTableName[1]).toUpperCase();
     }

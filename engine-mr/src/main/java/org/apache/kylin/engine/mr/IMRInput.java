@@ -18,16 +18,16 @@
 
 package org.apache.kylin.engine.mr;
 
+import java.util.Collection;
+
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.kylin.job.execution.DefaultChainedExecutable;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.ISegment;
 import org.apache.kylin.metadata.model.TableDesc;
 
-import java.util.Collection;
-
 /**
- * Any ITableSource that wishes to serve as input of MapReduce build engine must adapt to this interface.
+ * Any ISource that wishes to serve as input of MapReduce build engine must adapt to this interface.
  */
 public interface IMRInput {
 

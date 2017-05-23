@@ -474,6 +474,10 @@ abstract public class KylinConfigBase implements Serializable {
     // SOURCE.HIVE
     // ============================================================================
 
+    public int getDefaultSource() {
+        return Integer.parseInt(getOptional("kylin.source.default", "0"));
+    }
+
     public Map<Integer, String> getSourceEngines() {
         Map<Integer, String> r = Maps.newLinkedHashMap();
         // ref constants in ISourceAware

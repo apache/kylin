@@ -16,20 +16,21 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.dict;
+package org.apache.kylin.source;
 
-import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.source.IReadableTable;
+import java.util.List;
 
-/**
- * To build dictionary, we need a list of distinct values on a column.
- * For column on lookup table, simply scan the whole table since the table is small.
- * For column on fact table, the fact table is too big to iterate. So the build
- * engine will first extract distinct values (by a MR job for example), and
- * implement this interface to provide the result to DictionaryManager.
- */
-public interface DistinctColumnValuesProvider {
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 
-    /** Return a ReadableTable contains only one column, each row being a distinct value. */
-    public IReadableTable getDistinctValuesFor(TblColRef col);
+public interface ISourceMetadataExplorer {
+
+    List<String> listDatabases() throws Exception;
+    
+    List<String> listTables(String database) throws Exception;
+    
+    Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table) throws Exception;
+    
+    List<String> getRelatedKylinResources(TableDesc table);
 }

@@ -27,8 +27,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
+ * A table that can be read.
  */
-public interface ReadableTable {
+public interface IReadableTable {
 
     /**
      * Returns a reader to read the table.
@@ -39,9 +40,8 @@ public interface ReadableTable {
      * Used to detect table modifications.
      */
     public TableSignature getSignature() throws IOException;
-    
-    public boolean exists() throws IOException;
 
+    public boolean exists() throws IOException;
 
     public interface TableReader extends Closeable {
 
@@ -59,8 +59,9 @@ public interface ReadableTable {
 
     // ============================================================================
 
+    @SuppressWarnings("serial")
     @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-    public class TableSignature implements Serializable{
+    public class TableSignature implements Serializable {
 
         @JsonProperty("path")
         private String path;

@@ -38,7 +38,7 @@ import org.apache.kylin.dict.TrieDictionary;
 import org.apache.kylin.dict.TrieDictionaryBuilder;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -49,7 +49,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class SnapshotTable extends RootPersistentEntity implements ReadableTable {
+public class SnapshotTable extends RootPersistentEntity implements IReadableTable {
 
     @JsonProperty("tableName")
     private String tableName;
@@ -65,13 +65,13 @@ public class SnapshotTable extends RootPersistentEntity implements ReadableTable
     public SnapshotTable() {
     }
 
-    SnapshotTable(ReadableTable table, String tableName) throws IOException {
+    SnapshotTable(IReadableTable table, String tableName) throws IOException {
         this.tableName = tableName;
         this.signature = table.getSignature();
         this.useDictionary = true;
     }
 
-    public void takeSnapshot(ReadableTable table, TableDesc tableDesc) throws IOException {
+    public void takeSnapshot(IReadableTable table, TableDesc tableDesc) throws IOException {
         this.signature = table.getSignature();
 
         int maxIndex = tableDesc.getMaxColumnIndex();

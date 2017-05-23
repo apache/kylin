@@ -24,14 +24,17 @@ import java.util.Map;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeSegment;
 import org.apache.kylin.engine.mr.IMRInput;
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.source.ISource;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
+import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.apache.kylin.source.kafka.util.KafkaClient;
@@ -56,20 +59,12 @@ public class KafkaSource implements ISource {
     }
 
     @Override
-    public ReadableTable createReadableTable(TableDesc tableDesc) {
+    public IReadableTable createReadableTable(TableDesc tableDesc) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<String> getMRDependentResources(TableDesc table) {
-        List<String> dependentResources = Lists.newArrayList();
-        dependentResources.add(KafkaConfig.concatResourcePath(table.getIdentity()));
-        dependentResources.add(StreamingConfig.concatResourcePath(table.getIdentity()));
-        return dependentResources;
-    }
-
-    @Override
-    public SourcePartition parsePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition) {
+    public SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition) {
         checkSourceOffsets(srcPartition);
         final SourcePartition result = SourcePartition.getCopyOf(srcPartition);
         final CubeInstance cube = (CubeInstance) buildable;
@@ -183,6 +178,35 @@ public class KafkaSource implements ISource {
                 throw new IllegalArgumentException("Invalid 'sourcePartitionOffsetEnd', doesn't match with 'endOffset'");
             }
         }
+    }
+
+    @Override
+    public ISourceMetadataExplorer getSourceMetadataExplorer() {
+        return new ISourceMetadataExplorer() {
+
+            @Override
+            public List<String> listDatabases() throws Exception {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public List<String> listTables(String database) throws Exception {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Pair<TableDesc, TableExtDesc> loadTableMetadata(String database, String table) throws Exception {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public List<String> getRelatedKylinResources(TableDesc table) {
+                List<String> dependentResources = Lists.newArrayList();
+                dependentResources.add(KafkaConfig.concatResourcePath(table.getIdentity()));
+                dependentResources.add(StreamingConfig.concatResourcePath(table.getIdentity()));
+                return dependentResources;
+            }
+        };
     }
 
 }

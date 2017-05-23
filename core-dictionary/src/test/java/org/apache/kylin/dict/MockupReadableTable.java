@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 
-public class MockupReadableTable implements ReadableTable {
+public class MockupReadableTable implements IReadableTable {
 
-    public static ReadableTable newSingleColumnTable(String path, String... values) {
+    public static IReadableTable newSingleColumnTable(String path, String... values) {
         TableSignature sig = new TableSignature(path, values.length, 0);
         List<String[]> content = new ArrayList<>();
         for (String v : values) {
@@ -35,7 +35,7 @@ public class MockupReadableTable implements ReadableTable {
         return new MockupReadableTable(content, sig, true);
     }
     
-    public static ReadableTable newNonExistTable(String path) {
+    public static IReadableTable newNonExistTable(String path) {
         TableSignature sig = new TableSignature(path, -1, 0);
         return new MockupReadableTable(null, sig, false);
     }

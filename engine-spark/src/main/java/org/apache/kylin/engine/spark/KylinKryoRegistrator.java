@@ -290,7 +290,7 @@ public class KylinKryoRegistrator implements KryoRegistrator {
         kyroClasses.add(org.apache.kylin.metadata.project.RealizationEntry.class);
         kyroClasses.add(org.apache.kylin.metadata.realization.RealizationStatusEnum.class);
         kyroClasses.add(org.apache.kylin.metadata.streaming.StreamingConfig.class);
-        kyroClasses.add(org.apache.kylin.source.ReadableTable.TableSignature.class);
+        kyroClasses.add(org.apache.kylin.source.IReadableTable.TableSignature.class);
         kyroClasses.add(org.apache.kylin.storage.hybrid.HybridInstance.class);
     }
 

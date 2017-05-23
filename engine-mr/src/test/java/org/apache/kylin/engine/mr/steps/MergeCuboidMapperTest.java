@@ -43,7 +43,7 @@ import org.apache.kylin.metadata.MetadataManager;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.TblColRef;
 import org.apache.kylin.metadata.project.ProjectManager;
-import org.apache.kylin.source.ReadableTable.TableSignature;
+import org.apache.kylin.source.IReadableTable.TableSignature;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

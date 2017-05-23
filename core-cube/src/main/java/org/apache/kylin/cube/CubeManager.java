@@ -66,7 +66,7 @@ import org.apache.kylin.metadata.realization.IRealizationConstants;
 import org.apache.kylin.metadata.realization.IRealizationProvider;
 import org.apache.kylin.metadata.realization.RealizationStatusEnum;
 import org.apache.kylin.metadata.realization.RealizationType;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.SourceFactory;
 import org.apache.kylin.source.SourcePartition;
 import org.slf4j.Logger;
@@ -214,7 +214,7 @@ public class CubeManager implements IRealizationProvider {
         return result;
     }
 
-    public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, ReadableTable inpTable) throws IOException {
+    public DictionaryInfo buildDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
             return null;
@@ -226,7 +226,7 @@ public class CubeManager implements IRealizationProvider {
         return dictInfo;
     }
 
-    public DictionaryInfo saveDictionary(CubeSegment cubeSeg, TblColRef col, ReadableTable inpTable, Dictionary<String> dict) throws IOException {
+    public DictionaryInfo saveDictionary(CubeSegment cubeSeg, TblColRef col, IReadableTable inpTable, Dictionary<String> dict) throws IOException {
         CubeDesc cubeDesc = cubeSeg.getCubeDesc();
         if (!cubeDesc.getAllColumnsNeedDictionaryBuilt().contains(col))
             return null;
@@ -281,7 +281,7 @@ public class CubeManager implements IRealizationProvider {
             tableDesc.setName(tableName);
         }
 
-        ReadableTable hiveTable = SourceFactory.createReadableTable(tableDesc);
+        IReadableTable hiveTable = SourceFactory.createReadableTable(tableDesc);
         SnapshotTable snapshot = snapshotMgr.buildSnapshot(hiveTable, tableDesc);
 
         cubeSeg.putSnapshotResPath(lookupTable, snapshot.getResourcePath());
@@ -459,8 +459,22 @@ public class CubeManager implements IRealizationProvider {
         return appendSegment(cube, sourcePartition.getStartDate(), sourcePartition.getEndDate(), sourcePartition.getStartOffset(), sourcePartition.getEndOffset(), sourcePartition.getSourcePartitionOffsetStart(), sourcePartition.getSourcePartitionOffsetEnd());
     }
 
-    public CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) throws IOException {
+    CubeSegment appendSegment(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) throws IOException {
         checkBuildingSegment(cube);
+        
+        // fix start/end a bit
+        if (cube.getModel().getPartitionDesc().isPartitioned()) {
+            // if missing start, set it to where last time ends
+            if (startDate == 0 && startOffset == 0 && cube.getLastSegment() != null) {
+                CubeSegment last = cube.getLastSegment();
+                startDate = last.isSourceOffsetsOn() ? 0 : last.getDateRangeEnd();
+                startOffset = last.isSourceOffsetsOn() ? last.getSourceOffsetEnd() : 0;
+            }
+        } else {
+            // full build
+            startDate = startOffset = endOffset = 0;
+            endDate = Long.MAX_VALUE;
+        }
 
         CubeSegment newSegment = newSegment(cube, startDate, endDate, startOffset, endOffset);
         newSegment.setSourcePartitionOffsetStart(sourcePartitionOffsetStart);

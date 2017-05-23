@@ -25,7 +25,7 @@ import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.model.ColumnDesc;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 
 /**
  * @author yangli9
@@ -61,7 +61,7 @@ public class LookupStringTable extends LookupTable<String> {
     boolean[] colIsDateTime;
     boolean[] colIsNumber;
 
-    public LookupStringTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
+    public LookupStringTable(TableDesc tableDesc, String[] keyColumns, IReadableTable table) throws IOException {
         super(tableDesc, keyColumns, table);
     }
 

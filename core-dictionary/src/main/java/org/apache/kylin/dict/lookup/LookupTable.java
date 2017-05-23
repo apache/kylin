@@ -31,8 +31,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.ReadableTable;
-import org.apache.kylin.source.ReadableTable.TableReader;
+import org.apache.kylin.source.IReadableTable;
+import org.apache.kylin.source.IReadableTable.TableReader;
 
 import com.google.common.collect.Sets;
 
@@ -46,10 +46,10 @@ abstract public class LookupTable<T> {
 
     protected TableDesc tableDesc;
     protected String[] keyColumns;
-    protected ReadableTable table;
+    protected IReadableTable table;
     protected Map<Array<T>, T[]> data;
 
-    public LookupTable(TableDesc tableDesc, String[] keyColumns, ReadableTable table) throws IOException {
+    public LookupTable(TableDesc tableDesc, String[] keyColumns, IReadableTable table) throws IOException {
         this.tableDesc = tableDesc;
         this.keyColumns = keyColumns;
         this.table = table;

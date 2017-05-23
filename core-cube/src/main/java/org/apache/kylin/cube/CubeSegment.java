@@ -126,11 +126,13 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
      * returns "yyyyMMddHHmmss_yyyyMMddHHmmss"
      */
     public static String makeSegmentName(long startDate, long endDate, long startOffset, long endOffset) {
-        if (startOffset != 0 || endOffset != 0) {
-            if (startOffset == 0 && (endOffset == 0 || endOffset == Long.MAX_VALUE)) {
-                return "FULL_BUILD";
-            }
+        if (startOffset == 0 && startDate == 0 //
+                && (endOffset == 0 || endOffset == Long.MAX_VALUE) //
+                && (endDate == 0 || endDate == Long.MAX_VALUE)) {
+            return "FULL_BUILD";
+        }
 
+        if (startOffset != 0 || endOffset != 0) {
             return startOffset + "_" + endOffset;
         }
 
@@ -296,13 +298,13 @@ public class CubeSegment implements Comparable<CubeSegment>, IBuildable, ISegmen
         String r;
         String dictKey = col.getIdentity();
         r = getDictionaries().get(dictKey);
-        
+
         // try Kylin v1.x dict key as well
         if (r == null) {
             String v1DictKey = col.getTable() + "/" + col.getName();
             r = getDictionaries().get(v1DictKey);
         }
-        
+
         return r;
     }
 

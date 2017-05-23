@@ -42,7 +42,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.StringSplitter;
-import org.apache.kylin.source.ReadableTable.TableReader;
+import org.apache.kylin.source.IReadableTable.TableReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

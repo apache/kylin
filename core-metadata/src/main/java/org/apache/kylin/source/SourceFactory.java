@@ -33,21 +33,26 @@ public class SourceFactory {
         Map<Integer, String> impls = KylinConfig.getInstanceFromEnv().getSourceEngines();
         sources = new ImplementationSwitch<>(impls, ISource.class);
     }
+    
+    public static ISource getDefaultSource() {
+        KylinConfig config = KylinConfig.getInstanceFromEnv();
+        return sources.get(config.getDefaultSource());
+    }
 
-    public static ISource tableSource(ISourceAware aware) {
+    public static ISource getSource(ISourceAware aware) {
         return sources.get(aware.getSourceType());
     }
 
-    public static ReadableTable createReadableTable(TableDesc table) {
-        return tableSource(table).createReadableTable(table);
+    public static IReadableTable createReadableTable(TableDesc table) {
+        return getSource(table).createReadableTable(table);
     }
 
     public static <T> T createEngineAdapter(ISourceAware table, Class<T> engineInterface) {
-        return tableSource(table).adaptToBuildEngine(engineInterface);
+        return getSource(table).adaptToBuildEngine(engineInterface);
     }
 
     public static List<String> getMRDependentResources(TableDesc table) {
-        return tableSource(table).getMRDependentResources(table);
+        return getSource(table).getSourceMetadataExplorer().getRelatedKylinResources(table);
     }
 
 }

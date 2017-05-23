@@ -21,18 +21,18 @@ package org.apache.kylin.dict;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 
 /**
  * Created by dongli on 10/29/15.
  */
 public class TableColumnValueEnumerator implements IDictionaryValueEnumerator {
 
-    private ReadableTable.TableReader reader;
+    private IReadableTable.TableReader reader;
     private int colIndex;
     private String colValue;
 
-    public TableColumnValueEnumerator(ReadableTable.TableReader reader, int colIndex) {
+    public TableColumnValueEnumerator(IReadableTable.TableReader reader, int colIndex) {
         this.reader = reader;
         this.colIndex = colIndex;
     }

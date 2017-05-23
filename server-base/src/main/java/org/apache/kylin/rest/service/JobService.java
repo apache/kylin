@@ -211,9 +211,9 @@ public class JobService extends BasicService implements InitializingBean {
         CubeSegment newSeg = null;
         try {
             if (buildType == CubeBuildTypeEnum.BUILD) {
-                ISource source = SourceFactory.tableSource(cube);
+                ISource source = SourceFactory.getSource(cube);
                 SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
-                sourcePartition = source.parsePartitionBeforeBuild(cube, sourcePartition);
+                sourcePartition = source.enrichSourcePartitionBeforeBuild(cube, sourcePartition);
                 newSeg = getCubeManager().appendSegment(cube, sourcePartition);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter);
             } else if (buildType == CubeBuildTypeEnum.MERGE) {

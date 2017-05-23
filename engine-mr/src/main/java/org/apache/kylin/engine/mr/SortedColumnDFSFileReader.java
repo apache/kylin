@@ -17,7 +17,7 @@
 */
 package org.apache.kylin.engine.mr;
 
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -27,8 +27,8 @@ import java.util.PriorityQueue;
 /**
  * Created by xiefan on 16-11-22.
  */
-public class SortedColumnDFSFileReader implements ReadableTable.TableReader {
-    private Collection<ReadableTable.TableReader> readers;
+public class SortedColumnDFSFileReader implements IReadableTable.TableReader {
+    private Collection<IReadableTable.TableReader> readers;
 
     @SuppressWarnings("unused")
     private Comparator<String> comparator;
@@ -37,7 +37,7 @@ public class SortedColumnDFSFileReader implements ReadableTable.TableReader {
 
     private String[] row;
 
-    public SortedColumnDFSFileReader(Collection<ReadableTable.TableReader> readers, final Comparator<String> comparator) {
+    public SortedColumnDFSFileReader(Collection<IReadableTable.TableReader> readers, final Comparator<String> comparator) {
         this.readers = readers;
         this.comparator = comparator;
         pq = new PriorityQueue<ReaderBuffer>(11, new Comparator<ReaderBuffer>() {
@@ -54,7 +54,7 @@ public class SortedColumnDFSFileReader implements ReadableTable.TableReader {
                 return comparator.compare(i.peek()[0], j.peek()[0]);
             }
         });
-        for (ReadableTable.TableReader reader : readers) {
+        for (IReadableTable.TableReader reader : readers) {
             if (reader != null) {
                 try {
                     pq.add(new ReaderBuffer(reader));
@@ -91,16 +91,16 @@ public class SortedColumnDFSFileReader implements ReadableTable.TableReader {
 
     @Override
     public void close() throws IOException {
-        for (ReadableTable.TableReader reader : readers)
+        for (IReadableTable.TableReader reader : readers)
             reader.close();
     }
 
     static class ReaderBuffer {
-        private ReadableTable.TableReader reader;
+        private IReadableTable.TableReader reader;
 
         private String[] row;
 
-        public ReaderBuffer(ReadableTable.TableReader reader) throws IOException {
+        public ReaderBuffer(IReadableTable.TableReader reader) throws IOException {
             this.reader = reader;
             reload();
         }

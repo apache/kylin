@@ -18,18 +18,33 @@
 
 package org.apache.kylin.source;
 
-import java.util.List;
-
 import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 
+/**
+ * Represents a kind of source to Kylin, like Hive.
+ */
 public interface ISource {
 
+    /** 
+     * Return an explorer to sync table metadata from the data source.
+     */
+    ISourceMetadataExplorer getSourceMetadataExplorer();
+
+    /**
+     * Return an adaptor that implements specified interface as requested by the build engine.
+     * The IMRInput in particular, is required by the MR build engine.
+     */
     <I> I adaptToBuildEngine(Class<I> engineInterface);
 
-    ReadableTable createReadableTable(TableDesc tableDesc);
-
-    List<String> getMRDependentResources(TableDesc table);
-
-    SourcePartition parsePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition);
+    /**
+     * Return a ReadableTable that can iterate through the rows of given table.
+     */
+    IReadableTable createReadableTable(TableDesc tableDesc);
+    
+    /**
+     * Give the source a chance to enrich a SourcePartition before build start.
+     * Particularly, Kafka source use this chance to define start/end offsets within each partition.
+     */
+    SourcePartition enrichSourcePartitionBeforeBuild(IBuildable buildable, SourcePartition srcPartition);
 }

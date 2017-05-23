@@ -41,7 +41,7 @@ import org.apache.kylin.dict.IterableDictionaryValueEnumerator;
 import org.apache.kylin.measure.hllc.HLLCounter;
 import org.apache.kylin.metadata.model.IJoinedFlatTableDesc;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,7 +166,7 @@ public class CubingUtils {
         for (Map.Entry<TblColRef, Dictionary<String>> entry : dictionaryMap.entrySet()) {
             final TblColRef tblColRef = entry.getKey();
             final Dictionary<String> dictionary = entry.getValue();
-            ReadableTable.TableSignature signature = new ReadableTable.TableSignature();
+            IReadableTable.TableSignature signature = new IReadableTable.TableSignature();
             signature.setLastModifiedTime(System.currentTimeMillis());
             signature.setPath(String.format("streaming_%s_%s", startOffset, endOffset));
             signature.setSize(endOffset - startOffset);

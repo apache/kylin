@@ -36,7 +36,7 @@ import org.apache.kylin.dict.DictionaryManager;
 import org.apache.kylin.dict.DistinctColumnValuesProvider;
 import org.apache.kylin.engine.mr.DFSFileTable;
 import org.apache.kylin.metadata.model.TblColRef;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -119,7 +119,7 @@ public class ITDictionaryManagerTest extends LocalFileMetadataTestCase {
         }
 
         @Override
-        public ReadableTable getDistinctValuesFor(TblColRef col) {
+        public IReadableTable getDistinctValuesFor(TblColRef col) {
             return new DFSFileTable(tmpFilePath, -1);
         }
 

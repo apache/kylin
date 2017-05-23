@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.controller2;
 
+import java.io.IOException;
+
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.BadRequestException;
@@ -40,8 +42,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.io.IOException;
 
 /**
  * @author xduo
@@ -92,7 +92,7 @@ public class TableControllerV2 extends BasicController {
 
     @RequestMapping(value = "/load", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse loadHiveTablesV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws IOException {
+    public EnvelopeResponse loadHiveTablesV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws Exception {
         MsgPicker.setMsg(lang);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableServiceV2.loadHiveTables(requestV2.getTables(), requestV2.getProject(), requestV2.isNeedProfile()), "");
@@ -115,7 +115,7 @@ public class TableControllerV2 extends BasicController {
 
     @RequestMapping(value = "/cardinality", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void generateCardinalityV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws IOException {
+    public void generateCardinalityV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws Exception {
         MsgPicker.setMsg(lang);
 
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();

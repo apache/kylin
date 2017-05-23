@@ -24,14 +24,14 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 
 /**
  * Created by xiefan46 on 11/14/16.
  */
 public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumerator {
 
-    private Collection<ReadableTable.TableReader> readers;
+    private Collection<IReadableTable.TableReader> readers;
 
     private int colIndex;
 
@@ -41,7 +41,7 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
 
     private PriorityQueue<ReaderBuffer> pq;
 
-    public TableColumnValueSortedEnumerator(Collection<ReadableTable.TableReader> readers, int colIndex, final Comparator<String> comparator) {
+    public TableColumnValueSortedEnumerator(Collection<IReadableTable.TableReader> readers, int colIndex, final Comparator<String> comparator) {
         this.readers = readers;
         this.colIndex = colIndex;
         this.comparator = comparator;
@@ -59,7 +59,7 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
                 return comparator.compare(i.peek(), j.peek());
             }
         });
-        for (ReadableTable.TableReader reader : readers) {
+        for (IReadableTable.TableReader reader : readers) {
             if (reader != null) {
                 try {
                     pq.add(new ReaderBuffer(reader));
@@ -92,7 +92,7 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
 
     @Override
     public void close() throws IOException {
-        for (ReadableTable.TableReader reader : readers) {
+        for (IReadableTable.TableReader reader : readers) {
             if (reader != null)
                 reader.close();
         }
@@ -104,7 +104,7 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
     }
 
     final class ReaderBuffer {
-        public ReaderBuffer(ReadableTable.TableReader reader) throws IOException {
+        public ReaderBuffer(IReadableTable.TableReader reader) throws IOException {
             this.reader = reader;
             reload();
         }
@@ -148,7 +148,7 @@ public class TableColumnValueSortedEnumerator implements IDictionaryValueEnumera
 
         private String cache;
 
-        private ReadableTable.TableReader reader;
+        private IReadableTable.TableReader reader;
 
     }
 }

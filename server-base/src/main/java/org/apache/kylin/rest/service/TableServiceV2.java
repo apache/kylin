@@ -38,8 +38,6 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
-import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob;
-import org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +74,7 @@ public class TableServiceV2 extends TableService {
     private KafkaConfigService kafkaConfigService;
 
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws IOException {
+    public void calculateCardinalityIfNotPresent(String[] tables, String submitter) throws Exception {
         MetadataManager metaMgr = getMetadataManager();
         ExecutableManager exeMgt = ExecutableManager.getInstance(getConfig());
         for (String table : tables) {
@@ -95,7 +93,7 @@ public class TableServiceV2 extends TableService {
      * @param tableName
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
-    public void calculateCardinality(String tableName, String submitter) throws IOException {
+    public void calculateCardinality(String tableName, String submitter) throws Exception {
         Message msg = MsgPicker.getMsg();
 
         tableName = normalizeHiveTableName(tableName);
@@ -118,7 +116,7 @@ public class TableServiceV2 extends TableService {
 
         MapReduceExecutable step1 = new MapReduceExecutable();
 
-        step1.setMapReduceJobClass(HiveColumnCardinalityJob.class);
+        step1.setMapReduceJobClass(org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityJob.class);
         step1.setMapReduceParams(param);
         step1.setParam("segmentId", tableName);
 
@@ -126,7 +124,7 @@ public class TableServiceV2 extends TableService {
 
         HadoopShellExecutable step2 = new HadoopShellExecutable();
 
-        step2.setJobClass(HiveColumnCardinalityUpdateJob.class);
+        step2.setJobClass(org.apache.kylin.source.hive.cardinality.HiveColumnCardinalityUpdateJob.class);
         step2.setJobParams(param);
         step2.setParam("segmentId", tableName);
         job.addTask(step2);
@@ -187,7 +185,7 @@ public class TableServiceV2 extends TableService {
         return rtn;
     }
 
-    public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws IOException {
+    public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws Exception {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<String, String[]> result = new HashMap<String, String[]>();
 

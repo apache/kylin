@@ -25,13 +25,13 @@ import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.engine.mr.DFSFileTable;
 import org.apache.kylin.metadata.model.TableDesc;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  */
-public class HiveTable implements ReadableTable {
+public class HiveTable implements IReadableTable {
 
     private static final Logger logger = LoggerFactory.getLogger(HiveTable.class);
 

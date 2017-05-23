@@ -28,7 +28,7 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.dict.ByteComparator;
 import org.apache.kylin.dict.StringBytesConverter;
 import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.source.ReadableTable;
+import org.apache.kylin.source.IReadableTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  *
  * You need to ensure that values inside each file is sorted
  */
-public class SortedColumnDFSFile implements ReadableTable {
+public class SortedColumnDFSFile implements IReadableTable {
 
     private static final Logger logger = LoggerFactory.getLogger(SortedColumnDFSFile.class);
 

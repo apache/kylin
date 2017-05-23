@@ -20,11 +20,13 @@ package org.apache.kylin.source.hive;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.util.Set;
-
-import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.metadata.model.TableDesc;
+import org.apache.kylin.metadata.model.TableExtDesc;
+import org.apache.kylin.source.ISource;
+import org.apache.kylin.source.SourceFactory;
+import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,14 +44,17 @@ public class ITHiveSourceTableLoaderTest extends HBaseMetadataTestCase {
     }
 
     @Test
-    public void test() throws IOException {
-        KylinConfig config = getTestConfig();
-        String[] toLoad = new String[] { "DEFAULT.TEST_KYLIN_FACT", "EDW.TEST_CAL_DT" };
-        Set<String> loaded = HiveSourceTableLoader.loadHiveTables(toLoad, config);
-
-        assertTrue(loaded.size() == toLoad.length);
-        for (String str : toLoad)
-            assertTrue(loaded.contains(str));
+    public void test() throws Exception {
+        ISource source = SourceFactory.getDefaultSource();
+        ISourceMetadataExplorer explr = source.getSourceMetadataExplorer();
+        Pair<TableDesc, TableExtDesc> pair;
+        
+        pair = explr.loadTableMetadata("DEFAULT", "TEST_KYLIN_FACT");
+        assertTrue(pair.getFirst().getIdentity().equals("DEFAULT.TEST_KYLIN_FACT"));
+        
+        pair = explr.loadTableMetadata("EDW", "TEST_CAL_DT");
+        assertTrue(pair.getFirst().getIdentity().equals("EDW.TEST_CAL_DT"));
+        
     }
 
 }

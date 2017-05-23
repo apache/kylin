@@ -24,6 +24,14 @@ import java.util.Map;
 import com.google.common.base.Objects;
 
 /**
+ * Defines a set of source records that will be built into a cube segment.
+ * 
+ * There are two main approaches:
+ * 1) by a date range, in case of time partitioned tables like Hive.
+ * 2) by an offset range, in case of offset based source like Kafka.
+ * 
+ * For the offset approach, the source can further be partitioned and each partition can define
+ * its own start and end offset within that partition.
  */
 public class SourcePartition {
     long startDate;

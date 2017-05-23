@@ -152,7 +152,7 @@ public class TableController extends BasicController {
      */
     @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
-    public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) throws IOException {
+    public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) throws Exception {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] tables = tableNames.split(",");
         try {
