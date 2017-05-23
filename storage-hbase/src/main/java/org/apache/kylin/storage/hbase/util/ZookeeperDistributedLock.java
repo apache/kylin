@@ -283,7 +283,6 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     private String norm(String lockPath) {
         if (!lockPath.startsWith(zkPathBase))
             lockPath = zkPathBase + (lockPath.startsWith("/") ? "" : "/") + lockPath;
-
         return fixSlash(lockPath);
     }
 
@@ -292,7 +291,6 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             path = "/" + path;
         if (path.endsWith("/"))
             path = path.substring(0, path.length() - 1);
-
         for (int n = Integer.MAX_VALUE; n > path.length();) {
             n = path.length();
             path = path.replace("//", "/");

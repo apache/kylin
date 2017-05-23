@@ -77,7 +77,7 @@ public class ModelServiceTest extends ServiceTestBase {
         field.set(deserialize.getComputedColumnDescs().get(0), "change on comment is okay");
         DataModelDesc dataModelDesc = modelService.updateModelAndDesc(deserialize);
     }
-    
+
     @Test
     public void testFailureModelUpdateDueToComputedColumnConflict() throws IOException, JobException, NoSuchFieldException, IllegalAccessException {
         expectedEx.expect(IllegalStateException.class);

@@ -41,7 +41,6 @@ import net.sf.ehcache.CacheManager;
 public class CacheService extends BasicService {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
-
     private static QueryDataSource queryDataSource = new QueryDataSource();
 
     @Autowired

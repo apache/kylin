@@ -18,10 +18,9 @@
 
 package org.apache.kylin.rest.security;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.rest.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,26 +56,21 @@ public class KylinAuthenticationProvider implements AuthenticationProvider {
     //Embedded authentication provider
     private AuthenticationProvider authenticationProvider;
 
-    MessageDigest md = null;
+    private HashFunction hf = null;
 
     public KylinAuthenticationProvider(AuthenticationProvider authenticationProvider) {
         super();
         Assert.notNull(authenticationProvider, "The embedded authenticationProvider should not be null.");
         this.authenticationProvider = authenticationProvider;
-        try {
-            md = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to init Message Digest ", e);
-        }
+        hf = Hashing.murmur3_128();
     }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         Authentication authed = null;
         Cache userCache = cacheManager.getCache("UserCache");
-        md.reset();
-        byte[] hashKey = md.digest((authentication.getName() + authentication.getCredentials()).getBytes());
-        String userKey = Arrays.toString(hashKey);
+        byte[] hashKey = hf.hashString(authentication.getName() + authentication.getCredentials()).asBytes();
+        ByteArray userKey = new ByteArray(hashKey);
 
         Element authedUser = userCache.get(userKey);
         if (null != authedUser) {

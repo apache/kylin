@@ -603,6 +603,7 @@ public class MetadataManager {
         ResourceStore store = getStore();
         try {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
+            
             if (dataModelDesc.getStatus() == null)
                 dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
 
@@ -653,6 +654,7 @@ public class MetadataManager {
     }
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
+        
         if (dataModelDesc.getStatus() == null)
             dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
 
