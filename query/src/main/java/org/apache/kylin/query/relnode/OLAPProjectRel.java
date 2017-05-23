@@ -254,7 +254,7 @@ public class OLAPProjectRel extends Project implements OLAPRel {
                 return CompareResultType.AlwaysTrue;
             }
 
-            if (isConstant(operands.get(0)) && isConstant(operands.get(0))) {
+            if (isConstant(operands.get(0)) && isConstant(operands.get(1))) {
                 return CompareResultType.AlwaysFalse;
             }
         }
