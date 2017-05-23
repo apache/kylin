@@ -190,14 +190,16 @@ public class HiveMRInput implements IMRInput {
             HiveCmdBuilder hiveCmdBuilder = new HiveCmdBuilder();
             hiveCmdBuilder.addStatement(hiveInitStatements);
             for (TableDesc lookUpTableDesc : lookupViewsTables) {
+                String identity = lookUpTableDesc.getIdentity();
+                String intermediate = lookUpTableDesc.getMaterializedName();
                 if (lookUpTableDesc.isView()) {
                     StringBuilder createIntermediateTableHql = new StringBuilder();
-                    createIntermediateTableHql.append("DROP TABLE IF EXISTS " + lookUpTableDesc.getMaterializedName() + ";\n");
-                    createIntermediateTableHql.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + lookUpTableDesc.getMaterializedName() + "\n");
-                    createIntermediateTableHql.append("LOCATION '" + jobWorkingDir + "/" + lookUpTableDesc.getMaterializedName() + "'\n");
-                    createIntermediateTableHql.append("AS SELECT * FROM " + lookUpTableDesc.getIdentity() + ";\n");
+                    createIntermediateTableHql.append("DROP TABLE IF EXISTS " + intermediate + ";\n");
+                    createIntermediateTableHql.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediate + " LIKE " + identity + "\n");
+                    createIntermediateTableHql.append("LOCATION '" + jobWorkingDir + "/" + intermediate + "';\n");
+                    createIntermediateTableHql.append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + ";\n");
                     hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
-                    hiveViewIntermediateTables = hiveViewIntermediateTables + lookUpTableDesc.getMaterializedName() + ";";
+                    hiveViewIntermediateTables = hiveViewIntermediateTables + intermediate + ";";
                 }
             }
 
