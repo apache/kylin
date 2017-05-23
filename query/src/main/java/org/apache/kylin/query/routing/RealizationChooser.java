@@ -73,7 +73,7 @@ public class RealizationChooser {
 
                 IRealization realization = QueryRouter.selectRealization(context, modelMap.get(model));
                 if (realization == null) {
-                    logger.info("Give up on model {} because no suitable realization is found");
+                    logger.info("Give up on model {} because no suitable realization is found", model);
                     unfixModel(context);
                     continue;
                 }
