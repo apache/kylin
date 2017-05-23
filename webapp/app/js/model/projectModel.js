@@ -21,7 +21,6 @@ KylinApp.service('ProjectModel', function () {
   this.projects = [];
   this.selectedProject = "_null";
 
-
   this.setSelectedProject = function (project) {
     var _projects =[];
     angular.forEach(this.projects,function(pro){
@@ -31,6 +30,7 @@ KylinApp.service('ProjectModel', function () {
       this.selectedProject = project;
     }
   };
+
   this.getSelectedProject = function (project) {
     if (this.selectedProject == "_null") {
       return null;
@@ -56,10 +56,10 @@ KylinApp.service('ProjectModel', function () {
     this.sortProjects();
   }
 
-  this.removeProject = function (project) {
+  this.removeProject = function (projectName) {
     var index = -1;
     for (var i = 0; i < this.projects.length; i++) {
-      if (this.projects[i].name == project) {
+      if (this.projects[i].name == projectName) {
         index = i;
         break;
       }
@@ -67,7 +67,15 @@ KylinApp.service('ProjectModel', function () {
     if (index > -1) {
       this.projects.splice(index, 1);
     }
-    this.selectedProject = this.projects[0];
+
+    if (this.selectedProject == projectName) {
+        if (this.projects.length) {
+        	this.selectedProject = this.projects[0].name;
+        } else {
+        	this.selectedProject = "_null";
+        }
+    }
+
     this.sortProjects();
   }
 
@@ -96,7 +104,6 @@ KylinApp.service('ProjectModel', function () {
         }
       }
     }
-    ;
     return this.getSelectedProject();
   }
 
@@ -124,7 +131,6 @@ KylinApp.service('ProjectModel', function () {
       }
     }
     return index;
-
   }
 
 })
