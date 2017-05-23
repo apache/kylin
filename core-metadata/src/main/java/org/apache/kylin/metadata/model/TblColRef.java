@@ -87,7 +87,6 @@ public class TblColRef implements Serializable {
         checkArgument(col.table.getModel() == UNKNOWN_MODEL || col.table.getModel() == model);
         TableRef tableRef = model.findTable(alias);
         checkArgument(tableRef.getTableDesc().getIdentity().equals(col.column.getTable().getIdentity()));
-        checkArgument(tableRef.getTableDesc() == col.column.getTable());
         col.fixTableRef(tableRef);
     }
 
