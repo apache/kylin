@@ -127,7 +127,6 @@ public class SortedColumnReaderTest {
         IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(), -1);
         ArrayList<String> output = new ArrayList<>();
         while (e.moveNext()) {
-            System.out.println(new String(e.current()));
             output.add(new String(e.current()));
         }
         System.out.println(correctAnswer.size());
@@ -233,7 +232,6 @@ public class SortedColumnReaderTest {
         IDictionaryValueEnumerator e = new TableColumnValueEnumerator(column.getReader(), -1);
         ArrayList<String> output = new ArrayList<>();
         while (e.moveNext()) {
-            System.out.println(new String(e.current()));
             output.add(new String(e.current()));
         }
         System.out.println(correctAnswer.size());
