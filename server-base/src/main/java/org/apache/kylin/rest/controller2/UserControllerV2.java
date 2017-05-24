@@ -60,7 +60,9 @@ public class UserControllerV2 extends BasicController {
     @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse authenticateV2(@RequestHeader("Accept-Language") String lang) {
-        return authenticatedUserV2(lang);
+        EnvelopeResponse response = authenticatedUserV2(lang);
+        logger.debug("User login: {}", response.data);
+        return response;
     }
 
     @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
@@ -78,13 +80,11 @@ public class UserControllerV2 extends BasicController {
         }
 
         if (authentication.getPrincipal() instanceof UserDetails) {
-            logger.debug("authentication.getPrincipal() is " + authentication.getPrincipal());
             data = (UserDetails) authentication.getPrincipal();
             return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
         }
 
         if (authentication.getDetails() instanceof UserDetails) {
-            logger.debug("authentication.getDetails() is " + authentication.getDetails());
             data = (UserDetails) authentication.getDetails();
             return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
         }

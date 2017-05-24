@@ -91,7 +91,7 @@ public class UserService implements UserDetailsManager {
     }
 
     @Override
-    public void changePassword(String oldPassword, String newPasswor) {
+    public void changePassword(String oldPassword, String newPassword) {
         throw new UnsupportedOperationException();
     }
 

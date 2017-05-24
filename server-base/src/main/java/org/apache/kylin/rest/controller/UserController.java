@@ -51,7 +51,9 @@ public class UserController extends BasicController {
 
     @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = { "application/json" })
     public UserDetails authenticate() {
-        return authenticatedUser();
+        UserDetails userDetails = authenticatedUser();
+        logger.debug("User login: {}", userDetails);
+        return userDetails;
     }
 
     @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = { "application/json" })
@@ -64,12 +66,10 @@ public class UserController extends BasicController {
         }
 
         if (authentication.getPrincipal() instanceof UserDetails) {
-            //logger.debug("authentication.getPrincipal() is " + authentication.getPrincipal());
             return (UserDetails) authentication.getPrincipal();
         }
 
         if (authentication.getDetails() instanceof UserDetails) {
-            //logger.debug("authentication.getDetails() is " + authentication.getDetails());
             return (UserDetails) authentication.getDetails();
         }
 

@@ -50,16 +50,16 @@ public class ReducerNumSizing {
             //merge case
             double estimatedSize = cubeStatsReader.estimateCubeSize();
             adjustedCurrentLayerSizeEst = estimatedSize > totalMapInputMB ? totalMapInputMB : estimatedSize;
-            logger.info("estimated size {}, input size {}, adjustedCurrentLayerSizeEst: {}", estimatedSize, totalMapInputMB, adjustedCurrentLayerSizeEst);
+            logger.debug("estimated size {}, input size {}, adjustedCurrentLayerSizeEst: {}", estimatedSize, totalMapInputMB, adjustedCurrentLayerSizeEst);
         } else if (level == 0) {
             //base cuboid case TODO: the estimation could be very WRONG because it has no correction
             adjustedCurrentLayerSizeEst = cubeStatsReader.estimateLayerSize(0);
-            logger.info("adjustedCurrentLayerSizeEst: {}", adjustedCurrentLayerSizeEst);
+            logger.debug("adjustedCurrentLayerSizeEst: {}", adjustedCurrentLayerSizeEst);
         } else {
             parentLayerSizeEst = cubeStatsReader.estimateLayerSize(level - 1);
             currentLayerSizeEst = cubeStatsReader.estimateLayerSize(level);
             adjustedCurrentLayerSizeEst = totalMapInputMB / parentLayerSizeEst * currentLayerSizeEst;
-            logger.info("totalMapInputMB: {}, parentLayerSizeEst: {}, currentLayerSizeEst: {}, adjustedCurrentLayerSizeEst: {}", totalMapInputMB, parentLayerSizeEst, currentLayerSizeEst, adjustedCurrentLayerSizeEst);
+            logger.debug("totalMapInputMB: {}, parentLayerSizeEst: {}, currentLayerSizeEst: {}, adjustedCurrentLayerSizeEst: {}", totalMapInputMB, parentLayerSizeEst, currentLayerSizeEst, adjustedCurrentLayerSizeEst);
         }
 
         // number of reduce tasks
@@ -67,7 +67,7 @@ public class ReducerNumSizing {
 
         // adjust reducer number for cube which has DISTINCT_COUNT measures for better performance
         if (cubeDesc.hasMemoryHungryMeasures()) {
-            logger.info("Multiply reducer num by 4 to boost performance for memory hungry measures");
+            logger.debug("Multiply reducer num by 4 to boost performance for memory hungry measures");
             numReduceTasks = numReduceTasks * 4;
         }
 

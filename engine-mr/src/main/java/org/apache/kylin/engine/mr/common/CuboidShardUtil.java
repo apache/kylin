@@ -37,10 +37,7 @@ public class CuboidShardUtil {
 
         Map<Long, Short> filtered = Maps.newHashMap();
         for (Map.Entry<Long, Short> entry : cuboidShards.entrySet()) {
-            if (entry.getValue() <= 1) {
-                logger.info("Cuboid {} has {} shards, skip saving it as an optimization", entry.getKey(), entry.getValue());
-            } else {
-                logger.info("Cuboid {} has {} shards, saving it", entry.getKey(), entry.getValue());
+            if (entry.getValue() > 1) {
                 filtered.put(entry.getKey(), entry.getValue());
             }
         }

@@ -91,15 +91,12 @@ public class AclUtil {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetails userDetails = null;
         if (authentication == null) {
-            logger.debug("authentication is null.");
-            throw new InternalErrorException("Can not find authentication infomation.");
+            throw new InternalErrorException("Can not find authentication information.");
         }
         if (authentication.getPrincipal() instanceof UserDetails) {
-            logger.debug("authentication.getPrincipal() is " + authentication.getPrincipal());
             userDetails = (UserDetails) authentication.getPrincipal();
         }
         if (authentication.getDetails() instanceof UserDetails) {
-            logger.debug("authentication.getDetails() is " + authentication.getDetails());
             userDetails = (UserDetails) authentication.getDetails();
         }
         return userDetails;
