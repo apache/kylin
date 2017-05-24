@@ -21,6 +21,8 @@ package org.apache.kylin.common.util;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
+import com.google.common.primitives.Shorts;
+
 public class BytesUtil {
 
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
@@ -39,6 +41,12 @@ public class BytesUtil {
         }
     }
 
+    public static byte[] writeShort(short num) {
+        byte[] output = new byte[Shorts.BYTES];
+        writeShort(num, output, 0, output.length);
+        return output;
+    }
+
     public static long readShort(byte[] bytes, int offset, int size) {
         short num = 0;
         for (int i = offset, n = offset + size; i < n; i++) {
@@ -46,6 +54,10 @@ public class BytesUtil {
             num |= (short) bytes[i] & 0xFF;
         }
         return num;
+    }
+
+    public static short readShort(byte[] bytes) {
+        return (short) readShort(bytes, 0, Shorts.BYTES);
     }
 
     public static void writeUnsigned(int num, byte[] bytes, int offset, int size) {
