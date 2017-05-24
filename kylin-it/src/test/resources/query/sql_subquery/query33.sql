@@ -1,5 +1,5 @@
 
-  select  sum(price) as sum_price,  lstg_format_name,(case when '2'='1' then test_kylin_fact.lstg_site_id  when '2'='2' then test_cal_dt.week_beg_dt else test_kylin_fact.leaf_categ_id end) as xxx 
+  select    lstg_format_name,(case when '2'='1' then test_kylin_fact.lstg_site_id  when '2'='2' then test_cal_dt.week_beg_dt else test_kylin_fact.leaf_categ_id end) as xxx ,sum(price) as sum_price
   from test_kylin_fact
   inner JOIN edw.test_cal_dt as test_cal_dt
   ON test_kylin_fact.cal_dt = test_cal_dt.cal_dt
