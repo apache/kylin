@@ -75,15 +75,15 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             }
 
             Set<String> mandatoryDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            if (agg.getSelectRule().mandatory_dims != null) {
-                for (String m : agg.getSelectRule().mandatory_dims) {
+            if (agg.getSelectRule().mandatoryDims != null) {
+                for (String m : agg.getSelectRule().mandatoryDims) {
                     mandatoryDims.add(m);
                 }
             }
 
             Set<String> hierarchyDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            if (agg.getSelectRule().hierarchy_dims != null) {
-                for (String[] ss : agg.getSelectRule().hierarchy_dims) {
+            if (agg.getSelectRule().hierarchyDims != null) {
+                for (String[] ss : agg.getSelectRule().hierarchyDims) {
                     for (String s : ss) {
                         hierarchyDims.add(s);
                     }
@@ -91,8 +91,8 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             }
 
             Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            if (agg.getSelectRule().joint_dims != null) {
-                for (String[] ss : agg.getSelectRule().joint_dims) {
+            if (agg.getSelectRule().jointDims != null) {
+                for (String[] ss : agg.getSelectRule().jointDims) {
                     for (String s : ss) {
                         jointDims.add(s);
                     }
@@ -125,8 +125,8 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
             }
 
             int jointDimNum = 0;
-            if (agg.getSelectRule().joint_dims != null) {
-                for (String[] joints : agg.getSelectRule().joint_dims) {
+            if (agg.getSelectRule().jointDims != null) {
+                for (String[] joints : agg.getSelectRule().jointDims) {
 
                     Set<String> oneJoint = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
                     for (String s : joints) {
@@ -140,8 +140,8 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                     jointDimNum += oneJoint.size();
 
                     int overlapHierarchies = 0;
-                    if (agg.getSelectRule().hierarchy_dims != null) {
-                        for (String[] oneHierarchy : agg.getSelectRule().hierarchy_dims) {
+                    if (agg.getSelectRule().hierarchyDims != null) {
+                        for (String[] oneHierarchy : agg.getSelectRule().hierarchyDims) {
                             Set<String> share = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
                             share.addAll(CollectionUtils.intersection(oneJoint, Arrays.asList(oneHierarchy)));
 
@@ -165,7 +165,7 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
 
                     Set<String> existing = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
                     Set<String> overlap = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-                    for (String[] joints : agg.getSelectRule().joint_dims) {
+                    for (String[] joints : agg.getSelectRule().jointDims) {
                         Set<String> oneJoint = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
                         for (String s : joints) {
                             oneJoint.add(s);
@@ -179,12 +179,17 @@ public class AggregationGroupRule implements IValidatorRule<CubeDesc> {
                     continue;
                 }
             }
-
-            long combination = agg.calculateCuboidCombination();
-            if (combination > getMaxCombinations(cube)) {
-                String msg = "Aggregation group " + index + " has too many combinations, current combination is " + combination + ", max allowed combination is " + getMaxCombinations(cube) + "; use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
-                context.addResult(ResultLevel.ERROR, msg);
-                continue;
+            long combination = 0;
+            try {
+                combination = agg.calculateCuboidCombination();
+            } catch (Exception ex) {
+                combination = getMaxCombinations(cube) + 1;
+            } finally {
+                if (combination > getMaxCombinations(cube)) {
+                    String msg = "Aggregation group " + index + " has too many combinations, current combination is " + combination + ", max allowed combination is " + getMaxCombinations(cube) + "; use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
+                    context.addResult(ResultLevel.ERROR, msg);
+                    continue;
+                }
             }
 
             index++;

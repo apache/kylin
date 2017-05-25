@@ -77,6 +77,11 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
         for (File f : new File(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/").listFiles()) {
             System.out.println(f.getName());
             CubeDesc desc = JsonUtil.readValue(new FileInputStream(f), CubeDesc.class);
+            try {
+                desc.init(getTestConfig());
+            } catch (Exception e) {
+                // Ignore any exception here, validation may fail for bad json
+            }
             ValidateContext vContext = new ValidateContext();
             rule.validate(desc, vContext);
             vContext.print(System.out);
@@ -90,7 +95,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
 
         ValidateContext vContext = new ValidateContext();
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
-        desc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { //
+        desc.getAggregationGroups().get(0).getSelectRule().jointDims = new String[][] { //
                 new String[] { "lstg_format_name", "lstg_site_id", "slr_segment_cd", "CATEG_LVL2_NAME" } };
 
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
@@ -119,7 +124,7 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
 
         ValidateContext vContext = new ValidateContext();
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/test_kylin_cube_with_slr_desc.json"), CubeDesc.class);
-        desc.getAggregationGroups().get(0).getSelectRule().joint_dims = new String[][] { //
+        desc.getAggregationGroups().get(0).getSelectRule().jointDims = new String[][] { //
                 new String[] { "lstg_format_name", "lstg_site_id", "slr_segment_cd", "META_CATEG_NAME", "CATEG_LVL2_NAME" } };
 
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
@@ -142,6 +147,11 @@ public class AggregationGroupRuleTest extends LocalFileMetadataTestCase {
         CubeDesc desc = JsonUtil.readValue(new FileInputStream(LocalFileMetadataTestCase.LOCALMETA_TEMP_DATA + "/cube_desc/ut_cube_desc_combination_int_overflow.json"), CubeDesc.class);
 
         IValidatorRule<CubeDesc> rule = getAggregationGroupRule();
+        try {
+            desc.init(getTestConfig());
+        } catch (Exception ex) {
+            // as it's a failure case, it should throw exception
+        }
         rule.validate(desc, vContext);
         assertEquals(1, vContext.getResults().length);
     }

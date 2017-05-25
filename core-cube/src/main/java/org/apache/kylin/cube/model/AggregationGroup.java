@@ -21,11 +21,13 @@ package org.apache.kylin.cube.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.kylin.cube.cuboid.AggregationGroupScheduler;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.metadata.model.TblColRef;
 
@@ -34,10 +36,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
+@SuppressWarnings("serial")
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
-public class AggregationGroup implements Serializable{
-    public static class HierarchyMask implements java.io.Serializable {
+public class AggregationGroup implements Serializable {
+    public static class HierarchyMask implements Serializable {
         public long fullMask; // 00000111
         public long[] allMasks; // 00000100,00000110,00000111
         public long[] dims; // 00000100,00000010,00000001
@@ -59,6 +63,7 @@ public class AggregationGroup implements Serializable{
     private List<Long> normalDims;//each long is a single dim
     private CubeDesc cubeDesc;
     private boolean isMandatoryOnlyValid;
+    private HashMap<Long, Long> dim2JointMap;
 
     public void init(CubeDesc cubeDesc, RowKeyDesc rowKeyDesc) {
         this.cubeDesc = cubeDesc;
@@ -69,34 +74,33 @@ public class AggregationGroup implements Serializable{
         }
 
         normalizeColumnNames();
-        
+
         buildPartialCubeFullMask(rowKeyDesc);
         buildMandatoryColumnMask(rowKeyDesc);
-        buildHierarchyMasks(rowKeyDesc);
         buildJointColumnMask(rowKeyDesc);
         buildJointDimsMask();
-        buildNormalDimsMask();
+        buildHierarchyMasks(rowKeyDesc);
         buildHierarchyDimsMask();
-
+        buildNormalDimsMask();
     }
 
     private void normalizeColumnNames() {
         Preconditions.checkNotNull(includes);
         normalizeColumnNames(includes);
-        
-        Preconditions.checkNotNull(selectRule.mandatory_dims);
-        normalizeColumnNames(selectRule.mandatory_dims);
-        
-        if (selectRule.hierarchy_dims == null)
-            selectRule.hierarchy_dims = new String[0][];
-        for (String[] cols : selectRule.hierarchy_dims) {
+
+        Preconditions.checkNotNull(selectRule.mandatoryDims);
+        normalizeColumnNames(selectRule.mandatoryDims);
+
+        if (selectRule.hierarchyDims == null)
+            selectRule.hierarchyDims = new String[0][];
+        for (String[] cols : selectRule.hierarchyDims) {
             Preconditions.checkNotNull(cols);
             normalizeColumnNames(cols);
         }
-            
-        if (selectRule.joint_dims == null)
-            selectRule.joint_dims = new String[0][];
-        for (String[] cols : selectRule.joint_dims) {
+
+        if (selectRule.jointDims == null)
+            selectRule.jointDims = new String[0][];
+        for (String[] cols : selectRule.jointDims) {
             Preconditions.checkNotNull(cols);
             normalizeColumnNames(cols);
         }
@@ -105,12 +109,12 @@ public class AggregationGroup implements Serializable{
     private void normalizeColumnNames(String[] names) {
         if (names == null)
             return;
-        
+
         for (int i = 0; i < names.length; i++) {
             TblColRef col = cubeDesc.getModel().findColumn(names[i]);
             names[i] = col.getIdentity();
         }
-        
+
         // check no dup
         Set<String> set = new HashSet<>(Arrays.asList(names));
         if (set.size() < names.length)
@@ -132,19 +136,20 @@ public class AggregationGroup implements Serializable{
 
     private void buildJointColumnMask(RowKeyDesc rowKeyDesc) {
         joints = Lists.newArrayList();
+        dim2JointMap = Maps.newHashMap();
 
-        if (this.selectRule.joint_dims == null || this.selectRule.joint_dims.length == 0) {
+        if (this.selectRule.jointDims == null || this.selectRule.jointDims.length == 0) {
             return;
         }
 
-        for (String[] joint_dims : this.selectRule.joint_dims) {
-            if (joint_dims == null || joint_dims.length == 0) {
+        for (String[] jointDims : this.selectRule.jointDims) {
+            if (jointDims == null || jointDims.length == 0) {
                 continue;
             }
 
             long joint = 0L;
-            for (int i = 0; i < joint_dims.length; i++) {
-                TblColRef hColumn = cubeDesc.getModel().findColumn(joint_dims[i]);
+            for (int i = 0; i < jointDims.length; i++) {
+                TblColRef hColumn = cubeDesc.getModel().findColumn(jointDims[i]);
                 Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
                 long bit = 1L << index;
                 joint |= bit;
@@ -153,12 +158,20 @@ public class AggregationGroup implements Serializable{
             Preconditions.checkState(joint != 0);
             joints.add(joint);
         }
+
+        for (long jt : joints) {
+            for (int i = 0; i < 64; i++) {
+                if (((1L << i) & jt) != 0) {
+                    dim2JointMap.put((1L << i), jt);
+                }
+            }
+        }
     }
 
     private void buildMandatoryColumnMask(RowKeyDesc rowKeyDesc) {
         mandatoryColumnMask = 0L;
 
-        String[] mandatory_dims = this.selectRule.mandatory_dims;
+        String[] mandatory_dims = this.selectRule.mandatoryDims;
         if (mandatory_dims == null || mandatory_dims.length == 0) {
             return;
         }
@@ -168,17 +181,16 @@ public class AggregationGroup implements Serializable{
             Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
             mandatoryColumnMask |= (1L << index);
         }
-
     }
 
     private void buildHierarchyMasks(RowKeyDesc rowKeyDesc) {
         this.hierarchyMasks = new ArrayList<HierarchyMask>();
 
-        if (this.selectRule.hierarchy_dims == null || this.selectRule.hierarchy_dims.length == 0) {
+        if (this.selectRule.hierarchyDims == null || this.selectRule.hierarchyDims.length == 0) {
             return;
         }
 
-        for (String[] hierarchy_dims : this.selectRule.hierarchy_dims) {
+        for (String[] hierarchy_dims : this.selectRule.hierarchyDims) {
             HierarchyMask mask = new HierarchyMask();
             if (hierarchy_dims == null || hierarchy_dims.length == 0) {
                 continue;
@@ -190,6 +202,11 @@ public class AggregationGroup implements Serializable{
                 TblColRef hColumn = cubeDesc.getModel().findColumn(hierarchy_dims[i]);
                 Integer index = rowKeyDesc.getColumnBitIndex(hColumn);
                 long bit = 1L << index;
+
+                // combine joint as logic dim
+                if (dim2JointMap.get(bit) != null) {
+                    bit = dim2JointMap.get(bit);
+                }
 
                 mask.fullMask |= bit;
                 allMaskList.add(mask.fullMask);
@@ -205,9 +222,7 @@ public class AggregationGroup implements Serializable{
             }
 
             this.hierarchyMasks.add(mask);
-
         }
-
     }
 
     private void buildNormalDimsMask() {
@@ -279,33 +294,104 @@ public class AggregationGroup implements Serializable{
     /** Compute cuboid combination for aggregation group */
     public long calculateCuboidCombination() {
         long combination = 1;
-        
-        Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
-        Set<String> mandatoryDims = new TreeSet<>(Arrays.asList(selectRule.mandatory_dims));
-        
-        Set<String> hierarchyDims = new TreeSet<>();
-        for (String[] ss : selectRule.hierarchy_dims) {
-            hierarchyDims.addAll(Arrays.asList(ss));
-            combination = combination * (ss.length + 1);
+
+        if (this.getDimCap() > 0) {
+            combination = AggregationGroupScheduler.getCuboidsForAgg(cubeDesc, this).size();
+        } else {
+            Set<String> includeDims = new TreeSet<>(Arrays.asList(includes));
+            Set<String> mandatoryDims = new TreeSet<>(Arrays.asList(selectRule.mandatoryDims));
+
+            Set<String> hierarchyDims = new TreeSet<>();
+            for (String[] ss : selectRule.hierarchyDims) {
+                hierarchyDims.addAll(Arrays.asList(ss));
+                combination = combination * (ss.length + 1);
+            }
+
+            Set<String> jointDims = new TreeSet<>();
+            for (String[] ss : selectRule.jointDims) {
+                jointDims.addAll(Arrays.asList(ss));
+                combination = combination * 2;
+            }
+
+            Set<String> normalDims = new TreeSet<>();
+            normalDims.addAll(includeDims);
+            normalDims.removeAll(mandatoryDims);
+            normalDims.removeAll(hierarchyDims);
+            normalDims.removeAll(jointDims);
+
+            combination = combination * (1L << normalDims.size());
         }
-
-        Set<String> jointDims = new TreeSet<>();
-        for (String[] ss : selectRule.joint_dims) {
-            jointDims.addAll(Arrays.asList(ss));
-            combination = combination * 2;
-        }
-
-        Set<String> normalDims = new TreeSet<>();
-        normalDims.addAll(includeDims);
-        normalDims.removeAll(mandatoryDims);
-        normalDims.removeAll(hierarchyDims);
-        normalDims.removeAll(jointDims);
-
-        combination = combination * (1L << normalDims.size());
 
         return combination;
     }
-    
+
+    public boolean isOnTree(long cuboidID) {
+        if (cuboidID <= 0) {
+            return false; //cuboid must be greater than 0
+        }
+        if ((cuboidID & ~partialCubeFullMask) != 0) {
+            return false; //a cuboid's parent within agg is at most partialCubeFullMask
+        }
+
+        return checkMandatoryColumns(cuboidID) && checkHierarchy(cuboidID) && checkJoint(cuboidID);
+    }
+
+    private boolean checkMandatoryColumns(long cuboidID) {
+        if ((cuboidID & mandatoryColumnMask) != mandatoryColumnMask) {
+            return false;
+        } else {
+            //base cuboid is always valid
+            if (cuboidID == Cuboid.getBaseCuboidId(cubeDesc)) {
+                return true;
+            }
+
+            //cuboid with only mandatory columns maybe valid
+            return isMandatoryOnlyValid || (cuboidID & ~mandatoryColumnMask) != 0;
+        }
+    }
+
+    private boolean checkJoint(long cuboidID) {
+        for (long joint : joints) {
+            long common = cuboidID & joint;
+            if (!(common == 0 || common == joint)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean checkHierarchy(long cuboidID) {
+        // if no hierarchy defined in metadata
+        if (hierarchyMasks == null || hierarchyMasks.size() == 0) {
+            return true;
+        }
+
+        for (HierarchyMask hierarchy : hierarchyMasks) {
+            long result = cuboidID & hierarchy.fullMask;
+            if (result > 0) {
+                boolean meetHierarcy = false;
+                for (long mask : hierarchy.allMasks) {
+                    if (result == mask) {
+                        meetHierarcy = true;
+                        break;
+                    }
+                }
+
+                if (!meetHierarcy) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean checkDimCap(long cuboidID) {
+        if (getDimCap() <= 0) {
+            return true;
+        }
+        return Long.bitCount(cuboidID) <= getDimCap();
+    }
+
     public void setIncludes(String[] includes) {
         this.includes = includes;
     }
@@ -354,4 +440,7 @@ public class AggregationGroup implements Serializable{
         return cubeDesc;
     }
 
+    public int getDimCap() {
+        return this.selectRule.dimCap == null ? 0 : this.selectRule.dimCap;
+    }
 }

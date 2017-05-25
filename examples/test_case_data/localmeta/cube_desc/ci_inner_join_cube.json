@@ -535,7 +535,8 @@
             "TEST_KYLIN_FACT.SLR_SEGMENT_CD",
             "TEST_KYLIN_FACT.DEAL_YEAR"
           ]
-        ]
+        ],
+        "dim_cap" : 3
       }
     },
     {
@@ -600,7 +601,8 @@
             "BUYER_ACCOUNT.ACCOUNT_COUNTRY",
             "BUYER_COUNTRY.NAME"
           ]
-        ]
+        ],
+        "dim_cap" : 3
       }
     }
   ],

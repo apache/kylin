@@ -161,14 +161,14 @@ public class CubeDescUpgrade_v_1_5_1 {
             agg.setIncludes(toArray(remaining));
 
             SelectRule selectRule = new SelectRule();
-            selectRule.hierarchy_dims = hierarchies.toArray(new String[hierarchies.size()][]);
+            selectRule.hierarchyDims = hierarchies.toArray(new String[hierarchies.size()][]);
             if (joint.size() != 0) {
-                selectRule.joint_dims = new String[1][];
-                selectRule.joint_dims[0] = joint.toArray(new String[joint.size()]);
+                selectRule.jointDims = new String[1][];
+                selectRule.jointDims[0] = joint.toArray(new String[joint.size()]);
             } else {
-                selectRule.joint_dims = new String[0][];
+                selectRule.jointDims = new String[0][];
             }
-            selectRule.mandatory_dims = mandatories.toArray(new String[mandatories.size()]);
+            selectRule.mandatoryDims = mandatories.toArray(new String[mandatories.size()]);
             agg.setSelectRule(selectRule);
 
             aggs.add(agg);

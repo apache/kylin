@@ -629,25 +629,6 @@ public class CubeControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, response, "");
     }
 
-    /**
-     * Calculate Cuboid Combination based on the AggreationGroup definition.
-     *
-     * @param aggregationGroupStr
-     * @return number of cuboid, -1 if failed
-     */
-
-    @RequestMapping(value = "aggregationgroups/cuboid", method = RequestMethod.POST, produces = { "application/vnd.apache.kylin-v2+json" })
-    @ResponseBody
-    public EnvelopeResponse calculateCuboidCombinationV2(@RequestHeader("Accept-Language") String lang, @RequestBody String aggregationGroupStr) throws IOException {
-        MsgPicker.setMsg(lang);
-
-        AggregationGroup aggregationGroup = deserializeAggregationGroupV2(aggregationGroupStr);
-        if (aggregationGroup != null) {
-            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, aggregationGroup.calculateCuboidCombination(), "");
-        } else
-            return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, -1, "");
-    }
-
     @RequestMapping(value = "/checkNameAvailability/{cubeName}", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse checkNameAvailabilityV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {

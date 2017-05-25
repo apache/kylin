@@ -1,8 +1,7 @@
 {
-  "uuid": "629ab7a8-3929-4dff-b59d-2100aadccd1a",
-  "name": "ci_left_join_cube",
-  "model_name": "ci_left_join_model",
-  "description": null,
+  "name": "ut_inner_join_cube_partial",
+  "model_name": "ci_inner_join_model",
+  "description": "",
   "dimensions": [
     {
       "name": "CAL_DT",
@@ -145,224 +144,8 @@
       "column": "NAME"
     }
   ],
-  "measures": [
-    {
-      "name": "TRANS_CNT",
-      "function": {
-        "expression": "COUNT",
-        "parameter": {
-          "type": "constant",
-          "value": "1"
-        },
-        "returntype": "bigint"
-      }
-    },
-    {
-      "name": "ITEM_COUNT_SUM",
-      "function": {
-        "expression": "SUM",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.ITEM_COUNT"
-        },
-        "returntype": "bigint"
-      }
-    },
-    {
-      "name": "GMV_SUM",
-      "function": {
-        "expression": "SUM",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.PRICE"
-        },
-        "returntype": "decimal(19,4)"
-      }
-    },
-    {
-      "name": "GMV_MIN",
-      "function": {
-        "expression": "MIN",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.PRICE"
-        },
-        "returntype": "decimal(19,4)"
-      }
-    },
-    {
-      "name": "GMV_MAX",
-      "function": {
-        "expression": "MAX",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.PRICE"
-        },
-        "returntype": "decimal(19,4)"
-      }
-    },
-    {
-      "name": "SELLER_HLL",
-      "function": {
-        "expression": "COUNT_DISTINCT",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.SELLER_ID"
-        },
-        "returntype": "hllc(10)"
-      }
-    },
-    {
-      "name": "SELLER_FORMAT_HLL",
-      "function": {
-        "expression": "COUNT_DISTINCT",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.LSTG_FORMAT_NAME",
-          "next_parameter": {
-            "type": "column",
-            "value": "TEST_KYLIN_FACT.SELLER_ID"
-          }
-        },
-        "returntype": "hllc(10)"
-      }
-    },
-    {
-      "name": "TOP_SELLER",
-      "function": {
-        "expression": "TOP_N",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.PRICE",
-          "next_parameter": {
-            "type": "column",
-            "value": "TEST_KYLIN_FACT.SELLER_ID"
-          }
-        },
-        "returntype": "topn(100, 4)",
-        "configuration": {
-          "topn.encoding.TEST_KYLIN_FACT.SELLER_ID": "int:4"
-        }
-      }
-    },
-    {
-      "name": "TEST_COUNT_DISTINCT_BITMAP",
-      "function": {
-        "expression": "COUNT_DISTINCT",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP"
-        },
-        "returntype": "bitmap"
-      }
-    },
-    {
-      "name": "TEST_EXTENDED_COLUMN",
-      "function": {
-        "expression": "EXTENDED_COLUMN",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.ORDER_ID",
-          "next_parameter": {
-            "type": "column",
-            "value": "TEST_ORDER.TEST_EXTENDED_COLUMN"
-          }
-        },
-        "returntype": "extendedcolumn(100)"
-      }
-    },
-    {
-      "name": "BUYER_CONTACT",
-      "function": {
-        "expression": "EXTENDED_COLUMN",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_ORDER.BUYER_ID",
-          "next_parameter": {
-            "type": "column",
-            "value": "BUYER_ACCOUNT.ACCOUNT_CONTACT"
-          }
-        },
-        "returntype": "extendedcolumn(100)"
-      }
-    },
-    {
-      "name": "SELLER_CONTACT",
-      "function": {
-        "expression": "EXTENDED_COLUMN",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.SELLER_ID",
-          "next_parameter": {
-            "type": "column",
-            "value": "SELLER_ACCOUNT.ACCOUNT_CONTACT"
-          }
-        },
-        "returntype": "extendedcolumn(100)"
-      }
-    },
-    {
-      "name": "TRANS_ID_RAW",
-      "function": {
-        "expression": "RAW",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.TRANS_ID"
-        },
-        "returntype": "raw"
-      }
-    },
-    {
-      "name": "PRICE_RAW",
-      "function": {
-        "expression": "RAW",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.PRICE"
-        },
-        "returntype": "raw"
-      }
-    },
-    {
-      "name": "CAL_DT_RAW",
-      "function": {
-        "expression": "RAW",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.CAL_DT"
-        },
-        "returntype": "raw"
-      }
-    },
-    {
-      "name": "GVM_PERCENTILE",
-      "function": {
-        "expression": "PERCENTILE",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.PRICE"
-        },
-        "returntype": "percentile(100)"
-      }
-    },
-    {
-      "name": "COMPUTED_COLUMN_MEASURE",
-      "function": {
-        "expression": "SUM",
-        "parameter": {
-          "type": "column",
-          "value": "TEST_KYLIN_FACT.DEAL_AMOUNT"
-        },
-        "returntype": "decimal"
-      }
-    }
-  ],
-  "dictionaries": [
-    {
-      "column": "TEST_KYLIN_FACT.TEST_COUNT_DISTINCT_BITMAP",
-      "builder": "org.apache.kylin.dict.GlobalDictionaryBuilder"
-    }
-  ],
+  "measures": [],
+  "dictionaries": [],
   "rowkey": {
     "rowkey_columns": [
       {
@@ -464,59 +247,8 @@
     ]
   },
   "signature": null,
-  "last_modified": 1448959801311,
   "null_string": null,
-  "hbase_mapping": {
-    "column_family": [
-      {
-        "name": "f1",
-        "columns": [
-          {
-            "qualifier": "m",
-            "measure_refs": [
-              "TRANS_CNT",
-              "ITEM_COUNT_SUM",
-              "GMV_SUM",
-              "GMV_MIN",
-              "GMV_MAX",
-              "COMPUTED_COLUMN_MEASURE"
-            ]
-          }
-        ]
-      },
-      {
-        "name": "f2",
-        "columns": [
-          {
-            "qualifier": "m",
-            "measure_refs": [
-              "SELLER_HLL",
-              "SELLER_FORMAT_HLL",
-              "TOP_SELLER",
-              "TEST_COUNT_DISTINCT_BITMAP"
-            ]
-          }
-        ]
-      },
-      {
-        "name": "f3",
-        "columns": [
-          {
-            "qualifier": "m",
-            "measure_refs": [
-              "TEST_EXTENDED_COLUMN",
-              "TRANS_ID_RAW",
-              "PRICE_RAW",
-              "CAL_DT_RAW",
-              "BUYER_CONTACT",
-              "SELLER_CONTACT",
-              "GVM_PERCENTILE"
-            ]
-          }
-        ]
-      }
-    ]
-  },
+  "hbase_mapping": { "column_family": [ ] },
   "aggregation_groups": [
     {
       "includes": [
@@ -625,7 +357,7 @@
   "engine_type": 2,
   "storage_type": 2,
   "override_kylin_properties": {
-    "kylin.cube.algorithm": "INMEM"
+    "kylin.cube.algorithm": "LAYER"
   },
   "partition_date_start": 0
 }

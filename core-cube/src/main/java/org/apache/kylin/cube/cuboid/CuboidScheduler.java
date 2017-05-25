@@ -18,176 +18,48 @@
 
 package org.apache.kylin.cube.cuboid;
 
+import java.io.Serializable;
+
 /**
  */
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.apache.kylin.cube.model.AggregationGroup;
-import org.apache.kylin.cube.model.CubeDesc;
-
+import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class CuboidScheduler implements java.io.Serializable {
+import javax.annotation.Nullable;
 
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.model.AggregationGroup;
+import org.apache.kylin.cube.model.CubeDesc;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+@SuppressWarnings("serial")
+public class CuboidScheduler implements Serializable {
     private final CubeDesc cubeDesc;
     private final long max;
-    private final Map<Long, List<Long>> cache;
     private List<List<Long>> cuboidsByLayer;
 
     public CuboidScheduler(CubeDesc cubeDesc) {
         this.cubeDesc = cubeDesc;
         int size = this.cubeDesc.getRowkey().getRowKeyColumns().length;
         this.max = (long) Math.pow(2, size) - 1;
-        this.cache = new ConcurrentHashMap<Long, List<Long>>();
-    }
-
-    public long getParent(long child) {
-        List<Long> candidates = Lists.newArrayList();
-        long baseCuboidID = Cuboid.getBaseCuboidId(cubeDesc);
-        if (child == baseCuboidID || !Cuboid.isValid(cubeDesc, child)) {
-            throw new IllegalStateException();
-        }
-        for (AggregationGroup agg : Cuboid.getValidAggGroupForCuboid(cubeDesc, child)) {
-            boolean thisAggContributed = false;
-            if (agg.getPartialCubeFullMask() == child) {
-                //                candidates.add(baseCuboidID);
-                //                continue;
-                return baseCuboidID;
-
-            }
-
-            //+1 dim
-
-            //add one normal dim (only try the lowest dim)
-            long normalDimsMask = (agg.getNormalDimsMask() & ~child);
-            if (normalDimsMask != 0) {
-                candidates.add(child | Long.lowestOneBit(normalDimsMask));
-                thisAggContributed = true;
-            }
-
-            for (AggregationGroup.HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
-                if ((child & hierarchyMask.fullMask) == 0) {
-                    candidates.add(child | hierarchyMask.dims[0]);
-                    thisAggContributed = true;
-                } else {
-                    for (int i = hierarchyMask.allMasks.length - 1; i >= 0; i--) {
-                        if ((child & hierarchyMask.allMasks[i]) == hierarchyMask.allMasks[i]) {
-                            if (i == hierarchyMask.allMasks.length - 1) {
-                                continue;//match the full hierarchy
-                            }
-                            if ((agg.getJointDimsMask() & hierarchyMask.dims[i + 1]) == 0) {
-                                if ((child & hierarchyMask.dims[i + 1]) == 0) {
-                                    //only when the hierarchy dim is not among joints
-                                    candidates.add(child | hierarchyMask.dims[i + 1]);
-                                    thisAggContributed = true;
-                                }
-                            }
-                            break;//if hierarchyMask 111 is matched, won't check 110 or 100
-                        }
-                    }
-                }
-            }
-
-            if (thisAggContributed) {
-                //next section is going to append more than 2 dim to child
-                //thisAggContributed means there's already 1 dim added to child
-                //which can safely prune the 2+ dim candidates.
-                continue;
-            }
-
-            //2+ dim candidates
-            for (long joint : agg.getJoints()) {
-                if ((child & joint) == 0) {
-                    candidates.add(child | joint);
-                }
-            }
-        }
-
-        if (candidates.size() == 0) {
-            throw new IllegalStateException();
-        }
-
-        return Collections.min(candidates, Cuboid.cuboidSelectComparator);
-    }
-
-    public Set<Long> getPotentialChildren(long parent) {
-
-        if (parent != Cuboid.getBaseCuboid(cubeDesc).getId() && !Cuboid.isValid(cubeDesc, parent)) {
-            throw new IllegalStateException();
-        }
-
-        HashSet<Long> set = Sets.newHashSet();
-        if (Long.bitCount(parent) == 1) {
-            //do not aggregate apex cuboid
-            return set;
-        }
-
-        if (parent == Cuboid.getBaseCuboidId(cubeDesc)) {
-            //base cuboid is responsible for spawning each agg group's root
-            for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
-                long partialCubeFullMask = agg.getPartialCubeFullMask();
-                if (partialCubeFullMask != parent && Cuboid.isValid(agg, partialCubeFullMask)) {
-                    set.add(partialCubeFullMask);
-                }
-            }
-        }
-
-        for (AggregationGroup agg : Cuboid.getValidAggGroupForCuboid(cubeDesc, parent)) {
-
-            //normal dim section
-            for (long normalDimMask : agg.getNormalDims()) {
-                long common = parent & normalDimMask;
-                long temp = parent ^ normalDimMask;
-                if (common != 0 && Cuboid.isValid(agg, temp)) {
-                    set.add(temp);
-                }
-            }
-
-            for (AggregationGroup.HierarchyMask hierarchyMask : agg.getHierarchyMasks()) {
-                for (int i = hierarchyMask.allMasks.length - 1; i >= 0; i--) {
-                    if ((parent & hierarchyMask.allMasks[i]) == hierarchyMask.allMasks[i]) {
-                        if ((agg.getJointDimsMask() & hierarchyMask.dims[i]) == 0) {
-                            if (Cuboid.isValid(agg, parent ^ hierarchyMask.dims[i])) {
-                                //only when the hierarchy dim is not among joints
-                                set.add(parent ^ hierarchyMask.dims[i]);
-                            }
-                        }
-                        break;//if hierarchyMask 111 is matched, won't check 110 or 100
-                    }
-                }
-            }
-
-            //joint dim section
-            for (long joint : agg.getJoints()) {
-                if ((parent & joint) == joint) {
-                    if (Cuboid.isValid(agg, parent ^ joint)) {
-                        set.add(parent ^ joint);
-                    }
-                }
-            }
-
-        }
-
-        return set;
     }
 
     public int getCuboidCount() {
-        return getCuboidCount(Cuboid.getBaseCuboidId(cubeDesc));
-    }
-
-    private int getCuboidCount(long cuboidId) {
-        int r = 1;
-        for (Long child : getSpanningCuboid(cuboidId)) {
-            r += getCuboidCount(child);
-        }
-        return r;
+        return cubeDesc.getAllCuboids().size();
     }
 
     public List<Long> getSpanningCuboid(long cuboid) {
@@ -195,21 +67,11 @@ public class CuboidScheduler implements java.io.Serializable {
             throw new IllegalArgumentException("Cuboid " + cuboid + " is out of scope 0-" + max);
         }
 
-        List<Long> result = cache.get(cuboid);
-        if (result != null) {
-            return result;
+        List<Long> spanning = cubeDesc.getParent2Child().get(cuboid);
+        if (spanning == null) {
+            return Collections.EMPTY_LIST;
         }
-
-        result = Lists.newArrayList();
-        Set<Long> potentials = getPotentialChildren(cuboid);
-        for (Long potential : potentials) {
-            if (getParent(potential) == cuboid) {
-                result.add(potential);
-            }
-        }
-
-        cache.put(cuboid, result);
-        return result;
+        return spanning;
     }
 
     public int getCardinality(long cuboid) {
@@ -221,43 +83,214 @@ public class CuboidScheduler implements java.io.Serializable {
     }
 
     public List<Long> getAllCuboidIds() {
-        final long baseCuboidId = Cuboid.getBaseCuboidId(cubeDesc);
-        List<Long> result = Lists.newArrayList();
-        getSubCuboidIds(baseCuboidId, result);
-        return result;
+        return Lists.newArrayList(cubeDesc.getAllCuboids());
     }
 
-    private void getSubCuboidIds(long parentCuboidId, List<Long> result) {
-        result.add(parentCuboidId);
-        for (Long cuboidId : getSpanningCuboid(parentCuboidId)) {
-            getSubCuboidIds(cuboidId, result);
-        }
-    }
-
+    /**
+     * Get cuboids by layer. It's built from pre-expanding tree.
+     * @return layered cuboids
+     */
     public List<List<Long>> getCuboidsByLayer() {
         if (cuboidsByLayer != null) {
             return cuboidsByLayer;
         }
 
         int totalNum = 0;
-        int layerNum = cubeDesc.getBuildLevel();
         cuboidsByLayer = Lists.newArrayList();
 
         cuboidsByLayer.add(Collections.singletonList(Cuboid.getBaseCuboidId(cubeDesc)));
         totalNum++;
 
-        for (int i = 1; i <= layerNum; i++) {
-            List<Long> lastLayer = cuboidsByLayer.get(i - 1);
+        List<Long> lastLayer = cuboidsByLayer.get(cuboidsByLayer.size() - 1);
+        while (!lastLayer.isEmpty()) {
             List<Long> newLayer = Lists.newArrayList();
             for (Long parent : lastLayer) {
                 newLayer.addAll(getSpanningCuboid(parent));
             }
+            if (newLayer.isEmpty()) {
+                break;
+            }
             cuboidsByLayer.add(newLayer);
             totalNum += newLayer.size();
+            lastLayer = newLayer;
         }
 
         int size = getAllCuboidIds().size();
         Preconditions.checkState(totalNum == size, "total Num: " + totalNum + " actual size: " + size);
         return cuboidsByLayer;
+    }
+
+    /**
+     * Collect cuboid from bottom up, considering all factor including black list
+     * Build tree steps:
+     * 1. Build tree from bottom up considering dim capping
+     * 2. Kick out blacked-out cuboids from the tree
+     * 3. Make sure all the cuboids have proper "parent", if not add it to the tree.
+     *    Direct parent is not necessary, can jump *forward* steps to find in-direct parent.
+     *    For example, forward = 1, grandparent can also be the parent. Only if both parent
+     *    and grandparent are missing, add grandparent to the tree.
+     * @return Cuboid collection
+     */
+    public Pair<Set<Long>, Map<Long, List<Long>>> buildTreeBottomUp() {
+        int forward = cubeDesc.getParentForward();
+        KylinConfig config = cubeDesc.getConfig();
+
+        Set<Long> cuboidHolder = new HashSet<>();
+
+        // build tree structure
+        Set<Long> children = getLowestCuboids();
+        long maxCombination = config.getCubeAggrGroupMaxCombination() * 10;
+        maxCombination = maxCombination < 0 ? Long.MAX_VALUE : maxCombination;
+        while (!children.isEmpty()) {
+            if (cuboidHolder.size() > maxCombination) {
+                throw new IllegalStateException("Too many cuboids for the cube. Cuboid combination reached " + cuboidHolder.size() + " and limit is " + maxCombination + ". Abort calculation.");
+            }
+            cuboidHolder.addAll(children);
+            children = getOnTreeParentsByLayer(children);
+        }
+        cuboidHolder.add(Cuboid.getBaseCuboidId(cubeDesc));
+
+        // kick off blacked
+        cuboidHolder = Sets.newHashSet(Iterators.filter(cuboidHolder.iterator(), new Predicate<Long>() {
+            @Override
+            public boolean apply(@Nullable Long cuboidId) {
+                return !cubeDesc.isBlackedCuboid(cuboidId);
+            }
+        }));
+
+        // fill padding cuboids
+        Map<Long, List<Long>> parent2Child = Maps.newHashMap();
+        Queue<Long> cuboidScan = new ArrayDeque<>();
+        cuboidScan.addAll(cuboidHolder);
+        while (!cuboidScan.isEmpty()) {
+            long current = cuboidScan.poll();
+            long parent = getParentOnPromise(current, cuboidHolder, forward);
+
+            if (parent > 0) {
+                if (!cuboidHolder.contains(parent)) {
+                    cuboidScan.add(parent);
+                    cuboidHolder.add(parent);
+                }
+                if (parent2Child.containsKey(parent)) {
+                    parent2Child.get(parent).add(current);
+                } else {
+                    parent2Child.put(parent, Lists.newArrayList(current));
+                }
+            }
+        }
+
+        return Pair.newPair(cuboidHolder, parent2Child);
+    }
+
+    private long getParentOnPromise(long child, Set<Long> coll, int forward) {
+        long parent = getOnTreeParent(child);
+        if (parent < 0) {
+            return -1;
+        }
+
+        if (coll.contains(parent) || forward == 0) {
+            return parent;
+        }
+
+        return getParentOnPromise(parent, coll, forward - 1);
+    }
+
+    /**
+     * Get the parent cuboid really on the spanning tree.
+     * @param child an on-tree cuboid
+     * @return
+     */
+    public long getValidParent(long child) {
+        long parent = getOnTreeParent(child);
+        while (parent > 0) {
+            if (cubeDesc.getAllCuboids().contains(parent)) {
+                break;
+            }
+            parent = getOnTreeParent(parent);
+        }
+
+        if (parent <= 0) {
+            throw new IllegalStateException("Can't find valid parent for Cuboid " + child);
+        }
+        return parent;
+    }
+
+    private long getOnTreeParent(long child) {
+        Collection<Long> candidates = getOnTreeParents(child);
+        if (candidates == null || candidates.isEmpty()) {
+            return -1;
+        }
+        return Collections.min(candidates, Cuboid.cuboidSelectComparator);
+    }
+
+    /**
+     * Get all parent for children cuboids, considering dim cap.
+     * @param children children cuboids
+     * @return all parents cuboids
+     */
+    private Set<Long> getOnTreeParentsByLayer(Collection<Long> children) {
+        Set<Long> parents = new HashSet<>();
+        for (long child : children) {
+            parents.addAll(getOnTreeParents(child));
+        }
+        parents = Sets.newHashSet(Iterators.filter(parents.iterator(), new Predicate<Long>() {
+            @Override
+            public boolean apply(@Nullable Long cuboidId) {
+                if (cuboidId == Cuboid.getBaseCuboidId(cubeDesc)) {
+                    return true;
+                }
+
+                for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+                    if (agg.isOnTree(cuboidId) && agg.checkDimCap(cuboidId)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }));
+        return parents;
+    }
+
+    /**
+     * Get all *possible* parent for a child cuboid
+     * @param child Child cuboid ID
+     * @return all *possible* parent cuboids
+     */
+    private Set<Long> getOnTreeParents(long child) {
+        List<AggregationGroup> aggrs = Lists.newArrayList();
+        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+            if (agg.isOnTree(child)) {
+                aggrs.add(agg);
+            }
+        }
+
+        return getOnTreeParents(child, aggrs);
+    }
+
+    /**
+     * Get lowest (not Cube building level) Cuboids for every Agg group
+     * @return lowest level cuboids
+     */
+    private Set<Long> getLowestCuboids() {
+        return getOnTreeParents(0L, cubeDesc.getAggregationGroups());
+    }
+
+    private Set<Long> getOnTreeParents(long child, Collection<AggregationGroup> groups) {
+        Set<Long> parentCandidate = new HashSet<>();
+
+        if (child == Cuboid.getBaseCuboidId(cubeDesc)) {
+            return parentCandidate;
+        }
+
+        for (AggregationGroup agg : groups) {
+            if (child == agg.getPartialCubeFullMask()) {
+                parentCandidate.add(Cuboid.getBaseCuboidId(cubeDesc));
+                return parentCandidate;
+            }
+            parentCandidate.addAll(AggregationGroupScheduler.getOnTreeParents(child, agg));
+        }
+
+        return parentCandidate;
     }
 }

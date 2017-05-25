@@ -18,10 +18,16 @@
 
 package org.apache.kylin.cube.cuboid;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Lists;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.util.Bytes;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
@@ -32,20 +38,18 @@ import org.apache.kylin.cube.model.RowKeyColDesc;
 import org.apache.kylin.metadata.model.FunctionDesc;
 import org.apache.kylin.metadata.model.TblColRef;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Lists;
 
-public class Cuboid implements Comparable<Cuboid>, java.io.Serializable {
+@SuppressWarnings("serial")
+public class Cuboid implements Comparable<Cuboid>, Serializable {
 
     private final static Map<String, Map<Long, Cuboid>> CUBOID_CACHE = new ConcurrentHashMap<String, Map<Long, Cuboid>>();
 
-    //smaller is better
+    // smaller is better
     public final static Comparator<Long> cuboidSelectComparator = new Comparator<Long>() {
         @Override
         public int compare(Long o1, Long o2) {
@@ -53,6 +57,7 @@ public class Cuboid implements Comparable<Cuboid>, java.io.Serializable {
         }
     };
 
+    // this is the only entry point for query to find the right cuboid
     public static Cuboid identifyCuboid(CubeDesc cubeDesc, Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
         for (FunctionDesc metric : metrics) {
             if (metric.getMeasureType().onlyAggrInBaseCuboid())
@@ -64,6 +69,7 @@ public class Cuboid implements Comparable<Cuboid>, java.io.Serializable {
             int index = cubeDesc.getRowkey().getColumnBitIndex(column);
             cuboidID |= 1L << index;
         }
+
         return Cuboid.findById(cubeDesc, cuboidID);
     }
 
@@ -84,42 +90,10 @@ public class Cuboid implements Comparable<Cuboid>, java.io.Serializable {
             cubeCache.put(cuboidID, cuboid);
         }
         return cuboid;
-
     }
 
     public static boolean isValid(CubeDesc cube, long cuboidID) {
-        //base cuboid is always valid
-        if (cuboidID == getBaseCuboidId(cube)) {
-            return true;
-        }
-
-        for (AggregationGroup agg : cube.getAggregationGroups()) {
-            if (isValid(agg, cuboidID)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    static boolean isValid(AggregationGroup agg, long cuboidID) {
-        if (cuboidID <= 0) {
-            return false; //cuboid must be greater than 0
-        }
-        if ((cuboidID & ~agg.getPartialCubeFullMask()) != 0) {
-            return false; //a cuboid's parent within agg is at most partialCubeFullMask
-        }
-
-        return checkMandatoryColumns(agg, cuboidID) && checkHierarchy(agg, cuboidID) && checkJoint(agg, cuboidID);
-    }
-
-    public static List<AggregationGroup> getValidAggGroupForCuboid(CubeDesc cubeDesc, long cuboidID) {
-        List<AggregationGroup> ret = Lists.newArrayList();
-        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
-            if (isValid(agg, cuboidID)) {
-                ret.add(agg);
-            }
-        }
-        return ret;
+        return cube.getAllCuboids().contains(cuboidID);
     }
 
     public static long getBaseCuboidId(CubeDesc cube) {
@@ -130,27 +104,32 @@ public class Cuboid implements Comparable<Cuboid>, java.io.Serializable {
         return findById(cube, getBaseCuboidId(cube));
     }
 
-    public static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
+    static long translateToValidCuboid(CubeDesc cubeDesc, long cuboidID) {
         long baseCuboidId = getBaseCuboidId(cubeDesc);
-        if (cuboidID == baseCuboidId) {
+        if (cubeDesc.getAllCuboids().contains(cuboidID)) {
             return cuboidID;
         }
-        List<Long> candidates = Lists.newArrayList();
+        List<Long> onTreeCandidates = Lists.newArrayList();
         for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
-            Long candidate = translateToValidCuboid(agg, cuboidID);
+            Long candidate = translateToOnTreeCuboid(agg, cuboidID);
             if (candidate != null) {
-                candidates.add(candidate);
+                onTreeCandidates.add(candidate);
             }
         }
 
-        if (candidates.size() == 0) {
+        if (onTreeCandidates.size() == 0) {
             return baseCuboidId;
         }
 
-        return Collections.min(candidates, cuboidSelectComparator);
+        long onTreeCandi = Collections.min(onTreeCandidates, cuboidSelectComparator);
+        if (isValid(cubeDesc, onTreeCandi)) {
+            return onTreeCandi;
+        }
+
+        return new CuboidScheduler(cubeDesc).getValidParent(onTreeCandi);
     }
 
-    private static Long translateToValidCuboid(AggregationGroup agg, long cuboidID) {
+    private static Long translateToOnTreeCuboid(AggregationGroup agg, long cuboidID) {
         if ((cuboidID & ~agg.getPartialCubeFullMask()) > 0) {
             //the partial cube might not contain all required dims
             return null;
@@ -186,9 +165,7 @@ public class Cuboid implements Comparable<Cuboid>, java.io.Serializable {
             }
         }
 
-        if (isValid(agg, cuboidID)) {
-            return cuboidID;
-        } else {
+        if (!agg.isOnTree(cuboidID)) {
             // no column, add one column
             long nonJointDims = removeBits((agg.getPartialCubeFullMask() ^ agg.getMandatoryColumnMask()), agg.getJoints());
             if (nonJointDims != 0) {
@@ -213,8 +190,10 @@ public class Cuboid implements Comparable<Cuboid>, java.io.Serializable {
                 }
             }
 
-            return cuboidID | Collections.min(agg.getJoints(), cuboidSelectComparator);
+            cuboidID = cuboidID | Collections.min(agg.getJoints(), cuboidSelectComparator);
+            Preconditions.checkState(agg.isOnTree(cuboidID));
         }
+        return cuboidID;
     }
 
     private static long removeBits(long original, Collection<Long> toRemove) {
@@ -223,52 +202,6 @@ public class Cuboid implements Comparable<Cuboid>, java.io.Serializable {
             ret = ret & ~joint;
         }
         return ret;
-    }
-
-    private static boolean checkMandatoryColumns(AggregationGroup agg, long cuboidID) {
-        long mandatoryColumnMask = agg.getMandatoryColumnMask();
-        if ((cuboidID & mandatoryColumnMask) != mandatoryColumnMask) {
-            return false;
-        } else {
-            //base cuboid is always valid
-            if (cuboidID == getBaseCuboidId(agg.getCubeDesc())) {
-                return true;
-            }
-
-            //cuboid with only mandatory columns maybe valid
-            return agg.isMandatoryOnlyValid() || (cuboidID & ~mandatoryColumnMask) != 0;
-        }
-    }
-
-    private static boolean checkJoint(AggregationGroup agg, long cuboidID) {
-        for (long joint : agg.getJoints()) {
-            long common = cuboidID & joint;
-            if (!(common == 0 || common == joint)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean checkHierarchy(AggregationGroup agg, long cuboidID) {
-        List<HierarchyMask> hierarchyMaskList = agg.getHierarchyMasks();
-        // if no hierarchy defined in metadata
-        if (hierarchyMaskList == null || hierarchyMaskList.size() == 0) {
-            return true;
-        }
-
-        hier: for (HierarchyMask hierarchyMasks : hierarchyMaskList) {
-            long result = cuboidID & hierarchyMasks.fullMask;
-            if (result > 0) {
-                for (long mask : hierarchyMasks.allMasks) {
-                    if (result == mask) {
-                        continue hier;
-                    }
-                }
-                return false;
-            }
-        }
-        return true;
     }
 
     // ============================================================================

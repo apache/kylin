@@ -39,8 +39,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -53,6 +51,7 @@ import org.apache.kylin.common.persistence.RootPersistentEntity;
 import org.apache.kylin.common.util.Array;
 import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.common.util.Pair;
+import org.apache.kylin.cube.cuboid.CuboidScheduler;
 import org.apache.kylin.measure.MeasureType;
 import org.apache.kylin.measure.extendedcolumn.ExtendedColumnMeasureType;
 import org.apache.kylin.metadata.MetadataConstants;
@@ -78,8 +77,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -184,6 +181,19 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
     @JsonProperty("partition_offset_start")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<Integer, Long> partitionOffsetStart = Maps.newHashMap();
+
+    @JsonProperty("cuboid_black_list")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Set<Long> cuboidBlackSet = Sets.newHashSet();
+
+    @JsonProperty("parent_forward")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private int parentForward = 3;
+
+    // allCuboids and parent2Child lazy built
+    private Set<Long> allCuboids;
+    private Map<Long, List<Long>> parent2Child;
+    private Object cuboidTreeLock = new Object();
 
     public boolean isEnableSharding() {
         //in the future may extend to other storage that is shard-able
@@ -452,17 +462,12 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         return true;
     }
 
+    /**
+     * Get cuboid level count except base cuboid
+     * @return
+     */
     public int getBuildLevel() {
-        if (aggregationGroups == null || aggregationGroups.size() == 0)
-            throw new IllegalStateException("Cube has no aggregation group.");
-
-        return Collections.max(Collections2.transform(aggregationGroups, new Function<AggregationGroup, Integer>() {
-            @Nullable
-            @Override
-            public Integer apply(AggregationGroup input) {
-                return input.getBuildLevel();
-            }
-        }));
+        return new CuboidScheduler(this).getCuboidsByLayer().size() - 1;
     }
 
     @Override
@@ -554,6 +559,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         derivedToHostMap = Maps.newHashMap();
         hostToDerivedMap = Maps.newHashMap();
         extendedColumnToHosts = Maps.newHashMap();
+        cuboidBlackSet = null;
+        synchronized (cuboidTreeLock) {
+            allCuboids = null;
+            parent2Child = null;
+        }
     }
 
     public void init(KylinConfig config) {
@@ -589,10 +599,11 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
 
         rowkey.init(this);
 
-        validateAggregationGroups(); // check if aggregation group is valid
         for (AggregationGroup agg : this.aggregationGroups) {
             agg.init(this, rowkey);
         }
+        validateAggregationGroups(); // check if aggregation group is valid
+        validateAggregationGroupsCombination();
 
         if (hbaseMapping != null) {
             hbaseMapping.init(this);
@@ -631,6 +642,42 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.config = KylinConfigExt.createInstance(config, overrideKylinProps);
     }
 
+    private void buildCuboidTree() {
+        synchronized (cuboidTreeLock) {
+            if (allCuboids == null || parent2Child == null) {
+                Pair<Set<Long>, Map<Long, List<Long>>> ret = new CuboidScheduler(this).buildTreeBottomUp();
+                allCuboids = ret.getFirst();
+                parent2Child = ret.getSecond();
+            }
+        }
+    }
+
+    public boolean isBlackedCuboid(long cuboidID) {
+        return cuboidBlackSet.contains(cuboidID);
+    }
+
+    public void validateAggregationGroupsCombination() {
+        int index = 0;
+
+        for (AggregationGroup agg : getAggregationGroups()) {
+            long combination = 0L;
+            try {
+                combination = agg.calculateCuboidCombination();
+            } catch (Exception ex) {
+                combination = config.getCubeAggrGroupMaxCombination() + 1;
+            } finally {
+                if (combination > config.getCubeAggrGroupMaxCombination()) {
+                    String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
+                    logger.error("Aggregation group " + index + " has " + combination + " combinations;");
+                    logger.error(msg);
+                    throw new IllegalStateException(msg);
+                }
+            }
+
+            index++;
+        }
+    }
+
     public void validateAggregationGroups() {
         int index = 0;
 
@@ -645,26 +692,19 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 throw new IllegalStateException("Aggregation group " + index + " select rule field not set");
             }
 
-            long combination = 1;
             Set<String> includeDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             getDims(includeDims, agg.getIncludes());
 
             Set<String> mandatoryDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            getDims(mandatoryDims, agg.getSelectRule().mandatory_dims);
+            getDims(mandatoryDims, agg.getSelectRule().mandatoryDims);
 
             ArrayList<Set<String>> hierarchyDimsList = Lists.newArrayList();
             Set<String> hierarchyDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            getDims(hierarchyDimsList, hierarchyDims, agg.getSelectRule().hierarchy_dims);
-            for (Set<String> hierarchy : hierarchyDimsList) {
-                combination = combination * (hierarchy.size() + 1);
-            }
+            getDims(hierarchyDimsList, hierarchyDims, agg.getSelectRule().hierarchyDims);
 
             ArrayList<Set<String>> jointDimsList = Lists.newArrayList();
             Set<String> jointDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            getDims(jointDimsList, jointDims, agg.getSelectRule().joint_dims);
-            if (jointDimsList.size() > 0) {
-                combination = combination * (1L << jointDimsList.size());
-            }
+            getDims(jointDimsList, jointDims, agg.getSelectRule().jointDims);
 
             if (!includeDims.containsAll(mandatoryDims) || !includeDims.containsAll(hierarchyDims) || !includeDims.containsAll(jointDims)) {
                 List<String> notIncluded = Lists.newArrayList();
@@ -677,21 +717,6 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
                 Collections.sort(notIncluded);
                 logger.error("Aggregation group " + index + " Include dimensions not containing all the used dimensions");
                 throw new IllegalStateException("Aggregation group " + index + " 'includes' dimensions not include all the dimensions:" + notIncluded.toString());
-            }
-
-            Set<String> normalDims = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            normalDims.addAll(includeDims);
-            normalDims.removeAll(mandatoryDims);
-            normalDims.removeAll(hierarchyDims);
-            normalDims.removeAll(jointDims);
-
-            combination = combination * (1L << normalDims.size());
-
-            if (combination > config.getCubeAggrGroupMaxCombination()) {
-                String msg = "Aggregation group " + index + " has too many combinations, use 'mandatory'/'hierarchy'/'joint' to optimize; or update 'kylin.cube.aggrgroup.max-combination' to a bigger value.";
-                logger.error("Aggregation group " + index + " has " + combination + " combinations;");
-                logger.error(msg);
-                throw new IllegalStateException(msg);
             }
 
             if (CollectionUtils.containsAny(mandatoryDims, hierarchyDims)) {
@@ -1136,6 +1161,24 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         this.partitionOffsetStart = partitionOffsetStart;
     }
 
+    public Set<Long> getAllCuboids() {
+        buildCuboidTree();
+        return allCuboids;
+    }
+
+    public Map<Long, List<Long>> getParent2Child() {
+        buildCuboidTree();
+        return parent2Child;
+    }
+
+    public int getParentForward() {
+        return parentForward;
+    }
+
+    public void setParentForward(int parentForward) {
+        this.parentForward = parentForward;
+    }
+
     /**
      * Get columns that have dictionary
      */
@@ -1276,6 +1319,7 @@ public class CubeDesc extends RootPersistentEntity implements IEngineAware {
         newCubeDesc.setConfig((KylinConfigExt) cubeDesc.getConfig());
         newCubeDesc.setPartitionOffsetStart(cubeDesc.getPartitionOffsetStart());
         newCubeDesc.setVersion(cubeDesc.getVersion());
+        newCubeDesc.setParentForward(cubeDesc.getParentForward());
         newCubeDesc.updateRandomUuid();
         return newCubeDesc;
     }

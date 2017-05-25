@@ -26,6 +26,7 @@ import java.util.TreeSet;
 
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.cube.CubeDescManager;
+import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeDesc;
 
 /**
@@ -63,40 +64,54 @@ public class CuboidCLI {
             }
         }
 
-        if (validate) {
-            //only run this for test purpose, performance is bad when # of dims is large
-            TreeSet<Long> enumCuboids = enumCalcCuboidCount(cubeDesc);
-            System.out.println(Arrays.toString(enumCuboids.toArray(new Long[enumCuboids.size()])));
-            if (enumCuboids.equals(cuboidSet) == false) {
-                throw new IllegalStateException("Expected cuboid set " + enumCuboids + "; but actual cuboid set " + cuboidSet);
+        boolean enableDimCap = false;
+        for (AggregationGroup agg : cubeDesc.getAggregationGroups()) {
+            if (agg.getDimCap() > 0) {
+                enableDimCap = true;
+                break;
             }
+        }
 
-            //check all valid and invalid
-            for (long i = 0; i < baseCuboid; ++i) {
-                if (cuboidSet.contains(i)) {
-                    if (!Cuboid.isValid(cubeDesc, i)) {
-                        throw new RuntimeException();
-                    }
+        if (validate) {
+            if (enableDimCap) {
+                if (cubeDesc.getAllCuboids().size() != cuboidSet.size()) {
+                    throw new IllegalStateException("Expected cuboid set " + cubeDesc.getAllCuboids() + "; but actual cuboid set " + cuboidSet);
+                }
+            } else {
+                //only run this for test purpose, performance is bad when # of dims is large
+                TreeSet<Long> enumCuboids = enumCalcCuboidCount(cubeDesc);
+                System.out.println(Arrays.toString(enumCuboids.toArray(new Long[enumCuboids.size()])));
+                if (enumCuboids.equals(cuboidSet) == false) {
+                    throw new IllegalStateException("Expected cuboid set " + enumCuboids + "; but actual cuboid set " + cuboidSet);
+                }
 
-                    if (Cuboid.translateToValidCuboid(cubeDesc, i) != i) {
-                        throw new RuntimeException();
-                    }
-                } else {
-                    if (Cuboid.isValid(cubeDesc, i)) {
-                        throw new RuntimeException();
-                    }
+                //check all valid and invalid
+                for (long i = 0; i < baseCuboid; ++i) {
+                    if (cuboidSet.contains(i)) {
+                        if (!Cuboid.isValid(cubeDesc, i)) {
+                            throw new RuntimeException();
+                        }
 
-                    long corrected = Cuboid.translateToValidCuboid(cubeDesc, i);
-                    if (corrected == i) {
-                        throw new RuntimeException();
-                    }
+                        if (Cuboid.translateToValidCuboid(cubeDesc, i) != i) {
+                            throw new RuntimeException();
+                        }
+                    } else {
+                        if (Cuboid.isValid(cubeDesc, i)) {
+                            throw new RuntimeException();
+                        }
 
-                    if (!Cuboid.isValid(cubeDesc, corrected)) {
-                        throw new RuntimeException();
-                    }
+                        long corrected = Cuboid.translateToValidCuboid(cubeDesc, i);
+                        if (corrected == i) {
+                            throw new RuntimeException();
+                        }
 
-                    if (Cuboid.translateToValidCuboid(cubeDesc, corrected) != corrected) {
-                        throw new RuntimeException();
+                        if (!Cuboid.isValid(cubeDesc, corrected)) {
+                            throw new RuntimeException();
+                        }
+
+                        if (Cuboid.translateToValidCuboid(cubeDesc, corrected) != corrected) {
+                            throw new RuntimeException();
+                        }
                     }
                 }
             }

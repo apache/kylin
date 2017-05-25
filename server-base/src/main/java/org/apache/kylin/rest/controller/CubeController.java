@@ -31,7 +31,6 @@ import org.apache.kylin.common.util.JsonUtil;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.CubeSegment;
-import org.apache.kylin.cube.model.AggregationGroup;
 import org.apache.kylin.cube.model.CubeBuildTypeEnum;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.apache.kylin.dimension.DimensionEncodingFactory;
@@ -673,22 +672,6 @@ public class CubeController extends BasicController {
         return response;
     }
 
-    /**
-     * Calculate Cuboid Combination based on the AggreationGroup definition.
-     *
-     * @param aggregationGroupStr
-     * @return number of cuboid, -1 if failed
-     */
-    @RequestMapping(value = "aggregationgroups/cuboid", method = RequestMethod.POST, produces = { "application/json" })
-    @ResponseBody
-    public long calculateCuboidCombination(@RequestBody String aggregationGroupStr) {
-        AggregationGroup aggregationGroup = deserializeAggregationGroup(aggregationGroupStr);
-        if (aggregationGroup != null) {
-            return aggregationGroup.calculateCuboidCombination();
-        } else
-            return -1;
-    }
-
     private CubeDesc deserializeCubeDesc(CubeRequest cubeRequest) {
         CubeDesc desc = null;
         try {
@@ -705,22 +688,6 @@ public class CubeController extends BasicController {
             throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
         }
         return desc;
-    }
-
-    private AggregationGroup deserializeAggregationGroup(String aggregationGroupStr) {
-        AggregationGroup aggreationGroup = null;
-        try {
-            logger.debug("Parsing AggregationGroup " + aggregationGroupStr);
-            aggreationGroup = JsonUtil.readValue(aggregationGroupStr, AggregationGroup.class);
-        } catch (JsonParseException e) {
-            logger.error("The AggregationGroup definition is not valid.", e);
-        } catch (JsonMappingException e) {
-            logger.error("The AggregationGroup definition is not valid.", e);
-        } catch (IOException e) {
-            logger.error("Failed to deal with the request.", e);
-            throw new InternalErrorException("Failed to deal with the request:" + e.getMessage(), e);
-        }
-        return aggreationGroup;
     }
 
     private void updateRequest(CubeRequest request, boolean success, String message) {
