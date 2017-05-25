@@ -19,19 +19,25 @@
 package org.apache.kylin.rest.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.ProjectManager;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.security.AclPermission;
+import org.apache.kylin.rest.util.AclUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,8 +56,17 @@ public class ProjectService extends BasicService {
     @Qualifier("accessService")
     private AccessService accessService;
 
+    @Autowired
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeService;
+
+    @Autowired
+    private AclUtil aclUtil;
+
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
     public ProjectInstance createProject(ProjectInstance newProject) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
         String projectName = newProject.getName();
         String description = newProject.getDescription();
         LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
@@ -59,7 +74,7 @@ public class ProjectService extends BasicService {
         ProjectInstance currentProject = getProjectManager().getProject(projectName);
 
         if (currentProject != null) {
-            throw new InternalErrorException("The project named " + projectName + " already exists");
+            throw new BadRequestException(String.format(msg.getPROJECT_ALREADY_EXIST(), projectName));
         }
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
         ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description, overrideProps);
@@ -132,4 +147,56 @@ public class ProjectService extends BasicService {
         return false;
     }
 
+    public String getProjectOfModel(String modelName) {
+        List<ProjectInstance> projectInstances = listProjects(null, null);
+        for (ProjectInstance projectInstance : projectInstances) {
+            if (projectInstance.containsModel(modelName))
+                return projectInstance.getName();
+        }
+        return null;
+    }
+
+    public List<ProjectInstance> getReadableProjects() {
+        List<ProjectInstance> readableProjects = new ArrayList<ProjectInstance>();
+
+        //list all projects first
+        List<ProjectInstance> projectInstances = getProjectManager().listAllProjects();
+
+        for (ProjectInstance projectInstance : projectInstances) {
+
+            if (projectInstance == null) {
+                continue;
+            }
+
+            boolean hasProjectPermission = false;
+            try {
+                hasProjectPermission = aclUtil.hasProjectReadPermission(projectInstance);
+            } catch (AccessDeniedException e) {
+                //ignore to continue
+            }
+
+            if (!hasProjectPermission) {
+                List<CubeInstance> cubeInstances = cubeService.listAllCubes(projectInstance.getName());
+
+                for (CubeInstance cubeInstance : cubeInstances) {
+                    if (cubeInstance == null) {
+                        continue;
+                    }
+
+                    try {
+                        aclUtil.hasCubeReadPermission(cubeInstance);
+                        hasProjectPermission = true;
+                        break;
+                    } catch (AccessDeniedException e) {
+                        //ignore to continue
+                    }
+                }
+            }
+            if (hasProjectPermission) {
+                readableProjects.add(projectInstance);
+            }
+
+        }
+        return readableProjects;
+}
 }

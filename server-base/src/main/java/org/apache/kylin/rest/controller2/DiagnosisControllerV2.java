@@ -34,7 +34,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.DiagnosisService;
-import org.apache.kylin.rest.service.ProjectServiceV2;
+import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,8 +60,8 @@ public class DiagnosisControllerV2 extends BasicController {
     private DiagnosisService dgService;
 
     @Autowired
-    @Qualifier("projectServiceV2")
-    private ProjectServiceV2 projectServiceV2;
+    @Qualifier("projectService")
+    private ProjectService projectService;
 
     /**
      * Get bad query history
@@ -78,7 +78,7 @@ public class DiagnosisControllerV2 extends BasicController {
             BadQueryHistory badQueryHistory = dgService.getProjectBadQueryHistory(project);
             badEntry.addAll(badQueryHistory.getEntries());
         } else {
-            for (ProjectInstance projectInstance : projectServiceV2.getReadableProjects()) {
+            for (ProjectInstance projectInstance : projectService.getReadableProjects()) {
                 BadQueryHistory badQueryHistory = dgService.getProjectBadQueryHistory(projectInstance.getName());
                 badEntry.addAll(badQueryHistory.getEntries());
             }

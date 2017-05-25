@@ -32,7 +32,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.ProjectRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
-import org.apache.kylin.rest.service.ProjectServiceV2;
+import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +57,8 @@ public class ProjectControllerV2 extends BasicController {
     private static final char[] VALID_PROJECTNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     @Autowired
-    @Qualifier("projectServiceV2")
-    private ProjectServiceV2 projectServiceV2;
+    @Qualifier("projectService")
+    private ProjectService projectService;
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -68,7 +68,7 @@ public class ProjectControllerV2 extends BasicController {
         int offset = pageOffset * pageSize;
         int limit = pageSize;
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, projectServiceV2.listProjects(limit, offset), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, projectService.listProjects(limit, offset), "");
     }
 
     @RequestMapping(value = "/readable", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
@@ -78,7 +78,7 @@ public class ProjectControllerV2 extends BasicController {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
 
-        List<ProjectInstance> readableProjects = projectServiceV2.getReadableProjects();
+        List<ProjectInstance> readableProjects = projectService.getReadableProjects();
         int offset = pageOffset * pageSize;
         int limit = pageSize;
 
@@ -114,7 +114,7 @@ public class ProjectControllerV2 extends BasicController {
         }
 
         ProjectInstance createdProj = null;
-        createdProj = projectServiceV2.createProject(projectDesc);
+        createdProj = projectService.createProject(projectDesc);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, createdProj, "");
     }
@@ -134,12 +134,12 @@ public class ProjectControllerV2 extends BasicController {
 
         ProjectInstance updatedProj = null;
 
-        ProjectInstance currentProject = projectServiceV2.getProjectManager().getProject(formerProjectName);
+        ProjectInstance currentProject = projectService.getProjectManager().getProject(formerProjectName);
         if (currentProject == null) {
             throw new BadRequestException(String.format(msg.getPROJECT_NOT_FOUND(), formerProjectName));
         }
 
-        updatedProj = projectServiceV2.updateProject(projectDesc, currentProject);
+        updatedProj = projectService.updateProject(projectDesc, currentProject);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, updatedProj, "");
     }
 
@@ -155,8 +155,8 @@ public class ProjectControllerV2 extends BasicController {
     public void deleteProjectV2(@RequestHeader("Accept-Language") String lang, @PathVariable String projectName) throws IOException {
         MsgPicker.setMsg(lang);
 
-        ProjectInstance project = projectServiceV2.getProjectManager().getProject(projectName);
-        projectServiceV2.deleteProject(projectName, project);
+        ProjectInstance project = projectService.getProjectManager().getProject(projectName);
+        projectService.deleteProject(projectName, project);
     }
 
 }

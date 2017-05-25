@@ -56,10 +56,10 @@ import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.HBaseResponse;
 import org.apache.kylin.rest.response.ResponseCode;
-import org.apache.kylin.rest.service.CubeServiceV2;
+import org.apache.kylin.rest.service.CubeService;
 import org.apache.kylin.rest.service.JobService;
-import org.apache.kylin.rest.service.ModelServiceV2;
-import org.apache.kylin.rest.service.ProjectServiceV2;
+import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.apache.kylin.source.kafka.util.KafkaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,20 +90,20 @@ public class CubeControllerV2 extends BasicController {
     public static final char[] VALID_CUBENAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     @Autowired
-    @Qualifier("cubeMgmtServiceV2")
-    private CubeServiceV2 cubeServiceV2;
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeService;
 
     @Autowired
     @Qualifier("jobService")
     private JobService jobService;
 
     @Autowired
-    @Qualifier("projectServiceV2")
-    private ProjectServiceV2 projectServiceV2;
+    @Qualifier("projectService")
+    private ProjectService projectService;
 
     @Autowired
-    @Qualifier("modelMgmtServiceV2")
-    private ModelServiceV2 modelServiceV2;
+    @Qualifier("modelMgmtService")
+    private ModelService modelService;
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -112,7 +112,7 @@ public class CubeControllerV2 extends BasicController {
 
         HashMap<String, Object> data = new HashMap<String, Object>();
         List<CubeInstanceResponse> cubeInstanceResponses = new ArrayList<CubeInstanceResponse>();
-        List<CubeInstance> cubes = cubeServiceV2.listAllCubes(cubeName, projectName, modelName);
+        List<CubeInstance> cubes = cubeService.listAllCubes(cubeName, projectName, modelName);
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
@@ -133,7 +133,7 @@ public class CubeControllerV2 extends BasicController {
             String getModelName = modelName == null ? cube.getDescriptor().getModelName() : modelName;
             cubeInstanceResponse.setModel(getModelName);
 
-            DataModelDesc getModel = modelServiceV2.getMetadataManager().getDataModelDesc(getModelName);
+            DataModelDesc getModel = modelService.getMetadataManager().getDataModelDesc(getModelName);
             cubeInstanceResponse.setPartitionDateColumn(getModel.getPartitionDesc().getPartitionDateColumn());
 
             cubeInstanceResponse.setIs_streaming(getModel.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
@@ -141,7 +141,7 @@ public class CubeControllerV2 extends BasicController {
             if (projectName != null)
                 cubeInstanceResponse.setProject(projectName);
             else {
-                List<ProjectInstance> projectInstances = projectServiceV2.listProjects(null, null);
+                List<ProjectInstance> projectInstances = projectService.listProjects(null, null);
                 for (ProjectInstance projectInstance : projectInstances) {
                     if (projectInstance.containsModel(getModelName))
                         cubeInstanceResponse.setProject(projectInstance.getName());
@@ -173,7 +173,7 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
@@ -184,12 +184,12 @@ public class CubeControllerV2 extends BasicController {
         String modelName = cube.getDescriptor().getModelName();
         cubeInstanceResponse.setModel(modelName);
 
-        DataModelDesc model = modelServiceV2.getMetadataManager().getDataModelDesc(modelName);
+        DataModelDesc model = modelService.getMetadataManager().getDataModelDesc(modelName);
         cubeInstanceResponse.setPartitionDateColumn(model.getPartitionDesc().getPartitionDateColumn());
 
         cubeInstanceResponse.setIs_streaming(model.getRootFactTable().getTableDesc().getSourceType() == ISourceAware.ID_STREAMING);
 
-        List<ProjectInstance> projectInstances = projectServiceV2.listProjects(null, null);
+        List<ProjectInstance> projectInstances = projectService.listProjects(null, null);
         for (ProjectInstance projectInstance : projectInstances) {
             if (projectInstance.containsModel(modelName))
                 cubeInstanceResponse.setProject(projectInstance.getName());
@@ -213,7 +213,7 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
@@ -239,13 +239,13 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
 
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
 
-        cubeServiceV2.updateCubeNotifyList(cube, notifyList);
+        cubeService.updateCubeNotifyList(cube, notifyList);
 
     }
 
@@ -255,11 +255,11 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.updateCubeCost(cube, cost), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.updateCubeCost(cube, cost), "");
     }
 
     /**
@@ -274,12 +274,12 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        final CubeManager cubeMgr = cubeServiceV2.getCubeManager();
+        final CubeManager cubeMgr = cubeService.getCubeManager();
         final CubeInstance cube = cubeMgr.getCube(cubeName);
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.rebuildLookupSnapshot(cube, segmentName, lookupTable), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.rebuildLookupSnapshot(cube, segmentName, lookupTable), "");
     }
 
     /**
@@ -294,7 +294,7 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
 
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
@@ -304,7 +304,7 @@ public class CubeControllerV2 extends BasicController {
         if (segment == null) {
             throw new BadRequestException(String.format(msg.getSEG_NOT_FOUND(), segmentName));
         }
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.deleteSegment(cube, segmentName), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.deleteSegment(cube, segmentName), "");
     }
 
     /** Build/Rebuild a cube segment */
@@ -381,13 +381,13 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
 
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.disableCube(cube), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.disableCube(cube), "");
 
     }
 
@@ -397,12 +397,12 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
 
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.purgeCube(cube), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.purgeCube(cube), "");
     }
 
     @RequestMapping(value = "/{cubeName}/clone", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
@@ -414,7 +414,7 @@ public class CubeControllerV2 extends BasicController {
         String newCubeName = cubeRequest.getCubeName();
         String project = cubeRequest.getProject();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
@@ -432,10 +432,10 @@ public class CubeControllerV2 extends BasicController {
         newCubeDesc.setName(newCubeName);
 
         CubeInstance newCube;
-        newCube = cubeServiceV2.createCubeAndDesc(newCubeName, project, newCubeDesc);
+        newCube = cubeService.createCubeAndDesc(newCubeName, project, newCubeDesc);
 
         //reload to avoid shallow clone
-        cubeServiceV2.getCubeDescManager().reloadCubeDescLocal(newCubeName);
+        cubeService.getCubeDescManager().reloadCubeDescLocal(newCubeName);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, newCube, "");
     }
@@ -446,12 +446,12 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.enableCube(cube), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.enableCube(cube), "");
     }
 
     @RequestMapping(value = "/{cubeName}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
@@ -460,13 +460,13 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (null == cube) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
 
         //drop Cube
-        cubeServiceV2.deleteCube(cube);
+        cubeService.deleteCube(cube);
 
     }
 
@@ -485,7 +485,7 @@ public class CubeControllerV2 extends BasicController {
 
         List<HBaseResponse> hbase = new ArrayList<HBaseResponse>();
 
-        CubeInstance cube = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         if (cube == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
@@ -498,7 +498,7 @@ public class CubeControllerV2 extends BasicController {
 
             // Get info of given table.
             try {
-                hr = cubeServiceV2.getHTableInfo(tableName);
+                hr = cubeService.getHTableInfo(tableName);
             } catch (IOException e) {
                 logger.error("Failed to calculate size of HTable \"" + tableName + "\".", e);
             }
@@ -537,7 +537,7 @@ public class CubeControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
 
         checkCubeNameV2(cubeName);
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.getCubeManager().calculateHoles(cubeName), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.getCubeManager().calculateHoles(cubeName), "");
     }
 
     /**
@@ -555,7 +555,7 @@ public class CubeControllerV2 extends BasicController {
         checkCubeNameV2(cubeName);
 
         List<JobInstance> jobs = Lists.newArrayList();
-        List<CubeSegment> holes = cubeServiceV2.getCubeManager().calculateHoles(cubeName);
+        List<CubeSegment> holes = cubeService.getCubeManager().calculateHoles(cubeName);
 
         if (holes.size() == 0) {
             logger.info("No hole detected for cube '" + cubeName + "'");
@@ -613,7 +613,7 @@ public class CubeControllerV2 extends BasicController {
         Message msg = MsgPicker.getMsg();
 
         checkCubeNameV2(cubeName);
-        CubeInstance cubeInstance = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
         if (cubeInstance.getSourceType() != ISourceAware.ID_STREAMING) {
             throw new BadRequestException(String.format(msg.getNOT_STREAMING_CUBE(), cubeName));
         }
@@ -622,7 +622,7 @@ public class CubeControllerV2 extends BasicController {
         final Map<Integer, Long> startOffsets = KafkaClient.getLatestOffsets(cubeInstance);
         CubeDesc desc = cubeInstance.getDescriptor();
         desc.setPartitionOffsetStart(startOffsets);
-        cubeServiceV2.getCubeDescManager().updateCubeDesc(desc);
+        cubeService.getCubeDescManager().updateCubeDesc(desc);
         response.setProperty("result", "success");
         response.setProperty("offsets", startOffsets.toString());
 
@@ -633,7 +633,7 @@ public class CubeControllerV2 extends BasicController {
     @ResponseBody
     public EnvelopeResponse checkNameAvailabilityV2(@RequestHeader("Accept-Language") String lang, @PathVariable String cubeName) {
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeServiceV2.checkNameAvailability(cubeName), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeService.checkNameAvailability(cubeName), "");
     }
 
     private AggregationGroup deserializeAggregationGroupV2(String aggregationGroupStr) throws IOException {
@@ -652,15 +652,15 @@ public class CubeControllerV2 extends BasicController {
     private void checkCubeNameV2(String cubeName) {
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cubeInstance = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
 
         if (cubeInstance == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
     }
 
-    public void setCubeService(CubeServiceV2 cubeService) {
-        this.cubeServiceV2 = cubeService;
+    public void setCubeService(CubeService cubeService) {
+        this.cubeService = cubeService;
     }
 
     public void setJobService(JobService jobService) {

@@ -29,7 +29,7 @@ import org.apache.kylin.rest.request.UpdateConfigRequest;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.AdminService;
-import org.apache.kylin.rest.service.CubeServiceV2;
+import org.apache.kylin.rest.service.CubeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -54,8 +54,8 @@ public class AdminControllerV2 extends BasicController {
     private AdminService adminService;
 
     @Autowired
-    @Qualifier("cubeMgmtServiceV2")
-    private CubeServiceV2 cubeMgmtServiceV2;
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeMgmtService;
 
     @RequestMapping(value = "/env", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -76,7 +76,7 @@ public class AdminControllerV2 extends BasicController {
     @RequestMapping(value = "/metrics/cubes", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse cubeMetricsV2(@RequestHeader("Accept-Language") String lang, MetricsRequest request) {
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeMgmtServiceV2.calculateMetrics(request), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, cubeMgmtService.calculateMetrics(request), "");
     }
 
     @RequestMapping(value = "/storage", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
@@ -99,8 +99,8 @@ public class AdminControllerV2 extends BasicController {
         this.adminService = adminService;
     }
 
-    public void setCubeMgmtService(CubeServiceV2 cubeMgmtService) {
-        this.cubeMgmtServiceV2 = cubeMgmtService;
+    public void setCubeMgmtService(CubeService cubeMgmtService) {
+        this.cubeMgmtService = cubeMgmtService;
     }
 
 }

@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
@@ -43,7 +45,9 @@ import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.rest.exception.BadRequestException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.TableDescResponse;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourceFactory;
@@ -53,12 +57,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 
 @Component("tableService")
 public class TableService extends BasicService {
@@ -166,6 +172,46 @@ public class TableService extends BasicService {
         syncTableToProject(result, project);
         return result;
     }
+    
+    public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws Exception {
+        String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
+        Map<String, String[]> result = new HashMap<String, String[]>();
+
+        String[] loaded = loadHiveTablesToProject(tableNames, project);
+        result.put("result.loaded", loaded);
+        Set<String> allTables = new HashSet<String>();
+        for (String tableName : tableNames) {
+            allTables.add(normalizeHiveTableName(tableName));
+        }
+        for (String loadedTableName : loaded) {
+            allTables.remove(loadedTableName);
+        }
+        String[] unloaded = new String[allTables.size()];
+        allTables.toArray(unloaded);
+        result.put("result.unloaded", unloaded);
+        if (isNeedProfile) {
+            calculateCardinalityIfNotPresent(loaded, submitter);
+        }
+        return result;
+    }
+
+    public Map<String, String[]> unloadHiveTables(String[] tableNames, String project) throws IOException {
+        Set<String> unLoadSuccess = Sets.newHashSet();
+        Set<String> unLoadFail = Sets.newHashSet();
+        Map<String, String[]> result = new HashMap<String, String[]>();
+
+        for (String tableName : tableNames) {
+            if (unLoadHiveTable(tableName, project)) {
+                unLoadSuccess.add(tableName);
+            } else {
+                unLoadFail.add(tableName);
+            }
+        }
+
+        result.put("result.unload.success", (String[]) unLoadSuccess.toArray(new String[unLoadSuccess.size()]));
+        result.put("result.unload.fail", (String[]) unLoadFail.toArray(new String[unLoadFail.size()]));
+        return result;
+    }
 
     protected void unLoadHiveTable(String tableName) throws IOException {
         tableName = normalizeHiveTableName(tableName);
@@ -191,7 +237,9 @@ public class TableService extends BasicService {
      * @return
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN)
-    public boolean unLoadHiveTable(String tableName, String project) {
+    public boolean unLoadHiveTable(String tableName, String project) throws IOException {
+        Message msg = MsgPicker.getMsg();
+
         boolean rtn = false;
         int tableType = 0;
 
@@ -202,25 +250,17 @@ public class TableService extends BasicService {
             return false;
         tableType = desc.getSourceType();
 
-        try {
-            if (!modelService.isTableInModel(tableName, project)) {
-                removeTableFromProject(tableName, project);
-                rtn = true;
-            } else {
-                List<String> models = modelService.getModelsUsingTable(tableName, project);
-                throw new InternalErrorException("Table is already in use by models " + models);
-            }
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+        if (!modelService.isTableInModel(tableName, project)) {
+            removeTableFromProject(tableName, project);
+            rtn = true;
+        } else {
+            List<String> models = modelService.getModelsUsingTable(tableName, project);
+            throw new BadRequestException(String.format(msg.getTABLE_IN_USE_BY_MODEL(), models));
         }
+
         if (!projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
-            try {
-                unLoadHiveTable(tableName);
-                rtn = true;
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
-                rtn = false;
-            }
+            unLoadHiveTable(tableName);
+            rtn = true;
         }
 
         if (tableType == 1 && !projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
@@ -334,11 +374,13 @@ public class TableService extends BasicService {
      */
     @PreAuthorize(Constant.ACCESS_HAS_ROLE_MODELER + " or " + Constant.ACCESS_HAS_ROLE_ADMIN)
     public void calculateCardinality(String tableName, String submitter) throws Exception {
+        Message msg = MsgPicker.getMsg();
+
         tableName = normalizeHiveTableName(tableName);
         TableDesc table = getMetadataManager().getTableDesc(tableName);
         final TableExtDesc tableExt = getMetadataManager().getTableExt(tableName);
         if (table == null) {
-            IllegalArgumentException e = new IllegalArgumentException("Cannot find table descriptor " + tableName);
+            BadRequestException e = new BadRequestException(String.format(msg.getTABLE_DESC_NOT_FOUND(), tableName));
             logger.error("Cannot find table descriptor " + tableName, e);
             throw e;
         }

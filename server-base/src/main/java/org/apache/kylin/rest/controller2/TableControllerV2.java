@@ -28,7 +28,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.HiveTableRequestV2;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
-import org.apache.kylin.rest.service.TableServiceV2;
+import org.apache.kylin.rest.service.TableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,8 +53,8 @@ public class TableControllerV2 extends BasicController {
     private static final Logger logger = LoggerFactory.getLogger(TableControllerV2.class);
 
     @Autowired
-    @Qualifier("tableServiceV2")
-    private TableServiceV2 tableServiceV2;
+    @Qualifier("tableService")
+    private TableService tableService;
 
     /**
      * Get available table list of the project
@@ -68,7 +68,7 @@ public class TableControllerV2 extends BasicController {
     public EnvelopeResponse getTableDescV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = true) String project) throws IOException {
         MsgPicker.setMsg(lang);
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableServiceV2.getTableDescByProject(project, withExt), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.getTableDescByProject(project, withExt), "");
     }
 
     /**
@@ -84,7 +84,7 @@ public class TableControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        TableDesc table = tableServiceV2.getTableDescByName(tableName, false);
+        TableDesc table = tableService.getTableDescByName(tableName, false);
         if (table == null)
             throw new BadRequestException(String.format(msg.getHIVE_TABLE_NOT_FOUND(), tableName));
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, table, "");
@@ -95,7 +95,7 @@ public class TableControllerV2 extends BasicController {
     public EnvelopeResponse loadHiveTablesV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws Exception {
         MsgPicker.setMsg(lang);
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableServiceV2.loadHiveTables(requestV2.getTables(), requestV2.getProject(), requestV2.isNeedProfile()), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.loadHiveTables(requestV2.getTables(), requestV2.getProject(), requestV2.isNeedProfile()), "");
     }
 
     @RequestMapping(value = "/load", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
@@ -103,7 +103,7 @@ public class TableControllerV2 extends BasicController {
     public EnvelopeResponse unLoadHiveTablesV2(@RequestHeader("Accept-Language") String lang, @RequestBody HiveTableRequestV2 requestV2) throws IOException {
         MsgPicker.setMsg(lang);
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableServiceV2.unloadHiveTables(requestV2.getTables(), requestV2.getProject()), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.unloadHiveTables(requestV2.getTables(), requestV2.getProject()), "");
     }
 
     /**
@@ -122,7 +122,7 @@ public class TableControllerV2 extends BasicController {
         String[] tables = requestV2.getTables();
 
         for (String table : tables) {
-            tableServiceV2.calculateCardinality(table.toUpperCase(), submitter);
+            tableService.calculateCardinality(table.toUpperCase(), submitter);
         }
     }
 
@@ -138,7 +138,7 @@ public class TableControllerV2 extends BasicController {
     private EnvelopeResponse showHiveDatabasesV2(@RequestHeader("Accept-Language") String lang) throws Exception {
         MsgPicker.setMsg(lang);
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableServiceV2.getHiveDbNames(), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.getHiveDbNames(), "");
     }
 
     /**
@@ -153,7 +153,7 @@ public class TableControllerV2 extends BasicController {
     private EnvelopeResponse showHiveTablesV2(@RequestHeader("Accept-Language") String lang, @PathVariable String database) throws Exception {
         MsgPicker.setMsg(lang);
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableServiceV2.getHiveTableNames(database), "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, tableService.getHiveTableNames(database), "");
     }
 
 }

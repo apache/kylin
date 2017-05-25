@@ -33,7 +33,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.DataModelDescResponse;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
-import org.apache.kylin.rest.service.ProjectServiceV2;
+import org.apache.kylin.rest.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -52,8 +52,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class ModelDescControllerV2 extends BasicController {
 
     @Autowired
-    @Qualifier("projectServiceV2")
-    private ProjectServiceV2 projectServiceV2;
+    @Qualifier("projectService")
+    private ProjectService projectService;
 
     /**
      * Get detail information of the "Model ID"
@@ -77,7 +77,7 @@ public class ModelDescControllerV2 extends BasicController {
             throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), modelName));
 
         DataModelDescResponse dataModelDescResponse = new DataModelDescResponse(modelDesc);
-        dataModelDescResponse.setProject(projectServiceV2.getProjectOfModel(modelName));
+        dataModelDescResponse.setProject(projectService.getProjectOfModel(modelName));
 
         if (modelDesc.getStatus() == null) {
             data.put("model", dataModelDescResponse);
@@ -86,7 +86,7 @@ public class ModelDescControllerV2 extends BasicController {
             DataModelDesc draftDesc = metaManager.getDataModelDesc(draftName);
             if (draftDesc != null && draftDesc.getStatus() != null && draftDesc.getStatus().equals(STATUS_DRAFT)) {
                 DataModelDescResponse draftModelDescResponse = new DataModelDescResponse(draftDesc);
-                draftModelDescResponse.setProject(projectServiceV2.getProjectOfModel(draftName));
+                draftModelDescResponse.setProject(projectService.getProjectOfModel(draftName));
                 data.put("draft", draftModelDescResponse);
             }
         } else if (modelDesc.getStatus().equals(STATUS_DRAFT)) {
@@ -96,7 +96,7 @@ public class ModelDescControllerV2 extends BasicController {
             DataModelDesc parentDesc = metaManager.getDataModelDesc(parentName);
             if (parentDesc != null && parentDesc.getStatus() == null) {
                 DataModelDescResponse parentModelDescResponse = new DataModelDescResponse(parentDesc);
-                parentModelDescResponse.setProject(projectServiceV2.getProjectOfModel(parentName));
+                parentModelDescResponse.setProject(projectService.getProjectOfModel(parentName));
                 data.put("model", parentModelDescResponse);
             }
         }

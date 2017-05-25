@@ -37,7 +37,7 @@ import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.KafkaConfigService;
 import org.apache.kylin.rest.service.StreamingService;
-import org.apache.kylin.rest.service.TableServiceV2;
+import org.apache.kylin.rest.service.TableService;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,8 +75,8 @@ public class StreamingControllerV2 extends BasicController {
     private KafkaConfigService kafkaConfigService;
 
     @Autowired
-    @Qualifier("tableServiceV2")
-    private TableServiceV2 tableServiceV2;
+    @Qualifier("tableService")
+    private TableService tableService;
 
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
@@ -124,7 +124,7 @@ public class StreamingControllerV2 extends BasicController {
         boolean saveStreamingSuccess = false, saveKafkaSuccess = false;
 
         try {
-            tableServiceV2.addStreamingTable(tableDesc, project);
+            tableService.addStreamingTable(tableDesc, project);
         } catch (IOException e) {
             throw new InternalErrorException(msg.getADD_STREAMING_TABLE_FAIL());
         }

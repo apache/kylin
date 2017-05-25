@@ -47,8 +47,8 @@ import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.GeneralResponse;
 import org.apache.kylin.rest.response.ResponseCode;
 import org.apache.kylin.rest.service.CacheService;
-import org.apache.kylin.rest.service.ModelServiceV2;
-import org.apache.kylin.rest.service.ProjectServiceV2;
+import org.apache.kylin.rest.service.ModelService;
+import org.apache.kylin.rest.service.ProjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,12 +79,12 @@ public class ModelControllerV2 extends BasicController {
     public static final char[] VALID_MODELNAME = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_".toCharArray();
 
     @Autowired
-    @Qualifier("modelMgmtServiceV2")
-    private ModelServiceV2 modelServiceV2;
+    @Qualifier("modelMgmtService")
+    private ModelService modelService;
 
     @Autowired
-    @Qualifier("projectServiceV2")
-    private ProjectServiceV2 projectServiceV2;
+    @Qualifier("projectService")
+    private ProjectService projectService;
 
     @Autowired
     @Qualifier("cacheService")
@@ -96,7 +96,7 @@ public class ModelControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
 
         HashMap<String, Object> data = new HashMap<String, Object>();
-        List<DataModelDesc> models = modelServiceV2.listAllModels(modelName, projectName);
+        List<DataModelDesc> models = modelService.listAllModels(modelName, projectName);
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
@@ -111,13 +111,13 @@ public class ModelControllerV2 extends BasicController {
         }
 
         List<DataModelDescResponse> dataModelDescResponses = new ArrayList<DataModelDescResponse>();
-        for (DataModelDesc model : modelServiceV2.getModels(modelName, projectName, limit, offset)) {
+        for (DataModelDesc model : modelService.getModels(modelName, projectName, limit, offset)) {
             DataModelDescResponse dataModelDescResponse = new DataModelDescResponse(model);
 
             if (projectName != null)
                 dataModelDescResponse.setProject(projectName);
             else
-                dataModelDescResponse.setProject(projectServiceV2.getProjectOfModel(model.getName()));
+                dataModelDescResponse.setProject(projectService.getProjectOfModel(model.getName()));
 
             dataModelDescResponses.add(dataModelDescResponse);
         }
@@ -135,15 +135,15 @@ public class ModelControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
-        modelServiceV2.validateModelDesc(modelDesc);
+        modelService.validateModelDesc(modelDesc);
 
         String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
 
         ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
         Checkpoint cp = store.checkpoint();
         try {
-            boolean createNew = modelServiceV2.unifyModelDesc(modelDesc, false);
-            modelDesc = modelServiceV2.updateModelToResourceStore(modelDesc, projectName, createNew, false);
+            boolean createNew = modelService.unifyModelDesc(modelDesc, false);
+            modelDesc = modelService.updateModelToResourceStore(modelDesc, projectName, createNew, false);
         } catch (Exception ex) {
             cp.rollback();
             cacheService.wipeAllCache();
@@ -166,15 +166,15 @@ public class ModelControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
 
         DataModelDesc modelDesc = deserializeDataModelDescV2(modelRequest);
-        modelServiceV2.validateModelDesc(modelDesc);
+        modelService.validateModelDesc(modelDesc);
 
         String projectName = (null == modelRequest.getProject()) ? ProjectInstance.DEFAULT_PROJECT_NAME : modelRequest.getProject();
 
         ResourceStore store = ResourceStore.getStore(KylinConfig.getInstanceFromEnv());
         Checkpoint cp = store.checkpoint();
         try {
-            boolean createNew = modelServiceV2.unifyModelDesc(modelDesc, true);
-            modelDesc = modelServiceV2.updateModelToResourceStore(modelDesc, projectName, createNew, true);
+            boolean createNew = modelService.unifyModelDesc(modelDesc, true);
+            modelDesc = modelService.updateModelToResourceStore(modelDesc, projectName, createNew, true);
         } catch (Exception ex) {
             cp.rollback();
             cacheService.wipeAllCache();
@@ -197,11 +197,11 @@ public class ModelControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        DataModelDesc desc = modelServiceV2.getMetadataManager().getDataModelDesc(modelName);
+        DataModelDesc desc = modelService.getMetadataManager().getDataModelDesc(modelName);
         if (null == desc) {
             throw new BadRequestException(String.format(msg.getMODEL_NOT_FOUND(), modelName));
         }
-        modelServiceV2.dropModel(desc);
+        modelService.dropModel(desc);
     }
 
     @RequestMapping(value = "/{modelName}/clone", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
@@ -236,7 +236,7 @@ public class ModelControllerV2 extends BasicController {
         DataModelDesc newModelDesc = DataModelDesc.getCopyOf(modelDesc);
         newModelDesc.setName(newModelName);
 
-        newModelDesc = modelServiceV2.createModelDesc(project, newModelDesc);
+        newModelDesc = modelService.createModelDesc(project, newModelDesc);
 
         //reload avoid shallow
         metaManager.reloadDataModelDescAt(DataModelDesc.concatResourcePath(newModelName));
@@ -271,7 +271,7 @@ public class ModelControllerV2 extends BasicController {
     public EnvelopeResponse checkNameAvailabilityV2(@RequestHeader("Accept-Language") String lang, @PathVariable String modelName) throws IOException {
         MsgPicker.setMsg(lang);
 
-        boolean ret = modelServiceV2.checkNameAvailability(modelName);
+        boolean ret = modelService.checkNameAvailability(modelName);
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, ret, "");
     }
 
@@ -282,11 +282,11 @@ public class ModelControllerV2 extends BasicController {
 
         Map<String, Set<String>> data = new HashMap<>();
 
-        for (Map.Entry<TblColRef, Set<CubeInstance>> entry : modelServiceV2.getUsedDimCols(modelName).entrySet()) {
+        for (Map.Entry<TblColRef, Set<CubeInstance>> entry : modelService.getUsedDimCols(modelName).entrySet()) {
             populateUsedColResponse(entry.getKey(), entry.getValue(), data);
         }
 
-        for (Map.Entry<TblColRef, Set<CubeInstance>> entry : modelServiceV2.getUsedNonDimCols(modelName).entrySet()) {
+        for (Map.Entry<TblColRef, Set<CubeInstance>> entry : modelService.getUsedNonDimCols(modelName).entrySet()) {
             populateUsedColResponse(entry.getKey(), entry.getValue(), data);
         }
 
@@ -304,8 +304,8 @@ public class ModelControllerV2 extends BasicController {
         }
     }
 
-    public void setModelService(ModelServiceV2 modelService) {
-        this.modelServiceV2 = modelService;
+    public void setModelService(ModelService modelService) {
+        this.modelService = modelService;
     }
 
 }

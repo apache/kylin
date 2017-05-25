@@ -18,6 +18,8 @@
 
 package org.apache.kylin.rest.controller2;
 
+import static org.apache.kylin.cube.model.CubeDesc.STATUS_DRAFT;
+
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -29,7 +31,7 @@ import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.EnvelopeResponse;
 import org.apache.kylin.rest.response.ResponseCode;
-import org.apache.kylin.rest.service.CubeServiceV2;
+import org.apache.kylin.rest.service.CubeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -38,8 +40,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import static org.apache.kylin.cube.model.CubeDesc.STATUS_DRAFT;
 
 /**
  * @author xduo
@@ -50,8 +50,8 @@ import static org.apache.kylin.cube.model.CubeDesc.STATUS_DRAFT;
 public class CubeDescControllerV2 extends BasicController {
 
     @Autowired
-    @Qualifier("cubeMgmtServiceV2")
-    private CubeServiceV2 cubeServiceV2;
+    @Qualifier("cubeMgmtService")
+    private CubeService cubeService;
 
     /**
      * Get detail information of the "Cube ID"
@@ -68,7 +68,7 @@ public class CubeDescControllerV2 extends BasicController {
         MsgPicker.setMsg(lang);
         Message msg = MsgPicker.getMsg();
 
-        CubeInstance cubeInstance = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
         if (cubeInstance == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
@@ -98,7 +98,7 @@ public class CubeDescControllerV2 extends BasicController {
 
         HashMap<String, CubeDesc> data = new HashMap<String, CubeDesc>();
 
-        CubeInstance cubeInstance = cubeServiceV2.getCubeManager().getCube(cubeName);
+        CubeInstance cubeInstance = cubeService.getCubeManager().getCube(cubeName);
         if (cubeInstance == null) {
             throw new BadRequestException(String.format(msg.getCUBE_NOT_FOUND(), cubeName));
         }
@@ -111,7 +111,7 @@ public class CubeDescControllerV2 extends BasicController {
             data.put("cube", desc);
 
             String draftName = cubeName + "_draft";
-            CubeInstance draftCubeInstance = cubeServiceV2.getCubeManager().getCube(draftName);
+            CubeInstance draftCubeInstance = cubeService.getCubeManager().getCube(draftName);
             if (draftCubeInstance != null) {
                 CubeDesc draftCubeDesc = draftCubeInstance.getDescriptor();
                 if (draftCubeDesc != null && draftCubeDesc.getStatus() != null && draftCubeDesc.getStatus().equals(STATUS_DRAFT)) {
@@ -122,7 +122,7 @@ public class CubeDescControllerV2 extends BasicController {
             data.put("draft", desc);
 
             String parentName = cubeName.substring(0, cubeName.lastIndexOf("_draft"));
-            CubeInstance parentCubeInstance = cubeServiceV2.getCubeManager().getCube(parentName);
+            CubeInstance parentCubeInstance = cubeService.getCubeManager().getCube(parentName);
             if (parentCubeInstance != null) {
                 CubeDesc parentDesc = parentCubeInstance.getDescriptor();
                 if (parentDesc != null && parentDesc.getStatus() == null) {
@@ -134,8 +134,8 @@ public class CubeDescControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
-    public void setCubeService(CubeServiceV2 cubeService) {
-        this.cubeServiceV2 = cubeService;
+    public void setCubeService(CubeService cubeService) {
+        this.cubeService = cubeService;
     }
 
 }
