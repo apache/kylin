@@ -36,8 +36,11 @@ import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.ClassUtil;
+import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.common.util.OrderedProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,10 +117,13 @@ public class KylinConfig extends KylinConfigBase {
     }
 
     public enum UriType {
-        PROPERTIES_FILE, REST_ADDR, LOCAL_FOLDER
+        PROPERTIES_FILE, REST_ADDR, LOCAL_FOLDER, HDFS_FILE
     }
 
     private static UriType decideUriType(String metaUri) {
+        if (metaUri.indexOf("@hdfs") > 0) {
+            return UriType.HDFS_FILE;
+        }
 
         try {
             File file = new File(metaUri);
@@ -156,6 +162,23 @@ public class KylinConfig extends KylinConfigBase {
          * LOCAL_FOLDER: path to resource folder
          */
         UriType uriType = decideUriType(uri);
+
+        if (uriType == UriType.HDFS_FILE) {
+            KylinConfig config;
+            FileSystem fs;
+            int cut = uri.indexOf('@');
+            String realHdfsPath = uri.substring(0, cut) + "/" + KYLIN_CONF_PROPERTIES_FILE;
+            try {
+                config = new KylinConfig();
+                fs = HadoopUtil.getFileSystem(realHdfsPath);
+                InputStream is = fs.open(new Path(realHdfsPath));
+                Properties prop = streamToProps(is);
+                config.reloadKylinConfig(prop);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return config;
+        }
 
         if (uriType == UriType.LOCAL_FOLDER) {
             KylinConfig config = new KylinConfig();
@@ -400,6 +423,16 @@ public class KylinConfig extends KylinConfigBase {
 
     protected KylinConfig(Properties props, boolean force) {
         super(props, force);
+    }
+
+    public void writeProperties(Properties props, File file) throws IOException {
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(file);
+            props.store(fos, file.getAbsolutePath());
+        } finally {
+            IOUtils.closeQuietly(fos);
+        }
     }
 
     public void writeProperties(File file) throws IOException {

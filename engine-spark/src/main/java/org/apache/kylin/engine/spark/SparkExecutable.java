@@ -18,13 +18,22 @@
 package org.apache.kylin.engine.spark;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.KylinConfigExt;
+import org.apache.kylin.common.persistence.ResourceTool;
 import org.apache.kylin.common.util.CliCommandExecutor;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
+import org.apache.kylin.cube.CubeSegment;
+import org.apache.kylin.engine.mr.common.JobRelatedMetaUtil;
 import org.apache.kylin.job.common.PatternedLogger;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -99,17 +108,18 @@ public class SparkExecutable extends AbstractExecutable {
         }
         logger.info("Using " + hadoopConf + " as HADOOP_CONF_DIR");
 
-        //hbase-site.xml
-        String hbaseConf = ClassLoader.getSystemClassLoader().getResource("hbase-site.xml").getFile().toString();
-        logger.info("Get hbase-site.xml location from classpath: " + hbaseConf);
-        File hbaseConfFile = new File(hbaseConf);
-        if (hbaseConfFile.exists() == false) {
-            throw new IllegalArgumentException("Couldn't find hbase-site.xml from classpath.");
-        }
-
         String jobJar = config.getKylinJobJarPath();
         if (StringUtils.isEmpty(jars)) {
             jars = jobJar;
+        }
+
+        String segmentID = this.getParam(SparkCubingByLayer.OPTION_SEGMENT_ID.getOpt());
+        CubeSegment segment = cube.getSegmentById(segmentID);
+
+        try {
+            attachSegmentMetadataWithDict(segment);
+        } catch (IOException e) {
+            throw new ExecuteException("meta dump fialed");
         }
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -120,9 +130,9 @@ public class SparkExecutable extends AbstractExecutable {
             stringBuilder.append(" --conf ").append(entry.getKey()).append("=").append(entry.getValue()).append(" ");
         }
 
-        stringBuilder.append("--files %s --jars %s %s %s");
+        stringBuilder.append("--jars %s %s %s");
         try {
-            String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(), hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
+            String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(), jars, jobJar, formatArgs());
             logger.info("cmd: " + cmd);
             CliCommandExecutor exec = new CliCommandExecutor();
             PatternedLogger patternedLogger = new PatternedLogger(logger);
@@ -135,5 +145,33 @@ public class SparkExecutable extends AbstractExecutable {
         }
     }
 
+    private void attachSegmentMetadataWithDict(CubeSegment segment) throws IOException {
+        Set<String> dumpList = new LinkedHashSet<>();
+        dumpList.addAll(JobRelatedMetaUtil.collectCubeMetadata(segment.getCubeInstance()));
+        dumpList.addAll(segment.getDictionaryPaths());
+        dumpList.add(segment.getStatisticsResourcePath());
+        dumpAndUploadKylinPropsAndMetadata(dumpList, (KylinConfigExt) segment.getConfig());
+    }
 
+    private void dumpAndUploadKylinPropsAndMetadata(Set<String> dumpList, KylinConfigExt kylinConfig) throws IOException {
+        File tmp = File.createTempFile("kylin_job_meta", "");
+        FileUtils.forceDelete(tmp); // we need a directory, so delete the file first
+
+        File metaDir = new File(tmp, "meta");
+        metaDir.mkdirs();
+
+        // dump metadata
+        JobRelatedMetaUtil.dumpResources(kylinConfig, metaDir, dumpList);
+
+        // write kylin.properties
+        File kylinPropsFile = new File(metaDir, "kylin.properties");
+        Properties properties = kylinConfig.getAllProperties();
+        String metadataUrl = this.getParam(SparkCubingByLayer.OPTION_META_URL.getOpt());
+        properties.setProperty("kylin.metadata.url", metadataUrl);
+        kylinConfig.writeProperties(properties, kylinPropsFile);
+
+        KylinConfig dstConfig = KylinConfig.createKylinConfig(properties);
+        //upload metadata
+        ResourceTool.copy(KylinConfig.createInstanceFromUri(metaDir.getAbsolutePath()), dstConfig);
+    }
 }
