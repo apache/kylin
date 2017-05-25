@@ -23,10 +23,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaFactory;
@@ -80,7 +80,7 @@ public class OLAPSchemaFactory implements SchemaFactory {
     public static File createTempOLAPJson(String project, KylinConfig config) {
         project = ProjectInstance.getNormalizedProjectName(project);
 
-        Set<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
+        Collection<TableDesc> tables = ProjectManager.getInstance(config).listExposedTables(project);
 
         // "database" in TableDesc correspond to our schema
         // the logic to decide which schema to be "default" in calcite:

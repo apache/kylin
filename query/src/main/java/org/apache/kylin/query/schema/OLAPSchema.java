@@ -18,9 +18,9 @@
 
 package org.apache.kylin.query.schema;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.impl.AbstractSchema;
@@ -72,7 +72,8 @@ public class OLAPSchema extends AbstractSchema {
 
     private Map<String, Table> buildTableMap() {
         Map<String, Table> olapTables = new HashMap<String, Table>();
-        Set<TableDesc> projectTables = ProjectManager.getInstance(config).listExposedTables(projectName);
+
+        Collection<TableDesc> projectTables = ProjectManager.getInstance(config).listExposedTables(projectName);
 
         for (TableDesc tableDesc : projectTables) {
             if (tableDesc.getDatabase().equals(schemaName)) {

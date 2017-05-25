@@ -53,15 +53,15 @@ import org.apache.kylin.metadata.model.JoinTableDesc;
 import org.apache.kylin.metadata.model.ModelDimensionDesc;
 import org.apache.kylin.metadata.model.TableRef;
 import org.apache.kylin.metadata.project.ProjectInstance;
+import org.apache.kylin.metadata.querymeta.ColumnMetaWithType;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
-import org.apache.kylin.metadata.querymeta.ColumnMetaWithType;
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
@@ -148,7 +148,7 @@ public class QueryServiceV2 extends QueryService {
                     if (checkCondition(queryCacheEnabled, "query cache is disabled") //
                             && checkCondition(!sqlResponse.getIsException(), "query has exception") //
                             && checkCondition(sqlResponse.getDuration() > durationThreshold || sqlResponse.getTotalScanCount() > scanCountThreshold || sqlResponse.getTotalScanBytes() > scanBytesThreshold, //
-                            "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})", sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(), scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
+                                    "query is too lightweight with duration: {} (threshold {}), scan count: {} (threshold {}), scan bytes: {} (threshold {})", sqlResponse.getDuration(), durationThreshold, sqlResponse.getTotalScanCount(), scanCountThreshold, sqlResponse.getTotalScanBytes(), scanBytesThreshold)
                             && checkCondition(sqlResponse.getResults().size() < kylinConfig.getLargeQueryThreshold(), "query response is too large: {} ({})", sqlResponse.getResults().size(), kylinConfig.getLargeQueryThreshold())) {
                         cacheManager.getCache(SUCCESS_QUERY_CACHE).put(new Element(sqlRequest, sqlResponse));
                     }
@@ -159,7 +159,7 @@ public class QueryServiceV2 extends QueryService {
                     sqlResponse.setTotalScanBytes(0);
                 }
 
-                checkQueryAuth(sqlResponse);
+                checkQueryAuth(sqlResponse, sqlRequest.getProject());
 
             } catch (Throwable e) { // calcite may throw AssertError
                 logger.error("Exception when execute sql", e);
@@ -331,51 +331,51 @@ public class QueryServiceV2 extends QueryService {
         ColumnMetaData.Rep rep = ColumnMetaData.Rep.of(clazz);
 
         switch (rep) {
-            case PRIMITIVE_CHAR:
-            case CHARACTER:
-            case STRING:
-                preparedState.setString(index, isNull ? null : String.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_INT:
-            case INTEGER:
-                preparedState.setInt(index, isNull ? 0 : Integer.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_SHORT:
-            case SHORT:
-                preparedState.setShort(index, isNull ? 0 : Short.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_LONG:
-            case LONG:
-                preparedState.setLong(index, isNull ? 0 : Long.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_FLOAT:
-            case FLOAT:
-                preparedState.setFloat(index, isNull ? 0 : Float.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_DOUBLE:
-            case DOUBLE:
-                preparedState.setDouble(index, isNull ? 0 : Double.valueOf(param.getValue()));
-                break;
-            case PRIMITIVE_BOOLEAN:
-            case BOOLEAN:
-                preparedState.setBoolean(index, !isNull && Boolean.parseBoolean(param.getValue()));
-                break;
-            case PRIMITIVE_BYTE:
-            case BYTE:
-                preparedState.setByte(index, isNull ? 0 : Byte.valueOf(param.getValue()));
-                break;
-            case JAVA_UTIL_DATE:
-            case JAVA_SQL_DATE:
-                preparedState.setDate(index, isNull ? null : java.sql.Date.valueOf(param.getValue()));
-                break;
-            case JAVA_SQL_TIME:
-                preparedState.setTime(index, isNull ? null : Time.valueOf(param.getValue()));
-                break;
-            case JAVA_SQL_TIMESTAMP:
-                preparedState.setTimestamp(index, isNull ? null : Timestamp.valueOf(param.getValue()));
-                break;
-            default:
-                preparedState.setObject(index, isNull ? null : param.getValue());
+        case PRIMITIVE_CHAR:
+        case CHARACTER:
+        case STRING:
+            preparedState.setString(index, isNull ? null : String.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_INT:
+        case INTEGER:
+            preparedState.setInt(index, isNull ? 0 : Integer.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_SHORT:
+        case SHORT:
+            preparedState.setShort(index, isNull ? 0 : Short.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_LONG:
+        case LONG:
+            preparedState.setLong(index, isNull ? 0 : Long.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_FLOAT:
+        case FLOAT:
+            preparedState.setFloat(index, isNull ? 0 : Float.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_DOUBLE:
+        case DOUBLE:
+            preparedState.setDouble(index, isNull ? 0 : Double.valueOf(param.getValue()));
+            break;
+        case PRIMITIVE_BOOLEAN:
+        case BOOLEAN:
+            preparedState.setBoolean(index, !isNull && Boolean.parseBoolean(param.getValue()));
+            break;
+        case PRIMITIVE_BYTE:
+        case BYTE:
+            preparedState.setByte(index, isNull ? 0 : Byte.valueOf(param.getValue()));
+            break;
+        case JAVA_UTIL_DATE:
+        case JAVA_SQL_DATE:
+            preparedState.setDate(index, isNull ? null : java.sql.Date.valueOf(param.getValue()));
+            break;
+        case JAVA_SQL_TIME:
+            preparedState.setTime(index, isNull ? null : Time.valueOf(param.getValue()));
+            break;
+        case JAVA_SQL_TIMESTAMP:
+            preparedState.setTimestamp(index, isNull ? null : Timestamp.valueOf(param.getValue()));
+            break;
+        default:
+            preparedState.setObject(index, isNull ? null : param.getValue());
         }
     }
 
@@ -469,7 +469,7 @@ public class QueryServiceV2 extends QueryService {
                 // update column type: PK and FK
                 for (JoinTableDesc joinTableDesc : dataModelDesc.getJoinTables()) {
                     JoinDesc joinDesc = joinTableDesc.getJoin();
-                    for (String  pk : joinDesc.getPrimaryKey()) {
+                    for (String pk : joinDesc.getPrimaryKey()) {
                         String columnIdentity = (dataModelDesc.findTable(pk.substring(0, pk.indexOf("."))).getTableIdentity() + pk.substring(pk.indexOf("."))).replace('.', '#');
                         if (columnMap.containsKey(columnIdentity)) {
                             columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.PK);
@@ -478,7 +478,7 @@ public class QueryServiceV2 extends QueryService {
                         }
                     }
 
-                    for (String  fk : joinDesc.getForeignKey()) {
+                    for (String fk : joinDesc.getForeignKey()) {
                         String columnIdentity = (dataModelDesc.findTable(fk.substring(0, fk.indexOf("."))).getTableIdentity() + fk.substring(fk.indexOf("."))).replace('.', '#');
                         if (columnMap.containsKey(columnIdentity)) {
                             columnMap.get(columnIdentity).getTYPE().add(ColumnMetaWithType.columnTypeEnum.FK);

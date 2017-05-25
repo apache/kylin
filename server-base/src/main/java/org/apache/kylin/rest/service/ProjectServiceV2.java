@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.apache.kylin.common.persistence.AclEntity;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.rest.constant.Constant;
@@ -36,13 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.acls.domain.GrantedAuthoritySid;
-import org.springframework.security.acls.domain.PrincipalSid;
-import org.springframework.security.acls.model.AccessControlEntry;
-import org.springframework.security.acls.model.Acl;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 /**
@@ -107,53 +102,17 @@ public class ProjectServiceV2 extends ProjectService {
         //list all projects first
         List<ProjectInstance> projectInstances = getProjectManager().listAllProjects();
 
-        //get user infomation
-        UserDetails userDetails = aclUtil.getCurrentUser();
-        String userName = userDetails.getUsername();
-
-        //check if ROLE_ADMIN return all,also get user role list
-        List<String> userAuthority = aclUtil.getAuthorityList();
-        for (String auth : userAuthority) {
-            if (auth.equals(Constant.ROLE_ADMIN)) {
-                return projectInstances;
-            }
-        }
-
         for (ProjectInstance projectInstance : projectInstances) {
+
             if (projectInstance == null) {
                 continue;
             }
 
             boolean hasProjectPermission = false;
-            AclEntity ae = accessService.getAclEntity("ProjectInstance", projectInstance.getId());
-            Acl projectAcl = accessService.getAcl(ae);
-            //project no Acl info will be skipped
-            if (projectAcl != null) {
-
-                //project owner has permission
-                if (((PrincipalSid) projectAcl.getOwner()).getPrincipal().equals(userName)) {
-                    readableProjects.add(projectInstance);
-                    continue;
-                }
-
-                //check project permission and role
-                for (AccessControlEntry ace : projectAcl.getEntries()) {
-                    if (ace.getSid() instanceof PrincipalSid && ((PrincipalSid) ace.getSid()).getPrincipal().equals(userName)) {
-                        hasProjectPermission = true;
-                        readableProjects.add(projectInstance);
-                        break;
-
-                    } else if (ace.getSid() instanceof GrantedAuthoritySid) {
-                        String projectAuthority = ((GrantedAuthoritySid) ace.getSid()).getGrantedAuthority();
-                        if (userAuthority.contains(projectAuthority)) {
-                            hasProjectPermission = true;
-                            readableProjects.add(projectInstance);
-                            break;
-                        }
-
-                    }
-
-                }
+            try {
+                hasProjectPermission = aclUtil.hasProjectReadPermission(projectInstance);
+            } catch (AccessDeniedException e) {
+                //ignore to continue
             }
 
             if (!hasProjectPermission) {
@@ -164,14 +123,17 @@ public class ProjectServiceV2 extends ProjectService {
                         continue;
                     }
 
-                    if (aclUtil.isHasCubePermission(cubeInstance)) {
+                    try {
+                        aclUtil.hasCubeReadPermission(cubeInstance);
                         hasProjectPermission = true;
                         break;
+                    } catch (AccessDeniedException e) {
+                        //ignore to continue
                     }
                 }
-                if (hasProjectPermission) {
-                    readableProjects.add(projectInstance);
-                }
+            }
+            if (hasProjectPermission) {
+                readableProjects.add(projectInstance);
             }
 
         }

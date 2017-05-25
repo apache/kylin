@@ -38,7 +38,7 @@ public class AdHocUtil {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Boolean isAdHoc = false;
 
-        if (isExpectedCause && (!kylinConfig.getAdHocRunnerClassName().isEmpty())) {
+        if (isExpectedCause && kylinConfig.isAdhocEnabled()) {
             Class runnerClass = Class.forName(kylinConfig.getAdHocRunnerClassName());
             Object instance = runnerClass.newInstance();
 

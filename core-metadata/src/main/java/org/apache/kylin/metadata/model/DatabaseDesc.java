@@ -19,10 +19,10 @@
 package org.apache.kylin.metadata.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author xjiang
@@ -57,7 +57,7 @@ public class DatabaseDesc implements Serializable {
         return "DatabaseDesc [name=" + name + "]";
     }
 
-    public static HashMap<String, Integer> extractDatabaseOccurenceCounts(Set<TableDesc> tables) {
+    public static HashMap<String, Integer> extractDatabaseOccurenceCounts(Collection<TableDesc> tables) {
         HashMap<String, Integer> databaseCounts = new HashMap<String, Integer>();
         for (TableDesc tableDesc : tables) {
             String databaseName = tableDesc.getDatabase();

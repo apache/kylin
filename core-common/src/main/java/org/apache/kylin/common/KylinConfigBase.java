@@ -469,7 +469,7 @@ abstract public class KylinConfigBase implements Serializable {
     public String getJobTrackingURLPattern() {
         return getOptional("kylin.job.tracking-url-pattern", "");
     }
-    
+
     // ============================================================================
     // SOURCE.HIVE
     // ============================================================================
@@ -575,7 +575,7 @@ abstract public class KylinConfigBase implements Serializable {
         // for backward compatibility
         if ("hbase".equals(url))
             url = "default@hbase";
-        
+
         return StorageURL.valueOf(url);
     }
 
@@ -936,6 +936,10 @@ abstract public class KylinConfigBase implements Serializable {
 
     public int getQueryTimeoutSeconds() {
         return Integer.parseInt(this.getOptional("kylin.query.timeout-seconds", "0"));
+    }
+
+    public boolean isAdhocEnabled() {
+        return StringUtils.isNotEmpty(getAdHocRunnerClassName()); 
     }
 
     public String getAdHocRunnerClassName() {

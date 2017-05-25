@@ -94,12 +94,32 @@ class ProjectL2Cache {
             return Collections.unmodifiableSet(tableCache.exposedColumns);
     }
 
+    public boolean isDefinedTable(String project, String table) {
+        TableCache tableCache = getCache(project).tables.get(table);
+        if (tableCache == null)
+            return false;
+        else
+            return true;
+    }
+
     public boolean isExposedTable(String project, String table) {
         TableCache tableCache = getCache(project).tables.get(table);
         if (tableCache == null)
             return false;
         else
             return tableCache.exposed;
+    }
+
+    public boolean isDefinedColumn(String project, String table, String col) {
+        TableCache tableCache = getCache(project).tables.get(table);
+        if (tableCache == null)
+            return false;
+
+        for (ColumnDesc colDesc : tableCache.tableDesc.getColumns()) {
+            if (colDesc.getName().equals(col))
+                return true;
+        }
+        return false;
     }
 
     public boolean isExposedColumn(String project, String table, String col) {

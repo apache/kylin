@@ -20,6 +20,8 @@ package org.apache.kylin.metadata.project;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -403,24 +405,28 @@ public class ProjectManager {
         return l2Cache.listExternalFilterDesc(project);
     }
 
-    public List<TableDesc> listDefinedTables(String project) throws IOException {
+    public List<TableDesc> listDefinedTables(String project) {
         return l2Cache.listDefinedTables(norm(project));
     }
 
-    public Set<TableDesc> listExposedTables(String project) {
-        return l2Cache.listExposedTables(norm(project));
+    public Collection<TableDesc> listExposedTables(String project) {
+        return config.isAdhocEnabled() ? //
+                this.listDefinedTables(project) : //
+                l2Cache.listExposedTables(norm(project));
     }
 
-    public Set<ColumnDesc> listExposedColumns(String project, String table) {
-        return l2Cache.listExposedColumns(norm(project), table);
+    public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc) {
+        return config.isAdhocEnabled() ? //
+                Arrays.asList(tableDesc.getColumns()) : //
+                Lists.newArrayList(l2Cache.listExposedColumns(norm(project), tableDesc.getIdentity()));
     }
 
     public boolean isExposedTable(String project, String table) {
-        return l2Cache.isExposedTable(norm(project), table);
+        return config.isAdhocEnabled() ? l2Cache.isDefinedTable(norm(project), table) : l2Cache.isExposedTable(norm(project), table);
     }
 
     public boolean isExposedColumn(String project, String table, String col) {
-        return l2Cache.isExposedColumn(norm(project), table, col);
+        return config.isAdhocEnabled() ? l2Cache.isDefinedColumn(norm(project), table, col) : l2Cache.isExposedColumn(norm(project), table, col);
     }
 
     public Set<IRealization> listAllRealizations(String project) {

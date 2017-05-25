@@ -64,17 +64,18 @@ import org.apache.kylin.common.util.SetThreadName;
 import org.apache.kylin.cube.CubeInstance;
 import org.apache.kylin.cube.CubeManager;
 import org.apache.kylin.cube.cuboid.Cuboid;
+import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.metadata.project.RealizationEntry;
+import org.apache.kylin.metadata.querymeta.ColumnMeta;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.metadata.realization.RealizationType;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
-import org.apache.kylin.metadata.querymeta.ColumnMeta;
 import org.apache.kylin.rest.model.Query;
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
@@ -93,7 +94,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import net.sf.ehcache.Cache;
@@ -238,7 +242,7 @@ public class QueryService extends BasicService {
     }
 
     public void logQuery(final SQLRequest request, final SQLResponse response) {
-        final String user = SecurityContextHolder.getContext().getAuthentication().getName();
+        final String user = aclUtil.getCurrentUserName();
         final List<String> realizationNames = new LinkedList<>();
         final Set<Long> cuboidIds = new HashSet<Long>();
         float duration = response.getDuration() / (float) 1000;
@@ -291,22 +295,46 @@ public class QueryService extends BasicService {
         logger.info(stringBuilder.toString());
     }
 
-    public void checkAuthorization(String cubeName) throws AccessDeniedException {
-        // special care for hybrid
-        HybridInstance hybridInstance = getHybridManager().getHybridInstance(cubeName);
-        if (hybridInstance != null) {
-            checkHybridAuthorization(hybridInstance);
-            return;
+    public void checkAuthorization(SQLResponse sqlResponse, String project) throws AccessDeniedException {
+
+        //project 
+        ProjectInstance projectInstance = getProjectManager().getProject(project);
+        try {
+            if (aclUtil.hasProjectReadPermission(projectInstance)) {
+                return;
+            }
+        } catch (AccessDeniedException e) {
+            logger.warn("Current user {} has no READ permission on current project {}, please ask Administrator for permission granting.");
+            //just continue
         }
 
-        CubeInstance cubeInstance = getCubeManager().getCube(cubeName);
-        checkCubeAuthorization(cubeInstance);
+        String realizationsStr = sqlResponse.getCube();//CUBE[name=abc],HYBRID[name=xyz]
+
+        if (StringUtils.isEmpty(realizationsStr)) {
+            throw new AccessDeniedException("Ad-hoc query requires having READ permission on project, please ask Administrator to grant you permissions");
+        }
+
+        String[] splits = StringUtils.split(realizationsStr, ",");
+
+        for (String split : splits) {
+
+            Iterable<String> parts = Splitter.on(CharMatcher.anyOf("[]=,")).split(split);
+            String[] partsStr = Iterables.toArray(parts, String.class);
+
+            if (RealizationType.HYBRID.toString().equals(partsStr[0])) {
+                // special care for hybrid
+                HybridInstance hybridInstance = getHybridManager().getHybridInstance(partsStr[2]);
+                Preconditions.checkNotNull(hybridInstance);
+                checkHybridAuthorization(hybridInstance);
+            } else {
+                CubeInstance cubeInstance = getCubeManager().getCube(partsStr[2]);
+                checkCubeAuthorization(cubeInstance);
+            }
+        }
     }
 
     private void checkCubeAuthorization(CubeInstance cube) throws AccessDeniedException {
-        if (!aclUtil.isHasCubePermission(cube)) {
-            throw new AccessDeniedException("Access denied");
-        }
+        Preconditions.checkState(aclUtil.hasCubeReadPermission(cube));
     }
 
     private void checkHybridAuthorization(HybridInstance hybridInstance) throws AccessDeniedException {
@@ -383,7 +411,7 @@ public class QueryService extends BasicService {
                     sqlResponse.setTotalScanBytes(0);
                 }
 
-                checkQueryAuth(sqlResponse);
+                checkQueryAuth(sqlResponse, project);
 
             } catch (Throwable e) { // calcite may throw AssertError
                 logger.error("Exception when execute sql", e);
@@ -434,9 +462,9 @@ public class QueryService extends BasicService {
         return response;
     }
 
-    protected void checkQueryAuth(SQLResponse sqlResponse) throws AccessDeniedException {
+    protected void checkQueryAuth(SQLResponse sqlResponse, String project) throws AccessDeniedException {
         if (!sqlResponse.getIsException() && KylinConfig.getInstanceFromEnv().isQuerySecureEnabled()) {
-            checkAuthorization(sqlResponse.getCube());
+            checkAuthorization(sqlResponse, project);
         }
     }
 
@@ -594,20 +622,23 @@ public class QueryService extends BasicService {
         }
 
         boolean isPartialResult = false;
-        String cube = "";
-        StringBuilder sb = new StringBuilder("Processed rows for each storageContext: ");
+        StringBuilder cubeSb = new StringBuilder();
+        StringBuilder logSb = new StringBuilder("Processed rows for each storageContext: ");
         if (OLAPContext.getThreadLocalContexts() != null) { // contexts can be null in case of 'explain plan for'
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
                 if (ctx.realization != null) {
                     isPartialResult |= ctx.storageContext.isPartialResultReturned();
-                    cube = ctx.realization.getName();
-                    sb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
+                    if (cubeSb.length() > 0) {
+                        cubeSb.append(",");
+                    }
+                    cubeSb.append(ctx.realization.getCanonicalName());
+                    logSb.append(ctx.storageContext.getProcessedRowCount()).append(" ");
                 }
             }
         }
-        logger.info(sb.toString());
+        logger.info(logSb.toString());
 
-        SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult, isAdHoc);
+        SQLResponse response = new SQLResponse(columnMetas, results, cubeSb.toString(), 0, false, null, isPartialResult, isAdHoc);
         response.setTotalScanCount(QueryContext.current().getScannedRows());
         response.setTotalScanBytes(QueryContext.current().getScannedBytes());
 
