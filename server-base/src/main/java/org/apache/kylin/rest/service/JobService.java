@@ -392,7 +392,7 @@ public class JobService extends BasicService implements InitializingBean {
                     if (cubeNameExactMatch)
                         return executableCubeName.equalsIgnoreCase(cubeName);
                     else
-                        return executableCubeName.contains(cubeName);
+                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
                 } else {
                     return false;
                 }

@@ -20,6 +20,8 @@ package org.apache.kylin.rest.controller2;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +56,48 @@ public class JobControllerV2 extends BasicController {
     @Qualifier("jobService")
     private JobService jobService;
 
+    private Comparator<JobInstance> lastModifyComparator = new Comparator<JobInstance>() {
+        @Override
+        public int compare(JobInstance o1, JobInstance o2) {
+            return new Long(o1.getLastModified()).compareTo(o2.getLastModified());
+        }
+    };
+
+    private Comparator<JobInstance> lastModifyComparatorReverse = new Comparator<JobInstance>() {
+        @Override
+        public int compare(JobInstance o1, JobInstance o2) {
+            return 0 - new Long(o1.getLastModified()).compareTo(o2.getLastModified());
+        }
+    };
+
+    private Comparator<JobInstance> jobNameComparator = new Comparator<JobInstance>() {
+        @Override
+        public int compare(JobInstance o1, JobInstance o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
+
+    private Comparator<JobInstance> jobNameComparatorReverse = new Comparator<JobInstance>() {
+        @Override
+        public int compare(JobInstance o1, JobInstance o2) {
+            return 0 - o1.getName().compareTo(o2.getName());
+        }
+    };
+
+    private Comparator<JobInstance> cubeNameComparator = new Comparator<JobInstance>() {
+        @Override
+        public int compare(JobInstance o1, JobInstance o2) {
+            return o1.getRelatedCube().compareTo(o2.getRelatedCube());
+        }
+    };
+
+    private Comparator<JobInstance> cubeNameComparatorReverse = new Comparator<JobInstance>() {
+        @Override
+        public int compare(JobInstance o1, JobInstance o2) {
+            return 0 - o1.getRelatedCube().compareTo(o2.getRelatedCube());
+        }
+    };
+
     /**
      * get all cube jobs
      * 
@@ -63,7 +107,14 @@ public class JobControllerV2 extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse listV2(@RequestHeader("Accept-Language") String lang, @RequestParam(value = "status", required = false) Integer[] status, @RequestParam(value = "timeFilter", required = true) Integer timeFilter, @RequestParam(value = "cubeName", required = false) String cubeName, @RequestParam(value = "projectName", required = false) String projectName, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) {
+    public EnvelopeResponse listV2(@RequestHeader("Accept-Language") String lang, //
+            @RequestParam(value = "status", required = false) Integer[] status, //
+            @RequestParam(value = "timeFilter", required = true) Integer timeFilter, //
+            @RequestParam(value = "cubeName", required = false) String cubeName, //
+            @RequestParam(value = "projectName", required = false) String projectName, //
+            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, //
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize, //
+            @RequestParam(value = "sortby", required = false, defaultValue = "last_modify") String sortby, @RequestParam(value = "reverse", required = false, defaultValue = "true") Boolean reverse) {
         MsgPicker.setMsg(lang);
 
         HashMap<String, Object> data = new HashMap<String, Object>();
@@ -76,6 +127,23 @@ public class JobControllerV2 extends BasicController {
         }
 
         List<JobInstance> jobInstanceList = jobService.searchJobs(cubeName, projectName, statusList, JobTimeFilterEnum.getByCode(timeFilter));
+
+        if (sortby.equals("last_modify")) {
+            if (reverse) {
+                Collections.sort(jobInstanceList, lastModifyComparatorReverse);
+            }
+            Collections.sort(jobInstanceList, lastModifyComparator);
+        } else if (sortby.equals("job_name")) {
+            if (reverse) {
+                Collections.sort(jobInstanceList, jobNameComparatorReverse);
+            }
+            Collections.sort(jobInstanceList, jobNameComparator);
+        } else if (sortby.equals("cube_name")) {
+            if (reverse) {
+                Collections.sort(jobInstanceList, cubeNameComparatorReverse);
+            }
+            Collections.sort(jobInstanceList, cubeNameComparator);
+        }
 
         int offset = pageOffset * pageSize;
         int limit = pageSize;
