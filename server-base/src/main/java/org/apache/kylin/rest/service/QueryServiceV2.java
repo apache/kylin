@@ -67,6 +67,7 @@ import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
+import org.apache.kylin.rest.util.AdHocUtil;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -245,6 +246,7 @@ public class QueryServiceV2 extends QueryService {
         Connection conn = null;
         Statement stat = null;
         ResultSet resultSet = null;
+        Boolean isAdHoc = false;
 
         List<List<String>> results = Lists.newArrayList();
         List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
@@ -284,6 +286,8 @@ public class QueryServiceV2 extends QueryService {
 
                 results.add(oneRow);
             }
+        } catch (SQLException sqlException) {
+            isAdHoc = AdHocUtil.doAdHocQuery(correctedSql, results, columnMetas, sqlException);
         } finally {
             close(resultSet, stat, conn);
         }
@@ -302,7 +306,7 @@ public class QueryServiceV2 extends QueryService {
         }
         logger.info(sb.toString());
 
-        SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult, false);
+        SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult, isAdHoc);
         response.setTotalScanCount(QueryContext.current().getScannedRows());
         response.setTotalScanBytes(QueryContext.current().getScannedBytes());
 
