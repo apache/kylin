@@ -59,9 +59,9 @@ import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
-import org.apache.kylin.rest.model.ColumnMetaWithType;
-import org.apache.kylin.rest.model.SelectedColumnMeta;
-import org.apache.kylin.rest.model.TableMetaWithType;
+import org.apache.kylin.metadata.querymeta.ColumnMetaWithType;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.metadata.querymeta.TableMetaWithType;
 import org.apache.kylin.rest.msg.Message;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
@@ -302,7 +302,7 @@ public class QueryServiceV2 extends QueryService {
         }
         logger.info(sb.toString());
 
-        SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult);
+        SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult, false);
         response.setTotalScanCount(QueryContext.current().getScannedRows());
         response.setTotalScanBytes(QueryContext.current().getScannedBytes());
 

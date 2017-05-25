@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.kylin.rest.model.SelectedColumnMeta;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -16,7 +16,7 @@
  * limitations under the License.
 */
 
-package org.apache.kylin.rest.model;
+package org.apache.kylin.metadata.querymeta;
 
 import java.io.Serializable;
 import java.util.HashSet;

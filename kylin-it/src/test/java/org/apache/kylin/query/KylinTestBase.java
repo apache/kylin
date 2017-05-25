@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.LogManager;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
@@ -49,6 +50,8 @@ import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.ProjectInstance;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.rest.util.AdHocUtil;
 import org.dbunit.DatabaseUnitException;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
@@ -240,7 +243,7 @@ public class KylinTestBase {
         return queryTable;
     }
 
-    protected int executeQuery(String sql, boolean needDisplay) throws SQLException {
+    protected int executeQuery(String sql, boolean needDisplay) throws Exception {
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -254,6 +257,11 @@ public class KylinTestBase {
             logger.info("stop running...");
 
             return output(resultSet, needDisplay);
+        } catch (SQLException sqlException) {
+            List<List<String>> results =  Lists.newArrayList();
+            List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
+            AdHocUtil.doAdHocQuery(sql, results, columnMetas, sqlException);
+            return results.size();
         } finally {
             if (resultSet != null) {
                 try {
@@ -270,7 +278,6 @@ public class KylinTestBase {
                 }
             }
         }
-
     }
 
     protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql, List<String> parameters, boolean needSort) throws Exception {

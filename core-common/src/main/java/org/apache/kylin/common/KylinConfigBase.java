@@ -938,6 +938,38 @@ abstract public class KylinConfigBase implements Serializable {
         return Integer.parseInt(this.getOptional("kylin.query.timeout-seconds", "0"));
     }
 
+    public String getAdHocRunnerClassName() {
+        return getOptional("kylin.query.ad-hoc.runner.class-name", "");
+    }
+
+    public String getJdbcUrl() {
+        return getOptional("kylin.query.ad-hoc.jdbc.url", "");
+    }
+
+    public String getJdbcDriverClass() {
+        return getOptional("kylin.query.ad-hoc.jdbc.driver", "");
+    }
+
+    public String getJdbcUsername() {
+        return getOptional("kylin.query.ad-hoc.jdbc.username", "");
+    }
+
+    public String getJdbcPassword() {
+        return getOptional("kylin.query.ad-hoc.jdbc.password", "");
+    }
+
+    public int getPoolMaxTotal() {
+        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.pool.max-total", "8"));
+    }
+
+    public int getPoolMaxIdle() {
+        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.pool.max-idle", "8"));
+    }
+
+    public int getPoolMinIdle() {
+        return Integer.parseInt(this.getOptional("kylin.query.ad-hoc.pool.min-idle", "0"));
+    }
+
     // ============================================================================
     // SERVER
     // ============================================================================

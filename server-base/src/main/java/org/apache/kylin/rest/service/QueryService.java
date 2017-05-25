@@ -71,14 +71,15 @@ import org.apache.kylin.query.util.QueryUtil;
 import org.apache.kylin.rest.constant.Constant;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.metrics.QueryMetricsFacade;
-import org.apache.kylin.rest.model.ColumnMeta;
+import org.apache.kylin.metadata.querymeta.ColumnMeta;
 import org.apache.kylin.rest.model.Query;
-import org.apache.kylin.rest.model.SelectedColumnMeta;
-import org.apache.kylin.rest.model.TableMeta;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
 import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.apache.kylin.rest.util.AclUtil;
+import org.apache.kylin.rest.util.AdHocUtil;
 import org.apache.kylin.rest.util.Serializer;
 import org.apache.kylin.rest.util.TableauInterceptor;
 import org.apache.kylin.storage.hbase.HBaseConnection;
@@ -242,6 +243,7 @@ public class QueryService extends BasicService {
         final Set<Long> cuboidIds = new HashSet<Long>();
         float duration = response.getDuration() / (float) 1000;
         boolean storageCacheUsed = response.isStorageCacheUsed();
+        boolean isAdHoc = response.isAdHoc();
 
         if (!response.isHitExceptionCache() && null != OLAPContext.getThreadLocalContexts()) {
             for (OLAPContext ctx : OLAPContext.getThreadLocalContexts()) {
@@ -282,6 +284,7 @@ public class QueryService extends BasicService {
         stringBuilder.append("Is Partial Result: ").append(response.isPartial()).append(newLine);
         stringBuilder.append("Hit Exception Cache: ").append(response.isHitExceptionCache()).append(newLine);
         stringBuilder.append("Storage cache used: ").append(storageCacheUsed).append(newLine);
+        stringBuilder.append("Is Ad-hoc Query: ").append(isAdHoc).append(newLine);
         stringBuilder.append("Message: ").append(response.getExceptionMessage()).append(newLine);
         stringBuilder.append("==========================[QUERY]===============================").append(newLine);
 
@@ -544,6 +547,7 @@ public class QueryService extends BasicService {
         Connection conn = null;
         Statement stat = null;
         ResultSet resultSet = null;
+        Boolean isAdHoc = false;
 
         List<List<String>> results = Lists.newArrayList();
         List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
@@ -583,6 +587,8 @@ public class QueryService extends BasicService {
 
                 results.add(oneRow);
             }
+        } catch (SQLException sqlException) {
+            isAdHoc = AdHocUtil.doAdHocQuery(correctedSql, results, columnMetas, sqlException);
         } finally {
             close(resultSet, stat, conn);
         }
@@ -601,7 +607,7 @@ public class QueryService extends BasicService {
         }
         logger.info(sb.toString());
 
-        SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult);
+        SQLResponse response = new SQLResponse(columnMetas, results, cube, 0, false, null, isPartialResult, isAdHoc);
         response.setTotalScanCount(QueryContext.current().getScannedRows());
         response.setTotalScanBytes(QueryContext.current().getScannedBytes());
 

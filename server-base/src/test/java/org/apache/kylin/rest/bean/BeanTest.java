@@ -21,9 +21,9 @@ package org.apache.kylin.rest.bean;
 import java.beans.IntrospectionException;
 
 import org.apache.kylin.rest.constant.Constant;
-import org.apache.kylin.rest.model.ColumnMeta;
-import org.apache.kylin.rest.model.SelectedColumnMeta;
-import org.apache.kylin.rest.model.TableMeta;
+import org.apache.kylin.metadata.querymeta.ColumnMeta;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.metadata.querymeta.TableMeta;
 import org.apache.kylin.rest.request.AccessRequest;
 import org.apache.kylin.rest.request.CubeRequest;
 import org.apache.kylin.rest.request.JobListRequest;

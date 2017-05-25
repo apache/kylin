@@ -21,7 +21,7 @@ package org.apache.kylin.rest.response;
 import java.io.Serializable;
 import java.util.List;
 
-import org.apache.kylin.rest.model.SelectedColumnMeta;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 
 public class SQLResponse implements Serializable {
     protected static final long serialVersionUID = 1L;
@@ -61,6 +61,8 @@ public class SQLResponse implements Serializable {
 
     protected boolean storageCacheUsed = false;
 
+    protected boolean queryAdHoc = false;
+
     public SQLResponse() {
     }
 
@@ -81,7 +83,7 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isAdhoc) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;
@@ -89,6 +91,7 @@ public class SQLResponse implements Serializable {
         this.isException = isException;
         this.exceptionMessage = exceptionMessage;
         this.isPartial = isPartial;
+        this.queryAdHoc = isAdhoc;
     }
 
     public List<SelectedColumnMeta> getColumnMetas() {
@@ -142,6 +145,10 @@ public class SQLResponse implements Serializable {
     public boolean isPartial() {
 
         return isPartial;
+    }
+
+    public boolean isAdHoc() {
+        return queryAdHoc;
     }
 
     public long getTotalScanCount() {

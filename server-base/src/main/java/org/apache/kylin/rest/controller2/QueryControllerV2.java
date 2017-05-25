@@ -30,7 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.kylin.rest.controller.BasicController;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.model.Query;
-import org.apache.kylin.rest.model.SelectedColumnMeta;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.request.MetaRequest;
 import org.apache.kylin.rest.request.PrepareSqlRequest;
