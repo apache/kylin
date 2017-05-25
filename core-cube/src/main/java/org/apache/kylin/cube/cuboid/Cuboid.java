@@ -59,9 +59,14 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
 
     // this is the only entry point for query to find the right cuboid
     public static Cuboid identifyCuboid(CubeDesc cubeDesc, Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
+        long cuboidID = identifyCuboidId(cubeDesc, dimensions, metrics);
+        return Cuboid.findById(cubeDesc, cuboidID);
+    }
+
+    public static long identifyCuboidId(CubeDesc cubeDesc, Set<TblColRef> dimensions, Collection<FunctionDesc> metrics) {
         for (FunctionDesc metric : metrics) {
             if (metric.getMeasureType().onlyAggrInBaseCuboid())
-                return Cuboid.getBaseCuboid(cubeDesc);
+                return Cuboid.getBaseCuboidId(cubeDesc);
         }
 
         long cuboidID = 0;
@@ -69,8 +74,12 @@ public class Cuboid implements Comparable<Cuboid>, Serializable {
             int index = cubeDesc.getRowkey().getColumnBitIndex(column);
             cuboidID |= 1L << index;
         }
+        return cuboidID;
+    }
 
-        return Cuboid.findById(cubeDesc, cuboidID);
+    // for full cube, no need to translate cuboid
+    public static Cuboid findForFullCube(CubeDesc cube, long cuboidID) {
+        return new Cuboid(cube, cuboidID, cuboidID);
     }
 
     public static Cuboid findById(CubeDesc cube, byte[] cuboidID) {
