@@ -33,6 +33,8 @@ import org.apache.kylin.rest.exception.BadRequestException;
 import org.apache.kylin.rest.exception.ForbiddenException;
 import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.rest.exception.NotFoundException;
+import org.apache.kylin.rest.msg.Message;
+import org.apache.kylin.rest.msg.MsgPicker;
 import org.apache.kylin.rest.response.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +54,16 @@ public class BasicController {
     @ResponseBody
     ErrorResponse handleError(HttpServletRequest req, Exception ex) {
         logger.error("", ex);
+
+        Message msg = MsgPicker.getMsg();
+        Throwable cause = ex;
+        while (cause != null) {
+            if (cause.getClass().getPackage().getName().startsWith("org.apache.hadoop.hbase")) {
+                return new ErrorResponse(req.getRequestURL().toString(), new InternalErrorException(String.format(msg.getHBASE_FAIL(), ex.getMessage()), ex));
+            }
+            cause = cause.getCause();
+        }
+
         return new ErrorResponse(req.getRequestURL().toString(), ex);
     }
 

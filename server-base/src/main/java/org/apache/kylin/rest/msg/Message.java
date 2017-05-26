@@ -50,16 +50,16 @@ public class Message {
     private final String ACL_INFO_NOT_FOUND = "Unable to find ACL information for object identity '%s'.";
     private final String ACL_DOMAIN_NOT_FOUND = "Acl domain object required.";
     private final String PARENT_ACL_NOT_FOUND = "Parent acl required.";
-    private final String DISABLE_NOT_READY_CUBE= "Only ready cube can be disabled, status of '%s' is %s.";
+    private final String DISABLE_NOT_READY_CUBE = "Only ready cube can be disabled, status of '%s' is %s.";
     private final String PURGE_NOT_DISABLED_CUBE = "Only disabled cube can be purged, status of '%s' is %s.";
     private final String CLONE_BROKEN_CUBE = "Broken cube '%s' can't be cloned.";
     private final String INVALID_CUBE_NAME = "Invalid Cube name '%s', only letters, numbers and underline supported.";
     private final String CUBE_ALREADY_EXIST = "The cube named '%s' already exists.";
     private final String CUBE_DESC_ALREADY_EXIST = "The cube desc named '%s' already exists.";
     private final String BROKEN_CUBE_DESC = "Broken cube desc named '%s'.";
-    private final String ENABLE_NOT_DISABLED_CUBE= "Only disabled cube can be enabled, status of '%s' is %s.";
+    private final String ENABLE_NOT_DISABLED_CUBE = "Only disabled cube can be enabled, status of '%s' is %s.";
     private final String NO_READY_SEGMENT = "Cube '%s' doesn't contain any READY segment.";
-    private final String ENABLE_WITH_RUNNING_JOB= "Enable is not allowed with a running job.";
+    private final String ENABLE_WITH_RUNNING_JOB = "Enable is not allowed with a running job.";
     private final String DISCARD_JOB_FIRST = "The cube '%s' has running or failed job, please discard it and try again.";
     private final String IDENTITY_EXIST_CHILDREN = "Children exists for '%s'.";
     private final String INVALID_CUBE_DEFINITION = "The cube definition is invalid.";
@@ -167,7 +167,9 @@ public class Message {
     private final String FILTER_ALREADY_EXIST = "The filter named '%s' already exists.";
     private final String FILTER_NOT_FOUND = "The filter named '%s' does not exist.";
 
-
+    // Basic
+    private final String HBASE_FAIL = "HBase failed: '%s'";
+    private final String HBASE_FAIL_WITHOUT_DETAIL = "HBase failed.";
 
     public String getCUBE_NOT_FOUND() {
         return CUBE_NOT_FOUND;
@@ -321,7 +323,6 @@ public class Message {
         return ORIGIN_CUBE_NOT_FOUND;
     }
 
-
     public String getINVALID_MODEL_DEFINITION() {
         return INVALID_MODEL_DEFINITION;
     }
@@ -390,7 +391,6 @@ public class Message {
         return ORIGIN_MODEL_NOT_FOUND;
     }
 
-
     public String getILLEGAL_TIME_FILTER() {
         return ILLEGAL_TIME_FILTER;
     }
@@ -411,11 +411,9 @@ public class Message {
         return INVALID_JOB_STEP_STATE;
     }
 
-
     public String getUSER_NOT_EXIST() {
         return USER_NOT_EXIST;
     }
-
 
     public String getINVALID_PROJECT_NAME() {
         return INVALID_PROJECT_NAME;
@@ -428,7 +426,6 @@ public class Message {
     public String getPROJECT_NOT_FOUND() {
         return PROJECT_NOT_FOUND;
     }
-
 
     public String getHIVE_TABLE_NOT_FOUND() {
         return HIVE_TABLE_NOT_FOUND;
@@ -445,7 +442,6 @@ public class Message {
     public String getCUBE_DESC_NOT_FOUND() {
         return CUBE_DESC_NOT_FOUND;
     }
-
 
     public String getINVALID_TABLE_DESC_DEFINITION() {
         return INVALID_TABLE_DESC_DEFINITION;
@@ -507,7 +503,6 @@ public class Message {
         return STREAMING_CONFIG_NOT_FOUND;
     }
 
-
     public String getQUERY_NOT_ALLOWED() {
         return QUERY_NOT_ALLOWED;
     }
@@ -523,7 +518,6 @@ public class Message {
     public String getCOLUMN_META_INCONSISTENT() {
         return COLUMN_META_INCONSISTENT;
     }
-
 
     public String getACL_PERMISSION_REQUIRED() {
         return ACL_PERMISSION_REQUIRED;
@@ -541,11 +535,9 @@ public class Message {
         return ACE_ID_REQUIRED;
     }
 
-
     public String getGET_ENV_CONFIG_FAIL() {
         return GET_ENV_CONFIG_FAIL;
     }
-
 
     public String getAUTH_INFO_NOT_FOUND() {
         return AUTH_INFO_NOT_FOUND;
@@ -554,7 +546,6 @@ public class Message {
     public String getUSER_NOT_FOUND() {
         return USER_NOT_FOUND;
     }
-
 
     public String getDIAG_NOT_FOUND() {
         return DIAG_NOT_FOUND;
@@ -572,11 +563,9 @@ public class Message {
         return DIAG_PACKAGE_NOT_FOUND;
     }
 
-
     public String getVALID_ENCODING_NOT_AVAILABLE() {
         return VALID_ENCODING_NOT_AVAILABLE;
     }
-
 
     public String getFILTER_ALREADY_EXIST() {
         return FILTER_ALREADY_EXIST;
@@ -584,5 +573,13 @@ public class Message {
 
     public String getFILTER_NOT_FOUND() {
         return FILTER_NOT_FOUND;
+    }
+
+    public String getHBASE_FAIL() {
+        return HBASE_FAIL;
+    }
+
+    public String getHBASE_FAIL_WITHOUT_DETAIL() {
+        return HBASE_FAIL_WITHOUT_DETAIL;
     }
 }
