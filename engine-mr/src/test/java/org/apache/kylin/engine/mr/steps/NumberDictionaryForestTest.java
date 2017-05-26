@@ -67,7 +67,7 @@ public class NumberDictionaryForestTest {
         //stimulate map-reduce job
         ArrayList<SelfDefineSortableKey> keyList = createKeyList(humanList, (byte) flag.ordinal());
         Collections.sort(keyList);
-
+        
         //build tree
         NumberDictionaryForestBuilder b = new NumberDictionaryForestBuilder(0, 0);
         expectedList = numberSort(expectedList);
@@ -76,7 +76,7 @@ public class NumberDictionaryForestTest {
         }
         TrieDictionaryForest<String> dict = b.build();
         dict.dump(System.out);
-
+        
         ArrayList<Integer> resultIds = new ArrayList<>();
         for (int i = 0; i < keyList.size(); i++) {
             SelfDefineSortableKey key = keyList.get(i);
@@ -84,7 +84,7 @@ public class NumberDictionaryForestTest {
             resultIds.add(dict.getIdFromValue(fieldValue));
             assertEquals(expectedList.get(i), dict.getValueFromId(dict.getIdFromValue(fieldValue)));
         }
-
+        
         assertTrue(isIncreasedOrder(resultIds, new Comparator<Integer>() {
             @Override
             public int compare(Integer o1, Integer o2) {
@@ -101,8 +101,7 @@ public class NumberDictionaryForestTest {
                 double d1 = Double.parseDouble(o1);
                 double d2 = Double.parseDouble(o2);
                 return Double.compare(d1, d2);
-            }
-        });
+            }});
         return result;
     }
 
@@ -291,18 +290,16 @@ public class NumberDictionaryForestTest {
         int flag;
         T previous = null;
         for (T t : list) {
-            if (previous == null)
-                previous = t;
+            if (previous == null) previous = t;
             else {
                 flag = comp.compare(previous, t);
-                if (flag > 0)
-                    return false;
+                if (flag > 0) return false;
                 previous = t;
             }
         }
         return true;
     }
-
+    
     @Test
     public void testNormalizeNumber() {
         assertEquals("0", Number2BytesConverter.normalizeNumber("+0000.000"));
@@ -314,7 +311,7 @@ public class NumberDictionaryForestTest {
         assertEquals("200", Number2BytesConverter.normalizeNumber("200"));
         assertEquals("200", Number2BytesConverter.normalizeNumber("200.00"));
         assertEquals("200.01", Number2BytesConverter.normalizeNumber("200.010"));
-
+        
         for (int i = -100; i < 101; i++) {
             String expected = "" + i;
             int cut = expected.startsWith("-") ? 1 : 0;

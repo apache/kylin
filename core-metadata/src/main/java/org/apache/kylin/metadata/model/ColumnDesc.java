@@ -82,8 +82,7 @@ public class ColumnDesc implements Serializable {
         this.index = other.index;
     }
 
-    public ColumnDesc(String id, String name, String datatype, String comment, String dataGen, String index,
-            String computedColumnExpr) {
+    public ColumnDesc(String id, String name, String datatype, String comment, String dataGen, String index, String computedColumnExpr) {
         this.id = id;
         this.name = name;
         this.datatype = datatype;
@@ -258,7 +257,6 @@ public class ColumnDesc implements Serializable {
 
     @Override
     public String toString() {
-        return "ColumnDesc{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", datatype='" + datatype + '\''
-                + ", comment='" + comment + '\'' + '}';
+        return "ColumnDesc{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", datatype='" + datatype + '\'' + ", comment='" + comment + '\'' + '}';
     }
 }

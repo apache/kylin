@@ -35,11 +35,9 @@ public class TableReaderTest {
     @Test
     public void testBasicReader() throws IOException {
         File f = new File("src/test/resources/dict/DW_SITES");
-        DFSFileTableReader reader = new DFSFileTableReader("file://" + f.getAbsolutePath(), DFSFileTable.DELIM_AUTO,
-                10);
+        DFSFileTableReader reader = new DFSFileTableReader("file://" + f.getAbsolutePath(), DFSFileTable.DELIM_AUTO, 10);
         while (reader.next()) {
-            assertEquals("[-1, Korea Auction.co.kr, S, 48, 0, 111, 2009-02-11, , DW_OFFPLAT, ]",
-                    Arrays.toString(reader.getRow()));
+            assertEquals("[-1, Korea Auction.co.kr, S, 48, 0, 111, 2009-02-11, , DW_OFFPLAT, ]", Arrays.toString(reader.getRow()));
             break;
         }
         reader.close();

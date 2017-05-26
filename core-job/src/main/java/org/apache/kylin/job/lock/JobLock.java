@@ -23,7 +23,7 @@ package org.apache.kylin.job.lock;
  * This interface is for such negotiation. 
  */
 public interface JobLock {
-
+    
     boolean lockJobEngine();
 
     void unlockJobEngine();

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.storage.hdfs;
 
+
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.persistence.ResourceStoreTest;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;

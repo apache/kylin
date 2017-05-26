@@ -17,16 +17,11 @@
 */
 package org.apache.kylin.dict;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
@@ -37,12 +32,14 @@ import org.apache.kylin.dict.global.GlobalDictMetadata;
 import org.apache.kylin.dict.global.GlobalDictStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A dictionary based on Trie data structure that maps enumerations of byte[] to
@@ -63,8 +60,7 @@ import com.google.common.cache.RemovalNotification;
  */
 @SuppressWarnings({ "rawtypes", "unchecked", "serial" })
 public class AppendTrieDictionary<T> extends CacheDictionary<T> {
-    public static final byte[] HEAD_MAGIC = new byte[] { 0x41, 0x70, 0x70, 0x65, 0x63, 0x64, 0x54, 0x72, 0x69, 0x65,
-            0x44, 0x69, 0x63, 0x74 }; // "AppendTrieDict"
+    public static final byte[] HEAD_MAGIC = new byte[] { 0x41, 0x70, 0x70, 0x65, 0x63, 0x64, 0x54, 0x72, 0x69, 0x65, 0x44, 0x69, 0x63, 0x74 }; // "AppendTrieDict"
     public static final int HEAD_SIZE_I = HEAD_MAGIC.length;
     private static final Logger logger = LoggerFactory.getLogger(AppendTrieDictionary.class);
 
@@ -81,23 +77,19 @@ public class AppendTrieDictionary<T> extends CacheDictionary<T> {
         final Path latestVersionPath = globalDictStore.getVersionDir(latestVersion);
         this.metadata = globalDictStore.getMetadata(latestVersion);
         this.bytesConvert = metadata.bytesConverter;
-        this.dictCache = CacheBuilder.newBuilder().softValues()
-                .removalListener(new RemovalListener<AppendDictSliceKey, AppendDictSlice>() {
-                    @Override
-                    public void onRemoval(RemovalNotification<AppendDictSliceKey, AppendDictSlice> notification) {
-                        logger.info("Evict slice with key {} and value {} caused by {}, size {}/{}",
-                                notification.getKey(), notification.getValue(), notification.getCause(),
-                                dictCache.size(), metadata.sliceFileMap.size());
-                    }
-                }).build(new CacheLoader<AppendDictSliceKey, AppendDictSlice>() {
-                    @Override
-                    public AppendDictSlice load(AppendDictSliceKey key) throws Exception {
-                        AppendDictSlice slice = globalDictStore.readSlice(latestVersionPath.toString(),
-                                metadata.sliceFileMap.get(key));
-                        logger.info("Load slice with key {} and value {}", key, slice);
-                        return slice;
-                    }
-                });
+        this.dictCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<AppendDictSliceKey, AppendDictSlice>() {
+            @Override
+            public void onRemoval(RemovalNotification<AppendDictSliceKey, AppendDictSlice> notification) {
+                logger.info("Evict slice with key {} and value {} caused by {}, size {}/{}", notification.getKey(), notification.getValue(), notification.getCause(), dictCache.size(), metadata.sliceFileMap.size());
+            }
+        }).build(new CacheLoader<AppendDictSliceKey, AppendDictSlice>() {
+            @Override
+            public AppendDictSlice load(AppendDictSliceKey key) throws Exception {
+                AppendDictSlice slice = globalDictStore.readSlice(latestVersionPath.toString(), metadata.sliceFileMap.get(key));
+                logger.info("Load slice with key {} and value {}", key, slice);
+                return slice;
+            }
+        });
     }
 
     @Override

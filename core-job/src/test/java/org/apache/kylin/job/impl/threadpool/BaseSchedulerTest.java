@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseSchedulerTest.class);
-
+    
     private DefaultScheduler scheduler;
 
     protected ExecutableManager jobService;
@@ -76,7 +76,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
     protected void waitForJobFinish(String jobId) {
         int error = 0;
         final int errorLimit = 3;
-
+        
         while (error < errorLimit) {
             try {
                 Thread.sleep(2000);
@@ -87,8 +87,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
             try {
                 AbstractExecutable job = jobService.getJob(jobId);
                 ExecutableState status = job.getStatus();
-                if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR
-                        || status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED) {
+                if (status == ExecutableState.SUCCEED || status == ExecutableState.ERROR || status == ExecutableState.STOPPED || status == ExecutableState.DISCARDED) {
                     break;
                 }
             } catch (Exception ex) {
@@ -96,7 +95,7 @@ public abstract class BaseSchedulerTest extends LocalFileMetadataTestCase {
                 error++;
             }
         }
-
+        
         if (error >= errorLimit) {
             throw new RuntimeException("waitForJobFinish() encounters exceptions, see logs above");
         }

@@ -68,8 +68,7 @@ public class StorageContext {
     //the limit here correspond to the limit concept in SQL
     //also take into consideration Statement.setMaxRows in JDBC
     private int getLimit() {
-        if (overlookOuterLimit || BackdoorToggles.getStatementMaxRows() == null
-                || BackdoorToggles.getStatementMaxRows() == 0) {
+        if (overlookOuterLimit || BackdoorToggles.getStatementMaxRows() == null || BackdoorToggles.getStatementMaxRows() == 0) {
             return limit;
         } else {
             return Math.min(limit, BackdoorToggles.getStatementMaxRows());
@@ -78,8 +77,7 @@ public class StorageContext {
 
     public void setLimit(int l) {
         if (limit != Integer.MAX_VALUE) {
-            logger.warn("Setting limit to {} but in current olap context, the limit is already {}, won't apply", l,
-                    limit);
+            logger.warn("Setting limit to {} but in current olap context, the limit is already {}, won't apply", l, limit);
         } else {
             limit = l;
         }

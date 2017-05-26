@@ -88,23 +88,19 @@ public class CLIHiveClient implements IHiveClient {
         List<HiveTableMeta.HiveTableColumnMeta> allColumns = Lists.newArrayList();
         List<HiveTableMeta.HiveTableColumnMeta> partitionColumns = Lists.newArrayList();
         for (FieldSchema fieldSchema : allFields) {
-            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType(),
-                    fieldSchema.getComment()));
+            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType(), fieldSchema.getComment()));
         }
         if (partitionFields != null && partitionFields.size() > 0) {
             for (FieldSchema fieldSchema : partitionFields) {
-                partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType(),
-                        fieldSchema.getComment()));
+                partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(fieldSchema.getName(), fieldSchema.getType(), fieldSchema.getComment()));
             }
         }
         builder.setAllColumns(allColumns);
         builder.setPartitionColumns(partitionColumns);
 
         builder.setSdLocation(table.getSd().getLocation());
-        builder.setFileSize(
-                getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.TOTAL_SIZE));
-        builder.setFileNum(
-                getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES));
+        builder.setFileSize(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.TOTAL_SIZE));
+        builder.setFileNum(getBasicStatForTable(new org.apache.hadoop.hive.ql.metadata.Table(table), StatsSetupConst.NUM_FILES));
         builder.setIsNative(!MetaStoreUtils.isNonNativeTable(table));
         builder.setTableName(tableName);
         builder.setSdInputFormat(table.getSd().getInputFormat());

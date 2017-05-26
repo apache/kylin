@@ -51,8 +51,7 @@ public class TopNMeasureTypeTest extends LocalFileMetadataTestCase {
     @Test
     public void test() {
 
-        CubeDesc desc = CubeDescManager.getInstance(getTestConfig())
-                .getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
+        CubeDesc desc = CubeDescManager.getInstance(getTestConfig()).getCubeDesc("test_kylin_cube_without_slr_left_join_desc");
 
         MeasureDesc topSellerMeasure = null;
 
@@ -62,8 +61,7 @@ public class TopNMeasureTypeTest extends LocalFileMetadataTestCase {
                 break;
             }
         }
-        TopNMeasureType measureType = (TopNMeasureType) MeasureTypeFactory.create(
-                topSellerMeasure.getFunction().getExpression(), topSellerMeasure.getFunction().getReturnDataType());
+        TopNMeasureType measureType = (TopNMeasureType) MeasureTypeFactory.create(topSellerMeasure.getFunction().getExpression(), topSellerMeasure.getFunction().getReturnDataType());
 
         topSellerMeasure.getFunction().getConfiguration().clear();
         List<TblColRef> colsNeedDict = measureType.getColumnsNeedDictionary(topSellerMeasure.getFunction());
@@ -71,8 +69,7 @@ public class TopNMeasureTypeTest extends LocalFileMetadataTestCase {
         assertTrue(colsNeedDict != null && colsNeedDict.size() == 1);
 
         TblColRef sellerColRef = topSellerMeasure.getFunction().getParameter().getColRefs().get(1);
-        topSellerMeasure.getFunction().getConfiguration()
-                .put(TopNMeasureType.CONFIG_ENCODING_PREFIX + sellerColRef.getIdentity(), "int:6");
+        topSellerMeasure.getFunction().getConfiguration().put(TopNMeasureType.CONFIG_ENCODING_PREFIX + sellerColRef.getIdentity(), "int:6");
         colsNeedDict = measureType.getColumnsNeedDictionary(topSellerMeasure.getFunction());
 
         assertTrue(colsNeedDict.size() == 0);

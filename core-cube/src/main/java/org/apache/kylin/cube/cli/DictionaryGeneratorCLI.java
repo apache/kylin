@@ -47,16 +47,14 @@ public class DictionaryGeneratorCLI {
 
     private static final Logger logger = LoggerFactory.getLogger(DictionaryGeneratorCLI.class);
 
-    public static void processSegment(KylinConfig config, String cubeName, String segmentID,
-            DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
+    public static void processSegment(KylinConfig config, String cubeName, String segmentID, DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
         CubeInstance cube = CubeManager.getInstance(config).getCube(cubeName);
         CubeSegment segment = cube.getSegmentById(segmentID);
 
         processSegment(config, segment, factTableValueProvider, dictProvider);
     }
 
-    private static void processSegment(KylinConfig config, CubeSegment cubeSeg,
-            DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
+    private static void processSegment(KylinConfig config, CubeSegment cubeSeg, DistinctColumnValuesProvider factTableValueProvider, DictionaryProvider dictProvider) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(config);
 
         // dictionary
@@ -69,8 +67,7 @@ public class DictionaryGeneratorCLI {
                     logger.debug("Dict for '" + col.getName() + "' has already been built, save it");
                     cubeMgr.saveDictionary(cubeSeg, col, inpTable, dict);
                 } else {
-                    logger.debug(
-                            "Dict for '" + col.getName() + "' not pre-built, build it from " + inpTable.toString());
+                    logger.debug("Dict for '" + col.getName() + "' not pre-built, build it from " + inpTable.toString());
                     cubeMgr.buildDictionary(cubeSeg, col, inpTable);
                 }
             } else {
@@ -94,7 +91,7 @@ public class DictionaryGeneratorCLI {
             logger.info("Building snapshot of " + tableIdentity);
             cubeMgr.buildSnapshotTable(cubeSeg, tableIdentity);
         }
-
+        
         for (TableRef lookup : toCheckLookup) {
             logger.info("Checking snapshot of " + lookup);
             JoinDesc join = cubeSeg.getModel().getJoinsTree().getJoinByPKSide(lookup);
@@ -102,8 +99,7 @@ public class DictionaryGeneratorCLI {
         }
     }
 
-    private static IReadableTable decideInputTable(DataModelDesc model, TblColRef col,
-            DistinctColumnValuesProvider factTableValueProvider) {
+    private static IReadableTable decideInputTable(DataModelDesc model, TblColRef col, DistinctColumnValuesProvider factTableValueProvider) {
         KylinConfig config = model.getConfig();
         DictionaryManager dictMgr = DictionaryManager.getInstance(config);
         TblColRef srcCol = dictMgr.decideSourceData(model, col);

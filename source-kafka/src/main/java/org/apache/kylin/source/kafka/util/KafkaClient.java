@@ -17,11 +17,7 @@
 */
 package org.apache.kylin.source.kafka.util;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
@@ -34,7 +30,10 @@ import org.apache.kylin.source.kafka.config.BrokerConfig;
 import org.apache.kylin.source.kafka.config.KafkaClusterConfig;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
 
-import com.google.common.collect.Maps;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  */
@@ -46,8 +45,7 @@ public class KafkaClient {
         return consumer;
     }
 
-    private static Properties constructDefaultKafkaConsumerProperties(String brokers, String consumerGroup,
-            Properties properties) {
+    private static Properties constructDefaultKafkaConsumerProperties(String brokers, String consumerGroup, Properties properties) {
         Properties props = new Properties();
         if (properties != null) {
             for (Map.Entry entry : properties.entrySet()) {
@@ -99,8 +97,7 @@ public class KafkaClient {
     }
 
     public static Map<Integer, Long> getLatestOffsets(final CubeInstance cubeInstance) {
-        final KafkaConfig kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getKafkaConfig(cubeInstance.getRootFactTable());
+        final KafkaConfig kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig(cubeInstance.getRootFactTable());
 
         final String brokers = KafkaClient.getKafkaBrokers(kafkaConfig);
         final String topic = kafkaConfig.getTopic();
@@ -116,9 +113,9 @@ public class KafkaClient {
         return startOffsets;
     }
 
+
     public static Map<Integer, Long> getEarliestOffsets(final CubeInstance cubeInstance) {
-        final KafkaConfig kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getKafkaConfig(cubeInstance.getRootFactTable());
+        final KafkaConfig kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig(cubeInstance.getRootFactTable());
 
         final String brokers = KafkaClient.getKafkaBrokers(kafkaConfig);
         final String topic = kafkaConfig.getTopic();

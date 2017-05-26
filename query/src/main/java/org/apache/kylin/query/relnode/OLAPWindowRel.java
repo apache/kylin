@@ -21,9 +21,9 @@ package org.apache.kylin.query.relnode;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.calcite.adapter.enumerable.EnumerableWindowBridge;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRel;
-import org.apache.calcite.adapter.enumerable.EnumerableWindowBridge;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -34,11 +34,11 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+
+import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.kylin.metadata.model.TblColRef;
-
-import com.google.common.base.Preconditions;
 
 /**
  */
@@ -46,8 +46,7 @@ public class OLAPWindowRel extends Window implements OLAPRel {
     private ColumnRowType columnRowType;
     private OLAPContext context;
 
-    public OLAPWindowRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<RexLiteral> constants,
-            RelDataType rowType, List<Group> groups) {
+    public OLAPWindowRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<RexLiteral> constants, RelDataType rowType, List<Group> groups) {
         super(cluster, traitSet, input, constants, rowType, groups);
         Preconditions.checkArgument(getConvention() == CONVENTION);
         Preconditions.checkArgument(getConvention() == input.getConvention());
@@ -91,8 +90,7 @@ public class OLAPWindowRel extends Window implements OLAPRel {
         // add window aggregate calls column
         for (Group group : groups) {
             for (AggregateCall aggrCall : group.getAggregateCalls(this)) {
-                TblColRef aggrCallCol = TblColRef.newInnerColumn(aggrCall.getName(),
-                        TblColRef.InnerDataTypeEnum.LITERAL);
+                TblColRef aggrCallCol = TblColRef.newInnerColumn(aggrCall.getName(), TblColRef.InnerDataTypeEnum.LITERAL);
                 columns.add(aggrCallCol);
             }
         }
@@ -115,8 +113,7 @@ public class OLAPWindowRel extends Window implements OLAPRel {
             }
             relInputs.add(input);
         }
-        return EnumerableWindowBridge.createEnumerableWindow(getCluster(), traitSet, inputs.get(0), constants, rowType,
-                groups);
+        return EnumerableWindowBridge.createEnumerableWindow(getCluster(), traitSet, inputs.get(0), constants, rowType, groups);
     }
 
     @Override

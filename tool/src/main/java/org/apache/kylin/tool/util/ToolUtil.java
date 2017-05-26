@@ -19,17 +19,16 @@
 
 package org.apache.kylin.tool.util;
 
+import com.google.common.collect.Maps;
+import org.apache.commons.lang.StringUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.common.persistence.ResourceStore;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.common.persistence.ResourceStore;
-
-import com.google.common.collect.Maps;
 
 public class ToolUtil {
     public static String getConfFolder() {

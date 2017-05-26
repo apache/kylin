@@ -18,11 +18,7 @@
 
 package org.apache.kylin.engine.mr.common;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
 import org.apache.kylin.cube.CubeSegment;
@@ -39,7 +35,10 @@ import org.apache.kylin.metadata.model.TblColRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  */
@@ -60,9 +59,8 @@ public class BaseCuboidBuilder implements java.io.Serializable {
 
     protected KylinConfig kylinConfig;
 
-    public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment,
-            CubeJoinedFlatTableEnrich intermediateTableDesc, AbstractRowKeyEncoder rowKeyEncoder,
-            MeasureIngester<?>[] aggrIngesters, Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment, CubeJoinedFlatTableEnrich intermediateTableDesc,
+                             AbstractRowKeyEncoder rowKeyEncoder, MeasureIngester<?>[] aggrIngesters, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         this.kylinConfig = kylinConfig;
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;
@@ -75,8 +73,7 @@ public class BaseCuboidBuilder implements java.io.Serializable {
         measureCodec = new BufferedMeasureCodec(cubeDesc.getMeasures());
     }
 
-    public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment,
-            CubeJoinedFlatTableEnrich intermediateTableDesc) {
+    public BaseCuboidBuilder(KylinConfig kylinConfig, CubeDesc cubeDesc, CubeSegment cubeSegment, CubeJoinedFlatTableEnrich intermediateTableDesc) {
         this.kylinConfig = kylinConfig;
         this.cubeDesc = cubeDesc;
         this.cubeSegment = cubeSegment;

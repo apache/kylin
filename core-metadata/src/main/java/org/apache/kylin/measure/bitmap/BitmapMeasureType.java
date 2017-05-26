@@ -80,14 +80,13 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
     @Override
     public void validate(FunctionDesc functionDesc) throws IllegalArgumentException {
         checkArgument(FUNC_COUNT_DISTINCT.equals(functionDesc.getExpression()),
-                "BitmapMeasureType only support function %s, got %s", FUNC_COUNT_DISTINCT,
-                functionDesc.getExpression());
-        checkArgument(functionDesc.getParameterCount() == 1, "BitmapMeasureType only support 1 parameter, got %d",
-                functionDesc.getParameterCount());
+                "BitmapMeasureType only support function %s, got %s", FUNC_COUNT_DISTINCT, functionDesc.getExpression());
+        checkArgument(functionDesc.getParameterCount() == 1,
+                "BitmapMeasureType only support 1 parameter, got %d", functionDesc.getParameterCount());
 
         String returnType = functionDesc.getReturnDataType().getName();
-        checkArgument(DATATYPE_BITMAP.equals(returnType), "BitmapMeasureType's return type must be %s, got %s",
-                DATATYPE_BITMAP, returnType);
+        checkArgument(DATATYPE_BITMAP.equals(returnType),
+                "BitmapMeasureType's return type must be %s, got %s", DATATYPE_BITMAP, returnType);
     }
 
     @Override
@@ -103,8 +102,7 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
             BitmapCounter current = factory.newBitmap();
 
             @Override
-            public BitmapCounter valueOf(String[] values, MeasureDesc measureDesc,
-                    Map<TblColRef, Dictionary<String>> dictionaryMap) {
+            public BitmapCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 checkArgument(values.length == 1, "expect 1 value, got %s", Arrays.toString(values));
 
                 current.clear();
@@ -127,8 +125,7 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
             }
 
             @Override
-            public BitmapCounter reEncodeDictionary(BitmapCounter value, MeasureDesc measureDesc,
-                    Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
+            public BitmapCounter reEncodeDictionary(BitmapCounter value, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> oldDicts, Map<TblColRef, Dictionary<String>> newDicts) {
                 if (!needDictionaryColumn(measureDesc.getFunction())) {
                     return value;
                 }
@@ -185,7 +182,8 @@ public class BitmapMeasureType extends MeasureType<BitmapCounter> {
         return true;
     }
 
-    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.of(FUNC_COUNT_DISTINCT, BitmapDistinctCountAggFunc.class,
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.of(
+            FUNC_COUNT_DISTINCT, BitmapDistinctCountAggFunc.class,
             FUNC_INTERSECT_COUNT_DISTINCT, BitmapIntersectDistinctCountAggFunc.class);
 
     @Override

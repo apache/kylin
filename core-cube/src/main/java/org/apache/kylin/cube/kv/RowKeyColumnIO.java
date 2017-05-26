@@ -47,8 +47,7 @@ public class RowKeyColumnIO implements java.io.Serializable {
         return dimEncMap.getDictionary(col);
     }
 
-    public void writeColumn(TblColRef col, String value, int roundingFlag, byte defaultValue, byte[] output,
-            int outputOffset) {
+    public void writeColumn(TblColRef col, String value, int roundingFlag, byte defaultValue, byte[] output, int outputOffset) {
         DimensionEncoding dimEnc = dimEncMap.get(col);
         if (dimEnc instanceof DictionaryDimEnc)
             dimEnc = ((DictionaryDimEnc) dimEnc).copy(roundingFlag, defaultValue);

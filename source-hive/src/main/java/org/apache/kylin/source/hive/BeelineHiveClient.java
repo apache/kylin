@@ -133,8 +133,7 @@ public class BeelineHiveClient implements IHiveClient {
 
         List<HiveTableMeta.HiveTableColumnMeta> allColumns = Lists.newArrayList();
         while (columns.next()) {
-            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(columns.getString(4), columns.getString(6),
-                    columns.getString(12)));
+            allColumns.add(new HiveTableMeta.HiveTableColumnMeta(columns.getString(4), columns.getString(6), columns.getString(12)));
         }
         builder.setAllColumns(allColumns);
         DBUtils.closeQuietly(columns);
@@ -158,8 +157,7 @@ public class BeelineHiveClient implements IHiveClient {
                     if ("".equals(resultSet.getString(1).trim())) {
                         break;
                     }
-                    partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(resultSet.getString(1).trim(),
-                            resultSet.getString(2).trim(), resultSet.getString(3).trim()));
+                    partitionColumns.add(new HiveTableMeta.HiveTableColumnMeta(resultSet.getString(1).trim(), resultSet.getString(2).trim(), resultSet.getString(3).trim()));
                 }
                 builder.setPartitionColumns(partitionColumns);
             }
@@ -216,8 +214,7 @@ public class BeelineHiveClient implements IHiveClient {
 
     public static void main(String[] args) throws SQLException {
 
-        BeelineHiveClient loader = new BeelineHiveClient(
-                "-n root --hiveconf hive.security.authorization.sqlstd.confwhitelist.append='mapreduce.job.*|dfs.*' -u 'jdbc:hive2://sandbox:10000'");
+        BeelineHiveClient loader = new BeelineHiveClient("-n root --hiveconf hive.security.authorization.sqlstd.confwhitelist.append='mapreduce.job.*|dfs.*' -u 'jdbc:hive2://sandbox:10000'");
         //BeelineHiveClient loader = new BeelineHiveClient(StringUtils.join(args, " "));
         HiveTableMeta hiveTableMeta = loader.getHiveTableMeta("default", "test_kylin_fact_part");
         System.out.println(hiveTableMeta);

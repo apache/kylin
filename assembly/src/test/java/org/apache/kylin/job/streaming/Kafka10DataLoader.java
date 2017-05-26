@@ -52,20 +52,18 @@ public class Kafka10DataLoader extends StreamDataLoader {
     public void loadIntoKafka(List<String> messages) {
 
         KafkaClusterConfig clusterConfig = kafkaClusterConfigs.get(0);
-        String brokerList = StringUtils
-                .join(Collections2.transform(clusterConfig.getBrokerConfigs(), new Function<BrokerConfig, String>() {
-                    @Nullable
-                    @Override
-                    public String apply(BrokerConfig brokerConfig) {
-                        return brokerConfig.getHost() + ":" + brokerConfig.getPort();
-                    }
-                }), ",");
+        String brokerList = StringUtils.join(Collections2.transform(clusterConfig.getBrokerConfigs(), new Function<BrokerConfig, String>() {
+            @Nullable
+            @Override
+            public String apply(BrokerConfig brokerConfig) {
+                return brokerConfig.getHost() + ":" + brokerConfig.getPort();
+            }
+        }), ",");
 
         KafkaProducer producer = getKafkaProducer(brokerList, null);
 
         for (int i = 0; i < messages.size(); i++) {
-            ProducerRecord<String, String> keyedMessage = new ProducerRecord<String, String>(clusterConfig.getTopic(),
-                    String.valueOf(i), messages.get(i));
+            ProducerRecord<String, String> keyedMessage = new ProducerRecord<String, String>(clusterConfig.getTopic(), String.valueOf(i), messages.get(i));
             producer.send(keyedMessage);
         }
         logger.info("sent " + messages.size() + " messages to " + this.toString());

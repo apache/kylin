@@ -36,8 +36,7 @@ public class EhcacheTest {
 
     @Test
     public void basicTest() throws InterruptedException {
-        System.out.println("runtime used memory: "
-                + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
+        System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
 
         Configuration conf = new Configuration();
         conf.setMaxBytesLocalHeap("100M");
@@ -55,8 +54,7 @@ public class EhcacheTest {
 
         cacheManager.addCache(testCache);
 
-        System.out.println("runtime used memory: "
-                + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
+        System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
         byte[] blob = new byte[(1024 * 80 * 1024)];//400M
         Random random = new Random();
         for (int i = 0; i < blob.length; i++) {
@@ -73,8 +71,7 @@ public class EhcacheTest {
         System.out.println(testCache.get("1") == null);
         System.out.println(testCache.getSize());
         System.out.println(testCache.getStatistics().getLocalHeapSizeInBytes());
-        System.out.println("runtime used memory: "
-                + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
+        System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
 
         blob = new byte[(1024 * 80 * 1024)];//400M
         for (int i = 0; i < blob.length; i++) {
@@ -86,8 +83,7 @@ public class EhcacheTest {
         System.out.println(testCache.get("2") == null);
         System.out.println(testCache.getSize());
         System.out.println(testCache.getStatistics().getLocalHeapSizeInBytes());
-        System.out.println("runtime used memory: "
-                + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
+        System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
 
         blob = new byte[(1024 * 80 * 1024)];//400M
         for (int i = 0; i < blob.length; i++) {
@@ -99,8 +95,7 @@ public class EhcacheTest {
         System.out.println(testCache.get("3") == null);
         System.out.println(testCache.getSize());
         System.out.println(testCache.getStatistics().getLocalHeapSizeInBytes());
-        System.out.println("runtime used memory: "
-                + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
+        System.out.println("runtime used memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + "M");
 
         cacheManager.shutdown();
     }

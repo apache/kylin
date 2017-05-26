@@ -60,15 +60,12 @@ public class HiveCmdBuilderTest {
         hiveCmdBuilder.addStatement("SHOW\n TABLES;");
         hiveCmdBuilder.setHiveConfProps(hiveProps);
         hiveCmdBuilder.overwriteHiveProps(hivePropsOverwrite);
-        assertEquals(
-                "hive -e \"USE default;\nDROP TABLE test;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez",
-                hiveCmdBuilder.build());
+        assertEquals("hive -e \"USE default;\nDROP TABLE test;\nSHOW\n TABLES;\n\" --hiveconf hive.execution.engine=tez", hiveCmdBuilder.build());
     }
 
     @Test
     public void testBeeline() throws IOException {
-        String lineSeparator = java.security.AccessController
-                .doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
+        String lineSeparator = java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
         System.setProperty("kylin.source.hive.client", "beeline");
         System.setProperty("kylin.source.hive.beeline-params", "-u jdbc_url");
 
@@ -84,9 +81,7 @@ public class HiveCmdBuilderTest {
         hqlFile = hqlFile.substring(0, hqlFile.length() - ";exit $ret_code".length());
 
         String hqlStatement = FileUtils.readFileToString(new File(hqlFile), Charset.defaultCharset());
-        assertEquals(
-                "USE default;" + lineSeparator + "DROP TABLE test;" + lineSeparator + "SHOW\n TABLES;" + lineSeparator,
-                hqlStatement);
+        assertEquals("USE default;" + lineSeparator + "DROP TABLE test;" + lineSeparator + "SHOW\n TABLES;" + lineSeparator, hqlStatement);
 
         FileUtils.forceDelete(new File(hqlFile));
     }

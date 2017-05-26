@@ -130,8 +130,7 @@ public class RealizationChooser {
         KylinConfig kylinConfig = first.olapSchema.getConfig();
         String projectName = first.olapSchema.getProjectName();
         String factTableName = first.firstTableScan.getOlapTable().getTableName();
-        Set<IRealization> realizations = ProjectManager.getInstance(kylinConfig).getRealizationsByTable(projectName,
-                factTableName);
+        Set<IRealization> realizations = ProjectManager.getInstance(kylinConfig).getRealizationsByTable(projectName, factTableName);
 
         final Map<DataModelDesc, Set<IRealization>> models = Maps.newHashMap();
         final Map<DataModelDesc, RealizationCost> costs = Maps.newHashMap();
@@ -205,8 +204,7 @@ public class RealizationChooser {
             this.priority = Candidate.PRIORITIES.get(real.getType());
 
             // ref CubeInstance.getCost()
-            int c = real.getAllDimensions().size() * CubeInstance.COST_WEIGHT_DIMENSION
-                    + real.getMeasures().size() * CubeInstance.COST_WEIGHT_MEASURE;
+            int c = real.getAllDimensions().size() * CubeInstance.COST_WEIGHT_DIMENSION + real.getMeasures().size() * CubeInstance.COST_WEIGHT_MEASURE;
             for (JoinTableDesc join : real.getModel().getJoinTables()) {
                 if (join.getJoin().isInnerJoin())
                     c += CubeInstance.COST_WEIGHT_INNER_JOIN;

@@ -46,7 +46,7 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
         return codec;
     }
 
-    public Number2BytesConverter() {
+    public Number2BytesConverter(){
         this.maxDigitsBeforeDecimalPoint = MAX_DIGITS_BEFORE_DECIMAL_POINT;
     }
 
@@ -74,11 +74,11 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
         if (badBegin) {
             v = new BigDecimal(v).toPlainString();
         }
-
+        
         while (v.contains(".") && (v.endsWith("0") || v.endsWith("."))) {
             v = v.substring(0, v.length() - 1);
         }
-
+        
         return v;
     }
 
@@ -117,9 +117,9 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
                 return;
             }
 
+
             if (len > buf.length) {
-                throw new IllegalArgumentException("Too many digits for NumberDictionary: "
-                        + Bytes.toString(value, offset, len) + ". Internal buffer is only " + buf.length + " bytes");
+                throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len) + ". Internal buffer is only " + buf.length + " bytes");
             }
 
             boolean negative = value[offset] == '-';
@@ -149,9 +149,7 @@ public class Number2BytesConverter implements BytesConverter<String>, Serializab
             // prepend '0'
             int nZeroPadding = maxDigitsBeforeDecimalPoint - (decimalPoint - start);
             if (nZeroPadding < 0 || nZeroPadding + 1 > start)
-                throw new IllegalArgumentException(
-                        "Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len) + ". Expect "
-                                + maxDigitsBeforeDecimalPoint + " digits before decimal point at max.");
+                throw new IllegalArgumentException("Too many digits for NumberDictionary: " + Bytes.toString(value, offset, len) + ". Expect " + maxDigitsBeforeDecimalPoint + " digits before decimal point at max.");
             for (int i = 0; i < nZeroPadding; i++) {
                 buf[--start] = '0';
             }

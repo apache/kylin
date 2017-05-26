@@ -27,8 +27,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.bind.DatatypeConverter;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -47,7 +46,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.apache.kylin.common.util.JsonUtil;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * @author yangli9
@@ -123,8 +122,7 @@ public class RestClient {
             String msg = EntityUtils.toString(response.getEntity());
 
             if (response.getStatusLine().getStatusCode() != 200)
-                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode()
-                        + " with cache wipe url " + url + "\n" + msg);
+                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with cache wipe url " + url + "\n" + msg);
         } catch (Exception ex) {
             throw new IOException(ex);
         } finally {
@@ -142,8 +140,7 @@ public class RestClient {
             msg = map.get("config");
 
             if (response.getStatusLine().getStatusCode() != 200)
-                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode()
-                        + " with cache wipe url " + url + "\n" + msg);
+                throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with cache wipe url " + url + "\n" + msg);
             return msg;
         } finally {
             request.releaseConnection();
@@ -170,8 +167,7 @@ public class RestClient {
         HttpResponse response = client.execute(put);
         String result = getContent(response);
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode()
-                    + " with build cube url " + url + "\n" + jsonMsg);
+            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with build cube url " + url + "\n" + jsonMsg);
         } else {
             return true;
         }
@@ -205,8 +201,7 @@ public class RestClient {
         HttpResponse response = client.execute(put);
         String result = getContent(response);
         if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url
-                    + "\n" + jsonMsg);
+            throw new IOException("Invalid response " + response.getStatusLine().getStatusCode() + " with url " + url + "\n" + jsonMsg);
         } else {
             return true;
         }

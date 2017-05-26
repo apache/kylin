@@ -71,8 +71,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
 
     private TableName userTable = TableName.valueOf(STORE_WITH_OLD_TABLE + AclHBaseStorage.USER_TABLE_NAME);
 
-    private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(
-            UserGrantedAuthority[].class);
+    private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
     private AclTableMigrationTool aclTableMigrationJob;
 
@@ -128,8 +127,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
     private void createTestHTables() throws IOException {
         Configuration conf = HBaseConnection.getCurrentHBaseConfiguration();
         Admin hbaseAdmin = new HBaseAdmin(conf);
-        creatTable(hbaseAdmin, conf, aclTable,
-                new String[] { AclHBaseStorage.ACL_INFO_FAMILY, AclHBaseStorage.ACL_ACES_FAMILY });
+        creatTable(hbaseAdmin, conf, aclTable, new String[] { AclHBaseStorage.ACL_INFO_FAMILY, AclHBaseStorage.ACL_ACES_FAMILY });
         creatTable(hbaseAdmin, conf, userTable, new String[] { AclHBaseStorage.USER_AUTHORITY_FAMILY });
     }
 
@@ -137,8 +135,7 @@ public class ITAclTableMigrationToolTest extends HBaseMetadataTestCase {
         Table htable = HBaseConnection.get(kylinConfig.getStorageUrl()).getTable(userTable);
         Pair<byte[], byte[]> pair = getRandomUserRecord();
         Put put = new Put(pair.getKey());
-        put.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY),
-                Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
+        put.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
         htable.put(put);
     }
 

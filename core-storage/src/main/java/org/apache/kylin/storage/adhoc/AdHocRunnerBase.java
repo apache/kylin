@@ -18,12 +18,12 @@
 
 package org.apache.kylin.storage.adhoc;
 
-import java.util.List;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public abstract class AdHocRunnerBase {
 
@@ -44,6 +44,5 @@ public abstract class AdHocRunnerBase {
 
     public abstract void init();
 
-    public abstract void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas)
-            throws Exception;
+    public abstract void executeQuery(String query, List<List<String>> results, List<SelectedColumnMeta> columnMetas) throws Exception;
 }

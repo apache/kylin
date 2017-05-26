@@ -18,12 +18,6 @@
 
 package org.apache.kylin.dict;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Dictionary;
@@ -32,6 +26,12 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class ITGlobalDictionaryBuilderTest extends HBaseMetadataTestCase {
     private DictionaryInfo dictionaryInfo;
@@ -49,8 +49,7 @@ public class ITGlobalDictionaryBuilderTest extends HBaseMetadataTestCase {
     }
 
     private void cleanup() {
-        String BASE_DIR = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict"
-                + dictionaryInfo.getResourceDir() + "/";
+        String BASE_DIR = KylinConfig.getInstanceFromEnv().getHdfsWorkingDirectory() + "/resources/GlobalDict" + dictionaryInfo.getResourceDir() + "/";
         Path basePath = new Path(BASE_DIR);
         try {
             HadoopUtil.getFileSystem(basePath).delete(basePath, true);

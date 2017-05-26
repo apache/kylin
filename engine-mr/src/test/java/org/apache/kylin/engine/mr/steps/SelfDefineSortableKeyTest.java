@@ -56,8 +56,7 @@ public class SelfDefineSortableKeyTest {
         System.out.println("test numbers:" + longList);
         ArrayList<String> strNumList = listToStringList(longList);
         //System.out.println("test num strs list:"+strNumList);
-        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList,
-                (byte) SelfDefineSortableKey.TypeFlag.INTEGER_FAMILY_TYPE.ordinal());
+        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) SelfDefineSortableKey.TypeFlag.INTEGER_FAMILY_TYPE.ordinal());
         System.out.println(keyList.get(0).isIntegerFamily());
         Collections.sort(keyList);
         ArrayList<String> strListAftereSort = new ArrayList<>();
@@ -93,8 +92,7 @@ public class SelfDefineSortableKeyTest {
         System.out.println("test numbers:" + doubleList);
         ArrayList<String> strNumList = listToStringList(doubleList);
         //System.out.println("test num strs list:"+strNumList);
-        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList,
-                (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
+        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
         Collections.sort(keyList);
         ArrayList<String> strListAftereSort = new ArrayList<>();
         for (SelfDefineSortableKey key : keyList) {
@@ -123,8 +121,7 @@ public class SelfDefineSortableKeyTest {
         strList.add("hello"); //duplicate
         strList.add("123");
         strList.add("");
-        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strList,
-                (byte) SelfDefineSortableKey.TypeFlag.NONE_NUMERIC_TYPE.ordinal());
+        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strList, (byte) SelfDefineSortableKey.TypeFlag.NONE_NUMERIC_TYPE.ordinal());
         Collections.sort(keyList);
         ArrayList<String> strListAftereSort = new ArrayList<>();
         for (SelfDefineSortableKey key : keyList) {
@@ -154,15 +151,16 @@ public class SelfDefineSortableKeyTest {
         doubleList.add(-Double.MAX_VALUE);
         //System.out.println(Double.MIN_VALUE);
 
+
         ArrayList<String> strNumList = listToStringList(doubleList);
         //System.out.println("test num strs list:"+strNumList);
-        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList,
-                (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
+        ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
 
         System.out.println("start to test str sort");
         long start = System.currentTimeMillis();
         Collections.sort(strNumList);
         System.out.println("sort time : " + (System.currentTimeMillis() - start));
+
 
         System.out.println("start to test double sort");
         start = System.currentTimeMillis();
@@ -191,6 +189,7 @@ public class SelfDefineSortableKeyTest {
         System.out.println("sort time : " + (System.currentTimeMillis() - start));
     }
 
+
     @Test
     public void testIllegalNumber() {
         Random rand = new Random(System.currentTimeMillis());
@@ -211,11 +210,10 @@ public class SelfDefineSortableKeyTest {
         strNumList.add("fjaeif"); //illegal type
         //System.out.println("test num strs list:"+strNumList);
         try {
-            ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList,
-                    (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
+            ArrayList<SelfDefineSortableKey> keyList = createKeyList(strNumList, (byte) SelfDefineSortableKey.TypeFlag.DOUBLE_FAMILY_TYPE.ordinal());
             Collections.sort(keyList);
             fail("Need catch exception");
-        } catch (Exception e) {
+        }catch(Exception e){
             //correct
         }
 

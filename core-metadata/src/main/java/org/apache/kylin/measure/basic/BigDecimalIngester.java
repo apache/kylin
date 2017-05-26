@@ -29,8 +29,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 public class BigDecimalIngester extends MeasureIngester<BigDecimal> {
 
     @Override
-    public BigDecimal valueOf(String[] values, MeasureDesc measureDesc,
-            Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public BigDecimal valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         if (values.length > 1)
             throw new IllegalArgumentException();
 

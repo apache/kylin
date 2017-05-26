@@ -18,13 +18,13 @@
 
 package org.apache.kylin.metadata.model;
 
-import java.io.Serializable;
-import java.util.Arrays;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
+
+import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  */
@@ -55,15 +55,15 @@ public class JoinDesc implements Serializable {
     public boolean isInnerJoin() {
         return "INNER".equalsIgnoreCase(type);
     }
-
+    
     public boolean isLeftJoin() {
         return "LEFT".equalsIgnoreCase(type);
     }
-
+    
     public String getType() {
         return type;
     }
-
+    
     public void setType(String type) {
         this.type = type;
     }
@@ -105,7 +105,7 @@ public class JoinDesc implements Serializable {
     private void checkSameTable(TblColRef[] cols) {
         if (cols == null || cols.length == 0)
             return;
-
+        
         TableRef tableRef = cols[0].getTableRef();
         for (int i = 1; i < cols.length; i++)
             Preconditions.checkState(tableRef == cols[i].getTableRef());
@@ -114,14 +114,13 @@ public class JoinDesc implements Serializable {
     public TableRef getPKSide() {
         return primaryKeyColumns[0].getTableRef();
     }
-
+    
     public TableRef getFKSide() {
         return foreignKeyColumns[0].getTableRef();
     }
 
     public void sortByFK() {
-        Preconditions.checkState(primaryKey.length == foreignKey.length && primaryKey.length == primaryKeyColumns.length
-                && foreignKey.length == foreignKeyColumns.length);
+        Preconditions.checkState(primaryKey.length == foreignKey.length && primaryKey.length == primaryKeyColumns.length && foreignKey.length == foreignKeyColumns.length);
         boolean cont = true;
         int n = foreignKey.length;
         for (int i = 0; i < n - 1 && cont; i++) {
@@ -144,7 +143,7 @@ public class JoinDesc implements Serializable {
         arr[j] = arr[jj];
         arr[jj] = tmp;
     }
-
+    
     private void swap(TblColRef[] arr, int j, int jj) {
         TblColRef tmp = arr[j];
         arr[j] = arr[jj];
@@ -186,23 +185,23 @@ public class JoinDesc implements Serializable {
     public boolean matches(JoinDesc other) {
         if (other == null)
             return false;
-
+        
         if (!this.type.equalsIgnoreCase(other.getType()))
             return false;
-
+        
         // note pk/fk are sorted, sortByFK()
         if (!this.columnDescEquals(foreignKeyColumns, other.foreignKeyColumns))
             return false;
         if (!this.columnDescEquals(primaryKeyColumns, other.primaryKeyColumns))
             return false;
-
+        
         return true;
     }
 
     private boolean columnDescEquals(TblColRef[] a, TblColRef[] b) {
         if (a.length != b.length)
             return false;
-
+        
         for (int i = 0; i < a.length; i++) {
             if (a[i].getColumnDesc().equals(b[i].getColumnDesc()) == false)
                 return false;
@@ -212,8 +211,7 @@ public class JoinDesc implements Serializable {
 
     @Override
     public String toString() {
-        return "JoinDesc [type=" + type + ", primary_key=" + Arrays.toString(primaryKey) + ", foreign_key="
-                + Arrays.toString(foreignKey) + "]";
+        return "JoinDesc [type=" + type + ", primary_key=" + Arrays.toString(primaryKey) + ", foreign_key=" + Arrays.toString(foreignKey) + "]";
     }
 
 }

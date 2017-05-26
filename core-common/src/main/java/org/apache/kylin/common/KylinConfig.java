@@ -70,8 +70,7 @@ public class KylinConfig extends KylinConfigBase {
                     config = new KylinConfig();
                     config.reloadKylinConfig(getKylinProperties());
 
-                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : "
-                            + System.identityHashCode(config));
+                    logger.info("Initialized a new KylinConfig from getInstanceFromEnv : " + System.identityHashCode(config));
                     SYS_ENV_INSTANCE = config;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalStateException("Failed to find KylinConfig ", e);
@@ -109,12 +108,10 @@ public class KylinConfig extends KylinConfigBase {
                     if (file.getName().equalsIgnoreCase(KYLIN_CONF_PROPERTIES_FILE)) {
                         return UriType.PROPERTIES_FILE;
                     } else {
-                        throw new IllegalStateException(
-                                "Metadata uri : " + metaUri + " is a local file but not kylin.properties");
+                        throw new IllegalStateException("Metadata uri : " + metaUri + " is a local file but not kylin.properties");
                     }
                 } else {
-                    throw new IllegalStateException(
-                            "Metadata uri : " + metaUri + " looks like a file but it's neither a file nor a directory");
+                    throw new IllegalStateException("Metadata uri : " + metaUri + " looks like a file but it's neither a file nor a directory");
                 }
             } else {
                 if (RestClient.matchFullRestPattern(metaUri))
@@ -261,8 +258,7 @@ public class KylinConfig extends KylinConfigBase {
         return conf;
     }
 
-    private static OrderedProperties getKylinOrderedProperties()
-            throws FileNotFoundException, UnsupportedEncodingException {
+    private static OrderedProperties getKylinOrderedProperties() throws FileNotFoundException, UnsupportedEncodingException {
         File propFile = getKylinPropertiesFile();
         if (propFile == null || !propFile.exists()) {
             logger.error("fail to locate " + KYLIN_CONF_PROPERTIES_FILE);

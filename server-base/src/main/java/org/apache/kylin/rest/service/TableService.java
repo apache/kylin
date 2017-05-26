@@ -144,7 +144,7 @@ public class TableService extends BasicService {
         for (Pair<TableDesc, TableExtDesc> pair : allMeta) {
             TableDesc tableDesc = pair.getFirst();
             TableExtDesc extDesc = pair.getSecond();
-
+            
             TableDesc origTable = metaMgr.getTableDesc(tableDesc.getIdentity());
             if (origTable == null) {
                 tableDesc.setUuid(UUID.randomUUID().toString());
@@ -153,7 +153,7 @@ public class TableService extends BasicService {
                 tableDesc.setUuid(origTable.getUuid());
                 tableDesc.setLastModified(origTable.getLastModified());
             }
-
+            
             TableExtDesc origExt = metaMgr.getTableExt(tableDesc.getIdentity());
             if (origExt == null) {
                 extDesc.setUuid(UUID.randomUUID().toString());
@@ -172,9 +172,8 @@ public class TableService extends BasicService {
         syncTableToProject(result, project);
         return result;
     }
-
-    public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile)
-            throws Exception {
+    
+    public Map<String, String[]> loadHiveTables(String[] tableNames, String project, boolean isNeedProfile) throws Exception {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<String, String[]> result = new HashMap<String, String[]>();
 
@@ -264,8 +263,7 @@ public class TableService extends BasicService {
             rtn = true;
         }
 
-        if (tableType == 1 && !projectService.isTableInAnyProject(tableName)
-                && !modelService.isTableInAnyModel(tableName)) {
+        if (tableType == 1 && !projectService.isTableInAnyProject(tableName) && !modelService.isTableInAnyModel(tableName)) {
             StreamingConfig config = null;
             KafkaConfig kafkaConfig = null;
             try {
@@ -332,8 +330,7 @@ public class TableService extends BasicService {
                 if (cards.length > i) {
                     cardinality.put(columnDesc.getName(), Long.parseLong(cards[i]));
                 } else {
-                    logger.error("The result cardinality is not identical with hive table metadata, cardinality : "
-                            + scard + " column array length: " + cdescs.length);
+                    logger.error("The result cardinality is not identical with hive table metadata, cardinality : " + scard + " column array length: " + cdescs.length);
                     break;
                 }
             }

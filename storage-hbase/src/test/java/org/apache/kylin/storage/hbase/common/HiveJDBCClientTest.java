@@ -86,8 +86,7 @@ public class HiveJDBCClientTest {
         Statement stmt = con.createStatement();
         String tableName = "testHiveDriverTable";
         stmt.execute("drop table if exists " + tableName);
-        stmt.execute(
-                "create table " + tableName + " (key int, value string) row format delimited fields terminated by ' '");
+        stmt.execute("create table " + tableName + " (key int, value string) row format delimited fields terminated by ' '");
         // show tables
         String sql = "show tables '" + tableName + "'";
         System.out.println("Running: " + sql);

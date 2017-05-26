@@ -85,8 +85,7 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
     }
 
     private IGTScanner scan(GridTable table) throws IOException {
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null)
-                .setFilterPushDown(null).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest();
         IGTScanner scanner = table.scan(req);
         for (GTRecord r : scanner) {
             Object[] v = r.getValues();
@@ -101,9 +100,7 @@ public class SimpleGridTableTest extends LocalFileMetadataTestCase {
     }
 
     private IGTScanner scanAndAggregate(GridTable table) throws IOException {
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null)
-                .setAggrGroupBy(setOf(0, 2)).setAggrMetrics(setOf(3, 4))
-                .setAggrMetricsFuncs(new String[] { "count", "sum" }).setFilterPushDown(null).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(0, 2)).setAggrMetrics(setOf(3, 4)).setAggrMetricsFuncs(new String[] { "count", "sum" }).setFilterPushDown(null).createGTScanRequest();
         IGTScanner scanner = table.scan(req);
         int i = 0;
         for (GTRecord r : scanner) {

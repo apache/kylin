@@ -59,8 +59,7 @@ public class CubingUtils {
 
     private static Logger logger = LoggerFactory.getLogger(CubingUtils.class);
 
-    public static Map<Long, HLLCounter> sampling(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDescIn,
-            Iterable<List<String>> streams) {
+    public static Map<Long, HLLCounter> sampling(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDescIn, Iterable<List<String>> streams) {
         final CubeJoinedFlatTableEnrich flatDesc = new CubeJoinedFlatTableEnrich(flatDescIn, cubeDesc);
         final int rowkeyLength = cubeDesc.getRowkey().getRowKeyColumns().length;
         final List<Long> allCuboidIds = new CuboidScheduler(cubeDesc).getAllCuboidIds();
@@ -133,10 +132,8 @@ public class CubingUtils {
         return result;
     }
 
-    public static Map<TblColRef, Dictionary<String>> buildDictionary(final CubeInstance cubeInstance,
-            Iterable<List<String>> recordList) throws IOException {
-        final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor()
-                .listDimensionColumnsExcludingDerived(true);
+    public static Map<TblColRef, Dictionary<String>> buildDictionary(final CubeInstance cubeInstance, Iterable<List<String>> recordList) throws IOException {
+        final List<TblColRef> columnsNeedToBuildDictionary = cubeInstance.getDescriptor().listDimensionColumnsExcludingDerived(true);
         final HashMap<Integer, TblColRef> tblColRefMap = Maps.newHashMap();
         int index = 0;
         for (TblColRef column : columnsNeedToBuildDictionary) {
@@ -156,16 +153,14 @@ public class CubingUtils {
         }
         for (TblColRef tblColRef : valueMap.keySet()) {
             Set<String> values = valueMap.get(tblColRef);
-            Dictionary<String> dict = DictionaryGenerator.buildDictionary(tblColRef.getType(),
-                    new IterableDictionaryValueEnumerator(values));
+            Dictionary<String> dict = DictionaryGenerator.buildDictionary(tblColRef.getType(), new IterableDictionaryValueEnumerator(values));
             result.put(tblColRef, dict);
         }
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    public static Map<TblColRef, Dictionary<String>> writeDictionary(CubeSegment cubeSegment,
-            Map<TblColRef, Dictionary<String>> dictionaryMap, long startOffset, long endOffset) {
+    public static Map<TblColRef, Dictionary<String>> writeDictionary(CubeSegment cubeSegment, Map<TblColRef, Dictionary<String>> dictionaryMap, long startOffset, long endOffset) {
         Map<TblColRef, Dictionary<String>> realDictMap = Maps.newHashMap();
 
         for (Map.Entry<TblColRef, Dictionary<String>> entry : dictionaryMap.entrySet()) {

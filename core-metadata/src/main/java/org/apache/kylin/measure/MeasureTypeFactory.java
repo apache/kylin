@@ -121,8 +121,7 @@ abstract public class MeasureTypeFactory<T> {
                     logger.info("Checking custom measure types from kylin config: " + customFactory);
                     factoryInsts.add((MeasureTypeFactory<?>) Class.forName(customFactory).newInstance());
                 } catch (Exception e) {
-                    throw new IllegalArgumentException("Unrecognized MeasureTypeFactory classname: " + customFactory,
-                            e);
+                    throw new IllegalArgumentException("Unrecognized MeasureTypeFactory classname: " + customFactory, e);
                 }
             }
         } catch (KylinConfigCannotInitException e) {
@@ -133,12 +132,10 @@ abstract public class MeasureTypeFactory<T> {
         for (MeasureTypeFactory<?> factory : factoryInsts) {
             String funcName = factory.getAggrFunctionName();
             if (funcName.equals(funcName.toUpperCase()) == false)
-                throw new IllegalArgumentException(
-                        "Aggregation function name '" + funcName + "' must be in upper case");
+                throw new IllegalArgumentException("Aggregation function name '" + funcName + "' must be in upper case");
             String dataTypeName = factory.getAggrDataTypeName();
             if (dataTypeName.equals(dataTypeName.toLowerCase()) == false)
-                throw new IllegalArgumentException(
-                        "Aggregation data type name '" + dataTypeName + "' must be in lower case");
+                throw new IllegalArgumentException("Aggregation data type name '" + dataTypeName + "' must be in lower case");
             Class<? extends DataTypeSerializer<?>> serializer = factory.getAggrDataTypeSerializer();
 
             logger.info("registering " + funcName + "(" + dataTypeName + "), " + factory.getClass());
@@ -156,8 +153,7 @@ abstract public class MeasureTypeFactory<T> {
     }
 
     private static void registerUDAF(MeasureTypeFactory<?> factory) {
-        MeasureType<?> type = factory.createMeasureType(factory.getAggrFunctionName(),
-                DataType.getType(factory.getAggrDataTypeName()));
+        MeasureType<?> type = factory.createMeasureType(factory.getAggrFunctionName(), DataType.getType(factory.getAggrDataTypeName()));
         Map<String, Class<?>> udafs = type.getRewriteCalciteAggrFunctions();
         if (type.needRewrite() == false || udafs == null)
             return;
@@ -168,8 +164,7 @@ abstract public class MeasureTypeFactory<T> {
                 continue; // skip built-in function
 
             if (udafFactories.containsKey(udaf))
-                throw new IllegalStateException(
-                        "UDAF '" + udaf + "' was dup declared by " + udafFactories.get(udaf) + " and " + factory);
+                throw new IllegalStateException("UDAF '" + udaf + "' was dup declared by " + udafFactories.get(udaf) + " and " + factory);
 
             udafFactories.put(udaf, factory);
             udafMap.put(udaf, udafs.get(udaf));
@@ -191,8 +186,7 @@ abstract public class MeasureTypeFactory<T> {
     public static MeasureType<?> createNoRewriteFieldsMeasureType(String funcName, DataType dataType) {
         // currently only has DimCountDistinctAgg
         if (funcName.equalsIgnoreCase(FunctionDesc.FUNC_COUNT_DISTINCT)) {
-            return new DimCountDistinctMeasureType.DimCountDistinctMeasureTypeFactory().createMeasureType(funcName,
-                    dataType);
+            return new DimCountDistinctMeasureType.DimCountDistinctMeasureTypeFactory().createMeasureType(funcName, dataType);
         }
 
         throw new UnsupportedOperationException("No measure type found.");
@@ -234,8 +228,7 @@ abstract public class MeasureTypeFactory<T> {
                 if (needRewrite == null)
                     needRewrite = Boolean.valueOf(b);
                 else if (needRewrite.booleanValue() != b)
-                    throw new IllegalStateException(
-                            "needRewrite() of factorys " + factory + " does not have consensus");
+                    throw new IllegalStateException("needRewrite() of factorys " + factory + " does not have consensus");
             }
         }
 

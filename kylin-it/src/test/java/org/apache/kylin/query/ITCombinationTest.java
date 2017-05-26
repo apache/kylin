@@ -74,8 +74,7 @@ public class ITCombinationTest extends ITKylinQueryTest {
 
     public ITCombinationTest(String joinType, String coprocessorToggle, String queryEngine) throws Exception {
 
-        logger.info("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle
-                + ", query engine: " + queryEngine);
+        logger.info("Into combination join type: " + joinType + ", coprocessor toggle: " + coprocessorToggle + ", query engine: " + queryEngine);
 
         ITKylinQueryTest.clean();
 

@@ -272,8 +272,7 @@ public class GTAggregateScanner implements IGTScanner {
                 final long estMemSize = estimatedMemSize();
                 if (spillThreshold > 0 && estMemSize > spillThreshold) {
                     if (!spillEnabled) {
-                        throw new ResourceLimitExceededException("aggregation's memory consumption " + estMemSize
-                                + " exceeds threshold " + spillThreshold);
+                        throw new ResourceLimitExceededException("aggregation's memory consumption " + estMemSize + " exceeds threshold " + spillThreshold);
                     }
                     spillBuffMap(estMemSize); // spill to disk
                     aggBufMap = createBuffMap();
@@ -357,8 +356,7 @@ public class GTAggregateScanner implements IGTScanner {
 
                 final ReturningRecord returningRecord = new ReturningRecord();
                 Entry<byte[], MeasureAggregator[]> returningEntry = null;
-                final HavingFilterChecker havingFilterChecker = (havingFilter == null) ? null
-                        : new HavingFilterChecker();
+                final HavingFilterChecker havingFilterChecker = (havingFilter == null) ? null : new HavingFilterChecker();
 
                 @Override
                 public boolean hasNext() {
@@ -532,8 +530,7 @@ public class GTAggregateScanner implements IGTScanner {
             public Iterator<Pair<byte[], byte[]>> iterator() {
                 try {
                     if (dumpedFile == null || !dumpedFile.exists()) {
-                        throw new RuntimeException("Dumped file cannot be found at: "
-                                + (dumpedFile == null ? "<null>" : dumpedFile.getAbsolutePath()));
+                        throw new RuntimeException("Dumped file cannot be found at: " + (dumpedFile == null ? "<null>" : dumpedFile.getAbsolutePath()));
                     }
 
                     dis = new DataInputStream(new FileInputStream(dumpedFile));
@@ -558,8 +555,7 @@ public class GTAggregateScanner implements IGTScanner {
                                 dis.read(value);
                                 return new Pair<>(key, value);
                             } catch (Exception e) {
-                                throw new RuntimeException(
-                                        "Cannot read AggregationCache from dumped file: " + e.getMessage());
+                                throw new RuntimeException("Cannot read AggregationCache from dumped file: " + e.getMessage());
                             }
                         }
 
@@ -574,8 +570,7 @@ public class GTAggregateScanner implements IGTScanner {
             }
 
             public void flush() throws IOException {
-                logger.info("AggregationCache(size={} est_mem_size={} threshold={}) will spill to {}", buffMap.size(),
-                        estMemSize, spillThreshold, dumpedFile.getAbsolutePath());
+                logger.info("AggregationCache(size={} est_mem_size={} threshold={}) will spill to {}", buffMap.size(), estMemSize, spillThreshold, dumpedFile.getAbsolutePath());
 
                 if (buffMap != null) {
                     DataOutputStream dos = null;

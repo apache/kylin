@@ -57,8 +57,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
     private int splitRowThreshold = Integer.MAX_VALUE;
     private int unitRows = 1000;
 
-    public DoggedCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc,
-            Map<TblColRef, Dictionary<String>> dictionaryMap) {
+    public DoggedCubeBuilder(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
         super(cubeDesc, flatDesc, dictionaryMap);
 
         // check memory more often if a single row is big
@@ -199,10 +198,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             } else {
                 for (Throwable t : errors)
                     logger.error("Exception during in-mem cube build", t);
-                throw new IOException(
-                        errors.size()
-                                + " exceptions during in-mem cube build, cause set to the first, check log for more",
-                        errors.get(0));
+                throw new IOException(errors.size() + " exceptions during in-mem cube build, cause set to the first, check log for more", errors.get(0));
             }
         }
 
@@ -255,8 +251,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             int nSplit = splits.size();
             long splitRowCount = nSplit == 0 ? 0 : splits.get(nSplit - 1).inputRowCount;
 
-            logger.info(splitRowCount + " records went into split #" + nSplit + "; " + systemAvailMB + " MB left, "
-                    + reserveMemoryMB + " MB threshold");
+            logger.info(splitRowCount + " records went into split #" + nSplit + "; " + systemAvailMB + " MB left, " + reserveMemoryMB + " MB threshold");
 
             if (splitRowCount >= splitRowThreshold) {
                 logger.info("Split cut due to hitting splitRowThreshold " + splitRowThreshold);
@@ -264,8 +259,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
             }
 
             if (systemAvailMB <= reserveMemoryMB * 1.5) {
-                logger.info("Split cut due to hitting memory threshold, system avail " + systemAvailMB
-                        + " MB <= reserve " + reserveMemoryMB + "*1.5 MB");
+                logger.info("Split cut due to hitting memory threshold, system avail " + systemAvailMB + " MB <= reserve " + reserveMemoryMB + "*1.5 MB");
                 return true;
             }
 
@@ -411,8 +405,7 @@ public class DoggedCubeBuilder extends AbstractInMemCubeBuilder {
                 if (cuboidIterator.hasNext()) {
                     CuboidResult cuboid = cuboidIterator.next();
                     currentCuboidId = cuboid.cuboidId;
-                    scanner = cuboid.table.scan(new GTScanRequestBuilder().setInfo(cuboid.table.getInfo())
-                            .setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
+                    scanner = cuboid.table.scan(new GTScanRequestBuilder().setInfo(cuboid.table.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
                     recordIterator = scanner.iterator();
                 } else {
                     return false;

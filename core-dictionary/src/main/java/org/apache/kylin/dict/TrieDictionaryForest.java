@@ -63,12 +63,11 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
     }
 
     public TrieDictionaryForest(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, //
-            ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+                                ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
         init(trees, valueDivide, accuOffset, bytesConverter, baseId);
     }
 
-    private void init(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide,
-            ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
+    private void init(ArrayList<TrieDictionary<T>> trees, ArrayList<ByteArray> valueDivide, ArrayList<Integer> accuOffset, BytesConverter<T> bytesConverter, int baseId) {
         this.trees = trees;
         this.valueDivide = valueDivide;
         this.accuOffset = accuOffset;
@@ -99,8 +98,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
     }
 
     @Override
-    protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag)
-            throws IllegalArgumentException {
+    protected int getIdFromValueBytesWithoutCache(byte[] value, int offset, int len, int roundingFlag) throws IllegalArgumentException {
         int index;
         if (trees.size() == 1) {
             index = 0;
@@ -111,8 +109,7 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
                 if (roundingFlag > 0) {
                     return getMinId(); //searching value smaller than the smallest value in dict
                 } else {
-                    throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' ("
-                            + Bytes.toStringBinary(value, offset, len) + ") not exists!");
+                    throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
                 }
             }
 
@@ -121,15 +118,13 @@ public class TrieDictionaryForest<T> extends CacheDictionary<T> {
                 if (search.compareTo(maxValueOfTree) > 0)
                     index++;
                 if (index >= trees.size())
-                    throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' ("
-                            + Bytes.toStringBinary(value, offset, len) + ") not exists!");
+                    throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
             }
         }
         TrieDictionary<T> tree = trees.get(index);
         int id = tree.getIdFromValueBytesWithoutCache(value, offset, len, roundingFlag);
         if (id == -1)
-            throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' ("
-                    + Bytes.toStringBinary(value, offset, len) + ") not exists!");
+            throw new IllegalArgumentException("Value '" + Bytes.toString(value, offset, len) + "' (" + Bytes.toStringBinary(value, offset, len) + ") not exists!");
         id = id + accuOffset.get(index);
         id += baseId;
         return id;

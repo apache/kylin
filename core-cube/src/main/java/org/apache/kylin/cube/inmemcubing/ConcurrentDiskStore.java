@@ -323,8 +323,7 @@ public class ConcurrentDiskStore implements IGTStore, Closeable {
 
     private void openWriteChannel(long startOffset) throws IOException {
         if (startOffset > 0) { // TODO does not support append yet
-            writeChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.APPEND,
-                    StandardOpenOption.WRITE);
+            writeChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
         } else {
             diskFile.delete();
             writeChannel = FileChannel.open(diskFile.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);

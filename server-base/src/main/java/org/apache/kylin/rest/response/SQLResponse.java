@@ -66,8 +66,7 @@ public class SQLResponse implements Serializable {
     public SQLResponse() {
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, int affectedRowCount,
-            boolean isException, String exceptionMessage) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, int affectedRowCount, boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.affectedRowCount = affectedRowCount;
@@ -75,8 +74,7 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-            int affectedRowCount, boolean isException, String exceptionMessage) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;
@@ -85,8 +83,7 @@ public class SQLResponse implements Serializable {
         this.exceptionMessage = exceptionMessage;
     }
 
-    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube,
-            int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isAdhoc) {
+    public SQLResponse(List<SelectedColumnMeta> columnMetas, List<List<String>> results, String cube, int affectedRowCount, boolean isException, String exceptionMessage, boolean isPartial, boolean isAdhoc) {
         this.columnMetas = columnMetas;
         this.results = results;
         this.cube = cube;

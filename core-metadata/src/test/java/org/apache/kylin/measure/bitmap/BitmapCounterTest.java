@@ -18,11 +18,11 @@
 
 package org.apache.kylin.measure.bitmap;
 
+import org.junit.Test;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
 
 public class BitmapCounterTest {
     private static final BitmapCounterFactory factory = RoaringBitmapCounterFactory.INSTANCE;
@@ -43,14 +43,14 @@ public class BitmapCounterTest {
 
         counter2.orWith(counter);
         assertEquals(4, counter.getCount());
-        assertEquals(6, counter2.getCount()); // in-place change
+        assertEquals(6, counter2.getCount());  // in-place change
 
         int i = 0;
         int[] values = new int[(int) counter2.getCount()];
         for (int value : counter2) {
             values[i++] = value;
         }
-        assertArrayEquals(new int[] { 10, 20, 30, 40, 1000, 2000 }, values);
+        assertArrayEquals(new int[]{10, 20, 30, 40, 1000, 2000}, values);
 
         counter2.clear();
         assertEquals(0, counter2.getCount());

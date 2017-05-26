@@ -18,10 +18,9 @@
 
 package org.apache.kylin.storage.gtrecord;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import org.apache.kylin.common.util.ImmutableBitSet;
 import org.apache.kylin.gridtable.GTInfo;
 import org.apache.kylin.gridtable.GTRecord;
@@ -31,9 +30,9 @@ import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * scatter the blob returned from region server to a iterable of gtrecords
@@ -49,8 +48,7 @@ public class StorageResponseGTScatter implements IGTScanner {
     private final ImmutableBitSet groupByDims;
     private final boolean needSorted; // whether scanner should return sorted records
 
-    public StorageResponseGTScatter(GTScanRequest scanRequest, IPartitionStreamer partitionStreamer,
-            StorageContext context) {
+    public StorageResponseGTScatter(GTScanRequest scanRequest, IPartitionStreamer partitionStreamer, StorageContext context) {
         this.info = scanRequest.getInfo();
         this.partitionStreamer = partitionStreamer;
         this.blocks = partitionStreamer.asByteArrayIterator();
@@ -72,12 +70,11 @@ public class StorageResponseGTScatter implements IGTScanner {
 
     @Override
     public Iterator<GTRecord> iterator() {
-        Iterator<PartitionResultIterator> iterators = Iterators.transform(blocks,
-                new Function<byte[], PartitionResultIterator>() {
-                    public PartitionResultIterator apply(byte[] input) {
-                        return new PartitionResultIterator(input, info, columns);
-                    }
-                });
+        Iterator<PartitionResultIterator> iterators = Iterators.transform(blocks, new Function<byte[], PartitionResultIterator>() {
+            public PartitionResultIterator apply(byte[] input) {
+                return new PartitionResultIterator(input, info, columns);
+            }
+        });
 
         if (!needSorted) {
             logger.debug("Using Iterators.concat to pipeline partition results");

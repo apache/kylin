@@ -50,7 +50,7 @@ public class JoinsTreeTest extends LocalFileMetadataTestCase {
         MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());
         DataModelDesc model = mgr.getDataModelDesc("ci_left_join_model");
         JoinsTree joinsTree = model.getJoinsTree();
-
+        
         Chain chain = joinsTree.tableChains.get("BUYER_COUNTRY");
         assertTrue(chain.table == model.findTable("BUYER_COUNTRY"));
         assertTrue(chain.fkSide.table == model.findTable("BUYER_ACCOUNT"));
@@ -59,7 +59,7 @@ public class JoinsTreeTest extends LocalFileMetadataTestCase {
         assertTrue(chain.fkSide.fkSide.fkSide.join == null);
         assertTrue(chain.fkSide.fkSide.fkSide.fkSide == null);
     }
-
+    
     @Test
     public void testMatch() {
         MetadataManager mgr = MetadataManager.getInstance(KylinConfig.getInstanceFromEnv());

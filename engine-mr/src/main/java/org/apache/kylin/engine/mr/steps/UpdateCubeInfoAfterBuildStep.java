@@ -88,8 +88,7 @@ public class UpdateCubeInfoAfterBuildStep extends AbstractExecutable {
         final String factColumnsInputPath = this.getParams().get(BatchConstants.CFG_OUTPUT_PATH);
         Path colDir = new Path(factColumnsInputPath, partitionCol.getIdentity());
         FileSystem fs = HadoopUtil.getWorkingFileSystem();
-        Path outputFile = HadoopUtil.getFilterOnlyPath(fs, colDir,
-                partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
+        Path outputFile = HadoopUtil.getFilterOnlyPath(fs, colDir, partitionCol.getName() + FactDistinctColumnsReducer.PARTITION_COL_INFO_FILE_POSTFIX);
         if (outputFile == null) {
             throw new IOException("fail to find the partition file in base dir: " + colDir);
         }

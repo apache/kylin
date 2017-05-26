@@ -37,14 +37,14 @@ public class JoinTableDesc implements Serializable {
     @JsonProperty("kind")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private TableKind kind = TableKind.LOOKUP;
-
+    
     @JsonProperty("alias")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String alias;
-
+    
     @JsonProperty("join")
     private JoinDesc join;
-
+    
     private TableRef tableRef;
 
     public String getTable() {
@@ -58,15 +58,15 @@ public class JoinTableDesc implements Serializable {
     public TableKind getKind() {
         return kind;
     }
-
+    
     void setAlias(String alias) {
         this.alias = alias;
     }
-
+    
     public String getAlias() {
         return alias;
     }
-
+    
     public JoinDesc getJoin() {
         return join;
     }

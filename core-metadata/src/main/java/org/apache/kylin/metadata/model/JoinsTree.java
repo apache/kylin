@@ -73,8 +73,7 @@ public class JoinsTree implements Serializable {
         return matchUp.size();
     }
 
-    private boolean matchInTree(Chain chain, JoinsTree another, Map<String, String> constraints,
-            Map<String, String> matchUp) {
+    private boolean matchInTree(Chain chain, JoinsTree another, Map<String, String> constraints, Map<String, String> matchUp) {
         String thisAlias = chain.table.getAlias();
         if (matchUp.containsKey(thisAlias))
             return true;
@@ -104,8 +103,7 @@ public class JoinsTree implements Serializable {
 
         boolean matches = false;
         if (chain.join == null) {
-            matches = anotherChain.join == null
-                    && chain.table.getTableDesc().getIdentity().equals(anotherChain.table.getTableDesc().getIdentity());
+            matches = anotherChain.join == null && chain.table.getTableDesc().getIdentity().equals(anotherChain.table.getTableDesc().getIdentity());
         } else {
             matches = chain.join.matches(anotherChain.join) && matchChain(chain.fkSide, anotherChain.fkSide, matchUp);
         }

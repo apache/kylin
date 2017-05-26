@@ -18,9 +18,9 @@
 
 package org.apache.kylin.rest.request;
 
-import java.util.Map;
-
 import com.google.common.collect.Maps;
+
+import java.util.Map;
 
 public class JobBuildRequest2 {
 

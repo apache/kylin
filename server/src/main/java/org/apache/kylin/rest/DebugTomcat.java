@@ -18,10 +18,6 @@
 
 package org.apache.kylin.rest;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 import org.apache.catalina.Context;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
@@ -30,6 +26,10 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.kylin.common.KylinConfig;
+
+import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 public class DebugTomcat {
 
@@ -48,8 +48,7 @@ public class DebugTomcat {
                 System.setProperty("catalina.home", ".");
 
             if (StringUtils.isEmpty(System.getProperty("hdp.version"))) {
-                System.err.println(
-                        "No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
+                System.err.println("No hdp.version set; Please set hdp.version in your jvm option, for example: -Dhdp.version=2.4.0.0-169");
                 System.exit(1);
             }
 
@@ -110,8 +109,7 @@ public class DebugTomcat {
 
         String webBase = new File("../webapp/app").getAbsolutePath();
         if (new File(webBase, "WEB-INF").exists() == false) {
-            throw new RuntimeException(
-                    "In order to launch Kylin web app from IDE, please copy server/src/main/webapp/WEB-INF to  webapp/app/");
+            throw new RuntimeException("In order to launch Kylin web app from IDE, please copy server/src/main/webapp/WEB-INF to  webapp/app/");
         }
 
         Tomcat tomcat = new Tomcat();

@@ -50,8 +50,7 @@ public class MeasureCodecTest extends LocalFileMetadataTestCase {
 
     @Test
     public void basicTest() {
-        MeasureDesc[] descs = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"),
-                measure("HLLC16"), measure("bitmap") };
+        MeasureDesc[] descs = new MeasureDesc[] { measure("double"), measure("long"), measure("decimal"), measure("HLLC16"), measure("bitmap") };
         BufferedMeasureCodec codec = new BufferedMeasureCodec(descs);
 
         Double d = new Double(1.0);

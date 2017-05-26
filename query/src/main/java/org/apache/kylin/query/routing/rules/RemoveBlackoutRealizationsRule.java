@@ -40,10 +40,10 @@ public class RemoveBlackoutRealizationsRule extends RoutingRule {
             return false;
         if (!whiteList.isEmpty() && !whiteList.contains(real.getCanonicalName()))
             return false;
-
+        
         return true;
     }
-
+    
     @Override
     public void apply(List<Candidate> candidates) {
         for (Iterator<Candidate> iterator = candidates.iterator(); iterator.hasNext();) {

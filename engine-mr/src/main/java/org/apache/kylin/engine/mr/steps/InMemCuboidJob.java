@@ -111,8 +111,7 @@ public class InMemCuboidJob extends AbstractHadoopJob {
             job.setOutputValueClass(Text.class);
 
             // set input
-            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(segment)
-                    .getFlatTableInputFormat();
+            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(segment).getFlatTableInputFormat();
             flatTableInputFormat.configureJob(job);
 
             // set output

@@ -18,15 +18,6 @@
 
 package org.apache.kylin.dict.global;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -41,6 +32,15 @@ import org.apache.kylin.common.util.HadoopUtil;
 import org.apache.kylin.dict.BytesConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 public class GlobalDictHDFSStore extends GlobalDictStore {
 
@@ -241,12 +241,9 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
 
     @Override
     public String copyToAnotherMeta(KylinConfig srcConfig, KylinConfig dstConfig) throws IOException {
-        checkArgument(baseDir.startsWith(srcConfig.getHdfsWorkingDirectory()),
-                "Please check why current directory {} doesn't belong to source working directory {}", baseDir,
-                srcConfig.getHdfsWorkingDirectory());
+        checkArgument(baseDir.startsWith(srcConfig.getHdfsWorkingDirectory()), "Please check why current directory {} doesn't belong to source working directory {}", baseDir, srcConfig.getHdfsWorkingDirectory());
 
-        final String dstBaseDir = baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(),
-                dstConfig.getHdfsWorkingDirectory());
+        final String dstBaseDir = baseDir.replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory());
 
         Long[] versions = listAllVersions();
         if (versions.length == 0) { // empty dict, nothing to copy
@@ -254,8 +251,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         }
 
         Path srcVersionDir = getVersionDir(versions[versions.length - 1]);
-        Path dstVersionDir = new Path(srcVersionDir.toString().replaceFirst(srcConfig.getHdfsWorkingDirectory(),
-                dstConfig.getHdfsWorkingDirectory()));
+        Path dstVersionDir = new Path(srcVersionDir.toString().replaceFirst(srcConfig.getHdfsWorkingDirectory(), dstConfig.getHdfsWorkingDirectory()));
         FileSystem dstFS = dstVersionDir.getFileSystem(conf);
         if (dstFS.exists(dstVersionDir)) {
             dstFS.delete(dstVersionDir, true);
@@ -405,8 +401,7 @@ public class GlobalDictHDFSStore extends GlobalDictStore {
         public void sanityCheck(Path dir, GlobalDictMetadata metadata) throws IOException {
             for (Map.Entry<AppendDictSliceKey, String> entry : metadata.sliceFileMap.entrySet()) {
                 if (!fs.exists(new Path(dir, entry.getValue()))) {
-                    throw new RuntimeException("The slice file " + entry.getValue() + " for the key: " + entry.getKey()
-                            + " must be existed!");
+                    throw new RuntimeException("The slice file " + entry.getValue() + " for the key: " + entry.getKey() + " must be existed!");
                 }
             }
         }

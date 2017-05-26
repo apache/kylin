@@ -30,8 +30,7 @@ import scala.Tuple2;
  */
 public class IteratorUtils {
 
-    public static <K, V> Iterator<Tuple2<K, V>> merge(final Iterator<Tuple2<K, V>> input,
-            final Comparator<K> comparator, final Function<Iterable<V>, V> converter) {
+    public static <K, V> Iterator<Tuple2<K, V>> merge(final Iterator<Tuple2<K, V>> input, final Comparator<K> comparator, final Function<Iterable<V>, V> converter) {
         return new Iterator<Tuple2<K, V>>() {
 
             Tuple2<K, V> current = input.hasNext() ? input.next() : null;

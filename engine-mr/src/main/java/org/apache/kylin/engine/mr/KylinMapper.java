@@ -40,8 +40,7 @@ public class KylinMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN,
     }
 
     @Override
-    final public void map(KEYIN key, VALUEIN value, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
-            throws IOException, InterruptedException {
+    final public void map(KEYIN key, VALUEIN value, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         try {
             if (mapCounter++ % BatchConstants.NORMAL_RECORD_LOG_THRESHOLD == 0) {
                 logger.info("Accepting Mapper Key with ordinal: " + mapCounter);
@@ -62,14 +61,12 @@ public class KylinMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN,
         }
     }
 
-    protected void doMap(KEYIN key, VALUEIN value, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
-            throws IOException, InterruptedException {
+    protected void doMap(KEYIN key, VALUEIN value, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         super.map(key, value, context);
     }
 
     @Override
-    final protected void cleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
-            throws IOException, InterruptedException {
+    final protected void cleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         try {
             doCleanup(context);
         } catch (IOException ex) { // KYLIN-2170
@@ -87,7 +84,6 @@ public class KylinMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN,
         }
     }
 
-    protected void doCleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context)
-            throws IOException, InterruptedException {
+    protected void doCleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
     }
 }

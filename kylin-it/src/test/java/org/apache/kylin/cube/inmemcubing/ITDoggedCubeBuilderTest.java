@@ -71,8 +71,7 @@ public class ITDoggedCubeBuilderTest extends LocalFileMetadataTestCase {
         CubeManager cubeManager = CubeManager.getInstance(kylinConfig);
 
         cube = cubeManager.getCube("ssb");
-        flatTable = LocalFileMetadataTestCase.LOCALMETA_TEST_DATA
-                + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv";
+        flatTable = LocalFileMetadataTestCase.LOCALMETA_TEST_DATA + "/data/kylin_intermediate_ssb_19920101000000_19920201000000.csv";
         dictionaryMap = ITInMemCubeBuilderTest.getDictionaryMap(cube, flatTable);
     }
 

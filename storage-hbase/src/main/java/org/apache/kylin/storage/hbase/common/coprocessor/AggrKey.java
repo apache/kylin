@@ -124,8 +124,7 @@ public class AggrKey implements Comparable<AggrKey> {
             return comp;
 
         for (int i = 0; i < groupByMaskSet.length; i++) {
-            comp = BytesUtil.compareByteUnsigned(this.data[this.offset + groupByMaskSet[i]],
-                    o.data[o.offset + groupByMaskSet[i]]);
+            comp = BytesUtil.compareByteUnsigned(this.data[this.offset + groupByMaskSet[i]], o.data[o.offset + groupByMaskSet[i]]);
             if (comp != 0)
                 return comp;
         }

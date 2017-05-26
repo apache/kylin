@@ -24,7 +24,7 @@ import org.junit.Test;
 public class PasswordPlaceHolderConfigurerTest {
 
     @Test
-    public void testAESEncrypt() {
+    public void testAESEncrypt(){
         String input = "hello world";
         String result = PasswordPlaceholderConfigurer.encrypt(input);
         Assert.assertEquals("4stv/RRleOtvie/8SLHmXA==", result);

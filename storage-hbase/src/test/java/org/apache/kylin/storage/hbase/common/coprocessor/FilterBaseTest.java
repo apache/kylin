@@ -201,8 +201,7 @@ public class FilterBaseTest extends LocalFileMetadataTestCase {
         int s1 = f1.getChildren().size();
         int s2 = f2.getChildren().size();
         if (s1 != s2) {
-            throw new IllegalStateException(
-                    "f1=" + str1 + ", f2=" + str2 + " has different children: " + s1 + " vs. " + s2);
+            throw new IllegalStateException("f1=" + str1 + ", f2=" + str2 + " has different children: " + s1 + " vs. " + s2);
         }
 
         for (int i = 0; i < s1; i++) {
@@ -210,8 +209,7 @@ public class FilterBaseTest extends LocalFileMetadataTestCase {
         }
     }
 
-    private static String[][] SAMPLE_DATA = new String[][] { { "2013-03-10", "2012-01-12", "2014-03-10" },
-            { "ClothinShoes & Accessories", "ABIN", "FP-GTC", "FP-NON-GTC" } };
+    private static String[][] SAMPLE_DATA = new String[][] { { "2013-03-10", "2012-01-12", "2014-03-10" }, { "ClothinShoes & Accessories", "ABIN", "FP-GTC", "FP-NON-GTC" } };
 
     protected Collection<Tuple> generateTuple(int number, List<TblColRef> columns, int[] matches) {
 

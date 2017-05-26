@@ -97,8 +97,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             int reducerNum = 1;
             Class mapperClass = job.getMapperClass();
             if (mapperClass == HiveToBaseCuboidMapper.class || mapperClass == NDCuboidMapper.class) {
-                reducerNum = ReducerNumSizing.getLayeredCubingReduceTaskNum(segment,
-                        AbstractHadoopJob.getTotalMapInputMB(job), level);
+                reducerNum = ReducerNumSizing.getLayeredCubingReduceTaskNum(segment, AbstractHadoopJob.getTotalMapInputMB(job), level);
             } else if (mapperClass == InMemCuboidMapper.class) {
                 reducerNum = ReducerNumSizing.getInmemCubingReduceTaskNum(segment);
             }
@@ -121,10 +120,8 @@ public class HBaseMROutput2Transition implements IMROutput2 {
             }
 
             @Override
-            public void addStepPhase2_BuildCube(CubeSegment seg, List<CubeSegment> mergingSegments,
-                    DefaultChainedExecutable jobFlow) {
-                jobFlow.addTask(
-                        steps.createMergeCuboidDataStep(seg, mergingSegments, jobFlow.getId(), MergeCuboidJob.class));
+            public void addStepPhase2_BuildCube(CubeSegment seg, List<CubeSegment> mergingSegments, DefaultChainedExecutable jobFlow) {
+                jobFlow.addTask(steps.createMergeCuboidDataStep(seg, mergingSegments, jobFlow.getId(), MergeCuboidJob.class));
                 jobFlow.addTask(steps.createConvertCuboidToHfileStep(jobFlow.getId()));
                 jobFlow.addTask(steps.createBulkLoadStep(jobFlow.getId()));
             }
@@ -141,10 +138,9 @@ public class HBaseMROutput2Transition implements IMROutput2 {
         };
     }
 
-    public static class HBaseMergeMROutputFormat implements IMRMergeOutputFormat {
+    public static class HBaseMergeMROutputFormat implements IMRMergeOutputFormat{
 
-        private static final Pattern JOB_NAME_PATTERN = Pattern
-                .compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
+        private static final Pattern JOB_NAME_PATTERN = Pattern.compile("kylin-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})");
 
         @Override
         public void configureJobInput(Job job, String input) throws Exception {
@@ -153,8 +149,7 @@ public class HBaseMROutput2Transition implements IMROutput2 {
 
         @Override
         public void configureJobOutput(Job job, String output, CubeSegment segment) throws Exception {
-            int reducerNum = ReducerNumSizing.getLayeredCubingReduceTaskNum(segment,
-                    AbstractHadoopJob.getTotalMapInputMB(job), -1);
+            int reducerNum = ReducerNumSizing.getLayeredCubingReduceTaskNum(segment, AbstractHadoopJob.getTotalMapInputMB(job), -1);
             job.setNumReduceTasks(reducerNum);
 
             Path outputPath = new Path(output);

@@ -96,15 +96,16 @@ public class FixedLenHexDimEncTest {
         }
     }
 
+
     @Test
     public void testEncodeDecode2() {
         FixedLenHexDimEnc enc = new FixedLenHexDimEnc(5);
         testEncodeDecode(enc, "AF121");
         testEncodeDecode(enc, "00000");
-
+        
         //with a little extra room all F is supported
         testEncodeDecode(enc, "FFFFF");
-
+        
         try {
             testEncodeDecode(enc, "FFF");
             Assert.fail();

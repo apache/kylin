@@ -78,14 +78,13 @@ public class KafkaMRInput implements IMRInput {
     public IMRTableInputFormat getTableInputFormat(TableDesc table) {
         KafkaConfigManager kafkaConfigManager = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv());
         KafkaConfig kafkaConfig = kafkaConfigManager.getKafkaConfig(table.getIdentity());
-        List<TblColRef> columns = Lists.transform(Arrays.asList(table.getColumns()),
-                new Function<ColumnDesc, TblColRef>() {
-                    @Nullable
-                    @Override
-                    public TblColRef apply(ColumnDesc input) {
-                        return input.getRef();
-                    }
-                });
+        List<TblColRef> columns = Lists.transform(Arrays.asList(table.getColumns()), new Function<ColumnDesc, TblColRef>() {
+            @Nullable
+            @Override
+            public TblColRef apply(ColumnDesc input) {
+                return input.getRef();
+            }
+        });
 
         return new KafkaTableInputFormat(cubeSegment, columns, kafkaConfig, null);
     }
@@ -100,13 +99,11 @@ public class KafkaMRInput implements IMRInput {
         private StreamingParser streamingParser;
         private final JobEngineConfig conf;
 
-        public KafkaTableInputFormat(CubeSegment cubeSegment, List<TblColRef> columns, KafkaConfig kafkaConfig,
-                JobEngineConfig conf) {
+        public KafkaTableInputFormat(CubeSegment cubeSegment, List<TblColRef> columns, KafkaConfig kafkaConfig, JobEngineConfig conf) {
             this.cubeSegment = cubeSegment;
             this.conf = conf;
             try {
-                streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(),
-                        kafkaConfig.getParserProperties(), columns);
+                streamingParser = StreamingParser.getStreamingParser(kafkaConfig.getParserName(), kafkaConfig.getParserProperties(), columns);
             } catch (ReflectiveOperationException e) {
                 throw new IllegalArgumentException(e);
             }
@@ -117,8 +114,7 @@ public class KafkaMRInput implements IMRInput {
             job.setInputFormatClass(SequenceFileInputFormat.class);
             String jobId = job.getConfiguration().get(BatchConstants.ARG_CUBING_JOB_ID);
             IJoinedFlatTableDesc flatHiveTableDesc = new CubeJoinedFlatTableDesc(cubeSegment);
-            String inputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc,
-                    JobBuilderSupport.getJobWorkingDir(conf, jobId));
+            String inputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
             try {
                 FileInputFormat.addInputPath(job, new Path(inputPath));
             } catch (IOException e) {
@@ -130,10 +126,10 @@ public class KafkaMRInput implements IMRInput {
         public Collection<String[]> parseMapperInput(Object mapperInput) {
             Text text = (Text) mapperInput;
             ByteBuffer buffer = ByteBuffer.wrap(text.getBytes(), 0, text.getLength());
-            List<StreamingMessageRow> streamingMessageRowList = streamingParser.parse(buffer);
+            List<StreamingMessageRow>  streamingMessageRowList = streamingParser.parse(buffer);
             List<String[]> parsedDataCollection = new ArrayList<>();
 
-            for (StreamingMessageRow row : streamingMessageRowList) {
+            for (StreamingMessageRow row: streamingMessageRowList) {
                 parsedDataCollection.add(row.getData().toArray(new String[row.getData().size()]));
             }
 
@@ -162,19 +158,16 @@ public class KafkaMRInput implements IMRInput {
             MapReduceExecutable result = new MapReduceExecutable();
 
             IJoinedFlatTableDesc flatHiveTableDesc = new CubeJoinedFlatTableDesc(seg);
-            outputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc,
-                    JobBuilderSupport.getJobWorkingDir(conf, jobId));
+            outputPath = JoinedFlatTable.getTableDir(flatHiveTableDesc, JobBuilderSupport.getJobWorkingDir(conf, jobId));
             result.setName("Save data from Kafka");
             result.setMapReduceJobClass(KafkaFlatTableJob.class);
             JobBuilderSupport jobBuilderSupport = new JobBuilderSupport(seg, "system");
             StringBuilder cmd = new StringBuilder();
             jobBuilderSupport.appendMapReduceParameters(cmd);
-            JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME,
-                    seg.getRealization().getName());
+            JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_CUBE_NAME, seg.getRealization().getName());
             JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_OUTPUT, outputPath);
             JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_SEGMENT_ID, seg.getUuid());
-            JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME,
-                    "Kylin_Save_Kafka_Data_" + seg.getRealization().getName() + "_Step");
+            JobBuilderSupport.appendExecCmdParameters(cmd, BatchConstants.ARG_JOB_NAME, "Kylin_Save_Kafka_Data_" + seg.getRealization().getName() + "_Step");
 
             result.setMapReduceParams(cmd.toString());
             return result;

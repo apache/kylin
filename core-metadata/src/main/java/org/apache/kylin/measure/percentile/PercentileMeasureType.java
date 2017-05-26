@@ -71,8 +71,7 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
             PercentileCounter current = new PercentileCounter(dataType.getPrecision());
 
             @Override
-            public PercentileCounter valueOf(String[] values, MeasureDesc measureDesc,
-                    Map<TblColRef, Dictionary<String>> dictionaryMap) {
+            public PercentileCounter valueOf(String[] values, MeasureDesc measureDesc, Map<TblColRef, Dictionary<String>> dictionaryMap) {
                 PercentileCounter counter = current;
                 counter.clear();
                 for (String v : values) {
@@ -94,8 +93,7 @@ public class PercentileMeasureType extends MeasureType<PercentileCounter> {
         return true;
     }
 
-    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap
-            .<String, Class<?>> of(PercentileMeasureType.FUNC_PERCENTILE, PercentileAggFunc.class);
+    static final Map<String, Class<?>> UDAF_MAP = ImmutableMap.<String, Class<?>> of(PercentileMeasureType.FUNC_PERCENTILE, PercentileAggFunc.class);
 
     @Override
     public Map<String, Class<?>> getRewriteCalciteAggrFunctions() {

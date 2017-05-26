@@ -45,8 +45,7 @@ public class StreamingManager {
     // static cached instances
     private static final ConcurrentMap<KylinConfig, StreamingManager> CACHE = new ConcurrentHashMap<KylinConfig, StreamingManager>();
 
-    public static final Serializer<StreamingConfig> STREAMING_SERIALIZER = new JsonSerializer<StreamingConfig>(
-            StreamingConfig.class);
+    public static final Serializer<StreamingConfig> STREAMING_SERIALIZER = new JsonSerializer<StreamingConfig>(StreamingConfig.class);
 
     private KylinConfig config;
 
@@ -60,7 +59,7 @@ public class StreamingManager {
     private StreamingManager(KylinConfig config) throws IOException {
         this.config = config;
         this.streamingMap = new CaseInsensitiveStringCache<StreamingConfig>(config, "streaming");
-
+        
         // touch lower level metadata before registering my listener
         reloadAllStreaming();
         Broadcaster.getInstance(config).registerListener(new StreamingSyncListener(), "streaming");
@@ -73,8 +72,7 @@ public class StreamingManager {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             if (event == Event.DROP)
                 removeStreamingLocal(cacheKey);
             else
@@ -119,8 +117,7 @@ public class StreamingManager {
     }
 
     private static String formatStreamingOutputPath(String streaming, List<Integer> partitions) {
-        return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + StringUtils.join(partitions, "_")
-                + ".json";
+        return ResourceStore.STREAMING_OUTPUT_RESOURCE_ROOT + "/" + streaming + "_" + StringUtils.join(partitions, "_") + ".json";
     }
 
     public StreamingConfig getStreamingConfig(String name) {
@@ -222,13 +219,11 @@ public class StreamingManager {
 
     private void reloadAllStreaming() throws IOException {
         ResourceStore store = getStore();
-        logger.info("Reloading Streaming Metadata from folder "
-                + store.getReadableResourcePath(ResourceStore.STREAMING_RESOURCE_ROOT));
+        logger.info("Reloading Streaming Metadata from folder " + store.getReadableResourcePath(ResourceStore.STREAMING_RESOURCE_ROOT));
 
         streamingMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.STREAMING_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.STREAMING_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             StreamingConfig streamingConfig;
             try {
@@ -238,8 +233,7 @@ public class StreamingManager {
                 continue;
             }
             if (path.equals(streamingConfig.getResourcePath()) == false) {
-                logger.error("Skip suspicious desc at " + path + ", " + streamingConfig + " should be at "
-                        + streamingConfig.getResourcePath());
+                logger.error("Skip suspicious desc at " + path + ", " + streamingConfig + " should be at " + streamingConfig.getResourcePath());
                 continue;
             }
             if (streamingMap.containsKey(streamingConfig.getName())) {

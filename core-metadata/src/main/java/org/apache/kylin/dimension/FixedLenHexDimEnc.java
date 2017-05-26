@@ -44,7 +44,7 @@ import com.google.common.base.Preconditions;
  * <p>
  * Due to these limitations hex representation of hash values(with no padding, better with even characters) is more suitable
  */
-public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable {
+public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable{
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(FixedLenHexDimEnc.class);
@@ -166,19 +166,16 @@ public class FixedLenHexDimEnc extends DimensionEncoding implements Serializable
         byte[] value = Bytes.toBytes(valueStr);
         int valueLen = value.length;
         int endOffset = outputOffset + bytelen;
-
+        
         if (valueLen > hexLength) {
             if (avoidVerbose++ % 10000 == 0) {
-                logger.warn("Expect at most " + hexLength + " bytes, but got " + valueLen
-                        + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:"
-                        + avoidVerbose);
+                logger.warn("Expect at most " + hexLength + " bytes, but got " + valueLen + ", will truncate, value string: " + Bytes.toString(value, 0, valueLen) + " times:" + avoidVerbose);
             }
         }
 
         if (valueLen >= hexLength && isF(value, 0, hexLength)) {
             if (avoidVerbose2++ % 10000 == 0) {
-                logger.warn("All 'F' value: " + Bytes.toString(value, 0, valueLen)
-                        + "will become null after encode/decode. times:" + avoidVerbose);
+                logger.warn("All 'F' value: " + Bytes.toString(value, 0, valueLen) + "will become null after encode/decode. times:" + avoidVerbose);
             }
         }
 

@@ -22,13 +22,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import org.apache.kylin.common.util.StringUtil;
-import org.apache.kylin.metadata.model.FunctionDesc;
-import org.apache.kylin.metadata.model.MeasureDesc;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.kylin.common.util.StringUtil;
+import org.apache.kylin.metadata.model.FunctionDesc;
+import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  */

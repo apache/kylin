@@ -74,8 +74,7 @@ public class Driver extends UnregisteredDriver {
         try {
             DriverManager.registerDriver(new Driver());
         } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Error occurred while registering JDBC driver " + Driver.class.getName() + ": " + e.toString());
+            throw new RuntimeException("Error occurred while registering JDBC driver " + Driver.class.getName() + ": " + e.toString());
         }
     }
 
@@ -86,8 +85,7 @@ public class Driver extends UnregisteredDriver {
 
     @Override
     protected DriverVersion createDriverVersion() {
-        return DriverVersion.load(Driver.class, "org-apache-kylin-jdbc.properties", "Kylin JDBC Driver",
-                "unknown version", "Kylin", "unknown version");
+        return DriverVersion.load(Driver.class, "org-apache-kylin-jdbc.properties", "Kylin JDBC Driver", "unknown version", "Kylin", "unknown version");
     }
 
     @Override

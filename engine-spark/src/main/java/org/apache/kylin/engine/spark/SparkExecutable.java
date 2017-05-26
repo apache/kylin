@@ -84,8 +84,7 @@ public class SparkExecutable extends AbstractExecutable {
         hadoopConf = System.getProperty("kylin.hadoop.conf.dir");
 
         if (StringUtils.isEmpty(hadoopConf)) {
-            throw new RuntimeException(
-                    "kylin_hadoop_conf_dir is empty, check if there's error in the output of 'kylin.sh start'");
+            throw new RuntimeException("kylin_hadoop_conf_dir is empty, check if there's error in the output of 'kylin.sh start'");
         }
 
         File hiveConfFile = new File(hadoopConf, "hive-site.xml");
@@ -109,8 +108,7 @@ public class SparkExecutable extends AbstractExecutable {
         }
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(
-                "export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
+        stringBuilder.append("export HADOOP_CONF_DIR=%s && %s/bin/spark-submit --class org.apache.kylin.common.util.SparkEntry ");
 
         Map<String, String> sparkConfs = config.getSparkConfigOverride();
         for (Map.Entry<String, String> entry : sparkConfs.entrySet()) {
@@ -119,8 +117,7 @@ public class SparkExecutable extends AbstractExecutable {
 
         stringBuilder.append("--files %s --jars %s %s %s");
         try {
-            String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(),
-                    hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
+            String cmd = String.format(stringBuilder.toString(), hadoopConf, KylinConfig.getSparkHome(), hbaseConfFile.getAbsolutePath(), jars, jobJar, formatArgs());
             logger.info("cmd: " + cmd);
             CliCommandExecutor exec = new CliCommandExecutor();
             PatternedLogger patternedLogger = new PatternedLogger(logger);
@@ -132,5 +129,6 @@ public class SparkExecutable extends AbstractExecutable {
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());
         }
     }
+
 
 }

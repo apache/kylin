@@ -50,8 +50,7 @@ public class HybridCubeCLITest extends LocalFileMetadataTestCase {
     public void test1Create() throws IOException {
         HybridManager hybridManager = HybridManager.getInstance(KylinConfig.getInstanceFromEnv());
         Assert.assertNull(hybridManager.getHybridInstance("ssb_hybrid"));
-        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes",
-                "ssb_cube1,ssb_cube2", "-action", "create" });
+        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes", "ssb_cube1,ssb_cube2", "-action", "create" });
 
         HybridInstance hybridInstance = hybridManager.getHybridInstance("ssb_hybrid");
         Assert.assertNotNull(hybridInstance);
@@ -63,15 +62,13 @@ public class HybridCubeCLITest extends LocalFileMetadataTestCase {
     public void test2Update() throws IOException {
         HybridManager hybridManager = HybridManager.getInstance(KylinConfig.getInstanceFromEnv());
         Assert.assertNull(hybridManager.getHybridInstance("ssb_hybrid"));
-        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes",
-                "ssb_cube1,ssb_cube2", "-action", "create" });
+        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes", "ssb_cube1,ssb_cube2", "-action", "create" });
 
         HybridInstance hybridInstance = hybridManager.getHybridInstance("ssb_hybrid");
         Assert.assertNotNull(hybridManager.getHybridInstance("ssb_hybrid"));
         Assert.assertEquals("ssb_hybrid", hybridInstance.getName());
         Assert.assertEquals(2, hybridInstance.getRealizationEntries().size());
-        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes",
-                "ssb_cube1,ssb_cube2,ssb_cube3", "-action", "update" });
+        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes", "ssb_cube1,ssb_cube2,ssb_cube3", "-action", "update" });
 
         hybridInstance = hybridManager.getHybridInstance("ssb_hybrid");
         Assert.assertNotNull(hybridInstance);
@@ -83,16 +80,13 @@ public class HybridCubeCLITest extends LocalFileMetadataTestCase {
     public void test3Delete() throws IOException {
         HybridManager hybridManager = HybridManager.getInstance(KylinConfig.getInstanceFromEnv());
         Assert.assertNull(hybridManager.getHybridInstance("ssb_hybrid"));
-        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes",
-                "ssb_cube1,ssb_cube2", "-action", "create" });
+        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-cubes", "ssb_cube1,ssb_cube2", "-action", "create" });
         Assert.assertNotNull(hybridManager.getHybridInstance("ssb_hybrid"));
-        HybridCubeCLI.main(
-                new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-action", "delete" });
+        HybridCubeCLI.main(new String[] { "-name", "ssb_hybrid", "-project", "default", "-model", "ssb", "-action", "delete" });
 
         HybridInstance hybridInstance = hybridManager.getHybridInstance("ssb_hybrid");
         Assert.assertNull(hybridInstance);
-        Assert.assertEquals(0, ProjectManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .findProjects(RealizationType.HYBRID, "ssb_hybrid").size());
+        Assert.assertEquals(0, ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).findProjects(RealizationType.HYBRID, "ssb_hybrid").size());
     }
 
 }

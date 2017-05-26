@@ -31,7 +31,7 @@ public class PrintHBaseConfig {
 
     public static void main(String[] args) throws IOException {
         MyConfig config = new MyConfig(HBaseConfiguration.create());
-
+        
         if (args.length == 0) {
             for (Map.Entry<Object, Object> item : config.getProps().entrySet()) {
                 System.out.println(item.getKey() + "=" + item.getValue());
@@ -43,18 +43,18 @@ public class PrintHBaseConfig {
             System.out.println(config.get(args[0]));
             System.exit(0);
         }
-
+        
         for (String arg : args) {
             System.out.println(arg + "=" + config.get(arg));
         }
         System.exit(0);
     }
-
+    
     private static class MyConfig extends Configuration {
         MyConfig(Configuration other) {
             super(other);
         }
-
+        
         protected synchronized Properties getProps() {
             return super.getProps();
         }

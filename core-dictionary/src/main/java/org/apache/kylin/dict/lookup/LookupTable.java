@@ -83,8 +83,7 @@ abstract public class LookupTable<T> {
         Array<T> key = new Array<T>(keyCols);
 
         if (data.containsKey(key))
-            throw new IllegalStateException("The table: " + tableDesc.getName() + " Dup key found, key="
-                    + toString(keyCols) + ", value1=" + toString(data.get(key)) + ", value2=" + toString(value));
+            throw new IllegalStateException("The table: " + tableDesc.getName() + " Dup key found, key=" + toString(keyCols) + ", value1=" + toString(data.get(key)) + ", value2=" + toString(value));
 
         data.put(key, value);
     }
@@ -148,8 +147,7 @@ abstract public class LookupTable<T> {
     }
 
     private boolean between(T beginValue, T v, T endValue, Comparator<T> comp) {
-        return (beginValue == null || comp.compare(beginValue, v) <= 0)
-                && (endValue == null || comp.compare(v, endValue) <= 0);
+        return (beginValue == null || comp.compare(beginValue, v) <= 0) && (endValue == null || comp.compare(v, endValue) <= 0);
     }
 
     abstract protected Comparator<T> getComparator(int colIdx);

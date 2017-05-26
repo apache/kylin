@@ -54,13 +54,10 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
     private static final Logger logger = LoggerFactory.getLogger(MrJobInfoExtractor.class);
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_INCLUDE_DETAILS = OptionBuilder.withArgName("includeTasks").hasArg()
-            .isRequired(false).withDescription("Specify whether to include mr task details to extract. Default true.")
-            .create("includeTasks");
+    private static final Option OPTION_INCLUDE_DETAILS = OptionBuilder.withArgName("includeTasks").hasArg().isRequired(false).withDescription("Specify whether to include mr task details to extract. Default true.").create("includeTasks");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_MR_JOB_ID = OptionBuilder.withArgName("mrJobId").hasArg().isRequired(false)
-            .withDescription("Specify MR Job Id").create("mrJobId");
+    private static final Option OPTION_MR_JOB_ID = OptionBuilder.withArgName("mrJobId").hasArg().isRequired(false).withDescription("Specify MR Job Id").create("mrJobId");
 
     private static final int HTTP_RETRY = 3;
 
@@ -95,13 +92,11 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
         logger.info("kylin.engine.mr.yarn-check-status-url" + " is not set, read from hadoop configuration");
 
         Configuration conf = HadoopUtil.getCurrentConfiguration();
-        String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS,
-                YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);
+        String rmWebHost = HAUtil.getConfValueForRMInstance(YarnConfiguration.RM_WEBAPP_ADDRESS, YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, conf);
         if (HAUtil.isHAEnabled(conf)) {
             YarnConfiguration yarnConf = new YarnConfiguration(conf);
             String active = RMHAUtils.findActiveRMHAId(yarnConf);
-            rmWebHost = HAUtil.getConfValueForRMInstance(HAUtil.addSuffix(YarnConfiguration.RM_WEBAPP_ADDRESS, active),
-                    YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, yarnConf);
+            rmWebHost = HAUtil.getConfValueForRMInstance(HAUtil.addSuffix(YarnConfiguration.RM_WEBAPP_ADDRESS, active), YarnConfiguration.DEFAULT_RM_WEBAPP_ADDRESS, yarnConf);
         }
         if (StringUtils.isEmpty(rmWebHost)) {
             return;
@@ -112,8 +107,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
         Matcher m = pattern.matcher(rmWebHost);
         Preconditions.checkArgument(m.matches(), "Yarn master URL not found.");
         yarnMasterUrlBase = rmWebHost;
-        jobHistoryUrlBase = m.group(1)
-                + HAUtil.getConfValueForRMInstance("mapreduce.jobhistory.webapp.address", m.group(2) + ":19888", conf);
+        jobHistoryUrlBase = m.group(1) + HAUtil.getConfValueForRMInstance("mapreduce.jobhistory.webapp.address", m.group(2) + ":19888", conf);
     }
 
     private String getHttpResponse(String url) {
@@ -137,8 +131,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
         return msg;
     }
 
-    private void extractTaskDetail(String taskId, String user, File exportDir, String taskUrl, String urlBase)
-            throws IOException {
+    private void extractTaskDetail(String taskId, String user, File exportDir, String taskUrl, String urlBase) throws IOException {
         try {
             if (StringUtils.isEmpty(taskId)) {
                 return;
@@ -152,8 +145,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
             JsonNode taskAttempt = new ObjectMapper().readTree(taskInfo).path("task").path("successfulAttempt");
             String succAttemptId = taskAttempt.textValue();
 
-            String attemptInfo = saveHttpResponseQuietly(new File(destDir, "task_attempts.json"),
-                    taskUrlBase + "/attempts/" + succAttemptId);
+            String attemptInfo = saveHttpResponseQuietly(new File(destDir, "task_attempts.json"), taskUrlBase + "/attempts/" + succAttemptId);
             JsonNode attemptAttempt = new ObjectMapper().readTree(attemptInfo).path("taskAttempt");
             String containerId = attemptAttempt.get("assignedContainerId").textValue();
             String nodeId = nodeInfoMap.get(attemptAttempt.get("nodeHttpAddress").textValue());
@@ -162,8 +154,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
             saveHttpResponseQuietly(new File(destDir, "task_counters.json"), taskUrlBase + "/counters");
 
             // save task logs
-            String logUrl = urlBase + "/jobhistory/logs/" + nodeId + "/" + containerId + "/" + succAttemptId + "/"
-                    + user + "/syslog/?start=0";
+            String logUrl = urlBase + "/jobhistory/logs/" + nodeId + "/" + containerId + "/" + succAttemptId + "/" + user + "/syslog/?start=0";
             logger.debug("Fetch task log from url: " + logUrl);
 
             saveHttpResponseQuietly(new File(destDir, "task_log.txt"), logUrl);
@@ -190,8 +181,7 @@ public class MrJobInfoExtractor extends AbstractInfoExtractor {
     @Override
     protected void executeExtract(OptionsHelper optionsHelper, File exportDir) throws Exception {
         try {
-            boolean includeTaskDetails = optionsHelper.hasOption(OPTION_INCLUDE_DETAILS)
-                    ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_DETAILS)) : true;
+            boolean includeTaskDetails = optionsHelper.hasOption(OPTION_INCLUDE_DETAILS) ? Boolean.valueOf(optionsHelper.getOptionValue(OPTION_INCLUDE_DETAILS)) : true;
             String mrJobId = optionsHelper.getOptionValue(OPTION_MR_JOB_ID);
             extractRestCheckUrl();
 

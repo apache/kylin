@@ -134,8 +134,7 @@ public class UserService implements UserDetailsManager {
 
     public List<UserDetails> listUsers() throws IOException {
         List<UserDetails> all = new ArrayList<UserDetails>();
-        List<UserInfo> userInfos = aclStore.getAllResources(DIR_PREFIX, UserInfo.class,
-                UserInfoSerializer.getInstance());
+        List<UserInfo> userInfos = aclStore.getAllResources(DIR_PREFIX, UserInfo.class, UserInfoSerializer.getInstance());
         for (UserInfo info : userInfos) {
             all.add(wrap(info));
         }

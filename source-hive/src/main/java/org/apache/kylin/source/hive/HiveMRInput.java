@@ -137,8 +137,7 @@ public class HiveMRInput implements IMRInput {
         @Override
         public void addStepPhase1_CreateFlatTable(DefaultChainedExecutable jobFlow) {
             final String cubeName = CubingExecutableUtil.getCubeName(jobFlow.getParams());
-            final KylinConfig cubeConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName)
-                    .getConfig();
+            final KylinConfig cubeConfig = CubeManager.getInstance(KylinConfig.getInstanceFromEnv()).getCube(cubeName).getConfig();
             JobEngineConfig conf = new JobEngineConfig(cubeConfig);
 
             final String hiveInitStatements = JoinedFlatTable.generateHiveInitStatements(flatTableDatabase);
@@ -169,8 +168,7 @@ public class HiveMRInput implements IMRInput {
             return step;
         }
 
-        private ShellExecutable createLookupHiveViewMaterializationStep(String hiveInitStatements,
-                String jobWorkingDir) {
+        private ShellExecutable createLookupHiveViewMaterializationStep(String hiveInitStatements, String jobWorkingDir) {
             ShellExecutable step = new ShellExecutable();
             step.setName(ExecutableConstants.STEP_NAME_MATERIALIZE_HIVE_VIEW_IN_LOOKUP);
 
@@ -197,25 +195,21 @@ public class HiveMRInput implements IMRInput {
                 if (lookUpTableDesc.isView()) {
                     StringBuilder createIntermediateTableHql = new StringBuilder();
                     createIntermediateTableHql.append("DROP TABLE IF EXISTS " + intermediate + ";\n");
-                    createIntermediateTableHql
-                            .append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediate + " LIKE " + identity + "\n");
+                    createIntermediateTableHql.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + intermediate + " LIKE " + identity + "\n");
                     createIntermediateTableHql.append("LOCATION '" + jobWorkingDir + "/" + intermediate + "';\n");
-                    createIntermediateTableHql
-                            .append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + ";\n");
+                    createIntermediateTableHql.append("INSERT OVERWRITE TABLE " + intermediate + " SELECT * FROM " + identity + ";\n");
                     hiveCmdBuilder.addStatement(createIntermediateTableHql.toString());
                     hiveViewIntermediateTables = hiveViewIntermediateTables + intermediate + ";";
                 }
             }
 
-            hiveViewIntermediateTables = hiveViewIntermediateTables.substring(0,
-                    hiveViewIntermediateTables.length() - 1);
+            hiveViewIntermediateTables = hiveViewIntermediateTables.substring(0, hiveViewIntermediateTables.length() - 1);
 
             step.setCmd(hiveCmdBuilder.build());
             return step;
         }
 
-        private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir,
-                String cubeName) {
+        private AbstractExecutable createFlatHiveTableStep(String hiveInitStatements, String jobWorkingDir, String cubeName) {
             final String dropTableHql = JoinedFlatTable.generateDropTableStatement(flatDesc);
             final String createTableHql = JoinedFlatTable.generateCreateTableStatement(flatDesc, jobWorkingDir);
             String insertDataHqls = JoinedFlatTable.generateInsertDataStatement(flatDesc);
@@ -302,12 +296,10 @@ public class HiveMRInput implements IMRInput {
                 logger.debug("Row count of table '" + intermediateTable + "' is " + rowCount);
                 if (rowCount == 0) {
                     if (!config.isEmptySegmentAllowed()) {
-                        stepLogger.log("Detect upstream hive table is empty, "
-                                + "fail the job because \"kylin.job.allow-empty-segment\" = \"false\"");
+                        stepLogger.log("Detect upstream hive table is empty, " + "fail the job because \"kylin.job.allow-empty-segment\" = \"false\"");
                         return new ExecuteResult(ExecuteResult.State.ERROR, stepLogger.getBufferedLog());
                     } else {
-                        return new ExecuteResult(ExecuteResult.State.SUCCEED,
-                                "Row count is 0, no need to redistribute");
+                        return new ExecuteResult(ExecuteResult.State.SUCCEED, "Row count is 0, no need to redistribute");
                     }
                 }
 
@@ -384,8 +376,7 @@ public class HiveMRInput implements IMRInput {
                 config.getCliCommandExecutor().execute(hiveCmdBuilder.build());
                 output.append("Hive table " + hiveTable + " is dropped. \n");
                 rmdirOnHDFS(getExternalDataPath());
-                output.append(
-                        "Hive table " + hiveTable + " external data path " + getExternalDataPath() + " is deleted. \n");
+                output.append("Hive table " + hiveTable + " external data path " + getExternalDataPath() + " is deleted. \n");
             }
             return output.toString();
         }

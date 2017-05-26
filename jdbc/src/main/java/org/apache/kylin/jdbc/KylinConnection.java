@@ -47,8 +47,7 @@ public class KylinConnection extends AvaticaConnection {
     private final String project;
     private final IRemoteClient remoteClient;
 
-    protected KylinConnection(UnregisteredDriver driver, KylinJdbcFactory factory, String url, Properties info)
-            throws SQLException {
+    protected KylinConnection(UnregisteredDriver driver, KylinJdbcFactory factory, String url, Properties info) throws SQLException {
         super(driver, factory, url, info);
 
         String odbcUrl = url;
@@ -84,8 +83,7 @@ public class KylinConnection extends AvaticaConnection {
     }
 
     @Override
-    public AvaticaStatement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
-            throws SQLException {
+    public AvaticaStatement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         return super.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
@@ -102,11 +100,9 @@ public class KylinConnection extends AvaticaConnection {
     }
 
     @Override
-    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability) throws SQLException {
+    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
         Meta.Signature sig = mockPreparedSignature(sql);
-        return factory().newPreparedStatement(this, null, sig, resultSetType, resultSetConcurrency,
-                resultSetHoldability);
+        return factory().newPreparedStatement(this, null, sig, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     // TODO add restful API to prepare SQL, get back expected ResultSetMetaData

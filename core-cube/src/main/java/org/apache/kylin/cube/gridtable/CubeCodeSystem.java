@@ -123,8 +123,7 @@ public class CubeCodeSystem implements IGTCodeSystem {
             try {
                 serializer.serialize(value, buf);
             } catch (IllegalArgumentException ex) {
-                IllegalArgumentException rewordEx = new IllegalArgumentException("Column " + col + " value '"
-                        + toStringBinary(value) + "' met dictionary error: " + ex.getMessage());
+                IllegalArgumentException rewordEx = new IllegalArgumentException("Column " + col + " value '" + toStringBinary(value) + "' met dictionary error: " + ex.getMessage());
                 rewordEx.setStackTrace(ex.getStackTrace());
                 throw rewordEx;
             }

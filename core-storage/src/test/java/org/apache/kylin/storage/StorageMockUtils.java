@@ -36,13 +36,13 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 /**
  */
 public class StorageMockUtils {
-
+    
     final DataModelDesc model;
-
+    
     public StorageMockUtils(DataModelDesc model) {
         this.model = model;
     }
-
+    
     public TupleInfo newTupleInfo(List<TblColRef> groups, List<FunctionDesc> aggregations) {
         TupleInfo info = new TupleInfo();
         int idx = 0;

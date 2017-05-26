@@ -82,9 +82,7 @@ public class DictionaryRule implements IValidatorRule<CubeDesc> {
                 return;
             }
 
-            if (StringUtils.isNotEmpty(builderClass)
-                    && builderClass.equalsIgnoreCase(GlobalDictionaryBuilder.class.getName())
-                    && dimensionColumns.contains(dictCol)) {
+            if (StringUtils.isNotEmpty(builderClass) && builderClass.equalsIgnoreCase(GlobalDictionaryBuilder.class.getName()) && dimensionColumns.contains(dictCol)) {
                 context.addResult(ResultLevel.ERROR, ERROR_GLOBAL_DICTIONNARY_ONLY_MEASURE + dictCol);
                 return;
             }

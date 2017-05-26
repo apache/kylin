@@ -78,8 +78,7 @@ public class TupleFilterSerializer {
         return result;
     }
 
-    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer,
-            IFilterCodeSystem<?> cs) {
+    private static void internalSerialize(TupleFilter filter, Decorator decorator, ByteBuffer buffer, IFilterCodeSystem<?> cs) {
         if (decorator != null) { // give decorator a chance to manipulate the output filter
             filter = decorator.onSerialize(filter);
         }
@@ -204,8 +203,7 @@ public class TupleFilterSerializer {
             if (extendedTupleFilters.containsKey(op)) {
                 try {
                     filter = (TupleFilter) extendedTupleFilters.get(op).getConstructor().newInstance();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                        | NoSuchMethodException e) {
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 }
             } else {

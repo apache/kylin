@@ -18,9 +18,9 @@
 
 package org.apache.kylin.metadata.datatype;
 
-import java.nio.ByteBuffer;
-
 import org.apache.kylin.common.util.DateFormat;
+
+import java.nio.ByteBuffer;
 
 public class DateTimeSerializer extends DataTypeSerializer<Long> {
 

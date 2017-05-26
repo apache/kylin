@@ -88,8 +88,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         System.out.println(JsonUtil.writeValueAsIndentString(createdCube));
 
         assertTrue(prjMgr.listAllProjects().size() == originalProjectCount + 1);
-        assertTrue(prjMgr.listAllRealizations("ALIEN").iterator().next().getName()
-                .equalsIgnoreCase("CUBE_IN_ALIEN_PROJECT"));
+        assertTrue(prjMgr.listAllRealizations("ALIEN").iterator().next().getName().equalsIgnoreCase("CUBE_IN_ALIEN_PROJECT"));
         assertTrue(cubeMgr.listAllCubes().size() == originalCubeCount + 1);
 
         prjMgr.moveRealizationToProject(RealizationType.CUBE, "cube_in_alien_project", "default", null);
@@ -127,8 +126,7 @@ public class ProjectManagerTest extends LocalFileMetadataTestCase {
         store.deleteResource("/cube/new_cube_in_default.json");
 
         CubeDesc desc = cubeDescMgr.getCubeDesc("test_kylin_cube_with_slr_desc");
-        CubeInstance createdCube = cubeMgr.createCube("new_cube_in_default", ProjectInstance.DEFAULT_PROJECT_NAME, desc,
-                null);
+        CubeInstance createdCube = cubeMgr.createCube("new_cube_in_default", ProjectInstance.DEFAULT_PROJECT_NAME, desc, null);
         assertTrue(createdCube == cubeMgr.getCube("new_cube_in_default"));
 
         System.out.println(JsonUtil.writeValueAsIndentString(createdCube));

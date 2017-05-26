@@ -66,8 +66,7 @@ public class OLAPLimitRel extends SingleRel implements OLAPRel {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).itemIf("offset", localOffset, localOffset != null).itemIf("fetch", localFetch,
-                localFetch != null);
+        return super.explainTerms(pw).itemIf("offset", localOffset, localOffset != null).itemIf("fetch", localFetch, localFetch != null);
     }
 
     @Override

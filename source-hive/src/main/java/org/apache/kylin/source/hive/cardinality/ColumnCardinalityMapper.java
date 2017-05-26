@@ -71,7 +71,7 @@ public class ColumnCardinalityMapper<T> extends KylinMapper<T, Object, IntWritab
         ColumnDesc[] columns = tableDesc.getColumns();
         Collection<String[]> valuesCollection = tableInputFormat.parseMapperInput(value);
 
-        for (String[] values : valuesCollection) {
+        for (String[] values: valuesCollection) {
             for (int m = 0; m < columns.length; m++) {
                 String field = columns[m].getName();
                 String fieldValue = values[m];

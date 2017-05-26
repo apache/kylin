@@ -103,8 +103,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
      * @param newSeg
      * @throws IOException
      */
-    private void makeDictForNewSegment(KylinConfig conf, CubeInstance cube, CubeSegment newSeg,
-            List<CubeSegment> mergingSegments) throws IOException {
+    private void makeDictForNewSegment(KylinConfig conf, CubeInstance cube, CubeSegment newSeg, List<CubeSegment> mergingSegments) throws IOException {
         HashSet<TblColRef> colsNeedMeringDict = new HashSet<TblColRef>();
         HashSet<TblColRef> colsNeedCopyDict = new HashSet<TblColRef>();
         DictionaryManager dictMgr = DictionaryManager.getInstance(conf);
@@ -143,8 +142,7 @@ public class MergeDictionaryStep extends AbstractExecutable {
         }
     }
 
-    private DictionaryInfo mergeDictionaries(DictionaryManager dictMgr, CubeSegment cubeSeg, List<DictionaryInfo> dicts,
-            TblColRef col) throws IOException {
+    private DictionaryInfo mergeDictionaries(DictionaryManager dictMgr, CubeSegment cubeSeg, List<DictionaryInfo> dicts, TblColRef col) throws IOException {
         DictionaryInfo dictInfo = dictMgr.mergeDictionary(dicts);
         if (dictInfo != null)
             cubeSeg.putDictResPath(col, dictInfo.getResourcePath());

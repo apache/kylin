@@ -18,25 +18,23 @@
 
 package org.apache.kylin.rest.util;
 
-import java.sql.SQLException;
-import java.util.List;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.routing.NoRealizationFoundException;
-import org.apache.kylin.rest.exception.InternalErrorException;
 import org.apache.kylin.storage.adhoc.AdHocRunnerBase;
+import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.SQLException;
+import java.util.List;
 
 public class AdHocUtil {
     private static final Logger logger = LoggerFactory.getLogger(AdHocUtil.class);
 
-    public static boolean doAdHocQuery(String sql, List<List<String>> results, List<SelectedColumnMeta> columnMetas,
-            SQLException sqlException) throws Exception {
-        boolean isExpectedCause = (ExceptionUtils.getRootCause(sqlException).getClass()
-                .equals(NoRealizationFoundException.class));
+    public static boolean doAdHocQuery(String sql, List<List<String>> results, List<SelectedColumnMeta> columnMetas, SQLException sqlException) throws Exception {
+        boolean isExpectedCause = (ExceptionUtils.getRootCause(sqlException).getClass().equals(NoRealizationFoundException.class));
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         Boolean isAdHoc = false;
 
@@ -69,3 +67,4 @@ public class AdHocUtil {
         return isAdHoc;
     }
 }
+

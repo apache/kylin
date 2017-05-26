@@ -114,8 +114,7 @@ public class CubeService extends BasicService {
 
         if (modelName != null) {
             for (CubeInstance cubeInstance : cubeInstances) {
-                boolean isCubeMatch = cubeInstance.getDescriptor().getModelName().toLowerCase()
-                        .equals(modelName.toLowerCase());
+                boolean isCubeMatch = cubeInstance.getDescriptor().getModelName().toLowerCase().equals(modelName.toLowerCase());
                 if (isCubeMatch) {
                     filterModelCubes.add(cubeInstance);
                 }
@@ -126,8 +125,7 @@ public class CubeService extends BasicService {
 
         List<CubeInstance> filterCubes = new ArrayList<CubeInstance>();
         for (CubeInstance cubeInstance : filterModelCubes) {
-            boolean isCubeMatch = (null == cubeName)
-                    || cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase());
+            boolean isCubeMatch = (null == cubeName) || cubeInstance.getName().toLowerCase().contains(cubeName.toLowerCase());
 
             if (isCubeMatch) {
                 filterCubes.add(cubeInstance);
@@ -137,8 +135,7 @@ public class CubeService extends BasicService {
         return filterCubes;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance updateCubeCost(CubeInstance cube, int cost) throws IOException {
 
         if (cube.getCost() == cost) {
@@ -226,8 +223,7 @@ public class CubeService extends BasicService {
             if (projectDataModel.getType() == RealizationType.CUBE) {
                 CubeInstance cube = getCubeManager().getCube(projectDataModel.getRealization());
                 if (cube == null) {
-                    logger.error("Project " + projectName + " contains realization " + projectDataModel.getRealization()
-                            + " which is not found by CubeManager");
+                    logger.error("Project " + projectName + " contains realization " + projectDataModel.getRealization() + " which is not found by CubeManager");
                     continue;
                 }
                 if (cube.equals(target)) {
@@ -238,14 +234,11 @@ public class CubeService extends BasicService {
         return false;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName, boolean forceUpdate)
-            throws IOException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeDesc updateCubeAndDesc(CubeInstance cube, CubeDesc desc, String newProjectName, boolean forceUpdate) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null,
-                EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new BadRequestException(String.format(msg.getDISCARD_JOB_FIRST(), cube.getName()));
         }
@@ -264,21 +257,18 @@ public class CubeService extends BasicService {
         ProjectManager projectManager = getProjectManager();
         if (!isCubeInProject(newProjectName, cube)) {
             String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-            ProjectInstance newProject = projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(),
-                    newProjectName, owner);
+            ProjectInstance newProject = projectManager.moveRealizationToProject(RealizationType.CUBE, cube.getName(), newProjectName, owner);
             accessService.inherit(cube, newProject);
         }
 
         return updatedCubeDesc;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')")
     public void deleteCube(CubeInstance cube) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null,
-                EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING, ExecutableState.ERROR));
+        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING, ExecutableState.ERROR));
         if (!cubingJobs.isEmpty()) {
             throw new BadRequestException(String.format(msg.getDISCARD_JOB_FIRST(), cube.getName()));
         }
@@ -303,8 +293,7 @@ public class CubeService extends BasicService {
      * @throws IOException
      * @throws JobException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance purgeCube(CubeInstance cube) throws IOException {
         Message msg = MsgPicker.getMsg();
 
@@ -326,8 +315,7 @@ public class CubeService extends BasicService {
      * @throws IOException
      * @throws JobException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance disableCube(CubeInstance cube) throws IOException {
         Message msg = MsgPicker.getMsg();
 
@@ -356,8 +344,7 @@ public class CubeService extends BasicService {
      * @return
      * @throws IOException
      */
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance enableCube(CubeInstance cube) throws IOException {
         Message msg = MsgPicker.getMsg();
 
@@ -372,14 +359,12 @@ public class CubeService extends BasicService {
             throw new BadRequestException(String.format(msg.getNO_READY_SEGMENT(), cubeName));
         }
 
-        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null,
-                EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
+        final List<CubingJob> cubingJobs = jobService.listAllCubingJobs(cube.getName(), null, EnumSet.of(ExecutableState.READY, ExecutableState.RUNNING));
         if (!cubingJobs.isEmpty()) {
             throw new BadRequestException(msg.getENABLE_WITH_RUNNING_JOB());
         }
         if (!cube.getDescriptor().checkSignature()) {
-            throw new BadRequestException(
-                    String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
+            throw new BadRequestException(String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
         }
 
         try {
@@ -409,8 +394,7 @@ public class CubeService extends BasicService {
             }
         }
 
-        metrics.increase("aveStorage",
-                (metrics.get("totalCubes") == 0) ? 0 : metrics.get("totalStorage") / metrics.get("totalCubes"));
+        metrics.increase("aveStorage", (metrics.get("totalCubes") == 0) ? 0 : metrics.get("totalStorage") / metrics.get("totalCubes"));
 
         return metrics;
     }
@@ -451,31 +435,26 @@ public class CubeService extends BasicService {
         return hr;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public void updateCubeNotifyList(CubeInstance cube, List<String> notifyList) throws IOException {
         CubeDesc desc = cube.getDescriptor();
         desc.setNotifyList(notifyList);
         getCubeDescManager().updateCubeDesc(desc);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
-    public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable)
-            throws IOException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    public CubeInstance rebuildLookupSnapshot(CubeInstance cube, String segmentName, String lookupTable) throws IOException {
         CubeSegment seg = cube.getSegment(segmentName, SegmentStatusEnum.READY);
         getCubeManager().buildSnapshotTable(seg, lookupTable);
 
         return cube;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION')  or hasPermission(#cube, 'MANAGEMENT')")
     public CubeInstance deleteSegment(CubeInstance cube, String segmentName) throws IOException {
         Message msg = MsgPicker.getMsg();
 
-        if (!segmentName.equals(cube.getSegments().get(0).getName())
-                && !segmentName.equals(cube.getSegments().get(cube.getSegments().size() - 1).getName())) {
+        if (!segmentName.equals(cube.getSegments().get(0).getName()) && !segmentName.equals(cube.getSegments().get(cube.getSegments().size() - 1).getName())) {
             throw new BadRequestException(String.format(msg.getDELETE_NOT_FIRST_LAST_SEG(), segmentName));
         }
         CubeSegment toDelete = null;
@@ -525,8 +504,7 @@ public class CubeService extends BasicService {
     public void updateOnNewSegmentReady(String cubeName) {
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         String serverMode = kylinConfig.getServerMode();
-        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase())
-                || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
+        if (Constant.SERVER_MODE_JOB.equals(serverMode.toLowerCase()) || Constant.SERVER_MODE_ALL.equals(serverMode.toLowerCase())) {
             CubeInstance cube = getCubeManager().getCube(cubeName);
             if (cube != null) {
                 CubeSegment seg = cube.getLatestBuiltSegment();
@@ -584,8 +562,7 @@ public class CubeService extends BasicService {
                 cube = getCubeManager().getCube(cubeName);
                 Pair<Long, Long> offsets = getCubeManager().autoMergeCubeSegments(cube);
                 if (offsets != null) {
-                    CubeSegment newSeg = getCubeManager().mergeSegments(cube, 0, 0, offsets.getFirst(),
-                            offsets.getSecond(), true);
+                    CubeSegment newSeg = getCubeManager().mergeSegments(cube, 0, 0, offsets.getFirst(), offsets.getSecond(), true);
                     logger.debug("Will submit merge job on " + newSeg);
                     DefaultChainedExecutable job = EngineFactory.createBatchMergeJob(newSeg, "SYSTEM");
                     getExecutableManager().addJob(job);

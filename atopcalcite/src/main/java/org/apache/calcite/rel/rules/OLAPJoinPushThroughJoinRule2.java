@@ -61,11 +61,9 @@ public class OLAPJoinPushThroughJoinRule2 extends RelOptRule {
      * Instance of the rule that works on logical joins only, and pushes to the
      * right.
      */
-    public static final RelOptRule INSTANCE = new OLAPJoinPushThroughJoinRule2("OLAPJoinPushThroughJoinRule2",
-            LogicalJoin.class, RelFactories.LOGICAL_BUILDER);
+    public static final RelOptRule INSTANCE = new OLAPJoinPushThroughJoinRule2("OLAPJoinPushThroughJoinRule2", LogicalJoin.class, RelFactories.LOGICAL_BUILDER);
 
-    public OLAPJoinPushThroughJoinRule2(String description, Class<? extends Join> clazz,
-            RelBuilderFactory relBuilderFactory) {
+    public OLAPJoinPushThroughJoinRule2(String description, Class<? extends Join> clazz, RelBuilderFactory relBuilderFactory) {
         super(operand(clazz,
 
                 operand(Project.class, //project is added on top by OLAPJoinPushThroughJoinRule
@@ -118,8 +116,7 @@ public class OLAPJoinPushThroughJoinRule2 extends RelOptRule {
         final ImmutableBitSet bBitSetBelowProject = ImmutableBitSet.range(aCount, aCount + bCount);
         final ImmutableBitSet bBitSetAboveProject = Mappings.apply(inverseProjectPermu, bBitSetBelowProject);
 
-        final Mapping extendedProjectPerm = createAbstractTargetMapping(
-                Mappings.append(projectPermu, Mappings.createIdentity(cCount)));
+        final Mapping extendedProjectPerm = createAbstractTargetMapping(Mappings.append(projectPermu, Mappings.createIdentity(cCount)));
 
         // becomes
         //
@@ -157,29 +154,23 @@ public class OLAPJoinPushThroughJoinRule2 extends RelOptRule {
 
         // target: | A       | C      |
         // source: | A       | B | C      |
-        final Mappings.TargetMapping tempMapping = Mappings.createShiftMapping(aCount + bCount + cCount, 0, 0, aCount,
-                aCount + cCount, aCount, bCount, aCount, aCount + bCount, cCount);
-        final Mappings.TargetMapping thruProjectMapping = Mappings.multiply(extendedProjectPerm,
-                createAbstractTargetMapping(tempMapping));
+        final Mappings.TargetMapping tempMapping = Mappings.createShiftMapping(aCount + bCount + cCount, 0, 0, aCount, aCount + cCount, aCount, bCount, aCount, aCount + bCount, cCount);
+        final Mappings.TargetMapping thruProjectMapping = Mappings.multiply(extendedProjectPerm, createAbstractTargetMapping(tempMapping));
         final List<RexNode> newBottomList = new ArrayList<>();
         new RexPermuteInputsShuttle(thruProjectMapping, relA, relC).visitList(nonIntersecting, newBottomList);
         final RexBuilder rexBuilder = cluster.getRexBuilder();
         RexNode newBottomCondition = RexUtil.composeConjunction(rexBuilder, newBottomList, false);
-        final Join newBottomJoin = bottomJoin.copy(bottomJoin.getTraitSet(), newBottomCondition, relA, relC,
-                bottomJoin.getJoinType(), bottomJoin.isSemiJoinDone());
+        final Join newBottomJoin = bottomJoin.copy(bottomJoin.getTraitSet(), newBottomCondition, relA, relC, bottomJoin.getJoinType(), bottomJoin.isSemiJoinDone());
 
         // target: | A       | C      | B |
         // source: | A       | B | C      |
-        final Mappings.TargetMapping nonThruProjectMapping = Mappings.createShiftMapping(aCount + bCount + cCount, 0, 0,
-                aCount, aCount + cCount, aCount, bCount, aCount, aCount + bCount, cCount);
+        final Mappings.TargetMapping nonThruProjectMapping = Mappings.createShiftMapping(aCount + bCount + cCount, 0, 0, aCount, aCount + cCount, aCount, bCount, aCount, aCount + bCount, cCount);
         final List<RexNode> newTopList = new ArrayList<>();
         new RexPermuteInputsShuttle(thruProjectMapping, newBottomJoin, relB).visitList(intersecting, newTopList);
-        new RexPermuteInputsShuttle(nonThruProjectMapping, newBottomJoin, relB).visitList(bottomIntersecting,
-                newTopList);
+        new RexPermuteInputsShuttle(nonThruProjectMapping, newBottomJoin, relB).visitList(bottomIntersecting, newTopList);
         RexNode newTopCondition = RexUtil.composeConjunction(rexBuilder, newTopList, false);
         @SuppressWarnings("SuspiciousNameCombination")
-        final Join newTopJoin = topJoin.copy(topJoin.getTraitSet(), newTopCondition, newBottomJoin, relB,
-                topJoin.getJoinType(), topJoin.isSemiJoinDone());
+        final Join newTopJoin = topJoin.copy(topJoin.getTraitSet(), newTopCondition, newBottomJoin, relB, topJoin.getJoinType(), topJoin.isSemiJoinDone());
 
         assert !Mappings.isIdentity(thruProjectMapping);
         final RelBuilder relBuilder = call.builder();
@@ -201,8 +192,7 @@ public class OLAPJoinPushThroughJoinRule2 extends RelOptRule {
      * Splits a condition into conjunctions that do or do not intersect with
      * a given bit set.
      */
-    static void split(RexNode condition, ImmutableBitSet bitSet, List<RexNode> intersecting,
-            List<RexNode> nonIntersecting) {
+    static void split(RexNode condition, ImmutableBitSet bitSet, List<RexNode> intersecting, List<RexNode> nonIntersecting) {
         for (RexNode node : RelOptUtil.conjunctions(condition)) {
             ImmutableBitSet inputBitSet = RelOptUtil.InputFinder.bits(node);
             if (bitSet.intersects(inputBitSet)) {

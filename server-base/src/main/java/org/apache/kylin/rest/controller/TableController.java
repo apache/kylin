@@ -68,8 +68,7 @@ public class TableController extends BasicController {
      */
     @RequestMapping(value = "", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<TableDesc> getTableDesc(@RequestParam(value = "ext", required = false) boolean withExt,
-            @RequestParam(value = "project", required = true) String project) throws IOException {
+    public List<TableDesc> getTableDesc(@RequestParam(value = "ext", required = false) boolean withExt, @RequestParam(value = "project", required = true) String project) throws IOException {
         try {
             return tableService.getTableDescByProject(project, withExt);
         } catch (IOException e) {
@@ -95,8 +94,7 @@ public class TableController extends BasicController {
 
     @RequestMapping(value = "/{tables}/{project}", method = { RequestMethod.POST }, produces = { "application/json" })
     @ResponseBody
-    public Map<String, String[]> loadHiveTables(@PathVariable String tables, @PathVariable String project,
-            @RequestBody HiveTableRequest request) throws IOException {
+    public Map<String, String[]> loadHiveTables(@PathVariable String tables, @PathVariable String project, @RequestBody HiveTableRequest request) throws IOException {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<String, String[]> result = new HashMap<String, String[]>();
         String[] tableNames = StringUtil.splitAndTrim(tables, ",");
@@ -152,11 +150,9 @@ public class TableController extends BasicController {
      * @return Table metadata array
      * @throws IOException
      */
-    @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT }, produces = {
-            "application/json" })
+    @RequestMapping(value = "/{tableNames}/cardinality", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
-    public CardinalityRequest generateCardinality(@PathVariable String tableNames,
-            @RequestBody CardinalityRequest request) throws Exception {
+    public CardinalityRequest generateCardinality(@PathVariable String tableNames, @RequestBody CardinalityRequest request) throws Exception {
         String submitter = SecurityContextHolder.getContext().getAuthentication().getName();
         String[] tables = tableNames.split(",");
         try {

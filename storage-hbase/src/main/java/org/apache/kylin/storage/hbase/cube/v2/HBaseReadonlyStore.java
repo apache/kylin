@@ -45,12 +45,11 @@ public class HBaseReadonlyStore implements IGTStore {
     private int rowkeyPreambleSize;
     private boolean withDelay = false;
 
+
     /**
      * @param withDelay is for test use
      */
-    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest,
-            List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT, int rowkeyPreambleSize,
-            boolean withDelay) {
+    public HBaseReadonlyStore(CellListIterator cellListIterator, GTScanRequest gtScanRequest, List<Pair<byte[], byte[]>> hbaseColumns, List<List<Integer>> hbaseColumnsToGT, int rowkeyPreambleSize, boolean withDelay) {
         this.cellListIterator = cellListIterator;
         this.info = gtScanRequest.getInfo();
         this.hbaseColumns = hbaseColumns;
@@ -77,10 +76,8 @@ public class HBaseReadonlyStore implements IGTStore {
     //TODO: possible to use binary search as cells might be sorted?
     public static Cell findCell(List<Cell> cells, byte[] familyName, byte[] columnName) {
         for (Cell c : cells) {
-            if (BytesUtil.compareBytes(familyName, 0, c.getFamilyArray(), c.getFamilyOffset(), familyName.length) == 0
-                    && //
-                    BytesUtil.compareBytes(columnName, 0, c.getQualifierArray(), c.getQualifierOffset(),
-                            columnName.length) == 0) {
+            if (BytesUtil.compareBytes(familyName, 0, c.getFamilyArray(), c.getFamilyOffset(), familyName.length) == 0 && //
+                    BytesUtil.compareBytes(columnName, 0, c.getQualifierArray(), c.getQualifierOffset(), columnName.length) == 0) {
                 return c;
             }
         }
@@ -124,9 +121,7 @@ public class HBaseReadonlyStore implements IGTStore {
 
                         // dimensions, set to primary key, also the 0th column block
                         Cell firstCell = oneRow.get(0);
-                        ByteBuffer buf = byteBuffer(firstCell.getRowArray(),
-                                rowkeyPreambleSize + firstCell.getRowOffset(),
-                                firstCell.getRowLength() - rowkeyPreambleSize);
+                        ByteBuffer buf = byteBuffer(firstCell.getRowArray(), rowkeyPreambleSize + firstCell.getRowOffset(), firstCell.getRowLength() - rowkeyPreambleSize);
                         oneRecord.loadCellBlock(0, buf);
 
                         // metrics

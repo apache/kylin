@@ -87,21 +87,18 @@ public class JoinedFlatTable {
         if (kylinConfig.isAdvancedFlatTableUsed()) {
             try {
                 Class advancedFlatTable = Class.forName(kylinConfig.getAdvancedFlatTableClass());
-                Method method = advancedFlatTable.getMethod("generateInsertDataStatement", IJoinedFlatTableDesc.class,
-                        JobEngineConfig.class);
+                Method method = advancedFlatTable.getMethod("generateInsertDataStatement", IJoinedFlatTableDesc.class, JobEngineConfig.class);
                 return (String) method.invoke(null, flatDesc);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
 
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc)
-                + ";\n";
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + ";\n";
     }
 
     public static String generateInsertPartialDataStatement(IJoinedFlatTableDesc flatDesc, String statement) {
-        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc)
-                + statement + ";\n";
+        return "INSERT OVERWRITE TABLE " + flatDesc.getTableName() + " " + generateSelectDataStatement(flatDesc) + statement + ";\n";
     }
 
     public static String generateSelectDataStatement(IJoinedFlatTableDesc flatDesc) {
@@ -123,8 +120,7 @@ public class JoinedFlatTable {
         final StringBuilder sql = new StringBuilder();
         final TableRef rootTbl = flatDesc.getDataModel().getRootFactTable();
         sql.append("dfs -mkdir -p " + outputDir + ";\n");
-        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + rootTbl.getTableIdentity()
-                + " " + rootTbl.getAlias() + "\n");
+        sql.append("INSERT OVERWRITE DIRECTORY '" + outputDir + "' SELECT count(*) FROM " + rootTbl.getTableIdentity() + " " + rootTbl.getAlias() + "\n");
         appendWhereStatement(flatDesc, sql);
         return sql.toString();
     }
@@ -195,8 +191,7 @@ public class JoinedFlatTable {
 
                 if (!(dateStart == 0 && dateEnd == Long.MAX_VALUE)) {
                     whereBuilder.append(hasCondition ? " AND (" : " (");
-                    whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc,
-                            dateStart, dateEnd));
+                    whereBuilder.append(partDesc.getPartitionConditionBuilder().buildDateRangeCondition(partDesc, dateStart, dateEnd));
                     whereBuilder.append(")\n");
                     hasCondition = true;
                 }

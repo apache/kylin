@@ -77,24 +77,20 @@ public class ProjectService extends BasicService {
             throw new BadRequestException(String.format(msg.getPROJECT_ALREADY_EXIST(), projectName));
         }
         String owner = SecurityContextHolder.getContext().getAuthentication().getName();
-        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description,
-                overrideProps);
+        ProjectInstance createdProject = getProjectManager().createProject(projectName, owner, description, overrideProps);
         accessService.init(createdProject, AclPermission.ADMINISTRATION);
         logger.debug("New project created.");
 
         return createdProject;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#currentProject, 'ADMINISTRATION') or hasPermission(#currentProject, 'MANAGEMENT')")
-    public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject)
-            throws IOException {
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#currentProject, 'ADMINISTRATION') or hasPermission(#currentProject, 'MANAGEMENT')")
+    public ProjectInstance updateProject(ProjectInstance newProject, ProjectInstance currentProject) throws IOException {
         String newProjectName = newProject.getName();
         String newDescription = newProject.getDescription();
         LinkedHashMap<String, String> overrideProps = newProject.getOverrideKylinProps();
 
-        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName,
-                newDescription, overrideProps);
+        ProjectInstance updatedProject = getProjectManager().updateProject(currentProject, newProjectName, newDescription, overrideProps);
 
         logger.debug("Project updated.");
 
@@ -125,8 +121,7 @@ public class ProjectService extends BasicService {
         return projects.subList(coffset, coffset + climit);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')")
     public void deleteProject(String projectName, ProjectInstance project) throws IOException {
         getProjectManager().dropProject(projectName);
 
@@ -203,5 +198,5 @@ public class ProjectService extends BasicService {
 
         }
         return readableProjects;
-    }
+}
 }

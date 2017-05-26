@@ -94,7 +94,7 @@ public class HadoopCmdOutput {
             }
             this.output.append(counters.toString()).append("\n");
             logger.debug(counters.toString());
-
+            
             String bytsWrittenCounterName = "HDFS_BYTES_WRITTEN";
             String fsScheme = FileSystem.get(job.getConfiguration()).getScheme();
             if (("wasb").equalsIgnoreCase(fsScheme)) {
@@ -103,8 +103,7 @@ public class HadoopCmdOutput {
             }
 
             mapInputRecords = String.valueOf(counters.findCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
-            hdfsBytesWritten = String
-                    .valueOf(counters.findCounter("FileSystemCounters", bytsWrittenCounterName).getValue());
+            hdfsBytesWritten = String.valueOf(counters.findCounter("FileSystemCounters", bytsWrittenCounterName).getValue());
             rawInputBytesRead = String.valueOf(counters.findCounter(RawDataCounter.BYTES).getValue());
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);

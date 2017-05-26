@@ -31,7 +31,7 @@ public class IterableDictionaryValueEnumerator implements IDictionaryValueEnumer
     public IterableDictionaryValueEnumerator(String... strs) {
         this(Arrays.asList(strs));
     }
-
+    
     public IterableDictionaryValueEnumerator(Iterable<String> list) {
         iterator = list.iterator();
     }

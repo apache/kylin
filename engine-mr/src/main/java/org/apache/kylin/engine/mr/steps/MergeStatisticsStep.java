@@ -76,8 +76,7 @@ public class MergeStatisticsStep extends AbstractExecutable {
 
             int averageSamplingPercentage = 0;
             for (String segmentId : CubingExecutableUtil.getMergingSegmentIds(this.getParams())) {
-                String fileKey = CubeSegment
-                        .getStatisticsResourcePath(CubingExecutableUtil.getCubeName(this.getParams()), segmentId);
+                String fileKey = CubeSegment.getStatisticsResourcePath(CubingExecutableUtil.getCubeName(this.getParams()), segmentId);
                 InputStream is = rs.getResource(fileKey).inputStream;
                 File tempFile = null;
                 FileOutputStream tempFileStream = null;
@@ -121,13 +120,9 @@ public class MergeStatisticsStep extends AbstractExecutable {
                         tempFile.delete();
                 }
             }
-            averageSamplingPercentage = averageSamplingPercentage
-                    / CubingExecutableUtil.getMergingSegmentIds(this.getParams()).size();
-            CubeStatsWriter.writeCuboidStatistics(conf,
-                    new Path(CubingExecutableUtil.getMergedStatisticsPath(this.getParams())), cuboidHLLMap,
-                    averageSamplingPercentage);
-            Path statisticsFilePath = new Path(CubingExecutableUtil.getMergedStatisticsPath(this.getParams()),
-                    BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
+            averageSamplingPercentage = averageSamplingPercentage / CubingExecutableUtil.getMergingSegmentIds(this.getParams()).size();
+            CubeStatsWriter.writeCuboidStatistics(conf, new Path(CubingExecutableUtil.getMergedStatisticsPath(this.getParams())), cuboidHLLMap, averageSamplingPercentage);
+            Path statisticsFilePath = new Path(CubingExecutableUtil.getMergedStatisticsPath(this.getParams()), BatchConstants.CFG_STATISTICS_CUBOID_ESTIMATION_FILENAME);
             FileSystem fs = HadoopUtil.getFileSystem(statisticsFilePath, conf);
             FSDataInputStream is = fs.open(statisticsFilePath);
             try {

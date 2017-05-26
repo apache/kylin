@@ -58,15 +58,13 @@ public class CubeMetaIngesterTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testHappyIngest() {
-        String srcPath = Thread.currentThread().getContextClassLoader().getResource("cloned_cube_and_model.zip")
-                .getPath();
+        String srcPath = Thread.currentThread().getContextClassLoader().getResource("cloned_cube_and_model.zip").getPath();
         CubeMetaIngester.main(new String[] { "-project", "default", "-srcPath", srcPath });
 
         ProjectInstance project = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject("default");
         Assert.assertEquals(1, Collections.frequency(project.getTables(), "DEFAULT.TEST_KYLIN_FACT"));
         Assert.assertTrue(project.getModels().contains("cloned_model"));
-        Assert.assertTrue(
-                project.getRealizationEntries().contains(RealizationEntry.create(RealizationType.CUBE, "cloned_cube")));
+        Assert.assertTrue(project.getRealizationEntries().contains(RealizationEntry.create(RealizationType.CUBE, "cloned_cube")));
 
         MetadataManager.clearCache();
         CubeDescManager.clearCache();
@@ -83,8 +81,7 @@ public class CubeMetaIngesterTest extends LocalFileMetadataTestCase {
         ProjectInstance project = ProjectManager.getInstance(KylinConfig.getInstanceFromEnv()).getProject("default");
         Assert.assertEquals(1, Collections.frequency(project.getTables(), "SSB.CUSTOMER"));
         Assert.assertTrue(project.getModels().contains("benchmark_model"));
-        Assert.assertTrue(project.getRealizationEntries()
-                .contains(RealizationEntry.create(RealizationType.CUBE, "benchmark_cube")));
+        Assert.assertTrue(project.getRealizationEntries().contains(RealizationEntry.create(RealizationType.CUBE, "benchmark_cube")));
 
         MetadataManager.clearCache();
         CubeDescManager.clearCache();
@@ -102,8 +99,7 @@ public class CubeMetaIngesterTest extends LocalFileMetadataTestCase {
             @Override
             public boolean matches(Object item) {
                 if (item instanceof IllegalStateException) {
-                    if (((IllegalStateException) item).getMessage()
-                            .equals("Already exist a model called test_kylin_inner_join_model_desc")) {
+                    if (((IllegalStateException) item).getMessage().equals("Already exist a model called test_kylin_inner_join_model_desc")) {
                         return true;
                     }
                 }

@@ -36,9 +36,9 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.calcite.util.Pair;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.calcite.util.Pair;
 
 /**
  * Reduce project under aggregate which has unused input ref.
@@ -55,8 +55,7 @@ public class AggregateProjectReduceRule extends RelOptRule {
         super(operand, factory, description);
     }
 
-    private void mappingKeys(int key, Pair<RexNode, String> project, List<Pair<RexNode, String>> projects,
-            Map<Integer, Integer> mapping) {
+    private void mappingKeys(int key, Pair<RexNode, String> project, List<Pair<RexNode, String>> projects, Map<Integer, Integer> mapping) {
         if (!projects.contains(project)) {
             projects.add(project);
         }

@@ -36,8 +36,7 @@ import org.apache.kylin.metadata.model.TblColRef;
  */
 public class CoprocessorProjector {
 
-    public static CoprocessorProjector makeForObserver(final CubeSegment cubeSegment, final Cuboid cuboid,
-            final Collection<TblColRef> dimensionColumns) {
+    public static CoprocessorProjector makeForObserver(final CubeSegment cubeSegment, final Cuboid cuboid, final Collection<TblColRef> dimensionColumns) {
 
         RowKeyEncoder rowKeyMaskEncoder = new RowKeyEncoder(cubeSegment, cuboid) {
             @Override
@@ -46,8 +45,7 @@ public class CoprocessorProjector {
             }
 
             @Override
-            protected void fillColumnValue(TblColRef column, int columnLen, String valueStr, byte[] outputValue,
-                    int outputValueOffset) {
+            protected void fillColumnValue(TblColRef column, int columnLen, String valueStr, byte[] outputValue, int outputValueOffset) {
                 byte bits = dimensionColumns.contains(column) ? (byte) 0xff : 0x00;
                 Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen, bits);
             }
@@ -56,6 +54,7 @@ public class CoprocessorProjector {
         byte[] mask = rowKeyMaskEncoder.encode(new String[cuboid.getColumns().size()]);
         return new CoprocessorProjector(mask, dimensionColumns.size() != 0);
     }
+  
 
     public static byte[] serialize(CoprocessorProjector o) {
         ByteBuffer buf = ByteBuffer.allocate(BytesSerializer.SERIALIZE_BUFFER_SIZE);

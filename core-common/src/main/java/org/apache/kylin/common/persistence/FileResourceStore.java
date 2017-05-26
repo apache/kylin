@@ -46,8 +46,7 @@ public class FileResourceStore extends ResourceStore {
         super(kylinConfig);
         root = new File(kylinConfig.getMetadataUrl().getIdentifier()).getAbsoluteFile();
         if (root.exists() == false)
-            throw new IllegalArgumentException(
-                    "File not exist by '" + kylinConfig.getMetadataUrl() + "': " + root.getAbsolutePath());
+            throw new IllegalArgumentException("File not exist by '" + kylinConfig.getMetadataUrl() + "': " + root.getAbsolutePath());
     }
 
     @Override
@@ -71,8 +70,7 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    synchronized protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart,
-            long timeEndExclusive) throws IOException {
+    synchronized protected List<RawResource> getAllResourcesImpl(String folderPath, long timeStart, long timeEndExclusive) throws IOException {
         NavigableSet<String> resources = listResources(folderPath);
         if (resources == null)
             return Collections.emptyList();
@@ -133,12 +131,10 @@ public class FileResourceStore extends ResourceStore {
     }
 
     @Override
-    synchronized protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS)
-            throws IOException, IllegalStateException {
+    synchronized protected long checkAndPutResourceImpl(String resPath, byte[] content, long oldTS, long newTS) throws IOException, IllegalStateException {
         File f = file(resPath);
         if ((f.exists() && f.lastModified() != oldTS) || (f.exists() == false && oldTS != 0))
-            throw new IllegalStateException(
-                    "Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but found " + f.lastModified());
+            throw new IllegalStateException("Overwriting conflict " + resPath + ", expect old TS " + oldTS + ", but found " + f.lastModified());
 
         putResourceImpl(resPath, new ByteArrayInputStream(content), newTS);
 

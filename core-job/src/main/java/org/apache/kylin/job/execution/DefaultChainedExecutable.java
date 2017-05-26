@@ -43,7 +43,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
             sub.initConfig(config);
         }
     }
-
+    
     @Override
     protected ExecuteResult doWork(ExecutableContext context) throws ExecuteException {
         List<? extends Executable> executables = getTasks();
@@ -58,8 +58,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
                 // the job is paused
                 break;
             } else if (state == ExecutableState.ERROR) {
-                throw new IllegalStateException(
-                        "invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
+                throw new IllegalStateException("invalid subtask state, subtask:" + subTask.getName() + ", state:" + subTask.getStatus());
             }
             if (subTask.isRunnable()) {
                 return subTask.execute(context);
@@ -89,7 +88,7 @@ public class DefaultChainedExecutable extends AbstractExecutable implements Chai
     @Override
     protected void onExecuteFinished(ExecuteResult result, ExecutableContext executableContext) {
         ExecutableManager mgr = getManager();
-
+        
         if (isDiscarded()) {
             setEndTime(System.currentTimeMillis());
             notifyUserStatusChange(executableContext, ExecutableState.DISCARDED);

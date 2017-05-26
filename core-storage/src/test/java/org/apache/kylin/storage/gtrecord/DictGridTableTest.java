@@ -123,8 +123,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         {
             LogicalTupleFilter filter = and(timeComp0, ageComp1);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());//scan range are [close,close]
             assertEquals("[null, 10]-[1421193600000, 10]", r.get(0).toString());
@@ -133,40 +132,33 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         }
         {
             LogicalTupleFilter filter = and(timeComp2, ageComp1);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());
         }
         {
             LogicalTupleFilter filter = and(timeComp4, ageComp1);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());
         }
         {
             LogicalTupleFilter filter = and(timeComp5, ageComp1);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());
         }
         {
-            LogicalTupleFilter filter = or(and(timeComp2, ageComp1), and(timeComp1, ageComp1),
-                    and(timeComp6, ageComp1));
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            LogicalTupleFilter filter = or(and(timeComp2, ageComp1), and(timeComp1, ageComp1), and(timeComp6, ageComp1));
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[1421193600000, 10]-[null, 10]", r.get(0).toString());
-            assertEquals("[[null, 10, null, null, null], [1421193600000, 10, null, null, null]]",
-                    r.get(0).fuzzyKeys.toString());
+            assertEquals("[[null, 10, null, null, null], [1421193600000, 10, null, null, null]]", r.get(0).fuzzyKeys.toString());
         }
         {
             LogicalTupleFilter filter = or(timeComp2, timeComp1, timeComp6);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[1421193600000, null]-[null, null]", r.get(0).toString());
@@ -175,16 +167,14 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         {
             //skip FALSE filter
             LogicalTupleFilter filter = and(ageComp1, ConstantTupleFilter.FALSE);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());
         }
         {
             //TRUE or FALSE filter
             LogicalTupleFilter filter = or(ConstantTupleFilter.TRUE, ConstantTupleFilter.FALSE);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[null, null]-[null, null]", r.get(0).toString());
@@ -192,8 +182,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         {
             //TRUE or other filter
             LogicalTupleFilter filter = or(ageComp1, ConstantTupleFilter.TRUE);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(segmentStart, segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());
             assertEquals("[null, null]-[null, null]", r.get(0).toString());
@@ -206,8 +195,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         {
             LogicalTupleFilter filter = and(timeComp0, ageComp1);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(1, r.size());//scan range are [close,close]
             assertEquals("[null, 10]-[1421193600000, 10]", r.get(0).toString());
@@ -217,8 +205,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         {
             LogicalTupleFilter filter = and(timeComp5, ageComp1);
-            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd),
-                    info.colRef(0), filter);
+            CubeScanRangePlanner planner = new CubeScanRangePlanner(info, Pair.newPair(new ByteArray(), segmentEnd), info.colRef(0), filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(0, r.size());//scan range are [close,close]
         }
@@ -263,8 +250,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         // merge too many ranges
         {
-            LogicalTupleFilter filter = or(and(timeComp4, ageComp1), and(timeComp4, ageComp2),
-                    and(timeComp4, ageComp3));
+            LogicalTupleFilter filter = or(and(timeComp4, ageComp1), and(timeComp4, ageComp2), and(timeComp4, ageComp3));
             CubeScanRangePlanner planner = new CubeScanRangePlanner(info, null, null, filter);
             List<GTScanRange> r = planner.planScanRanges();
             assertEquals(3, r.size());
@@ -279,10 +265,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
     @Test
     public void verifyFirstRow() throws IOException {
-        doScanAndVerify(table,
-                new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null)
-                        .setFilterPushDown(null).createGTScanRequest(),
-                "[1421193600000, 30, Yang, 10, 10.5]", //
+        doScanAndVerify(table, new GTScanRequestBuilder().setInfo(table.getInfo()).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest(), "[1421193600000, 30, Yang, 10, 10.5]", //
                 "[1421193600000, 30, Luke, 10, 10.5]", //
                 "[1421280000000, 20, Dong, 10, 10.5]", //
                 "[1421280000000, 20, Jason, 10, 10.5]", //
@@ -315,18 +298,12 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         LogicalTupleFilter fNotPlusUnevaluatable = not(unevaluatable(info.colRef(1)));
         LogicalTupleFilter filter = and(fComp, fUnevaluatable, fNotPlusUnevaluatable);
 
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
-                .setAggrGroupBy(setOf(0)).setAggrMetrics(setOf(3)).setAggrMetricsFuncs(new String[] { "sum" })
-                .setFilterPushDown(filter).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(0)).setAggrMetrics(setOf(3)).setAggrMetricsFuncs(new String[] { "sum" }).setFilterPushDown(filter).createGTScanRequest();
 
         // note the unEvaluatable column 1 in filter is added to group by
-        assertEquals(
-                "GTScanRequest [range=[[null, null]-[null, null]], columns={0, 1, 3}, filterPushDown=AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]",
-                req.toString());
+        assertEquals("GTScanRequest [range=[[null, null]-[null, null]], columns={0, 1, 3}, filterPushDown=AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], [null], [null]], aggrGroupBy={0, 1}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
 
-        doScanAndVerify(table, useDeserializedGTScanRequest(req), "[1421280000000, 20, null, 20, null]",
-                "[1421280000000, 30, null, 10, null]", "[1421366400000, 20, null, 20, null]",
-                "[1421366400000, 30, null, 20, null]", "[1421452800000, 10, null, 10, null]");
+        doScanAndVerify(table, useDeserializedGTScanRequest(req), "[1421280000000, 20, null, 20, null]", "[1421280000000, 30, null, 10, null]", "[1421366400000, 20, null, 20, null]", "[1421366400000, 30, null, 20, null]", "[1421452800000, 10, null, 10, null]");
     }
 
     @Test
@@ -337,34 +314,26 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         CompareTupleFilter fComp2 = compare(info.colRef(1), FilterOperatorEnum.GT, enc(info, 1, "10"));
         LogicalTupleFilter filter = and(fComp1, fComp2);
 
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
-                .setAggrGroupBy(setOf(0)).setAggrMetrics(setOf(3)).setAggrMetricsFuncs(new String[] { "sum" })
-                .setFilterPushDown(filter).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(0)).setAggrMetrics(setOf(3)).setAggrMetricsFuncs(new String[] { "sum" }).setFilterPushDown(filter).createGTScanRequest();
         // note the evaluatable column 1 in filter is added to returned columns but not in group by
-        assertEquals(
-                "GTScanRequest [range=[[null, null]-[null, null]], columns={0, 1, 3}, filterPushDown=AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 GT [\\x00]], aggrGroupBy={0}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]",
-                req.toString());
+        assertEquals("GTScanRequest [range=[[null, null]-[null, null]], columns={0, 1, 3}, filterPushDown=AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 GT [\\x00]], aggrGroupBy={0}, aggrMetrics={3}, aggrMetricsFuncs=[sum]]", req.toString());
 
-        doScanAndVerify(table, useDeserializedGTScanRequest(req), "[1421280000000, 20, null, 30, null]",
-                "[1421366400000, 20, null, 40, null]");
+        doScanAndVerify(table, useDeserializedGTScanRequest(req), "[1421280000000, 20, null, 30, null]", "[1421366400000, 20, null, 40, null]");
     }
 
     @Test
     public void verifyAggregateAndHavingFilter() throws IOException {
         GTInfo info = table.getInfo();
-
+        
         TblColRef havingCol = TblColRef.newInnerColumn("SUM_OF_BIGDECIMAL", InnerDataTypeEnum.LITERAL);
         havingCol.getColumnDesc().setId("1"); // point to the first aggregated measure
         CompareTupleFilter havingFilter = compare(havingCol, FilterOperatorEnum.GT, "20");
-
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
-                .setAggrGroupBy(setOf(1)).setAggrMetrics(setOf(4)).setAggrMetricsFuncs(new String[] { "sum" })
-                .setHavingFilterPushDown(havingFilter).createGTScanRequest();
-
-        doScanAndVerify(table, useDeserializedGTScanRequest(req), "[null, 20, null, null, 42.0]",
-                "[null, 30, null, null, 52.5]");
+        
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setAggrGroupBy(setOf(1)).setAggrMetrics(setOf(4)).setAggrMetricsFuncs(new String[] { "sum" }).setHavingFilterPushDown(havingFilter).createGTScanRequest();
+        
+        doScanAndVerify(table, useDeserializedGTScanRequest(req), "[null, 20, null, null, 42.0]", "[null, 30, null, null, 52.5]");
     }
-
+    
     @Test
     public void testFilterScannerPerf() throws IOException {
         GridTable table = newTestPerfTable();
@@ -385,11 +354,9 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
     }
 
     @SuppressWarnings("unused")
-    private void testFilterScannerPerfInner(GridTable table, GTInfo info, LogicalTupleFilter filter)
-            throws IOException {
+    private void testFilterScannerPerfInner(GridTable table, GTInfo info, LogicalTupleFilter filter) throws IOException {
         long start = System.currentTimeMillis();
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
-                .setFilterPushDown(filter).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setFilterPushDown(filter).createGTScanRequest();
         IGTScanner scanner = table.scan(req);
         int i = 0;
         for (GTRecord r : scanner) {
@@ -397,8 +364,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         }
         scanner.close();
         long end = System.currentTimeMillis();
-        System.out.println(
-                (end - start) + "ms with filter cache enabled=" + FilterResultCache.ENABLED + ", " + i + " rows");
+        System.out.println((end - start) + "ms with filter cache enabled=" + FilterResultCache.ENABLED + ", " + i + " rows");
     }
 
     @Test
@@ -418,9 +384,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
         colMapping.add(extColB);
 
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-        assertEquals(
-                "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 EQ [\\x00]]",
-                newFilter.toString());
+        assertEquals("AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 EQ [\\x00]]", newFilter.toString());
     }
 
     @Test
@@ -441,9 +405,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         // $1<"9" round up to $1<"10"
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-        assertEquals(
-                "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 LT [\\x00]]",
-                newFilter.toString());
+        assertEquals("AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 LT [\\x00]]", newFilter.toString());
     }
 
     @Test
@@ -464,8 +426,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         // $1<="9" round down to FALSE
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-        assertEquals("AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], []]",
-                newFilter.toString());
+        assertEquals("AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], []]", newFilter.toString());
     }
 
     @Test
@@ -486,9 +447,7 @@ public class DictGridTableTest extends LocalFileMetadataTestCase {
 
         // $1 in ("9", "10", "15") has only "10" left
         TupleFilter newFilter = GTUtil.convertFilterColumnsAndConstants(filter, info, colMapping, null);
-        assertEquals(
-                "AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 IN [\\x00]]",
-                newFilter.toString());
+        assertEquals("AND [UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.0 GT [\\x00\\x00\\x01J\\xE5\\xBD\\x5C\\x00], UNKNOWN_MODEL:NULL.GT_MOCKUP_TABLE.1 IN [\\x00]]", newFilter.toString());
     }
 
     private void doScanAndVerify(GridTable table, GTScanRequest req, String... verifyRows) throws IOException {

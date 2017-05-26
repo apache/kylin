@@ -85,7 +85,7 @@ public class SortedColumnDFSFile implements IReadableTable {
     public TableSignature getSignature() throws IOException {
         return dfsFileTable.getSignature();
     }
-
+    
     @Override
     public boolean exists() throws IOException {
         return dfsFileTable.exists();
@@ -104,8 +104,7 @@ public class SortedColumnDFSFile implements IReadableTable {
                         Long num2 = Long.parseLong(str2);
                         return num1.compareTo(num2);
                     } catch (NumberFormatException e) {
-                        logger.error("NumberFormatException when parse integer family number.str1:" + str1 + " str2:"
-                                + str2);
+                        logger.error("NumberFormatException when parse integer family number.str1:" + str1 + " str2:" + str2);
                         e.printStackTrace();
                         return 0;
                     }
@@ -120,8 +119,7 @@ public class SortedColumnDFSFile implements IReadableTable {
                         Double num2 = Double.parseDouble(str2);
                         return num1.compareTo(num2);
                     } catch (NumberFormatException e) {
-                        logger.error(
-                                "NumberFormatException when parse doul family number.str1:" + str1 + " str2:" + str2);
+                        logger.error("NumberFormatException when parse doul family number.str1:" + str1 + " str2:" + str2);
                         return 0;
                     }
                 }

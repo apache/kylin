@@ -107,8 +107,7 @@ public class AclService implements MutableAclService {
     public List<ObjectIdentity> findChildren(ObjectIdentity parentIdentity) {
         List<ObjectIdentity> oids = new ArrayList<ObjectIdentity>();
         try {
-            List<AclRecord> allAclRecords = aclStore.getAllResources(String.valueOf(DIR_PREFIX), AclRecord.class,
-                    AclRecordSerializer.getInstance());
+            List<AclRecord> allAclRecords = aclStore.getAllResources(String.valueOf(DIR_PREFIX), AclRecord.class, AclRecordSerializer.getInstance());
             for (AclRecord record : allAclRecords) {
                 DomainObjectInfo parent = record.getParentDomainObjectInfo();
                 if (parent != null && parent.getId().equals(String.valueOf(parentIdentity.getIdentifier()))) {
@@ -149,13 +148,10 @@ public class AclService implements MutableAclService {
         Map<ObjectIdentity, Acl> aclMaps = new HashMap<ObjectIdentity, Acl>();
         try {
             for (ObjectIdentity oid : oids) {
-                AclRecord record = aclStore.getResource(getQueryKeyById(String.valueOf(oid.getIdentifier())),
-                        AclRecord.class, AclRecordSerializer.getInstance());
+                AclRecord record = aclStore.getResource(getQueryKeyById(String.valueOf(oid.getIdentifier())), AclRecord.class, AclRecordSerializer.getInstance());
                 if (record != null) {
                     SidInfo owner = record.getOwnerInfo();
-                    Sid ownerSid = (null == owner) ? null
-                            : (owner.isPrincipal() ? new PrincipalSid(owner.getSid())
-                                    : new GrantedAuthoritySid(owner.getSid()));
+                    Sid ownerSid = (null == owner) ? null : (owner.isPrincipal() ? new PrincipalSid(owner.getSid()) : new GrantedAuthoritySid(owner.getSid()));
                     boolean entriesInheriting = record.isEntriesInheriting();
 
                     Acl parentAcl = null;
@@ -165,8 +161,7 @@ public class AclService implements MutableAclService {
                         parentAcl = readAclById(parentObject, null);
                     }
 
-                    AclImpl acl = new AclImpl(oid, oid.getIdentifier(), aclAuthorizationStrategy,
-                            permissionGrantingStrategy, parentAcl, null, entriesInheriting, ownerSid);
+                    AclImpl acl = new AclImpl(oid, oid.getIdentifier(), aclAuthorizationStrategy, permissionGrantingStrategy, parentAcl, null, entriesInheriting, ownerSid);
                     genAces(sids, record, acl);
 
                     aclMaps.put(oid, acl);
@@ -196,8 +191,7 @@ public class AclService implements MutableAclService {
         PrincipalSid sid = new PrincipalSid(auth);
         try {
             AclRecord record = new AclRecord(new DomainObjectInfo(objectIdentity), null, new SidInfo(sid), true, null);
-            aclStore.putResource(getQueryKeyById(String.valueOf(objectIdentity.getIdentifier())), record, 0,
-                    AclRecordSerializer.getInstance());
+            aclStore.putResource(getQueryKeyById(String.valueOf(objectIdentity.getIdentifier())), record, 0, AclRecordSerializer.getInstance());
             logger.debug("ACL of " + objectIdentity + " created successfully.");
         } catch (IOException e) {
             throw new InternalErrorException(e);
@@ -263,8 +257,7 @@ public class AclService implements MutableAclService {
         return (MutableAcl) readAclById(mutableAcl.getObjectIdentity());
     }
 
-    protected void genAces(List<Sid> sids, AclRecord record, AclImpl acl)
-            throws JsonParseException, JsonMappingException, IOException {
+    protected void genAces(List<Sid> sids, AclRecord record, AclImpl acl) throws JsonParseException, JsonMappingException, IOException {
         List<AceInfo> aceInfos = new ArrayList<AceInfo>();
         Map<String, AceInfo> allAceInfos = record.getAllAceInfo();
         if (allAceInfos != null) {
@@ -294,10 +287,8 @@ public class AclService implements MutableAclService {
             AceInfo aceInfo = aceInfos.get(i);
 
             if (null != aceInfo) {
-                Sid sid = aceInfo.getSidInfo().isPrincipal() ? new PrincipalSid(aceInfo.getSidInfo().getSid())
-                        : new GrantedAuthoritySid(aceInfo.getSidInfo().getSid());
-                AccessControlEntry ace = new AccessControlEntryImpl(Long.valueOf(i), acl, sid,
-                        aclPermissionFactory.buildFromMask(aceInfo.getPermissionMask()), true, false, false);
+                Sid sid = aceInfo.getSidInfo().isPrincipal() ? new PrincipalSid(aceInfo.getSidInfo().getSid()) : new GrantedAuthoritySid(aceInfo.getSidInfo().getSid());
+                AccessControlEntry ace = new AccessControlEntryImpl(Long.valueOf(i), acl, sid, aclPermissionFactory.buildFromMask(aceInfo.getPermissionMask()), true, false, false);
                 newAces.add(ace);
             }
         }
@@ -365,8 +356,7 @@ class AclRecord extends RootPersistentEntity {
     public AclRecord() {
     }
 
-    public AclRecord(DomainObjectInfo domainObjectInfo, DomainObjectInfo parentDomainObjectInfo, SidInfo ownerInfo,
-            boolean entriesInheriting, Map<String, AceInfo> allAceInfo) {
+    public AclRecord(DomainObjectInfo domainObjectInfo, DomainObjectInfo parentDomainObjectInfo, SidInfo ownerInfo, boolean entriesInheriting, Map<String, AceInfo> allAceInfo) {
         this.domainObjectInfo = domainObjectInfo;
         this.parentDomainObjectInfo = parentDomainObjectInfo;
         this.ownerInfo = ownerInfo;

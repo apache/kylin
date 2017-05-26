@@ -18,10 +18,6 @@
 
 package org.apache.kylin.engine.mr.steps;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 import org.apache.hadoop.io.Text;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Bytes;
@@ -37,6 +33,10 @@ import org.apache.kylin.engine.mr.common.BaseCuboidBuilder;
 import org.apache.kylin.engine.mr.common.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  */
@@ -66,11 +66,11 @@ abstract public class BaseCuboidMapperBase<KEYIN, VALUEIN> extends KylinMapper<K
         cube = CubeManager.getInstance(kylinConfig).getCube(cubeName);
         cubeDesc = cube.getDescriptor();
         cubeSegment = cube.getSegmentById(segmentID);
-        CubeJoinedFlatTableEnrich intermediateTableDesc = new CubeJoinedFlatTableEnrich(
-                EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
+        CubeJoinedFlatTableEnrich intermediateTableDesc = new CubeJoinedFlatTableEnrich(EngineFactory.getJoinedFlatTableDesc(cubeSegment), cubeDesc);
         baseCuboidBuilder = new BaseCuboidBuilder(kylinConfig, cubeDesc, cubeSegment, intermediateTableDesc);
 
     }
+
 
     protected void outputKV(String[] flatRow, Context context) throws IOException, InterruptedException {
         byte[] rowKey = baseCuboidBuilder.buildKey(flatRow);

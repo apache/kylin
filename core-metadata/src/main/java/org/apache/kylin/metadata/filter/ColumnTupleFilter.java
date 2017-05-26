@@ -42,7 +42,7 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
 public class ColumnTupleFilter extends TupleFilter {
 
     private static final String _QUALIFIED_ = "_QUALIFIED_";
-
+    
     private TblColRef columnRef;
     private Object tupleValue;
     private List<Object> values;
@@ -92,7 +92,7 @@ public class ColumnTupleFilter extends TupleFilter {
     @Override
     public void serialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
         TableRef tableRef = columnRef.getTableRef();
-
+        
         if (tableRef == null) {
             // un-qualified column
             String table = columnRef.getTable();
@@ -109,13 +109,13 @@ public class ColumnTupleFilter extends TupleFilter {
         } else {
             // qualified column (from model)
             BytesUtil.writeUTFString(_QUALIFIED_, buffer);
-
+            
             String model = tableRef.getModel().getName();
             BytesUtil.writeUTFString(model, buffer);
-
+            
             String alias = tableRef.getAlias();
             BytesUtil.writeUTFString(alias, buffer);
-
+            
             String col = columnRef.getName();
             BytesUtil.writeUTFString(col, buffer);
         }
@@ -126,17 +126,17 @@ public class ColumnTupleFilter extends TupleFilter {
     public void deserialize(IFilterCodeSystem<?> cs, ByteBuffer buffer) {
 
         String tableName = BytesUtil.readUTFString(buffer);
-
+        
         if (_QUALIFIED_.equals(tableName)) {
             // qualified column (from model)
             String model = BytesUtil.readUTFString(buffer);
             String alias = BytesUtil.readUTFString(buffer);
             String col = BytesUtil.readUTFString(buffer);
-
+            
             KylinConfig config = KylinConfig.getInstanceFromEnv();
             DataModelDesc modelDesc = MetadataManager.getInstance(config).getDataModelDesc(model);
             this.columnRef = modelDesc.findColumn(alias, col);
-
+            
         } else {
             // un-qualified column
             TableDesc tableDesc = null;

@@ -18,6 +18,7 @@
 
 package org.apache.kylin.dict;
 
+
 import org.apache.kylin.common.util.ClassUtil;
 
 /**
@@ -27,6 +28,7 @@ import org.apache.kylin.common.util.ClassUtil;
 @SuppressWarnings("serial")
 @Deprecated
 public class NumberDictionary<T> extends TrieDictionary<T> {
+
 
     // ============================================================================
 
@@ -48,8 +50,8 @@ public class NumberDictionary<T> extends TrieDictionary<T> {
     protected void setConverterByName(String converterName) throws Exception {
         converterName = "org.apache.kylin.dict.Number2BytesConverter";
         this.bytesConvert = ClassUtil.forName(converterName, BytesConverter.class).newInstance();
-        ((Number2BytesConverter) this.bytesConvert)
-                .setMaxDigitsBeforeDecimalPoint(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT_LEGACY);
+        ((Number2BytesConverter)this.bytesConvert).setMaxDigitsBeforeDecimalPoint(Number2BytesConverter.MAX_DIGITS_BEFORE_DECIMAL_POINT_LEGACY);
     }
+
 
 }

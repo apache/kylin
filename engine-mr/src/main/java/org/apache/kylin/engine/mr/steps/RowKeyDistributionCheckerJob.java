@@ -39,8 +39,7 @@ import org.apache.kylin.engine.mr.common.AbstractHadoopJob;
 public class RowKeyDistributionCheckerJob extends AbstractHadoopJob {
 
     @SuppressWarnings("static-access")
-    protected static final Option ROW_KEY_STATS_FILE_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true)
-            .withDescription("rowKeyStatsFilePath").create("rowKeyStatsFilePath");
+    protected static final Option ROW_KEY_STATS_FILE_PATH = OptionBuilder.withArgName("path").hasArg().isRequired(true).withDescription("rowKeyStatsFilePath").create("rowKeyStatsFilePath");
 
     @Override
     public int run(String[] args) throws Exception {

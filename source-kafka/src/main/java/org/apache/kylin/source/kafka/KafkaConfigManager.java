@@ -73,8 +73,7 @@ public class KafkaConfigManager {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             if (event == Event.DROP)
                 removeKafkaConfigLocal(cacheKey);
             else
@@ -218,13 +217,11 @@ public class KafkaConfigManager {
 
     private void reloadAllKafkaConfig() throws IOException {
         ResourceStore store = getStore();
-        logger.info("Reloading Kafka Metadata from folder "
-                + store.getReadableResourcePath(ResourceStore.KAFKA_RESOURCE_ROOT));
+        logger.info("Reloading Kafka Metadata from folder " + store.getReadableResourcePath(ResourceStore.KAFKA_RESOURCE_ROOT));
 
         kafkaMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.KAFKA_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.KAFKA_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             KafkaConfig kafkaConfig;
             try {
@@ -234,8 +231,7 @@ public class KafkaConfigManager {
                 continue;
             }
             if (path.equals(kafkaConfig.getResourcePath()) == false) {
-                logger.error("Skip suspicious desc at " + path + ", " + kafkaConfig + " should be at "
-                        + kafkaConfig.getResourcePath());
+                logger.error("Skip suspicious desc at " + path + ", " + kafkaConfig + " should be at " + kafkaConfig.getResourcePath());
                 continue;
             }
             if (kafkaMap.containsKey(kafkaConfig.getName())) {

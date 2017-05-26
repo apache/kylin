@@ -40,10 +40,8 @@ public class CognosParenthesesEscapeTest {
     @Test
     public void advanced1Test() throws IOException {
         CognosParenthesesEscape escape = new CognosParenthesesEscape();
-        String query = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query01.sql"),
-                Charset.defaultCharset());
-        String expected = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query01.sql.expected"),
-                Charset.defaultCharset());
+        String query = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query01.sql"), Charset.defaultCharset());
+        String expected = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query01.sql.expected"), Charset.defaultCharset());
         String transformed = escape.transform(query);
         //System.out.println(transformed);
         Assert.assertEquals(expected, transformed);
@@ -52,10 +50,8 @@ public class CognosParenthesesEscapeTest {
     @Test
     public void advanced2Test() throws IOException {
         CognosParenthesesEscape escape = new CognosParenthesesEscape();
-        String query = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query02.sql"),
-                Charset.defaultCharset());
-        String expected = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query02.sql.expected"),
-                Charset.defaultCharset());
+        String query = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query02.sql"), Charset.defaultCharset());
+        String expected = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query02.sql.expected"), Charset.defaultCharset());
         String transformed = escape.transform(query);
         //System.out.println(transformed);
         Assert.assertEquals(expected, transformed);
@@ -64,10 +60,8 @@ public class CognosParenthesesEscapeTest {
     @Test
     public void advanced3Test() throws IOException {
         CognosParenthesesEscape escape = new CognosParenthesesEscape();
-        String query = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query03.sql"),
-                Charset.defaultCharset());
-        String expected = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query03.sql.expected"),
-                Charset.defaultCharset());
+        String query = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query03.sql"), Charset.defaultCharset());
+        String expected = FileUtils.readFileToString(new File("src/test/resources/query/cognos/query03.sql.expected"), Charset.defaultCharset());
         String transformed = escape.transform(query);
         //System.out.println(transformed);
         Assert.assertEquals(expected, transformed);
@@ -76,8 +70,7 @@ public class CognosParenthesesEscapeTest {
     @Test
     public void proguardTest() throws IOException {
         CognosParenthesesEscape escape = new CognosParenthesesEscape();
-        Collection<File> files = FileUtils.listFiles(new File("../kylin-it/src/test/resources"), new String[] { "sql" },
-                true);
+        Collection<File> files = FileUtils.listFiles(new File("../kylin-it/src/test/resources"), new String[] { "sql" }, true);
         for (File f : files) {
             System.out.println("checking " + f.getAbsolutePath());
             String query = FileUtils.readFileToString(f, Charset.defaultCharset());

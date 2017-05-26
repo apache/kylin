@@ -19,7 +19,6 @@
 package org.apache.kylin.job.common;
 
 import java.io.IOException;
-
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.job.exception.ExecuteException;
 import org.apache.kylin.job.execution.AbstractExecutable;
@@ -44,11 +43,9 @@ public class ShellExecutable extends AbstractExecutable {
         try {
             logger.info("executing:" + getCmd());
             final PatternedLogger patternedLogger = new PatternedLogger(logger);
-            final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd(),
-                    patternedLogger);
+            final Pair<Integer, String> result = context.getConfig().getCliCommandExecutor().execute(getCmd(), patternedLogger);
             getManager().addJobInfo(getId(), patternedLogger.getInfo());
-            return new ExecuteResult(result.getFirst() == 0 ? ExecuteResult.State.SUCCEED : ExecuteResult.State.FAILED,
-                    result.getSecond());
+            return new ExecuteResult(result.getFirst() == 0 ? ExecuteResult.State.SUCCEED : ExecuteResult.State.FAILED, result.getSecond());
         } catch (IOException e) {
             logger.error("job:" + getId() + " execute finished with exception", e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());

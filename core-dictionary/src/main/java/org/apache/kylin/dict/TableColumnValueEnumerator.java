@@ -47,8 +47,7 @@ public class TableColumnValueEnumerator implements IDictionaryValueEnumerator {
             } else {
                 // normal case
                 if (split.length <= colIndex) {
-                    throw new ArrayIndexOutOfBoundsException(
-                            "Column no. " + colIndex + " not found, line split is " + Arrays.asList(split));
+                    throw new ArrayIndexOutOfBoundsException("Column no. " + colIndex + " not found, line split is " + Arrays.asList(split));
                 }
                 colStrValue = split[colIndex];
             }

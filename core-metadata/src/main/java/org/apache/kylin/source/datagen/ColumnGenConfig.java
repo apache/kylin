@@ -33,22 +33,22 @@ public class ColumnGenConfig {
     public static final String ID = "ID";
     public static final String RAND = "RAND";
     public static final String $RANDOM = "${RANDOM}";
-
+    
     // discrete values
     boolean isDiscrete;
     boolean isFK;
     List<String> values;
-
+    
     // random
     boolean isRandom;
     String randFormat;
     int randStart;
     int randEnd;
-
+    
     // ID
     boolean isID;
     int idStart;
-
+    
     // general
     int cardinality;
     boolean genNull;
@@ -56,19 +56,19 @@ public class ColumnGenConfig {
     String genNullStr;
     boolean order;
     boolean unique;
-
+    
     public ColumnGenConfig(ColumnDesc col, ModelDataGenerator modelGen) throws IOException {
         init(col, modelGen);
     }
 
     private void init(ColumnDesc col, ModelDataGenerator modelGen) throws IOException {
-
+        
         Map<String, String> config = Util.parseEqualCommaPairs(col.getDataGen(), "values");
 
         values = Arrays.asList(Util.parseString(config, "values", "").split("[|]"));
-
+        
         List<String> pkValues = modelGen.getPkValuesIfIsFk(col);
-
+        
         if (FK.equals(values.get(0)) || (values.get(0).isEmpty() && pkValues != null)) {
             isFK = true;
             values = getPkValues(modelGen, config, pkValues);
@@ -83,7 +83,7 @@ public class ColumnGenConfig {
         } else {
             isDiscrete = true;
         }
-
+        
         cardinality = Util.parseInt(config, "card", guessCardinality(col.getName()));
         genNull = Util.parseBoolean(config, "null", guessGenNull(col.getName()));
         genNullPct = Util.parseDouble(config, "nullpct", 0.01);
@@ -92,19 +92,17 @@ public class ColumnGenConfig {
         unique = Util.parseBoolean(config, "uniq", modelGen.isPK(col));
     }
 
-    private List<String> getPkValues(ModelDataGenerator modelGen, Map<String, String> config, List<String> dftPkValues)
-            throws IOException {
+    private List<String> getPkValues(ModelDataGenerator modelGen, Map<String, String> config, List<String> dftPkValues) throws IOException {
         String pkColName = config.get("pk");
         if (pkColName == null)
             return dftPkValues;
-
+        
         int cut = pkColName.lastIndexOf('.');
         String pkTableName = pkColName.substring(0, cut);
         pkColName = pkColName.substring(cut + 1);
-
+        
         KylinConfig kylinConfig = modelGen.getModle().getConfig();
-        ColumnDesc pkcol = MetadataManager.getInstance(kylinConfig).getTableDesc(pkTableName)
-                .findColumnByName(pkColName);
+        ColumnDesc pkcol = MetadataManager.getInstance(kylinConfig).getTableDesc(pkTableName).findColumnByName(pkColName);
         return modelGen.getPkValues(pkcol);
     }
 

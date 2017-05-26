@@ -142,8 +142,7 @@ public class ITMassInQueryTest extends KylinTestBase {
             ITable kylinTable = executeQuery(kylinConn, queryName, sql, needSort);
 
             // execute H2
-            sql = sql.replace("massin(test_kylin_fact.SELLER_ID,'vip_customers')", "test_kylin_fact.SELLER_ID in ( "
-                    + org.apache.commons.lang.StringUtils.join(vipSellers, ",") + ")");
+            sql = sql.replace("massin(test_kylin_fact.SELLER_ID,'vip_customers')", "test_kylin_fact.SELLER_ID in ( " + org.apache.commons.lang.StringUtils.join(vipSellers, ",") + ")");
             logger.info("Query Result from H2 - " + queryName);
             logger.info("Query for H2 - " + sql);
             ITable h2Table = executeQuery(newH2Connection(), queryName, sql, needSort);

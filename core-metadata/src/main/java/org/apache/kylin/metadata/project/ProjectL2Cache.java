@@ -212,8 +212,7 @@ class ProjectL2Cache {
             if (filterDesc != null) {
                 projectCache.extFilters.put(extFilterName, filterDesc);
             } else {
-                logger.warn(
-                        "External Filter '" + extFilterName + "' defined under project '" + project + "' is not found");
+                logger.warn("External Filter '" + extFilterName + "' defined under project '" + project + "' is not found");
             }
         }
 
@@ -260,17 +259,14 @@ class ProjectL2Cache {
         for (TblColRef col : allColumns) {
             TableDesc table = metaMgr.getTableDesc(col.getTable());
             if (table == null) {
-                logger.error("Realization '" + realization.getCanonicalName() + "' reports column '"
-                        + col.getCanonicalName() + "', but its table is not found by MetadataManager");
+                logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but its table is not found by MetadataManager");
                 return false;
             }
 
             if (!col.getColumnDesc().isComputedColumnn()) {
                 ColumnDesc foundCol = table.findColumnByName(col.getName());
                 if (col.getColumnDesc().equals(foundCol) == false) {
-                    logger.error("Realization '" + realization.getCanonicalName() + "' reports column '"
-                            + col.getCanonicalName() + "', but it is not equal to '" + foundCol
-                            + "' according to MetadataManager");
+                    logger.error("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "', but it is not equal to '" + foundCol + "' according to MetadataManager");
                     return false;
                 }
             } else {
@@ -280,9 +276,7 @@ class ProjectL2Cache {
             // auto-define table required by realization for some legacy test case
             if (prjCache.tables.get(table.getIdentity()) == null) {
                 prjCache.tables.put(table.getIdentity(), new TableCache(table));
-                logger.warn(
-                        "Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName()
-                                + "' whose table is not defined in project '" + prjCache.project + "'");
+                logger.warn("Realization '" + realization.getCanonicalName() + "' reports column '" + col.getCanonicalName() + "' whose table is not defined in project '" + prjCache.project + "'");
             }
         }
 

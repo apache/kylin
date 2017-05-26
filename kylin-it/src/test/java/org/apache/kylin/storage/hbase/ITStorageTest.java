@@ -131,16 +131,13 @@ public class ITStorageTest extends HBaseMetadataTestCase {
             assertTrue(count > 0);
         }
     */
-    private int search(List<TblColRef> groups, List<FunctionDesc> aggregations, TupleFilter filter,
-            StorageContext context) {
+    private int search(List<TblColRef> groups, List<FunctionDesc> aggregations, TupleFilter filter, StorageContext context) {
         int count = 0;
         ITupleIterator iterator = null;
         try {
-            SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact",
-                    /*allCol*/ Collections.<TblColRef> emptySet(), /*join*/ null, //
+            SQLDigest sqlDigest = new SQLDigest("default.test_kylin_fact", /*allCol*/ Collections.<TblColRef> emptySet(), /*join*/ null, //
                     groups, /*subqueryJoinParticipants*/ Sets.<TblColRef> newHashSet(), //
-                    /*metricCol*/ Collections.<TblColRef> emptySet(), aggregations,
-                    /*aggrSqlCalls*/ Collections.<SQLCall> emptyList(), //
+                    /*metricCol*/ Collections.<TblColRef> emptySet(), aggregations, /*aggrSqlCalls*/ Collections.<SQLCall> emptyList(), //
                     /*filter col*/ Collections.<TblColRef> emptySet(), filter, null, //
                     /*sortCol*/ new ArrayList<TblColRef>(), new ArrayList<SQLDigest.OrderEnum>(), false);
             iterator = storageEngine.search(context, sqlDigest, mockup.newTupleInfo(groups, aggregations));

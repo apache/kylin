@@ -49,8 +49,7 @@ public class Functions {
         if (SUPPORTED_UDF.containsKey(name)) {
             try {
                 return (TupleFilter) SUPPORTED_UDF.get(name).getConstructor().newInstance();
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                    | NoSuchMethodException e) {
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                 throw new RuntimeException("Failed to on constructing FunctionTupleFilter for " + name);
             }
         }

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import com.google.common.collect.UnmodifiableIterator;
 import org.apache.kylin.cube.cuboid.Cuboid;
 import org.apache.kylin.cube.gridtable.CuboidToGridTableMapping;
 import org.apache.kylin.gridtable.GTInfo;
@@ -41,8 +42,6 @@ import org.apache.kylin.metadata.tuple.TupleInfo;
 import org.apache.kylin.storage.StorageContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.UnmodifiableIterator;
 
 public class SegmentCubeTupleIterator implements ITupleIterator {
 
@@ -87,7 +86,8 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
                 scanner.cubeSeg, cuboid, selectedDimensions, selectedMetrics, gtColIdx, tupleInfo);
     }
 
-    private Iterator<Object[]> getGTValuesIterator(final Iterator<GTRecord> records, final GTScanRequest scanRequest,
+    private Iterator<Object[]> getGTValuesIterator(
+            final Iterator<GTRecord> records, final GTScanRequest scanRequest,
             final int[] gtDimsIdx, final int[] gtMetricsIdx) {
 
         boolean hasMultiplePartitions = records instanceof SortMergedPartitionResultIterator;
@@ -98,8 +98,7 @@ public class SegmentCubeTupleIterator implements ITupleIterator {
                     return scanRequest.getInfo();
                 }
 
-                public void close() throws IOException {
-                }
+                public void close() throws IOException {}
 
                 public Iterator<GTRecord> iterator() {
                     return records;

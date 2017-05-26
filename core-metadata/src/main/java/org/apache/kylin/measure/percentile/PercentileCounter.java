@@ -107,7 +107,6 @@ public class PercentileCounter implements Serializable {
         out.writeInt(bound);
         out.write(buf.array(), 0, bound);
     }
-
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         int bound = in.readInt();

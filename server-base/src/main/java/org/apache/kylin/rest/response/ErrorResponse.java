@@ -38,7 +38,7 @@ public class ErrorResponse extends EnvelopeResponse {
 
     public ErrorResponse(String url, Exception exception) {
         super();
-
+        
         this.url = url;
         this.exception = exception.getLocalizedMessage();
         this.msg = exception.getLocalizedMessage();

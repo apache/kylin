@@ -68,11 +68,8 @@ class ExpectedSizeIterator implements Iterator<byte[]> {
             }
 
             if (ret == null) {
-                throw new RuntimeException(
-                        "Timeout visiting cube! Check why coprocessor exception is not sent back? In coprocessor Self-termination is checked every "
-                                + //
-                                GTScanRequest.terminateCheckInterval + " scanned rows, the configured timeout("
-                                + coprocessorTimeout + ") cannot support this many scans?");
+                throw new RuntimeException("Timeout visiting cube! Check why coprocessor exception is not sent back? In coprocessor Self-termination is checked every " + //
+                        GTScanRequest.terminateCheckInterval + " scanned rows, the configured timeout(" + coprocessorTimeout + ") cannot support this many scans?");
             }
 
             return ret;

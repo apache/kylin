@@ -57,8 +57,7 @@ public class UserControllerV2 extends BasicController {
     @Qualifier("userService")
     UserService userService;
 
-    @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/authentication", method = RequestMethod.POST, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse authenticateV2(@RequestHeader("Accept-Language") String lang) {
         EnvelopeResponse response = authenticatedUserV2(lang);
@@ -66,8 +65,7 @@ public class UserControllerV2 extends BasicController {
         return response;
     }
 
-    @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/authentication", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse authenticatedUserV2(@RequestHeader("Accept-Language") String lang) {
         MsgPicker.setMsg(lang);
@@ -94,8 +92,7 @@ public class UserControllerV2 extends BasicController {
         throw new BadRequestException(msg.getAUTH_INFO_NOT_FOUND());
     }
 
-    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/authentication/authorities", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getAuthoritiesV2(@RequestHeader("Accept-Language") String lang) throws IOException {
         MsgPicker.setMsg(lang);

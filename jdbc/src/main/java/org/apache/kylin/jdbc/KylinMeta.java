@@ -59,29 +59,25 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle sh, List<String> sqlCommands)
-            throws NoSuchStatementException {
-        return new ExecuteBatchResult(new long[] {});
+    public ExecuteBatchResult prepareAndExecuteBatch(StatementHandle sh, List<String> sqlCommands) throws NoSuchStatementException {
+        return new ExecuteBatchResult(new long[]{});
     }
 
     @Override
-    public ExecuteBatchResult executeBatch(StatementHandle sh, List<List<TypedValue>> parameterValues)
-            throws NoSuchStatementException {
-        return new ExecuteBatchResult(new long[] {});
+    public ExecuteBatchResult executeBatch(StatementHandle sh, List<List<TypedValue>> parameterValues) throws NoSuchStatementException {
+        return new ExecuteBatchResult(new long[]{});
     }
 
     // real execution happens in KylinResultSet.execute()
     @Override
     @Deprecated
-    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, long maxRowCount)
-            throws NoSuchStatementException {
+    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, long maxRowCount) throws NoSuchStatementException {
         final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
         return new ExecuteResult(Collections.singletonList(metaResultSet));
     }
 
     @Override
-    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, int maxRowsInFirstFrame)
-            throws NoSuchStatementException {
+    public ExecuteResult execute(StatementHandle sh, List<TypedValue> parameterValues, int maxRowsInFirstFrame) throws NoSuchStatementException {
         final MetaResultSet metaResultSet = MetaResultSet.create(sh.connectionId, sh.id, false, sh.signature, null);
         return new ExecuteResult(Collections.singletonList(metaResultSet));
     }
@@ -105,8 +101,7 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, int maxRowsInFirstFrame,
-            PrepareCallback callback) throws NoSuchStatementException {
+    public ExecuteResult prepareAndExecute(StatementHandle sh, String sql, long maxRowCount, int maxRowsInFirstFrame, PrepareCallback callback) throws NoSuchStatementException {
         try {
             synchronized (callback.getMonitor()) {
                 callback.clear();
@@ -156,8 +151,7 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public MetaResultSet getTables(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern,
-            List<String> typeList) {
+    public MetaResultSet getTables(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
         List<KMetaTable> tables = getMetaProject().getTables(catalog, schemaPattern, tableNamePattern, typeList);
         return createResultSet(tables, KMetaTable.class, //
                 "TABLE_CAT", //
@@ -173,10 +167,8 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public MetaResultSet getColumns(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern,
-            Pat columnNamePattern) {
-        List<KMetaColumn> columns = getMetaProject().getColumns(catalog, schemaPattern, tableNamePattern,
-                columnNamePattern);
+    public MetaResultSet getColumns(ConnectionHandle ch, String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
+        List<KMetaColumn> columns = getMetaProject().getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
         return createResultSet(columns, KMetaColumn.class, //
                 "TABLE_CAT", //
                 "TABLE_SCHEM", //
@@ -223,8 +215,7 @@ public class KylinMeta extends MetaImpl {
         }
 
         CursorFactory cursorFactory = CursorFactory.record(clazz, fields, fieldNames);
-        Signature signature = new Signature(columns, "", null, Collections.<String, Object> emptyMap(), cursorFactory,
-                StatementType.SELECT);
+        Signature signature = new Signature(columns, "", null, Collections.<String, Object> emptyMap(), cursorFactory, StatementType.SELECT);
         StatementHandle sh = this.createStatement(connection().handle);
         Frame frame = new Frame(0, true, iterable);
 
@@ -327,16 +318,13 @@ public class KylinMeta extends MetaImpl {
         }
 
         @SuppressWarnings("unchecked")
-        public List<KMetaTable> getTables(String catalog, Pat schemaPattern, Pat tableNamePattern,
-                List<String> typeList) {
+        public List<KMetaTable> getTables(String catalog, Pat schemaPattern, Pat tableNamePattern, List<String> typeList) {
             return (List<KMetaTable>) searchByPatterns(this, Pat.of(catalog), schemaPattern, tableNamePattern);
         }
 
         @SuppressWarnings("unchecked")
-        public List<KMetaColumn> getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern,
-                Pat columnNamePattern) {
-            return (List<KMetaColumn>) searchByPatterns(this, Pat.of(catalog), schemaPattern, tableNamePattern,
-                    columnNamePattern);
+        public List<KMetaColumn> getColumns(String catalog, Pat schemaPattern, Pat tableNamePattern, Pat columnNamePattern) {
+            return (List<KMetaColumn>) searchByPatterns(this, Pat.of(catalog), schemaPattern, tableNamePattern, columnNamePattern);
         }
 
         @Override
@@ -387,8 +375,7 @@ public class KylinMeta extends MetaImpl {
     public static class KMetaTable extends MetaTable implements NamedWithChildren {
         public final List<KMetaColumn> columns;
 
-        public KMetaTable(String tableCat, String tableSchem, String tableName, String tableType,
-                List<KMetaColumn> columns) {
+        public KMetaTable(String tableCat, String tableSchem, String tableName, String tableType, List<KMetaColumn> columns) {
             super(tableCat, tableSchem, tableName, tableType);
             this.columns = columns;
         }
@@ -401,11 +388,8 @@ public class KylinMeta extends MetaImpl {
 
     public static class KMetaColumn extends MetaColumn implements NamedWithChildren {
 
-        public KMetaColumn(String tableCat, String tableSchem, String tableName, String columnName, int dataType,
-                String typeName, int columnSize, Integer decimalDigits, int numPrecRadix, int nullable,
-                int charOctetLength, int ordinalPosition, String isNullable) {
-            super(tableCat, tableSchem, tableName, columnName, dataType, typeName, columnSize, decimalDigits,
-                    numPrecRadix, nullable, charOctetLength, ordinalPosition, isNullable);
+        public KMetaColumn(String tableCat, String tableSchem, String tableName, String columnName, int dataType, String typeName, int columnSize, Integer decimalDigits, int numPrecRadix, int nullable, int charOctetLength, int ordinalPosition, String isNullable) {
+            super(tableCat, tableSchem, tableName, columnName, dataType, typeName, columnSize, decimalDigits, numPrecRadix, nullable, charOctetLength, ordinalPosition, isNullable);
         }
 
         @Override
@@ -415,8 +399,7 @@ public class KylinMeta extends MetaImpl {
     }
 
     @Override
-    public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount)
-            throws NoSuchStatementException, MissingResultsException {
+    public Frame fetch(StatementHandle h, long offset, int fetchMaxRowCount) throws NoSuchStatementException, MissingResultsException {
         // TODO Auto-generated method stub
         return null;
     }

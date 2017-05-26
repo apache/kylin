@@ -18,12 +18,12 @@
 
 package org.apache.kylin.measure;
 
+import org.apache.kylin.metadata.datatype.DataType;
+import org.apache.kylin.metadata.model.MeasureDesc;
+
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
-
-import org.apache.kylin.metadata.datatype.DataType;
-import org.apache.kylin.metadata.model.MeasureDesc;
 
 /**
  * This class embeds a reusable byte buffer for measure encoding, and is not thread-safe.

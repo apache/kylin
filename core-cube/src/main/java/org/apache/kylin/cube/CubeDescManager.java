@@ -129,8 +129,7 @@ public class CubeDescManager {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             String cubeDescName = cacheKey;
             CubeDesc cubeDesc = getCubeDesc(cubeDescName);
             String modelName = cubeDesc == null ? null : cubeDesc.getModel().getName();
@@ -266,8 +265,7 @@ public class CubeDescManager {
                 int keyLength = 0;
                 while (parameter != null) {
                     String encoding = configuration.get(TopNMeasureType.CONFIG_ENCODING_PREFIX + parameter.getValue());
-                    String encodingVersionStr = configuration
-                            .get(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + parameter.getValue());
+                    String encodingVersionStr = configuration.get(TopNMeasureType.CONFIG_ENCODING_VERSION_PREFIX + parameter.getValue());
                     if (StringUtils.isEmpty(encoding) || DictionaryDimEnc.ENCODING_NAME.equals(encoding)) {
                         keyLength += DictionaryDimEnc.MAX_ENCODING_LENGTH; // estimation for dict encoding
                     } else {
@@ -281,8 +279,7 @@ public class CubeDescManager {
                             }
                         }
                         Object[] encodingConf = DimensionEncoding.parseEncodingConf(encoding);
-                        DimensionEncoding dimensionEncoding = DimensionEncodingFactory.create((String) encodingConf[0],
-                                (String[]) encodingConf[1], encodingVersion);
+                        DimensionEncoding dimensionEncoding = DimensionEncodingFactory.create((String) encodingConf[0], (String[]) encodingConf[1], encodingVersion);
                         keyLength += dimensionEncoding.getLengthOfEncoding();
                     }
 
@@ -312,19 +309,16 @@ public class CubeDescManager {
 
     private void reloadAllCubeDesc() throws IOException {
         ResourceStore store = getStore();
-        logger.info("Reloading Cube Metadata from folder "
-                + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
+        logger.info("Reloading Cube Metadata from folder " + store.getReadableResourcePath(ResourceStore.CUBE_DESC_RESOURCE_ROOT));
 
         cubeDescMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.CUBE_DESC_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             CubeDesc desc = loadCubeDesc(path, true);
 
             if (!path.equals(desc.getResourcePath())) {
-                logger.error(
-                        "Skip suspicious desc at " + path + ", " + desc + " should be at " + desc.getResourcePath());
+                logger.error("Skip suspicious desc at " + path + ", " + desc + " should be at " + desc.getResourcePath());
                 continue;
             }
             if (cubeDescMap.containsKey(desc.getName())) {

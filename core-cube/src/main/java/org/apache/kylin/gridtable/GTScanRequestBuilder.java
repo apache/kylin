@@ -61,7 +61,7 @@ public class GTScanRequestBuilder {
         this.havingFilterPushDown = havingFilterPushDown;
         return this;
     }
-
+    
     public GTScanRequestBuilder setDimensions(ImmutableBitSet dimensions) {
         this.dimensions = dimensions;
         return this;
@@ -131,16 +131,12 @@ public class GTScanRequestBuilder {
         }
 
         if (storageBehavior == null) {
-            storageBehavior = BackdoorToggles.getCoprocessorBehavior() == null
-                    ? StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString()
-                    : BackdoorToggles.getCoprocessorBehavior();
+            storageBehavior = BackdoorToggles.getCoprocessorBehavior() == null ? StorageSideBehavior.SCAN_FILTER_AGGR_CHECKMEM.toString() : BackdoorToggles.getCoprocessorBehavior();
         }
 
         this.startTime = startTime == -1 ? System.currentTimeMillis() : startTime;
         this.timeout = timeout == -1 ? 300000 : timeout;
 
-        return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown,
-                havingFilterPushDown, allowStorageAggregation, aggCacheMemThreshold, storageScanRowNumThreshold,
-                storagePushDownLimit, storageBehavior, startTime, timeout);
+        return new GTScanRequest(info, ranges, dimensions, aggrGroupBy, aggrMetrics, aggrMetricsFuncs, filterPushDown, havingFilterPushDown, allowStorageAggregation, aggCacheMemThreshold, storageScanRowNumThreshold, storagePushDownLimit, storageBehavior, startTime, timeout);
     }
 }

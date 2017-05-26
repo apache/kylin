@@ -18,10 +18,6 @@
 
 package org.apache.kylin;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Set;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.LocalFileMetadataTestCase;
 import org.apache.kylin.metadata.realization.RealizationRegistry;
@@ -29,6 +25,10 @@ import org.apache.kylin.metadata.realization.RealizationType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  */

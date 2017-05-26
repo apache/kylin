@@ -69,11 +69,9 @@ public class KafkaInputFormat extends InputFormat<LongWritable, BytesWritable> {
 
         Properties kafkaProperties = KafkaConsumerProperties.extractKafkaConfigToProperties(conf);
         final List<InputSplit> splits = new ArrayList<InputSplit>();
-        try (KafkaConsumer<String, String> consumer = KafkaClient.getKafkaConsumer(brokers, consumerGroup,
-                kafkaProperties)) {
+        try (KafkaConsumer<String, String> consumer = KafkaClient.getKafkaConsumer(brokers, consumerGroup, kafkaProperties)) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(inputTopic);
-            Preconditions.checkArgument(partitionInfos.size() == startOffsetMap.size(),
-                    "partition number mismatch with server side");
+            Preconditions.checkArgument(partitionInfos.size() == startOffsetMap.size(), "partition number mismatch with server side");
             for (int i = 0; i < partitionInfos.size(); i++) {
                 final PartitionInfo partition = partitionInfos.get(i);
                 int partitionId = partition.partition();
@@ -82,8 +80,7 @@ public class KafkaInputFormat extends InputFormat<LongWritable, BytesWritable> {
                 }
 
                 if (endOffsetMap.get(partitionId) > startOffsetMap.get(partitionId)) {
-                    InputSplit split = new KafkaInputSplit(brokers, inputTopic, partitionId,
-                            startOffsetMap.get(partitionId), endOffsetMap.get(partitionId));
+                    InputSplit split = new KafkaInputSplit(brokers, inputTopic, partitionId, startOffsetMap.get(partitionId), endOffsetMap.get(partitionId));
                     splits.add(split);
                 }
             }
@@ -92,8 +89,7 @@ public class KafkaInputFormat extends InputFormat<LongWritable, BytesWritable> {
     }
 
     @Override
-    public RecordReader<LongWritable, BytesWritable> createRecordReader(InputSplit arg0, TaskAttemptContext arg1)
-            throws IOException, InterruptedException {
+    public RecordReader<LongWritable, BytesWritable> createRecordReader(InputSplit arg0, TaskAttemptContext arg1) throws IOException, InterruptedException {
         return new KafkaInputRecordReader();
     }
 

@@ -34,10 +34,7 @@ public class RelFieldTrimmer {
     public RelFieldTrimmer(SqlValidator validator, RelBuilder relBuilder) {
     }
 
-    public RelFieldTrimmer(SqlValidator validator, RelOptCluster cluster, RelFactories.ProjectFactory projectFactory,
-            RelFactories.FilterFactory filterFactory, RelFactories.JoinFactory joinFactory,
-            RelFactories.SemiJoinFactory semiJoinFactory, RelFactories.SortFactory sortFactory,
-            RelFactories.AggregateFactory aggregateFactory, RelFactories.SetOpFactory setOpFactory) {
+    public RelFieldTrimmer(SqlValidator validator, RelOptCluster cluster, RelFactories.ProjectFactory projectFactory, RelFactories.FilterFactory filterFactory, RelFactories.JoinFactory joinFactory, RelFactories.SemiJoinFactory semiJoinFactory, RelFactories.SortFactory sortFactory, RelFactories.AggregateFactory aggregateFactory, RelFactories.SetOpFactory setOpFactory) {
     }
 
     public RelNode trim(RelNode rootRel) {

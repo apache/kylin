@@ -29,10 +29,10 @@ public interface IDictionaryBuilder {
 
     /** Sets the dictionary info for the dictionary being built. Mainly for GlobalDictionaryBuilder. */
     void init(DictionaryInfo info, int baseId) throws IOException;
-
+    
     /** Add a new value into dictionary, returns it is accepted (not null) or not. */
     boolean addValue(String value);
-
+    
     /** Build the dictionary */
     Dictionary<String> build() throws IOException;
 }

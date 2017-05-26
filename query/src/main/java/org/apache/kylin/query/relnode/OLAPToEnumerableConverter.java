@@ -125,10 +125,8 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
     private void doAccessControl(OLAPContext context) {
         String controllerCls = KylinConfig.getInstanceFromEnv().getQueryAccessController();
         if (null != controllerCls && !controllerCls.isEmpty()) {
-            OLAPContext.IAccessController accessController = (OLAPContext.IAccessController) ClassUtil
-                    .newInstance(controllerCls);
-            TupleFilter tupleFilter = accessController.check(context.olapAuthen, context.allColumns,
-                    context.realization);
+            OLAPContext.IAccessController accessController = (OLAPContext.IAccessController) ClassUtil.newInstance(controllerCls);
+            TupleFilter tupleFilter = accessController.check(context.olapAuthen, context.allColumns, context.realization);
             if (null != tupleFilter) {
                 context.filterColumns.addAll(collectColumns(tupleFilter));
                 context.allColumns.addAll(collectColumns(tupleFilter));
@@ -163,9 +161,7 @@ public class OLAPToEnumerableConverter extends ConverterImpl implements Enumerab
         PhysType physType = PhysTypeImpl.of(enumImplementor.getTypeFactory(), hiveRowType, pref.preferArray());
 
         RelOptTable factTable = context.firstTableScan.getTable();
-        Result result = enumImplementor.result(physType,
-                Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeHiveQuery",
-                        enumImplementor.getRootExpression())));
+        Result result = enumImplementor.result(physType, Blocks.toBlock(Expressions.call(factTable.getExpression(OLAPTable.class), "executeHiveQuery", enumImplementor.getRootExpression())));
         return result;
     }
 

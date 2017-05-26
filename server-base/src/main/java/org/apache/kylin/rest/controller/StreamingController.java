@@ -77,9 +77,7 @@ public class StreamingController extends BasicController {
 
     @RequestMapping(value = "/getConfig", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<StreamingConfig> getStreamings(@RequestParam(value = "table", required = false) String table,
-            @RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<StreamingConfig> getStreamings(@RequestParam(value = "table", required = false) String table, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         try {
             return streamingService.getStreamingConfigs(table, limit, offset);
         } catch (IOException e) {
@@ -90,10 +88,7 @@ public class StreamingController extends BasicController {
 
     @RequestMapping(value = "/getKfkConfig", method = { RequestMethod.GET }, produces = { "application/json" })
     @ResponseBody
-    public List<KafkaConfig> getKafkaConfigs(
-            @RequestParam(value = "kafkaConfigName", required = false) String kafkaConfigName,
-            @RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "offset", required = false) Integer offset) {
+    public List<KafkaConfig> getKafkaConfigs(@RequestParam(value = "kafkaConfigName", required = false) String kafkaConfigName, @RequestParam(value = "limit", required = false) Integer limit, @RequestParam(value = "offset", required = false) Integer offset) {
         try {
             return kafkaConfigService.getKafkaConfigs(kafkaConfigName, limit, offset);
         } catch (IOException e) {
@@ -150,8 +145,7 @@ public class StreamingController extends BasicController {
                 try {
                     streamingService.dropStreamingConfig(streamingConfig);
                 } catch (IOException e1) {
-                    throw new InternalErrorException(
-                            "StreamingConfig is created, but failed to create KafkaConfig: " + e.getLocalizedMessage());
+                    throw new InternalErrorException("StreamingConfig is created, but failed to create KafkaConfig: " + e.getLocalizedMessage());
                 }
                 logger.error("Failed to save KafkaConfig:" + e.getLocalizedMessage(), e);
                 throw new InternalErrorException("Failed to save KafkaConfig: " + e.getLocalizedMessage());
@@ -160,14 +154,11 @@ public class StreamingController extends BasicController {
             if (saveKafkaSuccess == false || saveStreamingSuccess == false) {
 
                 if (saveStreamingSuccess == true) {
-                    StreamingConfig sConfig = streamingService.getStreamingManager()
-                            .getStreamingConfig(streamingConfig.getName());
+                    StreamingConfig sConfig = streamingService.getStreamingManager().getStreamingConfig(streamingConfig.getName());
                     try {
                         streamingService.dropStreamingConfig(sConfig);
                     } catch (IOException e) {
-                        throw new InternalErrorException(
-                                "Action failed and failed to rollback the created streaming config: "
-                                        + e.getLocalizedMessage());
+                        throw new InternalErrorException("Action failed and failed to rollback the created streaming config: " + e.getLocalizedMessage());
                     }
                 }
                 if (saveKafkaSuccess == true) {
@@ -175,9 +166,7 @@ public class StreamingController extends BasicController {
                         KafkaConfig kConfig = kafkaConfigService.getKafkaConfig(kafkaConfig.getName());
                         kafkaConfigService.dropKafkaConfig(kConfig);
                     } catch (IOException e) {
-                        throw new InternalErrorException(
-                                "Action failed and failed to rollback the created kafka config: "
-                                        + e.getLocalizedMessage());
+                        throw new InternalErrorException("Action failed and failed to rollback the created kafka config: " + e.getLocalizedMessage());
                     }
                 }
             }
@@ -189,8 +178,7 @@ public class StreamingController extends BasicController {
 
     @RequestMapping(value = "", method = { RequestMethod.PUT }, produces = { "application/json" })
     @ResponseBody
-    public StreamingRequest updateStreamingConfig(@RequestBody StreamingRequest streamingRequest)
-            throws JsonProcessingException {
+    public StreamingRequest updateStreamingConfig(@RequestBody StreamingRequest streamingRequest) throws JsonProcessingException {
         StreamingConfig streamingConfig = deserializeSchemalDesc(streamingRequest);
         KafkaConfig kafkaConfig = deserializeKafkaSchemalDesc(streamingRequest);
 

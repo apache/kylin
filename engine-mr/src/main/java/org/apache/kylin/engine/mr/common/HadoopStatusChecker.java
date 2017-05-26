@@ -55,11 +55,9 @@ public class HadoopStatusChecker {
         }
         JobStepStatusEnum status = null;
         try {
-            final Pair<RMAppState, FinalApplicationStatus> result = new HadoopStatusGetter(yarnUrl, mrJobID)
-                    .get(useKerberosAuth);
+            final Pair<RMAppState, FinalApplicationStatus> result = new HadoopStatusGetter(yarnUrl, mrJobID).get(useKerberosAuth);
             logger.debug("State of Hadoop job: " + mrJobID + ":" + result.getLeft() + "-" + result.getRight());
-            output.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(new Date()) + " - State of Hadoop job: "
-                    + mrJobID + ":" + result.getLeft() + " - " + result.getRight() + "\n");
+            output.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S").format(new Date()) + " - State of Hadoop job: " + mrJobID + ":" + result.getLeft() + " - " + result.getRight() + "\n");
 
             switch (result.getRight()) {
             case SUCCEEDED:

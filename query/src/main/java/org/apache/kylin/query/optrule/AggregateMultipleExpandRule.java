@@ -18,12 +18,8 @@
 
 package org.apache.kylin.query.optrule;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -37,8 +33,10 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.ImmutableBitSet;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Supoort grouping query. Expand the non-simple aggregate to more than one simple aggregates.
@@ -85,8 +83,7 @@ public class AggregateMultipleExpandRule extends RelOptRule {
 
         for (ImmutableBitSet groupSet : aggr.getGroupSets()) {
             // push the simple aggregate with one group set
-            relBuilder.push(
-                    aggr.copy(aggr.getTraitSet(), input, false, groupSet, asList(groupSet), aggr.getAggCallList()));
+            relBuilder.push(aggr.copy(aggr.getTraitSet(), input, false, groupSet, asList(groupSet), aggr.getAggCallList()));
 
             ImmutableList.Builder<RexNode> rexNodes = new ImmutableList.Builder<>();
             int index = 0;

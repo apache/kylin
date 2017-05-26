@@ -39,8 +39,7 @@ public class ScannerWorker {
     private static final Logger logger = LoggerFactory.getLogger(ScannerWorker.class);
     private IGTScanner internal = null;
 
-    public ScannerWorker(ISegment segment, Cuboid cuboid, GTScanRequest scanRequest, String gtStorage,
-            StorageContext context) {
+    public ScannerWorker(ISegment segment, Cuboid cuboid, GTScanRequest scanRequest, String gtStorage, StorageContext context) {
         if (scanRequest == null) {
             logger.info("Segment {} will be skipped", segment);
             internal = new EmptyGTScanner();
@@ -50,16 +49,13 @@ public class ScannerWorker {
         final GTInfo info = scanRequest.getInfo();
 
         try {
-            IGTStorage rpc = (IGTStorage) Class.forName(gtStorage)
-                    .getConstructor(ISegment.class, Cuboid.class, GTInfo.class, StorageContext.class)
-                    .newInstance(segment, cuboid, info, context); // default behavior
+            IGTStorage rpc = (IGTStorage) Class.forName(gtStorage).getConstructor(ISegment.class, Cuboid.class, GTInfo.class, StorageContext.class).newInstance(segment, cuboid, info, context); // default behavior
             internal = rpc.getGTScanner(scanRequest);
-        } catch (IOException | InstantiationException | InvocationTargetException | IllegalAccessException
-                | ClassNotFoundException | NoSuchMethodException e) {
+        } catch (IOException | InstantiationException | InvocationTargetException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
     }
-
+    
     public boolean isSegmentSkipped() {
         return internal instanceof EmptyGTScanner;
     }

@@ -35,8 +35,7 @@ public class TarGZUtil {
         dest.mkdir();
         TarArchiveInputStream tarIn = null;
 
-        tarIn = new TarArchiveInputStream(
-                new GzipCompressorInputStream(new BufferedInputStream(new FileInputStream(tarFile))));
+        tarIn = new TarArchiveInputStream(new GzipCompressorInputStream(new BufferedInputStream(new FileInputStream(tarFile))));
 
         TarArchiveEntry tarEntry = tarIn.getNextTarEntry();
         // tarIn is a TarArchiveInputStream

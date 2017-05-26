@@ -182,8 +182,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             }
 
             if (lock(lockPath)) {
-                logger.debug(client + " waited " + (System.currentTimeMillis() - waitStart) + " ms for lock path "
-                        + lockPath);
+                logger.debug(client + " waited " + (System.currentTimeMillis() - waitStart) + " ms for lock path " + lockPath);
                 return true;
             }
         }
@@ -224,11 +223,9 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
 
         String owner = peekLock(lockPath);
         if (owner == null)
-            throw new IllegalStateException(
-                    client + " cannot unlock path " + lockPath + " which is not locked currently");
+            throw new IllegalStateException(client + " cannot unlock path " + lockPath + " which is not locked currently");
         if (client.equals(owner) == false)
-            throw new IllegalStateException(
-                    client + " cannot unlock path " + lockPath + " which is locked by " + owner);
+            throw new IllegalStateException(client + " cannot unlock path " + lockPath + " which is locked by " + owner);
 
         try {
             curator.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPath);
@@ -266,12 +263,10 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
                 public void childEvent(CuratorFramework client, PathChildrenCacheEvent event) throws Exception {
                     switch (event.getType()) {
                     case CHILD_ADDED:
-                        watcher.onLock(event.getData().getPath(),
-                                new String(event.getData().getData(), Charset.forName("UTF-8")));
+                        watcher.onLock(event.getData().getPath(), new String(event.getData().getData(), Charset.forName("UTF-8")));
                         break;
                     case CHILD_REMOVED:
-                        watcher.onUnlock(event.getData().getPath(),
-                                new String(event.getData().getData(), Charset.forName("UTF-8")));
+                        watcher.onUnlock(event.getData().getPath(), new String(event.getData().getData(), Charset.forName("UTF-8")));
                         break;
                     default:
                         break;

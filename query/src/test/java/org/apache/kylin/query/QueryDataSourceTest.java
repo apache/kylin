@@ -87,10 +87,10 @@ public class QueryDataSourceTest extends LocalFileMetadataTestCase {
         dsCache.clearCache();
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout=10000)
     public void testMaxConnLimit() throws SQLException {
         KylinConfig config = KylinConfig.getInstanceFromEnv();
-
+        
         // Test with connection limit 
         Properties props = new Properties();
         props.setProperty("maxActive", "3");
@@ -109,7 +109,7 @@ public class QueryDataSourceTest extends LocalFileMetadataTestCase {
         DBUtils.closeQuietly(ds1Conn1);
         DBUtils.closeQuietly(ds1Conn2);
         DBUtils.closeQuietly(ds1Conn3);
-
+        
         // Test with not connection limit
         DataSource ds2 = QueryDataSource.create("default", config);
         Connection ds2Conn1 = ds2.getConnection();

@@ -61,8 +61,7 @@ public class ModelDescControllerV2 extends BasicController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{modelName}", method = { RequestMethod.GET }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{modelName}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse getModelV2(@RequestHeader("Accept-Language") String lang, @PathVariable String modelName) {
         MsgPicker.setMsg(lang);

@@ -18,12 +18,12 @@
 
 package org.apache.kylin.dict.global;
 
+import org.apache.kylin.common.util.Bytes;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
-
-import org.apache.kylin.common.util.Bytes;
 
 public class AppendDictSliceKey implements Comparable<AppendDictSliceKey> {
     static final AppendDictSliceKey START_KEY = AppendDictSliceKey.wrap(new byte[0]);

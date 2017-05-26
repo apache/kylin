@@ -67,18 +67,15 @@ import org.slf4j.LoggerFactory;
 public class StorageCleanupJob extends AbstractApplication {
 
     @SuppressWarnings("static-access")
-    protected static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false)
-            .withDescription("Delete the unused storage").create("delete");
-    protected static final Option OPTION_FORCE = OptionBuilder.withArgName("force").hasArg().isRequired(false)
-            .withDescription("Warning: will delete all kylin intermediate hive tables").create("force");
+    protected static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
+    protected static final Option OPTION_FORCE = OptionBuilder.withArgName("force").hasArg().isRequired(false).withDescription("Warning: will delete all kylin intermediate hive tables").create("force");
 
     protected static final Logger logger = LoggerFactory.getLogger(StorageCleanupJob.class);
     public static final int deleteTimeout = 10; // Unit minute
 
     protected boolean delete = false;
     protected boolean force = false;
-    protected static ExecutableManager executableManager = ExecutableManager
-            .getInstance(KylinConfig.getInstanceFromEnv());
+    protected static ExecutableManager executableManager = ExecutableManager.getInstance(KylinConfig.getInstanceFromEnv());
 
     private void cleanUnusedHBaseTables(Configuration conf) throws IOException {
         CubeManager cubeMgr = CubeManager.getInstance(KylinConfig.getInstanceFromEnv());
@@ -102,8 +99,7 @@ public class StorageCleanupJob extends AbstractApplication {
                 String tablename = seg.getStorageLocationIdentifier();
                 if (allTablesNeedToBeDropped.contains(tablename)) {
                     allTablesNeedToBeDropped.remove(tablename);
-                    logger.info("Exclude table " + tablename + " from drop list, as the table belongs to cube "
-                            + cube.getName() + " with status " + cube.getStatus());
+                    logger.info("Exclude table " + tablename + " from drop list, as the table belongs to cube " + cube.getName() + " with status " + cube.getStatus());
                 }
             }
         }
@@ -117,8 +113,7 @@ public class StorageCleanupJob extends AbstractApplication {
                 try {
                     futureTask.get(deleteTimeout, TimeUnit.MINUTES);
                 } catch (TimeoutException e) {
-                    logger.warn("It fails to delete htable " + htableName + ", for it cost more than " + deleteTimeout
-                            + " minutes!");
+                    logger.warn("It fails to delete htable " + htableName + ", for it cost more than " + deleteTimeout + " minutes!");
                     futureTask.cancel(true);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -213,8 +208,7 @@ public class StorageCleanupJob extends AbstractApplication {
             if (!state.isFinalState()) {
                 String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobId);
                 allHdfsPathsNeedToBeDeleted.remove(path);
-                logger.info("Skip " + path + " from deletion list, as the path belongs to job " + jobId
-                        + " with status " + state);
+                logger.info("Skip " + path + " from deletion list, as the path belongs to job " + jobId + " with status " + state);
             }
         }
 
@@ -225,8 +219,7 @@ public class StorageCleanupJob extends AbstractApplication {
                 if (jobUuid != null && jobUuid.equals("") == false) {
                     String path = JobBuilderSupport.getJobWorkingDir(engineConfig.getHdfsWorkingDirectory(), jobUuid);
                     allHdfsPathsNeedToBeDeleted.remove(path);
-                    logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg
-                            + " of cube " + cube.getName());
+                    logger.info("Skip " + path + " from deletion list, as the path belongs to segment " + seg + " of cube " + cube.getName());
                 }
             }
         }
@@ -363,8 +356,7 @@ public class StorageCleanupJob extends AbstractApplication {
     }
 
     public static void main(String[] args) throws Exception {
-        logger.warn(
-                "org.apache.kylin.storage.hbase.util.StorageCleanupJob is deprecated, use org.apache.kylin.tool.StorageCleanupJob instead");
+        logger.warn("org.apache.kylin.storage.hbase.util.StorageCleanupJob is deprecated, use org.apache.kylin.tool.StorageCleanupJob instead");
 
         StorageCleanupJob cli = new StorageCleanupJob();
         cli.execute(args);

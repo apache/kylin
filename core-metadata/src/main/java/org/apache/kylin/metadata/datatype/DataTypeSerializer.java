@@ -18,14 +18,13 @@
 
 package org.apache.kylin.metadata.datatype;
 
+import com.google.common.collect.Maps;
+import org.apache.kylin.common.util.BytesSerializer;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
-
-import org.apache.kylin.common.util.BytesSerializer;
-
-import com.google.common.collect.Maps;
 
 /**
  * Note: the implementations MUST be thread-safe.

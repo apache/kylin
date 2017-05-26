@@ -66,8 +66,7 @@ public class FilterOptimizeTransformer implements ITupleFilterTransformer {
 
         if (logicalTupleFilter.getOperator() == TupleFilter.FilterOperatorEnum.OR) {
             @SuppressWarnings("unchecked")
-            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren()
-                    .listIterator();
+            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren().listIterator();
             while (childIterator.hasNext()) {
                 TupleFilter next = childIterator.next();
                 if (ConstantTupleFilter.TRUE == next) {
@@ -77,8 +76,7 @@ public class FilterOptimizeTransformer implements ITupleFilterTransformer {
             }
         } else if (logicalTupleFilter.getOperator() == TupleFilter.FilterOperatorEnum.AND) {
             @SuppressWarnings("unchecked")
-            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren()
-                    .listIterator();
+            ListIterator<TupleFilter> childIterator = (ListIterator<TupleFilter>) logicalTupleFilter.getChildren().listIterator();
             while (childIterator.hasNext()) {
                 TupleFilter next = childIterator.next();
                 if (ConstantTupleFilter.FALSE == next) {
@@ -118,7 +116,7 @@ public class FilterOptimizeTransformer implements ITupleFilterTransformer {
             if (newFilters.size() == 1) {
                 return newFilters.get(0);
             }
-
+            
             CaseTupleFilter newCaseTupleFilter = new CaseTupleFilter();
             newCaseTupleFilter.addChildren(newFilters);
             return newCaseTupleFilter;

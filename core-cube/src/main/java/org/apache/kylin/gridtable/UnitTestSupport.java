@@ -109,18 +109,12 @@ public class UnitTestSupport {
             result.add(newRec(info, d_01_14, "Luke", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
             result.add(newRec(info, d_01_15, "Xu", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
             result.add(newRec(info, d_01_15, "Dong", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(
-                    newRec(info, d_01_15, "Jason", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(
-                    newRec(info, d_01_16, "Mahone", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(newRec(info, d_01_16, "Shaofeng", "Food", new Long(10), new BigDecimal("10.5"),
-                    new HLLCounter(14)));
-            result.add(
-                    newRec(info, d_01_16, "Qianhao", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(
-                    newRec(info, d_01_16, "George", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
-            result.add(
-                    newRec(info, d_01_17, "Kejia", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_15, "Jason", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_16, "Mahone", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_16, "Shaofeng", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_16, "Qianhao", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_16, "George", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
+            result.add(newRec(info, d_01_17, "Kejia", "Food", new Long(10), new BigDecimal("10.5"), new HLLCounter(14)));
         }
         return result;
     }

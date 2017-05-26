@@ -24,8 +24,7 @@ import org.apache.calcite.avatica.Meta.StatementHandle;
 
 public class KylinStatement extends AvaticaStatement {
 
-    protected KylinStatement(AvaticaConnection connection, StatementHandle h, int resultSetType,
-            int resultSetConcurrency, int resultSetHoldability) {
+    protected KylinStatement(AvaticaConnection connection, StatementHandle h, int resultSetType, int resultSetConcurrency, int resultSetHoldability) {
         super(connection, h, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 

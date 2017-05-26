@@ -59,8 +59,7 @@ public class CubeHTableUtil {
         CubeDesc cubeDesc = cubeInstance.getDescriptor();
         KylinConfig kylinConfig = cubeDesc.getConfig();
 
-        HTableDescriptor tableDesc = new HTableDescriptor(
-                TableName.valueOf(cubeSegment.getStorageLocationIdentifier()));
+        HTableDescriptor tableDesc = new HTableDescriptor(TableName.valueOf(cubeSegment.getStorageLocationIdentifier()));
         tableDesc.setValue(HTableDescriptor.SPLIT_POLICY, DisabledRegionSplitPolicy.class.getName());
         tableDesc.setValue(IRealizationConstants.HTableTag, kylinConfig.getMetadataUrlPrefix());
         tableDesc.setValue(IRealizationConstants.HTableCreationTime, String.valueOf(System.currentTimeMillis()));
@@ -104,8 +103,7 @@ public class CubeHTableUtil {
             DeployCoprocessorCLI.deployCoprocessor(tableDesc);
 
             admin.createTable(tableDesc, splitKeys);
-            Preconditions.checkArgument(admin.isTableAvailable(TableName.valueOf(tableName)),
-                    "table " + tableName + " created, but is not available due to some reasons");
+            Preconditions.checkArgument(admin.isTableAvailable(TableName.valueOf(tableName)), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
         } finally {
             IOUtils.closeQuietly(admin);
@@ -146,8 +144,7 @@ public class CubeHTableUtil {
 
             logger.info("creating hbase table " + tableName);
             admin.createTable(tableDesc, null);
-            Preconditions.checkArgument(admin.isTableAvailable(tableName),
-                    "table " + tableName + " created, but is not available due to some reasons");
+            Preconditions.checkArgument(admin.isTableAvailable(tableName), "table " + tableName + " created, but is not available due to some reasons");
             logger.info("create hbase table " + tableName + " done.");
         } finally {
             IOUtils.closeQuietly(admin);

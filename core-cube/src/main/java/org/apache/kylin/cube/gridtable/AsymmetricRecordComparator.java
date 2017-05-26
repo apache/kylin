@@ -18,10 +18,10 @@
 
 package org.apache.kylin.cube.gridtable;
 
-import java.util.Collection;
-
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.gridtable.GTRecord;
+
+import java.util.Collection;
 
 /**
  * asymmetric means compare(a,b) > 0 does not cause compare(b,a) < 0 

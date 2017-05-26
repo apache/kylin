@@ -28,8 +28,7 @@ public class CubeGridTable {
 
         GTInfo.Builder builder = GTInfo.builder();
         builder.setTableName("Cuboid " + cuboid.getId());
-        builder.setCodeSystem(
-                new CubeCodeSystem(mapping.getDimensionEncodings(dimEncMap), mapping.getDependentMetricsMap()));
+        builder.setCodeSystem(new CubeCodeSystem(mapping.getDimensionEncodings(dimEncMap), mapping.getDependentMetricsMap()));
         builder.setColumns(mapping.getDataTypes());
         builder.setPrimaryKey(mapping.getPrimaryKey());
         builder.enableColumnBlock(mapping.getColumnBlocks());

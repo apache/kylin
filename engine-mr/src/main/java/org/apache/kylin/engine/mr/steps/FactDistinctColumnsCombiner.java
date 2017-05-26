@@ -26,8 +26,7 @@ import org.apache.kylin.engine.mr.KylinReducer;
 /**
  * @author yangli9
  */
-public class FactDistinctColumnsCombiner
-        extends KylinReducer<SelfDefineSortableKey, Text, SelfDefineSortableKey, Text> {
+public class FactDistinctColumnsCombiner extends KylinReducer<SelfDefineSortableKey, Text, SelfDefineSortableKey, Text> {
 
     @Override
     protected void setup(Context context) throws IOException {
@@ -35,8 +34,7 @@ public class FactDistinctColumnsCombiner
     }
 
     @Override
-    public void doReduce(SelfDefineSortableKey key, Iterable<Text> values, Context context)
-            throws IOException, InterruptedException {
+    public void doReduce(SelfDefineSortableKey key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
         // for hll, each key only has one output, no need to do local combine;
         // for normal col, values are empty text

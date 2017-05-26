@@ -29,23 +29,18 @@ public class CubeMetadataUpgradeEntry_v_1_5_1 {
     public static void main(String[] args) {
         if (!(args != null && (args.length == 1))) {
             System.out.println("Usage: java CubeMetadataUpgradeEntry_v_1_5_1 <metadata_export_folder>");
-            System.out.println(
-                    ", where metadata_export_folder is the folder containing your current metadata's dump (Upgrade program will not modify it directly, relax.");
+            System.out.println(", where metadata_export_folder is the folder containing your current metadata's dump (Upgrade program will not modify it directly, relax.");
             return;
         }
 
         try {
             CubeMetadataUpgrade_v_1_4_0.upgradeOrVerify(CubeMetadataUpgrade_v_1_4_0.class, args, true, false);
-            CubeMetadataUpgrade_v_1_5_1.upgradeOrVerify(CubeMetadataUpgrade_v_1_5_1.class,
-                    new String[] { args[0] + "_workspace" }, false, true);
+            CubeMetadataUpgrade_v_1_5_1.upgradeOrVerify(CubeMetadataUpgrade_v_1_5_1.class, new String[] { args[0] + "_workspace" }, false, true);
         } catch (Exception e) {
-            logger.error(
-                    "something went wrong when upgrading, don't override your metadata store with this workspace folder yet!",
-                    e);
+            logger.error("something went wrong when upgrading, don't override your metadata store with this workspace folder yet!", e);
             return;
         }
 
-        logger.info(
-                "The metadata upgrade is complete locally. You need to upload the metadata to you actual metadata store to verify locally. You need to upload the metadata to you actual metadata store to verify.");
+        logger.info("The metadata upgrade is complete locally. You need to upload the metadata to you actual metadata store to verify locally. You need to upload the metadata to you actual metadata store to verify.");
     }
 }

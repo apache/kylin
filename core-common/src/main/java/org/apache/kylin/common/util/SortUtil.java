@@ -26,8 +26,7 @@ import com.google.common.collect.TreeMultimap;
 /**
  */
 public class SortUtil {
-    public static <T extends Comparable, E extends Comparable> Iterator<T> extractAndSort(Iterator<T> input,
-            Function<T, E> extractor) {
+    public static <T extends Comparable, E extends Comparable> Iterator<T> extractAndSort(Iterator<T> input, Function<T, E> extractor) {
         TreeMultimap<E, T> reorgnized = TreeMultimap.create();
         while (input.hasNext()) {
             T t = input.next();

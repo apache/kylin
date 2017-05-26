@@ -19,19 +19,19 @@
 package org.apache.kylin.source.kafka;
 
 import java.lang.reflect.Constructor;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
+import java.nio.ByteBuffer;
 import org.apache.kylin.common.util.DateFormat;
 import org.apache.kylin.common.util.StreamingMessageRow;
 import org.apache.kylin.common.util.TimeUtil;
 import org.apache.kylin.metadata.model.TblColRef;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Maps;
 
 /**
  * By convention stream parsers should have a constructor with (List<TblColRef> allColumns, Map properties) as params
@@ -68,8 +68,7 @@ public abstract class StreamingParser {
 
     abstract public boolean filter(StreamingMessageRow streamingMessageRow);
 
-    public static StreamingParser getStreamingParser(String parserName, String parserProperties,
-            List<TblColRef> columns) throws ReflectiveOperationException {
+    public static StreamingParser getStreamingParser(String parserName, String parserProperties, List<TblColRef> columns) throws ReflectiveOperationException {
         if (!StringUtils.isEmpty(parserName)) {
             logger.info("Construct StreamingParse {} with properties {}", parserName, parserProperties);
             Class clazz = Class.forName(parserName);
@@ -77,8 +76,7 @@ public abstract class StreamingParser {
             Constructor constructor = clazz.getConstructor(List.class, Map.class);
             return (StreamingParser) constructor.newInstance(columns, properties);
         } else {
-            throw new IllegalStateException("invalid StreamingConfig, parserName " + parserName + ", parserProperties "
-                    + parserProperties + ".");
+            throw new IllegalStateException("invalid StreamingConfig, parserName " + parserName + ", parserProperties " + parserProperties + ".");
         }
     }
 

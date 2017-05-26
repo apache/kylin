@@ -32,8 +32,8 @@ import org.apache.kylin.metadata.model.IBuildable;
 import org.apache.kylin.metadata.model.TableDesc;
 import org.apache.kylin.metadata.model.TableExtDesc;
 import org.apache.kylin.metadata.streaming.StreamingConfig;
-import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISource;
+import org.apache.kylin.source.IReadableTable;
 import org.apache.kylin.source.ISourceMetadataExplorer;
 import org.apache.kylin.source.SourcePartition;
 import org.apache.kylin.source.kafka.config.KafkaConfig;
@@ -71,25 +71,20 @@ public class KafkaSource implements ISource {
         if (result.getStartOffset() == 0) {
             final CubeSegment last = cube.getLastSegment();
             if (last != null) {
-                logger.debug("Last segment exists, continue from last segment " + last.getName() + "'s end position: "
-                        + last.getSourcePartitionOffsetEnd());
+                logger.debug("Last segment exists, continue from last segment " + last.getName() + "'s end position: " + last.getSourcePartitionOffsetEnd());
                 // from last seg's end position
                 result.setSourcePartitionOffsetStart(last.getSourcePartitionOffsetEnd());
-            } else if (cube.getDescriptor().getPartitionOffsetStart() != null
-                    && cube.getDescriptor().getPartitionOffsetStart().size() > 0) {
-                logger.debug("Last segment doesn't exist, use the start offset that be initiated previously: "
-                        + cube.getDescriptor().getPartitionOffsetStart());
+            } else if (cube.getDescriptor().getPartitionOffsetStart() != null && cube.getDescriptor().getPartitionOffsetStart().size() > 0) {
+                logger.debug("Last segment doesn't exist, use the start offset that be initiated previously: " + cube.getDescriptor().getPartitionOffsetStart());
                 result.setSourcePartitionOffsetStart(cube.getDescriptor().getPartitionOffsetStart());
             } else {
                 // from the topic's earliest offset;
-                logger.debug(
-                        "Last segment doesn't exist, and didn't initiate the start offset, will seek from topic's earliest offset.");
+                logger.debug("Last segment doesn't exist, and didn't initiate the start offset, will seek from topic's earliest offset.");
                 result.setSourcePartitionOffsetStart(KafkaClient.getEarliestOffsets(cube));
             }
         }
 
-        final KafkaConfig kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv())
-                .getKafkaConfig(cube.getRootFactTable());
+        final KafkaConfig kafkaConfig = KafkaConfigManager.getInstance(KylinConfig.getInstanceFromEnv()).getKafkaConfig(cube.getRootFactTable());
         final String brokers = KafkaClient.getKafkaBrokers(kafkaConfig);
         final String topic = kafkaConfig.getTopic();
         try (final KafkaConsumer consumer = KafkaClient.getKafkaConsumer(brokers, cube.getName(), null)) {
@@ -113,9 +108,7 @@ public class KafkaSource implements ISource {
             for (Integer partitionId : latestOffsets.keySet()) {
                 if (result.getSourcePartitionOffsetStart().containsKey(partitionId)) {
                     if (result.getSourcePartitionOffsetStart().get(partitionId) > latestOffsets.get(partitionId)) {
-                        throw new IllegalArgumentException("Partition " + partitionId + " end offset ("
-                                + latestOffsets.get(partitionId) + ") is smaller than start offset ( "
-                                + result.getSourcePartitionOffsetStart().get(partitionId) + ")");
+                        throw new IllegalArgumentException("Partition " + partitionId + " end offset (" + latestOffsets.get(partitionId) + ") is smaller than start offset ( " + result.getSourcePartitionOffsetStart().get(partitionId) + ")");
                     }
                 } else {
                     throw new IllegalStateException("New partition added in between, retry.");
@@ -133,8 +126,7 @@ public class KafkaSource implements ISource {
         }
 
         if (totalStartOffset > totalEndOffset) {
-            throw new IllegalArgumentException(
-                    "Illegal offset: start: " + totalStartOffset + ", end: " + totalEndOffset);
+            throw new IllegalArgumentException("Illegal offset: start: " + totalStartOffset + ", end: " + totalEndOffset);
         }
 
         if (totalStartOffset == totalEndOffset) {
@@ -159,8 +151,7 @@ public class KafkaSource implements ISource {
 
         if (startOffset > 0) {
             if (sourcePartitionOffsetStart == null || sourcePartitionOffsetStart.size() == 0) {
-                throw new IllegalArgumentException(
-                        "When 'startOffset' is > 0, need provide each partition's start offset");
+                throw new IllegalArgumentException("When 'startOffset' is > 0, need provide each partition's start offset");
             }
 
             long totalOffset = 0;
@@ -169,15 +160,13 @@ public class KafkaSource implements ISource {
             }
 
             if (totalOffset != startOffset) {
-                throw new IllegalArgumentException(
-                        "Invalid 'sourcePartitionOffsetStart', doesn't match with 'startOffset'");
+                throw new IllegalArgumentException("Invalid 'sourcePartitionOffsetStart', doesn't match with 'startOffset'");
             }
         }
 
         if (endOffset > 0 && endOffset != Long.MAX_VALUE) {
             if (sourcePartitionOffsetEnd == null || sourcePartitionOffsetEnd.size() == 0) {
-                throw new IllegalArgumentException(
-                        "When 'endOffset' is not Long.MAX_VALUE, need provide each partition's start offset");
+                throw new IllegalArgumentException("When 'endOffset' is not Long.MAX_VALUE, need provide each partition's start offset");
             }
 
             long totalOffset = 0;
@@ -186,8 +175,7 @@ public class KafkaSource implements ISource {
             }
 
             if (totalOffset != endOffset) {
-                throw new IllegalArgumentException(
-                        "Invalid 'sourcePartitionOffsetEnd', doesn't match with 'endOffset'");
+                throw new IllegalArgumentException("Invalid 'sourcePartitionOffsetEnd', doesn't match with 'endOffset'");
             }
         }
     }

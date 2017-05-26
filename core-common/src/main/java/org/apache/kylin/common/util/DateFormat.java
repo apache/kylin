@@ -48,7 +48,7 @@ public class DateFormat {
         }
         return r;
     }
-
+    
     public static String formatToCompactDateStr(long millis) {
         return formatToDateStr(millis, COMPACT_DATE_PATTERN);
     }

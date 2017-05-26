@@ -28,7 +28,7 @@ import org.apache.kylin.common.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Segments<T extends ISegment> extends ArrayList<T> implements Serializable {
+public class Segments<T extends ISegment> extends ArrayList<T> implements Serializable{
 
     private static final long serialVersionUID = 1L;
 
@@ -110,8 +110,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
 
     public T getSegment(String name, SegmentStatusEnum status) {
         for (T segment : this) {
-            if ((null != segment.getName() && segment.getName().equals(name))
-                    && (status == null || segment.getStatus() == status)) {
+            if ((null != segment.getName() && segment.getName().equals(name)) && (status == null || segment.getStatus() == status)) {
                 return segment;
             }
         }
@@ -122,8 +121,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         Segments<T> buildingSegments = new Segments();
         if (null != this) {
             for (T segment : this) {
-                if (SegmentStatusEnum.NEW == segment.getStatus()
-                        || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
+                if (SegmentStatusEnum.NEW == segment.getStatus() || SegmentStatusEnum.READY_PENDING == segment.getStatus()) {
                     buildingSegments.add(segment);
                 }
             }
@@ -146,8 +144,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             if (sourceOffsetContains(mergedSegment, seg)) {
                 // make sure no holes
                 if (result.size() > 0 && result.getLast().getSourceOffsetEnd() != seg.getSourceOffsetStart())
-                    throw new IllegalStateException(
-                            "Merging segments must not have holes between " + result.getLast() + " and " + seg);
+                    throw new IllegalStateException("Merging segments must not have holes between " + result.getLast() + " and " + seg);
 
                 result.add(seg);
             }
@@ -155,8 +152,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
         return result;
     }
 
-    public Pair<Long, Long> autoMergeCubeSegments(boolean needAutoMerge, String cubeName, long[] timeRanges)
-            throws IOException {
+    public Pair<Long, Long> autoMergeCubeSegments(boolean needAutoMerge, String cubeName, long[] timeRanges) throws IOException {
         if (!needAutoMerge) {
             logger.debug("Cube " + cubeName + " doesn't need auto merge");
             return null;
@@ -175,8 +171,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             for (ISegment building : getBuildingSegments()) {
                 // exclude those under-merging segs
                 for (ISegment ready : readySegs) {
-                    if (ready.getSourceOffsetStart() >= building.getSourceOffsetStart()
-                            && ready.getSourceOffsetEnd() <= building.getSourceOffsetEnd()) {
+                    if (ready.getSourceOffsetStart() >= building.getSourceOffsetStart() && ready.getSourceOffsetEnd() <= building.getSourceOffsetEnd()) {
                         mergingSegs.add(ready);
                     }
                 }
@@ -194,8 +189,7 @@ public class Segments<T extends ISegment> extends ArrayList<T> implements Serial
             for (int s = 0; s < readySegs.size(); s++) {
                 ISegment seg = readySegs.get(s);
                 Pair<T, T> p = readySegs.getSubList(s, readySegs.size()) //
-                        .findMergeOffsetsByDateRange(seg.getDateRangeStart(), seg.getDateRangeStart() + toMergeRange,
-                                toMergeRange);
+                        .findMergeOffsetsByDateRange(seg.getDateRangeStart(), seg.getDateRangeStart() + toMergeRange, toMergeRange);
                 if (p != null && p.getSecond().getDateRangeEnd() - p.getFirst().getDateRangeStart() >= toMergeRange)
                     return Pair.newPair(p.getFirst().getSourceOffsetStart(), p.getSecond().getSourceOffsetEnd());
             }

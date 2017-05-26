@@ -71,12 +71,12 @@ public class QueryDataSource {
         if (project == null) {
             throw new IllegalArgumentException("project should not be null");
         }
-
+        
         DataSource ds = olapDataSources.get(project);
         if (ds != null) {
             return ds;
         }
-
+        
         WrappedDataSource wrappedDS = getWrapped(project, config, props);
         ds = wrappedDS.getDataSource();
         olapDataSources.putIfAbsent(project, ds);

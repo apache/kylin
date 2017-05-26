@@ -118,8 +118,7 @@ public abstract class ScanRangePlannerBase {
             }
 
             @SuppressWarnings("unchecked")
-            ColumnRange newRange = new ColumnRange(comp.getColumn(), (Set<ByteArray>) comp.getValues(),
-                    comp.getOperator());
+            ColumnRange newRange = new ColumnRange(comp.getColumn(), (Set<ByteArray>) comp.getValues(), comp.getOperator());
             ColumnRange existing = rangeMap.get(newRange.column);
             if (existing == null) {
                 rangeMap.put(newRange.column, newRange);
@@ -171,8 +170,7 @@ public abstract class ScanRangePlannerBase {
             this.column = column;
 
             //TODO: the treatment is un-precise
-            if (op == TupleFilter.FilterOperatorEnum.EQ || op == TupleFilter.FilterOperatorEnum.IN
-                    || op == TupleFilter.FilterOperatorEnum.LTE || op == TupleFilter.FilterOperatorEnum.GTE) {
+            if (op == TupleFilter.FilterOperatorEnum.EQ || op == TupleFilter.FilterOperatorEnum.IN || op == TupleFilter.FilterOperatorEnum.LTE || op == TupleFilter.FilterOperatorEnum.GTE) {
                 isBoundryInclusive = true;
             }
 
@@ -270,8 +268,7 @@ public abstract class ScanRangePlannerBase {
         private Set<ByteArray> filter(Set<ByteArray> equalValues, ByteArray beginValue, ByteArray endValue) {
             Set<ByteArray> result = Sets.newHashSetWithExpectedSize(equalValues.size());
             for (ByteArray v : equalValues) {
-                if (rangeStartEndComparator.comparator.compare(beginValue, v) <= 0
-                        && rangeStartEndComparator.comparator.compare(v, endValue) <= 0) {
+                if (rangeStartEndComparator.comparator.compare(beginValue, v) <= 0 && rangeStartEndComparator.comparator.compare(v, endValue) <= 0) {
                     result.add(v);
                 }
             }

@@ -163,8 +163,7 @@ public class ColumnValueRange {
     }
 
     private boolean between(String v, String beginValue, String endValue) {
-        return (beginValue == null || order.compare(beginValue, v) <= 0)
-                && (endValue == null || order.compare(v, endValue) <= 0);
+        return (beginValue == null || order.compare(beginValue, v) <= 0) && (endValue == null || order.compare(v, endValue) <= 0);
     }
 
     // remove invalid EQ/IN values and round start/end according to dictionary

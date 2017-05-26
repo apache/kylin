@@ -18,6 +18,11 @@
 
 package org.apache.kylin.dimension;
 
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.metadata.datatype.DataTypeSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -25,25 +30,17 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.metadata.datatype.DataTypeSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * not being used yet, prepared for future
  */
-public class OneMoreByteVLongDimEnc extends DimensionEncoding implements Serializable {
+public class OneMoreByteVLongDimEnc extends DimensionEncoding implements Serializable{
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(OneMoreByteVLongDimEnc.class);
 
-    private static final long[] CAP = { 0, 0x7fL, 0x7fffL, 0x7fffffL, 0x7fffffffL, 0x7fffffffffL, 0x7fffffffffffL,
-            0x7fffffffffffffL, 0x7fffffffffffffffL };
-    private static final long[] MASK = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL,
-            0xffffffffffffffL, 0xffffffffffffffffL };
-    private static final long[] TAIL = { 0, 0x80L, 0x8000L, 0x800000L, 0x80000000L, 0x8000000000L, 0x800000000000L,
-            0x80000000000000L, 0x8000000000000000L };
+    private static final long[] CAP = { 0, 0x7fL, 0x7fffL, 0x7fffffL, 0x7fffffffL, 0x7fffffffffL, 0x7fffffffffffL, 0x7fffffffffffffL, 0x7fffffffffffffffL };
+    private static final long[] MASK = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, 0xffffffffffffffffL };
+    private static final long[] TAIL = { 0, 0x80L, 0x8000L, 0x800000L, 0x80000000L, 0x8000000000L, 0x800000000000L, 0x80000000000000L, 0x8000000000000000L };
     static {
         for (int i = 1; i < TAIL.length; ++i) {
             long head = ~MASK[i];
@@ -98,8 +95,7 @@ public class OneMoreByteVLongDimEnc extends DimensionEncoding implements Seriali
         long integer = Long.parseLong(valueStr);
         if (integer > CAP[fixedLen] || integer < TAIL[fixedLen]) {
             if (avoidVerbose++ % 10000 == 0) {
-                logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueStr + ", will truncate, hit times:"
-                        + avoidVerbose);
+                logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueStr + ", will truncate, hit times:" + avoidVerbose);
             }
         }
 

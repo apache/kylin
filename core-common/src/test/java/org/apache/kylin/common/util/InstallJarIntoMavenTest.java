@@ -53,9 +53,7 @@ public class InstallJarIntoMavenTest {
             String artifactId = name.substring(0, match.start());
             String version = name.substring(match.start() + 1, lastDot);
 
-            fw.write(String.format(
-                    "mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId=%s -Dversion=%s -Dpackaging=jar",
-                    name, "org.apache." + groupId, artifactId, version));
+            fw.write(String.format("mvn install:install-file -Dfile=%s -DgroupId=%s -DartifactId=%s -Dversion=%s -Dpackaging=jar", name, "org.apache." + groupId, artifactId, version));
             fw.write("\n");
         }
         fw.close();

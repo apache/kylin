@@ -20,6 +20,7 @@ package org.apache.kylin.rest.service;
 
 import org.springframework.security.core.GrantedAuthority;
 
+
 public class UserGrantedAuthority implements GrantedAuthority {
     private static final long serialVersionUID = -5128905636841891058L;
 

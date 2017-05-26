@@ -44,8 +44,7 @@ public class SourcePartition {
     public SourcePartition() {
     }
 
-    public SourcePartition(long startDate, long endDate, long startOffset, long endOffset,
-            Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) {
+    public SourcePartition(long startDate, long endDate, long startOffset, long endOffset, Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.startOffset = startOffset;
@@ -104,10 +103,7 @@ public class SourcePartition {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("startDate", startDate).add("endDate", endDate)
-                .add("startOffset", startOffset).add("endOffset", endOffset)
-                .add("sourcePartitionOffsetStart", sourcePartitionOffsetStart.toString())
-                .add("sourcePartitionOffsetEnd", sourcePartitionOffsetEnd.toString()).toString();
+        return Objects.toStringHelper(this).add("startDate", startDate).add("endDate", endDate).add("startOffset", startOffset).add("endOffset", endOffset).add("sourcePartitionOffsetStart", sourcePartitionOffsetStart.toString()).add("sourcePartitionOffsetEnd", sourcePartitionOffsetEnd.toString()).toString();
     }
 
     public static SourcePartition getCopyOf(SourcePartition origin) {

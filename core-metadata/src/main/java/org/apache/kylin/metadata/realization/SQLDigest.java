@@ -96,7 +96,7 @@ public class SQLDigest {
         this.sortOrders = sortOrders;
         this.isRawQuery = isRawQuery();
         this.limitPrecedesAggr = limitPrecedesAggr;
-
+        
         this.includeSubqueryJoinParticipants();
     }
 

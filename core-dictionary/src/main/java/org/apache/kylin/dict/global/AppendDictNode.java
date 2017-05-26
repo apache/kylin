@@ -18,6 +18,11 @@
 
 package org.apache.kylin.dict.global;
 
+import org.apache.kylin.common.util.Bytes;
+import org.apache.kylin.common.util.BytesUtil;
+import org.apache.kylin.dict.AppendTrieDictionary;
+import org.apache.kylin.dict.TrieDictionary;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -26,11 +31,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
-
-import org.apache.kylin.common.util.Bytes;
-import org.apache.kylin.common.util.BytesUtil;
-import org.apache.kylin.dict.AppendTrieDictionary;
-import org.apache.kylin.dict.TrieDictionary;
 
 public class AppendDictNode {
     public byte[] part;
@@ -195,14 +195,12 @@ public class AppendDictNode {
     }
 
     private void build_overwriteChildOffset(int parentOffset, int childOffset, int sizeChildOffset, byte[] trieBytes) {
-        int flags = (int) trieBytes[parentOffset]
-                & (TrieDictionary.BIT_IS_LAST_CHILD | TrieDictionary.BIT_IS_END_OF_VALUE);
+        int flags = (int) trieBytes[parentOffset] & (TrieDictionary.BIT_IS_LAST_CHILD | TrieDictionary.BIT_IS_END_OF_VALUE);
         BytesUtil.writeUnsigned(childOffset, trieBytes, parentOffset, sizeChildOffset);
         trieBytes[parentOffset] |= flags;
     }
 
-    private int build_writeNode(AppendDictNode n, int offset, boolean isLastChild, int sizeChildOffset, int sizeId,
-            byte[] trieBytes) {
+    private int build_writeNode(AppendDictNode n, int offset, boolean isLastChild, int sizeChildOffset, int sizeId, byte[] trieBytes) {
         int o = offset;
 
         // childOffset
@@ -214,8 +212,7 @@ public class AppendDictNode {
 
         // nValueBytes
         if (n.part.length > 255)
-            throw new RuntimeException(
-                    "Value length is " + n.part.length + " and larger than 255: " + Bytes.toStringBinary(n.part));
+            throw new RuntimeException("Value length is " + n.part.length + " and larger than 255: " + Bytes.toStringBinary(n.part));
         BytesUtil.writeUnsigned(n.part.length, trieBytes, o, 1);
         o++;
 
@@ -241,8 +238,7 @@ public class AppendDictNode {
 
     @Override
     public String toString() {
-        return String.format("DictNode[root=%s, nodes=%d, firstValue=%s]", Bytes.toStringBinary(part), childrenCount,
-                Bytes.toStringBinary(firstValue()));
+        return String.format("DictNode[root=%s, nodes=%d, firstValue=%s]", Bytes.toStringBinary(part), childrenCount, Bytes.toStringBinary(firstValue()));
     }
 
     static class Stats {
@@ -336,8 +332,7 @@ public class AppendDictNode {
             s.mbpn_sizeValueTotal = s.nValueBytesCompressed + s.nValues * s.mbpn_sizeId;
             s.mbpn_sizeNoValueBytes = 1;
             s.mbpn_sizeChildOffset = 5;
-            s.mbpn_footprint = s.mbpn_sizeValueTotal
-                    + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeChildOffset);
+            s.mbpn_footprint = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeChildOffset);
             while (true) { // minimize the offset size to match the footprint
                 int t = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (s.mbpn_sizeNoValueBytes + s.mbpn_sizeChildOffset - 1);
                 // *4 because 2 MSB of offset is used for isEndOfValue & isEndChild flag

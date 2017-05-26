@@ -45,7 +45,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
         DataModelDesc model = getModel("ci_inner_join_model");
         ModelDataGenerator gen = new ModelDataGenerator(model, 100);
         gen.outprint = true;
-
+        
         gen.generate();
     }
 
@@ -54,7 +54,7 @@ public class DataGenTest extends LocalFileMetadataTestCase {
         DataModelDesc model = getModel("ssb");
         ModelDataGenerator gen = new ModelDataGenerator(model, 100);
         gen.outprint = true;
-
+        
         gen.generate();
     }
 

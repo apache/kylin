@@ -42,14 +42,15 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.LogManager;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.metadata.project.ProjectInstance;
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.query.relnode.OLAPContext;
 import org.apache.kylin.query.routing.rules.RemoveBlackoutRealizationsRule;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
 import org.apache.kylin.rest.util.AdHocUtil;
 import org.dbunit.DatabaseUnitException;
 import org.dbunit.database.DatabaseConfig;
@@ -69,7 +70,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 /**
@@ -110,8 +110,7 @@ public class KylinTestBase {
     // h2 (BIGINT)
     public static class TestH2DataTypeFactory extends H2DataTypeFactory {
         @Override
-        public DataType createDataType(int sqlType, String sqlTypeName, String tableName, String columnName)
-                throws DataTypeException {
+        public DataType createDataType(int sqlType, String sqlTypeName, String tableName, String columnName) throws DataTypeException {
 
             if ((columnName.startsWith("COL") || columnName.startsWith("col")) && sqlType == Types.BIGINT) {
                 return DataType.INTEGER;
@@ -224,8 +223,7 @@ public class KylinTestBase {
     // ////////////////////////////////////////////////////////////////////////////////////////
     // execute
 
-    protected ITable executeQuery(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort)
-            throws Exception {
+    protected ITable executeQuery(IDatabaseConnection dbConn, String queryName, String sql, boolean needSort) throws Exception {
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -260,7 +258,7 @@ public class KylinTestBase {
 
             return output(resultSet, needDisplay);
         } catch (SQLException sqlException) {
-            List<List<String>> results = Lists.newArrayList();
+            List<List<String>> results =  Lists.newArrayList();
             List<SelectedColumnMeta> columnMetas = Lists.newArrayList();
             AdHocUtil.doAdHocQuery(sql, results, columnMetas, sqlException);
             return results.size();
@@ -282,8 +280,7 @@ public class KylinTestBase {
         }
     }
 
-    protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql,
-            List<String> parameters, boolean needSort) throws Exception {
+    protected ITable executeDynamicQuery(IDatabaseConnection dbConn, String queryName, String sql, List<String> parameters, boolean needSort) throws Exception {
 
         // change join type to match current setting
         sql = changeJoinType(sql, joinType);
@@ -319,8 +316,7 @@ public class KylinTestBase {
 
         String[] tokens = StringUtils.split(sql, null);// split white spaces
         for (int i = 0; i < tokens.length - 1; ++i) {
-            if ((tokens[i].equalsIgnoreCase("inner") || tokens[i].equalsIgnoreCase("left"))
-                    && tokens[i + 1].equalsIgnoreCase("join")) {
+            if ((tokens[i].equalsIgnoreCase("inner") || tokens[i].equalsIgnoreCase("left")) && tokens[i + 1].equalsIgnoreCase("join")) {
                 tokens[i] = targetType.toLowerCase();
             }
         }
@@ -411,8 +407,7 @@ public class KylinTestBase {
         }
     }
 
-    protected void execAndCompResultSize(String queryFolder, String[] exclusiveQuerys, boolean needSort)
-            throws Exception {
+    protected void execAndCompResultSize(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
         logger.info("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
@@ -509,6 +504,7 @@ public class KylinTestBase {
         logger.info("Queries appended with limit: " + appendLimitQueries);
     }
 
+
     protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
         execAndCompQuery(queryFolder, exclusiveQuerys, needSort, new ICompareQueryTranslator() {
             @Override
@@ -522,8 +518,7 @@ public class KylinTestBase {
         });
     }
 
-    protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort,
-            ICompareQueryTranslator translator) throws Exception {
+    protected void execAndCompQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort, ICompareQueryTranslator translator) throws Exception {
         logger.info("---------- test folder: " + new File(queryFolder).getAbsolutePath());
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
@@ -562,8 +557,7 @@ public class KylinTestBase {
         }
     }
 
-    protected void execAndCompDynamicQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort)
-            throws Exception {
+    protected void execAndCompDynamicQuery(String queryFolder, String[] exclusiveQuerys, boolean needSort) throws Exception {
         logger.info("---------- test folder: " + queryFolder);
         Set<String> exclusiveSet = buildExclusiveSet(exclusiveQuerys);
 
@@ -689,8 +683,7 @@ public class KylinTestBase {
         cubeConnection = QueryDataSource.create(ProjectInstance.DEFAULT_PROJECT_NAME, config).getConnection();
 
         //setup h2
-        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++) + ";CACHE_SIZE=32072", "sa",
-                "");
+        h2Connection = DriverManager.getConnection("jdbc:h2:mem:db" + (h2InstanceCount++) + ";CACHE_SIZE=32072", "sa", "");
         // Load H2 Tables (inner join)
         H2Database h2DB = new H2Database(h2Connection, config);
         h2DB.loadAllTables();

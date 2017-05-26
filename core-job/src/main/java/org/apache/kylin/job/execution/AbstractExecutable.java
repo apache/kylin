@@ -60,16 +60,16 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
     public AbstractExecutable() {
         setId(UUID.randomUUID().toString());
     }
-
+    
     protected void initConfig(KylinConfig config) {
         Preconditions.checkState(this.config == null || this.config == config);
         this.config = config;
     }
-
+    
     protected KylinConfig getConfig() {
         return config;
     }
-
+    
     protected ExecutableManager getManager() {
         return ExecutableManager.getInstance(config);
     }
@@ -391,7 +391,6 @@ public abstract class AbstractExecutable implements Executable, Idempotent {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", getStatus())
-                .toString();
+        return Objects.toStringHelper(this).add("id", getId()).add("name", getName()).add("state", getStatus()).toString();
     }
 }

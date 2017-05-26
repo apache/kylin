@@ -37,17 +37,14 @@ import org.slf4j.LoggerFactory;
  * -2^(8*N-1) is not supported because the slot is reserved for null values.
  * -2^(8*N-1) will be encoded with warn, and its output will be null
  */
-public class IntegerDimEnc extends DimensionEncoding implements Serializable {
+public class IntegerDimEnc extends DimensionEncoding implements Serializable{
     private static final long serialVersionUID = 1L;
 
     private static Logger logger = LoggerFactory.getLogger(IntegerDimEnc.class);
 
-    private static final long[] CAP = { 0, 0x7fL, 0x7fffL, 0x7fffffL, 0x7fffffffL, 0x7fffffffffL, 0x7fffffffffffL,
-            0x7fffffffffffffL, 0x7fffffffffffffffL };
-    private static final long[] MASK = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL,
-            0xffffffffffffffL, 0xffffffffffffffffL };
-    private static final long[] TAIL = { 0, 0x80L, 0x8000L, 0x800000L, 0x80000000L, 0x8000000000L, 0x800000000000L,
-            0x80000000000000L, 0x8000000000000000L };
+    private static final long[] CAP = { 0, 0x7fL, 0x7fffL, 0x7fffffL, 0x7fffffffL, 0x7fffffffffL, 0x7fffffffffffL, 0x7fffffffffffffL, 0x7fffffffffffffffL };
+    private static final long[] MASK = { 0, 0xffL, 0xffffL, 0xffffffL, 0xffffffffL, 0xffffffffffL, 0xffffffffffffL, 0xffffffffffffffL, 0xffffffffffffffffL };
+    private static final long[] TAIL = { 0, 0x80L, 0x8000L, 0x800000L, 0x80000000L, 0x8000000000L, 0x800000000000L, 0x80000000000000L, 0x8000000000000000L };
     static {
         for (int i = 1; i < TAIL.length; ++i) {
             long head = ~MASK[i];
@@ -102,8 +99,7 @@ public class IntegerDimEnc extends DimensionEncoding implements Serializable {
         long integer = Long.parseLong(valueStr);
         if (integer > CAP[fixedLen] || integer < TAIL[fixedLen]) {
             if (avoidVerbose++ % 10000 == 0) {
-                logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueStr + ", will truncate, hit times:"
-                        + avoidVerbose);
+                logger.warn("Expect at most " + fixedLen + " bytes, but got " + valueStr + ", will truncate, hit times:" + avoidVerbose);
             }
         }
 

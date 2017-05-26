@@ -216,10 +216,7 @@ public class TrieDictionaryBuilder<T> {
 
             // flatten trie footprint calculation, case of One-Byte-Per-Node
             out.println("----------------------------------------------------------------------------");
-            out.println("OBPN node size:  "
-                    + (obpn_sizeValue + obpn_sizeNoValuesBeneath + obpn_sizeChildCount + obpn_sizeChildOffset) + " = "
-                    + obpn_sizeValue + " + " + obpn_sizeNoValuesBeneath + " + " + obpn_sizeChildCount + " + "
-                    + obpn_sizeChildOffset);
+            out.println("OBPN node size:  " + (obpn_sizeValue + obpn_sizeNoValuesBeneath + obpn_sizeChildCount + obpn_sizeChildOffset) + " = " + obpn_sizeValue + " + " + obpn_sizeNoValuesBeneath + " + " + obpn_sizeChildCount + " + " + obpn_sizeChildOffset);
             out.println("OBPN no. nodes:  " + obpn_nNodes);
             out.println("OBPN trie depth: " + maxValueLength);
             out.println("OBPN footprint:  " + obpn_footprint + " in bytes");
@@ -231,9 +228,7 @@ public class TrieDictionaryBuilder<T> {
             out.println("MBPN total fan out:     " + mbpn_nTotalFanOut);
             out.println("MBPN average fan out:   " + (double) mbpn_nTotalFanOut / mbpn_nChildLookups);
             out.println("MBPN values size total: " + mbpn_sizeValueTotal);
-            out.println("MBPN node size:         "
-                    + (mbpn_sizeNoValueBytes + mbpn_sizeNoValueBeneath + mbpn_sizeChildOffset) + " = "
-                    + mbpn_sizeNoValueBytes + " + " + mbpn_sizeNoValueBeneath + " + " + mbpn_sizeChildOffset);
+            out.println("MBPN node size:         " + (mbpn_sizeNoValueBytes + mbpn_sizeNoValueBeneath + mbpn_sizeChildOffset) + " = " + mbpn_sizeNoValueBytes + " + " + mbpn_sizeNoValueBeneath + " + " + mbpn_sizeChildOffset);
             out.println("MBPN no. nodes:         " + mbpn_nNodes);
             out.println("MBPN trie depth:        " + mbpn_trieDepth);
             out.println("MBPN footprint:         " + mbpn_footprint + " in bytes");
@@ -297,11 +292,9 @@ public class TrieDictionaryBuilder<T> {
         s.obpn_sizeChildCount = 1;
         s.obpn_sizeChildOffset = 5; // MSB used as isEndOfValue flag
         s.obpn_nNodes = s.nValueBytesCompressed; // no. nodes is the total number of compressed bytes in OBPN
-        s.obpn_footprint = s.obpn_nNodes * (long) (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount
-                + s.obpn_sizeChildOffset);
+        s.obpn_footprint = s.obpn_nNodes * (long) (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount + s.obpn_sizeChildOffset);
         while (true) { // minimize the offset size to match the footprint
-            long t = s.obpn_nNodes * (long) (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount
-                    + s.obpn_sizeChildOffset - 1);
+            long t = s.obpn_nNodes * (long) (s.obpn_sizeValue + s.obpn_sizeNoValuesBeneath + s.obpn_sizeChildCount + s.obpn_sizeChildOffset - 1);
             if (BytesUtil.sizeForValue(t * 2) <= s.obpn_sizeChildOffset - 1) { // *2 because MSB of offset is used for isEndOfValue flag
                 s.obpn_sizeChildOffset--;
                 s.obpn_footprint = t;
@@ -314,11 +307,9 @@ public class TrieDictionaryBuilder<T> {
         s.mbpn_sizeNoValueBytes = 1;
         s.mbpn_sizeNoValueBeneath = BytesUtil.sizeForValue(s.nValues);
         s.mbpn_sizeChildOffset = 5;
-        s.mbpn_footprint = s.mbpn_sizeValueTotal
-                + s.mbpn_nNodes * (long) (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset);
+        s.mbpn_footprint = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (long) (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset);
         while (true) { // minimize the offset size to match the footprint
-            long t = s.mbpn_sizeValueTotal + s.mbpn_nNodes
-                    * (long) (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset - 1);
+            long t = s.mbpn_sizeValueTotal + s.mbpn_nNodes * (long) (s.mbpn_sizeNoValueBytes + s.mbpn_sizeNoValueBeneath + s.mbpn_sizeChildOffset - 1);
             if (BytesUtil.sizeForValue(t * 4) <= s.mbpn_sizeChildOffset - 1) { // *4 because 2 MSB of offset is used for isEndOfValue & isEndChild flag
                 s.mbpn_sizeChildOffset--;
                 s.mbpn_footprint = t;
@@ -493,14 +484,12 @@ public class TrieDictionaryBuilder<T> {
     }
 
     private void build_overwriteChildOffset(int parentOffset, int childOffset, int sizeChildOffset, byte[] trieBytes) {
-        int flags = (int) trieBytes[parentOffset]
-                & (TrieDictionary.BIT_IS_LAST_CHILD | TrieDictionary.BIT_IS_END_OF_VALUE);
+        int flags = (int) trieBytes[parentOffset] & (TrieDictionary.BIT_IS_LAST_CHILD | TrieDictionary.BIT_IS_END_OF_VALUE);
         BytesUtil.writeUnsigned(childOffset, trieBytes, parentOffset, sizeChildOffset);
         trieBytes[parentOffset] |= flags;
     }
 
-    private int build_writeNode(Node n, int offset, boolean isLastChild, int sizeNoValuesBeneath, int sizeChildOffset,
-            byte[] trieBytes) {
+    private int build_writeNode(Node n, int offset, boolean isLastChild, int sizeNoValuesBeneath, int sizeChildOffset, byte[] trieBytes) {
         int o = offset;
         if (o > _2GB)
             throw new IllegalStateException();

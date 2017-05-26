@@ -111,9 +111,7 @@ public class GTScannerBenchmark {
     @SuppressWarnings("unused")
     private void testAggregate(ImmutableBitSet groupBy) throws IOException {
         long t = System.currentTimeMillis();
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(dimensions)
-                .setAggrGroupBy(groupBy).setAggrMetrics(metrics).setAggrMetricsFuncs(aggrFuncs).setFilterPushDown(null)
-                .createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(dimensions).setAggrGroupBy(groupBy).setAggrMetrics(metrics).setAggrMetricsFuncs(aggrFuncs).setFilterPushDown(null).createGTScanRequest();
         IGTScanner scanner = req.decorateScanner(gen.generate(N));
 
         long count = 0;
@@ -157,8 +155,7 @@ public class GTScannerBenchmark {
     @SuppressWarnings("unused")
     private void testFilter(TupleFilter filter) throws IOException {
         long t = System.currentTimeMillis();
-        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(info.getAllColumns())
-                .setFilterPushDown(filter).createGTScanRequest();
+        GTScanRequest req = new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(info.getAllColumns()).setFilterPushDown(filter).createGTScanRequest();
         IGTScanner scanner = req.decorateScanner(gen.generate(N));
 
         long count = 0;

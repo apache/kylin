@@ -60,26 +60,16 @@ public class CubeMetaIngester extends AbstractApplication {
     private static final Logger logger = LoggerFactory.getLogger(CubeMetaIngester.class);
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_SRC = OptionBuilder.withArgName("srcPath").hasArg().isRequired(true)
-            .withDescription("specify the path to the extracted cube metadata zip file").create("srcPath");
+    private static final Option OPTION_SRC = OptionBuilder.withArgName("srcPath").hasArg().isRequired(true).withDescription("specify the path to the extracted cube metadata zip file").create("srcPath");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(true)
-            .withDescription("specify the target project for the new cubes").create("project");
+    private static final Option OPTION_PROJECT = OptionBuilder.withArgName("project").hasArg().isRequired(true).withDescription("specify the target project for the new cubes").create("project");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_FORCE_INGEST = OptionBuilder.withArgName("forceIngest").hasArg()
-            .isRequired(false)
-            .withDescription(
-                    "skip the target cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first")
-            .create("forceIngest");
+    private static final Option OPTION_FORCE_INGEST = OptionBuilder.withArgName("forceIngest").hasArg().isRequired(false).withDescription("skip the target cube, model and table check and ingest by force. Use in caution because it might break existing cubes! Suggest to backup metadata store first").create("forceIngest");
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_OVERWRITE_TABLES = OptionBuilder.withArgName("overwriteTables").hasArg()
-            .isRequired(false)
-            .withDescription(
-                    "If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first")
-            .create("overwriteTables");
+    private static final Option OPTION_OVERWRITE_TABLES = OptionBuilder.withArgName("overwriteTables").hasArg().isRequired(false).withDescription("If table meta conflicts, overwrite the one in metadata store with the one in srcPath. Use in caution because it might break existing cubes! Suggest to backup metadata store first").create("overwriteTables");
 
     private KylinConfig kylinConfig;
     private MetadataManager metadataManager;
@@ -158,8 +148,7 @@ public class CubeMetaIngester extends AbstractApplication {
 
         for (TableDesc tableDesc : srcMetadataManager.listAllTables()) {
             logger.info("add " + tableDesc + " to " + targetProjectName);
-            projectManager.addTableDescToProject(Lists.newArrayList(tableDesc.getIdentity()).toArray(new String[0]),
-                    targetProjectName);
+            projectManager.addTableDescToProject(Lists.newArrayList(tableDesc.getIdentity()).toArray(new String[0]), targetProjectName);
         }
 
         for (CubeInstance cube : srcCubeManager.listAllCubes()) {
@@ -170,8 +159,7 @@ public class CubeMetaIngester extends AbstractApplication {
 
     }
 
-    private void checkAndMark(MetadataManager srcMetadataManager, HybridManager srcHybridManager,
-            CubeManager srcCubeManager, CubeDescManager srcCubeDescManager) {
+    private void checkAndMark(MetadataManager srcMetadataManager, HybridManager srcHybridManager, CubeManager srcCubeManager, CubeDescManager srcCubeDescManager) {
         if (srcHybridManager.listHybridInstances().size() > 0) {
             throw new IllegalStateException("Does not support ingest hybrid yet");
         }
@@ -184,15 +172,12 @@ public class CubeMetaIngester extends AbstractApplication {
         for (TableDesc tableDesc : srcMetadataManager.listAllTables()) {
             TableDesc existing = metadataManager.getTableDesc(tableDesc.getIdentity());
             if (existing != null && !existing.equals(tableDesc)) {
-                logger.info("Table {} already has a different version in target metadata store",
-                        tableDesc.getIdentity());
+                logger.info("Table {} already has a different version in target metadata store", tableDesc.getIdentity());
                 logger.info("Existing version: " + existing);
                 logger.info("New version: " + tableDesc);
 
                 if (!forceIngest && !overwriteTables) {
-                    throw new IllegalStateException(
-                            "table already exists with a different version: " + tableDesc.getIdentity()
-                                    + ". Consider adding -overwriteTables option to force overwriting (with caution)");
+                    throw new IllegalStateException("table already exists with a different version: " + tableDesc.getIdentity() + ". Consider adding -overwriteTables option to force overwriting (with caution)");
                 } else {
                     logger.warn("Overwriting the old table desc: " + tableDesc.getIdentity());
                 }

@@ -100,8 +100,7 @@ public class DictionaryDimEnc extends DimensionEncoding implements Serializable 
             for (int i = outputOffset; i < outputOffset + fixedLen; i++) {
                 output[i] = defaultByte;
             }
-            logger.error("Can't translate value " + valueStr + " to dictionary ID, roundingFlag " + roundingFlag
-                    + ". Using default value " + String.format("\\x%02X", defaultByte));
+            logger.error("Can't translate value " + valueStr + " to dictionary ID, roundingFlag " + roundingFlag + ". Using default value " + String.format("\\x%02X", defaultByte));
         }
     }
 

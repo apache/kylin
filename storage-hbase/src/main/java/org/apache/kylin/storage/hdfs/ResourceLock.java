@@ -17,9 +17,10 @@
 */
 package org.apache.kylin.storage.hdfs;
 
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
+
 import java.util.concurrent.TimeUnit;
 
-import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 
 public class ResourceLock {
 
@@ -34,13 +35,13 @@ public class ResourceLock {
 
     public void acquire(long time, TimeUnit unit) throws Exception {
         boolean success = lock.acquire(time, unit);
-        if (!success) {
+        if(!success){
             throw new IllegalStateException("Fail to get Zookeeper lock");
         }
     }
 
-    public void acquire() throws Exception {
-        lock.acquire();
+    public void acquire() throws Exception{
+       lock.acquire();
     }
 
     protected void release() throws Exception {

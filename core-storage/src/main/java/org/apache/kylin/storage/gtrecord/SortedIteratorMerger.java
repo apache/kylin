@@ -38,13 +38,12 @@ public class SortedIteratorMerger<E> {
     }
 
     public Iterator<E> getIterator() {
-        final PriorityQueue<PeekingImpl<E>> heap = new PriorityQueue<PeekingImpl<E>>(11,
-                new Comparator<PeekingImpl<E>>() {
-                    @Override
-                    public int compare(PeekingImpl<E> o1, PeekingImpl<E> o2) {
-                        return comparator.compare(o1.peek(), o2.peek());
-                    }
-                });
+        final PriorityQueue<PeekingImpl<E>> heap = new PriorityQueue<PeekingImpl<E>>(11, new Comparator<PeekingImpl<E>>() {
+            @Override
+            public int compare(PeekingImpl<E> o1, PeekingImpl<E> o2) {
+                return comparator.compare(o1.peek(), o2.peek());
+            }
+        });
 
         while (shardSubsets.hasNext()) {
             Iterator<E> iterator = shardSubsets.next();
@@ -83,8 +82,7 @@ public class SortedIteratorMerger<E> {
             if (poll.hasNext()) {
 
                 //TODO: remove this check when validated
-                Preconditions.checkState(comparator.compare(current, poll.peek()) < 0,
-                        "Not sorted! current: " + current + " Next: " + poll.peek());
+                Preconditions.checkState(comparator.compare(current, poll.peek()) < 0, "Not sorted! current: " + current + " Next: " + poll.peek());
 
                 heap.offer(poll);
             }
@@ -96,6 +94,7 @@ public class SortedIteratorMerger<E> {
             throw new UnsupportedOperationException();
         }
 
+     
     }
 
 }

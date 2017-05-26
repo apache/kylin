@@ -82,6 +82,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
     private JobEngineConfig jobEngineConfig;
     private String serverName;
 
+
     private final static String SEGMENT_ID = "segmentId";
     public static final String ZOOKEEPER_LOCK_PATH = "/job_engine/lock"; // note ZookeeperDistributedLock will ensure zk path prefix: /kylin/metadata
 
@@ -143,8 +144,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
                         logger.warn(executable.toString() + " fail to schedule in server: " + serverName, ex);
                     }
                 }
-                logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, "
-                        + nOtherRunning + " running in other server, " + nReady + " ready, " + nOthers + " others");
+                logger.info("Job Fetcher: " + nRunning + " should running, " + runningJobs.size() + " actual running, " + nOtherRunning + " running in other server, " + nReady + " ready, " + nOthers + " others");
             } catch (Exception e) {
                 logger.warn("Job Fetcher caught a exception " + e);
             }
@@ -216,12 +216,9 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
                 final Output output = executableManager.getOutput(id);
                 if (output.getState() == ExecutableState.RUNNING) {
                     AbstractExecutable executable = executableManager.getJob(id);
-                    if (executable instanceof DefaultChainedExecutable
-                            && executable.getParams().get(SEGMENT_ID).equalsIgnoreCase(segmentId)
-                            && !nodeData.equalsIgnoreCase(serverName)) {
+                    if (executable instanceof DefaultChainedExecutable && executable.getParams().get(SEGMENT_ID).equalsIgnoreCase(segmentId) && !nodeData.equalsIgnoreCase(serverName)) {
                         try {
-                            logger.warn(nodeData + " has released the lock for: " + segmentId
-                                    + " but the job still running. so " + serverName + " resume the job");
+                            logger.warn(nodeData + " has released the lock for: " + segmentId + " but the job still running. so " + serverName + " resume the job");
                             if (!jobLock.isLocked(getLockPath(segmentId))) {
                                 executableManager.resumeRunningJobForce(executable.getId());
                                 fetcherPool.schedule(fetcher, 0, TimeUnit.SECONDS);
@@ -280,13 +277,11 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         lockWatch = this.jobLock.watchLocks(getWatchPath(), watchPool, watcherProcess);
 
         int corePoolSize = jobEngineConfig.getMaxConcurrentJobLimit();
-        jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS,
-                new SynchronousQueue<Runnable>());
+        jobPool = new ThreadPoolExecutor(corePoolSize, corePoolSize, Long.MAX_VALUE, TimeUnit.DAYS, new SynchronousQueue<Runnable>());
         context = new DefaultContext(Maps.<String, Executable> newConcurrentMap(), jobEngineConfig.getConfig());
 
         fetcher = new FetcherRunner();
-        fetcherPool.scheduleAtFixedRate(fetcher, 10, ExecutableConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS,
-                TimeUnit.SECONDS);
+        fetcherPool.scheduleAtFixedRate(fetcher, 10, ExecutableConstants.DEFAULT_SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
         hasStarted = true;
 
         resumeAllRunningJobs();
@@ -324,7 +319,7 @@ public class DistributedScheduler implements Scheduler<AbstractExecutable>, Conn
         }
         return path;
     }
-
+    
     @Override
     public void shutdown() throws SchedulerException {
         logger.info("Will shut down Job Engine ....");

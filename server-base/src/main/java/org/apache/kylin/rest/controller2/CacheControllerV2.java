@@ -56,11 +56,9 @@ public class CacheControllerV2 extends BasicController {
      * Announce wipe cache to all cluster nodes
      */
 
-    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/announce/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void announceWipeCacheV2(@RequestHeader("Accept-Language") String lang, @PathVariable String entity,
-            @PathVariable String event, @PathVariable String cacheKey) throws IOException {
+    public void announceWipeCacheV2(@RequestHeader("Accept-Language") String lang, @PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
         MsgPicker.setMsg(lang);
 
         cacheService.annouceWipeCache(entity, event, cacheKey);
@@ -70,18 +68,15 @@ public class CacheControllerV2 extends BasicController {
      * Wipe cache on this node
      */
 
-    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{entity}/{cacheKey}/{event}", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void wipeCacheV2(@RequestHeader("Accept-Language") String lang, @PathVariable String entity,
-            @PathVariable String event, @PathVariable String cacheKey) throws IOException {
+    public void wipeCacheV2(@RequestHeader("Accept-Language") String lang, @PathVariable String entity, @PathVariable String event, @PathVariable String cacheKey) throws IOException {
         MsgPicker.setMsg(lang);
 
         cacheService.notifyMetadataChange(entity, Broadcaster.Event.getEvent(event), cacheKey);
     }
 
-    @RequestMapping(value = "/announce/config", method = { RequestMethod.POST }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/announce/config", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public void hotLoadKylinConfigV2(@RequestHeader("Accept-Language") String lang) throws IOException {
         MsgPicker.setMsg(lang);

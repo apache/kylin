@@ -86,8 +86,7 @@ public class SnapshotManager {
         this.snapshotCache = CacheBuilder.newBuilder().removalListener(new RemovalListener<String, SnapshotTable>() {
             @Override
             public void onRemoval(RemovalNotification<String, SnapshotTable> notification) {
-                SnapshotManager.logger.info("Snapshot with resource path " + notification.getKey()
-                        + " is removed due to " + notification.getCause());
+                SnapshotManager.logger.info("Snapshot with resource path " + notification.getKey() + " is removed due to " + notification.getCause());
             }
         }).maximumSize(config.getCachedSnapshotMaxEntrySize())//
                 .expireAfterWrite(1, TimeUnit.DAYS).build(new CacheLoader<String, SnapshotTable>() {
@@ -142,8 +141,7 @@ public class SnapshotManager {
         return trySaveNewSnapshot(snapshot);
     }
 
-    public SnapshotTable rebuildSnapshot(IReadableTable table, TableDesc tableDesc, String overwriteUUID)
-            throws IOException {
+    public SnapshotTable rebuildSnapshot(IReadableTable table, TableDesc tableDesc, String overwriteUUID) throws IOException {
         SnapshotTable snapshot = new SnapshotTable(table, tableDesc.getIdentity());
         snapshot.setUuid(overwriteUUID);
 
@@ -216,8 +214,7 @@ public class SnapshotManager {
         logger.info("Loading snapshotTable from " + resourcePath + ", with loadData: " + loadData);
         ResourceStore store = MetadataManager.getInstance(this.config).getStore();
 
-        SnapshotTable table = store.getResource(resourcePath, SnapshotTable.class,
-                loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
+        SnapshotTable table = store.getResource(resourcePath, SnapshotTable.class, loadData ? SnapshotTableSerializer.FULL_SERIALIZER : SnapshotTableSerializer.INFO_SERIALIZER);
 
         if (loadData)
             logger.debug("Loaded snapshot at " + resourcePath);

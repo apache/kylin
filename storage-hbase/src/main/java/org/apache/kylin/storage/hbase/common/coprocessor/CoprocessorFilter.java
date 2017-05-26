@@ -33,8 +33,7 @@ import org.apache.kylin.metadata.tuple.IEvaluatableTuple;
  */
 public class CoprocessorFilter {
 
-    public static CoprocessorFilter fromFilter(final IDimensionEncodingMap dimEncMap, TupleFilter rootFilter,
-            FilterDecorator.FilterConstantsTreatment filterConstantsTreatment) {
+    public static CoprocessorFilter fromFilter(final IDimensionEncodingMap dimEncMap, TupleFilter rootFilter, FilterDecorator.FilterConstantsTreatment filterConstantsTreatment) {
         // translate constants into dictionary IDs via a serialize copy
         FilterDecorator filterDecorator = new FilterDecorator(dimEncMap, filterConstantsTreatment);
         byte[] bytes = TupleFilterSerializer.serialize(rootFilter, filterDecorator, DictCodeSystem.INSTANCE);
@@ -44,8 +43,7 @@ public class CoprocessorFilter {
     }
 
     public static byte[] serialize(CoprocessorFilter o) {
-        return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY
-                : TupleFilterSerializer.serialize(o.filter, DictCodeSystem.INSTANCE);
+        return (o.filter == null) ? BytesUtil.EMPTY_BYTE_ARRAY : TupleFilterSerializer.serialize(o.filter, DictCodeSystem.INSTANCE);
     }
 
     public static CoprocessorFilter deserialize(byte[] filterBytes) {

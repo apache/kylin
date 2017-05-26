@@ -30,8 +30,7 @@ public class CombinationTest {
 
     public int findSmallerSibling(long valueBits, long valueMask) {
         if ((valueBits | valueMask) != valueMask) {
-            throw new IllegalArgumentException(
-                    "Dismatch " + Long.toBinaryString(valueBits) + " from " + Long.toBinaryString(valueMask));
+            throw new IllegalArgumentException("Dismatch " + Long.toBinaryString(valueBits) + " from " + Long.toBinaryString(valueMask));
         }
 
         int n = Long.bitCount(valueMask);

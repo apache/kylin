@@ -85,8 +85,7 @@ public class CubeDesc extends RootPersistentEntity {
 
         @Override
         public String toString() {
-            return "DeriveInfo [type=" + type + ", dimension=" + dimension + ", columns=" + Arrays.toString(columns)
-                    + ", isOneToOne=" + isOneToOne + "]";
+            return "DeriveInfo [type=" + type + ", dimension=" + dimension + ", columns=" + Arrays.toString(columns) + ", isOneToOne=" + isOneToOne + "]";
         }
 
     }
@@ -243,8 +242,7 @@ public class CubeDesc extends RootPersistentEntity {
         return derivedToHostMap.get(derived);
     }
 
-    public Map<Array<TblColRef>, List<DeriveInfo>> getHostToDerivedInfo(List<TblColRef> rowCols,
-            Collection<TblColRef> wantedCols) {
+    public Map<Array<TblColRef>, List<DeriveInfo>> getHostToDerivedInfo(List<TblColRef> rowCols, Collection<TblColRef> wantedCols) {
         Map<Array<TblColRef>, List<DeriveInfo>> result = new HashMap<Array<TblColRef>, List<DeriveInfo>>();
         for (Entry<Array<TblColRef>, List<DeriveInfo>> entry : hostToDerivedMap.entrySet()) {
             Array<TblColRef> hostCols = entry.getKey();
@@ -431,12 +429,7 @@ public class CubeDesc extends RootPersistentEntity {
         try {
             md = MessageDigest.getInstance("MD5");
             StringBuilder sigString = new StringBuilder();
-            sigString.append(this.name).append("|").append(this.getFactTable()).append("|")
-                    .append(JsonUtil.writeValueAsString(this.model.getPartitionDesc())).append("|")
-                    .append(JsonUtil.writeValueAsString(this.dimensions)).append("|")
-                    .append(JsonUtil.writeValueAsString(this.measures)).append("|")
-                    .append(JsonUtil.writeValueAsString(this.rowkey)).append("|")
-                    .append(JsonUtil.writeValueAsString(this.hbaseMapping));
+            sigString.append(this.name).append("|").append(this.getFactTable()).append("|").append(JsonUtil.writeValueAsString(this.model.getPartitionDesc())).append("|").append(JsonUtil.writeValueAsString(this.dimensions)).append("|").append(JsonUtil.writeValueAsString(this.measures)).append("|").append(JsonUtil.writeValueAsString(this.rowkey)).append("|").append(JsonUtil.writeValueAsString(this.hbaseMapping));
 
             byte[] signature = md.digest(sigString.toString().getBytes());
             return new String(Base64.encodeBase64(signature));
@@ -485,8 +478,7 @@ public class CubeDesc extends RootPersistentEntity {
         // check all dimension columns are presented on rowkey
         List<TblColRef> dimCols = listDimensionColumnsExcludingDerived();
         if (rowkey.getRowKeyColumns().length != dimCols.size()) {
-            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length
-                    + ") does not match dimension columns count (" + dimCols.size() + "). ");
+            addError("RowKey columns count (" + rowkey.getRowKeyColumns().length + ") does not match dimension columns count (" + dimCols.size() + "). ");
         }
     }
 
@@ -584,8 +576,7 @@ public class CubeDesc extends RootPersistentEntity {
         initDerivedMap(new TblColRef[] { hostCol }, type, dimension, new TblColRef[] { derivedCol }, null);
     }
 
-    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols,
-            String[] extra) {
+    private void initDerivedMap(TblColRef[] hostCols, DeriveType type, DimensionDesc dimension, TblColRef[] derivedCols, String[] extra) {
         if (hostCols.length == 0 || derivedCols.length == 0)
             throw new IllegalStateException("host/derived columns must not be empty");
 
@@ -609,8 +600,7 @@ public class CubeDesc extends RootPersistentEntity {
 
         for (int i = 0; i < derivedCols.length; i++) {
             TblColRef derivedCol = derivedCols[i];
-            boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol)
-                    || (extra != null && extra[i].contains("1-1"));
+            boolean isOneToOne = type == DeriveType.PK_FK || ArrayUtils.contains(hostCols, derivedCol) || (extra != null && extra[i].contains("1-1"));
             derivedToHostMap.put(derivedCol, new DeriveInfo(type, dimension, hostCols, isOneToOne));
         }
     }

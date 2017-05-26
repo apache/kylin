@@ -51,25 +51,21 @@ public class SequentialCubeTupleIterator implements ITupleIterator {
     private int scanCount;
     private int scanCountDelta;
 
-    public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid,
-            Set<TblColRef> selectedDimensions, //
+    public SequentialCubeTupleIterator(List<CubeSegmentScanner> scanners, Cuboid cuboid, Set<TblColRef> selectedDimensions, //
             Set<FunctionDesc> selectedMetrics, TupleInfo returnTupleInfo, StorageContext context) {
         this.context = context;
         this.scanners = scanners;
 
         segmentCubeTupleIterators = Lists.newArrayList();
         for (CubeSegmentScanner scanner : scanners) {
-            segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions,
-                    selectedMetrics, returnTupleInfo, context));
+            segmentCubeTupleIterators.add(new SegmentCubeTupleIterator(scanner, cuboid, selectedDimensions, selectedMetrics, returnTupleInfo, context));
         }
 
         if (context.mergeSortPartitionResults()) {
             //query with limit
             logger.info("Using SortedIteratorMergerWithLimit to merge segment results");
-            Iterator<Iterator<ITuple>> transformed = (Iterator<Iterator<ITuple>>) (Iterator<?>) segmentCubeTupleIterators
-                    .iterator();
-            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(),
-                    getTupleDimensionComparator(cuboid, returnTupleInfo)).getIterator();
+            Iterator<Iterator<ITuple>> transformed = (Iterator<Iterator<ITuple>>) (Iterator<?>) segmentCubeTupleIterators.iterator();
+            tupleIterator = new SortedIteratorMergerWithLimit<ITuple>(transformed, context.getFinalPushDownLimit(), getTupleDimensionComparator(cuboid, returnTupleInfo)).getIterator();
         } else {
             //normal case
             logger.info("Using Iterators.concat to merge segment results");

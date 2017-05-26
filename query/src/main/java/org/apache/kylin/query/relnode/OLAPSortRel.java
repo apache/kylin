@@ -47,16 +47,14 @@ public class OLAPSortRel extends Sort implements OLAPRel {
     private ColumnRowType columnRowType;
     private OLAPContext context;
 
-    public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RelCollation collation,
-            RexNode offset, RexNode fetch) {
+    public OLAPSortRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RelCollation collation, RexNode offset, RexNode fetch) {
         super(cluster, traitSet, child, collation, offset, fetch);
         Preconditions.checkArgument(getConvention() == OLAPRel.CONVENTION);
         Preconditions.checkArgument(getConvention() == child.getConvention());
     }
 
     @Override
-    public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput, RelCollation newCollation, RexNode offset,
-            RexNode fetch) {
+    public OLAPSortRel copy(RelTraitSet traitSet, RelNode newInput, RelCollation newCollation, RexNode offset, RexNode fetch) {
         return new OLAPSortRel(getCluster(), traitSet, newInput, newCollation, offset, fetch);
     }
 
@@ -122,8 +120,7 @@ public class OLAPSortRel extends Sort implements OLAPRel {
 
     @Override
     public EnumerableRel implementEnumerable(List<EnumerableRel> inputs) {
-        return new EnumerableSort(getCluster(),
-                getCluster().traitSetOf(EnumerableConvention.INSTANCE).replace(collation), //
+        return new EnumerableSort(getCluster(), getCluster().traitSetOf(EnumerableConvention.INSTANCE).replace(collation), //
                 sole(inputs), collation, offset, fetch);
     }
 

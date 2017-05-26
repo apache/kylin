@@ -52,7 +52,6 @@ public interface IRemoteClient extends Closeable {
     /**
      * Execute query remotely and get back result.
      */
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues,
-            Map<String, String> queryToggles) throws IOException;
+    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues, Map<String, String> queryToggles) throws IOException;
 
 }

@@ -297,7 +297,7 @@ public class SortedColumnReaderTest {
         }
         return result;
     }
-
+    
     private String qualify(String path) {
         String absolutePath = new File(path).getAbsolutePath();
         if (absolutePath.startsWith("/"))

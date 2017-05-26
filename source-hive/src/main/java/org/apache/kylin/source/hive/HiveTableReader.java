@@ -143,8 +143,7 @@ public class HiveTableReader implements TableReader {
         return "hive table reader for: " + dbName + "." + tableName;
     }
 
-    private static ReaderContext getHiveReaderContext(String database, String table, Map<String, String> partitionKV)
-            throws Exception {
+    private static ReaderContext getHiveReaderContext(String database, String table, Map<String, String> partitionKV) throws Exception {
         HiveConf hiveConf = new HiveConf(HiveTableReader.class);
         Iterator<Entry<String, String>> itr = hiveConf.iterator();
         Map<String, String> map = new HashMap<String, String>();
@@ -157,8 +156,7 @@ public class HiveTableReader implements TableReader {
         if (partitionKV == null || partitionKV.size() == 0) {
             entity = new ReadEntity.Builder().withDatabase(database).withTable(table).build();
         } else {
-            entity = new ReadEntity.Builder().withDatabase(database).withTable(table).withPartition(partitionKV)
-                    .build();
+            entity = new ReadEntity.Builder().withDatabase(database).withTable(table).withPartition(partitionKV).build();
         }
 
         HCatReader reader = DataTransferFactory.getHCatReader(entity, map);

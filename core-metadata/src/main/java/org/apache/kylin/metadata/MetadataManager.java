@@ -67,12 +67,9 @@ public class MetadataManager {
     private static final Logger logger = LoggerFactory.getLogger(MetadataManager.class);
 
     public static final Serializer<TableDesc> TABLE_SERIALIZER = new JsonSerializer<TableDesc>(TableDesc.class);
-    public static final Serializer<TableExtDesc> TABLE_EXT_SERIALIZER = new JsonSerializer<TableExtDesc>(
-            TableExtDesc.class);
-    public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(
-            DataModelDesc.class);
-    public static final Serializer<ExternalFilterDesc> EXTERNAL_FILTER_DESC_SERIALIZER = new JsonSerializer<ExternalFilterDesc>(
-            ExternalFilterDesc.class);
+    public static final Serializer<TableExtDesc> TABLE_EXT_SERIALIZER = new JsonSerializer<TableExtDesc>(TableExtDesc.class);
+    public static final Serializer<DataModelDesc> MODELDESC_SERIALIZER = new JsonSerializer<DataModelDesc>(DataModelDesc.class);
+    public static final Serializer<ExternalFilterDesc> EXTERNAL_FILTER_DESC_SERIALIZER = new JsonSerializer<ExternalFilterDesc>(ExternalFilterDesc.class);
 
     // static cached instances
     private static final ConcurrentMap<KylinConfig, MetadataManager> CACHE = new ConcurrentHashMap<KylinConfig, MetadataManager>();
@@ -324,8 +321,7 @@ public class MetadataManager {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             if (event == Event.DROP)
                 srcTableMap.removeLocal(cacheKey);
             else
@@ -344,8 +340,7 @@ public class MetadataManager {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             if (event == Event.DROP)
                 srcTableExdMap.removeLocal(cacheKey);
             else
@@ -372,8 +367,7 @@ public class MetadataManager {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             if (event == Event.DROP)
                 dataModelDescMap.removeLocal(cacheKey);
             else
@@ -392,8 +386,7 @@ public class MetadataManager {
         }
 
         @Override
-        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey)
-                throws IOException {
+        public void onEntityChange(Broadcaster broadcaster, String entity, Event event, String cacheKey) throws IOException {
             if (event == Event.DROP)
                 extFilterMap.removeLocal(cacheKey);
             else
@@ -403,13 +396,11 @@ public class MetadataManager {
 
     private void reloadAllTableExt() throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Reloading Table_exd info from folder "
-                + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
+        logger.debug("Reloading Table_exd info from folder " + store.getReadableResourcePath(ResourceStore.TABLE_EXD_RESOURCE_ROOT));
 
         srcTableExdMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_EXD_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             reloadTableExtAt(path);
         }
@@ -470,13 +461,11 @@ public class MetadataManager {
 
     private void reloadAllExternalFilter() throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Reloading ExternalFilter from folder "
-                + store.getReadableResourcePath(ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT));
+        logger.debug("Reloading ExternalFilter from folder " + store.getReadableResourcePath(ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT));
 
         extFilterMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.EXTERNAL_FILTER_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             reloadExternalFilterAt(path);
         }
@@ -486,13 +475,11 @@ public class MetadataManager {
 
     private void reloadAllSourceTable() throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Reloading SourceTable from folder "
-                + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
+        logger.debug("Reloading SourceTable from folder " + store.getReadableResourcePath(ResourceStore.TABLE_RESOURCE_ROOT));
 
         srcTableMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.TABLE_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
             reloadSourceTableAt(path);
         }
@@ -593,13 +580,11 @@ public class MetadataManager {
 
     private void reloadAllDataModel() throws IOException {
         ResourceStore store = getStore();
-        logger.debug("Reloading DataModel from folder "
-                + store.getReadableResourcePath(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT));
+        logger.debug("Reloading DataModel from folder " + store.getReadableResourcePath(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT));
 
         dataModelDescMap.clear();
 
-        List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT,
-                MetadataConstants.FILE_SURFIX);
+        List<String> paths = store.collectResourceRecursively(ResourceStore.DATA_MODEL_DESC_RESOURCE_ROOT, MetadataConstants.FILE_SURFIX);
         for (String path : paths) {
 
             try {
@@ -618,7 +603,7 @@ public class MetadataManager {
         ResourceStore store = getStore();
         try {
             DataModelDesc dataModelDesc = store.getResource(path, DataModelDesc.class, MODELDESC_SERIALIZER);
-
+            
             if (!dataModelDesc.isDraft())
                 dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
 
@@ -669,7 +654,7 @@ public class MetadataManager {
     }
 
     private DataModelDesc saveDataModelDesc(DataModelDesc dataModelDesc) throws IOException {
-
+        
         if (!dataModelDesc.isDraft())
             dataModelDesc.init(config, this.getAllTablesMap(), this.ccInfoMap);
 

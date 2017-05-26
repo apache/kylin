@@ -109,8 +109,7 @@ public class HBaseScannerBenchmark {
     private void testScanRaw(String msg) throws IOException {
         long t = System.currentTimeMillis();
 
-        IGTScanner scan = simpleStore.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
-                .setFilterPushDown(null).createGTScanRequest());
+        IGTScanner scan = simpleStore.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
         ResultScanner innerScanner = ((SimpleHBaseStore.Reader) scan).getHBaseScanner();
         int count = 0;
         for (Result r : innerScanner) {
@@ -126,8 +125,7 @@ public class HBaseScannerBenchmark {
     private void testScanRecords(String msg) throws IOException {
         long t = System.currentTimeMillis();
 
-        IGTScanner scan = simpleStore.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null)
-                .setFilterPushDown(null).createGTScanRequest());
+        IGTScanner scan = simpleStore.scan(new GTScanRequestBuilder().setInfo(info).setRanges(null).setDimensions(null).setFilterPushDown(null).createGTScanRequest());
         int count = 0;
         for (GTRecord rec : scan) {
             count++;

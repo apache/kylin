@@ -16,14 +16,13 @@
  * limitations under the License.
 */
 
+
 package org.apache.kylin.engine.mr.steps;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.kylin.common.util.ByteArray;
 import org.apache.kylin.common.util.Bytes;
@@ -33,10 +32,11 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 @Ignore
 public class NewCubeSamplingMethodTest {
@@ -64,6 +64,7 @@ public class NewCubeSamplingMethodTest {
         compareAccuracyBasic(dataSet);
     }
 
+
     @Ignore
     @Test
     public void testSmallCardData() throws Exception {
@@ -71,6 +72,7 @@ public class NewCubeSamplingMethodTest {
         comparePerformanceBasic(dataSet);
         compareAccuracyBasic(dataSet);
     }
+
 
     public void comparePerformanceBasic(final List<List<String>> rows) throws Exception {
         //old hash method
@@ -120,10 +122,10 @@ public class NewCubeSamplingMethodTest {
                     counter.add(hc.hash().asBytes());
                 }
                 long estimate = counter.getCountEstimate();
-                System.out.println("old method finished. Estimate cardinality : " + estimate + ". Error rate : "
-                        + countErrorRate(estimate, realCardinality));
+                System.out.println("old method finished. Estimate cardinality : " + estimate + ". Error rate : " + countErrorRate(estimate, realCardinality));
             }
         });
+
 
         long t2 = runAndGetTime(new TestCase() {
             @Override
@@ -147,8 +149,7 @@ public class NewCubeSamplingMethodTest {
                     counter.addHashDirectly(value);
                 }
                 long estimate = counter.getCountEstimate();
-                System.out.println("new method finished. Estimate cardinality : " + estimate + ". Error rate : "
-                        + countErrorRate(estimate, realCardinality));
+                System.out.println("new method finished. Estimate cardinality : " + estimate + ". Error rate : " + countErrorRate(estimate, realCardinality));
             }
         });
     }
@@ -178,6 +179,7 @@ public class NewCubeSamplingMethodTest {
         return counters;
     }
 
+
     private void addCuboidBitSet(long cuboidId, List<Integer[]> allCuboidsBitSet) {
         Integer[] indice = new Integer[Long.bitCount(cuboidId)];
 
@@ -206,8 +208,7 @@ public class NewCubeSamplingMethodTest {
         void run() throws Exception;
     }
 
-    private void putRowKeyToHLL(List<String> row, ByteArray[] colHashValues, HLLCounter[] cuboidCounters,
-            HashFunction hashFunction) {
+    private void putRowKeyToHLL(List<String> row, ByteArray[] colHashValues, HLLCounter[] cuboidCounters, HashFunction hashFunction) {
         int x = 0;
         for (String field : row) {
             Hasher hc = hashFunction.newHasher();
@@ -224,8 +225,7 @@ public class NewCubeSamplingMethodTest {
         }
     }
 
-    private void putRowKeyToHLLNew(List<String> row, long[] hashValuesLong, HLLCounter[] cuboidCounters,
-            HashFunction hashFunction) {
+    private void putRowKeyToHLLNew(List<String> row, long[] hashValuesLong, HLLCounter[] cuboidCounters, HashFunction hashFunction) {
         int x = 0;
         for (String field : row) {
             Hasher hc = hashFunction.newHasher();
@@ -266,7 +266,7 @@ public class NewCubeSamplingMethodTest {
         return row;
     }
 
-    private String[] smallCardRow = { "abc", "bcd", "jifea", "feaifj" };
+    private String[] smallCardRow = {"abc", "bcd", "jifea", "feaifj"};
 
     private Random rand = new Random(System.currentTimeMillis());
 
@@ -278,6 +278,7 @@ public class NewCubeSamplingMethodTest {
         }
         return row;
     }
+
 
     private int countCardinality(List<List<String>> rows) {
         Set<String> diffCols = new HashSet<String>();

@@ -61,11 +61,9 @@ public class AccessControllerV2 extends BasicController {
      * @throws IOException
      */
 
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.GET }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getAccessEntitiesV2(@RequestHeader("Accept-Language") String lang,
-            @PathVariable String type, @PathVariable String uuid) {
+    public EnvelopeResponse getAccessEntitiesV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type, @PathVariable String uuid) {
         MsgPicker.setMsg(lang);
 
         AclEntity ae = accessService.getAclEntity(type, uuid);
@@ -79,11 +77,9 @@ public class AccessControllerV2 extends BasicController {
      * @param accessRequest
      */
 
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.POST }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse grantV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type,
-            @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
+    public EnvelopeResponse grantV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
         MsgPicker.setMsg(lang);
 
         AclEntity ae = accessService.getAclEntity(type, uuid);
@@ -100,11 +96,9 @@ public class AccessControllerV2 extends BasicController {
      * @param accessRequest
      */
 
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.PUT }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse updateV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type,
-            @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
+    public EnvelopeResponse updateV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type, @PathVariable String uuid, @RequestBody AccessRequest accessRequest) {
         MsgPicker.setMsg(lang);
 
         AclEntity ae = accessService.getAclEntity(type, uuid);
@@ -120,11 +114,9 @@ public class AccessControllerV2 extends BasicController {
      * @param accessRequest
      */
 
-    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/{type}/{uuid}", method = { RequestMethod.DELETE }, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse revokeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type,
-            @PathVariable String uuid, AccessRequest accessRequest) {
+    public EnvelopeResponse revokeV2(@RequestHeader("Accept-Language") String lang, @PathVariable String type, @PathVariable String uuid, AccessRequest accessRequest) {
         MsgPicker.setMsg(lang);
 
         AclEntity ae = accessService.getAclEntity(type, uuid);

@@ -45,11 +45,11 @@ public class EngineFactory {
     public static IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeDesc cubeDesc) {
         return batchEngine(cubeDesc).getJoinedFlatTableDesc(cubeDesc);
     }
-
+    
     public static IJoinedFlatTableDesc getJoinedFlatTableDesc(CubeSegment newSegment) {
         return batchEngine(newSegment).getJoinedFlatTableDesc(newSegment);
     }
-
+    
     /** Build a new cube segment, typically its time range appends to the end of current cube. */
     public static DefaultChainedExecutable createBatchCubingJob(CubeSegment newSegment, String submitter) {
         return batchEngine(newSegment).createBatchCubingJob(newSegment, submitter);

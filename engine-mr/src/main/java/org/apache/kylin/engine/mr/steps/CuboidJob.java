@@ -93,8 +93,7 @@ public class CuboidJob extends AbstractHadoopJob {
             CubeSegment segment = cube.getSegmentById(segmentID);
 
             if (checkSkip(cubingJobId)) {
-                logger.info(
-                        "Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + segmentID + "[" + segmentID + "]");
+                logger.info("Skip job " + getOptionValue(OPTION_JOB_NAME) + " for " + segmentID + "[" + segmentID + "]");
                 return 0;
             }
 
@@ -142,8 +141,7 @@ public class CuboidJob extends AbstractHadoopJob {
 
         if ("FLAT_TABLE".equals(input)) {
             // base cuboid case
-            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg)
-                    .getFlatTableInputFormat();
+            IMRTableInputFormat flatTableInputFormat = MRUtil.getBatchCubingInputSide(cubeSeg).getFlatTableInputFormat();
             flatTableInputFormat.configureJob(job);
         } else {
             // n-dimension cuboid case

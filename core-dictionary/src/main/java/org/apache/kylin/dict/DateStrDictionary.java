@@ -83,13 +83,13 @@ public class DateStrDictionary extends Dictionary<String> {
         return pattern.length();
     }
 
+
     @Override
     final protected int getIdFromValueImpl(String value, int roundFlag) {
         Date date = stringToDate(value, pattern);
         int id = calcIdFromSeqNo((int) DateDimEnc.getNumOfDaysSince0000FromMillis(date.getTime()));
         if (id < baseId || id > maxId)
-            throw new IllegalArgumentException(
-                    "'" + value + "' encodes to '" + id + "' which is out of range [" + baseId + "," + maxId + "]");
+            throw new IllegalArgumentException("'" + value + "' encodes to '" + id + "' which is out of range [" + baseId + "," + maxId + "]");
 
         return id;
     }
@@ -122,6 +122,7 @@ public class DateStrDictionary extends Dictionary<String> {
         int baseId = in.readInt();
         init(pattern, baseId);
     }
+
 
     @Override
     public int hashCode() {

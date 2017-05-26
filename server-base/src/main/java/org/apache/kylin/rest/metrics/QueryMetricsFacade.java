@@ -18,10 +18,6 @@
 
 package org.apache.kylin.rest.metrics;
 
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.concurrent.ThreadSafe;
-
 import org.apache.hadoop.metrics2.MetricsException;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.kylin.common.KylinConfig;
@@ -29,6 +25,9 @@ import org.apache.kylin.rest.request.SQLRequest;
 import org.apache.kylin.rest.response.SQLResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.concurrent.ThreadSafe;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The entrance of metrics features.

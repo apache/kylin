@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class DBUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(DBUtils.class);
-
+    
     /**
      * Closes an <code>ResultSet</code> unconditionally.
      * <p>

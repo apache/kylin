@@ -75,16 +75,14 @@ public class CuboidCLI {
         if (validate) {
             if (enableDimCap) {
                 if (cubeDesc.getAllCuboids().size() != cuboidSet.size()) {
-                    throw new IllegalStateException(
-                            "Expected cuboid set " + cubeDesc.getAllCuboids() + "; but actual cuboid set " + cuboidSet);
+                    throw new IllegalStateException("Expected cuboid set " + cubeDesc.getAllCuboids() + "; but actual cuboid set " + cuboidSet);
                 }
             } else {
                 //only run this for test purpose, performance is bad when # of dims is large
                 TreeSet<Long> enumCuboids = enumCalcCuboidCount(cubeDesc);
                 System.out.println(Arrays.toString(enumCuboids.toArray(new Long[enumCuboids.size()])));
                 if (enumCuboids.equals(cuboidSet) == false) {
-                    throw new IllegalStateException(
-                            "Expected cuboid set " + enumCuboids + "; but actual cuboid set " + cuboidSet);
+                    throw new IllegalStateException("Expected cuboid set " + enumCuboids + "; but actual cuboid set " + cuboidSet);
                 }
 
                 //check all valid and invalid

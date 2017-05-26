@@ -75,15 +75,13 @@ public class CreateDictionaryJob extends AbstractHadoopJob {
                 Path colDir = new Path(factColumnsInputPath, col.getIdentity());
                 FileSystem fs = HadoopUtil.getWorkingFileSystem();
 
-                Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir,
-                        col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
+                Path dictFile = HadoopUtil.getFilterOnlyPath(fs, colDir, col.getName() + FactDistinctColumnsReducer.DICT_FILE_POSTFIX);
                 if (dictFile == null) {
                     logger.info("Dict for '" + col.getName() + "' not pre-built.");
                     return null;
                 }
 
-                try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(),
-                        SequenceFile.Reader.file(dictFile))) {
+                try (SequenceFile.Reader reader = new SequenceFile.Reader(HadoopUtil.getCurrentConfiguration(), SequenceFile.Reader.file(dictFile))) {
                     NullWritable key = NullWritable.get();
                     BytesWritable value = new BytesWritable();
                     reader.next(key, value);

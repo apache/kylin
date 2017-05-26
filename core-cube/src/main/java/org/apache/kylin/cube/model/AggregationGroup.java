@@ -118,8 +118,7 @@ public class AggregationGroup implements Serializable {
         // check no dup
         Set<String> set = new HashSet<>(Arrays.asList(names));
         if (set.size() < names.length)
-            throw new IllegalStateException(
-                    "Columns in aggrgroup must not contain duplication: " + Arrays.asList(names));
+            throw new IllegalStateException("Columns in aggrgroup must not contain duplication: " + Arrays.asList(names));
     }
 
     private void buildPartialCubeFullMask(RowKeyDesc rowKeyDesc) {

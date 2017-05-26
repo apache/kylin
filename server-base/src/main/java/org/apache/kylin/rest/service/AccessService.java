@@ -306,8 +306,7 @@ public class AccessService {
         // Cause there is a circle reference in AccessControlEntry, it needs to
         // set acl to null as a workaround.
         for (AccessControlEntry ace : acl.getEntries()) {
-            accessControlEntities
-                    .add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
+            accessControlEntities.add(new AccessEntryResponse(ace.getId(), ace.getSid(), ace.getPermission(), ace.isGranting()));
         }
 
         return accessControlEntities;
@@ -323,8 +322,7 @@ public class AccessService {
         Message msg = MsgPicker.getMsg();
 
         // Can't revoke admin permission from domain object owner
-        if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid())
-                && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
+        if (acl.getOwner().equals(acl.getEntries().get(indexOfAce).getSid()) && BasePermission.ADMINISTRATION.equals(acl.getEntries().get(indexOfAce).getPermission())) {
             throw new ForbiddenException(msg.getREVOKE_ADMIN_PERMISSION());
         }
     }

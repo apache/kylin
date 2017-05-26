@@ -45,8 +45,7 @@ public class TimedJsonStreamParserTest extends LocalFileMetadataTestCase {
     private static String[] userNeedColNames;
     private static final String jsonFilePath = "src/test/resources/message.json";
     private static ObjectMapper mapper;
-    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class),
-            SimpleType.construct(Object.class));
+    private final JavaType mapType = MapType.construct(HashMap.class, SimpleType.construct(String.class), SimpleType.construct(Object.class));
 
     @BeforeClass
     public static void setUp() throws Exception {

@@ -77,8 +77,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         reduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, "test_kylin_cube_with_slr_ready");
 
-        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready")
-                .getDescriptor();
+        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         BufferedMeasureCodec codec = new BufferedMeasureCodec(cubeDesc.getMeasures());
 
         Text key1 = new Text("72010ustech");
@@ -102,12 +101,9 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         List<Pair<Text, Text>> result = reduceDriver.run();
 
-        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"),
-                newValueText(codec, "45.43", "10", "20.34", 3, 600));
-        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"),
-                newValueText(codec, "35.43", "15.09", "20.34", 2, 1500));
-        Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"),
-                newValueText(codec, "146.52", "146.52", "146.52", 0, 0));
+        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "45.43", "10", "20.34", 3, 600));
+        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "35.43", "15.09", "20.34", 2, 1500));
+        Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"), newValueText(codec, "146.52", "146.52", "146.52", 0, 0));
 
         assertEquals(3, result.size());
 
@@ -121,8 +117,7 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
         reduceDriver.getConfiguration().set(BatchConstants.CFG_CUBE_NAME, "test_kylin_cube_with_slr_ready");
         reduceDriver.getConfiguration().setInt(BatchConstants.CFG_CUBE_CUBOID_LEVEL, 1);
 
-        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready")
-                .getDescriptor();
+        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         MeasureDesc measureDesc = cubeDesc.getMeasures().get(0);
         FunctionDesc functionDesc = measureDesc.getFunction();
         Field field = FunctionDesc.class.getDeclaredField("measureType");
@@ -153,10 +148,8 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
 
         List<Pair<Text, Text>> result = reduceDriver.run();
 
-        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"),
-                newValueText(codec, "0", "10", "20.34", 3, 600));
-        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"),
-                newValueText(codec, "0", "15.09", "20.34", 2, 1500));
+        Pair<Text, Text> p1 = new Pair<Text, Text>(new Text("72010ustech"), newValueText(codec, "0", "10", "20.34", 3, 600));
+        Pair<Text, Text> p2 = new Pair<Text, Text>(new Text("1tech"), newValueText(codec, "0", "15.09", "20.34", 2, 1500));
         Pair<Text, Text> p3 = new Pair<Text, Text>(new Text("0"), newValueText(codec, "0", "146.52", "146.52", 0, 0));
 
         assertEquals(3, result.size());
@@ -166,10 +159,8 @@ public class CubeReducerTest extends LocalFileMetadataTestCase {
         assertTrue(result.contains(p3));
     }
 
-    private Text newValueText(BufferedMeasureCodec codec, String sum, String min, String max, int count,
-            int item_count) {
-        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new Long(count),
-                new Long(item_count) };
+    private Text newValueText(BufferedMeasureCodec codec, String sum, String min, String max, int count, int item_count) {
+        Object[] values = new Object[] { new BigDecimal(sum), new BigDecimal(min), new BigDecimal(max), new Long(count), new Long(item_count) };
 
         ByteBuffer buf = codec.encode(values);
 

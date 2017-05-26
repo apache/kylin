@@ -65,8 +65,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, java.io.Se
         if (cubeSegment == null) {
             return "kylin_intermediate_" + cubeDesc.getName().toLowerCase();
         } else {
-            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase() + "_"
-                    + cubeSegment.getUuid().replaceAll("-", "_");
+            return "kylin_intermediate_" + cubeDesc.getName().toLowerCase() + "_" + cubeSegment.getUuid().replaceAll("-", "_");
         }
     }
 
@@ -116,8 +115,7 @@ public class CubeJoinedFlatTableDesc implements IJoinedFlatTableDesc, java.io.Se
     // sanity check the input record (in bytes) matches what's expected
     public void sanityCheck(BytesSplitter bytesSplitter) {
         if (columnCount != bytesSplitter.getBufferSize()) {
-            throw new IllegalArgumentException("Expect " + columnCount + " columns, but see "
-                    + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
+            throw new IllegalArgumentException("Expect " + columnCount + " columns, but see " + bytesSplitter.getBufferSize() + " -- " + bytesSplitter);
         }
 
         // TODO: check data types here

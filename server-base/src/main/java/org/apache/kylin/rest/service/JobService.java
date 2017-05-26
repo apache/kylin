@@ -107,8 +107,7 @@ public class JobService extends BasicService implements InitializingBean {
         TimeZone.setDefault(tzone);
 
         final KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
-        final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory
-                .scheduler(kylinConfig.getSchedulerType());
+        final Scheduler<AbstractExecutable> scheduler = (Scheduler<AbstractExecutable>) SchedulerFactory.scheduler(kylinConfig.getSchedulerType());
 
         jobLock = (JobLock) ClassUtil.newInstance(kylinConfig.getJobControllerLock());
 
@@ -155,22 +154,22 @@ public class JobService extends BasicService implements InitializingBean {
         Message msg = MsgPicker.getMsg();
 
         switch (status) {
-        case DISCARDED:
-            return ExecutableState.DISCARDED;
-        case ERROR:
-            return ExecutableState.ERROR;
-        case FINISHED:
-            return ExecutableState.SUCCEED;
-        case NEW:
-            return ExecutableState.READY;
-        case PENDING:
-            return ExecutableState.READY;
-        case RUNNING:
-            return ExecutableState.RUNNING;
-        case STOPPED:
-            return ExecutableState.STOPPED;
-        default:
-            throw new BadRequestException(String.format(msg.getILLEGAL_EXECUTABLE_STATE(), status));
+            case DISCARDED:
+                return ExecutableState.DISCARDED;
+            case ERROR:
+                return ExecutableState.ERROR;
+            case FINISHED:
+                return ExecutableState.SUCCEED;
+            case NEW:
+                return ExecutableState.READY;
+            case PENDING:
+                return ExecutableState.READY;
+            case RUNNING:
+                return ExecutableState.RUNNING;
+            case STOPPED:
+                return ExecutableState.STOPPED;
+            default:
+                throw new BadRequestException(String.format(msg.getILLEGAL_EXECUTABLE_STATE(), status));
         }
     }
 
@@ -178,30 +177,28 @@ public class JobService extends BasicService implements InitializingBean {
         Message msg = MsgPicker.getMsg();
 
         switch (timeFilter) {
-        case LAST_ONE_DAY:
-            calendar.add(Calendar.DAY_OF_MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_WEEK:
-            calendar.add(Calendar.WEEK_OF_MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_MONTH:
-            calendar.add(Calendar.MONTH, -1);
-            return calendar.getTimeInMillis();
-        case LAST_ONE_YEAR:
-            calendar.add(Calendar.YEAR, -1);
-            return calendar.getTimeInMillis();
-        case ALL:
-            return 0;
-        default:
-            throw new BadRequestException(String.format(msg.getILLEGAL_TIME_FILTER(), timeFilter));
+            case LAST_ONE_DAY:
+                calendar.add(Calendar.DAY_OF_MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_WEEK:
+                calendar.add(Calendar.WEEK_OF_MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_MONTH:
+                calendar.add(Calendar.MONTH, -1);
+                return calendar.getTimeInMillis();
+            case LAST_ONE_YEAR:
+                calendar.add(Calendar.YEAR, -1);
+                return calendar.getTimeInMillis();
+            case ALL:
+                return 0;
+            default:
+                throw new BadRequestException(String.format(msg.getILLEGAL_TIME_FILTER(), timeFilter));
         }
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'MANAGEMENT')")
     public JobInstance submitJob(CubeInstance cube, long startDate, long endDate, long startOffset, long endOffset, //
-            Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd,
-            CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
+                                 Map<Integer, Long> sourcePartitionOffsetStart, Map<Integer, Long> sourcePartitionOffsetEnd, CubeBuildTypeEnum buildType, boolean force, String submitter) throws IOException {
         Message msg = MsgPicker.getMsg();
 
         if (cube.getStatus() == RealizationStatusEnum.DESCBROKEN) {
@@ -215,8 +212,7 @@ public class JobService extends BasicService implements InitializingBean {
         try {
             if (buildType == CubeBuildTypeEnum.BUILD) {
                 ISource source = SourceFactory.getSource(cube);
-                SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset,
-                        sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
+                SourcePartition sourcePartition = new SourcePartition(startDate, endDate, startOffset, endOffset, sourcePartitionOffsetStart, sourcePartitionOffsetEnd);
                 sourcePartition = source.enrichSourcePartitionBeforeBuild(cube, sourcePartition);
                 newSeg = getCubeManager().appendSegment(cube, sourcePartition);
                 job = EngineFactory.createBatchCubingJob(newSeg, submitter);
@@ -234,8 +230,7 @@ public class JobService extends BasicService implements InitializingBean {
 
         } catch (Exception e) {
             if (newSeg != null) {
-                logger.error("Job submission might failed for NEW segment {}, will clean the NEW segment from cube",
-                        newSeg.getName());
+                logger.error("Job submission might failed for NEW segment {}, will clean the NEW segment from cube", newSeg.getName());
                 try {
                     // Remove this segments
                     CubeUpdate cubeBuilder = new CubeUpdate(cube);
@@ -261,8 +256,7 @@ public class JobService extends BasicService implements InitializingBean {
         Message msg = MsgPicker.getMsg();
 
         if (!cube.getDescriptor().checkSignature())
-            throw new BadRequestException(
-                    String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
+            throw new BadRequestException(String.format(msg.getINCONSISTENT_CUBE_DESC_SIGNATURE(), cube.getDescriptor()));
     }
 
     public JobInstance getJobInstance(String uuid) {
@@ -302,20 +296,17 @@ public class JobService extends BasicService implements InitializingBean {
         return result;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void resumeJob(JobInstance job) {
         getExecutableManager().resumeJob(job.getId());
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void rollbackJob(JobInstance job, String stepId) {
         getExecutableManager().rollbackJob(job.getId(), stepId);
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance cancelJob(JobInstance job) throws IOException {
         if (null == job.getRelatedCube() || null == getCubeManager().getCube(job.getRelatedCube())) {
             getExecutableManager().discardJob(job.getId());
@@ -338,15 +329,13 @@ public class JobService extends BasicService implements InitializingBean {
         return job;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public JobInstance pauseJob(JobInstance job) {
         getExecutableManager().pauseJob(job.getId());
         return job;
     }
 
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#job, 'ADMINISTRATION') or hasPermission(#job, 'OPERATION') or hasPermission(#job, 'MANAGEMENT')")
     public void dropJob(JobInstance job) throws IOException {
         cancelJob(job);
         getExecutableManager().deleteJob(job.getId());
@@ -356,9 +345,7 @@ public class JobService extends BasicService implements InitializingBean {
      * currently only support substring match
      * @return
      */
-    public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName,
-            final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue,
-            final JobTimeFilterEnum timeFilter) {
+    public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName, final List<JobStatusEnum> statusList, final Integer limitValue, final Integer offsetValue, final JobTimeFilterEnum timeFilter) {
         Integer limit = (null == limitValue) ? 30 : limitValue;
         Integer offset = (null == offsetValue) ? 0 : offsetValue;
         List<JobInstance> jobs = searchJobs(cubeNameSubstring, projectName, statusList, timeFilter);
@@ -375,8 +362,7 @@ public class JobService extends BasicService implements InitializingBean {
         return jobs.subList(offset, offset + limit);
     }
 
-    public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName,
-            final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
+    public List<JobInstance> searchJobs(final String cubeNameSubstring, final String projectName, final List<JobStatusEnum> statusList, final JobTimeFilterEnum timeFilter) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         long timeStartInMillis = getTimeStartInMillis(calendar, timeFilter);
@@ -384,81 +370,69 @@ public class JobService extends BasicService implements InitializingBean {
         long timeEndInMillis = Long.MAX_VALUE;
         Set<ExecutableState> states = convertStatusEnumToStates(statusList);
         final Map<String, Output> allOutputs = getExecutableManager().getAllOutputs(timeStartInMillis, timeEndInMillis);
-        return Lists
-                .newArrayList(
-                        FluentIterable
-                                .from(searchCubingJobs(cubeNameSubstring, projectName, states, timeStartInMillis,
-                                        timeEndInMillis, allOutputs, false))
-                                .transform(new Function<CubingJob, JobInstance>() {
-                                    @Override
-                                    public JobInstance apply(CubingJob cubingJob) {
-                                        return JobInfoConverter.parseToJobInstance(cubingJob, allOutputs);
-                                    }
-                                }));
+        return Lists.newArrayList(FluentIterable.from(searchCubingJobs(cubeNameSubstring, projectName, states, timeStartInMillis, timeEndInMillis, allOutputs, false)).transform(new Function<CubingJob, JobInstance>() {
+            @Override
+            public JobInstance apply(CubingJob cubingJob) {
+                return JobInfoConverter.parseToJobInstance(cubingJob, allOutputs);
+            }
+        }));
     }
 
-    public List<CubingJob> searchCubingJobs(final String cubeName, final String projectName,
-            final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis,
-            final Map<String, Output> allOutputs, final boolean cubeNameExactMatch) {
-        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(
-                getExecutableManager().getAllAbstractExecutables(timeStartInMillis, timeEndInMillis, CubingJob.class))
-                .filter(new Predicate<AbstractExecutable>() {
-                    @Override
-                    public boolean apply(AbstractExecutable executable) {
-                        if (executable instanceof CubingJob) {
-                            if (StringUtils.isEmpty(cubeName)) {
-                                return true;
-                            }
-                            String executableCubeName = CubingExecutableUtil.getCubeName(executable.getParams());
-                            if (executableCubeName == null)
-                                return true;
-                            if (cubeNameExactMatch)
-                                return executableCubeName.equalsIgnoreCase(cubeName);
-                            else
-                                return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
-                        } else {
-                            return false;
-                        }
+    public List<CubingJob> searchCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList, long timeStartInMillis, long timeEndInMillis, final Map<String, Output> allOutputs, final boolean cubeNameExactMatch) {
+        List<CubingJob> results = Lists.newArrayList(FluentIterable.from(getExecutableManager().getAllAbstractExecutables(timeStartInMillis, timeEndInMillis, CubingJob.class)).filter(new Predicate<AbstractExecutable>() {
+            @Override
+            public boolean apply(AbstractExecutable executable) {
+                if (executable instanceof CubingJob) {
+                    if (StringUtils.isEmpty(cubeName)) {
+                        return true;
                     }
-                }).transform(new Function<AbstractExecutable, CubingJob>() {
-                    @Override
-                    public CubingJob apply(AbstractExecutable executable) {
-                        return (CubingJob) executable;
-                    }
-                }).filter(Predicates.and(new Predicate<CubingJob>() {
-                    @Override
-                    public boolean apply(CubingJob executable) {
-                        if (null == projectName || null == getProjectManager().getProject(projectName)) {
-                            return true;
-                        } else {
-                            return projectName.equals(executable.getProjectName());
-                        }
-                    }
-                }, new Predicate<CubingJob>() {
-                    @Override
-                    public boolean apply(CubingJob executable) {
-                        try {
-                            Output output = allOutputs.get(executable.getId());
-                            ExecutableState state = output.getState();
-                            boolean ret = statusList.contains(state);
-                            return ret;
-                        } catch (Exception e) {
-                            throw e;
-                        }
-                    }
-                })));
+                    String executableCubeName = CubingExecutableUtil.getCubeName(executable.getParams());
+                    if (executableCubeName == null)
+                        return true;
+                    if (cubeNameExactMatch)
+                        return executableCubeName.equalsIgnoreCase(cubeName);
+                    else
+                        return executableCubeName.toLowerCase().contains(cubeName.toLowerCase());
+                } else {
+                    return false;
+                }
+            }
+        }).transform(new Function<AbstractExecutable, CubingJob>() {
+            @Override
+            public CubingJob apply(AbstractExecutable executable) {
+                return (CubingJob) executable;
+            }
+        }).filter(Predicates.and(new Predicate<CubingJob>() {
+            @Override
+            public boolean apply(CubingJob executable) {
+                if (null == projectName || null == getProjectManager().getProject(projectName)) {
+                    return true;
+                } else {
+                    return projectName.equals(executable.getProjectName());
+                }
+            }
+        }, new Predicate<CubingJob>() {
+            @Override
+            public boolean apply(CubingJob executable) {
+                try {
+                    Output output = allOutputs.get(executable.getId());
+                    ExecutableState state = output.getState();
+                    boolean ret = statusList.contains(state);
+                    return ret;
+                } catch (Exception e) {
+                    throw e;
+                }
+            }
+        })));
         return results;
     }
 
-    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName,
-            final Set<ExecutableState> statusList) {
-        return searchCubingJobs(cubeName, projectName, statusList, 0L, Long.MAX_VALUE,
-                getExecutableManager().getAllOutputs(), true);
+    public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName, final Set<ExecutableState> statusList) {
+        return searchCubingJobs(cubeName, projectName, statusList, 0L, Long.MAX_VALUE, getExecutableManager().getAllOutputs(), true);
     }
 
     public List<CubingJob> listAllCubingJobs(final String cubeName, final String projectName) {
-        return searchCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), 0L, Long.MAX_VALUE,
-                getExecutableManager().getAllOutputs(), true);
+        return searchCubingJobs(cubeName, projectName, EnumSet.allOf(ExecutableState.class), 0L, Long.MAX_VALUE, getExecutableManager().getAllOutputs(), true);
     }
 
 }

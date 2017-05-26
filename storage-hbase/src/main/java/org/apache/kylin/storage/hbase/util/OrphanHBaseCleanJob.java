@@ -46,11 +46,9 @@ import org.slf4j.LoggerFactory;
 public class OrphanHBaseCleanJob extends AbstractApplication {
 
     @SuppressWarnings("static-access")
-    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false)
-            .withDescription("Delete the unused storage").create("delete");
+    private static final Option OPTION_DELETE = OptionBuilder.withArgName("delete").hasArg().isRequired(false).withDescription("Delete the unused storage").create("delete");
     @SuppressWarnings("static-access")
-    private static final Option OPTION_WHITELIST = OptionBuilder.withArgName("whitelist").hasArg().isRequired(true)
-            .withDescription("metadata store whitelist, separated with comma").create("whitelist");
+    private static final Option OPTION_WHITELIST = OptionBuilder.withArgName("whitelist").hasArg().isRequired(true).withDescription("metadata store whitelist, separated with comma").create("whitelist");
 
     protected static final Logger logger = LoggerFactory.getLogger(OrphanHBaseCleanJob.class);
 

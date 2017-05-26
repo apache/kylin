@@ -52,8 +52,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
     @Test
     public void testDecode() throws Exception {
-        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready")
-                .getDescriptor();
+        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         HBaseColumnDesc hbaseCol = cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0];
 
         BufferedMeasureCodec codec = new BufferedMeasureCodec(hbaseCol.getMeasures());
@@ -83,8 +82,7 @@ public class RowValueDecoderTest extends LocalFileMetadataTestCase {
 
     @Test(expected = IllegalArgumentException.class)
     public void testError() throws Exception {
-        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready")
-                .getDescriptor();
+        CubeDesc cubeDesc = CubeManager.getInstance(getTestConfig()).getCube("test_kylin_cube_with_slr_ready").getDescriptor();
         HBaseColumnDesc hbaseCol = cubeDesc.getHbaseMapping().getColumnFamily()[0].getColumns()[0];
 
         BufferedMeasureCodec codec = new BufferedMeasureCodec(hbaseCol.getMeasures());

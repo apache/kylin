@@ -137,14 +137,10 @@ public class DeployCoprocessorCLI {
 
     private static void printUsageAndExit() {
         logger.info("Usage: ");
-        logger.info(
-                "$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar all");
-        logger.info(
-                "$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -table tableName1 tableName2 ...");
-        logger.info(
-                "$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -cube cubeName1 cubeName2 ... ");
-        logger.info(
-                "$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -project projectName1 projectName2 ...");
+        logger.info("$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar all");
+        logger.info("$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -table tableName1 tableName2 ...");
+        logger.info("$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -cube cubeName1 cubeName2 ... ");
+        logger.info("$KYLIN_HOME/bin/kylin.sh  org.apache.kylin.storage.hbase.util.DeployCoprocessorCLI $KYLIN_HOME/lib/kylin-coprocessor-*.jar -project projectName1 projectName2 ...");
         System.exit(0);
     }
 
@@ -161,7 +157,7 @@ public class DeployCoprocessorCLI {
 
             ProjectInstance projectInstance = projectManager.getProject(p);
             List<RealizationEntry> cubeList = projectInstance.getRealizationEntries(RealizationType.CUBE);
-            for (RealizationEntry cube : cubeList) {
+            for (RealizationEntry cube: cubeList) {
                 CubeInstance cubeInstance = cubeManager.getCube(cube.getRealization());
                 for (CubeSegment segment : cubeInstance.getSegments()) {
                     String tableName = segment.getStorageLocationIdentifier();
@@ -234,8 +230,7 @@ public class DeployCoprocessorCLI {
         desc.addCoprocessor(CubeEndpointClass, hdfsCoprocessorJar, 1001, null);
     }
 
-    public static boolean resetCoprocessor(String tableName, Admin hbaseAdmin, Path hdfsCoprocessorJar)
-            throws IOException {
+    public static boolean resetCoprocessor(String tableName, Admin hbaseAdmin, Path hdfsCoprocessorJar) throws IOException {
         KylinConfig kylinConfig = KylinConfig.getInstanceFromEnv();
         HTableDescriptor desc = hbaseAdmin.getTableDescriptor(TableName.valueOf(tableName));
 
@@ -284,15 +279,13 @@ public class DeployCoprocessorCLI {
         return true;
     }
 
-    private static List<String> resetCoprocessorOnHTables(final Admin hbaseAdmin, final Path hdfsCoprocessorJar,
-            List<String> tableNames) throws IOException {
+    private static List<String> resetCoprocessorOnHTables(final Admin hbaseAdmin, final Path hdfsCoprocessorJar, List<String> tableNames) throws IOException {
         List<String> processedTables = Collections.synchronizedList(new ArrayList<String>());
         ExecutorService coprocessorPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
         CountDownLatch countDownLatch = new CountDownLatch(tableNames.size());
 
         for (final String tableName : tableNames) {
-            coprocessorPool.execute(new ResetCoprocessorWorker(countDownLatch, hbaseAdmin, hdfsCoprocessorJar,
-                    tableName, processedTables));
+            coprocessorPool.execute(new ResetCoprocessorWorker(countDownLatch, hbaseAdmin, hdfsCoprocessorJar, tableName, processedTables));
         }
 
         try {
@@ -312,8 +305,7 @@ public class DeployCoprocessorCLI {
         private final String tableName;
         private final List<String> processedTables;
 
-        public ResetCoprocessorWorker(CountDownLatch countDownLatch, Admin hbaseAdmin, Path hdfsCoprocessorJar,
-                String tableName, List<String> processedTables) {
+        public ResetCoprocessorWorker(CountDownLatch countDownLatch, Admin hbaseAdmin, Path hdfsCoprocessorJar, String tableName, List<String> processedTables) {
             this.countDownLatch = countDownLatch;
             this.hbaseAdmin = hbaseAdmin;
             this.hdfsCoprocessorJar = hdfsCoprocessorJar;
@@ -358,8 +350,7 @@ public class DeployCoprocessorCLI {
         return path;
     }
 
-    public synchronized static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem,
-            Set<String> oldJarPaths) throws IOException {
+    public synchronized static Path uploadCoprocessorJar(String localCoprocessorJar, FileSystem fileSystem, Set<String> oldJarPaths) throws IOException {
         Path uploadPath = null;
         File localCoprocessorFile = new File(localCoprocessorJar);
 
@@ -417,8 +408,7 @@ public class DeployCoprocessorCLI {
     }
 
     private static boolean isSame(File localCoprocessorFile, FileStatus fileStatus) {
-        return fileStatus.getLen() == localCoprocessorFile.length()
-                && fileStatus.getModificationTime() == localCoprocessorFile.lastModified();
+        return fileStatus.getLen() == localCoprocessorFile.length() && fileStatus.getModificationTime() == localCoprocessorFile.lastModified();
     }
 
     private static String getBaseFileName(String localCoprocessorJar) {
@@ -476,8 +466,7 @@ public class DeployCoprocessorCLI {
 
         ArrayList<String> result = new ArrayList<String>();
         for (CubeInstance cube : cubeMgr.listAllCubes()) {
-            if (cube.getStorageType() == IStorageAware.ID_HBASE
-                    || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
+            if (cube.getStorageType() == IStorageAware.ID_HBASE || cube.getStorageType() == IStorageAware.ID_SHARDED_HBASE) {
                 for (CubeSegment seg : cube.getSegments(SegmentStatusEnum.READY)) {
                     String tableName = seg.getStorageLocationIdentifier();
                     if (StringUtils.isBlank(tableName) == false) {

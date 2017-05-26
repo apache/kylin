@@ -64,8 +64,7 @@ public class LookupTableEnumerator implements Enumerator<Object[]> {
         String lookupTableName = olapContext.firstTableScan.getTableName();
         DimensionDesc dim = cube.getDescriptor().findDimensionByTable(lookupTableName);
         if (dim == null)
-            throw new IllegalStateException("No dimension with derived columns found for lookup table "
-                    + lookupTableName + ", cube desc " + cube.getDescriptor());
+            throw new IllegalStateException("No dimension with derived columns found for lookup table " + lookupTableName + ", cube desc " + cube.getDescriptor());
 
         CubeManager cubeMgr = CubeManager.getInstance(cube.getConfig());
         LookupStringTable table = cubeMgr.getLookupTable(cube.getLatestReadySegment(), dim.getJoin());

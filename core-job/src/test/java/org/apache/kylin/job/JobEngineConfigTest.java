@@ -18,14 +18,14 @@
 
 package org.apache.kylin.job;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HotLoadKylinPropertiesTestCase;
 import org.apache.kylin.job.engine.JobEngineConfig;
 import org.junit.Test;
+
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author kangkaisen

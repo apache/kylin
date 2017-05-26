@@ -18,15 +18,15 @@
 
 package org.apache.kylin.dict;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Random;
-import java.util.UUID;
-
 import org.apache.kylin.common.util.Dictionary;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+import java.util.UUID;
 
 /**
  * Created by xiefan on 16-12-28.
@@ -50,8 +50,7 @@ public class TrieDictionaryForestBenchmark {
     public void before() {
         int dataSize = 100 * 10000;
         TrieDictionaryBuilder<String> b1 = new TrieDictionaryBuilder<>(new StringBytesConverter());
-        TrieDictionaryForestBuilder<String> b2 = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), 0,
-                5);
+        TrieDictionaryForestBuilder<String> b2 = new TrieDictionaryForestBuilder<String>(new StringBytesConverter(), 0, 5);
         this.rawData = genStringDataSet(dataSize);
         for (String str : this.rawData) {
             b1.addValue(str);
@@ -153,8 +152,7 @@ public class TrieDictionaryForestBenchmark {
         return System.currentTimeMillis() - startTime;
     }
 
-    private long runQueryIdByValueBytes(ArrayList<String> rawData, Dictionary<String> dict, int cardnality,
-            int testTimes) {
+    private long runQueryIdByValueBytes(ArrayList<String> rawData, Dictionary<String> dict, int cardnality, int testTimes) {
         long startTime = System.currentTimeMillis();
         int step = 1;
         for (int i = 0; i < testTimes; i++) {

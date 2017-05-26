@@ -41,11 +41,9 @@ public class TimeUtilTest {
 
         a.setTimeInMillis(timeMillis);
         if (unit == NormalizedTimeUnit.MINUTE) {
-            b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH),
-                    a.get(Calendar.HOUR_OF_DAY), a.get(Calendar.MINUTE));
+            b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY), a.get(Calendar.MINUTE));
         } else if (unit == NormalizedTimeUnit.HOUR) {
-            b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH),
-                    a.get(Calendar.HOUR_OF_DAY), 0);
+            b.set(a.get(Calendar.YEAR), a.get(Calendar.MONTH), a.get(Calendar.DAY_OF_MONTH), a.get(Calendar.HOUR_OF_DAY), 0);
         }
         return b.getTimeInMillis();
     }

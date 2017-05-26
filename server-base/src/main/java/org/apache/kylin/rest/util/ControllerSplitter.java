@@ -32,9 +32,9 @@ public class ControllerSplitter {
     static File v1dir = new File("src/main/java/org/apache/kylin/rest/controller");
     static File v2dir = new File("src/main/java/org/apache/kylin/rest/controller2");
     static boolean dryRun = false;
-
+    
     public static void main(String[] args) throws IOException {
-
+        
         for (File f : v1dir.listFiles()) {
             chopOff(f, "application/vnd.apache.kylin-v2+json");
         }
@@ -45,28 +45,28 @@ public class ControllerSplitter {
     }
 
     private static void chopOff(File f, String annoPtn) throws IOException {
-
+        
         System.out.println("Processing " + f);
-
+        
         FileInputStream is = new FileInputStream(f);
         List<String> lines = IOUtils.readLines(is, "UTF-8");
         is.close();
         List<String> outLines = new ArrayList<>(lines.size());
-
+        
         boolean del = false;
         for (String l : lines) {
             if (l.startsWith("    @") && l.contains(annoPtn))
                 del = true;
-
+            
             if (del)
                 System.out.println("x " + l);
             else
                 outLines.add(l);
-
+            
             if (del && l.startsWith("    }"))
                 del = false;
         }
-
+        
         if (!dryRun && outLines.size() < lines.size()) {
             FileOutputStream os = new FileOutputStream(f);
             IOUtils.writeLines(outLines, "\n", os, "UTF-8");
@@ -75,7 +75,7 @@ public class ControllerSplitter {
         } else {
             System.out.println("skipped");
         }
-
+        
         System.out.println("============================================================================");
     }
 }

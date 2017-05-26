@@ -43,8 +43,7 @@ import org.apache.kylin.metadata.model.TblColRef;
 
 /**
  */
-abstract public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN>
-        extends KylinMapper<KEYIN, VALUEIN, SelfDefineSortableKey, Text> {
+abstract public class FactDistinctColumnsMapperBase<KEYIN, VALUEIN> extends KylinMapper<KEYIN, VALUEIN, SelfDefineSortableKey, Text> {
 
     protected String cubeName;
     protected CubeInstance cube;

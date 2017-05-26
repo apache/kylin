@@ -52,11 +52,9 @@ public class OLAPJoinPushThroughJoinRule extends RelOptRule {
      * Instance of the rule that works on logical joins only, and pushes to the
      * right.
      */
-    public static final RelOptRule INSTANCE = new OLAPJoinPushThroughJoinRule("OLAPJoinPushThroughJoinRule",
-            LogicalJoin.class, RelFactories.LOGICAL_BUILDER);
+    public static final RelOptRule INSTANCE = new OLAPJoinPushThroughJoinRule("OLAPJoinPushThroughJoinRule", LogicalJoin.class, RelFactories.LOGICAL_BUILDER);
 
-    public OLAPJoinPushThroughJoinRule(String description, Class<? extends Join> clazz,
-            RelBuilderFactory relBuilderFactory) {
+    public OLAPJoinPushThroughJoinRule(String description, Class<? extends Join> clazz, RelBuilderFactory relBuilderFactory) {
         super(operand(clazz,
 
                 operand(clazz, operand(RelNode.class, any()), operand(RelNode.class, null, new Predicate<RelNode>() {
@@ -132,27 +130,23 @@ public class OLAPJoinPushThroughJoinRule extends RelOptRule {
         //            .createShiftMapping(aCount + bCount + cCount, 0, 0, aCount, aCount, aCount + bCount,
         //                cCount);
 
-        final Mappings.TargetMapping bottomMapping = Mappings.createShiftMapping(aCount + bCount + cCount, 0, 0, aCount,
-                aCount + cCount, aCount, bCount, aCount, aCount + bCount, cCount);
+        final Mappings.TargetMapping bottomMapping = Mappings.createShiftMapping(aCount + bCount + cCount, 0, 0, aCount, aCount + cCount, aCount, bCount, aCount, aCount + bCount, cCount);
         final List<RexNode> newBottomList = new ArrayList<>();
         new RexPermuteInputsShuttle(bottomMapping, relA, relC).visitList(nonIntersecting, newBottomList);
         new RexPermuteInputsShuttle(bottomMapping, relA, relC).visitList(bottomNonIntersecting, newBottomList);
         final RexBuilder rexBuilder = cluster.getRexBuilder();
         RexNode newBottomCondition = RexUtil.composeConjunction(rexBuilder, newBottomList, false);
-        final Join newBottomJoin = bottomJoin.copy(bottomJoin.getTraitSet(), newBottomCondition, relA, relC,
-                bottomJoin.getJoinType(), bottomJoin.isSemiJoinDone());
+        final Join newBottomJoin = bottomJoin.copy(bottomJoin.getTraitSet(), newBottomCondition, relA, relC, bottomJoin.getJoinType(), bottomJoin.isSemiJoinDone());
 
         // target: | A       | C      | B |
         // source: | A       | B | C      |
-        final Mappings.TargetMapping topMapping = Mappings.createShiftMapping(aCount + bCount + cCount, 0, 0, aCount,
-                aCount + cCount, aCount, bCount, aCount, aCount + bCount, cCount);
+        final Mappings.TargetMapping topMapping = Mappings.createShiftMapping(aCount + bCount + cCount, 0, 0, aCount, aCount + cCount, aCount, bCount, aCount, aCount + bCount, cCount);
         final List<RexNode> newTopList = new ArrayList<>();
         new RexPermuteInputsShuttle(topMapping, newBottomJoin, relB).visitList(intersecting, newTopList);
         new RexPermuteInputsShuttle(topMapping, newBottomJoin, relB).visitList(bottomIntersecting, newTopList);
         RexNode newTopCondition = RexUtil.composeConjunction(rexBuilder, newTopList, false);
         @SuppressWarnings("SuspiciousNameCombination")
-        final Join newTopJoin = topJoin.copy(topJoin.getTraitSet(), newTopCondition, newBottomJoin, relB,
-                topJoin.getJoinType(), topJoin.isSemiJoinDone());
+        final Join newTopJoin = topJoin.copy(topJoin.getTraitSet(), newTopCondition, newBottomJoin, relB, topJoin.getJoinType(), topJoin.isSemiJoinDone());
 
         assert !Mappings.isIdentity(topMapping);
         final RelBuilder relBuilder = call.builder();
@@ -165,8 +159,7 @@ public class OLAPJoinPushThroughJoinRule extends RelOptRule {
      * Splits a condition into conjunctions that do or do not intersect with
      * a given bit set.
      */
-    static void split(RexNode condition, ImmutableBitSet bitSet, List<RexNode> intersecting,
-            List<RexNode> nonIntersecting) {
+    static void split(RexNode condition, ImmutableBitSet bitSet, List<RexNode> intersecting, List<RexNode> nonIntersecting) {
         for (RexNode node : RelOptUtil.conjunctions(condition)) {
             ImmutableBitSet inputBitSet = RelOptUtil.InputFinder.bits(node);
             if (bitSet.intersects(inputBitSet)) {

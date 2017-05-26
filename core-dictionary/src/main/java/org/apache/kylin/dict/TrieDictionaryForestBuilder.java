@@ -17,12 +17,12 @@
 */
 package org.apache.kylin.dict;
 
-import java.util.ArrayList;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.ByteArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 
 /**
  * Build a trie dictionary forest if the input values is ordered, or the forest falls back to a single trie.
@@ -86,12 +86,10 @@ public class TrieDictionaryForestBuilder<T> {
                 return; //duplicate value
             }
             if (comp > 0) {
-                logger.info("values not in ascending order, previous '{}', current '{}'", previousValue,
-                        valueByteArray);
+                logger.info("values not in ascending order, previous '{}', current '{}'", previousValue, valueByteArray);
                 isOrdered = false;
                 if (trees.size() > 0) {
-                    throw new IllegalStateException(
-                            "Invalid input data. Unordered data cannot be split into multi trees");
+                    throw new IllegalStateException("Invalid input data. Unordered data cannot be split into multi trees");
                 }
             }
         }
@@ -112,8 +110,7 @@ public class TrieDictionaryForestBuilder<T> {
             addTree(tree);
             reset();
         }
-        TrieDictionaryForest<T> forest = new TrieDictionaryForest<T>(this.trees, this.valueDivide, this.accuOffset,
-                this.bytesConverter, baseId);
+        TrieDictionaryForest<T> forest = new TrieDictionaryForest<T>(this.trees, this.valueDivide, this.accuOffset, this.bytesConverter, baseId);
         // if input values are not in ascending order and tree num>1,TrieDictionaryForest can not work correctly.
         if (forest.getTrees().size() > 1 && !isOrdered) {
             throw new IllegalStateException("Invalid input data. Unordered data can not be split into multi trees");

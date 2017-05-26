@@ -71,8 +71,7 @@ public abstract class CubeMetadataUpgrade {
 
     public void verify() {
         logger.info("=================================================================");
-        logger.info(
-                "The changes are applied, now it's time to verify the new metadata store by reloading all metadata:");
+        logger.info("The changes are applied, now it's time to verify the new metadata store by reloading all metadata:");
         logger.info("=================================================================");
         MetadataManager.clearCache();
         MetadataManager.getInstance(config);
@@ -89,14 +88,11 @@ public abstract class CubeMetadataUpgrade {
 
     public abstract void upgradeCompatibleMeta();
 
-    public static void upgradeOrVerify(Class upgradeClass, String[] args, boolean firstStepInChain,
-            boolean lastStepInChain)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    public static void upgradeOrVerify(Class upgradeClass, String[] args, boolean firstStepInChain, boolean lastStepInChain) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
         if (!(args != null && (args.length == 1))) {
             System.out.println("Usage: java CubeMetadataUpgrade <metadata_export_folder>");
-            System.out.println(
-                    ", where metadata_export_folder is the folder containing your current metadata's dump (Upgrade program will not modify it directly, relax.");
+            System.out.println(", where metadata_export_folder is the folder containing your current metadata's dump (Upgrade program will not modify it directly, relax.");
             return;
         }
 

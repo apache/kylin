@@ -40,7 +40,7 @@ public class HiveToBaseCuboidMapper<KEYIN> extends BaseCuboidMapperBase<KEYIN, O
     @Override
     public void doMap(KEYIN key, Object value, Context context) throws IOException, InterruptedException {
         Collection<String[]> rowCollection = flatTableInputFormat.parseMapperInput(value);
-        for (String[] row : rowCollection) {
+        for (String[] row: rowCollection) {
             try {
                 outputKV(row, context);
 

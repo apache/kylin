@@ -91,8 +91,7 @@ public class HLLDistinctCountAggFunc {
             } else {
                 long oldValue = Math.abs(this.value.longValue());
                 long take = Math.max(oldValue, value);
-                logger.warn("Error to aggregate holistic count distinct, old value " + oldValue + ", new value " + value
-                        + ", taking " + take);
+                logger.warn("Error to aggregate holistic count distinct, old value " + oldValue + ", new value " + value + ", taking " + take);
                 this.value = -take; // make it obvious that this value is wrong
             }
         }

@@ -51,8 +51,7 @@ public class KafkaConfigService extends BasicService {
         return kafkaConfigs;
     }
 
-    public List<KafkaConfig> getKafkaConfigs(final String kafkaConfigName, final Integer limit, final Integer offset)
-            throws IOException {
+    public List<KafkaConfig> getKafkaConfigs(final String kafkaConfigName, final Integer limit, final Integer offset) throws IOException {
 
         List<KafkaConfig> kafkaConfigs;
         kafkaConfigs = listAllKafkaConfigs(kafkaConfigName);

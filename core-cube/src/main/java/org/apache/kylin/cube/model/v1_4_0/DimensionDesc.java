@@ -108,8 +108,7 @@ public class DimensionDesc {
         }
 
         if (derived != null && join == null) {
-            throw new IllegalStateException(
-                    "Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
+            throw new IllegalStateException("Derived can only be defined on lookup table, cube " + cubeDesc + ", " + this);
         }
     }
 
@@ -234,9 +233,7 @@ public class DimensionDesc {
 
     @Override
     public String toString() {
-        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy)
-                + ", table=" + table + ", column=" + Arrays.toString(column) + ", derived=" + Arrays.toString(derived)
-                + "]";
+        return "DimensionDesc [name=" + name + ", join=" + join + ", hierarchy=" + Arrays.toString(hierarchy) + ", table=" + table + ", column=" + Arrays.toString(column) + ", derived=" + Arrays.toString(derived) + "]";
     }
 
 }

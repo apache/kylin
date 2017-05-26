@@ -37,8 +37,7 @@ import org.apache.kylin.jdbc.IRemoteClient.QueryResult;
 
 public class KylinResultSet extends AvaticaResultSet {
 
-    public KylinResultSet(AvaticaStatement statement, QueryState state, Signature signature,
-            ResultSetMetaData resultSetMetaData, TimeZone timeZone, Frame firstFrame) {
+    public KylinResultSet(AvaticaStatement statement, QueryState state, Signature signature, ResultSetMetaData resultSetMetaData, TimeZone timeZone, Frame firstFrame) {
         super(statement, state, signature, resultSetMetaData, timeZone, firstFrame);
     }
 

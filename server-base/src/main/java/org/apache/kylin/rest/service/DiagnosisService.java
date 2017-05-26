@@ -52,8 +52,7 @@ public class DiagnosisService extends BasicService {
 
         File[] files = destDir.listFiles();
         if (files == null) {
-            throw new BadRequestException(
-                    String.format(msg.getDIAG_PACKAGE_NOT_AVAILABLE(), destDir.getAbsolutePath()));
+            throw new BadRequestException(String.format(msg.getDIAG_PACKAGE_NOT_AVAILABLE(), destDir.getAbsolutePath()));
         }
         for (File subDir : files) {
             if (subDir.isDirectory()) {

@@ -35,8 +35,7 @@ public class RealizationSortRule extends RoutingRule {
     public void apply(List<Candidate> candidates) {
         StringBuilder sb = new StringBuilder();
         for (Candidate candidate : candidates) {
-            sb.append(candidate.getRealization().getCanonicalName() + " priority " + candidate.getPriority() + " cost "
-                    + candidate.getCapability().cost + ". ");
+            sb.append(candidate.getRealization().getCanonicalName() + " priority " + candidate.getPriority() + " cost " + candidate.getCapability().cost + ". ");
         }
         logger.info(sb.toString());
 

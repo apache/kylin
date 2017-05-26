@@ -64,8 +64,7 @@ public class DummyClient implements IRemoteClient {
     }
 
     @Override
-    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues,
-            Map<String, String> queryToggles) throws IOException {
+    public QueryResult executeQuery(String sql, List<AvaticaParameter> params, List<Object> paramValues, Map<String, String> queryToggles) throws IOException {
         List<Object> data = new ArrayList<Object>();
         Object[] row = new Object[] { "foo", "bar", "tool" };
         data.add(row);

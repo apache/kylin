@@ -55,9 +55,7 @@ public class KylinConfigCLITest extends LocalFileMetadataTestCase {
         KylinConfigCLI.main(new String[] { "kylin.cube.engine." });
 
         String val = FileUtils.readFileToString(f, Charset.defaultCharset()).trim();
-        assertEquals(
-                "2=org.apache.kylin.engine.mr.MRBatchCubingEngine2\n0=org.apache.kylin.engine.mr.MRBatchCubingEngine",
-                val);
+        assertEquals("2=org.apache.kylin.engine.mr.MRBatchCubingEngine2\n0=org.apache.kylin.engine.mr.MRBatchCubingEngine", val);
 
         FileUtils.forceDelete(f);
         System.setOut(o);

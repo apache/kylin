@@ -106,16 +106,13 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
             RealizationRegistry registry = RealizationRegistry.getInstance(config);
             List<IRealization> realizationList = Lists.newArrayList();
             for (int i = 0; i < realizationEntries.size(); i++) {
-                IRealization realization = registry.getRealization(realizationEntries.get(i).getType(),
-                        realizationEntries.get(i).getRealization());
+                IRealization realization = registry.getRealization(realizationEntries.get(i).getType(), realizationEntries.get(i).getRealization());
                 if (realization == null) {
-                    logger.error("Realization '" + realizationEntries.get(i) + " is not found, remove from Hybrid '"
-                            + this.getName() + "'");
+                    logger.error("Realization '" + realizationEntries.get(i) + " is not found, remove from Hybrid '" + this.getName() + "'");
                     continue;
                 }
                 if (realization.isReady() == false) {
-                    logger.error("Realization '" + realization.getName() + " is disabled, remove from Hybrid '"
-                            + this.getName() + "'");
+                    logger.error("Realization '" + realization.getName() + " is disabled, remove from Hybrid '" + this.getName() + "'");
                     continue;
                 }
                 realizationList.add(realization);
@@ -223,7 +220,7 @@ public class HybridInstance extends RootPersistentEntity implements IRealization
         init();
         return allColumnDescs;
     }
-
+    
     @Override
     public List<MeasureDesc> getMeasures() {
         init();

@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.base.Strings;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.kylin.common.persistence.ResourceStore;
@@ -42,7 +43,6 @@ import org.apache.kylin.source.IReadableTable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
 
 /**
  * @author yangli9
@@ -83,8 +83,7 @@ public class SnapshotTable extends RootPersistentEntity implements IReadableTabl
             while (reader.next()) {
                 String[] row = reader.getRow();
                 if (row.length <= maxIndex) {
-                    throw new IllegalStateException("Bad hive table row, " + tableDesc + " expect " + (maxIndex + 1)
-                            + " columns, but got " + Arrays.toString(row));
+                    throw new IllegalStateException("Bad hive table row, " + tableDesc + " expect " + (maxIndex + 1) + " columns, but got " + Arrays.toString(row));
                 }
                 for (ColumnDesc column : tableDesc.getColumns()) {
                     String cell = row[column.getZeroBasedIndex()];
@@ -169,7 +168,7 @@ public class SnapshotTable extends RootPersistentEntity implements IReadableTabl
     public boolean exists() throws IOException {
         return true;
     }
-
+    
     /**
      * a naive implementation
      *

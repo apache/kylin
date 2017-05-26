@@ -60,14 +60,12 @@ public class FilterDecorator implements TupleFilterSerializer.Decorator {
         return inevaluableColumns;
     }
 
-    private TupleFilter replaceConstantsWithLocalDict(CompareTupleFilter oldCompareFilter,
-            CompareTupleFilter newCompareFilter) {
+    private TupleFilter replaceConstantsWithLocalDict(CompareTupleFilter oldCompareFilter, CompareTupleFilter newCompareFilter) {
         //TODO localdict: (performance issue) transalte() with roundingflag 0 will use try catch exceptions to deal with non-existing entries
         return replaceConstantsWithGlobalDict(oldCompareFilter, newCompareFilter);
     }
 
-    private TupleFilter replaceConstantsWithGlobalDict(CompareTupleFilter oldCompareFilter,
-            CompareTupleFilter newCompareFilter) {
+    private TupleFilter replaceConstantsWithGlobalDict(CompareTupleFilter oldCompareFilter, CompareTupleFilter newCompareFilter) {
         Collection<String> constValues = (Collection<String>) oldCompareFilter.getValues();
         String firstValue = constValues.iterator().next();
         TblColRef col = newCompareFilter.getColumn();

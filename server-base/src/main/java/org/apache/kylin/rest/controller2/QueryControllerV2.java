@@ -72,8 +72,7 @@ public class QueryControllerV2 extends BasicController {
     @Qualifier("queryService")
     private QueryService queryService;
 
-    @RequestMapping(value = "/query", method = RequestMethod.POST, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/query", method = RequestMethod.POST, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
     public EnvelopeResponse queryV2(@RequestHeader("Accept-Language") String lang, @RequestBody SQLRequest sqlRequest) {
         MsgPicker.setMsg(lang);
@@ -83,48 +82,37 @@ public class QueryControllerV2 extends BasicController {
 
     // TODO should be just "prepare" a statement, get back expected ResultSetMetaData
 
-    @RequestMapping(value = "/query/prestate", method = RequestMethod.POST, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/query/prestate", method = RequestMethod.POST, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse prepareQueryV2(@RequestHeader("Accept-Language") String lang,
-            @RequestBody PrepareSqlRequest sqlRequest) {
+    public EnvelopeResponse prepareQueryV2(@RequestHeader("Accept-Language") String lang, @RequestBody PrepareSqlRequest sqlRequest) {
         MsgPicker.setMsg(lang);
 
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, queryService.doQueryWithCache(sqlRequest), "");
     }
 
-    @RequestMapping(value = "/saved_queries", method = RequestMethod.POST, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/saved_queries", method = RequestMethod.POST, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void saveQueryV2(@RequestHeader("Accept-Language") String lang, @RequestBody SaveSqlRequest sqlRequest)
-            throws IOException {
+    public void saveQueryV2(@RequestHeader("Accept-Language") String lang, @RequestBody SaveSqlRequest sqlRequest) throws IOException {
         MsgPicker.setMsg(lang);
 
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
-        Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(),
-                sqlRequest.getDescription());
+        Query newQuery = new Query(sqlRequest.getName(), sqlRequest.getProject(), sqlRequest.getSql(), sqlRequest.getDescription());
 
         queryService.saveQuery(creator, newQuery);
     }
 
-    @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/saved_queries/{id}", method = RequestMethod.DELETE, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void removeQueryV2(@RequestHeader("Accept-Language") String lang, @PathVariable String id)
-            throws IOException {
+    public void removeQueryV2(@RequestHeader("Accept-Language") String lang, @PathVariable String id) throws IOException {
         MsgPicker.setMsg(lang);
 
         String creator = SecurityContextHolder.getContext().getAuthentication().getName();
         queryService.removeQuery(creator, id);
     }
 
-    @RequestMapping(value = "/saved_queries/{project}", method = RequestMethod.GET, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/saved_queries/{project}", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getQueriesV2(@RequestHeader("Accept-Language") String lang, @PathVariable String project,
-            @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset,
-            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize)
-            throws IOException {
+    public EnvelopeResponse getQueriesV2(@RequestHeader("Accept-Language") String lang, @PathVariable String project, @RequestParam(value = "pageOffset", required = false, defaultValue = "0") Integer pageOffset, @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize) throws IOException {
         MsgPicker.setMsg(lang);
 
         HashMap<String, Object> data = new HashMap<String, Object>();
@@ -153,11 +141,9 @@ public class QueryControllerV2 extends BasicController {
         return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, data, "");
     }
 
-    @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/query/format/{format}", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public void downloadQueryResultV2(@RequestHeader("Accept-Language") String lang, @PathVariable String format,
-            SQLRequest sqlRequest, HttpServletResponse response) {
+    public void downloadQueryResultV2(@RequestHeader("Accept-Language") String lang, @PathVariable String format, SQLRequest sqlRequest, HttpServletResponse response) {
         MsgPicker.setMsg(lang);
 
         SQLResponse result = queryService.doQueryWithCache(sqlRequest);
@@ -187,15 +173,12 @@ public class QueryControllerV2 extends BasicController {
         }
     }
 
-    @RequestMapping(value = "/tables_and_columns", method = RequestMethod.GET, produces = {
-            "application/vnd.apache.kylin-v2+json" })
+    @RequestMapping(value = "/tables_and_columns", method = RequestMethod.GET, produces = { "application/vnd.apache.kylin-v2+json" })
     @ResponseBody
-    public EnvelopeResponse getMetadataV2(@RequestHeader("Accept-Language") String lang, MetaRequest metaRequest)
-            throws SQLException, IOException {
+    public EnvelopeResponse getMetadataV2(@RequestHeader("Accept-Language") String lang, MetaRequest metaRequest) throws SQLException, IOException {
         MsgPicker.setMsg(lang);
 
-        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, queryService.getMetadataV2(metaRequest.getProject()),
-                "");
+        return new EnvelopeResponse(ResponseCode.CODE_SUCCESS, queryService.getMetadataV2(metaRequest.getProject()), "");
     }
 
     public void setQueryService(QueryService queryService) {

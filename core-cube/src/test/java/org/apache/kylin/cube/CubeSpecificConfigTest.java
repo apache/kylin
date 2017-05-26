@@ -20,12 +20,12 @@ package org.apache.kylin.cube;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
-
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.HotLoadKylinPropertiesTestCase;
 import org.apache.kylin.cube.model.CubeDesc;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class CubeSpecificConfigTest extends HotLoadKylinPropertiesTestCase {
     @Test

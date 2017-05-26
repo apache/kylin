@@ -49,8 +49,7 @@ public class InMemCubeBuilderInputConverter {
     private final GTInfo gtInfo;
     protected List<byte[]> nullBytes;
 
-    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc,
-            Map<TblColRef, Dictionary<String>> dictionaryMap, GTInfo gtInfo) {
+    public InMemCubeBuilderInputConverter(CubeDesc cubeDesc, IJoinedFlatTableDesc flatDesc, Map<TblColRef, Dictionary<String>> dictionaryMap, GTInfo gtInfo) {
         this.gtInfo = gtInfo;
         this.flatDesc = new CubeJoinedFlatTableEnrich(flatDesc, cubeDesc);
         this.measureCount = cubeDesc.getMeasures().size();

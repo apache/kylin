@@ -58,8 +58,7 @@ public class LegacyUserService implements UserDetailsManager {
 
     public static final String PWD_PREFIX = "PWD:";
 
-    private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(
-            UserGrantedAuthority[].class);
+    private Serializer<UserGrantedAuthority[]> ugaSerializer = new Serializer<UserGrantedAuthority[]>(UserGrantedAuthority[].class);
 
     private String userTableName = null;
 
@@ -99,8 +98,7 @@ public class LegacyUserService implements UserDetailsManager {
 
         String username = Bytes.toString(result.getRow());
 
-        byte[] valueBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY),
-                Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
+        byte[] valueBytes = result.getValue(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
         UserGrantedAuthority[] deserialized = ugaSerializer.deserialize(valueBytes);
 
         String password = "";
@@ -153,8 +151,7 @@ public class LegacyUserService implements UserDetailsManager {
             Pair<byte[], byte[]> pair = userToHBaseRow(user);
             Put put = new Put(pair.getKey());
 
-            put.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY),
-                    Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
+            put.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN), pair.getSecond());
 
             htable.put(put);
         } catch (IOException e) {
@@ -215,8 +212,7 @@ public class LegacyUserService implements UserDetailsManager {
 
     public List<UserDetails> listUsers() {
         Scan s = new Scan();
-        s.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY),
-                Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
+        s.addColumn(Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_FAMILY), Bytes.toBytes(AclHBaseStorage.USER_AUTHORITY_COLUMN));
 
         List<UserDetails> all = new ArrayList<UserDetails>();
         Table htable = null;

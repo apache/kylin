@@ -77,8 +77,7 @@ public class FuzzyMaskEncoder extends RowKeyEncoder {
     }
 
     @Override
-    protected void fillColumnValue(TblColRef column, int columnLen, String valueStr, byte[] outputValue,
-            int outputValueOffset) {
+    protected void fillColumnValue(TblColRef column, int columnLen, String valueStr, byte[] outputValue, int outputValueOffset) {
         if (valueStr == null) {
             Arrays.fill(outputValue, outputValueOffset, outputValueOffset + columnLen, RowConstants.BYTE_ONE);
         } else {

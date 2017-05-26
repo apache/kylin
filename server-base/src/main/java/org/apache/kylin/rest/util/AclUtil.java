@@ -29,17 +29,13 @@ import org.springframework.stereotype.Component;
 public class AclUtil {
 
     //such method MUST NOT be called from within same class
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')"
-            + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#cube, 'ADMINISTRATION') or hasPermission(#cube, 'MANAGEMENT')" + " or hasPermission(#cube, 'OPERATION') or hasPermission(#cube, 'READ')")
     public boolean hasCubeReadPermission(CubeInstance cube) {
         return true;
     }
 
     //such method MUST NOT be called from within same class
-    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN
-            + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')"
-            + " or hasPermission(#project, 'OPERATION') or hasPermission(#project, 'READ')")
+    @PreAuthorize(Constant.ACCESS_HAS_ROLE_ADMIN + " or hasPermission(#project, 'ADMINISTRATION') or hasPermission(#project, 'MANAGEMENT')" + " or hasPermission(#project, 'OPERATION') or hasPermission(#project, 'READ')")
     public boolean hasProjectReadPermission(ProjectInstance project) {
         return true;
     }

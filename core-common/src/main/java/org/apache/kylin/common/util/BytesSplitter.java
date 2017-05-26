@@ -29,8 +29,7 @@ import org.slf4j.LoggerFactory;
 public class BytesSplitter {
     private static final Logger logger = LoggerFactory.getLogger(BytesSplitter.class);
 
-    private static final int[] COMMON_DELIMS = new int[] { "\177".codePointAt(0), "|".codePointAt(0),
-            "\t".codePointAt(0), ",".codePointAt(0) };
+    private static final int[] COMMON_DELIMS = new int[] { "\177".codePointAt(0), "|".codePointAt(0), "\t".codePointAt(0), ",".codePointAt(0) };
 
     private SplittedBytes[] splitBuffers;
     private int bufferSize;

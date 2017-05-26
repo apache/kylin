@@ -370,8 +370,7 @@ public class DataModelDesc extends RootPersistentEntity {
             @Override
             public ColumnDesc apply(@Nullable ComputedColumnDesc input) {
                 id.increment();
-                ColumnDesc columnDesc = new ColumnDesc(id.toString(), input.getColumnName(), input.getDatatype(),
-                        input.getComment(), null, null, input.getExpression());
+                ColumnDesc columnDesc = new ColumnDesc(id.toString(), input.getColumnName(), input.getDatatype(), input.getComment(), null, null, input.getExpression());
                 return columnDesc;
             }
         }).toArray(ColumnDesc.class);
@@ -434,8 +433,7 @@ public class DataModelDesc extends RootPersistentEntity {
     private void addAlias(TableRef ref) {
         String alias = ref.getAlias();
         if (aliasMap.containsKey(alias))
-            throw new IllegalStateException("Alias '" + alias + "' ref to multiple tables: " + ref.getTableIdentity()
-                    + ", " + aliasMap.get(alias).getTableIdentity());
+            throw new IllegalStateException("Alias '" + alias + "' ref to multiple tables: " + ref.getTableIdentity() + ", " + aliasMap.get(alias).getTableIdentity());
         aliasMap.put(alias, ref);
 
         TableDesc table = ref.getTableDesc();
@@ -472,22 +470,18 @@ public class DataModelDesc extends RootPersistentEntity {
             computedColumnDesc.init();
 
             if (ccSet.contains(computedColumnDesc.getFullName())) {
-                throw new IllegalArgumentException(
-                        String.format("More than one computed column named %s exist in model %s",
-                                computedColumnDesc.getFullName(), this.getName()));
+                throw new IllegalArgumentException(String.format("More than one computed column named %s exist in model %s", computedColumnDesc.getFullName(), this.getName()));
             } else {
                 ccSet.add(computedColumnDesc.getFullName());
             }
 
             CCInfo other = ccInfoMap.get(computedColumnDesc.getFullName());
             if (other == null || (other.dataModelDescs.size() == 1 && other.dataModelDescs.contains(this))) {
-                ccInfoMap.put(computedColumnDesc.getFullName(),
-                        new CCInfo(computedColumnDesc, Sets.<DataModelDesc> newHashSet(this)));
+                ccInfoMap.put(computedColumnDesc.getFullName(), new CCInfo(computedColumnDesc, Sets.<DataModelDesc> newHashSet(this)));
             } else if (other.computedColumnDesc.equals(computedColumnDesc)) {
                 other.dataModelDescs.add(this);
             } else {
-                throw new IllegalStateException(String.format(
-                        "Computed column named %s is already defined in other models: %s. Please change another name, or try to keep consistent definition", //
+                throw new IllegalStateException(String.format("Computed column named %s is already defined in other models: %s. Please change another name, or try to keep consistent definition", //
                         computedColumnDesc.getFullName(), other.dataModelDescs));
             }
         }
@@ -540,14 +534,11 @@ public class DataModelDesc extends RootPersistentEntity {
             if (pkCols.length == 0 || fkCols.length == 0)
                 throw new IllegalStateException("Missing join columns on table " + dimTable);
             if (pkCols.length != fkCols.length) {
-                throw new IllegalStateException("Primary keys(" + dimTable + ")" + Arrays.toString(pks)
-                        + " are not consistent with Foreign keys(" + fkTable + ") " + Arrays.toString(fks));
+                throw new IllegalStateException("Primary keys(" + dimTable + ")" + Arrays.toString(pks) + " are not consistent with Foreign keys(" + fkTable + ") " + Arrays.toString(fks));
             }
             for (int i = 0; i < fkCols.length; i++) {
                 if (!fkCols[i].getDatatype().equals(pkCols[i].getDatatype())) {
-                    logger.warn("PK " + dimTable + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype()
-                            + " are not consistent with FK " + fkTable + "." + fkCols[i].getName() + "."
-                            + fkCols[i].getDatatype());
+                    logger.warn("PK " + dimTable + "." + pkCols[i].getName() + "." + pkCols[i].getDatatype() + " are not consistent with FK " + fkTable + "." + fkCols[i].getName() + "." + fkCols[i].getDatatype());
                 }
             }
         }

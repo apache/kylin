@@ -42,16 +42,13 @@ public class EncodingService extends BasicService {
         Message msg = MsgPicker.getMsg();
 
         if (dataType.isIntegerFamily()) {
-            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME,
-                    DictionaryDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
+            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
         } else if (dataType.isNumberFamily()) { //numbers include integers
             return Lists.newArrayList(DictionaryDimEnc.ENCODING_NAME);
         } else if (dataType.isDateTimeFamily()) {
-            return Lists.newArrayList(DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME,
-                    DictionaryDimEnc.ENCODING_NAME);
+            return Lists.newArrayList(DateDimEnc.ENCODING_NAME, TimeDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME);
         } else if (dataType.isStringFamily()) {
-            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME,
-                    FixedLenDimEnc.ENCODING_NAME, //
+            return Lists.newArrayList(BooleanDimEnc.ENCODING_NAME, DictionaryDimEnc.ENCODING_NAME, FixedLenDimEnc.ENCODING_NAME, //
                     FixedLenHexDimEnc.ENCODING_NAME, IntegerDimEnc.ENCODING_NAME);
         } else {
             throw new BadRequestException(String.format(msg.getVALID_ENCODING_NOT_AVAILABLE(), dataType));

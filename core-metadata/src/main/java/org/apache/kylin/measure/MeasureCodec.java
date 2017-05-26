@@ -18,12 +18,12 @@
 
 package org.apache.kylin.measure;
 
-import java.nio.ByteBuffer;
-import java.util.Collection;
-
 import org.apache.kylin.metadata.datatype.DataType;
 import org.apache.kylin.metadata.datatype.DataTypeSerializer;
 import org.apache.kylin.metadata.model.MeasureDesc;
+
+import java.nio.ByteBuffer;
+import java.util.Collection;
 
 /**
  * @author yangli9

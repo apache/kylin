@@ -72,8 +72,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
 
     protected StorageContext context;
 
-    public CubeScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions,
-            Set<TblColRef> groupByDims, //
+    public CubeScanRangePlanner(CubeSegment cubeSegment, Cuboid cuboid, TupleFilter filter, Set<TblColRef> dimensions, Set<TblColRef> groupByDims, //
             Collection<FunctionDesc> metrics, TupleFilter havingFilter, StorageContext context) {
         this.context = context;
 
@@ -100,13 +99,11 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
 
         //replace the constant values in filter to dictionary codes
         Set<TblColRef> groupByPushDown = Sets.newHashSet(groupByDims);
-        this.gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getCuboidDimensionsInGTOrder(),
-                groupByPushDown);
+        this.gtFilter = GTUtil.convertFilterColumnsAndConstants(filter, gtInfo, mapping.getCuboidDimensionsInGTOrder(), groupByPushDown);
         this.havingFilter = havingFilter;
 
         this.gtDimensions = mapping.makeGridTableColumns(dimensions);
-        this.gtAggrGroups = mapping
-                .makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
+        this.gtAggrGroups = mapping.makeGridTableColumns(replaceDerivedColumns(groupByPushDown, cubeSegment.getCubeDesc()));
         this.gtAggrMetrics = mapping.makeGridTableColumns(metrics);
         this.gtAggrFuncs = mapping.makeAggrFuncs(metrics);
 
@@ -124,8 +121,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
     /**
      * Construct  GTScanRangePlanner with incomplete information. For UT only.
      */
-    public CubeScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> gtStartAndEnd, TblColRef gtPartitionCol,
-            TupleFilter gtFilter) {
+    public CubeScanRangePlanner(GTInfo info, Pair<ByteArray, ByteArray> gtStartAndEnd, TblColRef gtPartitionCol, TupleFilter gtFilter) {
 
         this.maxScanRanges = KylinConfig.getInstanceFromEnv().getQueryStorageVisitScanRangeMax();
         this.maxFuzzyKeys = KylinConfig.getInstanceFromEnv().getQueryScanFuzzyKeyMax();
@@ -150,12 +146,9 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
         List<GTScanRange> scanRanges = this.planScanRanges();
         if (scanRanges != null && scanRanges.size() != 0) {
             scanRequest = new GTScanRequestBuilder().setInfo(gtInfo).setRanges(scanRanges).setDimensions(gtDimensions).//
-                    setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs)
-                    .setFilterPushDown(gtFilter).//
-                    setAllowStorageAggregation(context.isNeedStorageAggregation())
-                    .setAggCacheMemThreshold(cubeSegment.getConfig().getQueryCoprocessorMemGB()).//
-                    setStoragePushDownLimit(context.getFinalPushDownLimit()).setHavingFilterPushDown(havingFilter)
-                    .createGTScanRequest();
+                    setAggrGroupBy(gtAggrGroups).setAggrMetrics(gtAggrMetrics).setAggrMetricsFuncs(gtAggrFuncs).setFilterPushDown(gtFilter).//
+                    setAllowStorageAggregation(context.isNeedStorageAggregation()).setAggCacheMemThreshold(cubeSegment.getConfig().getQueryCoprocessorMemGB()).//
+                    setStoragePushDownLimit(context.getFinalPushDownLimit()).setHavingFilterPushDown(havingFilter).createGTScanRequest();
         } else {
             scanRequest = null;
         }
@@ -210,15 +203,11 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
                 int beginCompare = rangeStartEndComparator.comparator.compare(range.begin, gtStartAndEnd.getSecond());
                 int endCompare = rangeStartEndComparator.comparator.compare(gtStartAndEnd.getFirst(), range.end);
 
-                if ((isPartitionColUsingDatetimeEncoding && endCompare <= 0 && beginCompare < 0)
-                        || (!isPartitionColUsingDatetimeEncoding && endCompare <= 0 && beginCompare <= 0)) {
+                if ((isPartitionColUsingDatetimeEncoding && endCompare <= 0 && beginCompare < 0) || (!isPartitionColUsingDatetimeEncoding && endCompare <= 0 && beginCompare <= 0)) {
                     //segment range is [Closed,Open), but segmentStartAndEnd.getSecond() might be rounded when using dict encoding, so use <= when has equals in condition. 
                 } else {
-                    logger.debug(
-                            "Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}", //
-                            gtPartitionCol, makeReadable(gtStartAndEnd.getFirst()),
-                            makeReadable(gtStartAndEnd.getSecond()), makeReadable(range.begin),
-                            makeReadable(range.end));
+                    logger.debug("Pre-check partition col filter failed, partitionColRef {}, segment start {}, segment end {}, range begin {}, range end {}", //
+                            gtPartitionCol, makeReadable(gtStartAndEnd.getFirst()), makeReadable(gtStartAndEnd.getSecond()), makeReadable(range.begin), makeReadable(range.end));
                     return null;
                 }
             }
@@ -253,8 +242,7 @@ public class CubeScanRangePlanner extends ScanRangePlannerBase {
             return result;
         }
 
-        List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet,
-                maxFuzzyKeys);
+        List<Map<Integer, ByteArray>> fuzzyValueCombinations = FuzzyValueCombination.calculate(fuzzyValueSet, maxFuzzyKeys);
 
         for (Map<Integer, ByteArray> fuzzyValue : fuzzyValueCombinations) {
 

@@ -85,8 +85,7 @@ public class CaseTupleFilter extends TupleFilter implements IOptimizeableTupleFi
 
     @Override
     public String toString() {
-        return "CaseTupleFilter [when=" + whenFilters + ", then=" + thenFilters + ", else=" + elseFilter + ", children="
-                + children + "]";
+        return "CaseTupleFilter [when=" + whenFilters + ", then=" + thenFilters + ", else=" + elseFilter + ", children=" + children + "]";
     }
 
     @Override

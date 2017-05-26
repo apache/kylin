@@ -47,8 +47,7 @@ public class AuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
      * @param contextSource
      * @param groupSearchBase
      */
-    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole,
-            String defaultRole) {
+    public AuthoritiesPopulator(ContextSource contextSource, String groupSearchBase, String adminRole, String defaultRole) {
         super(contextSource, groupSearchBase);
         this.adminRoleAsAuthority = new SimpleGrantedAuthority(adminRole);
 

@@ -87,7 +87,7 @@ public class StorageURLTest {
             assertEquals("hello@hbase,a", id.toString());
         }
     }
-
+    
     @Test
     public void testValueOfCache() {
         StorageURL id1 = StorageURL.valueOf("hello@hbase");

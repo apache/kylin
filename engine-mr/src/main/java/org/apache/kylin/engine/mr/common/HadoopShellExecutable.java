@@ -52,8 +52,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
         Preconditions.checkNotNull(mapReduceJobClass);
         Preconditions.checkNotNull(params);
         try {
-            final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil
-                    .forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
+            final Constructor<? extends AbstractHadoopJob> constructor = ClassUtil.forName(mapReduceJobClass, AbstractHadoopJob.class).getConstructor();
             final AbstractHadoopJob job = constructor.newInstance();
             String[] args = params.trim().split("\\s+");
             logger.info("parameters of the HadoopShellExecutable: {}", params);
@@ -69,8 +68,7 @@ public class HadoopShellExecutable extends AbstractExecutable {
                 result = 2;
             }
             log.append("result code:").append(result);
-            return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, log.toString())
-                    : new ExecuteResult(ExecuteResult.State.FAILED, log.toString());
+            return result == 0 ? new ExecuteResult(ExecuteResult.State.SUCCEED, log.toString()) : new ExecuteResult(ExecuteResult.State.FAILED, log.toString());
         } catch (ReflectiveOperationException e) {
             logger.error("error getMapReduceJobClass, class name:" + getParam(KEY_MR_JOB), e);
             return new ExecuteResult(ExecuteResult.State.ERROR, e.getLocalizedMessage());

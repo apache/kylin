@@ -110,8 +110,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
 
         // decide which source segment
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
-        IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(mergedCubeSegment)
-                .getOuputFormat();
+        IMROutput2.IMRMergeOutputFormat outputFormat = MRUtil.getBatchMergeOutputSide2(mergedCubeSegment).getOuputFormat();
         sourceCubeSegment = outputFormat.findSourceSegment(fileSplit, cube);
 
         rowKeySplitter = new RowKeySplitter(sourceCubeSegment, 65, 255);
@@ -185,8 +184,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                     System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
                 }
 
-                int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[useSplit].value, 0,
-                        splittedByteses[useSplit].length);
+                int idInSourceDict = BytesUtil.readUnsigned(splittedByteses[useSplit].value, 0, splittedByteses[useSplit].length);
                 int idInMergedDict;
 
                 //int size = sourceDict.getValueBytesFromId(idInSourceDict, newKeyBodyBuf, bufOffset);
@@ -207,8 +205,7 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
                     System.arraycopy(oldBuf, 0, newKeyBodyBuf, 0, oldBuf.length);
                 }
 
-                System.arraycopy(splittedByteses[useSplit].value, 0, newKeyBodyBuf, bufOffset,
-                        splittedByteses[useSplit].length);
+                System.arraycopy(splittedByteses[useSplit].value, 0, newKeyBodyBuf, bufOffset, splittedByteses[useSplit].length);
                 bufOffset += splittedByteses[useSplit].length;
             }
         }
@@ -242,14 +239,13 @@ public class MergeCuboidMapper extends KylinMapper<Text, Text, Text, Text> {
         Boolean ret = dimensionsNeedDict.get(col);
         if (ret != null)
             return ret;
-
+        
         ret = cubeDesc.getRowkey().isUseDictionary(col);
         if (ret) {
-            TableRef srcTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), col)
-                    .getTableRef();
+            TableRef srcTable = DictionaryManager.getInstance(config).decideSourceData(cubeDesc.getModel(), col).getTableRef();
             ret = cubeDesc.getModel().isFactTable(srcTable);
         }
-
+        
         dimensionsNeedDict.put(col, ret);
         return ret;
     }

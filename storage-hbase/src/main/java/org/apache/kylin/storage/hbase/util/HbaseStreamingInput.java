@@ -197,8 +197,7 @@ public class HbaseStreamingInput {
                         logger.error("value size invalid!!!!!");
                     }
 
-                    hash += Arrays.hashCode(Arrays.copyOfRange(value, cell.getValueOffset(),
-                            cell.getValueLength() + cell.getValueOffset()));
+                    hash += Arrays.hashCode(Arrays.copyOfRange(value, cell.getValueOffset(), cell.getValueLength() + cell.getValueOffset()));
                     rowCount++;
                 }
                 scanner.close();

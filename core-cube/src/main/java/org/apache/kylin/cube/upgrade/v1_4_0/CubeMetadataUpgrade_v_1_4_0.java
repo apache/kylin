@@ -112,8 +112,7 @@ public class CubeMetadataUpgrade_v_1_4_0 extends CubeMetadataUpgrade {
                         if (!modelDimMap.containsKey(cubeDimDesc.getTable())) {
                             modelDimMap.put(cubeDimDesc.getTable(), new HashSet<String>());
                         }
-                        modelDimMap.get(cubeDimDesc.getTable()).addAll(Lists.newArrayList(
-                                cubeDimDesc.getDerived() != null ? cubeDimDesc.getDerived() : cubeDimDesc.getColumn()));
+                        modelDimMap.get(cubeDimDesc.getTable()).addAll(Lists.newArrayList(cubeDimDesc.getDerived() != null ? cubeDimDesc.getDerived() : cubeDimDesc.getColumn()));
                     }
 
                     List<ModelDimensionDesc> modelDimDescList = Lists.newArrayListWithCapacity(modelDimMap.size());

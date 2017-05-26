@@ -43,6 +43,8 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
+
+
 /**
  */
 public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperBase<KEYIN, Object> {
@@ -52,6 +54,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     public static enum RawDataCounter {
         BYTES
     }
+
 
     protected boolean collectStatistics = false;
     protected CuboidScheduler cuboidScheduler = null;
@@ -84,8 +87,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
         tmpbuf = ByteBuffer.allocate(4096);
         collectStatistics = Boolean.parseBoolean(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_ENABLED));
         if (collectStatistics) {
-            samplingPercentage = Integer
-                    .parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
+            samplingPercentage = Integer.parseInt(context.getConfiguration().get(BatchConstants.CFG_STATISTICS_SAMPLING_PERCENT));
             cuboidScheduler = new CuboidScheduler(cubeDesc);
             nRowKey = cubeDesc.getRowkey().getRowKeyColumns().length;
 
@@ -100,6 +102,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
             for (int i = 0; i < cuboidIds.length; i++) {
                 allCuboidsHLL[i] = new HLLCounter(cubeDesc.getConfig().getCubeStatsHLLPrecision(), RegisterType.DENSE);
             }
+
 
             TblColRef partitionColRef = cubeDesc.getModel().getPartitionDesc().getPartitionDateColumnRef();
             if (partitionColRef != null) {
@@ -126,9 +129,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                 isUsePutRowKeyToHllNewAlgorithm = true;
                 rowHashCodesLong = new long[nRowKey];
                 hf = Hashing.murmur3_128();
-                logger.info(
-                        "Found KylinVersion : {}. Use new algorithm for cuboid sampling. About the details of the new algorithm, please refer to KYLIN-2518",
-                        cubeDesc.getVersion());
+                logger.info("Found KylinVersion : {}. Use new algorithm for cuboid sampling. About the details of the new algorithm, please refer to KYLIN-2518", cubeDesc.getVersion());
             }
         }
 
@@ -159,7 +160,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
     public void doMap(KEYIN key, Object record, Context context) throws IOException, InterruptedException {
         Collection<String[]> rowCollection = flatTableInputFormat.parseMapperInput(record);
 
-        for (String[] row : rowCollection) {
+        for (String[] row: rowCollection) {
             context.getCounter(RawDataCounter.BYTES).increment(countSizeInBytes(row));
             for (int i = 0; i < factDictCols.size(); i++) {
                 String fieldValue = row[dictionaryColumnIndex[i]];
@@ -172,8 +173,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
                     reducerIndex = columnIndexToReducerBeginId.get(i);
                 } else {
                     //for the uhc
-                    reducerIndex = columnIndexToReducerBeginId.get(i)
-                            + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
+                    reducerIndex = columnIndexToReducerBeginId.get(i) + (fieldValue.hashCode() & 0x7fffffff) % uhcReducerCount;
                 }
 
                 tmpbuf.clear();
@@ -192,8 +192,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
 
                 // log a few rows for troubleshooting
                 if (rowCount < 10) {
-                    logger.info("Sample output: " + factDictCols.get(i) + " '" + fieldValue + "' => reducer "
-                            + reducerIndex);
+                    logger.info("Sample output: " + factDictCols.get(i) + " '" + fieldValue + "' => reducer " + reducerIndex);
                 }
             }
 
@@ -301,6 +300,7 @@ public class FactDistinctColumnsMapper<KEYIN> extends FactDistinctColumnsMapperB
             }
         }
     }
+
 
     private int countNewSize(int oldSize, int dataSize) {
         int newSize = oldSize * 2;

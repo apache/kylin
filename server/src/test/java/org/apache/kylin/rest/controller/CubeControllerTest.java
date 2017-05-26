@@ -35,10 +35,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * @author xduo
@@ -169,6 +169,7 @@ public class CubeControllerTest extends ServiceTestBase {
         Assert.assertTrue(segNumber == newSegNumber + 1);
     }
 
+
     @Test
     public void testGetHoles() throws IOException {
         String cubeName = "test_kylin_cube_with_slr_ready_3_segments";
@@ -178,7 +179,7 @@ public class CubeControllerTest extends ServiceTestBase {
         CubeInstance cube = cubeService.getCubeManager().getCube(cubeName);
         List<CubeSegment> segments = cube.getSegments();
 
-        final long dateEnd = segments.get(segments.size() - 1).getDateRangeEnd();
+        final long dateEnd = segments.get(segments.size() -1).getDateRangeEnd();
 
         final long ONEDAY = 24 * 60 * 60000;
         cubeService.getCubeManager().appendSegment(cube, dateEnd + ONEDAY, dateEnd + ONEDAY * 2);
@@ -192,6 +193,7 @@ public class CubeControllerTest extends ServiceTestBase {
         Assert.assertTrue(hole.getDateRangeStart() == dateEnd && hole.getDateRangeEnd() == (dateEnd + ONEDAY));
 
     }
+
 
     @Test
     public void testGetCubes() {

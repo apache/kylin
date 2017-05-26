@@ -22,6 +22,5 @@ import org.apache.kylin.metadata.filter.function.Functions;
 import org.apache.kylin.metadata.model.TblColRef;
 
 public interface MassInValueProviderFactory {
-    MassInValueProvider getProvider(Functions.FilterTableType filterTableType, String filterResourceIdentifier,
-            TblColRef col);
+    MassInValueProvider getProvider(Functions.FilterTableType filterTableType, String filterResourceIdentifier, TblColRef col);
 }

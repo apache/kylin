@@ -94,8 +94,7 @@ public interface IMROutput2 {
          * value is M1+M2+..+Mm. CUBOID is 8 bytes cuboid ID; Dx is dimension value with
          * dictionary encoding; Mx is measure value serialization form.
          */
-        public void addStepPhase2_BuildCube(CubeSegment set, List<CubeSegment> mergingSegments,
-                DefaultChainedExecutable jobFlow);
+        public void addStepPhase2_BuildCube(CubeSegment set, List<CubeSegment> mergingSegments, DefaultChainedExecutable jobFlow);
 
         /** Add step that does any necessary clean up. */
         public void addStepPhase3_Cleanup(DefaultChainedExecutable jobFlow);

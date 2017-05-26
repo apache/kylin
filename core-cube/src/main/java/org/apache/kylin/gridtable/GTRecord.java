@@ -45,7 +45,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         }
         this.info = info;
     }
-
+    
     @Override
     public GTRecord clone() { // deep copy
         ByteArray[] cols = new ByteArray[this.cols.length];
@@ -113,6 +113,7 @@ public class GTRecord implements Comparable<GTRecord>, Cloneable {
         }
         return result;
     }
+
 
     /** decode and return the values of this record */
     public Object[] getValues(int[] selectedColumns, Object[] result) {

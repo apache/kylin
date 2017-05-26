@@ -49,8 +49,7 @@ public class ColumnCardinalityReducer extends KylinReducer<IntWritable, BytesWri
     }
 
     @Override
-    public void doReduce(IntWritable key, Iterable<BytesWritable> values, Context context)
-            throws IOException, InterruptedException {
+    public void doReduce(IntWritable key, Iterable<BytesWritable> values, Context context) throws IOException, InterruptedException {
         int skey = key.get();
         for (BytesWritable v : values) {
             ByteBuffer buffer = ByteBuffer.wrap(v.getBytes());

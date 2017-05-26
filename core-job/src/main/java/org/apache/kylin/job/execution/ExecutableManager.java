@@ -18,10 +18,6 @@
 
 package org.apache.kylin.job.execution;
 
-import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
-import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
-import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
-
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
@@ -45,6 +41,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import static org.apache.kylin.job.constant.ExecutableConstants.MR_JOB_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_ID;
+import static org.apache.kylin.job.constant.ExecutableConstants.YARN_APP_URL;
 
 /**
  */
@@ -235,8 +235,7 @@ public class ExecutableManager {
      * @param expectedClass
      * @return
      */
-    public List<AbstractExecutable> getAllAbstractExecutables(long timeStartInMillis, long timeEndInMillis,
-            Class<? extends AbstractExecutable> expectedClass) {
+    public List<AbstractExecutable> getAllAbstractExecutables(long timeStartInMillis, long timeEndInMillis, Class<? extends AbstractExecutable> expectedClass) {
         try {
             List<AbstractExecutable> ret = Lists.newArrayList();
             for (ExecutablePO po : executableDao.getJobs(timeStartInMillis, timeEndInMillis)) {
@@ -383,8 +382,7 @@ public class ExecutableManager {
             ExecutableState oldStatus = ExecutableState.valueOf(jobOutput.getStatus());
             if (newStatus != null && oldStatus != newStatus) {
                 if (!ExecutableState.isValidStateTransfer(oldStatus, newStatus)) {
-                    throw new IllegalStateTranferException("there is no valid state transfer from:" + oldStatus + " to:"
-                            + newStatus + ", job id: " + jobId);
+                    throw new IllegalStateTranferException("there is no valid state transfer from:" + oldStatus + " to:" + newStatus + ", job id: " + jobId);
                 }
                 jobOutput.setStatus(newStatus.toString());
             }
@@ -484,8 +482,7 @@ public class ExecutableManager {
         }
     }
 
-    private AbstractExecutable parseToAbstract(ExecutablePO executablePO,
-            Class<? extends AbstractExecutable> expectedClass) {
+    private AbstractExecutable parseToAbstract(ExecutablePO executablePO, Class<? extends AbstractExecutable> expectedClass) {
         if (executablePO == null) {
             logger.warn("executablePO is null");
             return null;

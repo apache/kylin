@@ -26,8 +26,7 @@ import org.apache.kylin.common.util.Pair;
  */
 public final class InMemCubeBuilderUtils {
 
-    public static final Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(final long cuboidId,
-            final int measureCount) {
+    public static final Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(final long cuboidId, final int measureCount) {
         int cardinality = Long.bitCount(cuboidId);
         BitSet dimension = new BitSet();
         dimension.set(0, cardinality);
@@ -36,15 +35,13 @@ public final class InMemCubeBuilderUtils {
         return Pair.newPair(new ImmutableBitSet(dimension), new ImmutableBitSet(metrics));
     }
 
-    public static final Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(
-            final long baseCuboidId, final long childCuboidId, final int measureCount) {
-        final Pair<ImmutableBitSet, ImmutableBitSet> parentDimensionAndMetricColumnBitSet = getDimensionAndMetricColumnBitSet(
-                baseCuboidId, measureCount);
+    public static final Pair<ImmutableBitSet, ImmutableBitSet> getDimensionAndMetricColumnBitSet(final long baseCuboidId, final long childCuboidId, final int measureCount) {
+        final Pair<ImmutableBitSet, ImmutableBitSet> parentDimensionAndMetricColumnBitSet = getDimensionAndMetricColumnBitSet(baseCuboidId, measureCount);
         ImmutableBitSet parentDimensions = parentDimensionAndMetricColumnBitSet.getFirst();
         ImmutableBitSet measureColumns = parentDimensionAndMetricColumnBitSet.getSecond();
         ImmutableBitSet childDimensions = parentDimensions;
         long mask = Long.highestOneBit(baseCuboidId);
-        long parentCuboidIdActualLength = (long) Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
+        long parentCuboidIdActualLength = (long)Long.SIZE - Long.numberOfLeadingZeros(baseCuboidId);
         int index = 0;
         for (int i = 0; i < parentCuboidIdActualLength; i++) {
             if ((mask & baseCuboidId) > 0) {
