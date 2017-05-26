@@ -968,6 +968,10 @@ abstract public class KylinConfigBase implements Serializable {
     public String getAdHocRunnerClassName() {
         return getOptional("kylin.query.ad-hoc.runner.class-name", "");
     }
+    
+    public String getAdHocConverterClassName() {
+        return getOptional("kylin.query.ad-hoc.converter.class-name", "org.apache.kylin.storage.adhoc.HiveAdhocConverter");
+    }
 
     public String getJdbcUrl() {
         return getOptional("kylin.query.ad-hoc.jdbc.url", "");

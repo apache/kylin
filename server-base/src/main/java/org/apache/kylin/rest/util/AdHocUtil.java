@@ -18,17 +18,18 @@
 
 package org.apache.kylin.rest.util;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.kylin.common.KylinConfig;
-import org.apache.kylin.query.routing.NoRealizationFoundException;
-import org.apache.kylin.storage.adhoc.AdHocRunnerBase;
-import org.apache.kylin.rest.exception.InternalErrorException;
-import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.SQLException;
 import java.util.List;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.kylin.common.KylinConfig;
+import org.apache.kylin.metadata.querymeta.SelectedColumnMeta;
+import org.apache.kylin.query.routing.NoRealizationFoundException;
+import org.apache.kylin.rest.exception.InternalErrorException;
+import org.apache.kylin.storage.adhoc.AdHocRunnerBase;
+import org.apache.kylin.storage.adhoc.IAdhocConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AdHocUtil {
     private static final Logger logger = LoggerFactory.getLogger(AdHocUtil.class);
@@ -40,22 +41,33 @@ public class AdHocUtil {
 
         if (isExpectedCause && kylinConfig.isAdhocEnabled()) {
             Class runnerClass = Class.forName(kylinConfig.getAdHocRunnerClassName());
-            Object instance = runnerClass.newInstance();
+            Class converterClass = Class.forName(kylinConfig.getAdHocConverterClassName());
+            Object runnerObj = runnerClass.newInstance();
+            Object converterObj = converterClass.newInstance();
 
-            if (!(instance instanceof AdHocRunnerBase)) {
-                throw new InternalErrorException("Ad-hoc runner class should be sub-class of AdHocRunnerBase.");
+            if (!(runnerObj instanceof AdHocRunnerBase)) {
+                throw new InternalErrorException("Ad-hoc runner class should be sub-class of AdHocRunnerBase");
             }
 
-            AdHocRunnerBase runner = (AdHocRunnerBase) instance;
+            if (!(converterObj instanceof IAdhocConverter)) {
+                throw new InternalErrorException("Ad-hoc converter class should implement of IAdhocConverter");
+            }
+
+            AdHocRunnerBase runner = (AdHocRunnerBase) runnerObj;
+            IAdhocConverter converter = (IAdhocConverter) converterObj;
             runner.setConfig(kylinConfig);
 
             logger.debug("Ad-hoc query enabled for Kylin");
-            // running query to ad-hoc jdbc
 
             runner.init();
 
             try {
-                runner.executeQuery(sql, results, columnMetas);
+                String adhocSql = converter.convert(sql);
+                if (!sql.equals(adhocSql)) {
+                    logger.info("the original query is converted to {} before delegating to ", adhocSql);
+                }
+
+                runner.executeQuery(adhocSql, results, columnMetas);
                 isAdHoc = true;
             } catch (Exception exception) {
                 throw exception;
@@ -67,4 +79,3 @@ public class AdHocUtil {
         return isAdHoc;
     }
 }
-
