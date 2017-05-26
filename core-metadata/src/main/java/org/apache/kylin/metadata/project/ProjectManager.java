@@ -20,7 +20,6 @@ package org.apache.kylin.metadata.project;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class ProjectManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectManager.class);
@@ -416,17 +416,28 @@ public class ProjectManager {
     }
 
     public List<ColumnDesc> listExposedColumns(String project, TableDesc tableDesc) {
-        return config.isAdhocEnabled() ? //
-                Arrays.asList(tableDesc.getColumns()) : //
-                Lists.newArrayList(l2Cache.listExposedColumns(norm(project), tableDesc.getIdentity()));
+        Set<ColumnDesc> exposedColumns = l2Cache.listExposedColumns(norm(project), tableDesc.getIdentity());
+
+        if (config.isAdhocEnabled()) {
+            // take care of computed columns
+            Set<ColumnDesc> dedup = Sets.newHashSet(tableDesc.getColumns());
+            dedup.addAll(exposedColumns);
+            return Lists.newArrayList(dedup);
+        } else {
+            return Lists.newArrayList(exposedColumns);
+        }
     }
 
     public boolean isExposedTable(String project, String table) {
-        return config.isAdhocEnabled() ? l2Cache.isDefinedTable(norm(project), table) : l2Cache.isExposedTable(norm(project), table);
+        return config.isAdhocEnabled() ? //
+                l2Cache.isDefinedTable(norm(project), table) : //
+                l2Cache.isExposedTable(norm(project), table);
     }
 
     public boolean isExposedColumn(String project, String table, String col) {
-        return config.isAdhocEnabled() ? l2Cache.isDefinedColumn(norm(project), table, col) : l2Cache.isExposedColumn(norm(project), table, col);
+        return config.isAdhocEnabled() ? //
+                l2Cache.isDefinedColumn(norm(project), table, col) || l2Cache.isExposedColumn(norm(project), table, col) : //
+                l2Cache.isExposedColumn(norm(project), table, col);
     }
 
     public Set<IRealization> listAllRealizations(String project) {
