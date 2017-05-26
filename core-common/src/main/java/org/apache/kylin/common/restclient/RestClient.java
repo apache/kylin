@@ -33,6 +33,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -64,6 +65,10 @@ public class RestClient {
 
     private static final int HTTP_CONNECTION_TIMEOUT_MS = 30000;
     private static final int HTTP_SOCKET_TIMEOUT_MS = 120000;
+
+    public static final String SCHEME_HTTP = "http://";
+
+    public static final String KYLIN_API_PATH = "/kylin/api";
 
     public static boolean matchFullRestPattern(String uri) {
         Matcher m = fullRestPattern.matcher(uri);
@@ -97,7 +102,7 @@ public class RestClient {
         this.port = port;
         this.userName = userName;
         this.password = password;
-        this.baseUrl = "http://" + host + ":" + port + "/kylin/api";
+        this.baseUrl = SCHEME_HTTP + host + ":" + port + KYLIN_API_PATH;
 
         final HttpParams httpParams = new BasicHttpParams();
         HttpConnectionParams.setSoTimeout(httpParams, HTTP_SOCKET_TIMEOUT_MS);
@@ -114,6 +119,10 @@ public class RestClient {
     }
 
     public void wipeCache(String entity, String event, String cacheKey) throws IOException {
+        wipeCache(client, baseUrl, entity, event, cacheKey);
+    }
+
+    public static void wipeCache(HttpClient client, String baseUrl, String entity, String event, String cacheKey) throws IOException {
         String url = baseUrl + "/cache/" + entity + "/" + cacheKey + "/" + event;
         HttpPut request = new HttpPut(url);
 

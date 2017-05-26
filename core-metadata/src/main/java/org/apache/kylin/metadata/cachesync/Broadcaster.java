@@ -32,6 +32,11 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.restclient.RestClient;
 import org.apache.kylin.common.util.DaemonThreadFactory;
@@ -104,29 +109,29 @@ public class Broadcaster {
         final String[] nodes = config.getRestServers();
         if (nodes == null || nodes.length < 1) {
             logger.warn("There is no available rest server; check the 'kylin.server.cluster-servers' config");
-            broadcastEvents = null; // disable the broadcaster
-            return;
         }
         logger.debug(nodes.length + " nodes in the cluster: " + Arrays.toString(nodes));
 
         Executors.newSingleThreadExecutor(new DaemonThreadFactory()).execute(new Runnable() {
             @Override
             public void run() {
-                final List<RestClient> restClients = Lists.newArrayList();
-                for (String node : config.getRestServers()) {
-                    restClients.add(new RestClient(node));
-                }
-                final ExecutorService wipingCachePool = Executors.newFixedThreadPool(restClients.size(), new DaemonThreadFactory());
+                final HttpParams httpParams = new BasicHttpParams();
+                HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
+
+                final HttpClient client = new DefaultHttpClient(httpParams);
+
+                final ExecutorService wipingCachePool = Executors.newFixedThreadPool(3, new DaemonThreadFactory());
                 while (true) {
                     try {
                         final BroadcastEvent broadcastEvent = broadcastEvents.takeFirst();
+                        logger.debug("Servers in the cluster: " + Arrays.toString(config.getRestServers()));
                         logger.info("Announcing new broadcast event: " + broadcastEvent);
-                        for (final RestClient restClient : restClients) {
+                        for (final String address : config.getRestServers()) {
                             wipingCachePool.execute(new Runnable() {
                                 @Override
                                 public void run() {
                                     try {
-                                        restClient.wipeCache(broadcastEvent.getEntity(), broadcastEvent.getEvent(), broadcastEvent.getCacheKey());
+                                        RestClient.wipeCache(client, RestClient.SCHEME_HTTP + address + RestClient.KYLIN_API_PATH,  broadcastEvent.getEntity(), broadcastEvent.getEvent(), broadcastEvent.getCacheKey());
                                     } catch (IOException e) {
                                         logger.warn("Thread failed during wipe cache at " + broadcastEvent, e);
                                     }
